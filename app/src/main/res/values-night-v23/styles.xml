@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme" parent="BaseTheme">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorAccent">@color/white</item>
+        <item name="colorSurface">@color/dark_theme_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="checkboxColor">@color/checkbox_dark</item>
+        <item name="chatTextColor">@color/white</item>
+        <item name="elevationOverlayEnabled">false</item>
+    </style>
+</resources>

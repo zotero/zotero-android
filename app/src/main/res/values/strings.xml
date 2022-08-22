@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Zotero Android</string>
+    <string name="close">Close</string>
+
+    <string name="onboarding_access"><annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
+    <string name="onboarding_annotate"><annotation font="bold">Highlight and take notes</annotation> directly in your PDFs as you read them.</string>
+    <string name="onboarding_share"><annotation font="bold">Tap to collect</annotation> articles and books directly from the web, including their PDFs and full metadata.</string>
+    <string name="onboarding_sync"><annotation font="bold">Synchronize and collaborate</annotation> across devices, keeping your reading and notes seamlessly up to date.</string>
+    <string name="onboarding_sign_in">Sign In</string>
+    <string name="onboarding_sign_up">Sign Up</string>
+    <string name="onboarding_about">About Zotero</string>
 </resources>

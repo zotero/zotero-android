@@ -5,10 +5,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.compose.CustomTextField
-import org.zotero.android.sample.SampleViewEffect.NavigateBack
 import org.zotero.android.sample.MainViewModel
+import org.zotero.android.sample.SampleViewEffect.NavigateBack
 import org.zotero.android.sample.SampleViewState
+import org.zotero.android.uicomponents.systemui.SolidStatusBar
+import org.zotero.android.uicomponents.textinput.CustomTextField
 
 @Composable
 internal fun SampleScreen(
@@ -27,6 +28,8 @@ internal fun SampleScreen(
             null -> Unit
         }
     }
+
+    SolidStatusBar()
 
     CustomTextField(value = viewState.testText, onValueChange = {})
 }

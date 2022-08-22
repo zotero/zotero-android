@@ -1,10 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FFF</color>
+    <color name="black">#000</color>
+
+    <color name="charcoal">#2A2D35</color>
+    <color name="dark_charcoal">#1A1C21</color>
+    <color name="charcoal_semi_transparent">#332A2D35</color>
+    <color name="light_charcoal">#606272</color>
+    <color name="clear">#00000000</color>
+
+    <color name="cool_grey">#888AA0</color>
+    <color name="light_grey">#F7F7F7</color>
+    <color name="fog_grey">#EEEFF5</color>
+    <color name="feather_grey">#DEDFEB</color>
+    <color name="rain_grey">#abacb7</color>
+    <color name="onyx">#32333C</color>
+
+    <color name="red">#FF001F</color>
+
+    <color name="checkbox_light">@color/cool_grey</color>
+    <color name="checkbox_dark">@color/white</color>
+
+    <color name="chat_divider">@color/fog_grey</color>
+    <color name="send_message_chat_divider">@color/fog_grey</color>
+
+    <color name="switch_track_unchecked">#bebebe</color>
+    <color name="switch_thumb_unchecked">#f1f1f1</color>
+
+    <color name="ui_divider">@color/feather_grey</color>
+    <color name="primary_text_color">@color/charcoal</color>
+    <color name="card_background">@color/white</color>
+    <color name="text_color_on_primary">@color/white</color>
+    <color name="custom_green">#007f03</color>
+    <color name="custom_green_accent">#78AD7A</color>
+    <color name="custom_blue">#92CEFF</color>
+    <color name="orange">#ff641d</color>
+    <color name="pink">#F53354</color>
+    <color name="sky_blue">#008CFF</color>
+    <color name="purple_rose">#6700e7</color>
+    <color name="silver">#bcc2cc</color>
+
+    <color name="dark_theme_surface">#1A1C21</color>
+    <color name="cardview_background">@color/cardview_light_background</color>
+    <color name="room_background_color">@color/light_grey</color>
+    <color name="link_share_settings_icon_tint">@color/charcoal</color>
+    <color name="date_picker_primary">@color/white</color>
+    <color name="date_picker_accent">@color/sky_blue</color>
+    <color name="date_picker_box_stroke">@color/cool_grey</color>
+    <color name="create_home_divider">@color/fog_grey</color>
+    <color name="send_message_background">@color/white</color>
+    <color name="send_message_icon_tint">@color/charcoal</color>
+
+    <color name="toolbarColor">@color/white</color>
+    <color name="toolbarActionColor">@color/charcoal</color>
+    <color name="toolbarDivider">@color/fog_grey</color>
 </resources>

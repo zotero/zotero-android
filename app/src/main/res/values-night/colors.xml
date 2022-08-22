@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="red">#FF6363</color>
+    <color name="chat_divider">@color/cool_grey</color>
+    <color name="send_message_chat_divider">@color/charcoal</color>
+
+    <color name="ui_divider">#4E4E4E</color>
+    <color name="primary_text_color">@color/white</color>
+    <color name="card_background">@color/dark_charcoal</color>
+    <color name="text_color_on_primary">@color/charcoal</color>
+    <color name="cardview_background">@color/dark_theme_surface</color>
+    <color name="room_background_color">#121212</color>
+    <color name="link_share_settings_icon_tint">@color/white</color>
+    <color name="date_picker_primary">@color/charcoal</color>
+    <color name="date_picker_accent">@color/silver</color>
+    <color name="create_home_divider">@color/charcoal</color>
+    <color name="send_message_background">@color/black</color>
+    <color name="send_message_icon_tint">@color/cool_grey</color>
+
+    <color name="toolbarColor">#121212</color>
+    <color name="toolbarActionColor">@color/cool_grey</color>
+    <color name="toolbarDivider">@color/charcoal</color>
+</resources>

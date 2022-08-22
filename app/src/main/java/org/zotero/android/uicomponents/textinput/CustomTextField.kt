@@ -1,4 +1,4 @@
-package org.zotero.android.compose
+package org.zotero.android.uicomponents.textinput
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -22,6 +22,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 /**
  * This is the standard minimalistic text field.
@@ -52,7 +53,7 @@ fun CustomTextField(
     maxLines: Int = Int.MAX_VALUE,
     maxCharacters: Int = Int.MAX_VALUE,
     errorText: String? = null,
-    textColor: Color = Color.Black,
+    textColor: Color = CustomTheme.colors.primaryContent,
     hintColor: Color = Color.Unspecified
 ) {
     Column(
@@ -89,7 +90,7 @@ fun CustomTextField(
                     if (value.text.isEmpty()) {
                         Text(
                             text = hint,
-                            color = hintColor.takeOrElse { Color.Blue },
+                            color = hintColor.takeOrElse { CustomTheme.colors.secondaryContent },
                             style = textStyle
                         )
                     }
@@ -101,7 +102,8 @@ fun CustomTextField(
             Text(
                 text = errorText,
                 modifier = Modifier.padding(top = 8.dp),
-                color = Color.Red,
+                color = CustomTheme.colors.error,
+                style = CustomTheme.typography.info
             )
         }
     }
@@ -135,8 +137,8 @@ fun CustomTextField(
     maxCharacters: Int = Int.MAX_VALUE,
     maxLines: Int = Int.MAX_VALUE,
     singleLine: Boolean = false,
-    textColor: Color = Color.Black,
-    textStyle: TextStyle = TextStyle.Default,
+    textColor: Color = CustomTheme.colors.primaryContent,
+    textStyle: TextStyle = CustomTheme.typography.default,
 ) {
     Column(
         modifier = modifier
@@ -172,7 +174,7 @@ fun CustomTextField(
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
-                            color = hintColor.takeOrElse { Color.Black },
+                            color = hintColor.takeOrElse { CustomTheme.colors.secondaryContent },
                             style = textStyle
                         )
                     }
@@ -184,7 +186,8 @@ fun CustomTextField(
             Text(
                 text = errorText,
                 modifier = Modifier.padding(top = 8.dp),
-                color = Color.Red,
+                color = CustomTheme.colors.error,
+                style = CustomTheme.typography.info
             )
         }
     }

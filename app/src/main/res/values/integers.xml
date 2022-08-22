@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="navAnimTime">220</integer>
+    <integer name="max_name_length">50</integer>
+    <integer name="max_username_length">30</integer>
+
+    <!--  Add 1 to account for @ sign-->
+    <integer name="max_username_input">31</integer>
+
+    <integer name="max_bio_length">200</integer>
+
+    <integer name="max_message_lines">10</integer>
+    <integer name="max_message_length">8000</integer>
+
+    <integer name="max_home_name_length">30</integer>
+    <integer name="max_home_description_length">200</integer>
+
+    <integer name="max_room_name_length">30</integer>
+    <integer name="max_room_description_length">200</integer>
+</resources>

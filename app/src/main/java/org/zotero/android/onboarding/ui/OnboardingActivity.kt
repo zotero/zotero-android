@@ -1,4 +1,4 @@
-package org.zotero.android.sample.ui
+package org.zotero.android.onboarding.ui
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -7,14 +7,18 @@ import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @AndroidEntryPoint
-internal class SampleActivity : BaseActivity() {
+internal class OnboardingActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             CustomTheme {
-                SampleScreen(onBack = { finish() })
+                OnboardingScreen(
+                    onBack = { finish() },
+                    onSignUpClick = {
+                    },
+                )
             }
         }
     }

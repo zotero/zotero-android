@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="side_margin">16dp</dimen>
+    <dimen name="double_side_margin">32dp</dimen>
+    <dimen name="quad_side_margin">64dp</dimen>
+    <dimen name="half_side_margin">8dp</dimen>
+    <dimen name="quarter_side_margin">4dp</dimen>
+    <dimen name="content_margin">8dp</dimen>
+    <dimen name="corner_radius">6dp</dimen>
+    <dimen name="home_elevation">10dp</dimen>
+    <dimen name="message_card_elevation">16dp</dimen>
+    <dimen name="bottom_sheet_corner_radius">24dp</dimen>
+    <dimen name="min_touch_target">48dp</dimen>
+    <dimen name="one_dp">1dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
+    <dimen name="unselected_theme_inset">8dp</dimen>
+    <dimen name="selected_theme_check_inset">12dp</dimen>
+</resources>

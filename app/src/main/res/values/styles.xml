@@ -1,0 +1,206 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="BaseTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorAccent">@color/black</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Custom.SmallComponent
+        </item>
+        <item name="android:statusBarColor">?attr/statusBarColor</item>
+        <item name="android:windowAnimationStyle">@style/CustomSlideAnimation</item>
+        <item name="checkboxColor">@color/checkbox_light</item>
+        <item name="chatTextColor">@color/charcoal</item>
+        <item name="actionMenuTextAppearance">@style/MenuItemTextAppearance</item>
+        <item name="tabStyle">@style/TabLayoutStyle</item>
+        <item name="statusBarColor">@color/toolbarColor</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="appBarLayoutStyle">@style/AppBarLayoutStyle</item>
+        <item name="android:fontFamily">@font/suisse_intl</item>
+    </style>
+
+    <style name="AppBarLayoutStyle" parent="Widget.MaterialComponents.AppBarLayout.Surface">
+        <item name="android:background">@color/toolbarColor</item>
+    </style>
+
+    <style name="CustomSlideAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_from_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_to_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_from_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_to_right</item>
+    </style>
+
+    <style name="AppTheme" parent="BaseTheme">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="MemberApplicationTheme" parent="AppTheme">
+        <item name="shapeAppearanceSmallComponent">
+            @style/ShapeAppearance.MaterialComponents.SmallComponent
+        </item>
+        <item name="textInputStyle">@style/MemberApplicationTextInputStyle</item>
+    </style>
+
+    <style name="MemberApplicationTextInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/cool_grey</item>
+    </style>
+
+    <style name="AppTheme.DarkStatusBar">
+        <item name="android:statusBarColor">@color/toolbarColor</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="AppTheme.TransparentStatusBar">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">#00FFFFFF</item>
+        <item name="statusBarColor">#00FFFFFF</item>
+    </style>
+
+    <style name="ShapeAppearance.Custom.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">32dp</item>
+    </style>
+
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.MaterialComponents.ActionBar">
+        <!-- Customize color of navigation drawer icon and back arrow -->
+        <item name="colorControlNormal">@color/toolbarActionColor</item>
+        <item name="toolbarStyle">@style/ToolbarStyle</item>
+        <item name="iconTint">@color/toolbarActionColor</item>
+        <item name="navigationIcon">?attr/homeAsUpIndicator</item>
+    </style>
+
+    <style name="ToolbarStyle" parent="@style/Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/toolbarColor</item>
+        <item name="background">@color/toolbarColor</item>
+        <item name="titleTextAppearance">@style/ToolbarTitle</item>
+    </style>
+
+    <style name="ToolbarTheme.Closable">
+        <item name="navigationIcon">@drawable/ic_close_24dp</item>
+        <item name="navigationContentDescription">@string/close</item>
+    </style>
+
+    <style name="MenuItemTextAppearance" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Menu">
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="MaterialCalendarTheme" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorOnPrimary">@color/date_picker_primary</item>
+        <item name="colorPrimary">@color/date_picker_accent</item>
+    </style>
+
+    <style name="AppTheme.Transparent">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@color/clear</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <!-- Used for activities that are showing modal dialogs/bottom sheets -->
+    <!-- Make sure activity which use this style has set lockOrientationPortrait=false-->
+    <!-- to block orientation. Otherwise that may cause crash on Android 8.0 devices-->
+    <!-- https://issuetracker.google.com/issues/68454482-->
+    <style name="AppTheme.Modal">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@color/clear</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/clear</item>
+    </style>
+
+    <!-- A style that will assure that keyboard will always push the bottom sheet content up  -->
+    <style name="ClearBottomSheetDialogTheme.AboveKeyboard">
+        <item name="android:statusBarColor">?attr/statusBarColor</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize|stateVisible</item>
+    </style>
+
+    <style name="ClearBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ClearBottomSheetStyle</item>
+    </style>
+
+    <style name="ClearBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/clear</item>
+    </style>
+
+    <style name="RoundedBottomSheetCardViewStyle" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="shapeAppearanceOverlay">@style/RoundedBottomSheetShapeAppearanceOverlay</item>
+        <item name="cardBackgroundColor">@color/cardview_background</item>
+    </style>
+
+    <style name="RoundedBottomSheetShapeAppearanceOverlay">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">@dimen/bottom_sheet_corner_radius</item>
+        <item name="cornerSizeTopLeft">@dimen/bottom_sheet_corner_radius</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <style name="TopRoundedCornersAppearanceOverlay12dp">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">12sp</item>
+        <item name="cornerSizeTopLeft">12sp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <style name="TabLayoutStyle" parent="Widget.MaterialComponents.TabLayout">
+        <item name="tabTextAppearance">@style/TabLayoutTextStyle</item>
+        <item name="tabBackground">?colorSurface</item>
+    </style>
+
+    <style name="TabLayoutTextStyle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="BottomSheetCardShapeOverlay">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">@dimen/bottom_sheet_corner_radius</item>
+        <item name="cornerSizeTopLeft">@dimen/bottom_sheet_corner_radius</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+    </style>
+
+    <!--
+    In some cases elevation affects the background color, we don't want that.
+    -->
+    <style name="BottomSheetCardThemeOverlay" parent="ThemeOverlay.MaterialComponents">
+        <item name="elevationOverlayEnabled">false</item>
+    </style>
+
+    <!--
+    This base theme is empty, but it is used for hierarchy purpose and may be
+    extended. E.g.: SendMessageViewTheme.Default.
+    -->
+    <style name="SendMessageViewTheme" />
+
+    <style name="ChatEditTextStyle" parent="Base.Widget.MaterialComponents.TextInputEditText" />
+
+    <style name="CircularProgressBar" parent="Widget.MaterialComponents.CircularProgressIndicator" />
+
+    <style name="CircularProgressBar.Small">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+    </style>
+
+
+    <style name="AppTheme.IntroActivity">
+        <item name="statusBarColor">@color/clear</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+    <declare-styleable name="HomePicViewStyle">
+        <attr name="hp_hasRoundedCorners" format="boolean" />
+        <attr name="hp_showLargeText" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="TintedSwitchStyle">
+        <attr name="ts_shouldUseHomeTheme" format="boolean" />
+    </declare-styleable>
+</resources>

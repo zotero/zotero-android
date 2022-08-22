@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+
+    <!-- Fade out, over a black surface, which simulates a black scrim -->
+    <alpha
+        android:duration="167"
+        android:fillAfter="true"
+        android:fillBefore="true"
+        android:fillEnabled="true"
+        android:fromAlpha="1"
+        android:interpolator="@android:interpolator/linear"
+        android:startOffset="83"
+        android:toAlpha="0.4" />
+
+    <scale
+        android:duration="400"
+        android:fillAfter="true"
+        android:fillBefore="true"
+        android:fillEnabled="true"
+        android:fromXScale="1"
+        android:fromYScale="1"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.05"
+        android:toYScale="1.05" />
+</set>

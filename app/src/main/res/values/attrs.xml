@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CustomAppTheme">
+        <attr name="statusBarColor" format="color" />
+        <attr name="checkboxColor" format="color" />
+        <attr name="chatTextColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="LoadingLayout">
+        <attr name="contentHideMode" format="enum">
+            <enum name="gone" value="0" />
+            <enum name="invisible" value="1" />
+        </attr>
+        <attr name="showErrorCopy" format="boolean" />
+        <attr name="showErrorIcon" format="boolean" />
+        <attr name="errorTitleTextRes" format="string" />
+        <attr name="errorBodyTextRes" format="string" />
+        <attr name="errorButtonColor" format="color" />
+        <attr name="errorButtonTextColor" format="color" />
+        <attr name="loadingColor" format="color" />
+        <attr name="onDarkBackground" format="boolean" />
+        <attr name="errorButtonBold" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="LoadingMenuView">
+        <attr name="android:text" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="ProfilePicViewStyle">
+        <attr name="showShadow" format="boolean" />
+        <attr name="showFrame" format="boolean" />
+        <attr name="placeholderTextSize" format="dimension" />
+        <attr name="placeholderBackgroundColor" format="color" />
+    </declare-styleable>
+</resources>
