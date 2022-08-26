@@ -14,6 +14,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ApiModule
 import org.zotero.android.architecture.SdkInt
 import org.zotero.android.architecture.app.AppConfig
 import org.zotero.android.architecture.app.ApplicationIdProvider
@@ -26,7 +27,7 @@ import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module(
-    includes = []
+    includes = [ApiModule::class]
 )
 internal class AppModule {
     @Provides

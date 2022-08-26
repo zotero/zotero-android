@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -48,6 +49,7 @@ fun CustomTextField(
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     focusRequester: FocusRequester = remember { FocusRequester() },
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
@@ -82,6 +84,7 @@ fun CustomTextField(
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
+            visualTransformation = visualTransformation,
             cursorBrush = SolidColor(LocalContentColor.current),
             decorationBox = { innerTextField ->
                 Box(
@@ -131,6 +134,7 @@ fun CustomTextField(
     errorText: String? = null,
     focusRequester: FocusRequester = remember { FocusRequester() },
     hintColor: Color = Color.Unspecified,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -165,6 +169,7 @@ fun CustomTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
+            visualTransformation = visualTransformation,
             maxLines = maxLines,
             cursorBrush = SolidColor(LocalContentColor.current),
             decorationBox = { innerTextField ->

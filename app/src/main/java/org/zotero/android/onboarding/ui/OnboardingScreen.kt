@@ -30,14 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,6 +42,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import org.zotero.android.androidx.text.StyledTextHelper
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.sample.MainViewModel
 import org.zotero.android.sample.SampleViewEffect.NavigateBack
 import org.zotero.android.sample.SampleViewState
@@ -55,7 +53,6 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
-import kotlin.math.min
 
 private val onboardingPages =
     listOf(
@@ -69,10 +66,10 @@ private val onboardingPages =
 @Suppress("UNUSED_PARAMETER")
 internal fun OnboardingScreen(
     onBack: () -> Unit,
-    onSignUpClick: () -> Unit,
+    onSignInClick: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
-    val onboardingLayoutSize = calculateOnboardingLayoutSize()
+    val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(SampleViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(key1 = viewModel) {
@@ -88,7 +85,9 @@ internal fun OnboardingScreen(
     SolidStatusBar()
 
     Column(
-        modifier = Modifier.fillMaxSize().background(color = CustomTheme.colors.surface),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = CustomTheme.colors.surface),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -121,9 +120,9 @@ internal fun OnboardingScreen(
                         color = CustomTheme.colors.primaryContent,
                         textAlign = TextAlign.Center,
                         style = CustomTheme.typography.default.copy(lineHeight = 26.sp),
-                        fontSize = calculateTextSize(onboardingLayoutSize),
+                        fontSize = layoutType.calculateTextSize(),
                     )
-                    Spacer(modifier = Modifier.height(calculatePadding(onboardingLayoutSize)))
+                    Spacer(modifier = Modifier.height(layoutType.calculatePadding()))
                     Image(
                         painter = painterResource(onboardingPage.drawableRes),
                         contentDescription = null,
@@ -143,7 +142,7 @@ internal fun OnboardingScreen(
                     modifier = Modifier
                         .fillMaxWidth(),
                     text = stringResource(id = Strings.onboarding_sign_in),
-                    onClick = {}
+                    onClick = onSignInClick
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 PrimaryButton(
@@ -167,7 +166,7 @@ internal fun OnboardingScreen(
                     text = stringResource(id = Strings.onboarding_about),
                     color = CustomTheme.colors.zoteroBlueWithDarkMode,
                     style = CustomTheme.typography.default,
-                    fontSize = calculateTextSize(onboardingLayoutSize),
+                    fontSize = layoutType.calculateTextSize(),
                 )
             }
             Spacer(modifier = Modifier.weight(0.7f))
@@ -212,35 +211,5 @@ fun DotsIndicator(
                 Spacer(modifier = Modifier.padding(horizontal = 4.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun calculateOnboardingLayoutSize(): OnboardingLayoutSize {
-    val configuration = LocalConfiguration.current
-
-    val screenWidth = configuration.screenWidthDp
-    val screenHeight = configuration.screenHeightDp
-
-    val size = min(screenWidth, screenHeight).dp
-    if (size >= 834.dp) {
-        return OnboardingLayoutSize.big
-    } else if (size >= 768.dp) {
-        return OnboardingLayoutSize.medium
-    }
-    return OnboardingLayoutSize.small
-}
-
-private fun calculateTextSize(onboardingLayoutSize: OnboardingLayoutSize): TextUnit {
-    return when (onboardingLayoutSize) {
-        OnboardingLayoutSize.big, OnboardingLayoutSize.medium -> 20.sp
-        OnboardingLayoutSize.small -> 14.sp
-    }
-}
-
-private fun calculatePadding(onboardingLayoutSize: OnboardingLayoutSize): Dp {
-    return when (onboardingLayoutSize) {
-        OnboardingLayoutSize.big, OnboardingLayoutSize.medium -> 50.dp
-        OnboardingLayoutSize.small -> 8.dp
     }
 }
