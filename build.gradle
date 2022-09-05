@@ -18,6 +18,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'io.realm.kotlin' version '1.0.2' apply false
+}
+
 allprojects {
     repositories {
         google()
@@ -25,8 +29,8 @@ allprojects {
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
     }
-}
 
+}
 
 task clean(type: Delete) {
     delete rootProject.buildDir

@@ -1,5 +1,7 @@
 package org.zotero.android.onboarding.ui
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,6 +26,16 @@ internal class OnboardingActivity : BaseActivity() {
             }
         }
     }
+
+    companion object {
+        fun getIntent(
+            context: Context,
+        ): Intent {
+            return Intent(context, OnboardingActivity::class.java).apply {
+            }
+        }
+    }
+
 
 }
 

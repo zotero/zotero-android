@@ -17,4 +17,5 @@
     <string name="login_invalid_credentials">Invalid username or password</string>
     <string name="login_invalid_username">Invalid username</string>
     <string name="login_invalid_password">Invalid password</string>
+    <string name="dashboard_temp_string">Sync Happens in background</string>
 </resources>

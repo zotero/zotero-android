@@ -13,6 +13,7 @@ open class SdkPrefs @Inject constructor(
     private val sharedPrefsFile = "ZoteroPrefs"
     private val userId = "userId"
     private val name = "name"
+    private val username = "username"
     private val displayName = "displayName"
     private val apiToken = "apiToken"
 
@@ -31,12 +32,24 @@ open class SdkPrefs @Inject constructor(
         sharedPreferences.edit { putString(name, str) }
     }
 
+    fun setUsername(str: String) {
+        sharedPreferences.edit { putString(username, str) }
+    }
+
     fun setDisplayName(str: String) {
         sharedPreferences.edit { putString(displayName, str) }
     }
 
     fun setApiToken(str: String) {
         sharedPreferences.edit { putString(apiToken, str) }
+    }
+
+    fun getApiToken(): String? {
+        return sharedPreferences.getString(apiToken, null )
+    }
+
+    fun isUserLoggedIn() :Boolean {
+        return getApiToken() != null
     }
 
     fun getUserId(): Long {

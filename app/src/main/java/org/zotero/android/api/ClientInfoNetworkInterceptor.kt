@@ -7,11 +7,10 @@ import okhttp3.Response
 import javax.inject.Inject
 
 class ClientInfoNetworkInterceptor @Inject constructor(
-    configuration: ApiConfiguration
+    configuration: NetworkConfiguration
 ) : Interceptor {
-    private val clientVersion = configuration.appVersion
     private val userAgentString =
-        "zotero-$clientVersion " +
+        "zotero" +
             "android/${Build.VERSION.SDK_INT} " +
             "(${Build.MANUFACTURER} ${Build.DEVICE})"
 
@@ -19,7 +18,6 @@ class ClientInfoNetworkInterceptor @Inject constructor(
         val request = chain.request()
         val clientInfoRequest = request.newBuilder()
             .header("X-Zotero-Client", "Android")
-            .header("X-Zotero-Client-Version", clientVersion)
             .header("UserAgent", userAgentString)
             .build()
         return chain.proceed(clientInfoRequest)

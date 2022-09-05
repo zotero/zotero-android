@@ -8,6 +8,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.framework.ZoteroApplication
+import org.zotero.android.login.LoginViewEffect.NavigateToDashboard
 import org.zotero.android.login.usecase.LoginUseCase
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
@@ -63,6 +64,8 @@ internal class LoginViewModel @Inject constructor(
             } else {
                 showError(error.error.msg)
             }
+        } else {
+            triggerEffect(NavigateToDashboard)
         }
     }
 
@@ -103,4 +106,5 @@ internal data class LoginViewState(
 
 internal sealed class LoginViewEffect : ViewEffect {
     object NavigateBack : LoginViewEffect()
+    object NavigateToDashboard : LoginViewEffect()
 }

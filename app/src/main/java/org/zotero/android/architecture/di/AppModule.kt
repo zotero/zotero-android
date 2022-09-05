@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.ApiModule
+import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkInt
 import org.zotero.android.architecture.app.AppConfig
 import org.zotero.android.architecture.app.ApplicationIdProvider
@@ -44,6 +45,12 @@ internal class AppModule {
     fun provideAppConfig(application: Application): AppConfig {
         val packageInfo = application.packageManager.getPackageInfo(application.packageName, 0)
         return AppConfig(packageInfo.versionName)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGlobalVariables(): GlobalVariables {
+        return GlobalVariables()
     }
 
     @Provides

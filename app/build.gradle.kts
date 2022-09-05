@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     kotlin("plugin.serialization")
     id("dagger.hilt.android.plugin")
+    id ("io.realm.kotlin")
 }
 
 android {
@@ -97,13 +98,12 @@ android {
 //        }
     }
 
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.2.0-beta02"
@@ -182,11 +182,14 @@ dependencies {
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.6.21")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+
+    //Realm
+    implementation ("io.realm.kotlin:library-base:1.0.2")
 
     //Dagger + Hilt
     implementation("com.google.dagger:hilt-android:2.43.2")

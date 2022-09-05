@@ -22,9 +22,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,15 +34,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import org.zotero.android.androidx.text.StyledTextHelper
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.sample.MainViewModel
-import org.zotero.android.sample.SampleViewEffect.NavigateBack
-import org.zotero.android.sample.SampleViewState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.PrimaryButton
@@ -67,21 +60,9 @@ private val onboardingPages =
 internal fun OnboardingScreen(
     onBack: () -> Unit,
     onSignInClick: () -> Unit,
-    viewModel: MainViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(SampleViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            NavigateBack -> onBack()
-            null -> Unit
-        }
-    }
     SolidStatusBar()
 
     Column(

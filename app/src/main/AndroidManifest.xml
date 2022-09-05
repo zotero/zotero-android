@@ -28,17 +28,28 @@
             android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
             android:value="${enableCrashReporting}" />
         <activity
-            android:name=".onboarding.ui.OnboardingActivity"
+            android:name=".root.RootActivity"
             android:exported="true"
-            android:launchMode="singleTask"
-            android:theme="@style/AppTheme.IntroActivity"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.Transparent"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
+        <activity
+            android:name=".onboarding.ui.OnboardingActivity"
+            android:theme="@style/AppTheme.IntroActivity"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
+        </activity>
+
+        <activity
+            android:name=".dashboard.DashboardActivity"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".login.LoginActivity"

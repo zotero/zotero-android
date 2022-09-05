@@ -34,5 +34,4 @@ class AccountRepository @Inject constructor(
         sdkPrefs.setApiToken(networkResult.value.key)
         return NetworkResultWrapper.Success(Unit)
     }
-
 }

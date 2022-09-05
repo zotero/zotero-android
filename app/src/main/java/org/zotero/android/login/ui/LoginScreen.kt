@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalPagerApi::class)
 
-package org.zotero.android.login
+package org.zotero.android.login.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,6 +31,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.login.LoginViewEffect.NavigateBack
+import org.zotero.android.login.LoginViewEffect.NavigateToDashboard
+import org.zotero.android.login.LoginViewModel
+import org.zotero.android.login.LoginViewState
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.PrimaryButton
@@ -46,6 +49,7 @@ import org.zotero.android.uicomponents.topbar.NoIconTopBar
 @Suppress("UNUSED_PARAMETER")
 internal fun LoginScreen(
     onBack: () -> Unit,
+    navigateToDashboard: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -58,6 +62,7 @@ internal fun LoginScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             NavigateBack -> onBack()
+            NavigateToDashboard -> navigateToDashboard()
             null -> Unit
         }
     }

@@ -1,4 +1,3 @@
-import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.NamedDomainObjectContainer
 
 fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
@@ -31,6 +30,6 @@ fun <T> NamedDomainObjectContainer<T>.prod(block: T.() -> Unit) {
 
 private val ignoreSet = setOf("devRelease", "stagingRelease")
 
-fun VariantBuilder.ignoreUnusedVariants() {
-    this.enabled = !ignoreSet.contains(name)
-}
+//fun VariantBuilder.ignoreUnusedVariants() {
+//    this.enabled = !ignoreSet.contains(name)
+//}
