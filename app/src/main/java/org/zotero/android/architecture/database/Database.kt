@@ -1,6 +1,6 @@
 package org.zotero.android.architecture.database
 
-import io.realm.kotlin.RealmConfiguration
+import io.realm.RealmConfiguration
 import org.zotero.android.architecture.database.objects.RCustomLibrary
 import org.zotero.android.architecture.database.objects.RGroup
 import org.zotero.android.architecture.database.objects.RVersions

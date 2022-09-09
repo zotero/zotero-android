@@ -3,8 +3,8 @@ package org.zotero.android.sync
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 
 sealed class LibraryIdentifier {
-    data class custom(val rCustomLibraryType: RCustomLibraryType) : LibraryIdentifier()
-    data class group(val identifier: Int) : LibraryIdentifier()
+    data class custom(val type: RCustomLibraryType) : LibraryIdentifier()
+    data class group(val groupId: Int) : LibraryIdentifier()
 
     val isGroupLibrary: Boolean
         get() {

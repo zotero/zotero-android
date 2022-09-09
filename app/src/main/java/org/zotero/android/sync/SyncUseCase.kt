@@ -1,7 +1,10 @@
 package org.zotero.android.sync
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
+import org.zotero.android.api.network.NetworkResultWrapper
 import org.zotero.android.data.AccessPermissions
+import timber.log.Timber
 import javax.inject.Inject
 
 class SyncUseCase @Inject constructor(
@@ -58,21 +61,102 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun process(action: Action) {
-
         when (action) {
             is Action.loadKeyPermissions -> {
                 syncRepository.processKeyCheckAction()
             }
             is Action.createLibraryActions -> {
-
+                processCreateLibraryActions(
+                    libraries = action.librarySyncType,
+                    options = action.createLibraryActionsOptions
+                )
             }
 
             is Action.syncGroupVersions -> {
-                syncRepository.processSyncGroupVersions()
+                processSyncGroupVersions()
             }
         }
 
 
+    }
+
+    private fun processCreateLibraryActions(
+        libraries: LibrarySyncType,
+        options: CreateLibraryActionsOptions
+    ) {
+
+    }
+
+    private suspend fun processSyncGroupVersions() {
+        val result = syncRepository.processSyncGroupVersions()
+        if (result !is NetworkResultWrapper.Success) {
+            //TODO handle abort
+            Timber.e((result as NetworkResultWrapper.NetworkError).error.msg)
+            return
+        }
+        val (toUpdate, toRemove) = result.value
+        val actions =
+            createGroupActions(updateIds = toUpdate, deleteGroups = toRemove, syncType = type)
+        finishSyncGroupVersions(actions = actions, updateCount = toUpdate.size)
+    }
+
+    private suspend fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
+        enqueue(actions = actions, index =  0)
+    }
+
+    private suspend fun enqueue(actions: List<Action>, index: Int? = null, delayInSeconds: Int? = null) {
+        if (actions.isNotEmpty()) {
+            if (index != null) {
+                queue.addAll(index, actions)
+            } else {
+                queue.addAll(actions)
+            }
+        }
+
+        if (delayInSeconds != null && delayInSeconds > 0) {
+            //TODO another delay implementation?
+            delay(delayInSeconds * 1000L)
+            processNextAction()
+        } else {
+            processNextAction()
+        }
+    }
+
+    private fun createGroupActions(
+        updateIds: List<Int>,
+        deleteGroups: List<Pair<Int, String>>,
+        syncType: SyncType
+    ): List<Action> {
+        var idsToSync:MutableList<Int>
+        when (val libraryTypeL = libraryType) {
+            is LibrarySyncType.all -> {
+                idsToSync = updateIds.toMutableList()
+            }
+            is LibrarySyncType.specific -> {
+                idsToSync = mutableListOf()
+                val libraryIds = libraryTypeL.identifiers
+                libraryIds.forEach { libraryId ->
+                    when (libraryId) {
+                        is LibraryIdentifier.group -> {
+                            val groupId = libraryId.identifier
+                            if (updateIds.contains(groupId)) {
+                                idsToSync.add(groupId)
+                            }
+                        }
+
+                        is LibraryIdentifier.custom -> return@forEach
+                    }
+                }
+            }
+        }
+
+        val actions = deleteGroups.map { Action.resolveDeletedGroup(it.first, it.second) }
+            .toMutableList<Action>()
+        actions.addAll(idsToSync.map { Action.syncGroupToDb(it) })
+        val options: CreateLibraryActionsOptions =
+            if (syncType == SyncType.full) CreateLibraryActionsOptions.forceDownloads else CreateLibraryActionsOptions.automatic
+        actions.add(Action.createLibraryActions (libraryType, options))
+        return actions
     }
 
 

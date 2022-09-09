@@ -4,7 +4,7 @@ plugins {
     kotlin("kapt")
     kotlin("plugin.serialization")
     id("dagger.hilt.android.plugin")
-    id ("io.realm.kotlin")
+    id("realm-android")
 }
 
 android {
@@ -189,7 +189,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
 
     //Realm
-    implementation ("io.realm.kotlin:library-base:1.0.2")
 
     //Dagger + Hilt
     implementation("com.google.dagger:hilt-android:2.43.2")

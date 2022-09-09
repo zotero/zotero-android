@@ -8,6 +8,10 @@ sealed class Action {
         val createLibraryActionsOptions: CreateLibraryActionsOptions
     ) : Action()
 
+    data class resolveDeletedGroup(val a: Int, val b: String) : Action()
+
+    data class syncGroupToDb(val a: Int) : Action()
+
     val libraryId: LibraryIdentifier?
         get() {
             when (this) {
@@ -16,11 +20,12 @@ sealed class Action {
             }
         }
 
-    val requiresConflictReceiver: Boolean get() {
-        when (this) {
-            is loadKeyPermissions, is createLibraryActions,is syncGroupVersions ->
-            return false
+    val requiresConflictReceiver: Boolean
+        get() {
+            when (this) {
+                is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
+                    return false
+            }
         }
-    }
 
 }
