@@ -80,7 +80,7 @@ class ItemTitleFormatter {
             if (results.isEmpty()) {
                 return listOf()
             }
-            val sortedResults = results.sortedBy { "orderId" }
+            val sortedResults = results.sortedBy { it.orderId }
 
             var index = 0
             var names = mutableListOf<String>()
@@ -123,7 +123,7 @@ class ItemTitleFormatter {
             }
 
             val creator =
-                creators.filter { it.primary == true }.sortedBy { "orderId" }.firstOrNull()
+                creators.filter { it.primary == true }.sortedBy { it.orderId }.firstOrNull()
             if (creator != null) {
                 val name = creator.summaryName
                 if (!name.isEmpty()) {

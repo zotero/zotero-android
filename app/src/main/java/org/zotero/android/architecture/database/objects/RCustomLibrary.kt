@@ -7,8 +7,7 @@ enum class RCustomLibraryType(val libraryName: String) {
     myLibrary("My Library");
 
 }
-
-class RCustomLibrary : RealmObject() {
+open class RCustomLibrary : RealmObject() {
     @PrimaryKey
     var type = RCustomLibraryType.myLibrary.name
     var orderId: Int = 0

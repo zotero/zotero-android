@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.database.objects
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+
+import io.realm.RealmObject
+import io.realm.annotations.PrimaryKey
 
 enum class GroupType(val str: String) {
     privateOpt("Private"),
@@ -8,7 +9,7 @@ enum class GroupType(val str: String) {
     publicClosed("PublicClosed"),
 }
 
-class RGroup : RealmObject {
+open class RGroup : RealmObject() {
     @PrimaryKey
     var identifier: Int = 0
     var owner: Int = 0
@@ -22,5 +23,5 @@ class RGroup : RealmObject {
 
     var isLocalOnly: Boolean = false
     var version: Int = 0
-    lateinit var syncState: String //ObjectSyncState
+    lateinit var syncState: String //org.zotero.android.architecture.database.objects.ObjectSyncState
 }

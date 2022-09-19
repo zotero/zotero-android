@@ -1,15 +1,28 @@
 package org.zotero.android.sync
 
+import com.google.android.play.core.internal.by
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import org.zotero.android.api.network.NetworkResultWrapper
+import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.RealmDbStorage
+import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import org.zotero.android.data.AccessPermissions
 import timber.log.Timber
 import javax.inject.Inject
 
+
+interface SyncAction<A : Any> {
+    suspend fun result(): A
+}
+
+
 class SyncUseCase @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
-    private val syncRepository: SyncRepository
+    private val syncRepository: SyncRepository,
+    private val sdkPrefs: SdkPrefs,
+    private val dbWrapper: DbWrapper
 ) {
 
     private var libraryType: LibrarySyncType = LibrarySyncType.all
@@ -63,7 +76,11 @@ class SyncUseCase @Inject constructor(
     private suspend fun process(action: Action) {
         when (action) {
             is Action.loadKeyPermissions -> {
-                syncRepository.processKeyCheckAction()
+                val result = syncRepository.processKeyCheckAction()
+                if (result is NetworkResultWrapper.Success) {
+                    accessPermissions = result.value
+                    processNextAction()
+                }
             }
             is Action.createLibraryActions -> {
                 processCreateLibraryActions(
@@ -80,10 +97,28 @@ class SyncUseCase @Inject constructor(
 
     }
 
-    private fun processCreateLibraryActions(
+    private suspend fun processCreateLibraryActions(
         libraries: LibrarySyncType,
         options: CreateLibraryActionsOptions
     ) {
+        //TODO should use webDavController
+        val result = LoadLibraryDataSyncAction(
+            type = libraries,
+            fetchUpdates = (options != CreateLibraryActionsOptions.forceDownloads),
+            loadVersions = (this.type != SyncType.full),
+            webDavEnabled = false,
+            dbStorage = dbWrapper.realmDbStorage,
+            sdkPrefs = sdkPrefs
+        ).result()
+        //TODO handle errors
+
+        result.subscribe(on: self.workScheduler)
+        .subscribe(onSuccess: { [weak self] data in
+            self?.finishCreateLibraryActions(with: .success((data, options)))
+        }, onFailure: { [weak self] error in
+            self?.finishCreateLibraryActions(with: .failure(error))
+        })
+        .disposed(by: self.disposeBag)
 
     }
 
@@ -138,7 +173,7 @@ class SyncUseCase @Inject constructor(
                 libraryIds.forEach { libraryId ->
                     when (libraryId) {
                         is LibraryIdentifier.group -> {
-                            val groupId = libraryId.identifier
+                            val groupId = libraryId.groupId
                             if (updateIds.contains(groupId)) {
                                 idsToSync.add(groupId)
                             }

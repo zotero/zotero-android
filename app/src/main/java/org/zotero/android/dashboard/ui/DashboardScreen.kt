@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,8 +40,9 @@ internal fun DashboardScreen(
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    val context = LocalContext.current
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
+        viewModel.init(context = context)
     }
 
     LaunchedEffect(key1 = viewEffect) {

@@ -1,5 +1,6 @@
 package org.zotero.android.architecture.init
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.database.DbWrapper
@@ -12,9 +13,10 @@ class InitUseCase @Inject constructor(
     private val dbWrapper: DbWrapper,
 ) {
     suspend fun execute(
+        context: Context
     ) = withContext(dispatcher) {
         fileStore.init()
-        dbWrapper.initDb()
+        dbWrapper.initDb(context)
 
     }
 }

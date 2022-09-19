@@ -4,7 +4,7 @@ import io.realm.RealmObject
 import io.realm.annotations.RealmClass
 
 @RealmClass(embedded = true)
-class RCreator: RealmObject() {
+open class RCreator: RealmObject() {
     var rawType: String = ""
     var firstName: String= ""
     var lastName: String= ""
@@ -23,4 +23,16 @@ class RCreator: RealmObject() {
 
         return firstName
     }
+
+    val updateParameters: Map<String, Any>
+        get() {
+            var parameters: MutableMap<String, Any> = mutableMapOf("creatorType" to this.rawType)
+            if (!this.name.isEmpty()) {
+                parameters["name"] = this.name
+            } else if (!this.firstName.isEmpty() || !this.lastName.isEmpty()) {
+                parameters["firstName"] = this.firstName
+                parameters["lastName"] = this.lastName
+            }
+            return parameters
+        }
 }

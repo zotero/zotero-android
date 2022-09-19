@@ -1,5 +1,6 @@
 package org.zotero.android.dashboard
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -19,9 +20,9 @@ internal class DashboardViewModel @Inject constructor(
     private val initUseCase: InitUseCase
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
 
-    fun init() = initOnce {
+    fun init(context: Context) = initOnce {
         viewModelScope.launch {
-            initUseCase.execute()
+            initUseCase.execute(context)
             syncUseCase.start(type = SyncType.collectionsOnly, libraries = LibrarySyncType.all)
         }
     }

@@ -4,7 +4,7 @@ import io.realm.RealmObject
 import io.realm.annotations.RealmClass
 
 @RealmClass(embedded = true)
-class RLink: RealmObject() {
+open class RLink: RealmObject() {
     var type: String = ""
     var href: String= ""
     var contentType: String= ""

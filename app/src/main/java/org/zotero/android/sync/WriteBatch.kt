@@ -6,7 +6,10 @@ class WriteBatch(
     val version: Int,
     val parameters: List<Map<String, Any>>,
 ) {
-    val maxCount = 50
+    companion object {
+        val maxCount = 50
+
+    }
 
     fun copy(version: Int): WriteBatch {
         return WriteBatch(

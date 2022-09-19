@@ -1,11 +1,12 @@
 package org.zotero.android.sync
 
-import SyncGroupVersionsDbRequest
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.NetworkResultWrapper
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.requests.SyncGroupVersionsDbRequest
+import org.zotero.android.data.AccessPermissions
 import org.zotero.android.data.KeyResponse
 import javax.inject.Inject
 
@@ -14,7 +15,7 @@ class SyncRepository @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val sdkPrefs: SdkPrefs
 ) {
-    suspend fun processKeyCheckAction(): NetworkResultWrapper<KeyResponse> {
+    suspend fun processKeyCheckAction(): NetworkResultWrapper<AccessPermissions> {
         val networkResult = safeApiCall {
             syncApi.getKeys()
         }
@@ -28,7 +29,10 @@ class SyncRepository @Inject constructor(
         sdkPrefs.setUsername( keyResponse.username)
         sdkPrefs.setDisplayName( keyResponse.displayName)
 
-        return NetworkResultWrapper.Success(keyResponse)
+        return NetworkResultWrapper.Success(
+            AccessPermissions(user  = keyResponse.user,
+            groupDefault =  keyResponse.defaultGroup,
+        groups =  keyResponse.groups))
     }
 
     suspend fun processSyncGroupVersions(): NetworkResultWrapper<Pair<List<Int>, List<Pair<Int, String>>>> {

@@ -17,7 +17,7 @@ sealed class LibraryIdentifier {
     fun apiPath(userId: Int): String {
         return when (val q = this) {
             is group ->
-                "groups/${q.identifier}"
+                "groups/${q.groupId}"
             is custom ->
                 "users/${userId}"
         }

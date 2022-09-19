@@ -1,11 +1,7 @@
 package org.zotero.android.architecture.database.objects//
 
 import io.realm.Realm
-
-
-interface _DeletableObject : Deletable
-
-typealias DeletableObject = _DeletableObject
+import io.realm.RealmObject
 
 interface Deletable {
     var deleted: Boolean

@@ -4,7 +4,7 @@ import io.realm.RealmObject
 import io.realm.annotations.RealmClass
 
 @RealmClass(embedded = true)
-class RRelation: RealmObject() {
+open class RRelation: RealmObject() {
     var type: String = ""
     var urlString: String = ""
 }

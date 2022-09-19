@@ -1,12 +1,12 @@
 package org.zotero.android.architecture.database.objects
 
-import io.realm.RealmList
 import io.realm.RealmObject
+import io.realm.RealmResults
 import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import org.zotero.android.sync.LibraryIdentifier
 
-class RTypedTag : RealmObject() {
+open class RTypedTag : RealmObject() {
     enum class Kind(val q: Int) {
         automatic(1),
         manual(0)
@@ -17,20 +17,20 @@ class RTypedTag : RealmObject() {
     var item: RItem? = null
 }
 
-class RTag : RealmObject() {
+open class RTag : RealmObject() {
     @Index
     var name: String = ""
-    val color: String = ""
-    var customLibraryKey: RCustomLibraryType? = null
+    var color: String = ""
+    var customLibraryKey: String? = null // RCustomLibraryType
     var groupKey: Int? = null
 
     @LinkingObjects("tag")
-    lateinit var tags: RealmList<RTypedTag>
+    val tags: RealmResults<RTypedTag> = TODO()
 
     var libraryId: LibraryIdentifier?
         get() {
             if (customLibraryKey != null) {
-                return LibraryIdentifier.custom(customLibraryKey!!)
+                return LibraryIdentifier.custom(RCustomLibraryType.valueOf(customLibraryKey!!))
             }
             if (groupKey != null) {
                 return LibraryIdentifier.group(groupKey!!)
@@ -47,7 +47,7 @@ class RTag : RealmObject() {
 
             when (identifier) {
                 is LibraryIdentifier.custom ->
-                    customLibraryKey = identifier.type
+                    customLibraryKey = identifier.type.name
                 is LibraryIdentifier.group ->
                     groupKey = identifier.groupId
             }

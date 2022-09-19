@@ -115,7 +115,7 @@ class FieldKeys {
                 val pageLabel = "annotationPageLabel"
                 val sortIndex = "annotationSortIndex"
                 val position = "annotationPosition"
-                val pageIndex = "pageIndex"
+                const val pageIndex = "pageIndex"
                 val rects = "rects"
                 val paths = "paths"
                 val lineWidth = "width"

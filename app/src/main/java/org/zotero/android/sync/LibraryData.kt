@@ -63,66 +63,67 @@ class LibraryData(
             return batches
         }
 
+        fun init(
+            objectS: RCustomLibrary,
+            loadVersions: Boolean,
+            userId: Long,
+            chunkedUpdateParams: Map<SyncObject, List<List<Map<String, Any>>>>,
+            chunkedDeletionKeys: Map<SyncObject, List<List<String>>>,
+            hasUpload: Boolean,
+            hasWebDavDeletions: Boolean
+        ): LibraryData {
+            val type = RCustomLibraryType.valueOf(objectS.type)
+            val versions =
+                if (loadVersions) Versions.init(versions = objectS.versions) else Versions.empty
+            val maxVersion = versions.max
+
+            return LibraryData(
+                identifier = LibraryIdentifier.custom(type),
+                name = type.libraryName,
+                versions = versions,
+                canEditMetadata = true,
+                canEditFiles = true,
+                hasUpload = hasUpload,
+                updates = LibraryData.updates(chunkedParams =  chunkedUpdateParams, version = maxVersion, libraryId = LibraryIdentifier.custom(type)),
+                deletions = LibraryData.deletions(chunkedKeys = chunkedDeletionKeys, version =  maxVersion, libraryId=  LibraryIdentifier.custom(type)),
+                hasWebDavDeletions = hasWebDavDeletions
+            )
+        }
+
+        fun init(
+            objectS: RGroup,
+            loadVersions: Boolean,
+            chunkedUpdateParams: Map<SyncObject, List<List<Map<String, Any>>>>,
+            chunkedDeletionKeys: Map<SyncObject, List<List<String>>>,
+            hasUpload: Boolean,
+            hasWebDavDeletions: Boolean
+        ): LibraryData {
+            val versions =
+                if (loadVersions) Versions.init(versions = objectS.versions) else Versions.empty
+            val maxVersion = versions.max
+
+            return LibraryData(
+                identifier = LibraryIdentifier.group(objectS.identifier),
+                name = objectS.name,
+                versions = versions,
+                canEditMetadata = objectS.canEditMetadata,
+                canEditFiles = objectS.canEditFiles,
+                hasUpload = hasUpload,
+                updates = LibraryData.updates(
+                    chunkedParams = chunkedUpdateParams,
+                    version = maxVersion,
+                    libraryId = LibraryIdentifier.group(objectS.identifier)
+                ),
+                deletions = LibraryData.deletions(
+                    chunkedKeys = chunkedDeletionKeys,
+                    version = maxVersion,
+                    libraryId = LibraryIdentifier.group(objectS.identifier)
+                ),
+                hasWebDavDeletions = hasWebDavDeletions
+            )
+        }
     }
 
-    fun init(
-        objectS: RCustomLibrary,
-        loadVersions: Boolean,
-        userId: Int,
-        chunkedUpdateParams: Map<SyncObject, List<List<Map<String, Any>>>>,
-        chunkedDeletionKeys: Map<SyncObject, List<List<String>>>,
-        hasUpload: Boolean,
-        hasWebDavDeletions: Boolean
-    ): LibraryData {
-        val type = RCustomLibraryType.valueOf(objectS.type)
-        val versions =
-            if (loadVersions) Versions.init(versions = objectS.versions) else Versions.empty
-        val maxVersion = versions.max
 
-        return LibraryData(
-            identifier = LibraryIdentifier.custom(type),
-                    name = type.libraryName,
-                    versions = versions,
-                    canEditMetadata = true,
-                    canEditFiles = true,
-                    hasUpload = hasUpload,
-                    updates = LibraryData.updates(chunkedParams =  chunkedUpdateParams, version = maxVersion, libraryId = LibraryIdentifier.custom(type)),
-        deletions = LibraryData.deletions(chunkedKeys = chunkedDeletionKeys, version =  maxVersion, libraryId=  LibraryIdentifier.custom(type)),
-        hasWebDavDeletions = hasWebDavDeletions
-        )
-    }
-
-    fun init(
-        objectS: RGroup,
-        loadVersions: Boolean,
-        chunkedUpdateParams: Map<SyncObject, List<List<Map<String, Any>>>>,
-        chunkedDeletionKeys: Map<SyncObject, List<List<String>>>,
-        hasUpload: Boolean,
-        hasWebDavDeletions: Boolean
-    ): LibraryData {
-        val versions =
-            if (loadVersions) Versions.init(versions = objectS.versions) else Versions.empty
-        val maxVersion = versions.max
-
-        return LibraryData(
-            identifier = LibraryIdentifier.group(objectS.identifier),
-            name = objectS.name,
-            versions = versions,
-            canEditMetadata = objectS.canEditMetadata,
-            canEditFiles = objectS.canEditFiles,
-            hasUpload = hasUpload,
-            updates = LibraryData.updates(
-                chunkedParams = chunkedUpdateParams,
-                version = maxVersion,
-                libraryId = LibraryIdentifier.group(objectS.identifier)
-            ),
-            deletions = LibraryData.deletions(
-                chunkedKeys = chunkedDeletionKeys,
-                version = maxVersion,
-                libraryId = LibraryIdentifier.group(objectS.identifier)
-            ),
-            hasWebDavDeletions = hasWebDavDeletions
-        )
-    }
 
 }

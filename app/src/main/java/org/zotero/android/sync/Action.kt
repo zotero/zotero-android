@@ -17,14 +17,18 @@ sealed class Action {
             when (this) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return null
+                is resolveDeletedGroup -> return LibraryIdentifier.group(this.a)
+                is syncGroupToDb -> return LibraryIdentifier.group(this.a)
             }
         }
 
     val requiresConflictReceiver: Boolean
         get() {
-            when (this) {
+            return when (this) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return false
+                is resolveDeletedGroup -> true
+                is syncGroupToDb -> false
             }
         }
 

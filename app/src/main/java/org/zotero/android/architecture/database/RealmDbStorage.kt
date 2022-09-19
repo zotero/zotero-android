@@ -1,5 +1,6 @@
-import io.realm.kotlin.Realm
-import io.realm.kotlin.RealmConfiguration
+package org.zotero.android.architecture.database
+import io.realm.Realm
+import io.realm.RealmConfiguration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -9,11 +10,11 @@ enum class RealmDbError {
     autocreateMissingPrimaryKey
 }
 
-class RealmDbStorage(private val config: RealmConfiguration) {
+class RealmDbStorage(val config: RealmConfiguration) {
 
     val willPerformBetaWipe: Boolean
         get() {
-            return config.deleteRealmIfMigrationNeeded
+            return config.shouldDeleteRealmIfMigrationNeeded()
         }
 
     fun clear() {
@@ -29,7 +30,7 @@ class RealmDbStorage(private val config: RealmConfiguration) {
         for (url in realmUrls) {
             val result = File(url).delete()
             if (!result) {
-                Timber.e("RealmDbStorage: couldn't delete file at $url")
+                Timber.e("org.zotero.android.architecture.database.RealmDbStorage: couldn't delete file at $url")
             }
         }
     }
@@ -40,11 +41,11 @@ class RealmDbStorage(private val config: RealmConfiguration) {
             coordinatorAction(coordinator)
         }
 
-    suspend fun <T> perform(request: DbResponseRequest<T>) = withContext(Dispatchers.IO) {
+    suspend inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>) = withContext(Dispatchers.IO) {
         return@withContext perform(request = request, invalidateRealm = false, refreshRealm = false)
     }
 
-    suspend fun <T> perform(request: DbResponseRequest<T>, refreshRealm: Boolean) =
+    suspend inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>, refreshRealm: Boolean) =
         withContext(Dispatchers.IO) {
             return@withContext perform(
                 request = request,
@@ -53,8 +54,8 @@ class RealmDbStorage(private val config: RealmConfiguration) {
             )
         }
 
-    suspend fun <T> perform(
-        request: DbResponseRequest<T>,
+    suspend inline fun <reified T: Any> perform(
+        request: DbResponseRequest<T, T>,
         invalidateRealm: Boolean,
         q: String = ""
     ) =
@@ -66,14 +67,22 @@ class RealmDbStorage(private val config: RealmConfiguration) {
             )
         }
 
-    suspend fun <T> perform(
-        request: DbResponseRequest<T>,
+    suspend inline fun <reified T: Any> perform(
+        request: DbResponseRequest<T, T>,
         invalidateRealm: Boolean,
         refreshRealm: Boolean
     ): T {
         val coordinator = RealmDbCoordinator().init(config)
+
+        if (refreshRealm) {
+            coordinator.refresh()
+        }
         val result = coordinator.perform(request = request)
-        println(result)
+
+        if (invalidateRealm) {
+            coordinator.invalidate()
+        }
+
         return result
     }
 
@@ -89,10 +98,10 @@ class RealmDbStorage(private val config: RealmConfiguration) {
 }
 
 class RealmDbCoordinator {
-    private lateinit var realm: Realm
+    lateinit var realm: Realm
 
     fun init(configuration: RealmConfiguration): RealmDbCoordinator {
-        this.realm = Realm.open(configuration)
+        this.realm = Realm.getInstance(configuration)
         return this
     }
 
@@ -103,25 +112,23 @@ class RealmDbCoordinator {
         }
 
 
-        realm.write {
+        realm.executeTransaction {
             request.process(realm)
         }
     }
 
-    suspend fun <T> perform(request: DbResponseRequest<T>): T {
+    suspend inline fun <reified T: Any> perform(request: DbResponseRequest<T, T>): T {
         if (!request.needsWrite) {
-            return request.process(realm)
+            return request.process(realm, T::class)
         }
 
-        return realm.write {
-            return@write request.process(realm)
-        }
+        return request.process(realm, T::class)
 
     }
 
     suspend fun perform(requests: List<DbRequest>) = withContext(Dispatchers.IO) {
 
-        realm.write {
+        realm.executeTransaction {
             for (request in requests) {
                 if (!request.needsWrite) {
                     continue
@@ -130,6 +137,14 @@ class RealmDbCoordinator {
                 request.process(realm)
             }
         }
+    }
+
+    fun refresh() {
+        realm.refresh()
+    }
+
+    fun invalidate() {
+//        realm.invalidate()
     }
 
 

@@ -1,31 +1,39 @@
-
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.RealmResults
+package org.zotero.android.architecture.database.requests
+import org.zotero.android.architecture.database.DbResponseRequest
+import io.realm.Realm
+import io.realm.RealmResults
+import io.realm.kotlin.where
 import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.architecture.database.objects.RGroup
+import kotlin.reflect.KClass
+
+private typealias Result = Pair<List<Int>, List<Pair<Int, String>>>
 
 class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
-    DbResponseRequest<Pair<List<Int>, List<Pair<Int, String>>>> {
+    DbResponseRequest<Result, Result> {
 
 
     override val needsWrite: Boolean
         get() = false
 
 
-    override fun process(database: Realm): Pair<List<Int>, List<Pair<Int, String>>> {
+
+
+    override fun process(
+        database: Realm,
+        clazz: KClass<Result>?
+    ): Result {
         val allKeys = versions.keys.toMutableList()
 
         val toRemove: List<RGroup> =
-            database.query<RGroup>()
-                .find().filter { !allKeys.contains(it.identifier) }
+            database.where<RGroup>().findAll().filter { !allKeys.contains(it.identifier) }
 
         val toRemoveIds = toRemove.map { Pair(it.identifier, it.name) }
 
         val toUpdate = allKeys
 
         val listOfRGroupIds: RealmResults<RGroup> =
-            database.query<RGroup>().find()
+            database.where<RGroup>().findAll()
 
         for (library in listOfRGroupIds) {
             if (library.syncState != ObjectSyncState.synced.name) {
