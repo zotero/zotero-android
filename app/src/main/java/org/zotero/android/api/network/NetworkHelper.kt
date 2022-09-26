@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.zotero.android.api.network.NetworkHelper.getCurrentConnectionType
+import org.zotero.android.api.network.NetworkHelper.convertToCustomNetworkError
 import org.zotero.android.framework.ZoteroApplication
 import retrofit2.HttpException
 import java.io.IOException
@@ -27,6 +27,40 @@ object NetworkHelper {
         }
     }
 
+    fun convertToCustomNetworkError(throwable: Throwable): NetworkResultWrapper.NetworkError {
+        if (getCurrentConnectionType() == ConnectionType.none) {
+            return NetworkResultWrapper.NetworkError(
+                CustomNetworkError(throwable.localizedMessage!!, -1), true
+            )
+        }
+        if (throwable is HttpException) {
+            val response = throwable.response()
+            val code = throwable.code()
+
+            if (code < 200 || code >= 300) {
+                var errorMessage = ""
+                if (response?.errorBody() != null) {
+                    errorMessage = response.errorBody()!!.string()
+                }
+                return NetworkResultWrapper.NetworkError(
+                    CustomNetworkError(errorMessage, code), false
+                )
+            }
+        }
+
+        // A network error happened
+        if (throwable is IOException) {
+            return NetworkResultWrapper.NetworkError(
+                CustomNetworkError(throwable.getLocalizedMessage()!!, -1), true
+            )
+        }
+
+        // We don't know what happened. We need to simply convert to an unknown error
+        return NetworkResultWrapper.NetworkError(
+            CustomNetworkError("Invalid url response", -1), false
+        )
+    }
+
 }
 
 suspend fun <T> safeApiCall(retry: Int = 0, apiCall: suspend () -> T):
@@ -44,36 +78,3 @@ suspend fun <T> safeApiCall(retry: Int = 0, apiCall: suspend () -> T):
     }
 }
 
-private fun convertToCustomNetworkError(throwable: Throwable): NetworkResultWrapper.NetworkError {
-    if (getCurrentConnectionType() == ConnectionType.none) {
-        return NetworkResultWrapper.NetworkError(
-            CustomNetworkError(throwable.localizedMessage!!, -1), true
-        )
-    }
-    if (throwable is HttpException) {
-        val response = throwable.response()
-        val code = throwable.code()
-
-        if (code < 200 || code >= 300) {
-            var errorMessage = ""
-            if (response?.errorBody() != null) {
-                errorMessage = response.errorBody()!!.string()
-            }
-            return NetworkResultWrapper.NetworkError(
-                CustomNetworkError(errorMessage, code), false
-            )
-        }
-    }
-
-    // A network error happened
-    if (throwable is IOException) {
-        return NetworkResultWrapper.NetworkError(
-            CustomNetworkError(throwable.getLocalizedMessage()!!, -1), true
-        )
-    }
-
-    // We don't know what happened. We need to simply convert to an unknown error
-    return NetworkResultWrapper.NetworkError(
-        CustomNetworkError("Invalid url response", -1), false
-    )
-}

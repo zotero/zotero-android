@@ -1,8 +1,8 @@
 package org.zotero.android.architecture.database.requests
-import org.zotero.android.architecture.database.DbResponseRequest
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.kotlin.where
+import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.architecture.database.objects.RGroup
 import kotlin.reflect.KClass
@@ -15,8 +15,6 @@ class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
 
     override val needsWrite: Boolean
         get() = false
-
-
 
 
     override fun process(

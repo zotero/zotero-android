@@ -1,14 +1,14 @@
 package org.zotero.android.sync
 
-import com.google.android.play.core.internal.by
+import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import org.zotero.android.api.network.NetworkResultWrapper
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.RealmDbStorage
-import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.data.AccessPermissions
+import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -33,7 +33,8 @@ class SyncUseCase @Inject constructor(
 
     private var queue = mutableListOf<Action>()
     private var processingAction: Action? = null
-    private var createActionOptions: CreateLibraryActionsOptions = CreateLibraryActionsOptions.automatic
+    private var createActionOptions: CreateLibraryActionsOptions =
+        CreateLibraryActionsOptions.automatic
     private var didEnqueueWriteActionsToZoteroBackend: Boolean = false
     private var enqueuedUploads: Int = 0
     private var uploadsFailedBeforeReachingZoteroBackend: Int = 0
@@ -69,7 +70,7 @@ class SyncUseCase @Inject constructor(
 
         processingAction = action
 
-       //TODO requiresConflictReceiver
+        //TODO requiresConflictReceiver
         process(action = action)
     }
 
@@ -80,6 +81,16 @@ class SyncUseCase @Inject constructor(
                 if (result is NetworkResultWrapper.Success) {
                     accessPermissions = result.value
                     processNextAction()
+                } else {
+                    val networkError = result as NetworkResultWrapper.NetworkError
+                    val er = syncError(
+                        networkError = networkError, data = SyncError.ErrorData.from(
+                            libraryId = LibraryIdentifier.custom(
+                                RCustomLibraryType.myLibrary
+                            )
+                        )
+                    ).fatal2S ?: SyncError.Fatal.permissionLoadingFailed
+                    abort(er)
                 }
             }
             is Action.createLibraryActions -> {
@@ -101,32 +112,76 @@ class SyncUseCase @Inject constructor(
         libraries: LibrarySyncType,
         options: CreateLibraryActionsOptions
     ) {
-        //TODO should use webDavController
-        val result = LoadLibraryDataSyncAction(
-            type = libraries,
-            fetchUpdates = (options != CreateLibraryActionsOptions.forceDownloads),
-            loadVersions = (this.type != SyncType.full),
-            webDavEnabled = false,
-            dbStorage = dbWrapper.realmDbStorage,
-            sdkPrefs = sdkPrefs
-        ).result()
-        //TODO handle errors
+        try {
+            //TODO should use webDavController
+            val result = LoadLibraryDataSyncAction(
+                type = libraries,
+                fetchUpdates = (options != CreateLibraryActionsOptions.forceDownloads),
+                loadVersions = (this.type != SyncType.full),
+                webDavEnabled = false,
+                dbStorage = dbWrapper.realmDbStorage,
+                sdkPrefs = sdkPrefs
+            ).result()
+            finishCreateLibraryActions(pair = result to options)
+        } catch (e: Exception) {
+            finishCreateLibraryActions(exception = e)
+        }
+    }
 
-        result.subscribe(on: self.workScheduler)
-        .subscribe(onSuccess: { [weak self] data in
-            self?.finishCreateLibraryActions(with: .success((data, options)))
-        }, onFailure: { [weak self] error in
-            self?.finishCreateLibraryActions(with: .failure(error))
-        })
-        .disposed(by: self.disposeBag)
+    private suspend fun finishCreateLibraryActions(
+        exception: Exception? = null,
+        pair: Pair<List<LibraryData>, CreateLibraryActionsOptions>? = null
+    ) {
+
+        if (exception != null) {
+            val er = syncError(
+                error = exception, data = SyncError.ErrorData.from(
+                    libraryId = LibraryIdentifier.custom(
+                        RCustomLibraryType.myLibrary
+                    )
+                )
+            ).fatal2S ?: SyncError.Fatal.allLibrariesFetchFailed
+            abort(er)
+            return
+        }
+
+        var libraryNames: Map<LibraryIdentifier, String>? = null
+        val (data, options) = pair!!
+        if (options == CreateLibraryActionsOptions.automatic || this.type == SyncType.full) {
+            var nameDictionary = mutableMapOf<LibraryIdentifier, String>()
+            for (libraryData in data) {
+                nameDictionary[libraryData.identifier] = libraryData.name
+            }
+            libraryNames = nameDictionary
+        }
+        val (actions, queueIndex, writeCount) = createLibraryActions(
+            data,
+            options
+        )
+        this.didEnqueueWriteActionsToZoteroBackend =
+            options != CreateLibraryActionsOptions.automatic || writeCount > 0
+
+        this.createActionOptions = options
+        val names = libraryNames
+        if (names != null) {
+            //TODO update progress
+        }
+        enqueue(actions = actions, index = queueIndex)
 
     }
 
     private suspend fun processSyncGroupVersions() {
         val result = syncRepository.processSyncGroupVersions()
         if (result !is NetworkResultWrapper.Success) {
-            //TODO handle abort
             Timber.e((result as NetworkResultWrapper.NetworkError).error.msg)
+            val er = syncError(
+                networkError = result, data = SyncError.ErrorData.from(
+                    libraryId = LibraryIdentifier.custom(
+                        RCustomLibraryType.myLibrary
+                    )
+                )
+            ).fatal2S ?: SyncError.Fatal.groupSyncFailed
+            abort(er)
             return
         }
         val (toUpdate, toRemove) = result.value
@@ -136,10 +191,14 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
-        enqueue(actions = actions, index =  0)
+        enqueue(actions = actions, index = 0)
     }
 
-    private suspend fun enqueue(actions: List<Action>, index: Int? = null, delayInSeconds: Int? = null) {
+    private suspend fun enqueue(
+        actions: List<Action>,
+        index: Int? = null,
+        delayInSeconds: Int? = null
+    ) {
         if (actions.isNotEmpty()) {
             if (index != null) {
                 queue.addAll(index, actions)
@@ -162,7 +221,7 @@ class SyncUseCase @Inject constructor(
         deleteGroups: List<Pair<Int, String>>,
         syncType: SyncType
     ): List<Action> {
-        var idsToSync:MutableList<Int>
+        var idsToSync: MutableList<Int>
         when (val libraryTypeL = libraryType) {
             is LibrarySyncType.all -> {
                 idsToSync = updateIds.toMutableList()
@@ -190,13 +249,21 @@ class SyncUseCase @Inject constructor(
         actions.addAll(idsToSync.map { Action.syncGroupToDb(it) })
         val options: CreateLibraryActionsOptions =
             if (syncType == SyncType.full) CreateLibraryActionsOptions.forceDownloads else CreateLibraryActionsOptions.automatic
-        actions.add(Action.createLibraryActions (libraryType, options))
+        actions.add(Action.createLibraryActions(libraryType, options))
         return actions
     }
 
 
     private fun finish() {
         //TODO handle reportFinish - handle errors
+        cleanup()
+    }
+
+    private fun abort(error: SyncError.Fatal) {
+        Timber.i("Sync: aborted")
+        Timber.i("Error: $error")
+
+        //TODO display error
         cleanup()
     }
 
@@ -234,6 +301,306 @@ class SyncUseCase @Inject constructor(
                     Action.createLibraryActions(libraries, options)
                 )
 
+            }
+        }
+    }
+
+    private fun createLibraryActions(
+        data: List<LibraryData>,
+        creationOptions: CreateLibraryActionsOptions
+    ): Triple<List<Action>, Int?, Int> {
+        var writeCount = 0
+        var allActions = mutableListOf<Action>()
+
+        for (libraryData in data) {
+            val libraryId = libraryData.identifier
+
+            when (creationOptions) {
+                CreateLibraryActionsOptions.forceDownloads ->
+                    createDownloadActions(libraryId, versions = libraryData.versions).forEach {
+                        allActions.add(it)
+                    }
+
+                CreateLibraryActionsOptions.onlyWrites, CreateLibraryActionsOptions.automatic -> {
+                    if (!libraryData.updates.isEmpty() || (!libraryData.deletions.isEmpty()) || libraryData.hasUpload) {
+                        when (libraryData.identifier) {
+                            is LibraryIdentifier.group -> {
+                                // We need to check permissions for group
+                                if (libraryData.canEditMetadata) {
+                                    val actions = this.createUpdateActions(
+                                        updates = libraryData.updates,
+                                        deletions = libraryData.deletions,
+                                        libraryId = libraryId
+                                    )
+                                    writeCount += actions.count() - 1
+                                    actions.forEach {
+                                        allActions.add(it)
+
+                                    }
+                                } else {
+                                    allActions.add(
+                                        Action.resolveGroupMetadataWritePermission(
+                                            libraryData.identifier.groupId,
+                                            libraryData.name
+                                        )
+                                    )
+                                }
+                            }
+                            is LibraryIdentifier.custom -> {
+                                val actions = createUpdateActions(
+                                    updates = libraryData.updates,
+                                    deletions = libraryData.deletions,
+                                    libraryId = libraryId
+                                )
+                                writeCount += actions.count() - 1
+                                // We can always write to custom libraries
+                                actions.forEach {
+                                    allActions.add(it)
+
+                                }
+
+                            }
+
+                        }
+                    } else if (creationOptions == CreateLibraryActionsOptions.automatic) {
+                        createDownloadActions(libraryId, versions = libraryData.versions).forEach {
+                            allActions.add(it)
+                        }
+                    }
+
+                    if (libraryData.hasWebDavDeletions) {
+                        allActions.add(Action.performWebDavDeletions(libraryId))
+                    }
+                }
+            }
+        }
+
+        // Forced downloads or writes are pushed to the beginning of the queue, because only currently running action
+        // can force downloads or writes
+        val index: Int? = if (creationOptions == CreateLibraryActionsOptions.automatic) null else 0
+        return Triple(allActions, index, writeCount)
+    }
+
+    private fun createDownloadActions(
+        libraryId: LibraryIdentifier,
+        versions: Versions
+    ): List<Action> {
+        when (this.type) {
+            SyncType.collectionsOnly ->
+                return listOf(
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        objectS = SyncObject.collection,
+                        version = versions.collections, checkRemote = true
+                    )
+                )
+
+            SyncType.full ->
+                return listOf(
+                    Action.syncSettings(libraryId, versions.settings),
+                    Action.syncDeletions(libraryId, versions.deletions),
+                    Action.storeDeletionVersion(
+                        libraryId = libraryId,
+                        version = versions.deletions
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.collection,
+                        version = versions.collections, checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.search,
+                        version = versions.searches, checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.item,
+                        version = versions.items,
+                        checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        objectS = SyncObject.trash,
+                        version = versions.trash,
+                        checkRemote = true
+                    )
+                )
+
+            SyncType.ignoreIndividualDelays, SyncType.normal ->
+                return listOf(
+                    Action.syncSettings(libraryId, versions.settings),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.collection,
+                        version = versions.collections, checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.search,
+                        version = versions.searches, checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        SyncObject.item,
+                        version = versions.items,
+                        checkRemote = true
+                    ),
+                    Action.syncVersions(
+                        libraryId = libraryId,
+                        objectS = SyncObject.trash,
+                        version = versions.trash,
+                        checkRemote = true
+                    ),
+                    Action.syncDeletions(libraryId, versions.deletions),
+                    Action.storeDeletionVersion(libraryId = libraryId, version = versions.deletions)
+                )
+        }
+    }
+
+    private fun createUpdateActions(
+        updates: List<WriteBatch>,
+        deletions: List<DeleteBatch>,
+        libraryId: LibraryIdentifier
+    ): List<Action> {
+        var actions = mutableListOf<Action>()
+        if (!updates.isEmpty()) {
+            updates.forEach {
+                actions.add(Action.submitWriteBatch(it))
+            }
+        }
+        if (!deletions.isEmpty()) {
+            deletions.forEach {
+                actions.add(Action.submitDeleteBatch(it))
+            }
+        }
+        actions.add(
+            Action.createUploadActions(
+                libraryId = libraryId,
+                hadOtherWriteActions = (!updates.isEmpty() || !deletions.isEmpty())
+            )
+        )
+        return actions
+    }
+
+
+    private fun syncError(
+        error: Throwable? = null,
+        networkError: NetworkResultWrapper.NetworkError? = null,
+        data: SyncError.ErrorData
+    ): SyncError {
+        val fatalError = error as? SyncError.Fatal
+        if (fatalError != null) {
+            return SyncError.fatal2(error)
+        }
+
+        val nonFatalError = error as? SyncError.NonFatal
+        if (nonFatalError != null) {
+            return SyncError.nonFatal2(error)
+        }
+
+        val syncActionError = error as? SyncActionError
+
+        if (syncActionError != null) {
+            when (syncActionError) {
+                is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
+                    return SyncError.nonFatal2(
+                        SyncError.NonFatal.unknown(
+                            syncActionError.localizedMessage ?: ""
+                        )
+                    )
+                is SyncActionError.attachmentMissing ->
+                    return SyncError.nonFatal2(
+                        SyncError.NonFatal.attachmentMissing(
+                            key = syncActionError.key,
+                            libraryId = syncActionError.libraryId,
+                            title = syncActionError.title
+                        )
+                    )
+                is SyncActionError.annotationNeededSplitting ->
+                    return SyncError.nonFatal2(
+                        SyncError.NonFatal.annotationDidSplit(
+                            messageS = syncActionError.messageS,
+                            libraryId = syncActionError.libraryId
+                        )
+                    )
+                is SyncActionError.submitUpdateFailures ->
+                    return SyncError.nonFatal2(SyncError.NonFatal.unknown(syncActionError.messages))
+            }
+        }
+
+        // TODO handle web dav errors
+
+        //TODO handle reportMissing
+        if (networkError?.error?.isUnchanged() == true) {
+            return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
+        }
+
+
+        if (networkError != null) {
+            return networkErrorRequiresAbort(
+                networkError,
+                response = networkError.error.msg,
+                data = data
+            )
+        }
+
+        // Check realm errors, every "core" error is bad. Can't create new Realm instance, can't continue with sync
+        if (error is RealmError) {
+            Timber.e("received realm error - $error")
+            return SyncError.fatal2(SyncError.Fatal.dbError)
+        }
+        val schemaError = error as? SchemaError
+        if (schemaError != null) {
+            return SyncError.nonFatal2(SyncError.NonFatal.schema(error))
+        }
+        val parsingError = error as? Parsing.Error
+        if (parsingError != null) {
+            return SyncError.nonFatal2(SyncError.NonFatal.parsing(error))
+        }
+        Timber.e("received unknown error - $error")
+        return SyncError.nonFatal2(SyncError.NonFatal.unknown(error?.localizedMessage ?: ""))
+    }
+
+    private fun networkErrorRequiresAbort(
+        error: NetworkResultWrapper.NetworkError,
+        response: String,
+        data: SyncError.ErrorData
+    ): SyncError {
+        val responseMessage: () -> String = {
+            if (response == "No Response") {
+                error.error.msg
+            } else {
+                response
+            }
+        }
+
+        val code = error.error.code
+        when (code) {
+            304 ->
+                return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
+            413 ->
+                return SyncError.nonFatal2(SyncError.NonFatal.quotaLimit(data.libraryId))
+            507 ->
+                return SyncError.nonFatal2(SyncError.NonFatal.insufficientSpace)
+            503 ->
+                return SyncError.fatal2(SyncError.Fatal.serviceUnavailable)
+            else -> {
+                if (code >= 400 && code <= 499 && code != 403) {
+                    return SyncError.fatal2(
+                        SyncError.Fatal.apiError(
+                            response = responseMessage(),
+                            data = data
+                        )
+                    )
+                } else {
+                    return SyncError.nonFatal2(
+                        SyncError.NonFatal.apiError(
+                            response = responseMessage(),
+                            data = data
+                        )
+                    )
+                }
             }
         }
     }

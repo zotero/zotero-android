@@ -12,13 +12,47 @@ sealed class Action {
 
     data class syncGroupToDb(val a: Int) : Action()
 
-    val libraryId: LibraryIdentifier?
+    data class resolveGroupMetadataWritePermission(val groupId: Int, val libraryDataName: String): Action()
+
+    data class performWebDavDeletions(override val libraryId: LibraryIdentifier): Action()
+
+    data class submitDeleteBatch(val deleteBatch: DeleteBatch): Action()
+
+    data class createUploadActions(override val libraryId: LibraryIdentifier, val hadOtherWriteActions: Boolean): Action()
+
+    data class syncVersions(
+        override val libraryId: LibraryIdentifier,
+        val objectS: SyncObject,
+        val version: Int,
+        val checkRemote: Boolean
+    ): Action()
+
+    data class submitWriteBatch(val writeBatch: WriteBatch): Action()
+
+    data class syncDeletions(override val libraryId: LibraryIdentifier, val int: Int): Action()
+
+    data class storeDeletionVersion(override val libraryId: LibraryIdentifier, val version: Int): Action()
+
+    data class syncSettings(override val libraryId: LibraryIdentifier, val int: Int): Action()
+
+        open val libraryId: LibraryIdentifier?
         get() {
-            when (this) {
+            //TODO redo this all!
+            val q = this
+            return when (q) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return null
-                is resolveDeletedGroup -> return LibraryIdentifier.group(this.a)
-                is syncGroupToDb -> return LibraryIdentifier.group(this.a)
+                is resolveDeletedGroup -> return LibraryIdentifier.group(q.a)
+                is syncGroupToDb -> return LibraryIdentifier.group(q.a)
+                is createUploadActions -> q.libraryId
+                is performWebDavDeletions -> q.libraryId
+                is resolveGroupMetadataWritePermission -> return LibraryIdentifier.group(q.groupId)
+                is storeDeletionVersion -> q.libraryId
+                is submitDeleteBatch -> q.libraryId
+                is submitWriteBatch -> q.libraryId
+                is syncDeletions -> q.libraryId
+                is syncSettings -> q.libraryId
+                is syncVersions -> q.libraryId
             }
         }
 
@@ -29,6 +63,15 @@ sealed class Action {
                     return false
                 is resolveDeletedGroup -> true
                 is syncGroupToDb -> false
+                is createUploadActions -> false
+                is performWebDavDeletions -> false
+                is resolveGroupMetadataWritePermission -> true
+                    is storeDeletionVersion -> false
+                    is submitDeleteBatch -> false
+                is submitWriteBatch -> false
+                is syncDeletions -> true
+                is syncSettings -> false
+                is syncVersions -> false
             }
         }
 

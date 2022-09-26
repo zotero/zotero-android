@@ -14,6 +14,7 @@ import org.zotero.android.architecture.database.requests.name
 import org.zotero.android.formatter.ItemTitleFormatter
 import org.zotero.android.formatter.iso8601DateFormat
 import org.zotero.android.ktx.rounded
+import org.zotero.android.sync.LinkMode
 import java.util.Date
 
 enum class RItemChanges {
@@ -306,8 +307,56 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         get() = TODO("Not yet implemented")
 
     override fun markAsChanged(database: Realm) {
-        TODO("Not yet implemented")
+        this.changedFields = this.currentChanges
+        this.changeType = UpdatableChangeType.user.name
+                this.deleted = false
+        this.version = 0
+
+        for (field in this.fields) {
+            if (field.value.isEmpty()) {
+                continue
+            }
+            field.changed = true
+        }
+
+        if (this.rawType == ItemTypes.attachment && this.fields.filter(.key(FieldKeys.Item.Attachment.linkMode)).first?.value == LinkMode.importedFile.rawValue {
+            this.attachmentNeedsSync = true
+        }
+
+        this.children.forEach { child ->
+                child.markAsChanged(database)
+        }
     }
+
+    private val currentChanges: List<RItemChanges> get(){
+        var changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
+        if (!this.creators.isEmpty()) {
+            changes.add(RItemChanges.creators)
+        }
+        if (this.collections.isEmpty()) {
+            changes.add(RItemChanges.collections)
+        }
+        if (this.parent != null) {
+            changes.add(RItemChanges.parent)
+        }
+        if (!this.tags.isEmpty()) {
+            changes.add(RItemChanges.tags)
+        }
+        if (this.trash) {
+            changes.add(RItemChanges.trash)
+        }
+        if (!this.relations.isEmpty()) {
+            changes.add(RItemChanges.relations)
+        }
+        if (!this.rects.isEmpty()) {
+            changes.add(RItemChanges.rects)
+        }
+        if (!this.paths.isEmpty()) {
+            changes.add(RItemChanges.paths)
+        }
+        return changes
+    }
+
 
     override fun willRemove(database: Realm) {
         if (this.children.isValid) {

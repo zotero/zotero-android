@@ -12,4 +12,8 @@ class CustomNetworkError(
     @SerializedName("code")
     @Expose
     val code: Int
-)
+) {
+    fun isUnchanged(): Boolean {
+        return code == 304
+    }
+}
