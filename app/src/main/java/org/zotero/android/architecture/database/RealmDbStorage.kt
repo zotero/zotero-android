@@ -105,10 +105,10 @@ class RealmDbCoordinator {
         return this
     }
 
-    suspend fun perform(request: DbRequest) = withContext(Dispatchers.IO) {
+    fun perform(request: DbRequest) {
         if (!request.needsWrite) {
             request.process(realm)
-            return@withContext
+            return
         }
 
 
@@ -117,7 +117,7 @@ class RealmDbCoordinator {
         }
     }
 
-    suspend inline fun <reified T: Any> perform(request: DbResponseRequest<T, T>): T {
+    inline fun <reified T: Any> perform(request: DbResponseRequest<T, T>): T {
         if (!request.needsWrite) {
             return request.process(realm, T::class)
         }

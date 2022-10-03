@@ -1,9 +1,9 @@
 package org.zotero.android.api.repositories
 
 import org.zotero.android.api.AccountApi
-import org.zotero.android.api.network.NetworkResultWrapper
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.api.pojo.LoginRequest
+import org.zotero.android.api.pojo.login.LoginRequest
 import org.zotero.android.architecture.SdkPrefs
 import javax.inject.Inject
 
@@ -15,7 +15,7 @@ class AccountRepository @Inject constructor(
     suspend fun login(
         username: String,
         password: String,
-    ): NetworkResultWrapper<Unit> {
+    ): CustomResult<Unit> {
 
         val networkResult = safeApiCall {
             val params = LoginRequest(
@@ -25,13 +25,13 @@ class AccountRepository @Inject constructor(
             accountApi.loginUser(params)
         }
 
-        if (networkResult !is NetworkResultWrapper.Success) {
-            return networkResult as NetworkResultWrapper.NetworkError
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            return networkResult as CustomResult.GeneralError
         }
         sdkPrefs.setUserId(networkResult.value.userId)
         sdkPrefs.setDisplayName(networkResult.value.displayName)
         sdkPrefs.setName(networkResult.value.name)
         sdkPrefs.setApiToken(networkResult.value.key)
-        return NetworkResultWrapper.Success(Unit)
+        return CustomResult.GeneralSuccess(Unit)
     }
 }

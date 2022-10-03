@@ -3,7 +3,7 @@ package org.zotero.android.login
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
-import org.zotero.android.api.network.NetworkResultWrapper
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -57,26 +57,28 @@ internal class LoginViewModel @Inject constructor(
             copy(isLoading = false)
         }
 
-        if (networkResult !is NetworkResultWrapper.Success) {
-            val error = networkResult as NetworkResultWrapper.NetworkError
-            if (error.error.code == -1) {
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            val error = networkResult as CustomResult.GeneralError.NetworkError
+            if (error.httpCode == 403) {
                 showErrorRes(Strings.login_invalid_credentials)
             } else {
-                showError(error.error.msg)
+                showError(error.stringResponse)
             }
         } else {
             triggerEffect(NavigateToDashboard)
         }
     }
 
-    private fun showError(errorText: String) {
-        updateState {
-            copy(
-                snackbarMessage = SnackbarMessage.ErrorMessageString(
-                    message = errorText,
-                    onDismiss = ::dismissSnackbar
+    private fun showError(errorText: String?) {
+        if (errorText != null) {
+            updateState {
+                copy(
+                    snackbarMessage = SnackbarMessage.ErrorMessageString(
+                        message = errorText,
+                        onDismiss = ::dismissSnackbar
+                    )
                 )
-            )
+            }
         }
     }
 

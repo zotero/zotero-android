@@ -2,14 +2,21 @@ package org.zotero.android.sync
 
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import org.zotero.android.api.network.NetworkResultWrapper
+import kotlinx.coroutines.launch
+import org.zotero.android.api.SyncApi
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.data.AccessPermissions
+import org.zotero.android.data.mappers.ItemResponseMapper
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import timber.log.Timber
+import java.lang.Integer.min
 import javax.inject.Inject
 
 
@@ -22,8 +29,13 @@ class SyncUseCase @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
     private val syncRepository: SyncRepository,
     private val sdkPrefs: SdkPrefs,
-    private val dbWrapper: DbWrapper
+    private val dbWrapper: DbWrapper,
+    private val syncApi: SyncApi,
+    private val fileStore: FileStore,
+    private val itemResponseMapper: ItemResponseMapper
 ) {
+
+    private var coroutineScope = CoroutineScope(dispatcher)
 
     private var libraryType: LibrarySyncType = LibrarySyncType.all
     private var type: SyncType = SyncType.normal
@@ -39,10 +51,16 @@ class SyncUseCase @Inject constructor(
     private var enqueuedUploads: Int = 0
     private var uploadsFailedBeforeReachingZoteroBackend: Int = 0
 
+    private var syncDelayIntervals: List<Double> = DelayIntervals.sync
+
+    private var nonFatalErrors: MutableList<SyncError.NonFatal> = mutableListOf()
+
     private val isSyncing: Boolean
         get() {
             return processingAction != null || queue.isNotEmpty()
         }
+
+    private var batchProcessor: SyncBatchProcessor? = null
 
     suspend fun start(type: SyncType, libraries: LibrarySyncType) {
         if (isSyncing) {
@@ -78,13 +96,13 @@ class SyncUseCase @Inject constructor(
         when (action) {
             is Action.loadKeyPermissions -> {
                 val result = syncRepository.processKeyCheckAction()
-                if (result is NetworkResultWrapper.Success) {
+                if (result is CustomResult.GeneralSuccess) {
                     accessPermissions = result.value
                     processNextAction()
                 } else {
-                    val networkError = result as NetworkResultWrapper.NetworkError
+                    val customResultError = result as CustomResult.GeneralError
                     val er = syncError(
-                        networkError = networkError, data = SyncError.ErrorData.from(
+                        customResultError = customResultError, data = SyncError.ErrorData.from(
                             libraryId = LibraryIdentifier.custom(
                                 RCustomLibraryType.myLibrary
                             )
@@ -103,9 +121,153 @@ class SyncUseCase @Inject constructor(
             is Action.syncGroupVersions -> {
                 processSyncGroupVersions()
             }
+            is Action.syncVersions -> {
+                processSyncVersions(
+                    libraryId = action.libraryId,
+                    objectS = action.objectS,
+                    version = action.version,
+                    checkRemote = action.checkRemote
+                )
+            }
+            //TODO implement other actions
+
+            is Action.syncBatchesToDb -> {
+                processBatchesSync(action.batches)
+            }
+            else -> {
+                processNextAction()
+            }
         }
 
+    }
 
+    private suspend fun processBatchesSync(batches: List<DownloadBatch>) {
+        val batch = batches.firstOrNull()
+        if (batch == null) {
+            processNextAction()
+            return
+        }
+
+        val libraryId = batch.libraryId
+        val objectS = batch.objectS
+
+        this.batchProcessor =
+            SyncBatchProcessor(batches = batches, userId = sdkPrefs.getUserId(), syncApi = syncApi,
+                dbWrapper = this.dbWrapper, fileStore = this.fileStore,
+                itemResponseMapper = itemResponseMapper,
+                completion = { result ->
+                    this.batchProcessor = null
+                    finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
+                })
+        this.batchProcessor?.start()
+    }
+
+    private fun finishBatchesSyncAction(
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        result: CustomResult<SyncBatchResponse>
+    ) {
+        when (result) {
+            is CustomResult.GeneralSuccess -> {
+                //TODO handle non fatal errors
+                val (failedKeys, parseErrors) = result.value
+
+                if (failedKeys.isEmpty()) {
+                    coroutineScope.launch {
+                        processNextAction()
+                    }
+                } else {
+                    //TODO mark for resync
+                }
+            }
+            is CustomResult.GeneralError -> {
+                val syncError = this.syncError(
+                    customResultError = result,
+                    data = SyncError.ErrorData.from(libraryId = libraryId)
+                )
+                when (syncError) {
+                    is SyncError.fatal2 ->
+                        abort(error = syncError.error)
+                    is SyncError.nonFatal2 ->
+                        handleNonFatal(error = syncError.error, libraryId = libraryId, version = null)
+                }
+            }
+        }
+    }
+
+    private suspend fun processSyncVersions(
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        version: Int,
+        checkRemote: Boolean
+    ) {
+        val lastVersion = this.lastReturnedVersion
+
+        try {
+            val (newVersion, toUpdate) = SyncVersionsSyncAction(
+                objectS = objectS,
+                sinceVersion = version,
+                currentVersion = lastVersion,
+                syncType = this.type,
+                libraryId = libraryId,
+                userId = sdkPrefs.getUserId(),
+                syncDelayIntervals = this.syncDelayIntervals,
+                checkRemote = checkRemote,
+                syncApi = this.syncApi,
+                dbWrapper = this.dbWrapper
+            ).result()
+
+            val versionDidChange = version != lastVersion
+            val actions = createBatchedObjectActions(
+                libraryId = libraryId,
+                objectS = objectS,
+                keys = toUpdate,
+                version = newVersion,
+                shouldStoreVersion = versionDidChange,
+                syncType = this.type
+            )
+            finishSyncVersions(
+                actions = actions,
+                updateCount = toUpdate.size,
+                objectS = objectS,
+                libraryId = libraryId
+            )
+        } catch (e: Exception) {
+            finishFailedSyncVersions(
+                libraryId = libraryId,
+                objectS = objectS,
+                customResultError = CustomResult.GeneralError.CodeError(e),
+                version = version
+            )
+        }
+    }
+
+    private suspend fun finishSyncVersions(
+        actions: List<Action>,
+        updateCount: Int,
+        objectS: SyncObject,
+        libraryId: LibraryIdentifier
+    ) {
+        //TODO update progress
+        enqueue(actions = actions, index = 0)
+    }
+
+    private fun finishFailedSyncVersions(
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        customResultError: CustomResult.GeneralError,
+        version: Int
+    ) {
+        val syncError =
+            syncError(customResultError = customResultError, data = SyncError.ErrorData.Companion.from(libraryId))
+        when (syncError) {
+            is SyncError.fatal2 -> {
+                abort(error = syncError.error)
+            }
+            is SyncError.nonFatal2 -> {
+                handleNonFatal(error = syncError.error, libraryId = libraryId, version = version)
+            }
+        }
     }
 
     private suspend fun processCreateLibraryActions(
@@ -135,7 +297,8 @@ class SyncUseCase @Inject constructor(
 
         if (exception != null) {
             val er = syncError(
-                error = exception, data = SyncError.ErrorData.from(
+                customResultError = CustomResult.GeneralError.CodeError(exception),
+                data = SyncError.ErrorData.from(
                     libraryId = LibraryIdentifier.custom(
                         RCustomLibraryType.myLibrary
                     )
@@ -172,10 +335,9 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun processSyncGroupVersions() {
         val result = syncRepository.processSyncGroupVersions()
-        if (result !is NetworkResultWrapper.Success) {
-            Timber.e((result as NetworkResultWrapper.NetworkError).error.msg)
+        if (result !is CustomResult.GeneralSuccess) {
             val er = syncError(
-                networkError = result, data = SyncError.ErrorData.from(
+                customResultError = result as CustomResult.GeneralError, data = SyncError.ErrorData.from(
                     libraryId = LibraryIdentifier.custom(
                         RCustomLibraryType.myLibrary
                     )
@@ -253,6 +415,70 @@ class SyncUseCase @Inject constructor(
         return actions
     }
 
+    private fun createBatchedObjectActions(
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        keys: List<String>,
+        version: Int,
+        shouldStoreVersion: Boolean,
+        syncType: SyncType
+    ): List<Action> {
+        val batches = createBatchObjects(
+            keys = keys,
+            libraryId = libraryId,
+            objectS = objectS,
+            version = version
+        )
+
+        if (batches.isEmpty()) {
+            if (shouldStoreVersion) {
+                return listOf(Action.storeVersion(version, libraryId, objectS))
+            } else {
+                return listOf()
+            }
+        }
+
+
+        var actions: MutableList<Action> = mutableListOf(Action.syncBatchesToDb(batches))
+        if (shouldStoreVersion) {
+            actions.add(Action.storeVersion(version, libraryId, objectS))
+        }
+        return actions
+    }
+
+    private fun createBatchObjects(
+        keys: List<String>,
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        version: Int
+    ): List<DownloadBatch> {
+        val maxBatchSize = DownloadBatch.maxCount
+        var batchSize = 10
+        var lowerBound = 0
+        var batches: MutableList<DownloadBatch> = mutableListOf()
+
+        while (lowerBound < keys.size) {
+            val upperBound = min((keys.size - lowerBound), batchSize) + lowerBound
+            val batchKeys = keys.subList(lowerBound, upperBound)
+
+            batches.add(
+                DownloadBatch(
+                    libraryId = libraryId,
+                    objectS = objectS,
+                    keys = batchKeys,
+                    version = version
+                )
+            )
+
+            lowerBound += batchSize
+            if (batchSize < maxBatchSize) {
+                batchSize = min(batchSize * 2, maxBatchSize)
+            }
+        }
+
+        return batches
+    }
+
 
     private fun finish() {
         //TODO handle reportFinish - handle errors
@@ -266,6 +492,62 @@ class SyncUseCase @Inject constructor(
         //TODO display error
         cleanup()
     }
+
+    private fun handleNonFatal(
+        error: SyncError.NonFatal,
+        libraryId: LibraryIdentifier,
+        version: Int?,
+        additionalAction: (() -> Void)? = null
+    ) {
+        val appendAndContinue: () -> Unit = {
+            this.nonFatalErrors.add(error)
+            if (additionalAction != null) {
+                additionalAction()
+            }
+            coroutineScope.launch {
+                processNextAction()
+            }
+        }
+
+        when (error) {
+            is SyncError.NonFatal.versionMismatch -> {
+                removeAllActions(libraryId = libraryId)
+                appendAndContinue()
+            }
+
+
+            is SyncError.NonFatal.unchanged -> {
+                if (version != null) {
+                    //TODO handleUnchangedFailure
+                } else {
+                    if (additionalAction != null) {
+                        additionalAction()
+                    }
+                    coroutineScope.launch {
+                        processNextAction()
+                    }
+                }
+            }
+            is SyncError.NonFatal.quotaLimit -> {
+                //TODO handleQuotaLimitFailure
+            }
+
+            else -> {
+                appendAndContinue()
+            }
+        }
+    }
+
+    private fun removeAllActions(libraryId: LibraryIdentifier) {
+        while (!this.queue.isEmpty()) {
+            if (this.queue.firstOrNull()?.libraryId != libraryId) {
+                break
+            }
+            this.queue.removeFirst()
+
+        }
+    }
+
 
     private fun cleanup() {
         processingAction = null
@@ -485,97 +767,106 @@ class SyncUseCase @Inject constructor(
 
 
     private fun syncError(
-        error: Throwable? = null,
-        networkError: NetworkResultWrapper.NetworkError? = null,
+        customResultError: CustomResult.GeneralError,
         data: SyncError.ErrorData
     ): SyncError {
-        val fatalError = error as? SyncError.Fatal
-        if (fatalError != null) {
-            return SyncError.fatal2(error)
-        }
+        return when (customResultError) {
+            is CustomResult.GeneralError.CodeError -> {
+                val error = customResultError.throwable
+                Timber.e(error)
+                val fatalError = error as? SyncError.Fatal
+                if (fatalError != null) {
+                    return SyncError.fatal2(error)
+                }
 
-        val nonFatalError = error as? SyncError.NonFatal
-        if (nonFatalError != null) {
-            return SyncError.nonFatal2(error)
-        }
+                val nonFatalError = error as? SyncError.NonFatal
+                if (nonFatalError != null) {
+                    return SyncError.nonFatal2(error)
+                }
 
-        val syncActionError = error as? SyncActionError
+                val syncActionError = error as? SyncActionError
 
-        if (syncActionError != null) {
-            when (syncActionError) {
-                is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
-                    return SyncError.nonFatal2(
-                        SyncError.NonFatal.unknown(
-                            syncActionError.localizedMessage ?: ""
-                        )
+                if (syncActionError != null) {
+                    when (syncActionError) {
+                        is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
+                            return SyncError.nonFatal2(
+                                SyncError.NonFatal.unknown(
+                                    syncActionError.localizedMessage ?: ""
+                                )
+                            )
+                        is SyncActionError.attachmentMissing ->
+                            return SyncError.nonFatal2(
+                                SyncError.NonFatal.attachmentMissing(
+                                    key = syncActionError.key,
+                                    libraryId = syncActionError.libraryId,
+                                    title = syncActionError.title
+                                )
+                            )
+                        is SyncActionError.annotationNeededSplitting ->
+                            return SyncError.nonFatal2(
+                                SyncError.NonFatal.annotationDidSplit(
+                                    messageS = syncActionError.messageS,
+                                    libraryId = syncActionError.libraryId
+                                )
+                            )
+                        is SyncActionError.submitUpdateFailures ->
+                            return SyncError.nonFatal2(SyncError.NonFatal.unknown(syncActionError.messages))
+                    }
+                }
+
+                // Check realm errors, every "core" error is bad. Can't create new Realm instance, can't continue with sync
+                if (error is RealmError) {
+                    Timber.e("received realm error - $error")
+                    return SyncError.fatal2(SyncError.Fatal.dbError)
+                }
+                val schemaError = error as? SchemaError
+                if (schemaError != null) {
+                    return SyncError.nonFatal2(SyncError.NonFatal.schema(error))
+                }
+                val parsingError = error as? Parsing.Error
+                if (parsingError != null) {
+                    return SyncError.nonFatal2(SyncError.NonFatal.parsing(error))
+                }
+                Timber.e("received unknown error - $error")
+                return SyncError.nonFatal2(
+                    SyncError.NonFatal.unknown(
+                        error?.localizedMessage ?: ""
                     )
-                is SyncActionError.attachmentMissing ->
-                    return SyncError.nonFatal2(
-                        SyncError.NonFatal.attachmentMissing(
-                            key = syncActionError.key,
-                            libraryId = syncActionError.libraryId,
-                            title = syncActionError.title
-                        )
-                    )
-                is SyncActionError.annotationNeededSplitting ->
-                    return SyncError.nonFatal2(
-                        SyncError.NonFatal.annotationDidSplit(
-                            messageS = syncActionError.messageS,
-                            libraryId = syncActionError.libraryId
-                        )
-                    )
-                is SyncActionError.submitUpdateFailures ->
-                    return SyncError.nonFatal2(SyncError.NonFatal.unknown(syncActionError.messages))
+                )
+
+            }
+            is CustomResult.GeneralError.NetworkError -> {
+                // TODO handle web dav errors
+
+                //TODO handle reportMissing
+                if (customResultError.isUnchanged()) {
+                    return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
+                }
+
+
+                return networkErrorRequiresAbort(
+                    customResultError,
+                    response = customResultError.stringResponse ?: "No Response",
+                    data = data
+                )
             }
         }
-
-        // TODO handle web dav errors
-
-        //TODO handle reportMissing
-        if (networkError?.error?.isUnchanged() == true) {
-            return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
-        }
-
-
-        if (networkError != null) {
-            return networkErrorRequiresAbort(
-                networkError,
-                response = networkError.error.msg,
-                data = data
-            )
-        }
-
-        // Check realm errors, every "core" error is bad. Can't create new Realm instance, can't continue with sync
-        if (error is RealmError) {
-            Timber.e("received realm error - $error")
-            return SyncError.fatal2(SyncError.Fatal.dbError)
-        }
-        val schemaError = error as? SchemaError
-        if (schemaError != null) {
-            return SyncError.nonFatal2(SyncError.NonFatal.schema(error))
-        }
-        val parsingError = error as? Parsing.Error
-        if (parsingError != null) {
-            return SyncError.nonFatal2(SyncError.NonFatal.parsing(error))
-        }
-        Timber.e("received unknown error - $error")
-        return SyncError.nonFatal2(SyncError.NonFatal.unknown(error?.localizedMessage ?: ""))
     }
 
     private fun networkErrorRequiresAbort(
-        error: NetworkResultWrapper.NetworkError,
+        error: CustomResult.GeneralError.NetworkError,
         response: String,
         data: SyncError.ErrorData
     ): SyncError {
         val responseMessage: () -> String = {
             if (response == "No Response") {
-                error.error.msg
+                error.stringResponse ?: "No error to parse"
             } else {
                 response
             }
         }
 
-        val code = error.error.code
+        val code = error.httpCode
         when (code) {
             304 ->
                 return SyncError.nonFatal2(SyncError.NonFatal.unchanged)

@@ -1,4 +1,4 @@
-package org.zotero.android.api.pojo
+package org.zotero.android.api.pojo.login
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
@@ -19,7 +19,7 @@ data class LoginRequest(
 
     @SerializedName("access")
     @Expose
-    val access:LoginRequestAccessPart = LoginRequestAccessPart()
+    val access: LoginRequestAccessPart = LoginRequestAccessPart()
 
 
 )

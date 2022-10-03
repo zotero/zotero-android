@@ -319,7 +319,9 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             field.changed = true
         }
 
-        if (this.rawType == ItemTypes.attachment && this.fields.filter(.key(FieldKeys.Item.Attachment.linkMode)).first?.value == LinkMode.importedFile.rawValue {
+        val q = this.fields.filter {it.key == FieldKeys.Item.Attachment.linkMode }.firstOrNull()?.value == LinkMode.importedFile.name
+
+        if (this.rawType == ItemTypes.attachment && q) {
             this.attachmentNeedsSync = true
         }
 

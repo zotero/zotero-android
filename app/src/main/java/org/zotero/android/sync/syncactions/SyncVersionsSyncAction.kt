@@ -1,17 +1,18 @@
 package org.zotero.android.sync.syncactions
 
-import androidx.compose.runtime.snapshots.Snapshot.Companion.observe
+import org.zotero.android.BuildConfig
+import org.zotero.android.api.SyncApi
+import org.zotero.android.api.network.CustomResult
+import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.objects.ItemTypes.Companion.case
-import org.zotero.android.architecture.database.objects.RCollection
-import org.zotero.android.architecture.database.objects.RItem
-import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.architecture.database.requests.MarkOtherObjectsAsChangedByUser
+import org.zotero.android.architecture.database.requests.SyncVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncType
+import java.io.IOException
 
 class SyncVersionsSyncAction(
     val objectS: SyncObject,
@@ -19,58 +20,119 @@ class SyncVersionsSyncAction(
     val currentVersion: Int?,
     val syncType: SyncType,
     val libraryId: LibraryIdentifier,
-    val userId: Int,
+    val userId: Long,
     val syncDelayIntervals: List<Double>,
     val checkRemote: Boolean,
-    val dbStorage: DbWrapper
+    val dbWrapper: DbWrapper,
+    val syncApi: SyncApi,
 ) : SyncAction<Pair<Int, List<String>>> {
 
     override suspend fun result(): Pair<Int, List<String>> {
-        when(this.objectS) {
+        when (this.objectS) {
             SyncObject.collection ->
-            return self.synchronizeVersions(for: RCollection.self, libraryId: self.libraryId, userId: self.userId, object: self.object, since: self.sinceVersion, current: self.currentVersion,
-            syncType: self.syncType)
-            SyncObject.item
-                :
-            return self.synchronizeVersions(for: RItem.self, libraryId: self.libraryId, userId: self.userId, object: self.object, since: self.sinceVersion, current: self.currentVersion,
-            syncType: self.syncType)
-            case .trash:
-            return self.synchronizeVersions(for: RItem.self, libraryId: self.libraryId, userId: self.userId, object: self.object, since: self.sinceVersion, current: self.currentVersion,
-            syncType: self.syncType)
-            SyncObject.search
-                :
-            return self.synchronizeVersions(for: RSearch.self, libraryId: self.libraryId, userId: self.userId, object: self.object, since: self.sinceVersion, current: self.currentVersion,
-            syncType: self.syncType)
-            SyncObject.settings
-                :
-            return Single.just((0, []))
+                return synchronizeVersions(
+                    libraryId = this.libraryId,
+                    userId = this.userId, objectS = this.objectS, sinceVersion = this.sinceVersion,
+                    currentVersion = this.currentVersion, syncType = this.syncType
+                )
+            SyncObject.item -> {
+                return synchronizeVersions(
+                    libraryId = this.libraryId,
+                    userId = this.userId,
+                    objectS = this.objectS,
+                    sinceVersion = this.sinceVersion,
+                    currentVersion = this.currentVersion,
+                    syncType = this.syncType
+                )
+            }
+
+            SyncObject.trash -> {
+                return synchronizeVersions(
+                    libraryId = this.libraryId,
+                    userId = this.userId,
+                    objectS = this.objectS,
+                    sinceVersion = this.sinceVersion,
+                    currentVersion = this.currentVersion,
+                    syncType = this.syncType
+                )
+            }
+
+            SyncObject.search -> {
+                return synchronizeVersions(
+                    libraryId = this.libraryId,
+                    userId = this.userId,
+                    objectS = this.objectS,
+                    sinceVersion = this.sinceVersion,
+                    currentVersion = this.currentVersion,
+                    syncType = this.syncType
+                )
+            }
+
+            SyncObject.settings -> {
+                return Pair(0, listOf())
+            }
         }
     }
 
-    private func synchronizeVersions<Obj: SyncableObject & Deletable & Updatable>(for type: Obj.Type, libraryId: LibraryIdentifier, userId: Int, object: SyncObject, since sinceVersion: Int?,
-                                                                                  current currentVersion: Int?, syncType: SyncController.SyncType) -> Single<(Int, [String])> {
-        if !self.checkRemote && self.syncType != .full {
-            return self.loadChangedObjects(for: object, from: [:], in: libraryId, syncType: syncType, newVersion: (currentVersion ?? 0), delayIntervals: self.syncDelayIntervals)
-                       .observe(on: self.scheduler)
+    private suspend fun synchronizeVersions(
+        libraryId: LibraryIdentifier, userId: Long,
+        objectS: SyncObject, sinceVersion: Int?,
+        currentVersion: Int?, syncType: SyncType
+    ): Pair<Int, List<String>> {
+        if (!this.checkRemote && this.syncType != SyncType.full) {
+            return loadChangedObjects(
+                objectS = objectS,
+                response = mapOf(),
+                libraryId = libraryId,
+                syncType = syncType,
+                newVersion = (currentVersion ?: 0),
+                delayIntervals = this.syncDelayIntervals
+            )
         }
 
-        return self.loadRemoteVersions(for: object, in: libraryId, userId: userId, since: sinceVersion, syncType: syncType)
-                   .observe(on: self.scheduler)
-                   .flatMap { (decoded: [String: Int], response) -> Single<(Int, [String])> in
-                       let newVersion = response.allHeaderFields.lastModifiedVersion
-
-                       if let current = currentVersion, newVersion != current {
-                           return Single.error(SyncError.NonFatal.versionMismatch(libraryId))
-                       }
-
-                       return self.loadChangedObjects(for: object, from: decoded, in: libraryId, syncType: syncType, newVersion: newVersion, delayIntervals: self.syncDelayIntervals)
-                   }
+        val networkResult = loadRemoteVersions(
+            objectS = objectS,
+            libraryId = libraryId,
+            userId = userId,
+            sinceVersion = sinceVersion,
+            syncType = syncType
+        )
+        if (networkResult is CustomResult.GeneralSuccess.NetworkSuccess) {
+            val decoded = networkResult.value
+            val newVersion = networkResult.lastModifiedVersion
+            val current = currentVersion
+            if (current != null && newVersion != current) {
+                throw SyncError.NonFatal.versionMismatch(libraryId)
+            }
+            return loadChangedObjects(
+                objectS = objectS,
+                response = decoded ?: emptyMap(),
+                libraryId = libraryId,
+                syncType = syncType,
+                newVersion = newVersion,
+                delayIntervals = this.syncDelayIntervals
+            )
+        }
+        throw IOException((networkResult as CustomResult.GeneralError.NetworkError).stringResponse)
     }
 
-    private fun loadRemoteVersions(for object: SyncObject, in libraryId: LibraryIdentifier, userId: Int, since sinceVersion: Int?, syncType: SyncController.SyncType)
-                                                                                                                                                           -> Single<([String: Int], HTTPURLResponse)> {
-        let request = VersionsRequest(libraryId: libraryId, userId: userId, objectType: object, version: sinceVersion)
-        return self.apiClient.send(request: request, queue: self.queue)
+    private suspend fun loadRemoteVersions(
+        objectS: SyncObject,
+        libraryId: LibraryIdentifier,
+        userId: Long,
+        sinceVersion: Int?,
+        syncType: SyncType
+    )
+            : CustomResult<Map<String, Int>> {
+        val url =
+            BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/" + objectS.apiPath
+
+        val networkResult = safeApiCall {
+            syncApi.versions(url, since = sinceVersion)
+        }
+
+
+        return networkResult
     }
 
     private suspend fun loadChangedObjects(
@@ -80,35 +142,36 @@ class SyncVersionsSyncAction(
         syncType: SyncType,
         newVersion: Int,
         delayIntervals: List<Double>
-    ):
-                                                                                                                                                                            Pair<Int, List<String>> {
-            do {
-                var identifiers = mutableListOf<String>()
-                dbStorage.realmDbStorage.perform(coordinatorAction = { coordinator ->
-                    when (syncType) {
-                        SyncType.full -> {
-                            coordinator.perform(request = MarkOtherObjectsAsChangedByUser(syncObject =  objectS, versions = response, libraryId = libraryId))
-                            }
+    ): Pair<Int, List<String>> {
+        var identifiers = mutableListOf<String>()
+        dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+            when (syncType) {
+                SyncType.full -> {
+                    coordinator.perform(
+                        request = MarkOtherObjectsAsChangedByUser(
+                            syncObject = objectS,
+                            versions = response,
+                            libraryId = libraryId
+                        )
+                    )
+                }
 
-                        SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal -> {}
-                    }
-
-
-                    val request = SyncVersionsDbRequest(versions = response, libraryId = libraryId, syncObject =  objectS, syncType = syncType, delayIntervals =  delayIntervals)
-                    identifiers = coordinator.perform(request: request)
-
-                        coordinator.invalidate()
-                })
-
-                try self.dbStorage.perform(on: self.queue, with: { coordinator in
-
-                })
-
-                subscriber(.success((newVersion, identifiers)))
-            } catch let error {
-                subscriber(.failure(error))
+                SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal -> {
+                }
             }
 
-            return Disposables.create()
+
+            val request = SyncVersionsDbRequest(
+                versions = response,
+                libraryId = libraryId,
+                syncObject = objectS,
+                syncType = syncType,
+                delayIntervals = delayIntervals
+            )
+            identifiers = coordinator.perform(request = request).toMutableList()
+
+            coordinator.invalidate()
+        })
+        return Pair(newVersion, identifiers)
     }
 }

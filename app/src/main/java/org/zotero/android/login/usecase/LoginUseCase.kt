@@ -2,7 +2,7 @@ package org.zotero.android.login.usecase
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import org.zotero.android.api.network.NetworkResultWrapper
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.repositories.AccountRepository
 import javax.inject.Inject
 
@@ -13,12 +13,12 @@ class LoginUseCase @Inject constructor(
     suspend fun execute(
         username: String,
         password: String,
-    ): NetworkResultWrapper<Unit> = withContext(dispatcher) {
+    ): CustomResult<Unit> = withContext(dispatcher) {
         val networkResult = accountRepository.login(username = username, password = password)
-        if (networkResult !is NetworkResultWrapper.Success) {
-            return@withContext networkResult as NetworkResultWrapper.NetworkError
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            return@withContext networkResult as CustomResult.GeneralError
         }
-        NetworkResultWrapper.Success(Unit)
+        CustomResult.GeneralSuccess(Unit)
     }
 
 }

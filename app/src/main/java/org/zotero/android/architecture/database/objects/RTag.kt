@@ -7,9 +7,15 @@ import io.realm.annotations.LinkingObjects
 import org.zotero.android.sync.LibraryIdentifier
 
 open class RTypedTag : RealmObject() {
-    enum class Kind(val q: Int) {
+    enum class Kind(val int: Int) {
         automatic(1),
-        manual(0)
+        manual(0);
+
+        companion object {
+            private val map = values().associateBy(Kind::int)
+
+            fun from(int: Int) = map[int]
+        }
     }
 
     var type = Kind.automatic.name

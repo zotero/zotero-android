@@ -1,5 +1,6 @@
 package org.zotero.android.architecture.init
 
+import InitializeCustomLibrariesDbRequest
 import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -17,6 +18,6 @@ class InitUseCase @Inject constructor(
     ) = withContext(dispatcher) {
         fileStore.init()
         dbWrapper.initDb(context)
-
+        dbWrapper.realmDbStorage.perform(InitializeCustomLibrariesDbRequest())
     }
 }

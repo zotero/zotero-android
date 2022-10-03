@@ -1,7 +1,7 @@
 package org.zotero.android.sync
 
 import org.zotero.android.api.SyncApi
-import org.zotero.android.api.network.NetworkResultWrapper
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
@@ -15,13 +15,13 @@ class SyncRepository @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val sdkPrefs: SdkPrefs
 ) {
-    suspend fun processKeyCheckAction(): NetworkResultWrapper<AccessPermissions> {
+    suspend fun processKeyCheckAction(): CustomResult<AccessPermissions> {
         val networkResult = safeApiCall {
             syncApi.getKeys()
         }
 
-        if (networkResult !is NetworkResultWrapper.Success) {
-            return networkResult as NetworkResultWrapper.NetworkError
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            return networkResult as CustomResult.GeneralError
         }
 
         val keyResponse = KeyResponse.fromJson(networkResult.value)
@@ -29,19 +29,22 @@ class SyncRepository @Inject constructor(
         sdkPrefs.setUsername( keyResponse.username)
         sdkPrefs.setDisplayName( keyResponse.displayName)
 
-        return NetworkResultWrapper.Success(
-            AccessPermissions(user  = keyResponse.user,
-            groupDefault =  keyResponse.defaultGroup,
-        groups =  keyResponse.groups))
+        return CustomResult.GeneralSuccess(
+            AccessPermissions(
+                user = keyResponse.user,
+                groupDefault = keyResponse.defaultGroup,
+                groups = keyResponse.groups
+            )
+        )
     }
 
-    suspend fun processSyncGroupVersions(): NetworkResultWrapper<Pair<List<Int>, List<Pair<Int, String>>>> {
+    suspend fun processSyncGroupVersions(): CustomResult<Pair<List<Int>, List<Pair<Int, String>>>> {
         val networkResult = safeApiCall {
             syncApi.groupVersionsRequest(userId = sdkPrefs.getUserId())
         }
 
-        if (networkResult !is NetworkResultWrapper.Success) {
-            return networkResult as NetworkResultWrapper.NetworkError
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            return networkResult as CustomResult.GeneralError
         }
 
         val dbRes: Pair<List<Int>, List<Pair<Int, String>>> = dbWrapper.realmDbStorage.perform(
@@ -51,7 +54,7 @@ class SyncRepository @Inject constructor(
 
 
 
-        return NetworkResultWrapper.Success(dbRes)
+        return CustomResult.GeneralSuccess(dbRes)
     }
 
 

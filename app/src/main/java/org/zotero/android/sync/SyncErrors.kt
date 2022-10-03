@@ -1,7 +1,5 @@
 package org.zotero.android.sync
 
-import org.zotero.android.api.network.NetworkHelper
-
 sealed class SyncError {
     class ErrorData(
         val itemKeys: List<String>?,
@@ -147,19 +145,5 @@ sealed class SyncActionError : Exception() {
 sealed class PreconditionErrorType : Exception() {
     object objectConflict : PreconditionErrorType()
     object libraryConflict : PreconditionErrorType()
-}
-
-fun Exception.preconditionError(): PreconditionErrorType? {
-    val e = this as? PreconditionErrorType
-    if (e != null) {
-        return e
-    }
-    val networkError = NetworkHelper.convertToCustomNetworkError(this)
-
-    if (networkError.error.code == 412) {
-        return PreconditionErrorType.libraryConflict
-    }
-
-    return null
 }
 

@@ -23,7 +23,7 @@ internal class DashboardViewModel @Inject constructor(
     fun init(context: Context) = initOnce {
         viewModelScope.launch {
             initUseCase.execute(context)
-            syncUseCase.start(type = SyncType.collectionsOnly, libraries = LibrarySyncType.all)
+            syncUseCase.start(type = SyncType.full, libraries = LibrarySyncType.all)
         }
     }
 

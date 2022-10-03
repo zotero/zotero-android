@@ -33,11 +33,14 @@ sealed class Action {
 
     data class storeDeletionVersion(override val libraryId: LibraryIdentifier, val version: Int): Action()
 
+    data class syncBatchesToDb(val batches: List<DownloadBatch>) : Action()
+
     data class syncSettings(override val libraryId: LibraryIdentifier, val int: Int): Action()
+
+    data class storeVersion(val int: Int, override val libraryId: LibraryIdentifier, val syncObject: SyncObject): Action()
 
         open val libraryId: LibraryIdentifier?
         get() {
-            //TODO redo this all!
             val q = this
             return when (q) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
@@ -53,6 +56,8 @@ sealed class Action {
                 is syncDeletions -> q.libraryId
                 is syncSettings -> q.libraryId
                 is syncVersions -> q.libraryId
+                is storeVersion -> q.libraryId
+                is syncBatchesToDb -> q.batches.firstOrNull()?.libraryId
             }
         }
 
@@ -72,6 +77,8 @@ sealed class Action {
                 is syncDeletions -> true
                 is syncSettings -> false
                 is syncVersions -> false
+                is storeVersion -> false
+                is syncBatchesToDb -> false
             }
         }
 
