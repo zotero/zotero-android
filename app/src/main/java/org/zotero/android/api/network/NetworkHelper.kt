@@ -46,8 +46,13 @@ object NetworkHelper {
 
 suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): CustomResult<T> =
     withContext(Dispatchers.IO) {
-        val networkResponse = apiCall.invoke()
-        val parseNetworkResponse = NetworkHelper.parseNetworkResponse(networkResponse)
-        parseNetworkResponse
+        try {
+            val networkResponse = apiCall.invoke()
+            val parseNetworkResponse = NetworkHelper.parseNetworkResponse(networkResponse)
+            parseNetworkResponse
+        }catch (e: Exception) {
+            CustomResult.GeneralError.CodeError(e)
+        }
+
     }
 

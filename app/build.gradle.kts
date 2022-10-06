@@ -173,6 +173,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-placeholder:0.23.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.23.1")
     implementation("com.google.accompanist:accompanist-pager:0.23.1")
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.23.1")
 
 
     //Glide

@@ -19,6 +19,13 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateTitleTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 26.sp
+                small -> 20.sp
+            }
+        }
+
         fun calculatePadding(): Dp {
             return when (this) {
                 big, medium -> 50.dp

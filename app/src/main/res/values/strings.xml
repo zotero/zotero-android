@@ -18,4 +18,21 @@
     <string name="login_invalid_username">Invalid username</string>
     <string name="login_invalid_password">Invalid password</string>
     <string name="dashboard_temp_string">Sync Happens in background</string>
+
+    <string name="error_load_body">Refresh the app and try again</string>
+    <string name="error_content_description">Error</string>
+    <string name="error_refresh">Refresh</string>
+    <string name="offline_error_text">You\'re offline. Check your connection and try again.</string>
+    <string name="failed_to_load_content">Failed to load content</string>
+    <string name="click_to_load_more">Load more…</string>
+
+    <string name="all_items_load_error">Something went wrong, check the crash logs</string>
+    <string name="all_items">All Items</string>
+    <string name="item_details">Item Details</string>
+    <string name="item_type">Item Type</string>
+    <string name="date_added">Date Added</string>
+    <string name="date_modified">Date Modified</string>
+    <string name="notes">Notes</string>
+    <string name="tags">Tags</string>
+    <string name="attachments">Attachments</string>
 </resources>

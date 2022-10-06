@@ -32,7 +32,8 @@ class SyncUseCase @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val syncApi: SyncApi,
     private val fileStore: FileStore,
-    private val itemResponseMapper: ItemResponseMapper
+    private val itemResponseMapper: ItemResponseMapper,
+    private val itemResultsUseCase: ItemResultsUseCase
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -158,7 +159,8 @@ class SyncUseCase @Inject constructor(
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
-                })
+                }, itemResultsUseCase = itemResultsUseCase
+            )
         this.batchProcessor?.start()
     }
 
@@ -488,6 +490,7 @@ class SyncUseCase @Inject constructor(
     private fun abort(error: SyncError.Fatal) {
         Timber.i("Sync: aborted")
         Timber.i("Error: $error")
+        itemResultsUseCase.postError(error)
 
         //TODO display error
         cleanup()

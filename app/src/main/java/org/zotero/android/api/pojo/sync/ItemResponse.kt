@@ -21,4 +21,11 @@ data class ItemResponse(
     val inPublications: Boolean,
     val createdBy: UserResponse?,
     val lastModifiedBy: UserResponse?,
-    )
+    val title: String?,
+    val note: String?
+
+    ) {
+
+    var notes: MutableList<String> = mutableListOf()
+    var attachments: MutableList<String> = mutableListOf()
+}

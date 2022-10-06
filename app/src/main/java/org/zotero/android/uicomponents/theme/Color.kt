@@ -11,6 +11,7 @@ val LocalCustomColors: ProvidableCompositionLocal<CustomSemanticColors> =
 
 object CustomPalette {
     val Green = Color(0xFF007f03)
+    val Blue = Color(0xFF0000FF)
     val Black = Color(0xFF000000)
     val Charcoal = Color(0xFF2A2D35)
     val DarkCharcoal = Color(0xFF1A1C21)

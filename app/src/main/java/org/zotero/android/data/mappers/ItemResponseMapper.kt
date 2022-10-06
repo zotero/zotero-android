@@ -96,6 +96,9 @@ class ItemResponseMapper @Inject constructor(
             data["inPublications"]?.asBoolean ?: (data["inPublications"]?.asInt == 1)
         //TODO parse fiels, rects, paths
 
+        val title = data["title"]?.asString
+        val note = data["note"]?.asString
+
         return ItemResponse(
             rawType = rawType,
             collectionKeys = collectionKeys,
@@ -113,7 +116,9 @@ class ItemResponseMapper @Inject constructor(
             links = links,
             parsedDate = parsedDate,
             tags = tagsParsed,
-            version = version
+            version = version,
+            title = title,
+            note = note
         )
     }
 
@@ -160,7 +165,9 @@ class ItemResponseMapper @Inject constructor(
             creators = emptyList(),
             createdBy = createdBy,
             collectionKeys = collectionKeys,
-            rawType = rawType
+            rawType = rawType,
+            title = null,
+            note = null
         )
     }
 

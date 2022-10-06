@@ -19,6 +19,7 @@ class SyncBatchProcessor(
     val dbWrapper: DbWrapper,
     val fileStore: FileStore,
     val itemResponseMapper: ItemResponseMapper,
+    val itemResultsUseCase: ItemResultsUseCase,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit
 ) {
 
@@ -135,6 +136,7 @@ class SyncBatchProcessor(
                 }
                 //Set a breakpoint here
                 println(items)
+                itemResultsUseCase.postResults(items)
 
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
