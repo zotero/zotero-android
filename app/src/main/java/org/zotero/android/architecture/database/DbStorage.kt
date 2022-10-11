@@ -2,15 +2,15 @@ package org.zotero.android.architecture.database
 import io.realm.Realm
 import kotlin.reflect.KClass
 
-enum class DbError {
-    objectNotFound,
-    primaryKeyUnavailable,
-    invalidRequest;
+sealed class DbError: Throwable() {
+    object objectNotFound: DbError()
+    object primaryKeyUnavailable: DbError()
+    object invalidRequest: DbError();
 
     val isObjectNotFound: Boolean
         get() {
             return when (this) {
-                objectNotFound -> true
+                is objectNotFound -> true
                 else -> false
             }
         }

@@ -24,18 +24,12 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
     override lateinit var syncState: String
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
-    override lateinit var rawChangedFields: RealmList<String>
+    override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType
 
-    var changedFields: List<RPageIndexChanges>
+    val changedFields: List<RPageIndexChanges>
         get() {
-            return rawChangedFields.map { RPageIndexChanges.valueOf(it) }
-        }
-
-        set(newValue) {
-            val z = RealmList<String>()
-            z.addAll(newValue.map { it.name })
-            rawChangedFields = z
+            return changes.flatMap { it.rawChanges.map { RPageIndexChanges.valueOf(it) } }
         }
 
 

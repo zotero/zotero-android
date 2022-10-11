@@ -27,20 +27,15 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
     override lateinit var syncState: String
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
-    override lateinit var rawChangedFields: RealmList<String>
+    override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
 
     var trash: Boolean = false
 
-    var changedFields: List<RSearchChanges>
+    val changedFields: List<RSearchChanges>
         get() {
-            return rawChangedFields.map { RSearchChanges.valueOf(it) }
-        }
-        set(newValue) {
-            val z = RealmList<String>()
-            z.addAll(newValue.map { it.name })
-            rawChangedFields = z
+            return changes.flatMap { it.rawChanges.map { RSearchChanges.valueOf(it) } }
         }
 
     override fun willRemove(database: Realm) {
@@ -79,7 +74,7 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         get() = isChanged
 
     override fun markAsChanged(database: Realm) {
-        changedFields = RSearchChanges.values().toList()
+        this.changes.add(RObjectChange.create(changes = RSearchChanges.values().toList()))
         changeType = UpdatableChangeType.user.name
         deleted = false
         version = 0

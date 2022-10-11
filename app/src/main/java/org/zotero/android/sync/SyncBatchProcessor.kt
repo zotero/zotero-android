@@ -6,6 +6,7 @@ import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.files.FileStore
 
@@ -19,6 +20,7 @@ class SyncBatchProcessor(
     val dbWrapper: DbWrapper,
     val fileStore: FileStore,
     val itemResponseMapper: ItemResponseMapper,
+    val collectionResponseMapper: CollectionResponseMapper,
     val itemResultsUseCase: ItemResultsUseCase,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit
 ) {
@@ -130,6 +132,17 @@ class SyncBatchProcessor(
         expectedKeys: List<String>
     ): SyncBatchResponse {
         return when (objectS) {
+            SyncObject.collection -> {
+                val collections = dataArray.map {
+                    collectionResponseMapper.fromJson(it.asJsonObject)
+                }
+
+                val failedKeys =
+                    failedKeys(expectedKeys = expectedKeys, parsedKeys = collections.map { it.key })
+
+
+                SyncBatchResponse(failedKeys, emptyList(), emptyList())
+            }
             SyncObject.item, SyncObject.trash -> {
                 val items = dataArray.map {
                     itemResponseMapper.fromJson(it.asJsonObject)
@@ -144,9 +157,13 @@ class SyncBatchProcessor(
                 //TODO return parse errors and conflicts
                 SyncBatchResponse(failedKeys, emptyList(), emptyList())
             }
+            SyncObject.settings -> {
+                SyncBatchResponse(emptyList(), emptyList(), emptyList())
+            }
             else -> {
                 SyncBatchResponse(emptyList(), emptyList(), emptyList())
             }
+
         }
     }
 

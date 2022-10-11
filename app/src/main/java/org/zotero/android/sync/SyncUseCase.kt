@@ -11,6 +11,7 @@ import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.data.AccessPermissions
+import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
@@ -33,6 +34,7 @@ class SyncUseCase @Inject constructor(
     private val syncApi: SyncApi,
     private val fileStore: FileStore,
     private val itemResponseMapper: ItemResponseMapper,
+    private val collectionResponseMapper: CollectionResponseMapper,
     private val itemResultsUseCase: ItemResultsUseCase
 ) {
 
@@ -156,6 +158,7 @@ class SyncUseCase @Inject constructor(
             SyncBatchProcessor(batches = batches, userId = sdkPrefs.getUserId(), syncApi = syncApi,
                 dbWrapper = this.dbWrapper, fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
+                collectionResponseMapper = collectionResponseMapper,
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)

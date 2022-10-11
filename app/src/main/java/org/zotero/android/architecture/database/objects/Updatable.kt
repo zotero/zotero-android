@@ -4,7 +4,7 @@ import io.realm.Realm
 import io.realm.RealmList
 
 interface Updatable {
-    var rawChangedFields: RealmList<String>
+    var changes: RealmList<RObjectChange>
 
     var changeType: String //UpdatableChangeType
     val updateParameters: Map<String, Any>?
@@ -12,17 +12,22 @@ interface Updatable {
 
     fun markAsChanged(database: Realm)
 
-    fun resetChanges() {
-        if (!isChanged) {
-            return
+    fun deleteChanges(uuids: List<String>, database: Realm) {
+        if (this.isChanged && !uuids.isEmpty()) {
+            this.changes.filter { uuids.contains(it.identifier) }.forEach {
+                it.deleteFromRealm()
+            }
+            this.changeType = UpdatableChangeType.sync.name
         }
-        rawChangedFields = RealmList()
-        changeType = UpdatableChangeType.sync.name
+    }
+
+    fun deleteAllChanges(database: Realm) {
+        changes.deleteAllFromRealm()
     }
 
     val isChanged: Boolean
         get() {
-            return rawChangedFields.isNotEmpty()
+            return changes.isNotEmpty()
         }
 
 

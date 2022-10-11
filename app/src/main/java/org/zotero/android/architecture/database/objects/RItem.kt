@@ -4,6 +4,7 @@ import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
+import io.realm.annotations.Ignore
 import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.RealmClass
@@ -14,6 +15,7 @@ import org.zotero.android.architecture.database.requests.name
 import org.zotero.android.formatter.ItemTitleFormatter
 import org.zotero.android.formatter.iso8601DateFormat
 import org.zotero.android.ktx.rounded
+import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.LinkMode
 import java.util.Date
 
@@ -112,7 +114,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     override lateinit var syncState: String //ObjectSyncState
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
-    override lateinit var rawChangedFields: RealmList<String>
+    override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
 
@@ -128,14 +130,10 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             return fields.filter { it.key == FieldKeys.Item.url }.firstOrNull()?.value
         }
 
+    @Ignore
     var changedFields: List<RItemChanges>
         get() {
-            return rawChangedFields.map { RItemChanges.valueOf(it) }
-        }
-        set(newValue) {
-            val z = RealmList<String>()
-            z.addAll(newValue.map { it.name })
-            rawChangedFields = z
+            return changes.flatMap { it.rawChanges.map { RItemChanges.valueOf(it) } }
         }
 
 
@@ -427,6 +425,35 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
 
     private fun cleanupAttachmentFiles() {
         //TODO cleanup attachments & fire event bus events.
+    }
+
+    override fun deleteChanges(uuids: List<String>, database: Realm) {
+        this.changes.filter { uuids.contains(it.identifier) }.forEach {
+            it.deleteFromRealm()
+        }
+
+        this.changeType = UpdatableChangeType.sync.name
+        this.fields.filter { it.changed }.forEach { field ->
+            field.changed = false
+        }
+    }
+
+    override fun deleteAllChanges(database: Realm) {
+        if (!this.isChanged) {
+            return
+        }
+
+        this.changes.deleteAllFromRealm()
+        this.changeType = UpdatableChangeType.sync.name
+        this.fields.filter { it.changed }.forEach { field ->
+            field.changed = false
+        }
+    }
+
+    fun updateCreatorSummary() {
+        creatorSummary = CreatorSummaryFormatter.summary(this.creators)
+        sortCreatorSummary = this.creatorSummary?.lowercase()
+        hasCreatorSummary = this.creatorSummary != null
     }
 }
 

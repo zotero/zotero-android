@@ -2,9 +2,12 @@ package org.zotero.android.architecture.database.objects
 import timber.log.Timber
 
 class FieldKeys {
-    companion object {
-        val knownDataKeys = listOf("key", "version", "name", "parentCollection", "relations")
+    class Collection {
+        companion object {
+            val knownDataKeys = listOf("key", "version", "name", "parentCollection", "relations")
+        }
     }
+
 
     class Item {
 

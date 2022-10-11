@@ -38,7 +38,7 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
     override lateinit var syncState: String
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
-    override lateinit var rawChangedFields: RealmList<String>
+    override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String // UpdatableChangeType
     override var deleted: Boolean = false
     override fun willRemove(database: Realm) {
@@ -59,15 +59,9 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
 
     var trash: Boolean = false
 
-    var changedFields: List<RCollectionChanges>
+    val changedFields: List<RCollectionChanges>
         get() {
-            return rawChangedFields.map { RCollectionChanges.valueOf(it) }
-        }
-
-        set(newValue) {
-            val z = RealmList<String>()
-            z.addAll(newValue.map { it.name })
-            rawChangedFields = z
+            return changes.flatMap { it.rawChanges.map { RCollectionChanges.valueOf(it) } }
         }
 
     fun level(database: Realm) : Int {
@@ -115,18 +109,20 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
         get() = isChanged
 
     override fun markAsChanged(database: Realm) {
-        changedFields = listOf(RCollectionChanges.nameS)
+       val changes = mutableListOf<RCollectionChanges>(RCollectionChanges.nameS)
         changeType = UpdatableChangeType.user.name
         deleted = false
         version = 0
 
         if (this.parentKey != null) {
-            this.changedFields += RCollectionChanges.parent
+            changes+= RCollectionChanges.parent
         }
 
+        this.changes.add(RObjectChange.create(changes =  changes))
+
         this.items.forEach { item ->
-                item.changedFields = listOf(RItemChanges.collections)
-                item.changeType = UpdatableChangeType.user.name
+            item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.collections)))
+            item.changeType = UpdatableChangeType.user.name
         }
 
         val libraryId = this.libraryId

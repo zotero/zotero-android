@@ -24,7 +24,7 @@ fun <T> RealmQuery<T>.library(identifier: LibraryIdentifier): RealmQuery<T> {
 }
 
 fun <T> RealmQuery<T>.changed(): RealmQuery<T> {
-    return isNotEmpty("rawChangedFields")
+    return isNotEmpty("changes")
 }
 
 fun <T> RealmQuery<T>.changesWithoutDeletions(libraryId: LibraryIdentifier): RealmQuery<T> {
