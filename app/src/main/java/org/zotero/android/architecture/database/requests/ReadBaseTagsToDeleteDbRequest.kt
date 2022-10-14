@@ -1,12 +1,12 @@
 package org.zotero.android.architecture.database.requests
 
 import io.realm.Realm
-import io.realm.RealmResults
+import io.realm.RealmCollection
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RTypedTag
 import kotlin.reflect.KClass
 
-open class ReadBaseTagsToDeleteDbRequest<T : RTypedTag>(val fromTags: RealmResults<RTypedTag>) :
+open class ReadBaseTagsToDeleteDbRequest<T : Any>(val fromTags: RealmCollection<RTypedTag>) :
     DbResponseRequest<T, List<String>> {
     override val needsWrite: Boolean
         get() = false

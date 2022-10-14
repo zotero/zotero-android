@@ -1,8 +1,8 @@
 package org.zotero.android.architecture.database.requests
 
-import org.zotero.android.architecture.database.DbResponseRequest
 import io.realm.Realm
 import io.realm.kotlin.where
+import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RCollection
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.RPageIndex
@@ -10,8 +10,13 @@ import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
 import kotlin.reflect.KClass
 
+data class ReadUpdatedParametersResponse(
+    val parameters: List<Map<String, Any>>,
+    val changeUuids: Map<String, List<String>>
+)
+
 class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentifier):
-    DbResponseRequest<List<Map<String, Any>>, List<Map<String, Any>>> {
+    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean
         get() = false
@@ -19,33 +24,60 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
 
     override fun process(
         database: Realm,
-        clazz: KClass<List<Map<String, Any>>>?
-    ): List<Map<String, Any>> {
+        clazz: KClass<ReadUpdatedParametersResponse>?
+    ): ReadUpdatedParametersResponse {
         return when (this.libraryId) {
             is LibraryIdentifier.group ->
-                listOf()
-            is LibraryIdentifier.custom ->
-                database.where<RPageIndex>().changed().findAll()
-                    .mapNotNull { it.updateParameters }
+                ReadUpdatedParametersResponse(emptyList(), emptyMap())
+            is LibraryIdentifier.custom -> {
+                var parameters = mutableListOf<Map<String, Any>>()
+                var uuids = mutableMapOf<String, List<String>>()
+                val changed = database.where<RPageIndex>().changed().findAll()
+
+                for (objectS in changed) {
+                    val _parameters = objectS.updateParameters
+                    if (_parameters == null) {
+                        continue
+                    }
+                    parameters.add(_parameters)
+                    uuids[objectS.key] = objectS.changes.map { it.identifier }
+                }
+
+                return ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)
+            }
         }
     }
 
 }
 
-private typealias ResponseType1 = List<Map<String, Any>>
-
 class ReadUpdatedSearchUpdateParametersDbRequest(val libraryId: LibraryIdentifier):
-    DbResponseRequest<ResponseType1, ResponseType1> {
+    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean get() { return false }
 
-    override fun process(database: Realm, clazz: KClass<ResponseType1>?): ResponseType1 {
-        return database.where<RSearch>().changesWithoutDeletions(libraryId).findAll().mapNotNull { it.updateParameters }
+    override fun process(
+        database: Realm,
+        clazz: KClass<ReadUpdatedParametersResponse>?
+    ): ReadUpdatedParametersResponse {
+        var parameters = mutableListOf<Map<String, Any>>()
+        var uuids = mutableMapOf<String, List<String>>()
+        val changed = database.where<RSearch>().changesWithoutDeletions(this.libraryId).findAll()
+
+        for (objectS in changed) {
+            val _parameters = objectS.updateParameters
+            if (_parameters == null) {
+                continue
+            }
+            parameters.add(_parameters)
+            uuids[objectS.key] = objectS.changes.map { it.identifier }
+        }
+
+        return ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)
     }
 
 }
 
-private typealias ResponseType2 = Pair<List<Map<String, Any>>,Boolean>
+private typealias ResponseType2 = Pair<ReadUpdatedParametersResponse,Boolean>
 
 class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier):
     DbResponseRequest<ResponseType2, ResponseType2> {
@@ -53,12 +85,28 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
     override val needsWrite: Boolean get() { return false }
 
     override fun process(database: Realm, clazz: KClass<ResponseType2>? ): ResponseType2 {
-        val items = database.where<RItem>().itemChangesWithoutDeletions(libraryId).findAll()
+        val objects =  database.where<RItem>().itemChangesWithoutDeletions(this.libraryId).findAll()
+
+        if (objects.size == 1) {
+            val item = objects.first()
+            if (item != null) {
+                val parameters = item.updateParameters
+                if (parameters != null) {
+                    val uuids = item.changes.map { it.identifier }
+                    return ReadUpdatedParametersResponse(
+                        parameters = listOf(parameters),
+                        changeUuids = mapOf(item.key to uuids)
+                    ) to item.attachmentNeedsSync
+                }
+            }
+        }
+
 
         var hasUpload = false
         var keyToLevel = mutableMapOf<String, Int>()
         val levels = mutableMapOf<Int, MutableList<Map<String, Any>>>()
-        for (item in items) {
+        var uuids =  mutableMapOf<String, List<String>>()
+        for (item in objects) {
             if (item.attachmentNeedsSync) {
                 hasUpload = true
             }
@@ -70,6 +118,7 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
 
             val level = level(item,  keyToLevel)
             keyToLevel[item.key] = level
+            uuids[item.key] = item.changes.map{ it.identifier }
 
             val array = levels[level]
             if (array != null) {
@@ -81,15 +130,16 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
         }
 
         val results: MutableList<Map<String, Any>> = mutableListOf()
-        levels.keys.sorted().forEach { level ->
-            val parameters: MutableList<Map<String, Any>>? = levels[level]
-                if (parameters != null){
-                    parameters.forEach {
-                        results.add(it)
-                    }
-                }
+        for (level in levels.keys.sorted()) {
+            val parameters = levels[level]
+            if (parameters == null) {
+                continue
+            }
+            parameters.forEach {
+                results.add(it)
+            }
         }
-        return results to hasUpload
+        return (ReadUpdatedParametersResponse(parameters =  results, changeUuids =  uuids) to  hasUpload)
     }
 
 
@@ -111,27 +161,39 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
     }
 }
 
-private typealias ResponseType3 = List<Map<String, Any>>
-
 class ReadUpdatedCollectionUpdateParametersDbRequest(val libraryId: LibraryIdentifier):
-    DbResponseRequest<ResponseType3, ResponseType3> {
+    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean get() { return false }
 
-    override fun process(database: Realm, clazz: KClass<ResponseType3>?): ResponseType3 {
+    override fun process(database: Realm, clazz: KClass<ReadUpdatedParametersResponse>?): ReadUpdatedParametersResponse {
         val objects = database.where<RCollection>().changesWithoutDeletions(libraryId).findAll()
 
-        if (objects.count() == 1) {
-            return listOf(objects[0]?.updateParameters ?: emptyMap())
+        if (objects.size == 1) {
+            val collection = objects.first()
+            if (collection != null) {
+                val parameters = collection.updateParameters
+                if (parameters != null) {
+                    val uuids = collection.changes.map { it.identifier }
+                    return ReadUpdatedParametersResponse(
+                        parameters = listOf(parameters),
+                        changeUuids = mapOf(collection.key to uuids)
+                    )
+                }
+            }
         }
 
         var levels: MutableMap<Int, MutableList<Map<String, Any>>> = mutableMapOf()
+        var uuids = mutableMapOf<String, List<String>>()
 
         for (objectS in objects) {
             val parameters = objectS.updateParameters
             if (parameters == null) {
                 continue
             }
+
+            uuids[objectS.key] = objectS.changes.map{ it.identifier}
+
             val level = objectS.level(database)
             val array = levels[level]
             if (array != null) {
@@ -151,6 +213,6 @@ class ReadUpdatedCollectionUpdateParametersDbRequest(val libraryId: LibraryIdent
                 }
             }
         }
-        return results
+        return ReadUpdatedParametersResponse(parameters = results, changeUuids = uuids)
     }
 }

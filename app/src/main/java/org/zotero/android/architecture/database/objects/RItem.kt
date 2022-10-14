@@ -10,8 +10,9 @@ import io.realm.annotations.LinkingObjects
 import io.realm.annotations.RealmClass
 import io.realm.kotlin.where
 import org.zotero.android.architecture.database.requests.ReadBaseTagsToDeleteDbRequest
+import org.zotero.android.architecture.database.requests.baseKey
 import org.zotero.android.architecture.database.requests.key
-import org.zotero.android.architecture.database.requests.name
+import org.zotero.android.architecture.database.requests.nameIn
 import org.zotero.android.formatter.ItemTitleFormatter
 import org.zotero.android.formatter.iso8601DateFormat
 import org.zotero.android.ktx.rounded
@@ -105,6 +106,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     var hasPublisher: Boolean = false
     var publicationTitle: String? = ""
     var hasPublicationTitle: Boolean = false
+    @Index
     var annotationSortIndex: String = ""
     var trash: Boolean = false
 
@@ -172,8 +174,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             if (!isChanged) {
                 return null
             }
-            var changedPageIndex: Int? = null
-            var changedLineWidth: Double? = null
+            var positionFieldChanged = false
             var parameters: MutableMap<String, Any> = mutableMapOf(
                 "key" to this.key,
                 "version" to this.version,
@@ -210,49 +211,28 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
                 parameters["creators"] = this.creators.map { it.updateParameters }.toTypedArray()
             }
             if (changes.contains(RItemChanges.fields)) {
-                this.fields.filter { it.changed == true }.forEach { field ->
+                for( field in this.fields.filter { it.changed == true }) {
+                    if (field.baseKey ==FieldKeys.Item.Annotation.position ) {
+                        positionFieldChanged = true
+                        continue
+                    }
+
                     when (field.key) {
                         FieldKeys.Item.Attachment.md5, FieldKeys.Item.Attachment.mtime ->
-                            parameters[field.key] = ""
-                        FieldKeys.Item.Annotation.pageIndex ->
-                            changedPageIndex = field.value.toIntOrNull() ?: 0
-                        FieldKeys.Item.Annotation.lineWidth ->
-                            changedLineWidth = field.value.toDoubleOrNull() ?: 0.0
+                        parameters[field.key] = ""
                         else ->
-                            parameters[field.key] = field.value
+                        parameters[field.key] = field.value
                     }
                 }
             }
 
-            val annotationTypeS =
-                this.fields.firstOrNull { it.key == FieldKeys.Item.Annotation.type }
-            val annotationType =
-                annotationTypeS?.let { AnnotationType.valueOf(annotationTypeS.value) }
 
-            if (this.rawType == ItemTypes.annotation && (changes.contains(RItemChanges.rects)
-                        || changes.contains(RItemChanges.paths)
-                        || changedPageIndex != null
-                        || changedLineWidth != null)
-                && annotationType != null
-            ) {
-                parameters[FieldKeys.Item.Annotation.position] = this.createAnnotationPosition(
-                    annotationType,
-                    changedPageIndex = changedPageIndex,
-                    changedLineWidth  = changedLineWidth
-                )
-            }
-            val annotationType2 = this.fields.filter {it.key == FieldKeys.Item.Annotation.type}.firstOrNull()?.let{
-                AnnotationType.valueOf(it.value)
-            }
+            if (this.rawType == ItemTypes.annotation && (changes.contains(RItemChanges.rects) || changes.contains(RItemChanges.paths) || positionFieldChanged)) {
+                val annotationType = this.fields.where().key(FieldKeys.Item.Annotation.type).findFirst()?.let { AnnotationType.valueOf(it.value) }
+                if (annotationType != null) {
+                    parameters[FieldKeys.Item.Annotation.position] = createAnnotationPosition(annotationType, this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll())
 
-
-            if (this.rawType == ItemTypes.annotation && (changes.contains(RItemChanges.rects) || changes.contains(RItemChanges. paths) || changedPageIndex != null || changedLineWidth != null) &&
-                annotationType2 != null) {
-                parameters[FieldKeys.Item.Annotation.position] = this.createAnnotationPosition(
-                    annotationType2,
-                    changedPageIndex =  changedPageIndex,
-                    changedLineWidth =  changedLineWidth
-                )
+                }
             }
 
             return parameters
@@ -260,28 +240,33 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
 
     private fun createAnnotationPosition(
         type: AnnotationType,
-        changedPageIndex: Int?,
-        changedLineWidth: Double?
+        positionFields: RealmResults<RItemField>
     ): String {
-        val pageIndex = changedPageIndex
-            ?: (this.fields.filter { it.key == FieldKeys.Item.Annotation.pageIndex }.firstOrNull()
-                ?.let { it.value.toInt() } ?: 0)
-        var jsonData: MutableMap<String, Any> =
-            mutableMapOf(FieldKeys.Item.Annotation.pageIndex to pageIndex)
+        var jsonData = mutableMapOf<String, Any>()
+
+        for (field in positionFields) {
+            val value = field.value.toIntOrNull()
+            if (value != null){
+                jsonData[field.key] = value
+            } else {
+                val doubleVal = field.value.toDoubleOrNull()
+                if (doubleVal != null) {
+                    jsonData[field.key] = doubleVal
+                } else {
+                    jsonData[field.key] = field.value
+                }
+            }
+        }
 
         when (type) {
             AnnotationType.ink -> {
-                val lineWidth = changedLineWidth
-                    ?: (this.fields.filter { it.key == FieldKeys.Item.Annotation.lineWidth }
-                        .firstOrNull()?.let { it.value.toDouble() } ?: 0.0)
                 var apiPaths: MutableList<List<Double>> = mutableListOf()
                 for (path in this.paths.sortedBy { it.sortIndex }) {
                     apiPaths.add(path.coordinates.sortedBy { it.sortIndex }
                         .map { it.value.rounded(3) })
                 }
 
-                jsonData[FieldKeys.Item.Annotation.paths] = apiPaths
-                jsonData[FieldKeys.Item.Annotation.lineWidth] = lineWidth.rounded(3)
+                jsonData[FieldKeys.Item.Annotation.Position.paths] = apiPaths
             }
             AnnotationType.highlight, AnnotationType.image, AnnotationType.note -> {
                 var rectArray = mutableListOf<List<Double>>()
@@ -295,7 +280,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
                         )
                     )
                 }
-                jsonData[FieldKeys.Item.Annotation.rects] = rectArray
+                jsonData[FieldKeys.Item.Annotation.Position.rects] = rectArray
             }
         }
         return Gson().toJson(jsonData)
@@ -305,7 +290,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         get() = TODO("Not yet implemented")
 
     override fun markAsChanged(database: Realm) {
-        this.changedFields = this.currentChanges
+        this.changes.add(RObjectChange.create(changes = this.currentChanges))
         this.changeType = UpdatableChangeType.user.name
                 this.deleted = false
         this.version = 0
@@ -372,7 +357,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<RTypedTag>(this.tags).process(database,RTypedTag::class ) ?: emptyList()
                 this.tags.deleteAllFromRealm()
                 if (!baseTagsToRemove.isEmpty()) {
-                    database.where<RTag>().name(baseTagsToRemove).findAll().deleteAllFromRealm()
+                    database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
                 }
             }
 

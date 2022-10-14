@@ -33,7 +33,7 @@ fun <T> RealmQuery<T>.changesWithoutDeletions(libraryId: LibraryIdentifier): Rea
 
 fun <T> RealmQuery<T>.itemChangesWithoutDeletions(libraryId: LibraryIdentifier): RealmQuery<T> {
     val changePredicate = changed().or().attachmentChanged()
-    return changePredicate.and().library(libraryId).and().syncState(ObjectSyncState.synced).and()
+    return changePredicate.and().library(libraryId).and()
         .deleted(false)
 }
 
@@ -61,6 +61,18 @@ fun <T> RealmQuery<T>.key(keys: Set<String>): RealmQuery<T>  {
     return `in`("key", keys.toTypedArray())
 }
 
+fun <T> RealmQuery<T>.keyNotIn(keys: Set<String>): RealmQuery<T>  {
+    return not().`in`("key", keys.toTypedArray())
+}
+
+fun <T> RealmQuery<T>.keyNotIn(keys: List<String>): RealmQuery<T>  {
+    return not().`in`("key", keys.toTypedArray())
+}
+
+fun <T> RealmQuery<T>.baseKey(baseKey: String): RealmQuery<T>  {
+    return equalTo("baseKey", baseKey)
+}
+
 fun <T> RealmQuery<T>.parentKey(parentKey: String): RealmQuery<T> {
     return equalTo("parentKey", parentKey)
 }
@@ -77,7 +89,11 @@ fun <T> RealmQuery<T>.name(name: String): RealmQuery<T> {
     return equalTo("name", name)
 }
 
-fun <T> RealmQuery<T>.name(names: List<String>): RealmQuery<T> {
+fun <T> RealmQuery<T>.name(name: String, libraryId: LibraryIdentifier): RealmQuery<T>{
+    return name(name).and().library(libraryId)
+}
+
+fun <T> RealmQuery<T>.nameIn(names: List<String>): RealmQuery<T> {
     return `in`("name", names.toTypedArray())
 }
 
@@ -92,3 +108,13 @@ fun <T> RealmQuery<T>.keys(keys: Set<String>, libraryId: LibraryIdentifier): Rea
 fun <T> RealmQuery<T>.isTrash(trash: Boolean): RealmQuery<T>{
     return equalTo("trash", trash)
 }
+
+fun <T> RealmQuery<T>.tagNameNotIn(names: List<String>): RealmQuery<T>{
+    return not().`in`("tag.name", names.toTypedArray())
+}
+
+fun <T> RealmQuery<T>.tagName(name: String): RealmQuery<T>{
+    return equalTo("tag.name", name)
+}
+
+

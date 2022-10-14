@@ -5,6 +5,7 @@ class WriteBatch(
     val objectS: SyncObject,
     val version: Int,
     val parameters: List<Map<String, Any>>,
+    val changeUuids: Map<String, List<String>>
 ) {
     companion object {
         val maxCount = 50
@@ -16,7 +17,8 @@ class WriteBatch(
             libraryId = libraryId,
             objectS = objectS,
             version = version,
-            parameters = parameters
+            parameters = parameters,
+            changeUuids = changeUuids
         )
     }
 }

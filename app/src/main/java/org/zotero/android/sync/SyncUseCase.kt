@@ -283,7 +283,7 @@ class SyncUseCase @Inject constructor(
             //TODO should use webDavController
             val result = LoadLibraryDataSyncAction(
                 type = libraries,
-                fetchUpdates = (options != CreateLibraryActionsOptions.forceDownloads),
+                fetchUpdates = (options != CreateLibraryActionsOptions.onlyDownloads),
                 loadVersions = (this.type != SyncType.full),
                 webDavEnabled = false,
                 dbStorage = dbWrapper.realmDbStorage,
@@ -414,8 +414,7 @@ class SyncUseCase @Inject constructor(
         val actions = deleteGroups.map { Action.resolveDeletedGroup(it.first, it.second) }
             .toMutableList<Action>()
         actions.addAll(idsToSync.map { Action.syncGroupToDb(it) })
-        val options: CreateLibraryActionsOptions =
-            if (syncType == SyncType.full) CreateLibraryActionsOptions.forceDownloads else CreateLibraryActionsOptions.automatic
+        val options: CreateLibraryActionsOptions = libraryActionsOptions(syncType)
         actions.add(Action.createLibraryActions(libraryType, options))
         return actions
     }
@@ -581,9 +580,7 @@ class SyncUseCase @Inject constructor(
                         return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
                     }
                 }
-                val options = if (syncType == SyncType.full)
-                    CreateLibraryActionsOptions.forceDownloads else
-                    CreateLibraryActionsOptions.automatic
+                val options = libraryActionsOptions(syncType)
                 return listOf(
                     Action.loadKeyPermissions,
                     Action.createLibraryActions(libraries, options)
@@ -593,80 +590,110 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun createLibraryActions(
-        data: List<LibraryData>,
-        creationOptions: CreateLibraryActionsOptions
-    ): Triple<List<Action>, Int?, Int> {
+    private fun libraryActionsOptions(syncType: SyncType): CreateLibraryActionsOptions {
+        return when (syncType) {
+            SyncType.full, SyncType.collectionsOnly ->
+                CreateLibraryActionsOptions.onlyDownloads
+            SyncType.ignoreIndividualDelays,SyncType.normal ->
+                CreateLibraryActionsOptions.automatic
+        }
+    }
+
+    private fun createLibraryActions(data: List<LibraryData>, creationOptions: CreateLibraryActionsOptions): Triple<List<Action>, Int?, Int> {
         var writeCount = 0
-        var allActions = mutableListOf<Action>()
+        var actions = mutableListOf<Action>()
 
         for (libraryData in data) {
-            val libraryId = libraryData.identifier
-
-            when (creationOptions) {
-                CreateLibraryActionsOptions.forceDownloads ->
-                    createDownloadActions(libraryId, versions = libraryData.versions).forEach {
-                        allActions.add(it)
-                    }
-
-                CreateLibraryActionsOptions.onlyWrites, CreateLibraryActionsOptions.automatic -> {
-                    if (!libraryData.updates.isEmpty() || (!libraryData.deletions.isEmpty()) || libraryData.hasUpload) {
-                        when (libraryData.identifier) {
-                            is LibraryIdentifier.group -> {
-                                // We need to check permissions for group
-                                if (libraryData.canEditMetadata) {
-                                    val actions = this.createUpdateActions(
-                                        updates = libraryData.updates,
-                                        deletions = libraryData.deletions,
-                                        libraryId = libraryId
-                                    )
-                                    writeCount += actions.count() - 1
-                                    actions.forEach {
-                                        allActions.add(it)
-
-                                    }
-                                } else {
-                                    allActions.add(
-                                        Action.resolveGroupMetadataWritePermission(
-                                            libraryData.identifier.groupId,
-                                            libraryData.name
-                                        )
-                                    )
-                                }
-                            }
-                            is LibraryIdentifier.custom -> {
-                                val actions = createUpdateActions(
-                                    updates = libraryData.updates,
-                                    deletions = libraryData.deletions,
-                                    libraryId = libraryId
-                                )
-                                writeCount += actions.count() - 1
-                                // We can always write to custom libraries
-                                actions.forEach {
-                                    allActions.add(it)
-
-                                }
-
-                            }
-
-                        }
-                    } else if (creationOptions == CreateLibraryActionsOptions.automatic) {
-                        createDownloadActions(libraryId, versions = libraryData.versions).forEach {
-                            allActions.add(it)
-                        }
-                    }
-
-                    if (libraryData.hasWebDavDeletions) {
-                        allActions.add(Action.performWebDavDeletions(libraryId))
-                    }
-                }
+            val (_actions, _writeCount) = createLibraryActions(
+                libraryData,
+                creationOptions = creationOptions
+            )
+            writeCount += _writeCount
+            _actions.forEach {
+                actions.add(it)
             }
         }
 
-        // Forced downloads or writes are pushed to the beginning of the queue, because only currently running action
-        // can force downloads or writes
         val index: Int? = if (creationOptions == CreateLibraryActionsOptions.automatic) null else 0
-        return Triple(allActions, index, writeCount)
+        return Triple(actions, index, writeCount)
+    }
+
+    private fun createLibraryActions(libraryData: LibraryData, creationOptions: CreateLibraryActionsOptions): Pair<List<Action>, Int> {
+        when (creationOptions) {
+            CreateLibraryActionsOptions.onlyDownloads -> {
+                val actions = createDownloadActions(libraryData.identifier, versions =  libraryData.versions)
+                return actions to 0
+            }
+
+
+            CreateLibraryActionsOptions.onlyWrites -> {
+                var actions = mutableListOf<Action>()
+                var writeCount = 0
+
+                if (!libraryData.updates.isEmpty() || !libraryData.deletions.isEmpty() || libraryData.hasUpload) {
+                    val (_actions, _writeCount) = createLibraryWriteActions(libraryData)
+                    actions = _actions.toMutableList()
+                    writeCount = _writeCount
+                }
+
+                if (libraryData.hasWebDavDeletions) {
+                    actions.add(Action.performWebDavDeletions(libraryData.identifier))
+                }
+
+                return actions to writeCount
+            }
+
+
+            CreateLibraryActionsOptions.automatic -> {
+                var actions: MutableList<Action>
+                var writeCount = 0
+
+                if (!libraryData.updates.isEmpty() || !libraryData.deletions.isEmpty() || libraryData.hasUpload) {
+                    val (_actions, _writeCount) = this.createLibraryWriteActions(libraryData)
+                    actions = _actions.toMutableList()
+                    writeCount = _writeCount
+                } else {
+                    actions = createDownloadActions(libraryData.identifier, versions = libraryData.versions).toMutableList()
+                }
+
+                if (libraryData.hasWebDavDeletions) {
+                    actions.add(Action.performWebDavDeletions(libraryData.identifier))
+                }
+
+                return actions to writeCount
+            }
+
+        }
+    }
+
+    private fun createLibraryWriteActions(libraryData: LibraryData): Pair<List<Action>, Int> {
+        when (libraryData.identifier) {
+            is LibraryIdentifier.custom -> {
+                val actions = createUpdateActions(
+                    updates = libraryData.updates,
+                    deletions = libraryData.deletions,
+                    libraryId = libraryData.identifier
+                )
+                return actions to actions.size - 1
+            }
+
+            is LibraryIdentifier.group -> {
+                if (!libraryData.canEditMetadata) {
+                    return listOf(
+                        Action.resolveGroupMetadataWritePermission(
+                            libraryData.identifier.groupId,
+                            libraryData.name
+                        )
+                    ) to 0
+                }
+                val actions = createUpdateActions(
+                    updates = libraryData.updates,
+                    deletions = libraryData.deletions,
+                    libraryId = libraryData.identifier
+                )
+                return actions to actions.size - 1
+            }
+        }
     }
 
     private fun createDownloadActions(

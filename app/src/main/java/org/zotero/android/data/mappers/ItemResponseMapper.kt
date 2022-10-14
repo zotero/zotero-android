@@ -9,6 +9,7 @@ import org.zotero.android.api.pojo.sync.UserResponse
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.formatter.iso8601DateFormatV2
 import org.zotero.android.ktx.unmarshalList
+import org.zotero.android.sync.SchemaController
 import java.util.Date
 import javax.inject.Inject
 
@@ -17,7 +18,8 @@ class ItemResponseMapper @Inject constructor(
     private val libraryResponseMapper: LibraryResponseMapper,
     private val linksResponseMapper: LinksResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
-    private val userResponseMapper: UserResponseMapper
+    private val userResponseMapper: UserResponseMapper,
+    private val schemaController: SchemaController
 ) {
     fun fromJson(json: JsonObject): ItemResponse {
         val data = json["data"].asJsonObject
@@ -59,7 +61,8 @@ class ItemResponseMapper @Inject constructor(
                     library = library,
                     lastModifiedBy = lastModifiedBy,
                     createdBy = createdBy,
-                    rawType = itemType
+                    rawType = itemType,
+                    schemaController =schemaController
                 )
             }
         }
@@ -76,7 +79,8 @@ class ItemResponseMapper @Inject constructor(
         createdBy: UserResponse?,
         lastModifiedBy: UserResponse?,
         version: Int,
-        data: JsonObject
+        data: JsonObject,
+        schemaController: SchemaController
     ): ItemResponse {
         val dateAdded = data["dateAdded"]?.asString
         val dateModified = data["dateModified"]?.asString
@@ -94,8 +98,28 @@ class ItemResponseMapper @Inject constructor(
         val relations = data["relations"]?.asJsonObject ?: JsonObject()
         val inPublications =
             data["inPublications"]?.asBoolean ?: (data["inPublications"]?.asInt == 1)
-        //TODO parse fiels, rects, paths
 
+//        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = this.schemaController).first
+//
+//        if (rawType == ItemTypes.attachment) {
+//            val linkMode = fields[KeyBaseKeyPair(
+//                key = FieldKeys.Item.Attachment.linkMode,
+//                baseKey = null
+//            )]?.let { LinkMode.valueOf(it) }
+//            if (linkMode != null &&
+//                linkMode == LinkMode.embeddedImage && parentKey == null
+//            ) {
+//                throw SchemaError.embeddedImageMissingParent(
+//                    key = key, libraryId = library.libraryId ?: LibraryIdentifier.custom(
+//                        RCustomLibraryType.myLibrary
+//                    )
+//                )
+//            }
+//        }
+
+
+
+        //TODO this is not needed
         val title = data["title"]?.asString
         val note = data["note"]?.asString
 
@@ -118,7 +142,10 @@ class ItemResponseMapper @Inject constructor(
             tags = tagsParsed,
             version = version,
             title = title,
-            note = note
+            note = note,
+            paths = null,
+            rects = null,
+            fields = emptyMap()//TODO
         )
     }
 
@@ -148,6 +175,9 @@ class ItemResponseMapper @Inject constructor(
         val tagsParsed = tags.map { tagResponseMapper.fromJson(it.asJsonObject) }
         val relations = JsonObject()
         val inPublications = false
+
+//        val (fields, rects, paths) = ItemResponse.parseFields(data, rawType =  ItemTypes.annotation, key =  key, schemaController = schemaController)
+
         return ItemResponse(
             version = version,
             tags = tagsParsed,
@@ -167,7 +197,14 @@ class ItemResponseMapper @Inject constructor(
             collectionKeys = collectionKeys,
             rawType = rawType,
             title = null,
-            note = null
+            note = null,
+            fields = emptyMap(),
+            rects = null,
+            paths = null,
+            //TODO
+//            fields = fields,
+//            rects = rects,
+//            paths = paths
         )
     }
 

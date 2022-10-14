@@ -8,10 +8,14 @@ import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.data.mappers.SchemaResponseMapper
 import org.zotero.android.files.FileStore
 import java.util.Locale
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SchemaController(private val fileStore: FileStore, private val schemaResponseMapper: SchemaResponseMapper) {
+class SchemaController @Inject constructor(
+    private val fileStore: FileStore,
+    private val schemaResponseMapper: SchemaResponseMapper
+) {
 
     private var itemSchemas: Map<String, ItemSchema> = emptyMap()
     private var locales:  Map<String, SchemaLocale> = emptyMap()
