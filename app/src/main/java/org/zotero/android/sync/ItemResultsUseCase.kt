@@ -20,8 +20,8 @@ class ItemResultsUseCase @Inject constructor() {
 
         newList = findChildrenForParents(newList)
 
-        resultLiveData.value =
-            CustomResult.GeneralSuccess(newList.filter { it.rawType != ItemTypes.annotation })
+        resultLiveData.postValue(
+            CustomResult.GeneralSuccess(newList.filter { it.rawType != ItemTypes.annotation }))
     }
 
     private fun findChildrenForParents(itemsList: List<ItemResponse>): List<ItemResponse> {
