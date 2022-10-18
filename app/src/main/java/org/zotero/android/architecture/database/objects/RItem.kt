@@ -4,7 +4,6 @@ import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
-import io.realm.annotations.Ignore
 import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.RealmClass
@@ -74,15 +73,15 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     override var groupKey: Int? = null
 
     @LinkingObjects("items")
-    val collections: RealmResults<RCollection> = TODO()
+    val collections: RealmResults<RCollection>? = null
 
     lateinit var fields: RealmList<RItemField>
 
     @LinkingObjects("parent")
-    val children: RealmResults<RItem> = TODO()
+    val children: RealmResults<RItem>? = null
 
     @LinkingObjects("item")
-    val tags: RealmResults<RTypedTag> = TODO()
+    val tags: RealmResults<RTypedTag>? = null
 
     lateinit var creators: RealmList<RCreator>
     lateinit var links: RealmList<RLink>
@@ -113,7 +112,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     @Index
     override var version: Int = 0
     var attachmentNeedsSync: Boolean = false
-    override lateinit var syncState: String //ObjectSyncState
+    override var syncState: String = "" //ObjectSyncState
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>
@@ -132,8 +131,8 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             return fields.filter { it.key == FieldKeys.Item.url }.firstOrNull()?.value
         }
 
-    @Ignore
-    var changedFields: List<RItemChanges>
+//    @Ignore
+    val changedFields: List<RItemChanges>
         get() {
             return changes.flatMap { it.rawChanges.map { RItemChanges.valueOf(it) } }
         }
@@ -191,11 +190,11 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             }
             if (changes.contains(RItemChanges.tags)) {
                 parameters["tags"] =
-                    this.tags.map { listOf("tag" to it.tag?.name, "type" to it.type) }
+                    this.tags!!.map { listOf("tag" to it.tag?.name, "type" to it.type) }
                         .toTypedArray()
             }
             if (changes.contains(RItemChanges.collections)) {
-                parameters["collections"] = collections.map { it.key }.toTypedArray()
+                parameters["collections"] = collections?.map { it.key }?.toTypedArray() ?: emptyArray<String>()
             }
             if (changes.contains(RItemChanges.relations)) {
                 var relations = mutableMapOf<String, String>()
@@ -262,7 +261,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             AnnotationType.ink -> {
                 var apiPaths: MutableList<List<Double>> = mutableListOf()
                 for (path in this.paths.sortedBy { it.sortIndex }) {
-                    apiPaths.add(path.coordinates.sortedBy { it.sortIndex }
+                    apiPaths.add(path.coordinates!!.sortedBy { it.sortIndex }
                         .map { it.value.rounded(3) })
                 }
 
@@ -287,7 +286,19 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     }
 
     override val selfOrChildChanged: Boolean
-        get() = TODO("Not yet implemented")
+        get()  {
+            if (this.isChanged) {
+                return true
+            }
+
+            for (child in this.children!!) {
+                if (child.selfOrChildChanged) {
+                    return true
+                }
+            }
+
+            return false
+        }
 
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = this.currentChanges))
@@ -308,7 +319,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             this.attachmentNeedsSync = true
         }
 
-        this.children.forEach { child ->
+        this.children!!.forEach { child ->
                 child.markAsChanged(database)
         }
     }
@@ -318,13 +329,13 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         if (!this.creators.isEmpty()) {
             changes.add(RItemChanges.creators)
         }
-        if (this.collections.isEmpty()) {
+        if (this.collections.isNullOrEmpty()) {
             changes.add(RItemChanges.collections)
         }
         if (this.parent != null) {
             changes.add(RItemChanges.parent)
         }
-        if (!this.tags.isEmpty()) {
+        if (!this.tags!!.isEmpty()) {
             changes.add(RItemChanges.tags)
         }
         if (this.trash) {
@@ -344,7 +355,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
 
 
     override fun willRemove(database: Realm) {
-        if (this.children.isValid) {
+        if (this.children!!.isValid) {
             for (child in this.children) {
                 if (!child.isValid) {
                     continue
@@ -353,7 +364,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             }
             children.deleteAllFromRealm()
         }
-        if (this.tags.isValid) {
+        if (this.tags!!.isValid) {
             val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<RTypedTag>(this.tags).process(database,RTypedTag::class ) ?: emptyList()
                 this.tags.deleteAllFromRealm()
                 if (!baseTagsToRemove.isEmpty()) {
@@ -440,6 +451,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         sortCreatorSummary = this.creatorSummary?.lowercase()
         hasCreatorSummary = this.creatorSummary != null
     }
+
 }
 
 @RealmClass(embedded = true)

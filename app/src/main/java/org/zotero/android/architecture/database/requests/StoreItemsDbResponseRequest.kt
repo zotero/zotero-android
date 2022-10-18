@@ -2,6 +2,7 @@ package org.zotero.android.architecture.database.requests
 
 import com.google.gson.JsonObject
 import io.realm.Realm
+import io.realm.RealmQuery
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.CreatorResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
@@ -12,7 +13,6 @@ import org.zotero.android.architecture.database.DbError
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.architecture.database.objects.ItemTypes
-import org.zotero.android.architecture.database.objects.ItemTypes.Companion.case
 import org.zotero.android.architecture.database.objects.LinkType
 import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.architecture.database.objects.RCollection
@@ -28,9 +28,12 @@ import org.zotero.android.architecture.database.objects.RRelation
 import org.zotero.android.architecture.database.objects.RTag
 import org.zotero.android.architecture.database.objects.RTypedTag
 import org.zotero.android.architecture.database.objects.RUser
+import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.NotePreviewGenerator
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
+import java.util.Date
 import kotlin.reflect.KClass
 
 class StoreItemsDbResponseRequest(
@@ -45,8 +48,27 @@ class StoreItemsDbResponseRequest(
         var filenameChanges = mutableListOf<StoreItemsResponse.FilenameChange>()
         var errors = mutableListOf<StoreItemsResponse.Error>()
 
-        //TODO continue implementation
-        return StoreItemsResponse(emptyList(), emptyList())
+        for (response in this.responses) {
+            try {
+                val (_, change) = StoreItemDbRequest(
+                    response = response,
+                    schemaController = this.schemaController,
+                    preferRemoteData = this.preferResponseData
+                ).process(database)
+                if (change != null) {
+                    filenameChanges.add(change)
+                }
+            } catch (e: Throwable) {
+                val responseError = e as? StoreItemsResponse.Error
+                if (responseError != null) {
+                    errors.add(responseError)
+                } else {
+                    throw e
+                }
+            }
+        }
+
+        return StoreItemsResponse(changedFilenames = filenameChanges, conflicts = errors)
     }
 }
 
@@ -76,7 +98,10 @@ class StoreItemDbRequest(
             item = existing
         } else {
             item = RItem()
-            database.insertOrUpdate(item)
+            database.executeTransaction {
+                item = database.copyToRealm(item)
+
+            }
         }
 
         if (!this.preferRemoteData) {
@@ -88,103 +113,153 @@ class StoreItemDbRequest(
                 throw StoreItemsResponse.Error.itemChanged(this.response)
             }
         } else {
-            item.deleted = false
+            database.executeTransaction {
+                item.deleted = false
+            }
             item.deleteAllChanges(database =  database)
         }
-        throw RuntimeException()
-        //TODO continue implementation
+        return update(item = item, libraryId = libraryId, this.response, schemaController = this.schemaController, database = database)
     }
 
     companion object {
 
-//        fun syncFields(data: ItemResponse, item: RItem, database: Realm, schemaController: SchemaController): StoreItemsResponse.FilenameChange? {
-//            var oldName: String?
-//            var newName: String?
-//            var contentType: String?
-//            val allFieldKeys = RItemChanges.fields.keys
-//
-//            let toRemove = item.fields.filter("NOT key IN %@", allFieldKeys.map({ $0.key }))
-//            database.delete(toRemove)
-//
-//            var date: String?
-//            var publisher: String?
-//            var publicationTitle: String?
-//            var sortIndex: String?
-//            var md5: String?
-//
-//            for keyPair in allFieldKeys {
-//                let value = data.fields[keyPair] ?? ""
-//                var field: RItemField
-//
-//                // Backwards compatibility for fields that didn't store `annotationPosition` as `baseKey`. This is a precaution in case there is a field with the same key as a sub-field
-//                // of `annotationPosition`. If there is just one key with the same name, we can look up by just key and update the `baseKey` value appropriately. Otherwise we have to look up both `key`
-//                // and `baseKey`.
-//                let keyCount: Int
-//                        let existingFieldFilter: NSPredicate
-//                        if let baseKey = keyPair.baseKey {
-//                            keyCount = allFieldKeys.filter({ $0.key == keyPair.key }).count
-//                            existingFieldFilter = keyCount == 1 ? .key(keyPair.key) : .key(keyPair.key, andBaseKey: baseKey)
-//                        } else {
-//                            keyCount = 0
-//                            existingFieldFilter = .key(keyPair.key)
-//                        }
-//
-//                if let existing = item.fields.filter(existingFieldFilter).first {
-//                    if (existing.key == FieldKeys.Item.Attachment.filename || existing.baseKey == FieldKeys.Item.Attachment.filename) && existing.value != value {
-//                        oldName = existing.value
-//                        newName = value
-//                    }
-//                    if keyCount == 1 && existing.baseKey == nil {
-//                        existing.baseKey = keyPair.baseKey
-//                    }
-//                    // Backend returns "<null>" for md5 and mtime for item which was submitted, but attachment has not yet been uploaded. Just ignore these values, we have correct values stored locally
-//                    // and they'll be submitted on upload of attachment.
-//                    if value != "<null>" || existing.value.isEmpty {
-//                        existing.value = value
-//                    }
-//                    field = existing
-//                } else {
-//                    field = RItemField()
-//                    field.key = keyPair.key
-//                    field.baseKey = keyPair.baseKey ?? schemaController.baseKey(for: data.rawType, field: keyPair.key)
-//                    field.value = value
-//                    item.fields.append(field)
-//                }
-//
-//                switch (field.key, field.baseKey) {
-//                    case (FieldKeys.Item.title, _), (_, FieldKeys.Item.title):
-//                    item.baseTitle = value
-//                    case (FieldKeys.Item.note, _) where item.rawType == ItemTypes.note:
-//                    item.baseTitle = NotePreviewGenerator.preview(from: value) ?? value
-//                    case (FieldKeys.Item.date, _):
-//                    date = value
-//                    case (FieldKeys.Item.publisher, _), (_, FieldKeys.Item.publisher):
-//                    publisher = value
-//                    case (FieldKeys.Item.publicationTitle, _), (_, FieldKeys.Item.publicationTitle):
-//                    publicationTitle = value
-//                    case (FieldKeys.Item.Annotation.sortIndex, _):
-//                    sortIndex = value
-//                    case (FieldKeys.Item.Attachment.md5, _):
-//                    if value != "<null>" {
-//                        md5 = value
-//                    }
-//                    case (FieldKeys.Item.Attachment.contentType, _), (_, FieldKeys.Item.Attachment.contentType):
-//                    contentType = value
-//                    default: break
-//                }
-//            }
-//
-//            item.setDateFieldMetadata(date, parser: dateParser)
-//            item.set(publisher: publisher)
-//            item.set(publicationTitle: publicationTitle)
-//            item.annotationSortIndex = sortIndex ?? ""
-//            item.backendMd5 = md5 ?? ""
-//
-//            if let oldName = oldName, let newName = newName, let contentType = contentType {
-//                return StoreItemsResponse.FilenameChange(key: item.key, oldName: oldName, newName: newName, contentType: contentType)
-//            }
-//            return nil
-//        }
+        fun update(item: RItem, libraryId: LibraryIdentifier, response: ItemResponse, schemaController: SchemaController, database: Realm): Pair<RItem, StoreItemsResponse.FilenameChange?> {
+            var filenameChange: StoreItemsResponse.FilenameChange? = null
+            database.executeTransaction {
+                item.key = response.key
+                item.rawType = response.rawType
+                item.localizedType = schemaController.localizedItemType(itemType = response.rawType) ?: ""
+                item.inPublications = response.inPublications
+                item.version = response.version
+                item.trash = response.isTrash
+                item.dateModified = response.dateModified
+                item.dateAdded = response.dateAdded
+                item.syncState = ObjectSyncState.synced.name
+                item.syncRetries = 0
+                item.lastSyncDate = Date()
+                item.changeType = UpdatableChangeType.sync.name
+                item.libraryId = libraryId
+
+                filenameChange = syncFields(data =  response, item =  item, database = database, schemaController = schemaController)
+                syncParent(key =  response.parentKey, libraryId =  libraryId, item =  item, database = database)
+                syncCollections(keys = response.collectionKeys, libraryId = libraryId, item = item, database = database)
+                syncTags(tags = response. tags, libraryId = libraryId, item = item, database = database)
+                syncCreators(creators = response. creators, item = item, schemaController =schemaController, database = database)
+                syncRelations(relations = response. relations, item = item, database = database)
+                syncLinks(data = response, item = item, database = database)
+                syncUsers(createdBy =  response.createdBy, lastModifiedBy = response.lastModifiedBy, item = item, database = database)
+                syncRects(rects = response. rects ?: emptyList(), item, database = database)
+                syncPaths(paths = response. paths ?: emptyList(), item, database = database)
+
+                item.updateDerivedTitles()
+            }
+
+            return item to filenameChange
+        }
+
+
+        fun syncFields(data: ItemResponse, item: RItem, database: Realm, schemaController: SchemaController): StoreItemsResponse.FilenameChange? {
+            var oldName: String? = null
+            var newName: String? = null
+            var contentType: String? = null
+            val allFieldKeys = data.fields.keys.toTypedArray()
+
+            val toRemove = item.fields.where().not().`in`("key",allFieldKeys.map{ it.key }.toTypedArray())
+            toRemove.findAll().deleteAllFromRealm()
+
+            var date: String? = null
+            var publisher: String? = null
+            var publicationTitle: String? = null
+            var sortIndex: String? = null
+            var md5: String? = null
+
+            for (keyPair in allFieldKeys) {
+                val value = data.fields[keyPair] ?: ""
+                var field: RItemField
+
+                val keyCount: Int
+                        val existingFieldFilter: RealmQuery<RItemField>
+                        val baseKey = keyPair.baseKey
+                        if (baseKey !=  null){
+                            keyCount = allFieldKeys.filter{ it.key == keyPair.key }.size
+                            if (keyCount == 1) {
+                                existingFieldFilter = item.fields.where().key(keyPair.key)
+                            } else {
+                                existingFieldFilter = item.fields.where().key(keyPair.key, andBaseKey = baseKey)
+                            }
+                        } else {
+                            keyCount = 0
+                            existingFieldFilter = item.fields.where().key(keyPair.key)
+                        }
+
+                val existing = existingFieldFilter.findFirst()
+
+                if (existing != null) {
+                    if ((existing.key == FieldKeys.Item.Attachment.filename || existing.baseKey == FieldKeys.Item.Attachment.filename) && existing.value != value) {
+                        oldName = existing.value
+                        newName = value
+                    }
+                    if (keyCount == 1 && existing.baseKey == null) {
+                        existing.baseKey = keyPair.baseKey
+                    }
+                    if (value != "<null>" || existing.value.isEmpty()) {
+                        existing.value = value
+                    }
+                    field = existing
+                } else {
+                    field = RItemField()
+                    field.key = keyPair.key
+                    field.baseKey = keyPair.baseKey ?: schemaController.baseKey(data.rawType, field = keyPair.key)
+                    field.value = value
+                    item.fields.add(field)
+                }
+
+                when  {
+                    field.key == FieldKeys.Item.title || field.baseKey ==  FieldKeys.Item.title-> {
+                        item.baseTitle = value
+                    }
+                    field.key == FieldKeys.Item.note && item.rawType == ItemTypes.note -> {
+                        item.baseTitle = NotePreviewGenerator.preview(value) ?: value
+                    }
+                    field.key == FieldKeys.Item.date -> {
+                        date = value
+                    }
+                    field.key == FieldKeys.Item.publisher || field.baseKey ==  FieldKeys.Item.publisher-> {
+                        publisher = value
+                    }
+                    field.key == FieldKeys.Item.publicationTitle || field.baseKey ==  FieldKeys.Item.publicationTitle-> {
+                        publicationTitle = value
+                    }
+                    field.key == FieldKeys.Item.Annotation.sortIndex -> {
+                        sortIndex = value
+                    }
+                    field.key == FieldKeys.Item.Attachment.md5 -> {
+                        if (value != "<null>") {
+                            md5 = value
+                        }
+                    }
+                    field.key == FieldKeys.Item.Attachment.contentType || field.baseKey ==  FieldKeys.Item.Attachment.contentType-> {
+                        contentType = value
+                    }
+                }
+            }
+
+//            item.setDateFieldMetadata //TODO
+            item.setP(publisher = publisher)
+            item.setPT(publicationTitle =  publicationTitle)
+            item.annotationSortIndex = sortIndex ?: ""
+            item.backendMd5 = md5 ?: ""
+
+            if (oldName != null && newName != null && contentType != null) {
+                return StoreItemsResponse.FilenameChange(
+                    key = item.key,
+                    oldName = oldName,
+                    newName = newName,
+                    contentType = contentType
+                )
+            }
+            return null
+        }
 
         fun syncRects(rects: List<List<Double>>, item: RItem, database: Realm) {
             if (!rects(rects, item.rects)) {
@@ -223,17 +298,18 @@ class StoreItemDbRequest(
             item.paths.deleteAllFromRealm()
 
             paths.forEachIndexed { idx, path ->
-                val rPath = RPath()
+                val rPath = database.createEmbeddedObject(RPath::class.java, item, "paths")
                 rPath.sortIndex = idx
 
                 path.forEachIndexed { idy, value ->
                     val rCoordinate = RPathCoordinate()
                     rCoordinate.value = value
                     rCoordinate.sortIndex = idy
-                    rPath.coordinates.add(rCoordinate)
+                    rPath.coordinates!!.add(rCoordinate)
                 }
 
-                item.paths.add(rPath)
+                //TODO propably not needed
+//                item.paths.add(rPath)
             }
         }
 
@@ -246,14 +322,15 @@ class StoreItemDbRequest(
 
             paths.forEachIndexed { idx, path ->
                 val itemPath = sortedPaths[idx]
-                if (path.size != itemPath.coordinates.size) {
+                if (path.size != itemPath.coordinates!!.size) {
                     return true
                 }
 
                 val sortedCoordinates = itemPath.coordinates.sort("sortIndex")
 
                 for (idy in 0..path.size) {
-                    if (path[idy] != sortedCoordinates[idy]?.value) {
+                    if (path[idy]
+                        != sortedCoordinates[idy]?.value) {
                         return true
                     }
                 }
@@ -269,7 +346,7 @@ class StoreItemDbRequest(
                 return
             }
 
-            val parent: RItem
+            var parent: RItem
             val existing = database.where<RItem>().key(key, libraryId).findFirst()
             if (existing != null) {
                 parent = existing
@@ -278,7 +355,7 @@ class StoreItemDbRequest(
                 parent.key = key
                 parent.syncState = ObjectSyncState.dirty.name
                 parent.libraryId = libraryId
-                database.insertOrUpdate(parent)
+                parent = database.copyToRealm(parent)
             }
 
             item.parent = parent
@@ -286,7 +363,7 @@ class StoreItemDbRequest(
 
         fun syncCollections(keys: Set<String>, libraryId: LibraryIdentifier, item: RItem, database: Realm) {
             // Remove item from collections, which are not in the `keys` array anymore
-            for (collection in item.collections.where().keyNotIn(keys).findAll()) {
+            for (collection in item.collections!!.where().keyNotIn(keys).findAll()) {
                 val index = collection.items.indexOf(item)
                 if (index == -1) {
                     continue
@@ -320,7 +397,7 @@ class StoreItemDbRequest(
         }
 
         fun syncTags(tags: List<TagResponse>, libraryId: LibraryIdentifier, item: RItem, database: Realm) {
-            val toRemove = item.tags.where().tagNameNotIn(tags.map { it.tag }).findAll()
+            val toRemove = item.tags!!.where().tagNameNotIn(tags.map { it.tag }).findAll()
 
             val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<Any>(fromTags = toRemove).process(
                 database = database
@@ -337,7 +414,7 @@ class StoreItemDbRequest(
                 val allTags = database.where<RTag>()
 
                 for (tag in tags) {
-                    val existingA = item.tags.where().tagName(tag.tag).findFirst()
+                    val existingA = item.tags!!.where().tagName(tag.tag).findFirst()
                     if (existingA != null) {
                         if (existingA.type != tag.type.name) {
                             existingA.type = tag.type.name
@@ -389,8 +466,8 @@ class StoreItemDbRequest(
             item.updateCreatorSummary()
         }
 
-        fun syncRelations(relations: Map<String, JsonObject>, item: RItem, database: Realm) {
-            val allKeys = relations.keys.toTypedArray()
+        fun syncRelations(relations: JsonObject, item: RItem, database: Realm) {
+            val allKeys = relations.keySet().toTypedArray()
 
             val toRemove = item.relations.filter { !allKeys.contains(it.type) }
             toRemove.forEach {

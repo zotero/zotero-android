@@ -35,6 +35,7 @@ class SyncUseCase @Inject constructor(
     private val fileStore: FileStore,
     private val itemResponseMapper: ItemResponseMapper,
     private val collectionResponseMapper: CollectionResponseMapper,
+    private val schemaController: SchemaController,
     private val itemResultsUseCase: ItemResultsUseCase
 ) {
 
@@ -159,6 +160,7 @@ class SyncUseCase @Inject constructor(
                 dbWrapper = this.dbWrapper, fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
                 collectionResponseMapper = collectionResponseMapper,
+                schemaController = schemaController,
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)

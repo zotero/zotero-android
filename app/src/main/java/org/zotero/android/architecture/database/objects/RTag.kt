@@ -31,7 +31,7 @@ open class RTag : RealmObject() {
     var groupKey: Int? = null
 
     @LinkingObjects("tag")
-    val tags: RealmResults<RTypedTag> = TODO()
+    val tags: RealmResults<RTypedTag>? = null
 
     var libraryId: LibraryIdentifier?
         get() {

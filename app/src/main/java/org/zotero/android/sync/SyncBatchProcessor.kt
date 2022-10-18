@@ -1,6 +1,7 @@
 package org.zotero.android.sync
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
@@ -9,6 +10,7 @@ import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.files.FileStore
+import timber.log.Timber
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
@@ -22,6 +24,7 @@ class SyncBatchProcessor(
     val itemResponseMapper: ItemResponseMapper,
     val collectionResponseMapper: CollectionResponseMapper,
     val itemResultsUseCase: ItemResultsUseCase,
+    val schemaController: SchemaController,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit
 ) {
 
@@ -57,7 +60,7 @@ class SyncBatchProcessor(
 
     }
 
-    private fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
+    private suspend fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
         if (isFinished) {
             return
         }
@@ -74,7 +77,7 @@ class SyncBatchProcessor(
         }
     }
 
-    private fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
+    private suspend fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
         if (this.isFinished) {
             return
         }
@@ -124,7 +127,7 @@ class SyncBatchProcessor(
 
     }
 
-    private fun sync(
+    private suspend fun sync(
         dataArray: JsonArray,
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
@@ -144,17 +147,31 @@ class SyncBatchProcessor(
                 SyncBatchResponse(failedKeys, emptyList(), emptyList())
             }
             SyncObject.item, SyncObject.trash -> {
-                val items = dataArray.map {
-                    itemResponseMapper.fromJson(it.asJsonObject)
+                val objects = mutableListOf<JsonElement>()
+                val errors = mutableListOf<Throwable>()
+                val items = dataArray.mapNotNull {
+                    try {
+                        objects.add(it)
+                        itemResponseMapper.fromJson(it.asJsonObject)
+                    } catch (e :Exception) {
+                        Timber.e(e)
+                        errors.add(e)
+                        null
+                    }
                 }
                 //Set a breakpoint here
                 println(items)
                 itemResultsUseCase.postResults(items)
+                //TODO storeIndividualObjects
 
+//                val request = StoreItemsDbResponseRequest(responses = items, schemaController = this. schemaController, preferResponseData = true)
+//                val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
 
-                //TODO return parse errors and conflicts
+//                renameExistingFiles(changes = response.changedFilenames, libraryId = libraryId)
+//                SyncBatchResponse(failedKeys, errors, response.conflicts)
+
                 SyncBatchResponse(failedKeys, emptyList(), emptyList())
             }
             SyncObject.settings -> {
@@ -169,6 +186,21 @@ class SyncBatchProcessor(
 
     private fun failedKeys(expectedKeys: List<String>, parsedKeys: List<String>): List<String> {
         return expectedKeys.filter { !parsedKeys.contains(it) }
+    }
+
+    private fun renameExistingFiles(changes: List<StoreItemsResponse.FilenameChange>, libraryId: LibraryIdentifier) {
+        for (change in changes) {
+            val oldFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.oldName, contentType = change.contentType)
+            if (!oldFile.exists()) {
+                continue
+            }
+
+            val newFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.newName, contentType =  change.contentType)
+            if (!oldFile.renameTo(newFile)) {
+                Timber.e("SyncBatchProcessor: can't rename file")
+                oldFile.delete()
+            }
+        }
     }
 
     private fun cancel(error: CustomResult.GeneralError) {

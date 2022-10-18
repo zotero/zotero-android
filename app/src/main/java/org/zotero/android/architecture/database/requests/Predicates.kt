@@ -61,6 +61,10 @@ fun <T> RealmQuery<T>.key(keys: Set<String>): RealmQuery<T>  {
     return `in`("key", keys.toTypedArray())
 }
 
+fun <T> RealmQuery<T>.key(key: String, andBaseKey: String): RealmQuery<T>  {
+    return equalTo("key", key).and().equalTo("baseKey", andBaseKey)
+}
+
 fun <T> RealmQuery<T>.keyNotIn(keys: Set<String>): RealmQuery<T>  {
     return not().`in`("key", keys.toTypedArray())
 }

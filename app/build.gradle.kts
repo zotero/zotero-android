@@ -35,6 +35,9 @@ android {
             keyPassword = "0uilyM8v9iPi"
         }
     }
+    androidResources {
+        noCompress ("ttf", "mov", "avi", "json", "html", "csv", "obb")
+    }
     buildTypes {
 //        getByName("internalQAForDevug") {
 //            isDebuggable = true

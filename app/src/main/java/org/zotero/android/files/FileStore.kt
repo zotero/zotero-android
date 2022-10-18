@@ -1,14 +1,19 @@
 package org.zotero.android.files
 
 import android.content.Context
+import android.content.res.AssetManager
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import com.google.gson.Gson
 import com.google.gson.JsonObject
+import okhttp3.internal.closeQuietly
 import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,7 +34,7 @@ class FileStore @Inject constructor (
     private lateinit var bundledDataDbFile: File
 
     companion object {
-        private const val BUNDLED_SCHEMA_FILE = "bundled_schema.json"
+        private const val BUNDLED_SCHEMA_FILE = "schema.json"
     }
 
     fun init() {
@@ -67,9 +72,24 @@ class FileStore @Inject constructor (
 
     fun getRootDirectory() = rootDirectory
 
+
+    @Throws(IOException::class)
+    fun loadAssetIntoJsonObject(assetFileName: String): JsonObject {
+        try {
+            val assetManager: AssetManager = context.assets
+            val assetFileDescriptor = assetManager.openFd(assetFileName)
+            val inputStream = assetFileDescriptor.createInputStream()
+            val fromJson = Gson().fromJson(InputStreamReader(inputStream), JsonObject::class.java)
+            inputStream.closeQuietly()
+            return fromJson
+        } catch (e: IOException) {
+            throw e
+        }
+    }
+
     fun getBundledSchema(): JsonObject? {
         return try {
-            dataMarshaller.unmarshal(BUNDLED_SCHEMA_FILE)
+            loadAssetIntoJsonObject(BUNDLED_SCHEMA_FILE)
         } catch (e: Exception) {
             Timber.d("Failed to load cached bundled data")
             null
@@ -103,6 +123,24 @@ class FileStore @Inject constructor (
         } catch (e: IOException) {
             Timber.e(e, "Unable to write data to file = $filename")
         }
+    }
+
+    fun attachmentFile(libraryId: LibraryIdentifier, key: String, filename: String, contentType: String): File {
+        val name = split(filename = filename).first
+        val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
+        folderPath.mkdirs()
+        val result = File(folderPath, name)
+        return result
+    }
+
+    private fun split(filename: String): Pair<String, String> {
+        val index = filename.lastIndexOf(".")
+        if (index != -1) {
+            val name = filename.substring(0, index)
+            val ext = filename.substring(index + 1, filename.length)
+            return name to ext
+        }
+        return filename to ""
     }
 
 }

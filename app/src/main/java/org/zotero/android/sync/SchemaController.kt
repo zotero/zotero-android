@@ -50,7 +50,7 @@ class SchemaController @Inject constructor(
     }
 
     fun baseKey(type: String, field: String): String? {
-        return fields(type = type)?.first { it.field == field }?.baseField
+        return fields(type = type)?.firstOrNull { it.field == field }?.baseField
     }
 
     fun creators(type: String): List<CreatorSchema>? {

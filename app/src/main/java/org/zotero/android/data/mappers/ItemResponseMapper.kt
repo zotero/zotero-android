@@ -3,13 +3,19 @@ package org.zotero.android.data.mappers
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
 import org.zotero.android.api.pojo.sync.LinksResponse
 import org.zotero.android.api.pojo.sync.UserResponse
+import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.architecture.database.objects.ItemTypes
+import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.formatter.iso8601DateFormatV2
 import org.zotero.android.ktx.unmarshalList
+import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SchemaError
 import java.util.Date
 import javax.inject.Inject
 
@@ -99,23 +105,23 @@ class ItemResponseMapper @Inject constructor(
         val inPublications =
             data["inPublications"]?.asBoolean ?: (data["inPublications"]?.asInt == 1)
 
-//        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = this.schemaController).first
-//
-//        if (rawType == ItemTypes.attachment) {
-//            val linkMode = fields[KeyBaseKeyPair(
-//                key = FieldKeys.Item.Attachment.linkMode,
-//                baseKey = null
-//            )]?.let { LinkMode.valueOf(it) }
-//            if (linkMode != null &&
-//                linkMode == LinkMode.embeddedImage && parentKey == null
-//            ) {
-//                throw SchemaError.embeddedImageMissingParent(
-//                    key = key, libraryId = library.libraryId ?: LibraryIdentifier.custom(
-//                        RCustomLibraryType.myLibrary
-//                    )
-//                )
-//            }
-//        }
+        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = this.schemaController).first
+
+        if (rawType == ItemTypes.attachment) {
+            val linkMode = fields[KeyBaseKeyPair(
+                key = FieldKeys.Item.Attachment.linkMode,
+                baseKey = null
+            )]?.let { LinkMode.from(it) }
+            if (linkMode != null &&
+                linkMode == LinkMode.embeddedImage && parentKey == null
+            ) {
+                throw SchemaError.embeddedImageMissingParent(
+                    key = key, libraryId = library.libraryId ?: LibraryIdentifier.custom(
+                        RCustomLibraryType.myLibrary
+                    )
+                )
+            }
+        }
 
 
 
@@ -145,7 +151,7 @@ class ItemResponseMapper @Inject constructor(
             note = note,
             paths = null,
             rects = null,
-            fields = emptyMap()//TODO
+            fields = fields
         )
     }
 
@@ -176,7 +182,7 @@ class ItemResponseMapper @Inject constructor(
         val relations = JsonObject()
         val inPublications = false
 
-//        val (fields, rects, paths) = ItemResponse.parseFields(data, rawType =  ItemTypes.annotation, key =  key, schemaController = schemaController)
+        val (fields, rects, paths) = ItemResponse.parseFields(data, rawType =  ItemTypes.annotation, key =  key, schemaController = schemaController)
 
         return ItemResponse(
             version = version,
@@ -198,13 +204,9 @@ class ItemResponseMapper @Inject constructor(
             rawType = rawType,
             title = null,
             note = null,
-            fields = emptyMap(),
-            rects = null,
-            paths = null,
-            //TODO
-//            fields = fields,
-//            rects = rects,
-//            paths = paths
+            fields = fields,
+            rects = rects,
+            paths = paths
         )
     }
 

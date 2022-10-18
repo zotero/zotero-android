@@ -23,6 +23,20 @@ sealed class LibraryIdentifier {
         }
     }
 
+    val folderName: String get() {
+        when (this) {
+            is LibraryIdentifier.custom -> {
+                when (this.type) {
+                    RCustomLibraryType.myLibrary ->
+                    return "custom_my_library"
+                }
+            }
+
+            is LibraryIdentifier.group ->
+            return "group_${this.groupId}"
+        }
+    }
+
     companion object {
         fun from(apiPath: String): LibraryIdentifier? {
             if (apiPath.contains("users")) {

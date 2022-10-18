@@ -1,5 +1,6 @@
 package org.zotero.android.api.pojo.sync
 
+import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.zotero.android.architecture.database.objects.AnnotationType
@@ -11,6 +12,7 @@ import org.zotero.android.ktx.unmarshalList
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SchemaError
+import timber.log.Timber
 import java.util.Date
 
 data class ItemResponse(
@@ -37,7 +39,6 @@ data class ItemResponse(
 
     val title: String?,
     val note: String?
-
     ) {
 
     var notes: MutableList<String> = mutableListOf()
@@ -210,8 +211,10 @@ data class ItemResponse(
                         )
                     }
                     try {
-                        LinkMode.valueOf(rawLinkMode)
+                        LinkMode.from(rawLinkMode)
                     } catch (e: Exception) {
+                        Timber.e(e)
+
                         throw SchemaError.invalidValue(
                             value = rawLinkMode,
                             field = FieldKeys.Item.Attachment.linkMode,
@@ -238,10 +241,10 @@ data class ItemResponse(
         }
 
         private fun parsePositionFields(encoded: JsonElement?, key: String, fields: MutableMap<KeyBaseKeyPair, String>) : Pair<List<List<Double>>?, List<List<Double>>?>  {
-            val json = encoded?.asJsonObject
-            if (json == null) {
+            if (encoded == null) {
                 throw SchemaError.invalidValue(value  = encoded?.asString ?: "", field =  FieldKeys.Item.Annotation.position, key =  key)
             }
+            val json = Gson().fromJson(encoded.asString, JsonObject::class.java)
 
             var rects: List<List<Double>>? = null
             var paths: List<List<Double>>? = null
