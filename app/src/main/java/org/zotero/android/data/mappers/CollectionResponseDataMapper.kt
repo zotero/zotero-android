@@ -10,7 +10,7 @@ class CollectionResponseDataMapper @Inject constructor(
 ) {
     fun fromJson(response: JsonObject, key: String): CollectionResponse.Data {
         val unknownKey =
-            response.keySet().first { !FieldKeys.Collection.knownDataKeys.contains(it) }
+            response.keySet().firstOrNull { !FieldKeys.Collection.knownDataKeys.contains(it) }
         if (unknownKey != null) {
 
             throw SchemaError.unknownField(key = key, field = unknownKey)
