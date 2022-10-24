@@ -90,7 +90,7 @@ class SyncVersionsDbRequest(
 //                    toUpdate.add(objectS.key)
 //                }
 //
-//                SyncType.collectionsOnly, SyncType.normal -> {
+//                SyncType.collectionsOnly, SyncType.normal, SyncType.keysOnly -> {
 //                    val delayIdx = min(objectS.syncRetries, (this.delayIntervals.size - 1))
 //                    val delay = this.delayIntervals[delayIdx]
 //                    if (date.time - objectS.lastSyncDate.time >= delay) {

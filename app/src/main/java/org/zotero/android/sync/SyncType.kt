@@ -5,4 +5,5 @@ enum class SyncType {
     ignoreIndividualDelays,
     full,
     collectionsOnly,
+    keysOnly
 }

@@ -35,7 +35,7 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
 
     @Index
     override var version: Int = 0
-    override lateinit var syncState: String
+    override lateinit var syncState: String//ObjectSyncState
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>

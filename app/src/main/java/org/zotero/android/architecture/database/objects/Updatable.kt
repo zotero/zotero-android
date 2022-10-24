@@ -17,7 +17,7 @@ interface Updatable {
             this.changes.filter { uuids.contains(it.identifier) }.forEach {
                 it.deleteFromRealm()
             }
-            this.changeType = UpdatableChangeType.sync.name
+            this.changeType = UpdatableChangeType.syncResponse.name
         }
     }
 

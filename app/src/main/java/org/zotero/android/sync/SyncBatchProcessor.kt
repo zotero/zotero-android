@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import org.zotero.android.BuildConfig
@@ -7,10 +8,15 @@ import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.requests.StoreCollectionsDbRequest
+import org.zotero.android.architecture.database.requests.StoreItemsDbResponseRequest
+import org.zotero.android.architecture.database.requests.StoreSearchesDbRequest
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
+import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.files.FileStore
 import timber.log.Timber
+import java.io.FileWriter
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
@@ -23,6 +29,7 @@ class SyncBatchProcessor(
     val fileStore: FileStore,
     val itemResponseMapper: ItemResponseMapper,
     val collectionResponseMapper: CollectionResponseMapper,
+    val searchResponseMapper: SearchResponseMapper,
     val itemResultsUseCase: ItemResultsUseCase,
     val schemaController: SchemaController,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit
@@ -136,15 +143,49 @@ class SyncBatchProcessor(
     ): SyncBatchResponse {
         return when (objectS) {
             SyncObject.collection -> {
-                val collections = dataArray.map {
-                    collectionResponseMapper.fromJson(it.asJsonObject)
+                val objects = mutableListOf<JsonElement>()
+                val errors = mutableListOf<Throwable>()
+                val collections = dataArray.mapNotNull {
+                    try {
+                        objects.add(it)
+                        collectionResponseMapper.fromJson(it.asJsonObject)
+                    } catch (e :Exception) {
+                        Timber.e(e)
+                        errors.add(e)
+                        null
+                    }
                 }
+
+                storeIndividualObjects(objects, type = SyncObject.collection, libraryId = libraryId)
+                dbWrapper.realmDbStorage.perform(request = StoreCollectionsDbRequest(response = collections))
 
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = collections.map { it.key })
 
+                SyncBatchResponse(failedKeys, errors, emptyList())
+            }
+            SyncObject.search -> {
+                val objects = mutableListOf<JsonElement>()
+                val errors = mutableListOf<Throwable>()
 
-                SyncBatchResponse(failedKeys, emptyList(), emptyList())
+                val searches = dataArray.mapNotNull {
+                    try {
+                        objects.add(it)
+                        searchResponseMapper.fromJson(it.asJsonObject)
+                    } catch (e :Exception) {
+                        Timber.e(e)
+                        errors.add(e)
+                        null
+                    }
+                }
+                storeIndividualObjects(objects, SyncObject.search, libraryId = libraryId)
+
+                dbWrapper.realmDbStorage.perform(request = StoreSearchesDbRequest(response = searches))
+
+                val failedKeys =
+                    failedKeys(expectedKeys = expectedKeys, parsedKeys = searches.map { it.key })
+
+                SyncBatchResponse(failedKeys, errors, emptyList())
             }
             SyncObject.item, SyncObject.trash -> {
                 val objects = mutableListOf<JsonElement>()
@@ -162,17 +203,17 @@ class SyncBatchProcessor(
                 //Set a breakpoint here
                 println(items)
                 itemResultsUseCase.postResults(items)
-                //TODO storeIndividualObjects
 
-//                val request = StoreItemsDbResponseRequest(responses = items, schemaController = this. schemaController, preferResponseData = true)
-//                val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+                storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
+
+                val request = StoreItemsDbResponseRequest(responses = items, schemaController = this. schemaController, preferResponseData = true)
+                val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
 
-//                renameExistingFiles(changes = response.changedFilenames, libraryId = libraryId)
-//                SyncBatchResponse(failedKeys, errors, response.conflicts)
+                renameExistingFiles(changes = response.changedFilenames, libraryId = libraryId)
+                SyncBatchResponse(failedKeys, errors, response.conflicts)
 
-                SyncBatchResponse(failedKeys, emptyList(), emptyList())
             }
             SyncObject.settings -> {
                 SyncBatchResponse(emptyList(), emptyList(), emptyList())
@@ -199,6 +240,23 @@ class SyncBatchProcessor(
             if (!oldFile.renameTo(newFile)) {
                 Timber.e("SyncBatchProcessor: can't rename file")
                 oldFile.delete()
+            }
+        }
+    }
+
+    private fun storeIndividualObjects(jsonObjects: List<JsonElement>, type: SyncObject, libraryId: LibraryIdentifier) {
+        for (obj in jsonObjects) {
+            val objectS = obj.asJsonObject
+            val key = objectS["key"]?.asString ?: continue
+            try {
+                val file = fileStore.jsonCacheFile(type, libraryId = libraryId, key = key)
+                val fileWriter = FileWriter(file)
+                Gson().toJson(objectS, fileWriter)
+                fileWriter.flush()
+                fileWriter.close()
+                println("")
+            } catch (e: Throwable) {
+                Timber.e(e, "SyncBatchProcessor: can't encode/write item - $objectS")
             }
         }
     }

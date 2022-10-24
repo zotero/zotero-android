@@ -37,7 +37,7 @@ sealed class Action {
 
     data class syncSettings(override val libraryId: LibraryIdentifier, val int: Int): Action()
 
-    data class storeVersion(val int: Int, override val libraryId: LibraryIdentifier, val syncObject: SyncObject): Action()
+    data class storeVersion(val version: Int, override val libraryId: LibraryIdentifier, val syncObject: SyncObject): Action()
 
         open val libraryId: LibraryIdentifier?
         get() {

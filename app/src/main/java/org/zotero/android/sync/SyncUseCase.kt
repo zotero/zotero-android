@@ -10,11 +10,14 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.architecture.database.requests.UpdateVersionType
 import org.zotero.android.data.AccessPermissions
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
+import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.sync.syncactions.StoreVersionSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import timber.log.Timber
 import java.lang.Integer.min
@@ -35,6 +38,7 @@ class SyncUseCase @Inject constructor(
     private val fileStore: FileStore,
     private val itemResponseMapper: ItemResponseMapper,
     private val collectionResponseMapper: CollectionResponseMapper,
+    private val searchResponseMapper: SearchResponseMapper,
     private val schemaController: SchemaController,
     private val itemResultsUseCase: ItemResultsUseCase
 ) {
@@ -133,10 +137,17 @@ class SyncUseCase @Inject constructor(
                     checkRemote = action.checkRemote
                 )
             }
+
             //TODO implement other actions
 
             is Action.syncBatchesToDb -> {
                 processBatchesSync(action.batches)
+            }
+            is Action.storeVersion -> {
+                processStoreVersion(libraryId = action.libraryId, type = UpdateVersionType.objectS(action.syncObject), version = action.version)
+            }
+            is Action.storeDeletionVersion -> {
+                processStoreVersion(libraryId = action.libraryId, type = UpdateVersionType.deletions, version = action.version)
             }
             else -> {
                 processNextAction()
@@ -160,6 +171,7 @@ class SyncUseCase @Inject constructor(
                 dbWrapper = this.dbWrapper, fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
                 collectionResponseMapper = collectionResponseMapper,
+                searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
                 completion = { result ->
                     this.batchProcessor = null
@@ -573,6 +585,10 @@ class SyncUseCase @Inject constructor(
 
 
     private fun createInitialActions(libraries: LibrarySyncType, syncType: SyncType): List<Action> {
+        if (SyncType.keysOnly == syncType) {
+            return listOf(Action.loadKeyPermissions)
+        }
+
         when (libraries) {
             is LibrarySyncType.all ->
                 return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
@@ -596,7 +612,7 @@ class SyncUseCase @Inject constructor(
         return when (syncType) {
             SyncType.full, SyncType.collectionsOnly ->
                 CreateLibraryActionsOptions.onlyDownloads
-            SyncType.ignoreIndividualDelays,SyncType.normal ->
+            SyncType.ignoreIndividualDelays,SyncType.normal, SyncType.keysOnly ->
                 CreateLibraryActionsOptions.automatic
         }
     }
@@ -703,6 +719,7 @@ class SyncUseCase @Inject constructor(
         versions: Versions
     ): List<Action> {
         when (this.type) {
+            SyncType.keysOnly -> return listOf()
             SyncType.collectionsOnly ->
                 return listOf(
                     Action.syncVersions(
@@ -911,8 +928,10 @@ class SyncUseCase @Inject constructor(
                 return SyncError.nonFatal2(SyncError.NonFatal.insufficientSpace)
             503 ->
                 return SyncError.fatal2(SyncError.Fatal.serviceUnavailable)
+            403 ->
+                return SyncError.fatal2(SyncError.Fatal.forbidden)
             else -> {
-                if (code >= 400 && code <= 499 && code != 403) {
+                if (code >= 400 && code <= 499) {
                     return SyncError.fatal2(
                         SyncError.Fatal.apiError(
                             response = responseMessage(),
@@ -927,6 +946,33 @@ class SyncUseCase @Inject constructor(
                         )
                     )
                 }
+            }
+        }
+    }
+
+        private suspend fun processStoreVersion(libraryId: LibraryIdentifier, type: UpdateVersionType, version: Int) {
+        try {
+            StoreVersionSyncAction(version =  version, type =  type, libraryId = libraryId, dbWrapper = this.dbWrapper).result()
+            finishCompletableAction(null)
+        }catch (e: Throwable) {
+            finishCompletableAction(e to SyncError.ErrorData.from(libraryId = libraryId))
+        }
+    }
+
+    private suspend fun finishCompletableAction(errorData: Pair<Throwable, SyncError.ErrorData>?) {
+        if (errorData == null) {
+            processNextAction()
+            return
+        }
+        val (error, data) = errorData
+
+        val syncError = syncError(CustomResult.GeneralError.CodeError(error), data)
+        when (syncError) {
+            is SyncError.fatal2 -> {
+                abort(syncError.error)
+            }
+            is SyncError.nonFatal2 -> {
+                handleNonFatal(error = syncError.error, libraryId = data.libraryId, version = null)
             }
         }
     }

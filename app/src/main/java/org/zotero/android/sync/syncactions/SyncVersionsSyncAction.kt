@@ -156,7 +156,8 @@ class SyncVersionsSyncAction(
                     )
                 }
 
-                SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal -> {
+                SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal,SyncType.keysOnly -> {
+                    //no-op
                 }
             }
 

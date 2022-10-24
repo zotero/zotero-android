@@ -58,6 +58,7 @@ sealed class SyncError {
         object preconditionErrorCantBeResolved : Fatal()
         object cantResolveConflict : Fatal()
         object serviceUnavailable : Fatal()
+        object forbidden : Fatal()
 
 
         override fun equals(other: Any?): Boolean {

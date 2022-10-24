@@ -428,7 +428,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             it.deleteFromRealm()
         }
 
-        this.changeType = UpdatableChangeType.sync.name
+        this.changeType = UpdatableChangeType.syncResponse.name
         this.fields.filter { it.changed }.forEach { field ->
             field.changed = false
         }

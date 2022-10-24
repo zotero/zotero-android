@@ -10,6 +10,7 @@ import okhttp3.internal.closeQuietly
 import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
@@ -130,6 +131,24 @@ class FileStore @Inject constructor (
         val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
         folderPath.mkdirs()
         val result = File(folderPath, name)
+        return result
+    }
+
+    fun jsonCacheFile(objectS: SyncObject, libraryId: LibraryIdentifier, key: String): File {
+        val objectName: String
+                when(objectS) {
+            SyncObject.collection ->
+            objectName = "collection"
+            SyncObject.item, SyncObject.trash ->
+            objectName = "item"
+            SyncObject.search ->
+            objectName = "search"
+            SyncObject.settings ->
+            objectName = "settings"
+        }
+        val folderPath = File(getRootDirectory(), "jsons/${libraryId.folderName}/$objectName")
+        folderPath.mkdirs()
+        val result = File(folderPath, "$key.json")
         return result
     }
 

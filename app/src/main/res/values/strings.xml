@@ -38,4 +38,8 @@
 
     <string name="items.creator_summary.and">$1%s and $2%s</string>
     <string name="items.creator_summary.etal">%s et al.</string>
+
+    <string name="errors.sync_toolbar.forbidden">Invalid username or password</string>
+    <string name="errors.sync_toolbar.forbidden_message">The Zotero sync server did not accept your username and password.\n\nPlease log out and log in with correct login information.</string>
+
 </resources>
