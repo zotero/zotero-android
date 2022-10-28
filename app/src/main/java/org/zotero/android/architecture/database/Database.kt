@@ -7,7 +7,7 @@ import org.zotero.android.files.FileStore
 
 class Database {
     companion object {
-        private val schemaVersion: Long = 34
+        private val schemaVersion: Long = 35
 
         fun mainConfiguration(fileStore: FileStore, context: Context): RealmConfiguration {
             Realm.init(context)

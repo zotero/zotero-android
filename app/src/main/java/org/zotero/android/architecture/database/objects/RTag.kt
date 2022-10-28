@@ -58,4 +58,7 @@ open class RTag : RealmObject() {
                     groupKey = identifier.groupId
             }
         }
+
+    val isInvalidated: Boolean
+        get() = !isValid
 }

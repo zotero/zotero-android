@@ -218,10 +218,6 @@ class SyncBatchProcessor(
             SyncObject.settings -> {
                 SyncBatchResponse(emptyList(), emptyList(), emptyList())
             }
-            else -> {
-                SyncBatchResponse(emptyList(), emptyList(), emptyList())
-            }
-
         }
     }
 

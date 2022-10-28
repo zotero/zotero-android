@@ -1,5 +1,7 @@
 package org.zotero.android.sync;
 
+import org.zotero.android.architecture.database.requests.PerformDeletionsDbRequest
+
 sealed class Action {
     object loadKeyPermissions : Action()
     object syncGroupVersions : Action()
@@ -39,6 +41,18 @@ sealed class Action {
 
     data class storeVersion(val version: Int, override val libraryId: LibraryIdentifier, val syncObject: SyncObject): Action()
 
+    data class markChangesAsResolved(override val libraryId: LibraryIdentifier):Action()
+
+    data class markGroupAsLocalOnly(val groupId: Int):Action()
+
+    data class deleteGroup(val groupId: Int):Action()
+
+    data class performDeletions(
+        override val libraryId: LibraryIdentifier, val collections: List<String>,
+        val items: List<String>, val searches: List<String>, val tags: List<String>,
+        val conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
+    ) : Action()
+
         open val libraryId: LibraryIdentifier?
         get() {
             val q = this
@@ -57,7 +71,11 @@ sealed class Action {
                 is syncSettings -> q.libraryId
                 is syncVersions -> q.libraryId
                 is storeVersion -> q.libraryId
+                is performDeletions -> q.libraryId
                 is syncBatchesToDb -> q.batches.firstOrNull()?.libraryId
+                is markChangesAsResolved -> q.libraryId
+                is markGroupAsLocalOnly -> LibraryIdentifier.group(q.groupId)
+                is deleteGroup -> LibraryIdentifier.group(q.groupId)
             }
         }
 
@@ -79,6 +97,10 @@ sealed class Action {
                 is syncVersions -> false
                 is storeVersion -> false
                 is syncBatchesToDb -> false
+                is performDeletions -> false
+                is markChangesAsResolved -> false
+                is markGroupAsLocalOnly -> false
+                is deleteGroup -> false
             }
         }
 

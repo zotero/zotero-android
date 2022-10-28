@@ -23,5 +23,8 @@ open class RGroup : RealmObject() {
 
     var isLocalOnly: Boolean = false
     var version: Int = 0
-    lateinit var syncState: String //org.zotero.android.architecture.database.objects.ObjectSyncState
+    lateinit var syncState: String //ObjectSyncState
+
+    val isInvalidated: Boolean
+        get() = !isValid
 }

@@ -405,6 +405,9 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         }
     }
 
+    override val isInvalidated: Boolean
+        get() = !isValid
+
     private fun deletePageIndex(database: Realm) {
         val libraryId = this.libraryId
         if (libraryId != null) {

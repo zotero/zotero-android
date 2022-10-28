@@ -42,6 +42,9 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         //no-op
     }
 
+    override val isInvalidated: Boolean
+        get() = !isValid
+
     override val updateParameters: Map<String, Any>?
         get() {
             if (!isChanged) {

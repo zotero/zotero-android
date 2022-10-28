@@ -9,14 +9,20 @@ import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.objects.Conflict
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.architecture.database.requests.PerformDeletionsDbRequest
 import org.zotero.android.architecture.database.requests.UpdateVersionType
 import org.zotero.android.data.AccessPermissions
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.files.FileStore
+import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
+import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
+import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import timber.log.Timber
@@ -148,6 +154,19 @@ class SyncUseCase @Inject constructor(
             }
             is Action.storeDeletionVersion -> {
                 processStoreVersion(libraryId = action.libraryId, type = UpdateVersionType.deletions, version = action.version)
+            }
+            is Action.performDeletions -> {
+                performDeletions(libraryId = action.libraryId, collections = action.collections,
+                    items = action.items, searches = action.searches, tags = action.tags, conflictMode = action.conflictMode)
+            }
+            is Action.markChangesAsResolved -> {
+                markChangesAsResolved(action.libraryId)
+            }
+            is Action.markGroupAsLocalOnly -> {
+                markGroupAsLocalOnly(action.groupId)
+            }
+            is Action.deleteGroup -> {
+                deleteGroup(action.groupId)
             }
             else -> {
                 processNextAction()
@@ -975,5 +994,81 @@ class SyncUseCase @Inject constructor(
                 handleNonFatal(error = syncError.error, libraryId = data.libraryId, version = null)
             }
         }
+    }
+
+    private suspend fun performDeletions(libraryId: LibraryIdentifier, collections: List<String>,
+                                         items: List<String>, searches: List<String>, tags: List<String>,
+                                         conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode) {
+        try {
+            val conflicts = PerformDeletionsSyncAction(libraryId = libraryId, collections = collections,
+                items = items, searches = searches, tags = tags,
+                conflictMode = conflictMode, dbWrapper = dbWrapper).result()
+            finishDeletionsSync(result = conflicts, libraryId = libraryId)
+        }catch(e: Throwable) {
+            finishDeletionsSync(e = e, libraryId = libraryId)
+        }
+    }
+
+    private suspend fun finishDeletionsSync(
+        e: Throwable? = null,
+        result: List<Pair<String, String>>? = null,
+        libraryId: LibraryIdentifier, version: Int? = null
+    ) {
+        if (e != null) {
+            val syncError = syncError(
+                CustomResult.GeneralError.CodeError(e),
+                data = SyncError.ErrorData.from(libraryId = libraryId)
+            )
+            when (syncError) {
+                is SyncError.fatal2 ->
+                abort(error = syncError.error)
+                is SyncError.nonFatal2 ->
+                handleNonFatal(error = syncError.error, libraryId = libraryId, version = version)
+            }
+            return
+        }
+
+        val conflicts = result!!
+        if (!conflicts.isEmpty()) {
+            resolve(conflict = Conflict.removedItemsHaveLocalChanges(keys = conflicts, libraryId = libraryId))
+        } else {
+            processNextAction()
+        }
+    }
+
+    private suspend fun resolve(conflict: Conflict) {
+        //TODO implement conflict resolution
+        processNextAction()
+    }
+
+    private suspend fun markChangesAsResolved(libraryId: LibraryIdentifier) {
+        try {
+            MarkChangesAsResolvedSyncAction(libraryId = libraryId, dbWrapper = dbWrapper).result()
+            finishCompletableAction(errorData = null)
+        } catch (e: Exception) {
+            Timber.e(e)
+            finishCompletableAction(e to SyncError.ErrorData.from(libraryId = libraryId))
+        }
+    }
+
+    private suspend fun markGroupAsLocalOnly(groupId: Int) {
+        try {
+            MarkGroupAsLocalOnlySyncAction(groupId = groupId, dbWrapper = dbWrapper).result()
+            finishCompletableAction(errorData = null)
+        } catch (e: Exception) {
+            Timber.e(e)
+            finishCompletableAction(e to SyncError.ErrorData.from(libraryId = LibraryIdentifier.group(groupId)))
+        }
+    }
+
+    private suspend fun deleteGroup(groupId: Int) {
+        try {
+            DeleteGroupSyncAction(groupId =  groupId, dbWrapper = dbWrapper).result()
+            finishCompletableAction(errorData = null)
+        } catch (e: Exception) {
+            Timber.e(e)
+            finishCompletableAction(e to SyncError.ErrorData.from(libraryId = LibraryIdentifier.group(groupId)))
+        }
+
     }
 }

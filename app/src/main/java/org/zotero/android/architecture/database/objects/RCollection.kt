@@ -38,6 +38,8 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
     override lateinit var syncState: String//ObjectSyncState
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
+    override val isInvalidated: Boolean
+        get() = !isValid
     override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String // UpdatableChangeType
     override var deleted: Boolean = false

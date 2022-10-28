@@ -121,8 +121,8 @@ class RealmDbCoordinator {
         if (!request.needsWrite) {
             return request.process(realm, T::class)
         }
-
         return request.process(realm, T::class)
+
 
     }
 

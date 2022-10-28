@@ -101,6 +101,10 @@ fun <T> RealmQuery<T>.nameIn(names: List<String>): RealmQuery<T> {
     return `in`("name", names.toTypedArray())
 }
 
+fun <T> RealmQuery<T>.nameIn(names: List<String>, libraryId: LibraryIdentifier): RealmQuery<T> {
+    return nameIn(names).and().library(libraryId)
+}
+
 fun <T> RealmQuery<T>.keys(keys: List<String>, libraryId: LibraryIdentifier): RealmQuery<T> {
     return key(keys = keys).and().library(libraryId)
 }
@@ -120,5 +124,4 @@ fun <T> RealmQuery<T>.tagNameNotIn(names: List<String>): RealmQuery<T>{
 fun <T> RealmQuery<T>.tagName(name: String): RealmQuery<T>{
     return equalTo("tag.name", name)
 }
-
 
