@@ -222,6 +222,8 @@ dependencies {
     implementation("com.airbnb.android:lottie:5.0.3")
 
     implementation("commons-io:commons-io:2.6")
+    implementation ("commons-codec:commons-codec:1.13")
+
 
     implementation("androidx.work:work-runtime-ktx:2.7.1")
 

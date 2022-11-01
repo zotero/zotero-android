@@ -13,6 +13,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import javax.inject.Inject
@@ -134,6 +135,32 @@ class FileStore @Inject constructor (
         return result
     }
 
+    fun annotationPreview(annotationKey: String, pdfKey: String, libraryId: LibraryIdentifier, isDark: Boolean): File {
+        val folderPath = File(getRootDirectory(), "annotations/${libraryId.folderName}/$pdfKey")
+        folderPath.mkdirs()
+        val name = annotationKey + (if(isDark) "_dark" else "") + ".png"
+        val result = File(folderPath, name)
+        return result
+    }
+
+    fun annotationPreviews(pdfKey: String, libraryId: LibraryIdentifier): File {
+        val folderPath = File(getRootDirectory(), "annotations/${libraryId.folderName}/$pdfKey")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun annotationPreviews(libraryId: LibraryIdentifier): File {
+        val folderPath = File(getRootDirectory(), "annotations/${libraryId.folderName}")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    val annotationPreviews: File get() {
+        val folderPath = File(getRootDirectory(), "annotations")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun jsonCacheFile(objectS: SyncObject, libraryId: LibraryIdentifier, key: String): File {
         val objectName: String
                 when(objectS) {
@@ -160,6 +187,12 @@ class FileStore @Inject constructor (
             return name to ext
         }
         return filename to ""
+    }
+
+    fun md5(file: File): String {
+        val inputStream = FileInputStream(file)
+        val md5: String = org.apache.commons.codec.digest.DigestUtils.md5Hex(inputStream)
+        return md5
     }
 
 }

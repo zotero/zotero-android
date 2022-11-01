@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.database.requests
 
 import io.realm.RealmQuery
+import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.sync.LibraryIdentifier
 
@@ -25,6 +26,10 @@ fun <T> RealmQuery<T>.library(identifier: LibraryIdentifier): RealmQuery<T> {
 
 fun <T> RealmQuery<T>.changed(): RealmQuery<T> {
     return isNotEmpty("changes")
+}
+
+fun <T> RealmQuery<T>.notChanged(): RealmQuery<T> {
+    return isEmpty("changes")
 }
 
 fun <T> RealmQuery<T>.changesWithoutDeletions(libraryId: LibraryIdentifier): RealmQuery<T> {
@@ -125,3 +130,14 @@ fun <T> RealmQuery<T>.tagName(name: String): RealmQuery<T>{
     return equalTo("tag.name", name)
 }
 
+fun <T> RealmQuery<T>.attachmentNeedsUpload(): RealmQuery<T>{
+    return equalTo("attachmentNeedsSync", true)
+}
+
+fun <T> RealmQuery<T>.itemsNotChangedAndNeedUpload(libraryId: LibraryIdentifier): RealmQuery<T>{
+    return notChanged().and().attachmentNeedsUpload().and().item(ItemTypes.attachment).and().library(libraryId)
+}
+
+fun <T> RealmQuery<T>.item(type: String): RealmQuery<T>{
+    return equalTo("rawType", type)
+}
