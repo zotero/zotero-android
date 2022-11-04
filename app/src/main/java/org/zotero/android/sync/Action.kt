@@ -31,6 +31,8 @@ sealed class Action {
 
     data class submitWriteBatch(val writeBatch: WriteBatch): Action()
 
+    data class uploadAttachment(val upload: AttachmentUpload): Action()
+
     data class syncDeletions(override val libraryId: LibraryIdentifier, val int: Int): Action()
 
     data class storeDeletionVersion(override val libraryId: LibraryIdentifier, val version: Int): Action()
@@ -76,6 +78,7 @@ sealed class Action {
                 is markChangesAsResolved -> q.libraryId
                 is markGroupAsLocalOnly -> LibraryIdentifier.group(q.groupId)
                 is deleteGroup -> LibraryIdentifier.group(q.groupId)
+                is uploadAttachment -> q.upload.libraryId
             }
         }
 
@@ -101,6 +104,7 @@ sealed class Action {
                 is markChangesAsResolved -> false
                 is markGroupAsLocalOnly -> false
                 is deleteGroup -> false
+                is uploadAttachment -> false
             }
         }
 

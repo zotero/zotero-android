@@ -9,12 +9,14 @@ import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
 import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,7 +28,7 @@ import javax.inject.Singleton
 class FileStore @Inject constructor (
     private val context: Context,
     private val sdkPrefs: SdkPrefs,
-    private val dataMarshaller: DataMarshaller,
+    val dataMarshaller: DataMarshaller,
     private val globalVariables: GlobalVariables,
 ) {
 
@@ -37,6 +39,10 @@ class FileStore @Inject constructor (
 
     companion object {
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
+
+        private const val ACTIVE_KEY_FILE = "uploads"
+        private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
+        private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
     }
 
     fun init() {
@@ -193,6 +199,105 @@ class FileStore @Inject constructor (
         val inputStream = FileInputStream(file)
         val md5: String = org.apache.commons.codec.digest.DigestUtils.md5Hex(inputStream)
         return md5
+    }
+
+    fun getShareExtensionSessionIds(): List<String>? {
+        return loadListDataWithFilename(
+            EXTENSION_SESSION_IDS_KEY,
+        )
+    }
+
+    fun saveShareExtensionSessions(identifiers: List<String>){
+        saveObject(
+            identifiers,
+            EXTENSION_SESSION_IDS_KEY
+        )
+    }
+
+    fun getSessionIds(): List<String>? {
+        return loadListDataWithFilename(
+            SESSION_IDS_KEY_FILE,
+        )
+    }
+
+    fun saveSessions(identifiers: List<String>){
+        saveObject(
+            identifiers,
+            SESSION_IDS_KEY_FILE
+        )
+    }
+
+    fun deleteAllSessionIds(){
+        deleteDataWithFilename(SESSION_IDS_KEY_FILE)
+    }
+
+    fun getUploads(): Map<Int, BackgroundUpload>? {
+        return loadMapDataWithFilename(
+            ACTIVE_KEY_FILE,
+        )
+    }
+
+    fun saveUploads(uploads: Map<Int, BackgroundUpload>){
+        saveObject(
+            uploads,
+            ACTIVE_KEY_FILE
+        )
+    }
+
+    fun deleteAllUploads(){
+        deleteDataWithFilename(ACTIVE_KEY_FILE)
+    }
+
+    inline fun <reified T> loadListDataWithFilename(filename: String): MutableList<T>? {
+        if (!fileExists(filename)) {
+            return null
+        }
+        val path = pathForFilename(filename)
+        return try {
+            val json = Files.asCharSource(File(path), Charsets.UTF_8).read()
+            dataMarshaller.unmarshalList(json)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    inline fun <reified K, reified V> loadMapDataWithFilename(
+        filename: String,
+    ): Map<K, V>? {
+        if (!fileExists(filename)) {
+            return null
+        }
+        val path = pathForFilename(filename)
+        return try {
+            val json = Files.asCharSource(File(path), Charsets.UTF_8).read()
+            dataMarshaller.unmarshalMap(json)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun fileExists(filename: String): Boolean {
+        return fileURLForFilename(filename)?.exists() ?: false
+    }
+
+    fun deleteDataWithFilename(filename: String?) {
+        if (filename == null || !fileExists(filename)) {
+            return
+        }
+        val file = fileURLForFilename(filename)
+        file?.delete()
+    }
+
+    fun isPdf(file: File): Boolean {
+        val buffer = ByteArray(4)
+        val inputStream: InputStream = FileInputStream(file)
+        if (inputStream.read(buffer) != buffer.size) {
+            // do something
+        }
+        inputStream.closeQuietly()
+        return buffer.contentEquals(byteArrayOf(0x25, 0x50, 0x44, 0x46))
     }
 
 }

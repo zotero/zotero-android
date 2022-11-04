@@ -17,7 +17,7 @@ open class SdkPrefs @Inject constructor(
     private val displayName = "displayName"
     private val apiToken = "apiToken"
 
-    private val sharedPreferences: SharedPreferences by lazy {
+    val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
             Context.MODE_PRIVATE

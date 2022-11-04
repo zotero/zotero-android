@@ -13,6 +13,7 @@ import org.zotero.android.architecture.database.objects.Conflict
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.architecture.database.requests.PerformDeletionsDbRequest
 import org.zotero.android.architecture.database.requests.UpdateVersionType
+import org.zotero.android.backgrounduploader.BackgroundUploaderContext
 import org.zotero.android.data.AccessPermissions
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
@@ -20,6 +21,7 @@ import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
 import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
@@ -42,6 +44,7 @@ class SyncUseCase @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val syncApi: SyncApi,
     private val fileStore: FileStore,
+    private val backgroundUploaderContext: BackgroundUploaderContext,
     private val itemResponseMapper: ItemResponseMapper,
     private val collectionResponseMapper: CollectionResponseMapper,
     private val searchResponseMapper: SearchResponseMapper,
@@ -167,6 +170,9 @@ class SyncUseCase @Inject constructor(
             }
             is Action.deleteGroup -> {
                 deleteGroup(action.groupId)
+            }
+            is Action.createUploadActions -> {
+                processCreateUploadActions(action.libraryId, hadOtherWriteActions = action.hadOtherWriteActions)
             }
             else -> {
                 processNextAction()
@@ -1070,5 +1076,37 @@ class SyncUseCase @Inject constructor(
             finishCompletableAction(e to SyncError.ErrorData.from(libraryId = LibraryIdentifier.group(groupId)))
         }
 
+    }
+
+    private suspend fun processCreateUploadActions(libraryId: LibraryIdentifier, hadOtherWriteActions: Boolean) {
+        try {
+            val uploads = LoadUploadDataSyncAction(libraryId = libraryId, backgroundUploaderContext = backgroundUploaderContext, dbWrapper = dbWrapper,
+                fileStore = fileStore).result()
+            process(uploads = uploads, hadOtherWriteActions = hadOtherWriteActions, libraryId = libraryId)
+        } catch (e: Exception) {
+            enqueuedUploads = 0
+            uploadsFailedBeforeReachingZoteroBackend = 0
+
+            Timber.e(e)
+            finishCompletableAction(e to SyncError.ErrorData.from(libraryId = libraryId))
+        }
+    }
+
+    private suspend fun process(uploads: List<AttachmentUpload>, hadOtherWriteActions: Boolean, libraryId: LibraryIdentifier) {
+        if (uploads.isEmpty()) {
+            if (hadOtherWriteActions) {
+                processNextAction()
+                return
+            }
+
+            this.queue.add(index = 0, Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)), CreateLibraryActionsOptions.onlyDownloads))
+            processNextAction()
+            return
+        }
+
+        //TODO report progress
+        enqueuedUploads = uploads.size
+        uploadsFailedBeforeReachingZoteroBackend = 0
+        enqueue(actions = uploads.map{ Action.uploadAttachment(it) }, index = 0)
     }
 }

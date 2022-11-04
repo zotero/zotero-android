@@ -3,13 +3,12 @@ package org.zotero.android.architecture.database.requests
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.architecture.database.DbError
-import org.zotero.android.architecture.database.DbResponseRequest
+import org.zotero.android.architecture.database.DbRequest
 import org.zotero.android.architecture.database.objects.RCustomLibrary
 import org.zotero.android.architecture.database.objects.RGroup
 import org.zotero.android.architecture.database.objects.RVersions
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
-import kotlin.reflect.KClass
 
 sealed class UpdateVersionType {
     data class objectS(val syncObject: SyncObject): UpdateVersionType()
@@ -20,12 +19,12 @@ class UpdateVersionsDbRequest(
     val version: Int,
     val libraryId: LibraryIdentifier,
     val type: UpdateVersionType,
-): DbResponseRequest<Unit, Unit> {
+): DbRequest {
 
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm, clazz: KClass<Unit>?) {
+    override fun process(database: Realm) {
         database.executeTransaction {
             when (this.libraryId) {
                 is LibraryIdentifier.custom -> {
