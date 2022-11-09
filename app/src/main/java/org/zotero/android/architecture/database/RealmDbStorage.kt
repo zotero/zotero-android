@@ -110,7 +110,11 @@ class RealmDbCoordinator {
             request.process(realm)
             return
         }
-
+        if (realm.isInTransaction) {
+            Timber.e("RealmDbCoordinator: realm already in transaction $request")
+            request.process(realm)
+            return
+        }
 
         realm.executeTransaction {
             request.process(realm)
@@ -121,12 +125,29 @@ class RealmDbCoordinator {
         if (!request.needsWrite) {
             return request.process(realm, T::class)
         }
+
+        if (realm.isInTransaction) {
+            Timber.e("RealmDbCoordinator: realm already in transaction $request")
+            return request.process(realm, T::class)
+        }
+
         return request.process(realm, T::class)
 
 
     }
 
     suspend fun perform(requests: List<DbRequest>) = withContext(Dispatchers.IO) {
+        if (realm.isInTransaction) {
+            Timber.e("RealmDbCoordinator: realm already writing")
+            for (request in requests) {
+                if (!request.needsWrite) {
+                    continue
+                }
+                Timber.e("type of: $request")
+                request.process(realm)
+            }
+            return@withContext
+        }
 
         realm.executeTransaction {
             for (request in requests) {
@@ -137,6 +158,7 @@ class RealmDbCoordinator {
                 request.process(realm)
             }
         }
+
     }
 
     fun refresh() {

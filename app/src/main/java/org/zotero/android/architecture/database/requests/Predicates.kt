@@ -3,6 +3,7 @@ package org.zotero.android.architecture.database.requests
 import io.realm.RealmQuery
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.ObjectSyncState
+import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 
 fun <T> RealmQuery<T>.deleted(deleted: Boolean): RealmQuery<T> {
@@ -140,4 +141,49 @@ fun <T> RealmQuery<T>.itemsNotChangedAndNeedUpload(libraryId: LibraryIdentifier)
 
 fun <T> RealmQuery<T>.item(type: String): RealmQuery<T>{
     return equalTo("rawType", type)
+}
+
+fun <T> RealmQuery<T>.items(forCollectionsKeys: Set<String>, libraryId: LibraryIdentifier): RealmQuery<T>{
+    val predicates = baseItemPredicates(isTrash = false, libraryId = libraryId).and().`in`("collections.key", forCollectionsKeys.toTypedArray())
+    return predicates
+}
+
+
+fun <T> RealmQuery<T>.baseItemPredicates(isTrash: Boolean, libraryId: LibraryIdentifier): RealmQuery<T>{
+    var resultQuery =
+        library(libraryId).and().notSyncState(ObjectSyncState.dirty).and().deleted(false).and()
+            .isTrash(isTrash)
+    if (!isTrash) {
+        resultQuery = resultQuery.and().isNull("parent")
+    }
+    return resultQuery
+
+}
+
+
+fun <T> RealmQuery<T>.notSyncState(syncState: ObjectSyncState): RealmQuery<T>{
+    return notEqualTo("syncState", syncState.name)
+}
+
+fun <T> RealmQuery<T>.items(forCollectionId: CollectionIdentifier, libraryId: LibraryIdentifier): RealmQuery<T>{
+    var predicates = baseItemPredicates(isTrash = forCollectionId.isTrash, libraryId = libraryId)
+    when (forCollectionId) {
+        is CollectionIdentifier.collection -> {
+            predicates = predicates.and().equalTo("collections.key", forCollectionId.key)
+        }
+        is CollectionIdentifier.custom -> {
+            when (forCollectionId.type) {
+                CollectionIdentifier.CustomType.unfiled -> {
+                    predicates = predicates.and().isEmpty("collections")
+                }
+                CollectionIdentifier.CustomType.all,  CollectionIdentifier.CustomType.publications, CollectionIdentifier.CustomType.trash -> {
+                    //no-op
+                }
+            }
+        }
+        is CollectionIdentifier.search -> {
+            //no-op
+        }
+    }
+    return predicates
 }

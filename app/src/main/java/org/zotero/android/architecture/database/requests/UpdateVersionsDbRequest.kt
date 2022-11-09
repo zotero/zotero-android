@@ -25,7 +25,7 @@ class UpdateVersionsDbRequest(
         get() = true
 
     override fun process(database: Realm) {
-        database.executeTransaction {
+//        database.executeTransaction {
             when (this.libraryId) {
                 is LibraryIdentifier.custom -> {
                     val library = database.where<RCustomLibrary>().equalTo("type", libraryId.type.name).findFirst() ?: throw DbError.objectNotFound
@@ -43,7 +43,7 @@ class UpdateVersionsDbRequest(
                     }
                 }
             }
-        }
+//        }
     }
 
     private fun update(versions: RVersions, type: UpdateVersionType, version: Int) {

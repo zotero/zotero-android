@@ -3,12 +3,17 @@ package org.zotero.android.architecture
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.files.DataMarshaller
+import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 open class SdkPrefs @Inject constructor(
     private val context: Context,
+    private val dataMarshaller: DataMarshaller,
 ) {
     private val sharedPrefsFile = "ZoteroPrefs"
     private val userId = "userId"
@@ -16,6 +21,9 @@ open class SdkPrefs @Inject constructor(
     private val username = "username"
     private val displayName = "displayName"
     private val apiToken = "apiToken"
+    private val showSubcollectionItems = "showSubcollectionItems"
+    private val selectedLibrary = "selectedLibrary"
+    private val selectedCollectionId = "selectedCollectionId"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -54,6 +62,48 @@ open class SdkPrefs @Inject constructor(
 
     fun getUserId(): Long {
         return sharedPreferences.getLong(userId, 0L)
+    }
+
+    fun showSubcollectionItems(): Boolean {
+        return sharedPreferences.getBoolean(showSubcollectionItems, false)
+    }
+
+    fun setShowSubcollectionItems(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(showSubcollectionItems, newValue) }
+    }
+
+    fun getSelectedLibrary(): LibraryIdentifier {
+        val json: String = sharedPreferences.getString(
+            selectedLibrary,
+            null
+        )
+            ?: return LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun setSelectedLibrary(
+        libraryIdentifier: LibraryIdentifier,
+    ) {
+        val json = dataMarshaller.marshal(libraryIdentifier)
+        sharedPreferences.edit { putString(selectedLibrary, json) }
+    }
+
+
+
+    fun getSelectedCollectionId(): CollectionIdentifier {
+        val json: String = sharedPreferences.getString(
+            selectedCollectionId,
+            null
+        )
+            ?: return CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun setSelectedCollectionId(
+        collectionIdentifier: CollectionIdentifier,
+    ) {
+        val json = dataMarshaller.marshal(collectionIdentifier)
+        sharedPreferences.edit { putString(selectedCollectionId, json) }
     }
 
 }

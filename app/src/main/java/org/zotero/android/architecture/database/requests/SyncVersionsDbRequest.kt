@@ -13,6 +13,7 @@ import org.zotero.android.architecture.database.objects.Syncable
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncType
+import java.lang.Integer.min
 import java.util.Date
 import kotlin.reflect.KClass
 
@@ -69,45 +70,44 @@ class SyncVersionsDbRequest(
         var toUpdate = this.versions.keys.toTypedArray().toMutableList()
 
         //TODO uncomment when UI is getting data frm DB
+        for (objectS in objects) {
+            if (objectS.syncState == ObjectSyncState.synced.name) {
+                val version = this.versions[objectS.key]
+                if (version != null && version == objectS.version) {
+                    val index = toUpdate.indexOfFirst { it == objectS.key }
+                    if (index != -1) {
+                        toUpdate.removeAt(index)
+                    }
+                }
+                continue
+            }
 
-//        for (objectS in objects) {
-//            if (objectS.syncState == ObjectSyncState.synced.name) {
-//                val version = this.versions[objectS.key]
-//                if (version != null && version == objectS.version) {
-//                    val index = toUpdate.indexOfFirst { it == objectS.key }
-//                    if (index != -1) {
-//                        toUpdate.removeAt(index)
-//                    }
-//                }
-//                continue
-//            }
-//
-//            when (this.syncType) {
-//                SyncType.ignoreIndividualDelays, SyncType.full -> {
-//                    if (toUpdate.contains(objectS.key)) {
-//                        continue
-//                    }
-//                    toUpdate.add(objectS.key)
-//                }
-//
-//                SyncType.collectionsOnly, SyncType.normal, SyncType.keysOnly -> {
-//                    val delayIdx = min(objectS.syncRetries, (this.delayIntervals.size - 1))
-//                    val delay = this.delayIntervals[delayIdx]
-//                    if (date.time - objectS.lastSyncDate.time >= delay) {
-//                        if (toUpdate.contains(objectS.key)) {
-//                            continue
-//                        }
-//                        toUpdate.add(objectS.key)
-//                    } else {
-//                        val index = toUpdate.indexOfFirst { it == objectS.key }
-//                        if (index != -1) {
-//                            toUpdate.removeAt(index)
-//                        }
-//                    }
-//                }
-//
-//            }
-//        }
+            when (this.syncType) {
+                SyncType.ignoreIndividualDelays, SyncType.full -> {
+                    if (toUpdate.contains(objectS.key)) {
+                        continue
+                    }
+                    toUpdate.add(objectS.key)
+                }
+
+                SyncType.collectionsOnly, SyncType.normal, SyncType.keysOnly -> {
+                    val delayIdx = min(objectS.syncRetries, (this.delayIntervals.size - 1))
+                    val delay = this.delayIntervals[delayIdx]
+                    if (date.time - objectS.lastSyncDate.time >= delay) {
+                        if (toUpdate.contains(objectS.key)) {
+                            continue
+                        }
+                        toUpdate.add(objectS.key)
+                    } else {
+                        val index = toUpdate.indexOfFirst { it == objectS.key }
+                        if (index != -1) {
+                            toUpdate.removeAt(index)
+                        }
+                    }
+                }
+
+            }
+        }
 
         return toUpdate
     }
