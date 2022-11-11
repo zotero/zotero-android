@@ -1,17 +1,26 @@
 package org.zotero.android.dashboard
 
-import androidx.lifecycle.LifecycleOwner
+import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.OrderedCollectionChangeSet
+import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
-import org.zotero.android.api.pojo.sync.ItemResponse
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.database.Database
 import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.objects.Attachment
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.requests.ReadCollectionDbRequest
@@ -20,8 +29,13 @@ import org.zotero.android.architecture.database.requests.ReadLibraryDbRequest
 import org.zotero.android.architecture.database.requests.ReadSearchDbRequest
 import org.zotero.android.dashboard.data.InitialLoadData
 import org.zotero.android.dashboard.data.ItemsError
+import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.MediaSelectionResult
+import org.zotero.android.helpers.SelectMediaUseCase
+import org.zotero.android.helpers.UriExtractor
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.ItemResultsUseCase
+import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
@@ -34,9 +48,14 @@ internal class AllItemsViewModel @Inject constructor(
     private val itemResultsUseCase: ItemResultsUseCase,
     private val sdkPrefs: SdkPrefs,
     private val dbWrapper: DbWrapper,
+    private val dispatcher: CoroutineDispatcher,
+    private val uriExtractor: UriExtractor,
+    private val fileStore: FileStore,
+    private val selectMedia: SelectMediaUseCase,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
-    fun init(lifecycleOwner: LifecycleOwner) = initOnce {
+    fun init() = initOnce {
+        EventBus.getDefault().register(this)
         viewModelScope.launch {
             val data = loadInitialDetailData(
                 collectionId = sdkPrefs.getSelectedCollectionId(),
@@ -128,10 +147,17 @@ internal class AllItemsViewModel @Inject constructor(
 //        }
 //    }
 
-    suspend fun process(action: ItemsAction) {
-        when(action) {
-            is ItemsAction.loadInitialState -> {
-                loadInitialState()
+    fun process(action: ItemsAction) {
+        viewModelScope.launch {
+            when(action) {
+                is ItemsAction.loadInitialState -> {
+                    loadInitialState()
+                }
+                is ItemsAction.observingFailed -> {
+                    updateState {
+                        copy(error = ItemsError.dataLoading)
+                    }
+                }
             }
         }
     }
@@ -144,8 +170,42 @@ internal class AllItemsViewModel @Inject constructor(
             copy(
                 results = results,
                 error = if (results == null) ItemsError.dataLoading else null,
+                tableItems = results.freeze(), lce = LCE2.Content,
             )
         }
+        startObserving(results)
+    }
+
+    private suspend fun startObserving(results: RealmResults<RItem>) {
+        results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> {items, changeSet ->
+            val state = changeSet.state
+            when (state) {
+                OrderedCollectionChangeSet.State.INITIAL -> {
+                  updateState {
+                      copy(tableItems = items.freeze(), lce = LCE2.Content,)
+                  }
+                }
+                OrderedCollectionChangeSet.State.UPDATE ->  {
+                    val deletions = changeSet.deletions
+                    val modifications = changeSet.changes
+                    val insertions = changeSet.insertions
+                    val correctedModifications = Database.correctedModifications(modifications = modifications, insertions = insertions, deletions = deletions)
+                    process(ItemsAction.updateKeys(items = items, deletions = deletions, insertions = insertions, modifications = correctedModifications))
+                    updateState {
+                        copy(tableItems = items.freeze(), lce = LCE2.Content,)
+                    }
+
+                }
+                OrderedCollectionChangeSet.State.ERROR -> {
+                    Timber.e(changeSet.error, "ItemsViewController: could not load results")
+                    process(ItemsAction.observingFailed)
+                    updateState {
+                        copy(lce = LCE2.LoadError {})
+                    }
+                }
+            }
+        })
+
     }
 
     fun showDefaultLibrary() {
@@ -169,16 +229,115 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
+    private fun startSync() {
+        process(action = ItemsAction.startSync)
+    }
+
+    fun onAdd() {
+        updateState {
+            copy(
+                shouldShowAddBottomSheet = true
+            )
+        }
+    }
+
+    fun onAddFile() {
+        onAddBottomSheetCollapse()
+    }
+
+    fun onAddBottomSheetCollapse() {
+        updateState {
+            copy(
+                shouldShowAddBottomSheet = false
+            )
+        }
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.FileWasSelected) {
+        if (event.uri != null) {
+            viewModelScope.launch {
+                addAttachments(listOf(event.uri))
+            }
+        }
+    }
+
+    private suspend fun addAttachments(urls: List<Uri>) {
+        val libraryId = viewState.library.identifier
+        val attachments = mutableListOf<Attachment>()
+        for (url in urls) {
+            val key = KeyGenerator.newKey
+
+            val selectionResult = selectMedia.execute(
+                uri = url.toString(),
+                isValidMimeType = { true }
+            )
+
+            val isSuccess = selectionResult is MediaSelectionResult.AttachMediaSuccess
+            if (!isSuccess) {
+                //TODO parse errors
+                continue
+            }
+            selectionResult as MediaSelectionResult.AttachMediaSuccess
+
+            val original = selectionResult.file.file
+            val filename = original.nameWithoutExtension + "." + original.extension
+            val contentType =
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)!!
+            val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename, contentType = contentType)
+            if (!original.renameTo(file)) {
+                Timber.e("can't move file")
+                continue
+            }
+            attachments.add(
+                Attachment(
+                    type = Attachment.Kind.file(
+                        filename = filename,
+                        contentType = contentType,
+                        location = Attachment.FileLocation.local,
+                        linkType = Attachment.FileLinkType.importedFile
+                    ),
+                    title = filename,
+                    key = key,
+                    libraryId = libraryId
+                )
+            )
+        }
+        if (attachments.isEmpty()) {
+            updateState {
+                copy(error = ItemsError.attachmentAdding(ItemsError.AttachmentLoading.couldNotSave))
+            }
+            return
+        }
+        val collections: Set<String>
+        val identifier = viewState.collection.identifier
+        when(identifier) {
+            is CollectionIdentifier.collection -> {
+                collections = setOf(identifier.key)
+            }
+            is CollectionIdentifier.search, is CollectionIdentifier.custom -> {
+                collections = emptySet()
+            }
+        }
+        //TODO implement remaining functionality
+    }
+
 }
 
 internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Loading,
     val snackbarMessage: SnackbarMessage? = null,
-    val items: List<ItemResponse> = emptyList(),
+    val tableItems: RealmResults<RItem>? = null,
     val collection: Collection = Collection(identifier = CollectionIdentifier.collection(""), name = "", itemCount = 0),
     val library: Library = Library(LibraryIdentifier.group(0),"",false, false),
     var error: ItemsError? = null,
-    var results: RealmResults<RItem>? = null
+    var results: RealmResults<RItem>? = null,
+    val shouldShowAddBottomSheet: Boolean = false
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
@@ -186,4 +345,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
 
 sealed class ItemsAction {
     object loadInitialState: ItemsAction()
+    object observingFailed: ItemsAction()
+    data class updateKeys(val items: RealmResults<RItem>, val deletions: IntArray, val insertions: IntArray, val modifications: IntArray): ItemsAction()
+    object startSync: ItemsAction()
 }

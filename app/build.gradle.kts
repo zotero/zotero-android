@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("dagger.hilt.android.plugin")
     id("realm-android")
+    id("kotlin-parcelize")
 }
 
 android {

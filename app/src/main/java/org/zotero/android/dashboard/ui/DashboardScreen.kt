@@ -7,7 +7,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.dashboard.DashboardViewModel
@@ -18,7 +17,8 @@ import org.zotero.android.uicomponents.systemui.SolidStatusBar
 @Suppress("UNUSED_PARAMETER")
 internal fun DashboardScreen(
     onBack: () -> Unit,
-    viewModel: DashboardViewModel = hiltViewModel(),
+    onPickFile: () -> Unit,
+    viewModel: DashboardViewModel,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
@@ -35,7 +35,7 @@ internal fun DashboardScreen(
     }
     SolidStatusBar()
 
-    DashboardNavigation()
+    DashboardNavigation(onPickFile = onPickFile,)
 
 }
 

@@ -19,12 +19,6 @@ class ReadItemsDbRequest(val libraryId: LibraryIdentifier, val collectionId: Col
         get() = false
 
     override fun process(database: Realm, clazz: KClass<RealmResults<RItem>,>?): RealmResults<RItem> {
-        val q = database.where<RItem>().findAll()
-        for (z in q) {
-            val collections = z.collections
-            println(collections)
-        }
-        println(q)
         if(sdkPrefs.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
             val keys = selfAndSubcollectionKeys(collectionId.key, database)
             return database.where<RItem>().items(forCollectionsKeys = keys, libraryId = this.libraryId).findAll()

@@ -20,8 +20,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 internal const val ARG_ITEM_ID = "itemId"
 
 @Composable
-internal fun DashboardNavigation(
-) {
+internal fun DashboardNavigation(onPickFile: () -> Unit) {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -35,6 +34,7 @@ internal fun DashboardNavigation(
     ) {
         allItemsScreen(
             onBack = navigation::onBack,
+            onPickFile = onPickFile,
                 navigateToItemDetails = navigation::toItemDetails,
         )
         itemDetailsScreen(
@@ -46,10 +46,12 @@ internal fun DashboardNavigation(
 private fun NavGraphBuilder.allItemsScreen(
     onBack: () -> Unit,
     navigateToItemDetails: (itemId: String) -> Unit,
+    onPickFile: () -> Unit,
 ) {
     composable(route = Destinations.ALL_ITEMS) {
         AllItemsScreen(
             onBack = onBack,
+            onPickFile = onPickFile,
             navigateToItemDetails = navigateToItemDetails,
         )
     }

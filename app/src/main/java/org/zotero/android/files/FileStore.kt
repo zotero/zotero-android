@@ -2,14 +2,17 @@ package org.zotero.android.files
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.net.Uri
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
+import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.backgrounduploader.BackgroundUpload
+import org.zotero.android.helpers.MimeType
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
@@ -33,6 +36,7 @@ class FileStore @Inject constructor (
 ) {
 
     private lateinit var rootDirectory: File
+    private lateinit var cachesDirectory: File
 
     private lateinit var dbFile: File
     private lateinit var bundledDataDbFile: File
@@ -60,6 +64,9 @@ class FileStore @Inject constructor (
         val filesDir = context.filesDir
         rootDirectory = filesDir
         rootDirectory.mkdirs()
+
+        cachesDirectory = File(context.cacheDir, "cache")
+        cachesDirectory.mkdirs()
     }
 
     fun pathForFilename(filename: String?): String {
@@ -299,5 +306,17 @@ class FileStore @Inject constructor (
         inputStream.closeQuietly()
         return buffer.contentEquals(byteArrayOf(0x25, 0x50, 0x44, 0x46))
     }
+
+    fun getCachesDirectory(): File {
+        cachesDirectory.mkdirs()
+        return cachesDirectory
+    }
+
+    fun getFileSize(uri: Uri): Long? = context.getFileSize(uri)
+
+    fun openInputStream(uri: Uri): InputStream? =
+        context.contentResolver.openInputStream(uri)
+
+    fun getType(uri: Uri): MimeType? = context.contentResolver.getType(uri)
 
 }

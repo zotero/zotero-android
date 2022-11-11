@@ -7,12 +7,15 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.content.res.Configuration
+import android.content.res.Resources
+import android.net.Uri
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 fun Context.getDimension(@DimenRes res: Int): Float = resources.getDimension(res)
@@ -77,5 +80,17 @@ fun Context.getFirstPrimaryClip(): ClipData.Item? {
         } else {
             null
         }
+    }
+}
+
+fun Context.getFileSize(uri: Uri): Long? {
+    try {
+        val descriptor = contentResolver.openFileDescriptor(uri, "r")
+        val size = descriptor?.statSize ?: return null
+        descriptor.close()
+        return size
+    } catch (e: Resources.NotFoundException) {
+        Timber.e(e, "Failed to get file size")
+        return null
     }
 }

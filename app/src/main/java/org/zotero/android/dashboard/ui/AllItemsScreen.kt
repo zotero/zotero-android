@@ -6,14 +6,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -24,17 +27,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
-import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.dashboard.AllItemsViewModel
 import org.zotero.android.dashboard.AllItemsViewState
@@ -46,9 +50,12 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.modal.CustomModalBottomSheet
+import org.zotero.android.uicomponents.row.RowItemWithArrow
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CloseIconTopBar
+import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
 @Suppress("UNUSED_PARAMETER")
@@ -56,13 +63,13 @@ internal fun AllItemsScreen(
     navigateToItemDetails: (itemId: String) -> Unit,
     onBack: () -> Unit,
     viewModel: AllItemsViewModel = hiltViewModel(),
+    onPickFile: () -> Unit,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init(lifecycleOwner = lifecycleOwner)
+        viewModel.init()
     }
 
     LaunchedEffect(key1 = viewEffect) {
@@ -73,7 +80,7 @@ internal fun AllItemsScreen(
 
     CustomScaffold(
         topBar = {
-            TopBar(onCloseClicked = onBack)
+            TopBar(onCloseClicked = onBack, onAddClicked = viewModel::onAdd)
         },
     ) {
         BaseLceBox(
@@ -108,7 +115,7 @@ internal fun AllItemsScreen(
                         contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
                         items(
-                            viewState.items
+                            viewState.tableItems!!
                         ) { item ->
                             ItemView(
                                 modifier = Modifier.safeClickable(
@@ -129,6 +136,12 @@ internal fun AllItemsScreen(
 
         }
 
+        AddBottomSheet(
+            onAddFile = onPickFile,
+            onClose = viewModel::onAddBottomSheetCollapse,
+            showBottomSheet = viewState.shouldShowAddBottomSheet
+        )
+
     }
 
 }
@@ -136,7 +149,7 @@ internal fun AllItemsScreen(
 @Composable
 private fun ItemView(
     modifier: Modifier,
-    item: ItemResponse,
+    item: RItem,
     layoutType: CustomLayoutSize.LayoutType
 ) {
     Column(modifier = modifier) {
@@ -155,7 +168,7 @@ private fun ItemView(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 12.dp),
-                text = item.title ?: "Some ${item.rawType}",
+                text = item.displayTitle,
                 fontSize = layoutType.calculateTextSize(),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -182,10 +195,67 @@ private fun ItemView(
 @Composable
 private fun TopBar(
     onCloseClicked: () -> Unit,
+    onAddClicked: () -> Unit,
 ) {
     CloseIconTopBar(
         title = stringResource(id = Strings.all_items),
         onClose = onCloseClicked,
-    ) {
+        actions = {
+            HeadingTextButton(
+                isEnabled = true,
+                onClick = onAddClicked,
+                text = stringResource(Strings.add)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+    )
+}
+
+@Composable
+internal fun AddBottomSheet(
+    onAddFile:() -> Unit,
+    onClose: () -> Unit,
+    showBottomSheet: Boolean,
+) {
+
+    var shouldShow by remember { mutableStateOf(false) }
+    LaunchedEffect(showBottomSheet) {
+        if (showBottomSheet) {
+            shouldShow = true
+        }
+    }
+
+    if (shouldShow) {
+        CustomModalBottomSheet(
+            shouldCollapse = !showBottomSheet,
+            sheetContent = {
+                AddBottomSheetContent(onAddFile = {
+                    onClose()
+                    onAddFile()
+                })
+            },
+            onCollapse = {
+                shouldShow = false
+                onClose()
+            },
+        )
+    }
+
+}
+
+@Composable
+private fun AddBottomSheetContent(
+    onAddFile:() -> Unit,
+) {
+    Box {
+        Column(
+            modifier = Modifier.padding(bottom = 16.dp)
+        ) {
+//            CustomDivider(modifier = Modifier.padding(16.dp))
+            RowItemWithArrow(
+                title = stringResource(id = Strings.add_item_bottom_sheet_file),
+                onClick = { onAddFile() }
+            )
+        }
     }
 }

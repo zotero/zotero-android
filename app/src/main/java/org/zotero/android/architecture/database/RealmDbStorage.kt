@@ -41,8 +41,8 @@ class RealmDbStorage(val config: RealmConfiguration) {
             coordinatorAction(coordinator)
         }
 
-    suspend inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>) = withContext(Dispatchers.IO) {
-        return@withContext perform(request = request, invalidateRealm = false, refreshRealm = false)
+    suspend inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>): T {
+        return perform(request = request, invalidateRealm = false, refreshRealm = false)
     }
 
     suspend inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>, refreshRealm: Boolean) =
