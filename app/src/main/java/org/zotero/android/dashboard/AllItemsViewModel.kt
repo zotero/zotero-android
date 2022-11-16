@@ -21,23 +21,30 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.Database
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.Attachment
+import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.architecture.database.objects.RItem
+import org.zotero.android.architecture.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.architecture.database.requests.ReadCollectionDbRequest
 import org.zotero.android.architecture.database.requests.ReadItemsDbRequest
 import org.zotero.android.architecture.database.requests.ReadLibraryDbRequest
 import org.zotero.android.architecture.database.requests.ReadSearchDbRequest
+import org.zotero.android.architecture.ifFailure
 import org.zotero.android.dashboard.data.InitialLoadData
+import org.zotero.android.dashboard.data.ItemAccessory
 import org.zotero.android.dashboard.data.ItemsError
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.UriExtractor
+import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.ItemResultsUseCase
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uidata.Collection
 import timber.log.Timber
@@ -52,6 +59,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val uriExtractor: UriExtractor,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
+    private val schemaController: SchemaController
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     fun init() = initOnce {
@@ -158,8 +166,90 @@ internal class AllItemsViewModel @Inject constructor(
                         copy(error = ItemsError.dataLoading)
                     }
                 }
+                ItemsAction.startSync -> TODO()
+                is ItemsAction.updateKeys -> {
+                    processUpdate(items = action.items, deletions = action.deletions, insertions = action.insertions, modifications = action.modifications)
+                }
             }
         }
+    }
+
+    private fun processUpdate(
+        items: RealmResults<RItem>,
+        deletions: IntArray,
+        insertions: IntArray,
+        modifications: IntArray
+    ) {
+        if (viewState.isEditing) {
+            deletions.sorted().reversed().forEach { idx ->
+               val mutableKeys = viewState.keys.toMutableList()
+                val key = mutableKeys.removeAt(idx)
+                updateState {
+                    copy(keys = mutableKeys)
+                }
+
+
+                val mutableSelectedItems = viewState.selectedItems.toMutableSet()
+                val isSelectedRemoved = mutableSelectedItems.remove(key)
+                updateState {
+                    copy(selectedItems = mutableSelectedItems)
+                }
+                if (isSelectedRemoved) {
+                    updateState {
+                        copy(changes = viewState.changes + Changes.selection)
+                    }
+                }
+            }
+        }
+        modifications.forEach { idx ->
+            val item = items[idx]
+            val mutableItemAccessories = viewState.itemAccessories.toMutableMap()
+            val itemAccessory = accessory(item!!)
+            if (itemAccessory != null) {
+                mutableItemAccessories.put(item.key, itemAccessory)
+                updateState {
+                    copy(itemAccessories = mutableItemAccessories)
+                }
+            }
+
+        }
+        insertions.forEach { idx ->
+            val item = items[idx]
+            if (viewState.isEditing) {
+                val mutableKeys = viewState.keys.toMutableList()
+                mutableKeys.add(element = item!!.key, index = idx)
+                updateState {
+                    copy(keys = mutableKeys)
+                }
+            }
+
+            val mutableItemAccessories = viewState.itemAccessories.toMutableMap()
+            val itemAccessory = accessory(item!!)
+            if (itemAccessory != null) {
+                mutableItemAccessories.put(item.key, itemAccessory)
+                updateState {
+                    copy(itemAccessories = mutableItemAccessories)
+                }
+            }
+        }
+
+    }
+
+    private fun accessory(item: RItem): ItemAccessory? {
+        val attachment = AttachmentCreator.mainAttachment(item, fileStorage = fileStore)
+        if (attachment != null) {
+            return ItemAccessory.attachment(attachment)
+        }
+        val urlString = item.urlString
+        if (urlString != null && UrlDetector().isUrl(urlString)) {
+            return ItemAccessory.url(urlString)
+        }
+        val doi = item.doi
+        if (doi != null) {
+            return ItemAccessory.doi(doi)
+        }
+
+        return null
     }
 
     private suspend fun loadInitialState() {
@@ -324,7 +414,24 @@ internal class AllItemsViewModel @Inject constructor(
                 collections = emptySet()
             }
         }
-        //TODO implement remaining functionality
+        val type = schemaController.localizedItemType(ItemTypes.attachment) ?: ""
+        val request = CreateAttachmentsDbRequest(attachments = attachments, parentKey = null, localizedType = type, collections = collections, fileStore = fileStore)
+
+        val result = perform(dbWrapper, invalidateRealm = true, request = request).ifFailure {
+            Timber.e(it,"ItemsActionHandler: can't add attachment")
+            updateState {
+                copy(error = ItemsError.attachmentAdding(ItemsError.AttachmentLoading.couldNotSave))
+            }
+            return
+        }
+        val failed = result
+        if (failed.isEmpty()) {
+            return
+        }
+        updateState {
+            copy(error = ItemsError.attachmentAdding(ItemsError.AttachmentLoading.someFailed(failed.map { it.second })))
+        }
+
     }
 
 }
@@ -335,6 +442,11 @@ internal data class AllItemsViewState(
     val tableItems: RealmResults<RItem>? = null,
     val collection: Collection = Collection(identifier = CollectionIdentifier.collection(""), name = "", itemCount = 0),
     val library: Library = Library(LibraryIdentifier.group(0),"",false, false),
+    var itemAccessories: Map<String, ItemAccessory> = emptyMap(),
+    var keys: List<String> = emptyList(),
+    var selectedItems: Set<String> = emptySet(),
+    var isEditing: Boolean = false,
+    var changes: List<Changes> = emptyList(),
     var error: ItemsError? = null,
     var results: RealmResults<RItem>? = null,
     val shouldShowAddBottomSheet: Boolean = false
@@ -348,4 +460,15 @@ sealed class ItemsAction {
     object observingFailed: ItemsAction()
     data class updateKeys(val items: RealmResults<RItem>, val deletions: IntArray, val insertions: IntArray, val modifications: IntArray): ItemsAction()
     object startSync: ItemsAction()
+}
+
+enum class Changes {
+    results,
+    editing,
+    selection,
+    selectAll,
+    attachmentsRemoved,
+    filters,
+    webViewCleanup,
+    batchData,
 }

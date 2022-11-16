@@ -75,7 +75,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     @LinkingObjects("items")
     val collections: RealmResults<RCollection>? = null
 
-    lateinit var fields: RealmList<RItemField>
+    var fields: RealmList<RItemField> = RealmList()
 
     @LinkingObjects("parent")
     val children: RealmResults<RItem>? = null

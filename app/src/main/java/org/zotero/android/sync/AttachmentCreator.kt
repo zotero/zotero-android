@@ -5,10 +5,12 @@ import org.zotero.android.architecture.database.objects.Attachment
 import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.LinkType
+import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.File
+import java.util.Date
 
 class AttachmentCreator {
 
@@ -22,6 +24,87 @@ class AttachmentCreator {
     }
 
     companion object {
+        private val mainAttachmentContentTypes = setOf("text/html", "application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain")
+
+        fun mainAttachment(item: RItem, fileStorage: FileStore): Attachment? {
+            if (item.rawType == ItemTypes.attachment) {
+                val attachment = attachment(item = item, fileStorage = fileStorage, urlDetector = null)
+                if (attachment != null) {
+                when {
+                    attachment.type is Attachment.Kind.url ->
+                    return attachment
+                    attachment.type is Attachment.Kind.file && (attachment.type.linkType == Attachment.FileLinkType.importedFile ||  attachment.type.linkType == Attachment.FileLinkType.importedUrl)->
+                    return attachment
+                    else -> {
+                      //no-op
+                    }
+                }
+                }
+                return null
+            }
+
+            var attachmentData = attachmentData(item)
+
+            if (attachmentData.isEmpty()) { return null }
+
+            attachmentData = attachmentData.sortedWith { lData, rData ->
+                mainAttachmentsAreInIncreasingOrder(lData = Triple(lData.contentType, lData.hasMatchingUrlWithParent, lData.dateAdded), rData = Triple(rData.contentType, rData.hasMatchingUrlWithParent, rData.dateAdded))
+            }
+
+            val firstAttachmentData = attachmentData.firstOrNull()
+            if (firstAttachmentData == null) {
+                return null
+            }
+            val idx = firstAttachmentData.idx
+            val contentType = firstAttachmentData.contentType
+            val linkMode = firstAttachmentData.linkMode
+
+            val rAttachment = item.children?.get(idx)
+            val linkType: Attachment.FileLinkType = if(linkMode == LinkMode.importedFile) Attachment.FileLinkType.importedFile else Attachment.FileLinkType.importedUrl
+
+
+            val libraryId = rAttachment?.libraryId
+            if (libraryId != null) {
+                val type = importedType(rAttachment, contentType = contentType, libraryId = libraryId, fileStorage = fileStorage, linkType = linkType)
+                if (type != null) {
+                    return Attachment.initWithItemAndKind(item = rAttachment, type = type)
+                }
+            }
+            return null
+        }
+
+        private fun attachmentData(item: RItem): List<AttachmentData> {
+            val itemUrl = item.fields.firstOrNull{it.key == FieldKeys.Item.url }?.value
+            var data = mutableListOf<AttachmentData>()
+            item.children!!
+            for ((idx, child) in item.children.withIndex()) {
+                if (child.rawType == ItemTypes.attachment && child.syncState != ObjectSyncState.dirty.name && !child.trash) {
+                    val linkMode = child.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.let{ LinkMode.from(it.value) }
+                    if (linkMode == LinkMode.importedUrl || linkMode == LinkMode.importedFile) {
+                        val contentType = contentType(child)
+                        if (contentType != null && mainAttachmentContentTypes.contains(contentType)) {
+                            var hasMatchingUrlWithParent = false
+                            val url = itemUrl
+                            if (url != null) {
+                                val childUrl = child.fields.firstOrNull{it.key == FieldKeys.Item.Attachment.url }?.value
+                                if (childUrl != null) {
+                                    hasMatchingUrlWithParent = url == childUrl
+                                }
+                            }
+                            data.add(AttachmentData(idx, contentType, linkMode, hasMatchingUrlWithParent, child.dateAdded))
+                        }
+                    }
+                }
+            }
+
+            return data
+        }
+
+
+        fun attachment(item: RItem, options: Options = Options.light, fileStorage: FileStore?, urlDetector: UrlDetector?): Attachment? {
+            return attachmentType(item, options = options, fileStorage = fileStorage, urlDetector = urlDetector)?.let {Attachment.initWithItemAndKind(item = item, type = it) }
+        }
+
         fun attachmentType(item: RItem, options: Options = Options.light, fileStorage: FileStore?, urlDetector: UrlDetector?): Attachment.Kind? {
             val linkMode = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.let { LinkMode.from(it.value) }
             if (linkMode == null) {
@@ -180,6 +263,22 @@ class AttachmentCreator {
             return Attachment.Kind.url(urlString)
         }
 
+        private fun mainAttachmentsAreInIncreasingOrder(lData: Triple<String, Boolean, Date>, rData: Triple<String, Boolean, Date>): Int {
+            val lPriority = priority(lData.first)
+            val rPriority = priority(rData.first)
+
+            if(lPriority != rPriority) {
+                return rPriority.compareTo(lPriority)
+            }
+
+            if( lData.second != rData.second) {
+                return lData.second.compareTo(!rData.second)
+            }
+
+            return lData.third.compareTo(rData.third)
+        }
+
+
         private fun linkedFileType(item: RItem, libraryId: LibraryIdentifier): Attachment.Kind? {
             val contentType = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.contentType }?.value
             if (contentType == null || contentType.isEmpty()) {
@@ -195,5 +294,16 @@ class AttachmentCreator {
             val filename = filename(item, ext = File(path).extension)
             return Attachment.Kind.file(filename = filename, contentType = contentType, location = Attachment.FileLocation.local, linkType = Attachment.FileLinkType.linkedFile)
         }
+        private fun priority(contentType: String): Int {
+            when (contentType) {
+                "application/pdf" -> return 0
+                "text/html" -> return 1
+                "image/gif", "image/jpeg", "image/png" -> return 2
+                "text/plain" -> return 3
+                 else -> return 4
+            }
+        }
     }
 }
+
+private data class AttachmentData(val idx: Int, val contentType: String, val linkMode: LinkMode, val hasMatchingUrlWithParent: Boolean ,val dateAdded: Date)
