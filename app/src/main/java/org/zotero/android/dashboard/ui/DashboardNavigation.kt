@@ -10,14 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
-
-internal const val ARG_ITEM_ID = "itemId"
 
 @Composable
 internal fun DashboardNavigation(onPickFile: () -> Unit) {
@@ -45,7 +41,7 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
 
 private fun NavGraphBuilder.allItemsScreen(
     onBack: () -> Unit,
-    navigateToItemDetails: (itemId: String) -> Unit,
+    navigateToItemDetails: () -> Unit,
     onPickFile: () -> Unit,
 ) {
     composable(route = Destinations.ALL_ITEMS) {
@@ -61,10 +57,8 @@ private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${Destinations.ITEM_DETAILS}/{$ARG_ITEM_ID}",
-        arguments = listOf(
-            navArgument(ARG_ITEM_ID) { type = NavType.StringType },
-        ),
+        route = "${Destinations.ITEM_DETAILS}",
+        arguments = listOf(),
     ) {
         ItemDetailsScreen(
             onBack = onBack,
@@ -84,7 +78,7 @@ private class Navigation(
 ) {
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
 
-    fun toItemDetails(itemId: String) {
-        navController.navigate("${Destinations.ITEM_DETAILS}/$itemId")
+    fun toItemDetails() {
+        navController.navigate("${Destinations.ITEM_DETAILS}")
     }
 }

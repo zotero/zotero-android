@@ -9,7 +9,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
 import org.zotero.android.androidx.content.getFileSize
-import org.zotero.android.architecture.GlobalVariables
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.helpers.MimeType
@@ -32,7 +31,6 @@ class FileStore @Inject constructor (
     private val context: Context,
     private val sdkPrefs: SdkPrefs,
     val dataMarshaller: DataMarshaller,
-    private val globalVariables: GlobalVariables,
 ) {
 
     private lateinit var rootDirectory: File

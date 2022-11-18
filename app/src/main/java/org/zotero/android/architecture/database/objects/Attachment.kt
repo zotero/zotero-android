@@ -1,9 +1,12 @@
 package org.zotero.android.architecture.database.objects
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.util.Date
 
+@Parcelize
 data class Attachment(
     val type: Kind,
     val title: String,
@@ -11,7 +14,7 @@ data class Attachment(
     val libraryId: LibraryIdentifier,
     val url: String? = null,
     val dateAdded: Date = Date(),
-) {
+): Parcelable {
 
     val id: String get() { return this.key }
 
@@ -30,8 +33,10 @@ data class Attachment(
         importedUrl, importedFile, embeddedImage, linkedFile
     }
 
-    sealed class Kind {
+    sealed class Kind: Parcelable {
+        @Parcelize
         data class file(val filename: String, val contentType: String, val location: FileLocation, val linkType: FileLinkType): Kind()
+        @Parcelize
         data class url(val url: String): Kind()
     }
 

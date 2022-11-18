@@ -1,9 +1,13 @@
 package org.zotero.android.sync
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 
-sealed class LibraryIdentifier {
+sealed class LibraryIdentifier: Parcelable {
+    @Parcelize
     data class custom(val type: RCustomLibraryType) : LibraryIdentifier()
+    @Parcelize
     data class group(val groupId: Int) : LibraryIdentifier()
 
     val isGroupLibrary: Boolean

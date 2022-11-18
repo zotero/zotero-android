@@ -15,6 +15,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -30,9 +31,11 @@ import org.zotero.android.architecture.database.requests.ReadItemsDbRequest
 import org.zotero.android.architecture.database.requests.ReadLibraryDbRequest
 import org.zotero.android.architecture.database.requests.ReadSearchDbRequest
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.dashboard.data.DetailType
 import org.zotero.android.dashboard.data.InitialLoadData
 import org.zotero.android.dashboard.data.ItemAccessory
 import org.zotero.android.dashboard.data.ItemsError
+import org.zotero.android.dashboard.data.ShowItemDetailsArgs
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
@@ -434,6 +437,18 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
+    fun showItemDetail(item: RItem) {
+        when (item.rawType) {
+            ItemTypes.note -> {
+                //TODO support displaying of notes
+            }
+            else -> {
+                ScreenArguments.showItemDetailsArgs = ShowItemDetailsArgs(DetailType.preview(key = item.key), library = viewState.library, childKey = null)
+                triggerEffect(AllItemsViewEffect.ShowItemDetailEffect)
+            }
+        }
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -453,6 +468,7 @@ internal data class AllItemsViewState(
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
+    object ShowItemDetailEffect: AllItemsViewEffect()
 }
 
 sealed class ItemsAction {

@@ -187,3 +187,12 @@ fun <T> RealmQuery<T>.items(forCollectionId: CollectionIdentifier, libraryId: Li
     }
     return predicates
 }
+
+
+fun <T> RealmQuery<T>.items(type: String, notSyncState: ObjectSyncState, trash: Boolean? = null): RealmQuery<T>{
+    var predicates = item(type = type).and().notSyncState(notSyncState)
+    if (trash != null) {
+        predicates = predicates.and().isTrash(trash)
+    }
+    return predicates
+}

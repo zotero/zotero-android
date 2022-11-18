@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.dashboard.AllItemsViewEffect
 import org.zotero.android.dashboard.AllItemsViewModel
 import org.zotero.android.dashboard.AllItemsViewState
 import org.zotero.android.uicomponents.CustomScaffold
@@ -60,7 +61,7 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Composable
 @Suppress("UNUSED_PARAMETER")
 internal fun AllItemsScreen(
-    navigateToItemDetails: (itemId: String) -> Unit,
+    navigateToItemDetails: () -> Unit,
     onBack: () -> Unit,
     viewModel: AllItemsViewModel = hiltViewModel(),
     onPickFile: () -> Unit,
@@ -74,6 +75,7 @@ internal fun AllItemsScreen(
 
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
+            is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
             null -> Unit
         }
     }
@@ -122,7 +124,7 @@ internal fun AllItemsScreen(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = rememberRipple(),
                                     onClick = {
-                                        navigateToItemDetails(item.key)
+                                        viewModel.showItemDetail(item)
                                     }
                                 ),
                                 item = item,

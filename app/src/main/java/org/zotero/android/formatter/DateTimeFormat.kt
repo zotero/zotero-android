@@ -31,3 +31,6 @@ val iso8601DateFormatV2: SimpleDateFormat
 
 val deadlineTimeFormat: SimpleDateFormat
     get() = SimpleDateFormat("EEEE MMM d, h:mm a", Locale.getDefault())
+
+val sqlFormat: SimpleDateFormat
+    get() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
