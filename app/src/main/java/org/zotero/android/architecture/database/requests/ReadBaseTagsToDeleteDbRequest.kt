@@ -12,8 +12,10 @@ open class ReadBaseTagsToDeleteDbRequest<T : Any>(val fromTags: RealmCollection<
         get() = false
 
     override fun process(database: Realm, clazz: KClass<T>?): List<String> {
-        return this.fromTags.where().baseTagsToDelete().findAll().mapNotNull { it.tag?.name }
+        return this.fromTags
+            .where()
+            .baseTagsToDelete()
+            .findAll()
+            .mapNotNull { it.tag?.name }
     }
-
-
 }

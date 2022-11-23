@@ -27,20 +27,24 @@ class CreateAttachmentDbRequest(
     val collections: Set<String>,
     val tags: List<TagResponse>,
     val fileStore: FileStore
-): DbResponseRequest<RItem, RItem> {
+) : DbResponseRequest<RItem, RItem> {
 
-    sealed class Error: Exception() {
-        object cantCreateMd5: Error()
-        object incorrectMd5Value: Error()
+    sealed class Error : Exception() {
+        object cantCreateMd5 : Error()
+        object incorrectMd5Value : Error()
     }
 
     override val needsWrite: Boolean
         get() = true
 
     override fun process(database: Realm, clazz: KClass<RItem>?): RItem {
-        var changes = mutableListOf(RItemChanges.type, RItemChanges.fields, RItemChanges.tags)
+        val changes = mutableListOf(
+            RItemChanges.type,
+            RItemChanges.fields,
+            RItemChanges.tags
+        )
 
-        var resItem:RItem? = null
+        var resItem: RItem? = null
         database.executeTransaction {
             val item = database.createObject<RItem>()
             resItem = item
@@ -65,20 +69,16 @@ class CreateAttachmentDbRequest(
                     FieldKeys.Item.title ->
                         value = this.attachment.title
                     FieldKeys.Item.Attachment.linkMode -> {
-                        when (this.attachment.type) {
+                        value = when (this.attachment.type) {
                             is Attachment.Kind.file -> {
                                 when (this.attachment.type.linkType) {
-                                    Attachment.FileLinkType.embeddedImage -> value =
-                                        LinkMode.embeddedImage.str
-                                    Attachment.FileLinkType.importedFile -> value =
-                                        LinkMode.importedFile.str
-                                    Attachment.FileLinkType.importedUrl -> value =
-                                        LinkMode.importedUrl.str
-                                    Attachment.FileLinkType.linkedFile -> value =
-                                        LinkMode.linkedFile.str
+                                    Attachment.FileLinkType.embeddedImage -> LinkMode.embeddedImage.str
+                                    Attachment.FileLinkType.importedFile -> LinkMode.importedFile.str
+                                    Attachment.FileLinkType.importedUrl -> LinkMode.importedUrl.str
+                                    Attachment.FileLinkType.linkedFile -> LinkMode.linkedFile.str
                                 }
                             }
-                            is Attachment.Kind.url -> value = LinkMode.linkedUrl.str
+                            is Attachment.Kind.url -> LinkMode.linkedUrl.str
                         }
                     }
                     FieldKeys.Item.Attachment.contentType -> {
@@ -98,7 +98,8 @@ class CreateAttachmentDbRequest(
                                 )
                                 val md5Value = fileStore.md5(file)
                                 if (md5Value == "<null>") {
-                                    Timber.e("CreateAttachmentDbRequest: incorrect md5 value for attachment ${this.attachment.key}")
+                                    Timber.e("CreateAttachmentDbRequest: incorrect md5 value " +
+                                            "for attachment ${this.attachment.key}")
                                     throw Error.incorrectMd5Value
                                 }
                                 value = md5Value
@@ -131,21 +132,19 @@ class CreateAttachmentDbRequest(
                     }
 
                     FieldKeys.Item.Attachment.url -> {
-                        when (this.attachment.type) {
-                            is Attachment.Kind.url -> value = this.attachment.type.url
+                        value = when (this.attachment.type) {
+                            is Attachment.Kind.url -> this.attachment.type.url
                             else -> {
-                                val url = this.attachment.url
-                                if (url == null) {
-                                    continue
-                                }
-                                value = url
+                                val url = this.attachment.url ?: continue
+                                url
                             }
                         }
                     }
 
                     FieldKeys.Item.Attachment.path -> {
                         when {
-                            this.attachment.type is Attachment.Kind.file && this.attachment.type.linkType == Attachment.FileLinkType.linkedFile -> {
+                            this.attachment.type is Attachment.Kind.file &&
+                                    this.attachment.type.linkType == Attachment.FileLinkType.linkedFile -> {
                                 val file = fileStore.attachmentFile(
                                     this.attachment.libraryId,
                                     key = this.attachment.key,
@@ -171,8 +170,10 @@ class CreateAttachmentDbRequest(
             this.collections.forEach { key ->
                 val collection: RCollection
                 val existing =
-                    database.where<RCollection>().key(key, this.attachment.libraryId).findFirst()
-
+                    database
+                        .where<RCollection>()
+                        .key(key, this.attachment.libraryId)
+                        .findFirst()
                 if (existing != null) {
                     collection = existing
                 } else {
@@ -186,13 +187,16 @@ class CreateAttachmentDbRequest(
                 collection.items.add(item)
             }
 
-            if (!this.collections.isEmpty()) {
+            if (this.collections.isNotEmpty()) {
                 changes.add(RItemChanges.collections)
             }
 
             val key = this.parentKey
             if (key != null) {
-                val parent = database.where<RItem>().key(key, this.attachment.libraryId).findFirst()
+                val parent = database
+                    .where<RItem>()
+                    .key(key, this.attachment.libraryId)
+                    .findFirst()
                 if (parent != null) {
                     item.parent = parent
                     changes.add(RItemChanges.parent)

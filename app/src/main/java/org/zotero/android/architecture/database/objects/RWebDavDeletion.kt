@@ -3,7 +3,7 @@ package org.zotero.android.architecture.database.objects
 import io.realm.RealmObject
 import org.zotero.android.sync.LibraryIdentifier
 
-open class RWebDavDeletion: RealmObject() {
+open class RWebDavDeletion : RealmObject() {
     lateinit var key: String
     var customLibraryKey: String? = null //RCustomLibraryType
     var groupKey: Int? = null
@@ -21,9 +21,7 @@ open class RWebDavDeletion: RealmObject() {
             return null
 
         }
-
-        set(newValue) {
-            val identifier = newValue
+        set(identifier) {
             if (identifier == null) {
                 this.groupKey = null
                 this.customLibraryKey = null
@@ -31,10 +29,10 @@ open class RWebDavDeletion: RealmObject() {
             }
 
             when (identifier) {
-            is LibraryIdentifier.custom ->
-                this.customLibraryKey = identifier.type.name
-            is  LibraryIdentifier.group ->
-                this.groupKey = identifier.groupId
+                is LibraryIdentifier.custom ->
+                    this.customLibraryKey = identifier.type.name
+                is LibraryIdentifier.group ->
+                    this.groupKey = identifier.groupId
             }
         }
 }

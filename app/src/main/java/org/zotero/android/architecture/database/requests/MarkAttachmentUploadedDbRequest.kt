@@ -12,18 +12,21 @@ class MarkAttachmentUploadedDbRequest(
     val libraryId: LibraryIdentifier,
     val key: String,
     val version: Int?,
-): DbRequest {
+) : DbRequest {
     override val needsWrite: Boolean
         get() = true
 
     override fun process(database: Realm) {
-        val attachment = database.where<RItem>().key(this.key, this.libraryId).findFirst()
-        if (attachment == null) {
-            return
-        }
+        val attachment = database
+            .where<RItem>()
+            .key(this.key, this.libraryId)
+            .findFirst() ?: return
         attachment.attachmentNeedsSync = false
         attachment.changeType = UpdatableChangeType.syncResponse.name
-        val md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
+        val md5 = attachment.fields
+            .where()
+            .key(FieldKeys.Item.Attachment.md5)
+            .findFirst()?.value
         if (md5 != null) {
             attachment.backendMd5 = md5
         }
@@ -36,6 +39,4 @@ class MarkAttachmentUploadedDbRequest(
             parent.version = parent.version
         }
     }
-
-
 }

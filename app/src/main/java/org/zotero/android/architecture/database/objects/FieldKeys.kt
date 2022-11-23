@@ -1,4 +1,5 @@
 package org.zotero.android.architecture.database.objects
+
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import timber.log.Timber
 
@@ -8,7 +9,6 @@ class FieldKeys {
             val knownDataKeys = listOf("key", "version", "name", "parentCollection", "relations")
         }
     }
-
 
     class Item {
 
@@ -26,7 +26,7 @@ class FieldKeys {
             val accessDate = "accessDate"
             val extra = "extra"
 
-            fun clean(doi: String) : String {
+            fun clean(doi: String): String {
                 if (doi.isEmpty()) {
                     return ""
                 }
@@ -63,7 +63,6 @@ class FieldKeys {
                 "inPublications"
             )
         }
-
 
 
         class Attachment {
@@ -148,51 +147,51 @@ class FieldKeys {
                         )
                     }
 
-                fun fields(type: AnnotationType): List<KeyBaseKeyPair> {
-                    when (type) {
+                fun fields(annotationType: AnnotationType): List<KeyBaseKeyPair> {
+                    when (annotationType) {
                         AnnotationType.highlight -> {
                             return listOf(
-                                KeyBaseKeyPair(key = Annotation.type, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.comment, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.color, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.sortIndex, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.text, baseKey = null),
+                                KeyBaseKeyPair(key = type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = text, baseKey = null),
                                 KeyBaseKeyPair(
-                                    key = Annotation.Position.pageIndex,
-                                    baseKey = Annotation.position
+                                    key = Position.pageIndex,
+                                    baseKey = position
                                 )
                             )
                         }
 
                         AnnotationType.ink -> {
                             return listOf(
-                                KeyBaseKeyPair(key = Annotation.type, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.comment, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.color, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
                                 KeyBaseKeyPair(
-                                    key = Annotation.Position.pageIndex,
-                                    baseKey = Annotation.position
+                                    key = Position.pageIndex,
+                                    baseKey = position
                                 ),
                                 KeyBaseKeyPair(
-                                    key = Annotation.Position.lineWidth,
-                                    baseKey = Annotation.position
+                                    key = Position.lineWidth,
+                                    baseKey = position
                                 )
                             )
                         }
 
                         AnnotationType.note, AnnotationType.image -> {
                             return listOf(
-                                KeyBaseKeyPair(key = Annotation.type, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.comment, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.color, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
-                                KeyBaseKeyPair(key = Annotation.sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
                                 KeyBaseKeyPair(
-                                    key = Annotation.Position.pageIndex,
-                                    baseKey = Annotation.position
+                                    key = Position.pageIndex,
+                                    baseKey = position
                                 )
                             )
                         }
@@ -202,9 +201,6 @@ class FieldKeys {
 
             }
         }
-
-
-
     }
 
     class Search {

@@ -25,31 +25,49 @@ class ReadAttachmentUploadsDbRequest(
         database: Realm,
         clazz: KClass<List<AttachmentUpload>>?
     ): List<AttachmentUpload> {
-        val items = database.where<RItem>().itemsNotChangedAndNeedUpload(this.libraryId).findAll()
+        val items = database
+            .where<RItem>()
+            .itemsNotChangedAndNeedUpload(this.libraryId)
+            .findAll()
         val uploads = items.mapNotNull { item ->
             val contentType =
-                item.fields.where().key(FieldKeys.Item.Attachment.contentType).findFirst()?.value
+                item.fields
+                    .where()
+                    .key(FieldKeys.Item.Attachment.contentType)
+                    .findFirst()?.value
             if (contentType == null) {
                 Timber.e("ReadAttachmentUploadsDbRequest: contentType field missing !!!")
                 return@mapNotNull null
             }
-            val mtimeField = item.fields.where().key(FieldKeys.Item.Attachment.mtime).findFirst()
+            val mtimeField = item.fields
+                .where()
+                .key(FieldKeys.Item.Attachment.mtime)
+                .findFirst()
             if (mtimeField == null) {
                 Timber.e("ReadAttachmentUploadsDbRequest: mtime field missing !!!")
                 return@mapNotNull null
             }
             val mtime = mtimeField.value.toIntOrNull()
             if (mtime == null) {
-                Timber.e("ReadAttachmentUploadsDbRequest: mtime field value not a number ${mtimeField.value} !!!")
+                Timber.e("ReadAttachmentUploadsDbRequest: mtime field " +
+                        "value not a number ${mtimeField.value} !!!")
                 return@mapNotNull null
             }
-            val md5Field = item.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()
+            val md5Field = item.fields
+                .where()
+                .key(FieldKeys.Item.Attachment.md5)
+                .findFirst()
             if (md5Field == null) {
                 Timber.e("ReadAttachmentUploadsDbRequest: md5 field missing !!!")
                 return@mapNotNull null
             }
 
-            val attachmentType = AttachmentCreator.attachmentType(item, options =  AttachmentCreator.Options.light, fileStorage = null, urlDetector = null)
+            val attachmentType = AttachmentCreator.attachmentType(
+                item,
+                options = AttachmentCreator.Options.light,
+                fileStorage = null,
+                urlDetector = null
+            )
             if (attachmentType == null) {
                 return@mapNotNull null
             }
@@ -64,20 +82,34 @@ class ReadAttachmentUploadsDbRequest(
                     if (attachmentType.linkType == Attachment.FileLinkType.linkedFile) {
                         return@mapNotNull null
                     }
-                    file = fileStorage.attachmentFile(this.libraryId, key = item.key, filename = attachmentType.filename, contentType = attachmentType.contentType)
+                    file = fileStorage.attachmentFile(
+                        this.libraryId,
+                        key = item.key,
+                        filename = attachmentType.filename,
+                        contentType = attachmentType.contentType
+                    )
                     filename = attachmentType.filename
                 }
             }
             if (md5Field.value == "<null>") {
                 val newMd5 = fileStorage.md5(file)
-                    md5Field.value = newMd5
+                md5Field.value = newMd5
             }
-            var backendMd5: String? = if(item.backendMd5.isEmpty()) null else item.backendMd5
+            var backendMd5: String? = if (item.backendMd5.isEmpty()) null else item.backendMd5
             if (backendMd5 == "<null>") {
                 // Don't need to update item here, it'll get updated in `MarkAttachmentUploadedDbRequest`.
                 backendMd5 = null
             }
-            AttachmentUpload(libraryId = this.libraryId, key = item.key, filename = filename, contentType = contentType, md5 = md5Field.value, mtime = mtime, file = file, oldMd5 = backendMd5)
+            AttachmentUpload(
+                libraryId = this.libraryId,
+                key = item.key,
+                filename = filename,
+                contentType = contentType,
+                md5 = md5Field.value,
+                mtime = mtime,
+                file = file,
+                oldMd5 = backendMd5
+            )
         }
         return uploads
     }

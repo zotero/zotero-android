@@ -16,7 +16,7 @@ import kotlin.reflect.KClass
 
 class StoreSearchesDbRequest(
     val response: List<SearchResponse>,
-): DbResponseRequest<Unit, Unit> {
+) : DbResponseRequest<Unit, Unit> {
 
     override val needsWrite: Boolean
         get() = true
@@ -53,15 +53,20 @@ class StoreSearchesDbRequest(
 
     companion object {
 
-        fun update(search: RSearch, response: SearchResponse, libraryId: LibraryIdentifier, database: Realm) {
+        fun update(
+            search: RSearch,
+            response: SearchResponse,
+            libraryId: LibraryIdentifier,
+            database: Realm
+        ) {
             search.key = response.key
             search.name = response.data.name
             search.version = response.version
             search.syncState = ObjectSyncState.synced.name
-                    search.syncRetries = 0
+            search.syncRetries = 0
             search.lastSyncDate = Date()
             search.changeType = UpdatableChangeType.sync.name
-                    search.libraryId = libraryId
+            search.libraryId = libraryId
             search.trash = response.data.isTrash
 
             sync(conditions = response.data.conditions, search = search, database = database)
@@ -70,7 +75,7 @@ class StoreSearchesDbRequest(
         fun sync(conditions: List<ConditionResponse>, search: RSearch, database: Realm) {
             search.conditions.deleteAllFromRealm()
 
-            for ((index,objectS) in conditions.withIndex()) {
+            for ((index, objectS) in conditions.withIndex()) {
                 val condition = RCondition()
                 condition.condition = objectS.condition
                 condition.operator = objectS.operator

@@ -11,15 +11,14 @@ import kotlin.reflect.KClass
 class ReadSearchDbRequest(
     val libraryId: LibraryIdentifier,
     val key: String,
-): DbResponseRequest<RSearch, RSearch> {
+) : DbResponseRequest<RSearch, RSearch> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(database: Realm, clazz: KClass<RSearch>?): RSearch {
-        val search = database.where<RSearch>().key(this.key, this.libraryId).findFirst()
-        if (search == null) {
-            throw DbError.objectNotFound
-        }
-        return search
+        return database
+            .where<RSearch>()
+            .key(key, libraryId)
+            .findFirst() ?: throw DbError.objectNotFound
     }
 }

@@ -11,7 +11,7 @@ class ItemTypes {
         const val annotation = "annotation"
         const val document = "document"
 
-        var excludedFromTypePicker: Set<String> = setOf(ItemTypes.attachment, ItemTypes.annotation)
+        var excludedFromTypePicker: Set<String> = setOf(attachment, annotation)
     }
 
 }

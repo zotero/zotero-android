@@ -29,17 +29,19 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
 
     val changedFields: List<RPageIndexChanges>
         get() {
-            return changes.flatMap { it.rawChanges.map { RPageIndexChanges.valueOf(it) } }
+            return changes.flatMap {
+                it.rawChanges.map { indexChanges ->
+                    RPageIndexChanges.valueOf(
+                        indexChanges
+                    )
+                }
+            }
         }
 
 
     override val updateParameters: Map<String, Any>?
         get() {
-            val libraryId = this.libraryId
-            if (libraryId == null) {
-                return null
-            }
-
+            val libraryId = this.libraryId ?: return null
 
             val libraryPart: String =
                 when (libraryId) {

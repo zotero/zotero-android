@@ -17,7 +17,7 @@ class PerformDeletionsDbRequest constructor(
     val searches: List<String>,
     val tags: List<String>,
     val conflictMode: ConflictResolutionMode,
-): DbResponseRequest<List<Pair<String, String>>, List<Pair<String, String>>> {
+) : DbResponseRequest<List<Pair<String, String>>, List<Pair<String, String>>> {
     enum class ConflictResolutionMode {
         resolveConflicts,
         deleteConflicts,
@@ -40,7 +40,7 @@ class PerformDeletionsDbRequest constructor(
 
     private fun deleteItems(keys: List<String>, database: Realm): List<Pair<String, String>> {
         val objects = database.where<RItem>().keys(keys, this.libraryId).findAll()
-        var conflicts: MutableList<Pair<String, String>> = mutableListOf()
+        val conflicts: MutableList<Pair<String, String>> = mutableListOf()
         for (objectS in objects) {
             if (objectS.isInvalidated) {
                 continue
@@ -69,7 +69,10 @@ class PerformDeletionsDbRequest constructor(
     }
 
     private fun deleteCollections(keys: List<String>, database: Realm) {
-        val objects = database.where<RCollection>().keys(keys, this.libraryId).findAll()
+        val objects = database
+            .where<RCollection>()
+            .keys(keys, this.libraryId)
+            .findAll()
 
         for (objectS in objects) {
             if (objectS.isInvalidated) {
@@ -86,7 +89,10 @@ class PerformDeletionsDbRequest constructor(
     }
 
     private fun deleteSearches(keys: List<String>, database: Realm) {
-        val objects = database.where<RSearch>().keys(keys, this.libraryId).findAll()
+        val objects = database
+            .where<RSearch>()
+            .keys(keys, this.libraryId)
+            .findAll()
 
         for (objectS in objects) {
             if (objectS.isInvalidated) {
@@ -102,7 +108,10 @@ class PerformDeletionsDbRequest constructor(
     }
 
     private fun deleteTags(names: List<String>, database: Realm) {
-        val tags = database.where<RTag>().nameIn(names, this.libraryId).findAll()
+        val tags = database
+            .where<RTag>()
+            .nameIn(names, this.libraryId)
+            .findAll()
         for (tag in tags) {
             tag.tags?.deleteAllFromRealm()
         }

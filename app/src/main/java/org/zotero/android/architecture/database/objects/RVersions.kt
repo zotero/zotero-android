@@ -11,7 +11,5 @@ open class RVersions(
     var searches: Int = 0,
     var deletions: Int = 0,
     var settings: Int = 0,
-) : RealmObject() {
-
-}
+) : RealmObject()
 

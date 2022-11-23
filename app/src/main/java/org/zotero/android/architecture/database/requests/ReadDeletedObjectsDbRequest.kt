@@ -14,7 +14,10 @@ class ReadDeletedObjectsDbRequest<T : RealmObject>(val libraryId: LibraryIdentif
         get() = false
 
     override fun process(database: Realm, clazz: KClass<T>?): RealmResults<T> {
-        return database.where(clazz!!.java).deleted(true, libraryId).findAll()
+        return database
+            .where(clazz!!.java)
+            .deleted(true, libraryId)
+            .findAll()
     }
 
 }

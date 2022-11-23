@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
 
 class StoreCollectionsDbRequest(
     val response: List<CollectionResponse>,
-): DbResponseRequest<Unit, Unit> {
+) : DbResponseRequest<Unit, Unit> {
 
     override val needsWrite: Boolean
         get() = true
@@ -31,7 +31,10 @@ class StoreCollectionsDbRequest(
 
             val collection: RCollection
             val existing =
-                database.where<RCollection>().key(data.key, libraryId = libraryId).findFirst()
+                database
+                    .where<RCollection>()
+                    .key(data.key, libraryId = libraryId)
+                    .findFirst()
             if (existing != null) {
                 collection = existing
             } else {
@@ -50,7 +53,7 @@ class StoreCollectionsDbRequest(
             collection.deleteAllChanges(database = database)
 
             // Update local instance with remote values
-            StoreCollectionsDbRequest.update(
+            update(
                 collection = collection,
                 response = data,
                 libraryId = libraryId,
@@ -67,17 +70,15 @@ class StoreCollectionsDbRequest(
             database: Realm
         ) {
             database.executeTransaction {
-
                 collection.parentKey = null
-
                 val key = parentCollection ?: return@executeTransaction
-
                 val parent: RCollection
-                val existing =
-                    database.where<RCollection>().key(key, libraryId = libraryId).findFirst()
+                val existing = database
+                    .where<RCollection>()
+                    .key(key, libraryId = libraryId)
+                    .findFirst()
                 if (existing != null) {
                     parent = existing
-
                 } else {
                     parent = RCollection()
                     parent.key = key
@@ -90,7 +91,12 @@ class StoreCollectionsDbRequest(
             }
         }
 
-        fun update(collection: RCollection, response: CollectionResponse, libraryId: LibraryIdentifier, database: Realm) {
+        fun update(
+            collection: RCollection,
+            response: CollectionResponse,
+            libraryId: LibraryIdentifier,
+            database: Realm
+        ) {
             collection.key = response.key
             collection.name = response.data.name
             collection.version = response.version
@@ -101,7 +107,12 @@ class StoreCollectionsDbRequest(
             collection.libraryId = libraryId
             collection.trash = response.data.isTrash
 
-            sync(parentCollection = response.data.parentCollection, libraryId = libraryId, collection = collection, database = database)
+            sync(
+                parentCollection = response.data.parentCollection,
+                libraryId = libraryId,
+                collection = collection,
+                database = database
+            )
         }
     }
 }

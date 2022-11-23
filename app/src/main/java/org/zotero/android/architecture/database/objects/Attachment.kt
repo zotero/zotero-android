@@ -14,16 +14,20 @@ data class Attachment(
     val libraryId: LibraryIdentifier,
     val url: String? = null,
     val dateAdded: Date = Date(),
-): Parcelable {
+) : Parcelable {
 
-    val id: String get() { return this.key }
-
-    val location: FileLocation? get() {
-        when (this.type) {
-            is Kind.url -> return null
-            is Kind.file -> return this.type.location
+    val id: String
+        get() {
+            return this.key
         }
-    }
+
+    val location: FileLocation?
+        get() {
+            when (this.type) {
+                is Kind.url -> return null
+                is Kind.file -> return this.type.location
+            }
+        }
 
     enum class FileLocation {
         local, localAndChangedRemotely, remote, remoteMissing
@@ -33,26 +37,39 @@ data class Attachment(
         importedUrl, importedFile, embeddedImage, linkedFile
     }
 
-    sealed class Kind: Parcelable {
+    sealed class Kind : Parcelable {
         @Parcelize
-        data class file(val filename: String, val contentType: String, val location: FileLocation, val linkType: FileLinkType): Kind()
+        data class file(
+            val filename: String,
+            val contentType: String,
+            val location: FileLocation,
+            val linkType: FileLinkType
+        ) : Kind()
+
         @Parcelize
-        data class url(val url: String): Kind()
+        data class url(val url: String) : Kind()
     }
 
     fun changed(location: FileLocation, condition: (FileLocation) -> Boolean): Attachment? {
         when {
             this.type is Kind.file && condition(this.type.location) -> {
-                return Attachment(type =  Kind.file(filename =  this.type.filename, contentType =  this.type.contentType, location = location, linkType = this.type.linkType),
-                title =  this.title,
-                url = this.url,
-                dateAdded = this.dateAdded,
-                key = this.key,
-                libraryId = this.libraryId)
+                return Attachment(
+                    type = Kind.file(
+                        filename = this.type.filename,
+                        contentType = this.type.contentType,
+                        location = location,
+                        linkType = this.type.linkType
+                    ),
+                    title = this.title,
+                    url = this.url,
+                    dateAdded = this.dateAdded,
+                    key = this.key,
+                    libraryId = this.libraryId
+                )
             }
 
             this.type is Kind.url || this.type is Kind.file ->
-            return null
+                return null
             else -> return null
         }
     }
@@ -60,12 +77,19 @@ data class Attachment(
     fun changed(location: FileLocation): Attachment? {
         when {
             this.type is Kind.file && (this.type.location != location) -> {
-                return Attachment(type =  Kind.file(filename =  this.type.filename, contentType =  this.type.contentType, location = location, linkType = this.type.linkType),
-                    title =  this.title,
+                return Attachment(
+                    type = Kind.file(
+                        filename = this.type.filename,
+                        contentType = this.type.contentType,
+                        location = location,
+                        linkType = this.type.linkType
+                    ),
+                    title = this.title,
                     url = this.url,
                     dateAdded = this.dateAdded,
                     key = this.key,
-                    libraryId = this.libraryId)
+                    libraryId = this.libraryId
+                )
             }
 
             this.type is Kind.url || this.type is Kind.file ->

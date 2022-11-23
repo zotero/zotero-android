@@ -11,7 +11,7 @@ open class RObjectChange : RealmObject() {
     lateinit var rawChanges: RealmList<String>
 
     companion object {
-        fun<E : Enum<E>> create(changes: List<E>): RObjectChange {
+        fun <E : Enum<E>> create(changes: List<E>): RObjectChange {
             val objectChange = RObjectChange()
             objectChange.identifier = UUID.randomUUID().toString()
             val realmList = RealmList<String>()

@@ -1,4 +1,5 @@
 package org.zotero.android.architecture.database.objects
+
 import com.google.gson.Gson
 import io.realm.Realm
 import io.realm.RealmList
@@ -32,8 +33,7 @@ enum class RItemChanges {
     paths,
 }
 
-
-open class RItem: Updatable, Deletable, Syncable, RealmObject() {
+open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
     companion object {
         val observableKeypathsForItemList = listOf(
@@ -56,7 +56,6 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             "tags"
         )
         val observableKeypathsForItemDetail = listOf("version", "changeType", "children.version")
-
     }
 
     @Index
@@ -105,6 +104,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     var hasPublisher: Boolean = false
     var publicationTitle: String? = ""
     var hasPublicationTitle: Boolean = false
+
     @Index
     var annotationSortIndex: String = ""
     var trash: Boolean = false
@@ -174,7 +174,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
                 return null
             }
             var positionFieldChanged = false
-            var parameters: MutableMap<String, Any> = mutableMapOf(
+            val parameters: MutableMap<String, Any> = mutableMapOf(
                 "key" to this.key,
                 "version" to this.version,
                 "dateModified" to iso8601DateFormat.format(dateModified),
@@ -194,10 +194,11 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
                         .toTypedArray()
             }
             if (changes.contains(RItemChanges.collections)) {
-                parameters["collections"] = collections?.map { it.key }?.toTypedArray() ?: emptyArray<String>()
+                parameters["collections"] =
+                    collections?.map { it.key }?.toTypedArray() ?: emptyArray<String>()
             }
             if (changes.contains(RItemChanges.relations)) {
-                var relations = mutableMapOf<String, String>()
+                val relations = mutableMapOf<String, String>()
                 this.relations.forEach { relation ->
                     relations[relation.type] = relation.urlString
                 }
@@ -210,30 +211,36 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
                 parameters["creators"] = this.creators.map { it.updateParameters }.toTypedArray()
             }
             if (changes.contains(RItemChanges.fields)) {
-                for( field in this.fields.filter { it.changed == true }) {
-                    if (field.baseKey ==FieldKeys.Item.Annotation.position ) {
+                for (field in this.fields.filter { it.changed == true }) {
+                    if (field.baseKey == FieldKeys.Item.Annotation.position) {
                         positionFieldChanged = true
                         continue
                     }
 
                     when (field.key) {
                         FieldKeys.Item.Attachment.md5, FieldKeys.Item.Attachment.mtime ->
-                        parameters[field.key] = ""
+                            parameters[field.key] = ""
                         else ->
-                        parameters[field.key] = field.value
+                            parameters[field.key] = field.value
                     }
                 }
             }
 
 
-            if (this.rawType == ItemTypes.annotation && (changes.contains(RItemChanges.rects) || changes.contains(RItemChanges.paths) || positionFieldChanged)) {
-                val annotationType = this.fields.where().key(FieldKeys.Item.Annotation.type).findFirst()?.let { AnnotationType.valueOf(it.value) }
+            if (this.rawType == ItemTypes.annotation && (changes.contains(RItemChanges.rects)
+                        || changes.contains(RItemChanges.paths) || positionFieldChanged)
+            ) {
+                val annotationType =
+                    this.fields.where().key(FieldKeys.Item.Annotation.type).findFirst()
+                        ?.let { AnnotationType.valueOf(it.value) }
                 if (annotationType != null) {
-                    parameters[FieldKeys.Item.Annotation.position] = createAnnotationPosition(annotationType, this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll())
+                    parameters[FieldKeys.Item.Annotation.position] = createAnnotationPosition(
+                        annotationType,
+                        this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll()
+                    )
 
                 }
             }
-
             return parameters
         }
 
@@ -241,11 +248,11 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
         type: AnnotationType,
         positionFields: RealmResults<RItemField>
     ): String {
-        var jsonData = mutableMapOf<String, Any>()
+        val jsonData = mutableMapOf<String, Any>()
 
         for (field in positionFields) {
             val value = field.value.toIntOrNull()
-            if (value != null){
+            if (value != null) {
                 jsonData[field.key] = value
             } else {
                 val doubleVal = field.value.toDoubleOrNull()
@@ -259,16 +266,17 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
 
         when (type) {
             AnnotationType.ink -> {
-                var apiPaths: MutableList<List<Double>> = mutableListOf()
+                val apiPaths: MutableList<List<Double>> = mutableListOf()
                 for (path in this.paths.sortedBy { it.sortIndex }) {
-                    apiPaths.add(path.coordinates!!.sortedBy { it.sortIndex }
+                    apiPaths.add(path.coordinates!!
+                        .sortedBy { it.sortIndex }
                         .map { it.value.rounded(3) })
                 }
 
                 jsonData[FieldKeys.Item.Annotation.Position.paths] = apiPaths
             }
             AnnotationType.highlight, AnnotationType.image, AnnotationType.note -> {
-                var rectArray = mutableListOf<List<Double>>()
+                val rectArray = mutableListOf<List<Double>>()
                 this.rects.forEach { rRect ->
                     rectArray.add(
                         listOf(
@@ -286,7 +294,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     }
 
     override val selfOrChildChanged: Boolean
-        get()  {
+        get() {
             if (this.isChanged) {
                 return true
             }
@@ -303,7 +311,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = this.currentChanges))
         this.changeType = UpdatableChangeType.user.name
-                this.deleted = false
+        this.deleted = false
         this.version = 0
 
         for (field in this.fields) {
@@ -313,45 +321,47 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             field.changed = true
         }
 
-        val q = this.fields.filter {it.key == FieldKeys.Item.Attachment.linkMode }.firstOrNull()?.value == LinkMode.importedFile.name
+        val hasLinkModeField = this.fields.filter { it.key == FieldKeys.Item.Attachment.linkMode }
+            .firstOrNull()?.value == LinkMode.importedFile.name
 
-        if (this.rawType == ItemTypes.attachment && q) {
+        if (this.rawType == ItemTypes.attachment && hasLinkModeField) {
             this.attachmentNeedsSync = true
         }
 
         this.children!!.forEach { child ->
-                child.markAsChanged(database)
+            child.markAsChanged(database)
         }
     }
 
-    private val currentChanges: List<RItemChanges> get(){
-        var changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
-        if (!this.creators.isEmpty()) {
-            changes.add(RItemChanges.creators)
+    private val currentChanges: List<RItemChanges>
+        get() {
+            var changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
+            if (!this.creators.isEmpty()) {
+                changes.add(RItemChanges.creators)
+            }
+            if (this.collections.isNullOrEmpty()) {
+                changes.add(RItemChanges.collections)
+            }
+            if (this.parent != null) {
+                changes.add(RItemChanges.parent)
+            }
+            if (!this.tags!!.isEmpty()) {
+                changes.add(RItemChanges.tags)
+            }
+            if (this.trash) {
+                changes.add(RItemChanges.trash)
+            }
+            if (!this.relations.isEmpty()) {
+                changes.add(RItemChanges.relations)
+            }
+            if (!this.rects.isEmpty()) {
+                changes.add(RItemChanges.rects)
+            }
+            if (!this.paths.isEmpty()) {
+                changes.add(RItemChanges.paths)
+            }
+            return changes
         }
-        if (this.collections.isNullOrEmpty()) {
-            changes.add(RItemChanges.collections)
-        }
-        if (this.parent != null) {
-            changes.add(RItemChanges.parent)
-        }
-        if (!this.tags!!.isEmpty()) {
-            changes.add(RItemChanges.tags)
-        }
-        if (this.trash) {
-            changes.add(RItemChanges.trash)
-        }
-        if (!this.relations.isEmpty()) {
-            changes.add(RItemChanges.relations)
-        }
-        if (!this.rects.isEmpty()) {
-            changes.add(RItemChanges.rects)
-        }
-        if (!this.paths.isEmpty()) {
-            changes.add(RItemChanges.paths)
-        }
-        return changes
-    }
 
 
     override fun willRemove(database: Realm) {
@@ -365,17 +375,23 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             children.deleteAllFromRealm()
         }
         if (this.tags!!.isValid) {
-            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<RTypedTag>(this.tags).process(database,RTypedTag::class ) ?: emptyList()
-                this.tags.deleteAllFromRealm()
-                if (!baseTagsToRemove.isEmpty()) {
-                    database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
-                }
+            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<RTypedTag>(this.tags).process(
+                database,
+                RTypedTag::class
+            ) ?: emptyList()
+            this.tags.deleteAllFromRealm()
+            if (!baseTagsToRemove.isEmpty()) {
+                database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
             }
+        }
 
         val createdByUser = this.createdBy
         val lastModifiedByUser = this.lastModifiedBy
 
-        if (createdByUser != null && createdByUser.isValid && lastModifiedByUser != null && lastModifiedByUser.isValid &&
+        if (createdByUser != null &&
+            createdByUser.isValid &&
+            lastModifiedByUser != null &&
+            lastModifiedByUser.isValid &&
             createdByUser.identifier == lastModifiedByUser.identifier &&
             createdByUser.createdBy.count() == 1 &&
             createdByUser.modifiedBy.count() == 1
@@ -383,11 +399,18 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
             createdByUser.deleteFromRealm()
         } else {
             val userCreatedBy = this.createdBy
-            if (userCreatedBy != null && userCreatedBy.isValid && userCreatedBy.createdBy.count() == 1 && (!userCreatedBy.modifiedBy.isValid || userCreatedBy.modifiedBy.isEmpty())) {
+            if (userCreatedBy != null &&
+                userCreatedBy.isValid &&
+                userCreatedBy.createdBy.count() == 1 &&
+                (!userCreatedBy.modifiedBy.isValid || userCreatedBy.modifiedBy.isEmpty())
+            ) {
                 userCreatedBy.deleteFromRealm()
             }
             val user = this.lastModifiedBy
-            if (user != null && user.isValid && (!user.createdBy.isValid || user.createdBy.isEmpty()) && user.modifiedBy.count() == 1) {
+            if (user != null && user.isValid &&
+                (!user.createdBy.isValid || user.createdBy.isEmpty()) &&
+                user.modifiedBy.count() == 1
+            ) {
                 user.deleteFromRealm()
             }
         }
@@ -411,15 +434,12 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
     private fun deletePageIndex(database: Realm) {
         val libraryId = this.libraryId
         if (libraryId != null) {
-            val pageIndex = database.where<RPageIndex>().key(this.key, libraryId).findFirst()
-            if (pageIndex != null) {
-                pageIndex.deleteFromRealm()
-            }
+            database.where<RPageIndex>().key(key, libraryId).findFirst()?.deleteFromRealm()
         }
     }
 
     private fun cleanupAnnotationFiles() {
-       //TODO cleanup annotations & fire event bus events.
+        //TODO cleanup annotations & fire event bus events.
     }
 
     private fun cleanupAttachmentFiles() {
@@ -458,7 +478,7 @@ open class RItem: Updatable, Deletable, Syncable, RealmObject() {
 }
 
 @RealmClass(embedded = true)
-open class RItemField: RealmObject() {
+open class RItemField : RealmObject() {
     var key: String = ""
     var baseKey: String? = null
     var value: String = ""

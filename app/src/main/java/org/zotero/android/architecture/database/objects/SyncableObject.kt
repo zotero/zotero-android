@@ -1,11 +1,12 @@
 package org.zotero.android.architecture.database.objects
 
-import io.realm.RealmObject
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
 
 enum class ObjectSyncState {
-    synced, dirty, outdated
+    synced,
+    dirty,
+    outdated
 }
 
 interface Syncable {
@@ -38,8 +39,7 @@ interface Syncable {
 
             return null
         }
-        set(newValue) {
-            val identifier = newValue
+        set(identifier) {
             if (identifier == null) {
                 groupKey = null
                 customLibraryKey = null

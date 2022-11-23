@@ -11,16 +11,15 @@ import kotlin.reflect.KClass
 class ReadItemDbRequest(
     val libraryId: LibraryIdentifier,
     val key: String,
-): DbResponseRequest<RItem,RItem> {
+) : DbResponseRequest<RItem, RItem> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(database: Realm, clazz: KClass<RItem>?): RItem {
-        val item = database.where<RItem>().key(this.key, this.libraryId).findFirst()
-        if (item == null) {
-            throw DbError.objectNotFound
-        }
-        return item
+        return database
+            .where<RItem>()
+            .key(key, libraryId)
+            .findFirst() ?: throw DbError.objectNotFound
     }
 
 }

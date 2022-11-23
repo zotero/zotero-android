@@ -5,7 +5,7 @@ import io.realm.RealmResults
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.PrimaryKey
 
-open class RUser: RealmObject() {
+open class RUser : RealmObject() {
     @PrimaryKey
     var identifier: Int = 0
     var name: String = ""

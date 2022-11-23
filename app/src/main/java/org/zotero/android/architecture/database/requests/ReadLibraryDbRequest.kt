@@ -11,19 +11,29 @@ import kotlin.reflect.KClass
 
 class ReadLibraryDbRequest(
     val libraryId: LibraryIdentifier
-): DbResponseRequest<Library, Library> {
+) : DbResponseRequest<Library, Library> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(database: Realm, clazz: KClass<Library>?): Library {
         when (this.libraryId) {
-            is LibraryIdentifier.custom -> return Library(identifier =  this.libraryId, name = this.libraryId.type.libraryName, metadataEditable = true, filesEditable = true)
+            is LibraryIdentifier.custom -> return Library(
+                identifier = this.libraryId,
+                name = this.libraryId.type.libraryName,
+                metadataEditable = true,
+                filesEditable = true
+            )
             is LibraryIdentifier.group -> {
-                val group = database.where<RGroup>().equalTo("identifier", this.libraryId.groupId).findFirst()
-                if (group == null) {
-                    throw DbError.objectNotFound
-                }
-                return Library(identifier = this.libraryId, name = group.name, metadataEditable = group.canEditMetadata, filesEditable = group.canEditFiles)
+                val group = database
+                    .where<RGroup>()
+                    .equalTo("identifier", this.libraryId.groupId)
+                    .findFirst() ?: throw DbError.objectNotFound
+                return Library(
+                    identifier = this.libraryId,
+                    name = group.name,
+                    metadataEditable = group.canEditMetadata,
+                    filesEditable = group.canEditFiles
+                )
             }
         }
     }

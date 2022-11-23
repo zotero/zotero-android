@@ -92,7 +92,6 @@ open class RCondition(
     var sortId: Int = 0
 ) : RealmObject() {
 
-
     val updateParameters: Map<String, Any>
         get() {
             return mapOf(

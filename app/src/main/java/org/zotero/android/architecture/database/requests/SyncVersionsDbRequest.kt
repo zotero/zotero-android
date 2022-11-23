@@ -37,26 +37,38 @@ class SyncVersionsDbRequest(
         when (this.syncObject) {
             SyncObject.collection ->
                 return check(
-                    versions = this.versions, objects = database.where<RCollection>().findAll()
+                    versions = this.versions,
+                    objects = database
+                        .where<RCollection>()
+                        .findAll()
                 )
             SyncObject.search ->
                 return check(
-                    versions = this.versions, objects = database.where<RSearch>().findAll()
+                    versions = this.versions,
+                    objects = database
+                        .where<RSearch>()
+                        .findAll()
                 )
-
             SyncObject.item -> {
-                val objects = database.where<RItem>().isTrash(false).findAll()
+                val objects = database
+                    .where<RItem>()
+                    .isTrash(false)
+                    .findAll()
                 return check(
-                    versions = this.versions, objects = objects
+                    versions = this.versions,
+                    objects = objects
                 )
             }
             SyncObject.trash -> {
-                val objects = database.where<RItem>().isTrash(true).findAll()
+                val objects = database
+                    .where<RItem>()
+                    .isTrash(true)
+                    .findAll()
                 return check(
-                    versions = this.versions, objects = objects
+                    versions = this.versions,
+                    objects = objects
                 )
             }
-
             SyncObject.settings ->
                 return listOf()
         }
@@ -67,9 +79,8 @@ class SyncVersionsDbRequest(
         objects: RealmResults<Obj>
     ): List<String> {
         val date = Date()
-        var toUpdate = this.versions.keys.toTypedArray().toMutableList()
+        val toUpdate = this.versions.keys.toTypedArray().toMutableList()
 
-        //TODO uncomment when UI is getting data frm DB
         for (objectS in objects) {
             if (objectS.syncState == ObjectSyncState.synced.name) {
                 val version = this.versions[objectS.key]
@@ -83,14 +94,16 @@ class SyncVersionsDbRequest(
             }
 
             when (this.syncType) {
-                SyncType.ignoreIndividualDelays, SyncType.full -> {
+                SyncType.ignoreIndividualDelays,
+                SyncType.full -> {
                     if (toUpdate.contains(objectS.key)) {
                         continue
                     }
                     toUpdate.add(objectS.key)
                 }
-
-                SyncType.collectionsOnly, SyncType.normal, SyncType.keysOnly -> {
+                SyncType.collectionsOnly,
+                SyncType.normal,
+                SyncType.keysOnly -> {
                     val delayIdx = min(objectS.syncRetries, (this.delayIntervals.size - 1))
                     val delay = this.delayIntervals[delayIdx]
                     if (date.time - objectS.lastSyncDate.time >= delay) {
@@ -105,13 +118,10 @@ class SyncVersionsDbRequest(
                         }
                     }
                 }
-
             }
         }
-
         return toUpdate
     }
-
 }
 
 private typealias ResultSyncVersions = Pair<List<Int>, List<Pair<Int, String>>>
@@ -129,17 +139,18 @@ class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
         clazz: KClass<ResultSyncVersions>?
     ): ResultSyncVersions {
         val allKeys = versions.keys.toMutableList()
-
         val toRemove: List<RGroup> =
-            database.where<RGroup>().findAll().filter { !allKeys.contains(it.identifier) }
+            database
+                .where<RGroup>()
+                .findAll()
+                .filter { !allKeys.contains(it.identifier) }
 
         val toRemoveIds = toRemove.map { Pair(it.identifier, it.name) }
-
         val toUpdate = allKeys
-
         val listOfRGroupIds: RealmResults<RGroup> =
-            database.where<RGroup>().findAll()
-
+            database
+                .where<RGroup>()
+                .findAll()
         for (library in listOfRGroupIds) {
             if (library.syncState != ObjectSyncState.synced.name) {
                 if (!toUpdate.contains(library.identifier)) {
@@ -153,7 +164,6 @@ class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
                 }
             }
         }
-
         return Pair(toUpdate, toRemoveIds)
     }
 }

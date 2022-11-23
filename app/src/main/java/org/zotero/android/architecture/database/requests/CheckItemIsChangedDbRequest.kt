@@ -8,10 +8,10 @@ import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.sync.LibraryIdentifier
 import kotlin.reflect.KClass
 
-class CheckItemIsChangedDbRequest (
+class CheckItemIsChangedDbRequest(
     val libraryId: LibraryIdentifier,
     val key: String,
-        ): DbResponseRequest<Boolean, Boolean> {
+) : DbResponseRequest<Boolean, Boolean> {
     override val needsWrite: Boolean
         get() = false
 

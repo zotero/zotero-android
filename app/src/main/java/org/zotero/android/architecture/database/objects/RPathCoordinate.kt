@@ -5,13 +5,13 @@ import io.realm.RealmObject
 import io.realm.annotations.RealmClass
 
 @RealmClass(embedded = true)
-open class RPath: RealmObject() {
+open class RPath : RealmObject() {
     var sortIndex: Int = 0
     val coordinates: RealmList<RPathCoordinate>? = null
 }
 
 @RealmClass(embedded = true)
-open class RPathCoordinate: RealmObject() {
+open class RPathCoordinate : RealmObject() {
     var value: Double = 0.0
     var sortIndex: Int = 0
 }

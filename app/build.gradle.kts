@@ -185,15 +185,13 @@ dependencies {
     kapt ("com.github.bumptech.glide:compiler:4.11.0")
 
     //Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.6.21")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
-
-    //Realm
 
     //Dagger + Hilt
     implementation("com.google.dagger:hilt-android:2.43.2")
@@ -204,15 +202,12 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.0.0")
     kapt("androidx.hilt:hilt-compiler:1.0.0")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-//    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0"
-
 
     //Crash & Analytics
     implementation("com.google.android.gms:play-services-auth:20.2.0")
     implementation("com.google.android.play:core-ktx:1.8.1")
     implementation("com.google.firebase:firebase-crashlytics-ktx:18.2.12")
     implementation("com.google.firebase:firebase-analytics-ktx:21.1.0")
-
 
     //Other
     implementation("com.jakewharton.timber:timber:4.7.1")
