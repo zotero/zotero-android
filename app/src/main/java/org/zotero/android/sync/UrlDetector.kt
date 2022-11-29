@@ -1,8 +1,9 @@
 package org.zotero.android.sync
 
 import java.util.regex.Pattern
+import javax.inject.Inject
 
-class UrlDetector {
+class UrlDetector @Inject constructor() {
     private val urlPattern: Pattern = Pattern.compile(
         "(?:^|[\\W])((ht|f)tp(s?):\\/\\/|www\\.)"
                 + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"

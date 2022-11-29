@@ -171,9 +171,11 @@ object ItemDetailDataCreator {
             //TODO Parse dateOrder
 
             if (key == FieldKeys.Item.accessDate) {
-                val date = iso8601DateFormatV2.parse(value)!!
-                additionalInfo = mapOf(ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
-                    ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
+                if (value.isNotEmpty()) {
+                    val date = iso8601DateFormatV2.parse(value)!!
+                    additionalInfo = mapOf(ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
+                        ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
+                }
             }
 
 
@@ -198,6 +200,16 @@ object ItemDetailDataCreator {
             else ->
             return false
         }
+    }
+
+    fun filteredFieldKeys(fieldKeys: List<String>, fields: Map<String, ItemDetailField>): List<String> {
+        var newFieldKeys = mutableListOf<String>()
+        fieldKeys.forEach { key ->
+            if (!(fields[key]?.value ?: "").isEmpty()) {
+                newFieldKeys.add(key)
+            }
+        }
+        return newFieldKeys
     }
 
 

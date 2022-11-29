@@ -30,7 +30,6 @@ class SyncBatchProcessor(
     val itemResponseMapper: ItemResponseMapper,
     val collectionResponseMapper: CollectionResponseMapper,
     val searchResponseMapper: SearchResponseMapper,
-    val itemResultsUseCase: ItemResultsUseCase,
     val schemaController: SchemaController,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit
 ) {
@@ -202,7 +201,6 @@ class SyncBatchProcessor(
                 }
                 //Set a breakpoint here
                 println(items)
-                itemResultsUseCase.postResults(items)
 
                 storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
 

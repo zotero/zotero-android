@@ -3,6 +3,7 @@ package org.zotero.android.architecture.database.requests
 import com.google.gson.JsonObject
 import io.realm.Realm
 import io.realm.RealmQuery
+import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.CreatorResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
@@ -18,7 +19,6 @@ import org.zotero.android.architecture.database.objects.ObjectSyncState
 import org.zotero.android.architecture.database.objects.RCollection
 import org.zotero.android.architecture.database.objects.RCreator
 import org.zotero.android.architecture.database.objects.RItem
-import org.zotero.android.architecture.database.objects.RItemChanges
 import org.zotero.android.architecture.database.objects.RItemField
 import org.zotero.android.architecture.database.objects.RLink
 import org.zotero.android.architecture.database.objects.RPath
@@ -548,17 +548,17 @@ class StoreItemDbRequest(
                 if (existing != null) {
                     rTag = existing
                 } else {
-                    rTag = RTag()
+                    rTag = database.createObject<RTag>()
                     rTag.name = tag.tag
                     rTag.libraryId = libraryId
                     database.insertOrUpdate(rTag)
                 }
 
-                val rTypedTag = RTypedTag()
-                rTypedTag.type = RItemChanges.type.name
-                database.insertOrUpdate(rTypedTag)
+                val rTypedTag = database.createObject<RTypedTag>()
+                rTypedTag.type = tag.type.name
                 rTypedTag.item = item
                 rTypedTag.tag = rTag
+                database.insertOrUpdate(rTypedTag)
             }
         }
 

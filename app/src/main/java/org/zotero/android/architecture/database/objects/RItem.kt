@@ -121,7 +121,10 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
     val doi: String?
         get() {
-            val fieldS = fields.filter { it.key == FieldKeys.Item.doi }.first()
+            val fieldS = fields.filter { it.key == FieldKeys.Item.doi }.firstOrNull()
+            if (fieldS == null) {
+                return null
+            }
             val doi = FieldKeys.Item.clean(doi = fieldS.value)
             return if (!doi.isEmpty()) doi else null
         }

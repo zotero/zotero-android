@@ -13,7 +13,7 @@ data class ItemDetailData(
     var creators: Map<UUID, ItemDetailCreator>,
     var creatorIds: List<UUID>,
     var fields: Map<String, ItemDetailField>,
-    var fieldIds: List<String>,
+    var fieldIds: List<String> = emptyList(),
     var abstract: String? = null,
     var dateModified: Date,
     val dateAdded: Date,

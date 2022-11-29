@@ -15,7 +15,7 @@ class ItemDetailCreator {
     lateinit var id: UUID
     var type: String? = null
     var primary: Boolean? = null
-    var localizedType: String? = null
+    lateinit var localizedType: String
     var fullName: String? = null
     var firstName: String? = null
     var lastName: String? = null

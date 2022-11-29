@@ -42,7 +42,6 @@ import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.UriExtractor
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CollectionIdentifier
-import org.zotero.android.sync.ItemResultsUseCase
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
@@ -55,7 +54,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class AllItemsViewModel @Inject constructor(
-    private val itemResultsUseCase: ItemResultsUseCase,
     private val sdkPrefs: SdkPrefs,
     private val dbWrapper: DbWrapper,
     private val dispatcher: CoroutineDispatcher,
