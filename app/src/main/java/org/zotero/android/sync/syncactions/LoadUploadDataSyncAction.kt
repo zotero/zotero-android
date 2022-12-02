@@ -20,7 +20,7 @@ class LoadUploadDataSyncAction constructor(
         return uploads.filter { !backgroundUploads.contains(it.md5) }
     }
 
-    private suspend fun loadUploads(libraryId: LibraryIdentifier): List<AttachmentUpload> {
+    private fun loadUploads(libraryId: LibraryIdentifier): List<AttachmentUpload> {
         val request = ReadAttachmentUploadsDbRequest(libraryId = libraryId, fileStorage = fileStore)
         return dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
     }

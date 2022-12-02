@@ -18,7 +18,7 @@ sealed class Action {
 
     data class performWebDavDeletions(override val libraryId: LibraryIdentifier): Action()
 
-    data class submitDeleteBatch(val deleteBatch: DeleteBatch): Action()
+    data class submitDeleteBatch(val batch: DeleteBatch): Action()
 
     data class createUploadActions(override val libraryId: LibraryIdentifier, val hadOtherWriteActions: Boolean): Action()
 
@@ -29,7 +29,7 @@ sealed class Action {
         val checkRemote: Boolean
     ): Action()
 
-    data class submitWriteBatch(val writeBatch: WriteBatch): Action()
+    data class submitWriteBatch(val batch: WriteBatch): Action()
 
     data class uploadAttachment(val upload: AttachmentUpload): Action()
 

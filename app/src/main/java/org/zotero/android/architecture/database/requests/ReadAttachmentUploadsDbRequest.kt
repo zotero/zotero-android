@@ -47,7 +47,7 @@ class ReadAttachmentUploadsDbRequest(
                 Timber.e("ReadAttachmentUploadsDbRequest: mtime field missing !!!")
                 return@mapNotNull null
             }
-            val mtime = mtimeField.value.toIntOrNull()
+            val mtime = mtimeField.value.toLongOrNull()
             if (mtime == null) {
                 Timber.e("ReadAttachmentUploadsDbRequest: mtime field " +
                         "value not a number ${mtimeField.value} !!!")

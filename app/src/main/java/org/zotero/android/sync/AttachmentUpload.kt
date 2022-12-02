@@ -8,7 +8,7 @@ data class AttachmentUpload(
     val filename: String,
     val contentType: String,
     val md5: String,
-    val mtime: Int,
+    val mtime: Long,
     val file: File,
     val oldMd5: String?,
 ) {
@@ -35,7 +35,7 @@ data class AttachmentUpload(
         result = 31 * result + filename.hashCode()
         result = 31 * result + contentType.hashCode()
         result = 31 * result + md5.hashCode()
-        result = 31 * result + mtime
+        result = 31 * result + mtime.hashCode()
         return result
     }
 }

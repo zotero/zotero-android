@@ -27,6 +27,7 @@ import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
+import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
 import timber.log.Timber
 import java.lang.Integer.min
 import javax.inject.Inject
@@ -34,6 +35,10 @@ import javax.inject.Inject
 
 interface SyncAction<A : Any> {
     suspend fun result(): A
+}
+
+interface SyncActionWithError<A : Any> {
+    suspend fun result(): CustomResult<A>
 }
 
 
@@ -53,10 +58,12 @@ class SyncUseCase @Inject constructor(
 
     private var coroutineScope = CoroutineScope(dispatcher)
 
+    private var userId: Long = 0L
     private var libraryType: LibrarySyncType = LibrarySyncType.all
     private var type: SyncType = SyncType.normal
     private var lastReturnedVersion: Int? = null
     private var conflictRetries: Int = 0
+    private var conflictDelays: MutableList<Int> = mutableListOf()
     private var accessPermissions: AccessPermissions? = null
 
     private var queue = mutableListOf<Action>()
@@ -78,10 +85,11 @@ class SyncUseCase @Inject constructor(
 
     private var batchProcessor: SyncBatchProcessor? = null
 
-    suspend fun start(type: SyncType, libraries: LibrarySyncType) {
+    suspend fun start(userId: Long, type: SyncType, libraries: LibrarySyncType) {
         if (isSyncing) {
             return
         }
+        this.userId = userId
         this.type = type
         this.libraryType = libraries
         queue.addAll(createInitialActions(libraries = libraries, syncType = type))
@@ -173,11 +181,34 @@ class SyncUseCase @Inject constructor(
             is Action.createUploadActions -> {
                 processCreateUploadActions(action.libraryId, hadOtherWriteActions = action.hadOtherWriteActions)
             }
+            is Action.uploadAttachment -> {
+                processUploadAttachment(action.upload)
+            }
+            is Action.submitWriteBatch -> {
+                //TODO
+            }
             else -> {
                 processNextAction()
             }
         }
 
+    }
+
+    private suspend fun processUploadAttachment(upload: AttachmentUpload) {
+        val action = UploadAttachmentSyncAction(key = upload.key, file = upload. file, filename = upload.filename, md5 = upload.md5, mtime = upload.mtime,
+            libraryId = upload.libraryId, userId = this.userId, oldMd5 = upload.oldMd5, syncApi =  this.syncApi, dbWrapper = dbWrapper, fileStore = this.fileStore,
+        schemaController = this.schemaController)
+
+        val actionResult = action.result()
+        if (actionResult !is CustomResult.GeneralSuccess) {
+            //TODO report uploaded progress
+            finishSubmission(error = actionResult as CustomResult.GeneralError, newVersion = null, keys = listOf(upload.key),
+                libraryId = upload.libraryId, objectS = SyncObject.item, failedBeforeReachingApi = action.failedBeforeZoteroApiRequest)
+        } else {
+            //TODO report uploaded progress
+            finishSubmission(error = null, newVersion = null, keys = listOf(upload.key),
+                libraryId = upload.libraryId, objectS = SyncObject.item)
+        }
     }
 
     private suspend fun processBatchesSync(batches: List<DownloadBatch>) {
@@ -539,7 +570,7 @@ class SyncUseCase @Inject constructor(
         error: SyncError.NonFatal,
         libraryId: LibraryIdentifier,
         version: Int?,
-        additionalAction: (() -> Void)? = null
+        additionalAction: (() -> Unit)? = null
     ) {
         val appendAndContinue: () -> Unit = {
             this.nonFatalErrors.add(error)
@@ -1107,4 +1138,152 @@ class SyncUseCase @Inject constructor(
         uploadsFailedBeforeReachingZoteroBackend = 0
         enqueue(actions = uploads.map{ Action.uploadAttachment(it) }, index = 0)
     }
+
+    private suspend fun finishSubmission(error: CustomResult.GeneralError?, newVersion: Int?, keys: List<String>, libraryId: LibraryIdentifier,
+                                         objectS: SyncObject, failedBeforeReachingApi: Boolean = false, ignoreWebDav: Boolean = false) {
+        val nextAction = {
+            if (newVersion != null) {
+                updateVersionInNextWriteBatch(newVersion)
+            }
+            coroutineScope.launch {
+                processNextAction()
+            }
+        }
+
+         if (error == null) {
+            nextAction()
+            return
+        }
+
+        val syncActionError = (error as? CustomResult.GeneralError.CodeError)?.throwable
+                as? SyncActionError
+        if (syncActionError != null) {
+            when(syncActionError) {
+                is SyncActionError.attachmentAlreadyUploaded -> {
+                    nextAction()
+                    return
+                }
+            }
+        }
+
+        if (handleUpdatePreconditionFailureIfNeeded(error, libraryId = libraryId)) {
+            return
+        }
+
+       //TODO handle webdav error
+
+
+        val er = syncError(
+            customResultError = error, data = SyncError.ErrorData.from(
+                syncObject = objectS, keys = keys, libraryId = libraryId)
+            )
+        when (er) {
+            is SyncError.fatal2 ->
+                abort(error = er.error)
+            is SyncError.nonFatal2 -> {
+                handleNonFatal(error = er.error, libraryId = libraryId, version = newVersion, additionalAction = {
+                    if (newVersion != null) {
+                        updateVersionInNextWriteBatch(newVersion)
+                    }
+                    if (failedBeforeReachingApi) {
+                        handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId)
+                    }
+                })
+            }
+        }
+    }
+
+    private fun updateVersionInNextWriteBatch(version: Int) {
+        val action = this.queue.firstOrNull()
+        if (action == null) {
+            return
+        }
+        when (action) {
+            is Action.submitWriteBatch -> {
+                val updatedBatch = action.batch.copy(version=version)
+                queue[0]=Action.submitWriteBatch(updatedBatch)
+            }
+            is Action.submitDeleteBatch -> {
+                val updatedBatch = action.batch.copy(version=version)
+                this.queue[0]=Action.submitDeleteBatch(updatedBatch)
+            }
+        }
+    }
+
+    private suspend fun handleUpdatePreconditionFailureIfNeeded(error: CustomResult.GeneralError, libraryId: LibraryIdentifier): Boolean {
+        val preconditionError = error.preconditionError
+        if (preconditionError == null) {
+            return false
+        }
+
+        if (this.createActionOptions == CreateLibraryActionsOptions.onlyWrites) {
+            this.abort(error= SyncError.Fatal.preconditionErrorCantBeResolved)
+            return true
+        }
+
+        when(preconditionError) {
+            is PreconditionErrorType.objectConflict -> {
+                if (this.conflictRetries >= this.conflictDelays.size) {
+                    abort(SyncError.Fatal.uploadObjectConflict)
+                    return true
+                }
+
+                Timber.e("SyncController: object conflict - trying full sync")
+
+                val delay = this.conflictDelays[min(this.conflictRetries, (this.conflictDelays.size - 1))]
+                val actions = createInitialActions(this.libraryType, syncType = SyncType.full)
+
+                this.type = SyncType.full
+                this.conflictRetries = this.conflictDelays.size
+
+                this.queue.clear()
+                enqueue(actions = actions, index = 0, delayInSeconds = delay)
+            }
+
+
+            is PreconditionErrorType.libraryConflict -> {
+                if (this.conflictRetries >= this.conflictDelays.size) {
+                    abort(SyncError.Fatal.cantResolveConflict)
+                    return true
+                }
+
+                Timber.e("SyncController: library conflict - re-downloading library objects and trying writes again")
+
+                val delay = this.conflictDelays[min(this.conflictRetries, (this.conflictDelays.size - 1))]
+                val actions = listOf(Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
+                    CreateLibraryActionsOptions.onlyDownloads
+                ),
+                Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
+                CreateLibraryActionsOptions.onlyWrites
+                ))
+
+                this.conflictRetries += 1
+
+                removeAllActions(libraryId)
+                enqueue(actions = actions, index =  0, delayInSeconds = delay)
+            }
+
+        }
+
+        return true
+    }
+
+    private fun handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId: LibraryIdentifier) {
+        if (didEnqueueWriteActionsToZoteroBackend || !(this.enqueuedUploads > 0)) {
+            return
+        }
+        this.uploadsFailedBeforeReachingZoteroBackend += 1
+
+        if (!(this.enqueuedUploads == this.uploadsFailedBeforeReachingZoteroBackend) || !(this.queue.firstOrNull()?.libraryId != libraryId) ) {
+            return
+        }
+
+        this.didEnqueueWriteActionsToZoteroBackend = false
+        this.enqueuedUploads = 0
+        this.uploadsFailedBeforeReachingZoteroBackend = 0
+        this.queue.add(element=Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
+            CreateLibraryActionsOptions.onlyDownloads
+        ), index = 0)
+    }
+
 }

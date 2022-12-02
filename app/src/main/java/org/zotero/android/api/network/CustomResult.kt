@@ -1,6 +1,7 @@
 package org.zotero.android.api.network
 
 import okhttp3.Headers
+import org.zotero.android.sync.PreconditionErrorType
 
 sealed class CustomResult<out T> {
     sealed class GeneralError : CustomResult<Nothing>() {
@@ -12,6 +13,20 @@ sealed class CustomResult<out T> {
 
         data class CodeError(val throwable: Throwable) : GeneralError() {
 
+        }
+
+        val preconditionError: PreconditionErrorType? get() {
+            val codeError = this as? CodeError
+            if (codeError != null) {
+                if (codeError.throwable as? PreconditionErrorType != null) {
+                    return codeError.throwable
+                }
+            }
+            val networkError = this as? NetworkError
+            if (networkError != null && networkError.httpCode == 412) {
+                return PreconditionErrorType.libraryConflict
+            }
+            return null
         }
     }
 
