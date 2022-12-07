@@ -97,7 +97,7 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideDbWrapper(
-        fileStore: FileStore
+        fileStore: FileStore,
     ): DbWrapper {
        return DbWrapper(fileStore = fileStore)
     }

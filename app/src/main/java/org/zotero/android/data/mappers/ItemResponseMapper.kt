@@ -25,13 +25,15 @@ class ItemResponseMapper @Inject constructor(
     private val linksResponseMapper: LinksResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
     private val userResponseMapper: UserResponseMapper,
-    private val schemaController: SchemaController
 ) {
-    fun fromJson(json: JsonObject): ItemResponse {
+    fun fromJson(json: JsonObject, schemaController: SchemaController): ItemResponse {
         val data = json["data"].asJsonObject
         val key: String = json["key"].asString
         val itemType = data["itemType"].asString
 
+        if (!schemaController.itemTypes.contains(itemType)) {
+            throw SchemaError.invalidValue(value = itemType, field = "itemType", key = key)
+        }
 
         val library = libraryResponseMapper.fromJson(json["library"].asJsonObject)
 
@@ -54,7 +56,8 @@ class ItemResponseMapper @Inject constructor(
                     links = links,
                     parsedDate = parsedDate,
                     version = version,
-                    data = data
+                    data = data,
+                    schemaController = schemaController
                 )
             }
             else -> {
@@ -68,7 +71,7 @@ class ItemResponseMapper @Inject constructor(
                     lastModifiedBy = lastModifiedBy,
                     createdBy = createdBy,
                     rawType = itemType,
-                    schemaController =schemaController
+                    schemaController = schemaController
                 )
             }
         }
@@ -105,7 +108,7 @@ class ItemResponseMapper @Inject constructor(
         val inPublications =
             data["inPublications"]?.asBoolean ?: (data["inPublications"]?.asInt == 1)
 
-        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = this.schemaController).first
+        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = schemaController).first
 
         if (rawType == ItemTypes.attachment) {
             val linkMode = fields[KeyBaseKeyPair(
@@ -163,7 +166,8 @@ class ItemResponseMapper @Inject constructor(
         createdBy: UserResponse?,
         lastModifiedBy: UserResponse?,
         version: Int,
-        data: JsonObject
+        data: JsonObject,
+        schemaController: SchemaController
     ): ItemResponse {
         val dateAdded = data["dateAdded"]?.asString
         val dateModified = data["dateModified"]?.asString

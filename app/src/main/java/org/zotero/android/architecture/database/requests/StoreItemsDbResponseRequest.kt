@@ -96,10 +96,7 @@ class StoreItemDbRequest(
         if (existing != null) {
             item = existing
         } else {
-            item = RItem()
-            database.executeTransaction {
-                item = database.copyToRealm(item)
-            }
+            item = database.createObject<RItem>()
         }
 
         if (!this.preferRemoteData) {
@@ -111,9 +108,7 @@ class StoreItemDbRequest(
                 throw StoreItemsResponse.Error.itemChanged(this.response)
             }
         } else {
-            database.executeTransaction {
-                item.deleted = false
-            }
+            item.deleted = false
             item.deleteAllChanges(database = database)
         }
         return update(
@@ -135,7 +130,6 @@ class StoreItemDbRequest(
             database: Realm
         ): Pair<RItem, StoreItemsResponse.FilenameChange?> {
             var filenameChange: StoreItemsResponse.FilenameChange? = null
-            database.executeTransaction {
                 item.key = response.key
                 item.rawType = response.rawType
                 item.localizedType =
@@ -208,7 +202,6 @@ class StoreItemDbRequest(
                     database = database
                 )
                 item.updateDerivedTitles()
-            }
             return item to filenameChange
         }
 
@@ -279,14 +272,13 @@ class StoreItemDbRequest(
                     }
                     field = existing
                 } else {
-                    field = RItemField()
+                    field = database.createEmbeddedObject(RItemField::class.java, item, "fields")
                     field.key = keyPair.key
                     field.baseKey = keyPair.baseKey ?: schemaController.baseKey(
                         data.rawType,
                         field = keyPair.key
                     )
                     field.value = value
-                    item.fields.add(field)
                 }
 
                 when {
@@ -346,12 +338,11 @@ class StoreItemDbRequest(
             }
             item.rects.deleteAllFromRealm()
             for (rect in rects) {
-                val rRect = RRect()
+                val rRect = database.createEmbeddedObject(RRect::class.java, item, "rects")
                 rRect.minX = rect[0]
                 rRect.minY = rect[1]
                 rRect.maxX = rect[2]
                 rRect.maxY = rect[3]
-                item.rects.add(rRect)
             }
         }
 
@@ -391,13 +382,11 @@ class StoreItemDbRequest(
                 rPath.sortIndex = idx
 
                 path.forEachIndexed { idy, value ->
-                    val rCoordinate = RPathCoordinate()
+                    val rCoordinate = database.createEmbeddedObject(RPathCoordinate::class.java, rPath, "coordinates")
                     rCoordinate.value = value
                     rCoordinate.sortIndex = idy
-                    rPath.coordinates!!.add(rCoordinate)
+//                    rPath.coordinates.add(rCoordinate)
                 }
-
-                //TODO propably not needed
 //                item.paths.add(rPath)
             }
         }
@@ -448,11 +437,10 @@ class StoreItemDbRequest(
             if (existing != null) {
                 parent = existing
             } else {
-                parent = RItem()
+                parent = database.createObject<RItem>()
                 parent.key = key
                 parent.syncState = ObjectSyncState.dirty.name
                 parent.libraryId = libraryId
-                parent = database.copyToRealm(parent)
             }
             item.parent = parent
         }
@@ -491,11 +479,10 @@ class StoreItemDbRequest(
             }
 
             for (key in toCreateKeys) {
-                val collection = RCollection()
+                val collection = database.createObject<RCollection>()
                 collection.key = key
                 collection.syncState = ObjectSyncState.dirty.name
                 collection.libraryId = libraryId
-                database.insertOrUpdate(collection)
                 collection.items.add(item)
             }
         }
@@ -551,14 +538,12 @@ class StoreItemDbRequest(
                     rTag = database.createObject<RTag>()
                     rTag.name = tag.tag
                     rTag.libraryId = libraryId
-                    database.insertOrUpdate(rTag)
                 }
 
                 val rTypedTag = database.createObject<RTypedTag>()
                 rTypedTag.type = tag.type.name
                 rTypedTag.item = item
                 rTypedTag.tag = rTag
-                database.insertOrUpdate(rTypedTag)
             }
         }
 
@@ -573,12 +558,11 @@ class StoreItemDbRequest(
             }
 
             for (objectS in creators.withIndex()) {
-
                 val firstName = objectS.value.firstName ?: ""
                 val lastName = objectS.value.lastName ?: ""
                 val name = objectS.value.name ?: ""
 
-                val creator = RCreator()
+                val creator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
                 creator.rawType = objectS.value.creatorType
                 creator.firstName = firstName
                 creator.lastName = lastName
@@ -589,7 +573,6 @@ class StoreItemDbRequest(
                         creatorType = creator.rawType,
                         itemType = item.rawType
                     )
-                item.creators.add(creator)
             }
             item.updateCreatorSummary()
         }
@@ -622,9 +605,8 @@ class StoreItemDbRequest(
                 if (existing != null) {
                     relation = existing
                 } else {
-                    relation = RRelation()
+                    relation = database.createEmbeddedObject(RRelation::class.java, item, "relations")
                     relation.type = key
-                    item.relations.add(relation)
                 }
 
                 relation.urlString = valueRes
@@ -674,13 +656,12 @@ class StoreItemDbRequest(
             item: RItem,
             database: Realm
         ) {
-            val link = RLink()
+            val link = database.createEmbeddedObject(RLink::class.java, item, "links")
             link.type = type
             link.contentType = data.type ?: ""
             link.href = data.href
             link.title = data.title ?: ""
             link.length = data.length ?: 0
-            item.links.add(link)
         }
 
         fun syncUsers(
@@ -729,11 +710,10 @@ class StoreItemDbRequest(
                 return dbUser
             }
 
-            val user = RUser()
+            val user = database.createObject<RUser>()
             user.identifier = response.id
             user.name = response.name
             user.username = response.username
-            database.insertOrUpdate(user)
             return user
         }
     }

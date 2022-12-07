@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.Field
+import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
@@ -66,5 +67,12 @@ interface SyncApi {
         @Field("upload") upload: String,
     ) : retrofit2.Response<JsonObject>
 
+    @FormUrlEncoded
+    @POST
+    fun updates(
+        @Url url: String,
+        @FieldMap fieldMap: Map<String, Any>,
+        @HeaderMap headers: Map<String, String>
+    ): retrofit2.Response<JsonObject>
 
 }

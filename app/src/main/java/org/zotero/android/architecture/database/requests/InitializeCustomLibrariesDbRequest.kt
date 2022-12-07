@@ -1,4 +1,6 @@
+
 import io.realm.Realm
+import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RCustomLibrary
@@ -8,7 +10,7 @@ import kotlin.reflect.KClass
 
 class InitializeCustomLibrariesDbRequest : DbResponseRequest<Boolean, Boolean> {
     override val needsWrite: Boolean
-        get() = false
+        get() = true
 
     override fun process(database: Realm, clazz: KClass<Boolean>?): Boolean {
         val existingRecord = database
@@ -18,13 +20,9 @@ class InitializeCustomLibrariesDbRequest : DbResponseRequest<Boolean, Boolean> {
         if (existingRecord.isNotEmpty()) {
             return false
         }
-        database.executeTransaction {
-            val library = RCustomLibrary()
-            library.type = RCustomLibraryType.myLibrary.name
-            library.orderId = 1
-            library.versions = RVersions()
-            database.insertOrUpdate(library)
-        }
+        val library = database.createObject<RCustomLibrary>(RCustomLibraryType.myLibrary.name)
+        library.orderId = 1
+        database.createEmbeddedObject(RVersions::class.java, library, "versions")
         return true
     }
 }

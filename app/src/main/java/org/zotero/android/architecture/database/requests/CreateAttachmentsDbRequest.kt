@@ -42,24 +42,20 @@ class CreateAttachmentsDbRequest(
 
         for (attachment in this.attachments) {
             try {
-                database.executeTransaction {
-                    val attachment = CreateAttachmentDbRequest(
-                        attachment = attachment,
-                        parentKey = null,
-                        localizedType = this.localizedType,
-                        collections = this.collections,
-                        tags = emptyList(),
-                        fileStore = fileStore
-                    ).process(database)
-                    if (parent != null) {
-                        attachment.parent = parent
-                        attachment.changes.add(
-                            RObjectChange.create(changes = listOf(RItemChanges.parent))
-                        )
-                    }
+                val attachment = CreateAttachmentDbRequest(
+                    attachment = attachment,
+                    parentKey = null,
+                    localizedType = this.localizedType,
+                    collections = this.collections,
+                    tags = emptyList(),
+                    fileStore = fileStore
+                ).process(database)
+                if (parent != null) {
+                    attachment.parent = parent
+                    attachment.changes.add(
+                        RObjectChange.create(changes = listOf(RItemChanges.parent))
+                    )
                 }
-
-
             } catch (error: Throwable) {
                 Timber.e(error, "CreateAttachmentsDbRequest: could not create attachment ")
                 failed.add((attachment.key to attachment.title))

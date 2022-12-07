@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.database.requests
 
 import io.realm.Realm
+import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.ConditionResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
@@ -28,27 +29,24 @@ class StoreSearchesDbRequest(
     }
 
     private fun store(data: SearchResponse, database: Realm) {
-        database.executeTransaction {
-            val libraryId = data.library.libraryId ?: throw DbError.primaryKeyUnavailable
+        val libraryId = data.library.libraryId ?: throw DbError.primaryKeyUnavailable
 
-            val search: RSearch
-            val existing =
-                database.where<RSearch>().key(data.key, libraryId = libraryId).findFirst()
-            if (existing != null) {
-                search = existing
-            } else {
-                search = RSearch()
-                database.copyToRealm(search)
-            }
-
-            search.deleted = false
-            search.deleteAllChanges(database = database)
-
-            // Update local instance with remote values
-            StoreSearchesDbRequest.update(
-                search = search, response = data, libraryId = libraryId, database = database
-            )
+        val search: RSearch
+        val existing =
+            database.where<RSearch>().key(data.key, libraryId = libraryId).findFirst()
+        if (existing != null) {
+            search = existing
+        } else {
+            search = database.createObject<RSearch>()
         }
+
+        search.deleted = false
+        search.deleteAllChanges(database = database)
+
+        // Update local instance with remote values
+        StoreSearchesDbRequest.update(
+            search = search, response = data, libraryId = libraryId, database = database
+        )
     }
 
     companion object {
@@ -76,12 +74,11 @@ class StoreSearchesDbRequest(
             search.conditions.deleteAllFromRealm()
 
             for ((index, objectS) in conditions.withIndex()) {
-                val condition = RCondition()
+                val condition = database.createEmbeddedObject(RCondition::class.java, search, "conditions")
                 condition.condition = objectS.condition
                 condition.operator = objectS.operator
                 condition.value = objectS.value
                 condition.sortId = index
-                search.conditions.add(condition)
             }
         }
     }

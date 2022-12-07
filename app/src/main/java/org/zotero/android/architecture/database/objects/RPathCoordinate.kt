@@ -7,7 +7,7 @@ import io.realm.annotations.RealmClass
 @RealmClass(embedded = true)
 open class RPath : RealmObject() {
     var sortIndex: Int = 0
-    val coordinates: RealmList<RPathCoordinate>? = null
+    val coordinates: RealmList<RPathCoordinate> = RealmList()
 }
 
 @RealmClass(embedded = true)

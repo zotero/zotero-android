@@ -185,12 +185,32 @@ class SyncUseCase @Inject constructor(
                 processUploadAttachment(action.upload)
             }
             is Action.submitWriteBatch -> {
-                //TODO
+                processSubmitUpdate(action.batch)
             }
             else -> {
                 processNextAction()
             }
         }
+
+    }
+
+    private fun processSubmitUpdate(batch: WriteBatch) {
+//        val result = SubmitUpdateSyncAction(parameters: batch.parameters, changeUuids: batch.changeUuids, sinceVersion: batch.version, object: batch.object, libraryId: batch.libraryId,
+//        userId: self.userId, updateLibraryVersion: true, apiClient: self.apiClient, dbStorage: self.dbStorage, fileStorage: self.fileStorage,
+//        schemaController: self.schemaController, dateParser: self.dateParser, queue: self.workQueue, scheduler: self.workScheduler).result
+//        result.subscribe(on: self.workScheduler)
+//        .subscribe(onSuccess: { [weak self] version, error in
+//            self?.accessQueue.async(flags: .barrier) { [weak self] in
+//                    self?.progressHandler.reportWriteBatchSynced(size: batch.parameters.count)
+//                self?.finishSubmission(error: error, newVersion: version, keys: batch.parameters.compactMap({ $0["key"] as? String }), libraryId: batch.libraryId, object: batch.object)
+//            }
+//        }, onFailure: { [weak self] error in
+//            self?.accessQueue.async(flags: .barrier) { [weak self] in
+//                    self?.progressHandler.reportWriteBatchSynced(size: batch.parameters.count)
+//                self?.finishSubmission(error: error, newVersion: batch.version, keys: batch.parameters.compactMap({ $0["key"] as? String }), libraryId: batch.libraryId, object: batch.object)
+//            }
+//        })
+//        .disposed(by: self.disposeBag)
 
     }
 

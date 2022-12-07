@@ -1,5 +1,7 @@
 package org.zotero.android.sync.syncactions
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.requests.UpdateVersionType
 import org.zotero.android.architecture.database.requests.UpdateVersionsDbRequest
@@ -12,8 +14,12 @@ class StoreVersionSyncAction(
     val type: UpdateVersionType,
     val libraryId: LibraryIdentifier,
 ) : SyncAction<Unit> {
-    override suspend fun result() {
-        val request = UpdateVersionsDbRequest(version = this. version, libraryId = this.libraryId, type = this.type)
+    override suspend fun result() = withContext(Dispatchers.IO) {
+        val request = UpdateVersionsDbRequest(
+            version = this@StoreVersionSyncAction.version,
+            libraryId = this@StoreVersionSyncAction.libraryId,
+            type = this@StoreVersionSyncAction.type
+        )
         dbWrapper.realmDbStorage.perform(request = request)
     }
 }

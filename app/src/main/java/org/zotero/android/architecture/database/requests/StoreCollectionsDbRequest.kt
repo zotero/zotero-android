@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.database.requests
 
 import io.realm.Realm
+import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.architecture.database.DbError
@@ -26,7 +27,6 @@ class StoreCollectionsDbRequest(
     }
 
     private fun store(data: CollectionResponse, database: Realm) {
-        database.executeTransaction {
             val libraryId = data.library.libraryId ?: throw DbError.primaryKeyUnavailable
 
             val collection: RCollection
@@ -38,9 +38,8 @@ class StoreCollectionsDbRequest(
             if (existing != null) {
                 collection = existing
             } else {
-                collection = RCollection()
+                collection = database.createObject<RCollection>()
                 collection.collapsed = true
-                database.copyToRealm(collection)
             }
 
             if (collection.deleted) {
@@ -59,7 +58,6 @@ class StoreCollectionsDbRequest(
                 libraryId = libraryId,
                 database = database
             )
-        }
     }
 
     companion object {
@@ -69,26 +67,23 @@ class StoreCollectionsDbRequest(
             collection: RCollection,
             database: Realm
         ) {
-            database.executeTransaction {
-                collection.parentKey = null
-                val key = parentCollection ?: return@executeTransaction
-                val parent: RCollection
-                val existing = database
-                    .where<RCollection>()
-                    .key(key, libraryId = libraryId)
-                    .findFirst()
-                if (existing != null) {
-                    parent = existing
-                } else {
-                    parent = RCollection()
-                    parent.key = key
-                    parent.syncState = ObjectSyncState.dirty.name
-                    parent.libraryId = libraryId
-                    database.copyToRealm(parent)
+            collection.parentKey = null
+            val key = parentCollection ?: return
+            val parent: RCollection
+            val existing = database
+                .where<RCollection>()
+                .key(key, libraryId = libraryId)
+                .findFirst()
+            if (existing != null) {
+                parent = existing
+            } else {
+                parent = database.createObject<RCollection>()
+                parent.key = key
+                parent.syncState = ObjectSyncState.dirty.name
+                parent.libraryId = libraryId
 
-                }
-                collection.parentKey = parent.key
             }
+            collection.parentKey = parent.key
         }
 
         fun update(

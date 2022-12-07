@@ -3,6 +3,8 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
@@ -40,11 +42,11 @@ class SyncBatchProcessor(
     private var isFinished: Boolean = false
     private var processedCount: Int = 0
 
-    suspend fun start() {
-        this.batches.map { batch ->
+    suspend fun start() = withContext(Dispatchers.IO) {
+        this@SyncBatchProcessor.batches.map { batch ->
             val keysString = batch.keys.joinToString(separator = ",")
             val url =
-                BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this.userId) + "/" + batch.objectS.apiPath
+                BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
 
             val networkResult = safeApiCall {
                 val parameters = mutableMapOf<String, String>()
@@ -192,7 +194,7 @@ class SyncBatchProcessor(
                 val items = dataArray.mapNotNull {
                     try {
                         objects.add(it)
-                        itemResponseMapper.fromJson(it.asJsonObject)
+                        itemResponseMapper.fromJson(it.asJsonObject, schemaController)
                     } catch (e :Exception) {
                         Timber.e(e)
                         errors.add(e)

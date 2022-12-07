@@ -1,8 +1,6 @@
 package org.zotero.android.architecture.database
 import io.realm.Realm
 import io.realm.RealmConfiguration
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
@@ -35,11 +33,10 @@ class RealmDbStorage(val config: RealmConfiguration) {
         }
     }
 
-    suspend fun perform(coordinatorAction: (RealmDbCoordinator) -> Unit) =
-        withContext(Dispatchers.IO) {
-            val coordinator = RealmDbCoordinator().init(config)
-            coordinatorAction(coordinator)
-        }
+    fun perform(coordinatorAction: (RealmDbCoordinator) -> Unit) {
+        val coordinator = RealmDbCoordinator().init(config)
+        coordinatorAction(coordinator)
+    }
 
     inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>): T {
         return perform(request = request, invalidateRealm = false, refreshRealm = false)
@@ -84,14 +81,16 @@ class RealmDbStorage(val config: RealmConfiguration) {
         return result
     }
 
-    suspend fun perform(request: DbRequest) = withContext(Dispatchers.IO) {
+    fun perform(request: DbRequest) {
         val coordinator = RealmDbCoordinator().init(config)
         coordinator.perform(request = request)
+        coordinator.invalidate()
     }
 
-    suspend fun perform(requests: List<DbRequest>) = withContext(Dispatchers.IO) {
+    fun perform(requests: List<DbRequest>) {
         val coordinator = RealmDbCoordinator().init(config)
         coordinator.perform(requests)
+        coordinator.invalidate()
     }
 }
 
@@ -120,21 +119,22 @@ class RealmDbCoordinator {
     }
 
     inline fun <reified T: Any> perform(request: DbResponseRequest<T, T>): T {
-        if (!request.needsWrite) {
-            return request.process(realm, T::class)
-        }
+         if (!request.needsWrite) {
+             return request.process(realm, T::class)
+         }
 
-        if (realm.isInTransaction) {
-            Timber.e("RealmDbCoordinator: realm already in transaction $request")
-            return request.process(realm, T::class)
-        }
-
-        return request.process(realm, T::class)
-
-
+         if (realm.isInTransaction) {
+             Timber.e("RealmDbCoordinator: realm already in transaction $request")
+             return request.process(realm, T::class)
+         }
+         var result: T? = null
+         realm.executeTransaction {
+             result = request.process(realm, T::class)
+         }
+         return result!!
     }
 
-    suspend fun perform(requests: List<DbRequest>) = withContext(Dispatchers.IO) {
+    fun perform(requests: List<DbRequest>) {
         if (realm.isInTransaction) {
             Timber.e("RealmDbCoordinator: realm already writing")
             for (request in requests) {
@@ -144,7 +144,7 @@ class RealmDbCoordinator {
                 Timber.e("type of: $request")
                 request.process(realm)
             }
-            return@withContext
+            return
         }
 
         realm.executeTransaction {

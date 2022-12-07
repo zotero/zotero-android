@@ -159,7 +159,6 @@ class CreateAttachmentDbRequest(
             field.baseKey = null
             field.value = value
             field.changed = true
-            item.fields.add(field)
         }
 
         this.collections.forEach { key ->
@@ -172,11 +171,10 @@ class CreateAttachmentDbRequest(
             if (existing != null) {
                 collection = existing
             } else {
-                collection = RCollection()
+                collection = database.createObject<RCollection>()
                 collection.key = key
                 collection.syncState = ObjectSyncState.dirty.name
                 collection.libraryId = this.attachment.libraryId
-                database.insertOrUpdate(collection)
             }
 
             collection.items.add(item)

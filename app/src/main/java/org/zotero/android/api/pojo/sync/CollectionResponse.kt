@@ -8,7 +8,6 @@ data class CollectionResponse(
     val version: Int
 ) {
 
-
     data class Data(
         val name: String,
         val parentCollection: String?,
