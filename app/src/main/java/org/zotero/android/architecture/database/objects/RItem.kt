@@ -14,7 +14,7 @@ import org.zotero.android.architecture.database.requests.baseKey
 import org.zotero.android.architecture.database.requests.key
 import org.zotero.android.architecture.database.requests.nameIn
 import org.zotero.android.formatter.ItemTitleFormatter
-import org.zotero.android.formatter.iso8601DateFormat
+import org.zotero.android.formatter.sqlFormat
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.LinkMode
@@ -82,14 +82,14 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     @LinkingObjects("item")
     val tags: RealmResults<RTypedTag>? = null
 
-    lateinit var creators: RealmList<RCreator>
-    lateinit var links: RealmList<RLink>
-    lateinit var relations: RealmList<RRelation>
+    var creators:RealmList<RCreator> = RealmList()
+    var links:RealmList<RLink> = RealmList()
+    var relations:RealmList<RRelation> = RealmList()
 
     var backendMd5: String = ""
     var fileDownloaded: Boolean = false
-    lateinit var rects: RealmList<RRect>
-    lateinit var paths: RealmList<RPath>
+    var rects: RealmList<RRect> = RealmList()
+    var paths: RealmList<RPath> = RealmList()
     var localizedType: String = ""
     var displayTitle: String = ""
     var sortTitle: String = ""
@@ -115,7 +115,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     override var syncState: String = "" //ObjectSyncState
     override lateinit var lastSyncDate: Date
     override var syncRetries: Int = 0
-    override lateinit var changes: RealmList<RObjectChange>
+    override var changes: RealmList<RObjectChange> = RealmList()
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
 
@@ -180,8 +180,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             val parameters: MutableMap<String, Any> = mutableMapOf(
                 "key" to this.key,
                 "version" to this.version,
-                "dateModified" to iso8601DateFormat.format(dateModified),
-                "dateAdded" to iso8601DateFormat.format(dateAdded)
+                "dateModified" to sqlFormat.format(dateModified),
+                "dateAdded" to sqlFormat.format(dateAdded)
             )
 
             val changes = this.changedFields

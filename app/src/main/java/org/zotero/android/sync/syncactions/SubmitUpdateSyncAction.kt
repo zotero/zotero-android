@@ -1,10 +1,15 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
+import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.api.pojo.sync.UpdatesResponse
@@ -17,16 +22,23 @@ import org.zotero.android.architecture.database.requests.MarkCollectionAsSyncedA
 import org.zotero.android.architecture.database.requests.MarkForResyncDbAction
 import org.zotero.android.architecture.database.requests.MarkItemAsSyncedAndUpdateDbRequest
 import org.zotero.android.architecture.database.requests.MarkObjectsAsSyncedDbRequest
+import org.zotero.android.architecture.database.requests.MarkSearchAsSyncedAndUpdateDbRequest
+import org.zotero.android.architecture.database.requests.SplitAnnotationsDbRequest
+import org.zotero.android.architecture.database.requests.UpdateVersionType
+import org.zotero.android.architecture.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.data.mappers.UpdatesResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.PreconditionErrorType
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncActionWithError
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
+import java.io.FileWriter
 
 class SubmitUpdateSyncAction(
     val parameters:List<Map<String, Any>>,
@@ -44,43 +56,46 @@ class SubmitUpdateSyncAction(
     val collectionResponseMapper: CollectionResponseMapper,
     val itemResponseMapper: ItemResponseMapper,
     val searchResponseMapper: SearchResponseMapper,
-) : SyncActionWithError<Pair<Int, Exception>> {
+    val dispatcher: CoroutineDispatcher
+) : SyncActionWithError<Pair<Int, CustomResult.GeneralError.CodeError?>> {
     private val splitMessage = "Annotation position is too long"
 
 
-    override suspend fun result(): CustomResult<Pair<Int, Exception>> {
-        try {
-            when (this.objectS) {
-                SyncObject.settings ->
-                    TODO()
-                SyncObject.collection, SyncObject.item, SyncObject.search, SyncObject.trash ->
-                    return submitOther()
+    override suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+        return withContext(dispatcher) {
+            try {
+                when (this@SubmitUpdateSyncAction.objectS) {
+                    SyncObject.settings ->
+                        TODO()
+                    SyncObject.collection, SyncObject.item, SyncObject.search, SyncObject.trash ->
+                        return@withContext submitOther()
+                }
+            } catch (e:Exception) {
+                Timber.e(e, "SubmitUpdateSyncAction: can't parse updates response")
+                return@withContext CustomResult.GeneralError.CodeError(e)
             }
-        } catch (e :Exception) {
-            Timber.e(e, "SubmitUpdateSyncAction: can't parse updates response")
-            return CustomResult.GeneralError.CodeError(e)
         }
     }
 
-    private suspend fun submitOther(): CustomResult<Pair<Int, Exception>> {
+    private suspend fun submitOther(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
         val objectType = this.objectS
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + objectType.apiPath
 
         val networkResult = safeApiCall {
-            val parameters: Map<String, Any>
+            val jsonBody: String
             when (objectType) {
                 SyncObject.settings ->
-                    parameters = this.parameters.first()
+                    jsonBody = Gson().toJson(this.parameters.first())
                 else ->
-                    parameters = mapOf("arrayParametersKey" to this.parameters)
+                    jsonBody = Gson().toJson(this.parameters)
             }
 
             val headers = mutableMapOf<String, String>()
             this.sinceVersion?.let {
                 headers.put("If-Unmodified-Since-Version", it.toString())
             }
-            syncApi.updates(url = url, fieldMap = parameters, headers = headers)
+            syncApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {
@@ -94,9 +109,30 @@ class SubmitUpdateSyncAction(
         return process(response = updatesResponse, newVersion = newVersion)
     }
 
-    private fun process(response: UpdatesResponse, newVersion: Int): CustomResult<Pair<Int, Exception>> {
-        TODO()
+    private fun process(response: UpdatesResponse, newVersion: Int): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+        val requests = createRequests(response = response, version = newVersion, updateLibraryVersion = this.updateLibraryVersion)
 
+        if (!response.successfulJsonObjects.isEmpty()) {
+            when (this.objectS) {
+                SyncObject.item, SyncObject.trash ->
+                    storeIndividualItemJsonObjects(response.successfulJsonObjects.values, libraryId = this.libraryId)
+                SyncObject.collection, SyncObject.search, SyncObject.settings -> {
+                    //no-op
+                }
+            }
+        }
+
+        if (!requests.isEmpty()) {
+            try {
+                dbStorage.realmDbStorage.perform(requests)
+            } catch (e:Exception) {
+                Timber.e(e, "SubmitUpdateSyncAction: can't store local changes")
+                return CustomResult.GeneralSuccess(Pair(newVersion, CustomResult.GeneralError.CodeError(e)))
+            }
+        }
+
+        val error = process(failedResponses = response.failed, this.libraryId)
+        return CustomResult.GeneralSuccess(Pair(newVersion, error?.let { CustomResult.GeneralError.CodeError(error) }))
     }
 
     private fun createRequests(response: UpdatesResponse, version: Int, updateLibraryVersion: Boolean): List<DbRequest> {
@@ -152,20 +188,62 @@ class SubmitUpdateSyncAction(
                 )
             }
         }
-//
-//        if !changedSearches.isEmpty {
-//            // Update searches locally based on response from backend and mark as submitted.
-//            for response in changedSearches {
-//                let changeUuids = self.changeUuids[response.key] ?? []
-//                requests.append(MarkSearchAsSyncedAndUpdateDbRequest(libraryId: self.libraryId, response: response, changeUuids: changeUuids))
-//            }
-//        }
-//
-//        if updateLibraryVersion {
-//            requests.append(UpdateVersionsDbRequest(version: version, libraryId: self.libraryId, type: .object(self.object)))
-//        }
+
+        if (!changedSearches.isEmpty()) {
+            for (response in changedSearches) {
+                val changeUuids = this.changeUuids[response.key] ?:emptyList()
+                requests.add(MarkSearchAsSyncedAndUpdateDbRequest(libraryId= this.libraryId, response =response, changeUuids = changeUuids))
+            }
+        }
+
+        if (updateLibraryVersion) {
+            requests.add(UpdateVersionsDbRequest(version = version, libraryId = this.libraryId,
+                type = UpdateVersionType.objectS(this.objectS)))
+        }
 
         return requests
+    }
+
+    private fun process(failedResponses: List<FailedUpdateResponse>, libraryId: LibraryIdentifier): Exception? {
+        if(failedResponses.isEmpty()) {
+            return null
+        }
+
+        var splitKeys = mutableSetOf<String>()
+
+        for (response in failedResponses) {
+            when (response.code) {
+                412 -> {
+                    Timber.e("SubmitUpdateSyncAction: failed ${response.key ?: "unknown key"} " +
+                            "- ${response.message}. Library ${libraryId}")
+                    return PreconditionErrorType.objectConflict
+                }
+                400 -> {
+                    if (response.message == this.splitMessage && response.key != null) {
+                        splitKeys.add(response.key)
+                    }
+                }
+                else -> {
+                    continue
+                }
+            }
+        }
+
+        if (!splitKeys.isEmpty()) {
+            Timber.w("SubmitUpdateSyncAction: annotations too long: ${splitKeys} in ${libraryId}")
+
+            try {
+                dbStorage.realmDbStorage.perform(request = SplitAnnotationsDbRequest(keys = splitKeys, libraryId = libraryId))
+                    return SyncActionError.annotationNeededSplitting(messageS = this.splitMessage, libraryId = libraryId)
+                } catch (e:Exception) {
+                    Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
+                }
+            }
+
+        Timber.e("SubmitUpdateSyncAction: failures - ${failedResponses}")
+
+        val errorMessages = failedResponses.map{ it.message }.joinToString(separator = "\n")
+        return SyncActionError.submitUpdateFailures(errorMessages)
     }
 
     private fun process(response: UpdatesResponse): SubmitUpdateProcessResponse {
@@ -210,6 +288,23 @@ class SubmitUpdateSyncAction(
         }
 
         return SubmitUpdateProcessResponse(unchangedKeys, parsingFailedKeys, changedCollections, changedItems, changedSearches)
+    }
+
+    private fun storeIndividualItemJsonObjects(jsonObjects: Collection<JsonObject>, libraryId: LibraryIdentifier) {
+        for (obj in jsonObjects) {
+            val objectS = obj.asJsonObject
+            val key = objectS["key"]?.asString ?: continue
+            try {
+                val file = fileStorage.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
+                val fileWriter = FileWriter(file)
+                Gson().toJson(objectS, fileWriter)
+                fileWriter.flush()
+                fileWriter.close()
+                println("")
+            } catch (e:Throwable) {
+                Timber.e(e, "SubmitUpdateSyncAction: can't encode/write item - $objectS")
+            }
+        }
     }
 
 }

@@ -46,6 +46,7 @@ import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SyncUseCase
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uidata.Collection
@@ -60,7 +61,8 @@ internal class AllItemsViewModel @Inject constructor(
     private val uriExtractor: UriExtractor,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
-    private val schemaController: SchemaController
+    private val schemaController: SchemaController,
+    private val syncUseCase: SyncUseCase
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     fun init() = initOnce {

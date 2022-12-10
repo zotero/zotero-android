@@ -25,7 +25,9 @@ internal class DashboardViewModel @Inject constructor(
     fun init(context: Context) = initOnce {
         viewModelScope.launch {
             initUseCase.execute(context)
-            syncUseCase.start(userId = sdkPrefs.getUserId(), type = SyncType.normal, libraries = LibrarySyncType.all)
+            syncUseCase.start(userId = sdkPrefs.getUserId(), type = SyncType.normal,
+                libraries = LibrarySyncType.all, syncDelayIntervals = listOf(0.0, 1.0, 2.0, 3.0),
+                conflictDelays = listOf(0, 1, 2, 3))
         }
     }
 

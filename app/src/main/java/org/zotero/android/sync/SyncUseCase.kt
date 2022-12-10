@@ -18,6 +18,7 @@ import org.zotero.android.data.AccessPermissions
 import org.zotero.android.data.mappers.CollectionResponseMapper
 import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.data.mappers.SearchResponseMapper
+import org.zotero.android.data.mappers.UpdatesResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
@@ -26,6 +27,7 @@ import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
+import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
 import timber.log.Timber
@@ -54,6 +56,7 @@ class SyncUseCase @Inject constructor(
     private val collectionResponseMapper: CollectionResponseMapper,
     private val searchResponseMapper: SearchResponseMapper,
     private val schemaController: SchemaController,
+    private val updatesResponseMapper: UpdatesResponseMapper
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -85,12 +88,14 @@ class SyncUseCase @Inject constructor(
 
     private var batchProcessor: SyncBatchProcessor? = null
 
-    suspend fun start(userId: Long, type: SyncType, libraries: LibrarySyncType) {
+    suspend fun start(userId: Long, type: SyncType, libraries: LibrarySyncType, conflictDelays: List<Int>, syncDelayIntervals: List<Double>) {
         if (isSyncing) {
             return
         }
         this.userId = userId
         this.type = type
+        this.conflictDelays = conflictDelays.toMutableList()
+        this.syncDelayIntervals = syncDelayIntervals
         this.libraryType = libraries
         queue.addAll(createInitialActions(libraries = libraries, syncType = type))
 
@@ -194,23 +199,29 @@ class SyncUseCase @Inject constructor(
 
     }
 
-    private fun processSubmitUpdate(batch: WriteBatch) {
-//        val result = SubmitUpdateSyncAction(parameters: batch.parameters, changeUuids: batch.changeUuids, sinceVersion: batch.version, object: batch.object, libraryId: batch.libraryId,
-//        userId: self.userId, updateLibraryVersion: true, apiClient: self.apiClient, dbStorage: self.dbStorage, fileStorage: self.fileStorage,
-//        schemaController: self.schemaController, dateParser: self.dateParser, queue: self.workQueue, scheduler: self.workScheduler).result
-//        result.subscribe(on: self.workScheduler)
-//        .subscribe(onSuccess: { [weak self] version, error in
-//            self?.accessQueue.async(flags: .barrier) { [weak self] in
-//                    self?.progressHandler.reportWriteBatchSynced(size: batch.parameters.count)
-//                self?.finishSubmission(error: error, newVersion: version, keys: batch.parameters.compactMap({ $0["key"] as? String }), libraryId: batch.libraryId, object: batch.object)
-//            }
-//        }, onFailure: { [weak self] error in
-//            self?.accessQueue.async(flags: .barrier) { [weak self] in
-//                    self?.progressHandler.reportWriteBatchSynced(size: batch.parameters.count)
-//                self?.finishSubmission(error: error, newVersion: batch.version, keys: batch.parameters.compactMap({ $0["key"] as? String }), libraryId: batch.libraryId, object: batch.object)
-//            }
-//        })
-//        .disposed(by: self.disposeBag)
+    private suspend fun processSubmitUpdate(batch: WriteBatch) {
+        val actionResult = SubmitUpdateSyncAction(parameters = batch.parameters, changeUuids = batch.changeUuids,
+            sinceVersion = batch.version, objectS = batch.objectS, libraryId = batch.libraryId,
+        userId = this.userId, updateLibraryVersion = true, syncApi = this.syncApi,
+            dbStorage = this.dbWrapper, fileStorage = this.fileStore,
+        schemaController = this.schemaController, collectionResponseMapper = collectionResponseMapper,
+        itemResponseMapper = itemResponseMapper,
+        searchResponseMapper = searchResponseMapper,
+        updatesResponseMapper = updatesResponseMapper, dispatcher = dispatcher).result()
+
+        if (actionResult !is CustomResult.GeneralSuccess) {
+            //TODO report uploaded progress
+            finishSubmission(error = actionResult as CustomResult.GeneralError, newVersion = batch.version,
+                keys = batch.parameters.mapNotNull { it["key"]?.toString() }, libraryId = batch.libraryId,
+                objectS = batch.objectS
+            )
+        } else {
+            //TODO report uploaded progress
+            finishSubmission(error = actionResult.value.second, newVersion = actionResult.value.first,
+                keys = batch.parameters.mapNotNull { it["key"]?.toString() }, libraryId = batch.libraryId,
+                objectS = batch.objectS
+            )
+        }
 
     }
 
@@ -308,7 +319,8 @@ class SyncUseCase @Inject constructor(
                 syncDelayIntervals = this.syncDelayIntervals,
                 checkRemote = checkRemote,
                 syncApi = this.syncApi,
-                dbWrapper = this.dbWrapper
+                dbWrapper = this.dbWrapper,
+                dispatcher = this.dispatcher
             ).result()
 
             val versionDidChange = version != lastVersion
@@ -1156,7 +1168,7 @@ class SyncUseCase @Inject constructor(
         //TODO report progress
         enqueuedUploads = uploads.size
         uploadsFailedBeforeReachingZoteroBackend = 0
-        enqueue(actions = uploads.map{ Action.uploadAttachment(it) }, index = 0)
+        enqueue(actions = uploads.map { Action.uploadAttachment(it) }, index = 0)
     }
 
     private suspend fun finishSubmission(error: CustomResult.GeneralError?, newVersion: Int?, keys: List<String>, libraryId: LibraryIdentifier,

@@ -5,11 +5,14 @@ import io.realm.RealmModel
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.architecture.database.DbRequest
 import org.zotero.android.architecture.database.objects.RCollection
 import org.zotero.android.architecture.database.objects.RCollectionChanges
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.RItemChanges
+import org.zotero.android.architecture.database.objects.RSearch
+import org.zotero.android.architecture.database.objects.RSearchChanges
 import org.zotero.android.architecture.database.objects.Syncable
 import org.zotero.android.architecture.database.objects.Updatable
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
@@ -171,5 +174,47 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         }
 
         item.updateDerivedTitles()
+    }
+}
+
+class MarkSearchAsSyncedAndUpdateDbRequest(
+    val libraryId:LibraryIdentifier,
+    val response:SearchResponse,
+    val changeUuids:List<String>,
+):DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database:Realm) {
+        val search = database.where<RSearch>().key(this.response.key, this.libraryId).findFirst()
+        if (search == null) {
+            return
+        }
+
+        search.deleteChanges(uuids = this.changeUuids, database = database)
+        updateUnchangedData(search, response = this.response, database = database)
+    }
+
+    private fun updateUnchangedData(search: RSearch, response: SearchResponse, database: Realm) {
+        val localChanges = search.changedFields
+
+        if (localChanges.isEmpty()) {
+            StoreSearchesDbRequest.update(search = search, response = this.response,
+                libraryId = this.libraryId, database = database)
+            search.changeType = UpdatableChangeType.syncResponse.name
+            return
+        }
+
+        search.trash = response.data.isTrash
+        search.version = response.version
+        search.changeType = UpdatableChangeType.syncResponse.name
+
+        if (!localChanges.contains(RSearchChanges.nameS)) {
+            search.name = response.data.name
+        }
+
+        if (!localChanges.contains(RSearchChanges.conditions)) {
+            StoreSearchesDbRequest.sync(conditions = response.data.conditions, search = search, database = database)
+        }
     }
 }
