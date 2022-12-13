@@ -12,18 +12,16 @@ import org.zotero.android.sync.AttachmentUpload
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
-import kotlin.reflect.KClass
 
 class ReadAttachmentUploadsDbRequest(
     val libraryId: LibraryIdentifier,
     val fileStorage: FileStore
-) : DbResponseRequest<List<AttachmentUpload>, List<AttachmentUpload>> {
+) : DbResponseRequest<List<AttachmentUpload>> {
     override val needsWrite: Boolean
         get() = true
 
     override fun process(
         database: Realm,
-        clazz: KClass<List<AttachmentUpload>>?
     ): List<AttachmentUpload> {
         val items = database
             .where<RItem>()

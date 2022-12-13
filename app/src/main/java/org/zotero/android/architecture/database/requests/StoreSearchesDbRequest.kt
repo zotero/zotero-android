@@ -13,16 +13,15 @@ import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
-import kotlin.reflect.KClass
 
 class StoreSearchesDbRequest(
     val response: List<SearchResponse>,
-) : DbResponseRequest<Unit, Unit> {
+) : DbResponseRequest<Unit> {
 
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm, clazz: KClass<Unit>?) {
+    override fun process(database: Realm) {
         for (data in this.response) {
             store(data = data, database)
         }

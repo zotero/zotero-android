@@ -34,17 +34,16 @@ import org.zotero.android.sync.NotePreviewGenerator
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
 import java.util.Date
-import kotlin.reflect.KClass
 
 class StoreItemsDbResponseRequest(
     val responses: List<ItemResponse>,
     val schemaController: SchemaController,
     val preferResponseData: Boolean
-) : DbResponseRequest<StoreItemsResponse, StoreItemsResponse> {
+) : DbResponseRequest<StoreItemsResponse> {
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm, clazz: KClass<StoreItemsResponse>?): StoreItemsResponse {
+    override fun process(database: Realm): StoreItemsResponse {
         val filenameChanges = mutableListOf<StoreItemsResponse.FilenameChange>()
         val errors = mutableListOf<StoreItemsResponse.Error>()
 
@@ -77,14 +76,12 @@ class StoreItemDbRequest(
     val schemaController: SchemaController,
     val preferRemoteData: Boolean,
 ) : DbResponseRequest<
-        Pair<RItem, StoreItemsResponse.FilenameChange?>,
         Pair<RItem, StoreItemsResponse.FilenameChange?>> {
     override val needsWrite: Boolean
         get() = true
 
     override fun process(
         database: Realm,
-        clazz: KClass<Pair<RItem, StoreItemsResponse.FilenameChange?>>?
     ): Pair<RItem, StoreItemsResponse.FilenameChange?> {
         val libraryId = this.response.library.libraryId ?: throw DbError.primaryKeyUnavailable
 
@@ -498,7 +495,7 @@ class StoreItemDbRequest(
                 .tagNameNotIn(tags.map { it.tag })
                 .findAll()
 
-            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<Any>(fromTags = toRemove)
+            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest(fromTags = toRemove)
                 .process(database = database)
             toRemove.deleteAllFromRealm()
 

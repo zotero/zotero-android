@@ -6,16 +6,15 @@ import org.zotero.android.architecture.database.DbError
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
-import kotlin.reflect.KClass
 
 class ReadSearchDbRequest(
     val libraryId: LibraryIdentifier,
     val key: String,
-) : DbResponseRequest<RSearch, RSearch> {
+) : DbResponseRequest<RSearch> {
     override val needsWrite: Boolean
         get() = false
 
-    override fun process(database: Realm, clazz: KClass<RSearch>?): RSearch {
+    override fun process(database: Realm): RSearch {
         return database
             .where<RSearch>()
             .key(key, libraryId)

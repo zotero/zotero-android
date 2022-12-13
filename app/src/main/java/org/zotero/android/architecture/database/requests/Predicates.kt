@@ -3,6 +3,7 @@ package org.zotero.android.architecture.database.requests
 import io.realm.RealmQuery
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.ObjectSyncState
+import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 
@@ -257,3 +258,27 @@ fun <T> RealmQuery<T>.items(
     }
     return predicates
 }
+
+fun <T> RealmQuery<T>.changedByUser(
+): RealmQuery<T> {
+    return equalTo("changeType", UpdatableChangeType.user.name)
+}
+
+
+fun <T> RealmQuery<T>.itemUserChanges(
+): RealmQuery<T> {
+    val changes = beginGroup().changed().or().attachmentChanged().or().deleted(true).endGroup()
+    return changes.and().changedByUser()
+}
+
+fun <T> RealmQuery<T>.pageIndexUserChanges(
+): RealmQuery<T> {
+    return changedByUser().and().changed()
+}
+
+fun <T> RealmQuery<T>.userChanges(
+): RealmQuery<T> {
+    val changed = beginGroup().changed().or().deleted(true).endGroup()
+    return changed.and().changedByUser()
+}
+

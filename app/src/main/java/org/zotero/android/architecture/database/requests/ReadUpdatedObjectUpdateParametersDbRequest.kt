@@ -8,7 +8,6 @@ import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.RPageIndex
 import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
-import kotlin.reflect.KClass
 
 data class ReadUpdatedParametersResponse(
     val parameters: List<Map<String, Any>>,
@@ -16,7 +15,7 @@ data class ReadUpdatedParametersResponse(
 )
 
 class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentifier) :
-    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
+    DbResponseRequest<ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean
         get() = false
@@ -24,7 +23,6 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
 
     override fun process(
         database: Realm,
-        clazz: KClass<ReadUpdatedParametersResponse>?
     ): ReadUpdatedParametersResponse {
         return when (this.libraryId) {
             is LibraryIdentifier.group ->
@@ -50,7 +48,7 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
 }
 
 class ReadUpdatedSearchUpdateParametersDbRequest(val libraryId: LibraryIdentifier) :
-    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
+    DbResponseRequest<ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean
         get() {
@@ -59,7 +57,6 @@ class ReadUpdatedSearchUpdateParametersDbRequest(val libraryId: LibraryIdentifie
 
     override fun process(
         database: Realm,
-        clazz: KClass<ReadUpdatedParametersResponse>?
     ): ReadUpdatedParametersResponse {
         val parameters = mutableListOf<Map<String, Any>>()
         val uuids = mutableMapOf<String, List<String>>()
@@ -79,7 +76,6 @@ class ReadUpdatedSearchUpdateParametersDbRequest(val libraryId: LibraryIdentifie
 
 class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier) :
     DbResponseRequest<
-            Pair<ReadUpdatedParametersResponse, Boolean>,
             Pair<ReadUpdatedParametersResponse, Boolean>> {
 
     override val needsWrite: Boolean
@@ -89,7 +85,6 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
 
     override fun process(
         database: Realm,
-        clazz: KClass<Pair<ReadUpdatedParametersResponse, Boolean>>?
     ): Pair<ReadUpdatedParametersResponse, Boolean> {
         val objects = database
             .where<RItem>()
@@ -165,7 +160,7 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
 }
 
 class ReadUpdatedCollectionUpdateParametersDbRequest(val libraryId: LibraryIdentifier) :
-    DbResponseRequest<ReadUpdatedParametersResponse, ReadUpdatedParametersResponse> {
+    DbResponseRequest<ReadUpdatedParametersResponse> {
 
     override val needsWrite: Boolean
         get() {
@@ -174,7 +169,6 @@ class ReadUpdatedCollectionUpdateParametersDbRequest(val libraryId: LibraryIdent
 
     override fun process(
         database: Realm,
-        clazz: KClass<ReadUpdatedParametersResponse>?
     ): ReadUpdatedParametersResponse {
         val objects = database
             .where<RCollection>()

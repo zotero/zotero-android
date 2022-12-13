@@ -17,7 +17,6 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.Versions
 import org.zotero.android.sync.WriteBatch
-import kotlin.reflect.KClass
 
 class ReadLibrariesDataDbRequest(
     private val identifiers: List<LibraryIdentifier>?,
@@ -25,12 +24,12 @@ class ReadLibrariesDataDbRequest(
     private val loadVersions: Boolean,
     private val webDavEnabled: Boolean,
     private val sdkPrefs: SdkPrefs
-) : DbResponseRequest<List<LibraryData>, List<LibraryData>> {
+) : DbResponseRequest<List<LibraryData>> {
 
     override val needsWrite: Boolean
         get() = false
 
-    override fun process(database: Realm, clazz: KClass<List<LibraryData>>?): List<LibraryData> {
+    override fun process(database: Realm): List<LibraryData> {
         val allLibraryData = mutableListOf<LibraryData>()
 
         val userId = sdkPrefs.getUserId()
@@ -166,26 +165,25 @@ class ReadLibrariesDataDbRequest(
             return emptyList()
         }
         val collectionDeletions =
-            ReadDeletedObjectsDbRequest<RCollection>(libraryId = libraryId)
-                .process(
-                    database = database,
-                    clazz = RCollection::class
+            ReadDeletedObjectsDbRequest(
+                libraryId = libraryId, clazz = RCollection::class
+            ).process(
+                database = database,
+            )
+            .map { it.key }
+            .chunked(DeleteBatch.maxCount)
+            .map {
+                DeleteBatch(
+                    libraryId = libraryId,
+                    objectS = SyncObject.collection,
+                    version = version,
+                    keys = it
                 )
-                .map { it.key }
-                .chunked(DeleteBatch.maxCount)
-                .map {
-                    DeleteBatch(
-                        libraryId = libraryId,
-                        objectS = SyncObject.collection,
-                        version = version,
-                        keys = it
-                    )
-                }
+            }
 
-        val searchDeletions = ReadDeletedObjectsDbRequest<RSearch>(libraryId = libraryId)
+        val searchDeletions = ReadDeletedObjectsDbRequest<RSearch>(libraryId = libraryId, clazz = RSearch::class)
             .process(
                 database = database,
-                clazz = RSearch::class
             )
             .map { it.key }
             .chunked(DeleteBatch.maxCount)
@@ -198,10 +196,11 @@ class ReadLibrariesDataDbRequest(
                 )
             }
 
-        val itemDeletions = ReadDeletedObjectsDbRequest<RItem>(libraryId = libraryId)
+        val itemDeletions = ReadDeletedObjectsDbRequest(
+            libraryId = libraryId, clazz = RItem::class
+        )
             .process(
                 database = database,
-                clazz = RItem::class
             )
             .map { it.key }
             .chunked(DeleteBatch.maxCount)

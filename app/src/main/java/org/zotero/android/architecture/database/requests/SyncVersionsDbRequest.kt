@@ -15,7 +15,6 @@ import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncType
 import java.lang.Integer.min
 import java.util.Date
-import kotlin.reflect.KClass
 
 private typealias ResultSyncVersionsString = List<String>
 
@@ -26,13 +25,12 @@ class SyncVersionsDbRequest(
     val syncType: SyncType,
     val delayIntervals: List<Double>
 ) :
-    DbResponseRequest<ResultSyncVersionsString, ResultSyncVersionsString> {
+    DbResponseRequest<ResultSyncVersionsString> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(
         database: Realm,
-        clazz: KClass<ResultSyncVersionsString>?
     ): ResultSyncVersionsString {
         when (this.syncObject) {
             SyncObject.collection ->
@@ -127,7 +125,7 @@ class SyncVersionsDbRequest(
 private typealias ResultSyncVersions = Pair<List<Int>, List<Pair<Int, String>>>
 
 class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
-    DbResponseRequest<ResultSyncVersions, ResultSyncVersions> {
+    DbResponseRequest<ResultSyncVersions> {
 
 
     override val needsWrite: Boolean
@@ -136,7 +134,6 @@ class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
 
     override fun process(
         database: Realm,
-        clazz: KClass<ResultSyncVersions>?
     ): ResultSyncVersions {
         val allKeys = versions.keys.toMutableList()
         val toRemove: List<RGroup> =

@@ -9,6 +9,7 @@ import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.init.InitUseCase
+import org.zotero.android.sync.DelayIntervals
 import org.zotero.android.sync.LibrarySyncType
 import org.zotero.android.sync.SyncType
 import org.zotero.android.sync.SyncUseCase
@@ -25,9 +26,15 @@ internal class DashboardViewModel @Inject constructor(
     fun init(context: Context) = initOnce {
         viewModelScope.launch {
             initUseCase.execute(context)
-            syncUseCase.start(userId = sdkPrefs.getUserId(), type = SyncType.normal,
-                libraries = LibrarySyncType.all, syncDelayIntervals = listOf(0.0, 1.0, 2.0, 3.0),
-                conflictDelays = listOf(0, 1, 2, 3))
+            syncUseCase.init(
+                userId = sdkPrefs.getUserId(),
+                syncDelayIntervals = DelayIntervals.sync,
+                conflictDelays = DelayIntervals.conflict
+            )
+            syncUseCase.start(
+                type = SyncType.normal,
+                libraries = LibrarySyncType.all
+            )
         }
     }
 

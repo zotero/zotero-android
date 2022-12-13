@@ -3,6 +3,7 @@ package org.zotero.android.sync
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.zotero.android.api.SyncApi
@@ -20,10 +21,12 @@ import org.zotero.android.data.mappers.ItemResponseMapper
 import org.zotero.android.data.mappers.SearchResponseMapper
 import org.zotero.android.data.mappers.UpdatesResponseMapper
 import org.zotero.android.files.FileStore
+import org.zotero.android.sync.SyncError.NonFatal
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
 import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
+import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
@@ -56,10 +59,12 @@ class SyncUseCase @Inject constructor(
     private val collectionResponseMapper: CollectionResponseMapper,
     private val searchResponseMapper: SearchResponseMapper,
     private val schemaController: SchemaController,
-    private val updatesResponseMapper: UpdatesResponseMapper
+    private val updatesResponseMapper: UpdatesResponseMapper,
+    private val observable: SyncObservableEventStream
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
+    private var runningSyncJob: Job? = null
 
     private var userId: Long = 0L
     private var libraryType: LibrarySyncType = LibrarySyncType.all
@@ -71,6 +76,7 @@ class SyncUseCase @Inject constructor(
 
     private var queue = mutableListOf<Action>()
     private var processingAction: Action? = null
+    private var previousType: SyncType? = null
     private var createActionOptions: CreateLibraryActionsOptions =
         CreateLibraryActionsOptions.automatic
     private var didEnqueueWriteActionsToZoteroBackend: Boolean = false
@@ -79,7 +85,7 @@ class SyncUseCase @Inject constructor(
 
     private var syncDelayIntervals: List<Double> = DelayIntervals.sync
 
-    private var nonFatalErrors: MutableList<SyncError.NonFatal> = mutableListOf()
+    private var nonFatalErrors: MutableList<NonFatal> = mutableListOf()
 
     private val isSyncing: Boolean
         get() {
@@ -88,21 +94,30 @@ class SyncUseCase @Inject constructor(
 
     private var batchProcessor: SyncBatchProcessor? = null
 
-    suspend fun start(userId: Long, type: SyncType, libraries: LibrarySyncType, conflictDelays: List<Int>, syncDelayIntervals: List<Double>) {
-        if (isSyncing) {
-            return
-        }
-        this.userId = userId
-        this.type = type
+    fun init(userId: Long, conflictDelays: List<Int>, syncDelayIntervals: List<Double>) {
         this.conflictDelays = conflictDelays.toMutableList()
         this.syncDelayIntervals = syncDelayIntervals
-        this.libraryType = libraries
-        queue.addAll(createInitialActions(libraries = libraries, syncType = type))
-
-        processNextAction()
+        this.userId = userId
     }
 
-    private suspend fun processNextAction() {
+    fun start(type: SyncType, libraries: LibrarySyncType) {
+        runningSyncJob = coroutineScope.launch {
+            with(this@SyncUseCase) {
+                if (this.isSyncing) {
+                    return@with
+                }
+                this.type = type
+                this.libraryType = libraries
+                queue.addAll(createInitialActions(libraries = libraries, syncType = type))
+
+                processNextAction()
+            }
+
+        }
+
+    }
+
+    private fun processNextAction() {
         if (queue.isEmpty()) {
             processingAction = null
             finish()
@@ -118,7 +133,10 @@ class SyncUseCase @Inject constructor(
         processingAction = action
 
         //TODO requiresConflictReceiver
-        process(action = action)
+
+        runningSyncJob = coroutineScope.launch {
+            process(action = action)
+        }
     }
 
     private suspend fun process(action: Action) {
@@ -242,7 +260,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun processBatchesSync(batches: List<DownloadBatch>) {
+    private fun processBatchesSync(batches: List<DownloadBatch>) {
         val batch = batches.firstOrNull()
         if (batch == null) {
             processNextAction()
@@ -259,6 +277,7 @@ class SyncUseCase @Inject constructor(
                 collectionResponseMapper = collectionResponseMapper,
                 searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
+                dispatcher = dispatcher,
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
@@ -274,15 +293,19 @@ class SyncUseCase @Inject constructor(
     ) {
         when (result) {
             is CustomResult.GeneralSuccess -> {
-                //TODO handle non fatal errors
                 val (failedKeys, parseErrors) = result.value
+                this.nonFatalErrors.addAll(parseErrors.map({
+                    syncError(customResultError = CustomResult.GeneralError.CodeError(it),
+                        data = SyncError.ErrorData.from(libraryId = libraryId)).nonFatal2S
+                        ?: NonFatal.unknown(it.localizedMessage ?:"") }))
+
 
                 if (failedKeys.isEmpty()) {
-                    coroutineScope.launch {
-                        processNextAction()
-                    }
+                    processNextAction()
                 } else {
-                    //TODO mark for resync
+                    coroutineScope.launch {
+                        markForResync(keys = failedKeys, libraryId = libraryId, objectS = objectS)
+                    }
                 }
             }
             is CustomResult.GeneralError -> {
@@ -297,6 +320,19 @@ class SyncUseCase @Inject constructor(
                         handleNonFatal(error = syncError.error, libraryId = libraryId, version = null)
                 }
             }
+        }
+    }
+
+    private suspend fun markForResync(
+        keys: List<String>,
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject
+    ) {
+        try {
+            MarkForResyncSyncAction(keys = keys, objectS = objectS, libraryId = libraryId, dbStorage = this.dbWrapper).result()
+            finishCompletableAction(errorData = null)
+        } catch (e: Exception) {
+            finishCompletableAction(errorData = Pair(e, SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
         }
     }
 
@@ -348,7 +384,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun finishSyncVersions(
+    private fun finishSyncVersions(
         actions: List<Action>,
         updateCount: Int,
         objectS: SyncObject,
@@ -396,7 +432,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun finishCreateLibraryActions(
+    private fun finishCreateLibraryActions(
         exception: Exception? = null,
         pair: Pair<List<LibraryData>, CreateLibraryActionsOptions>? = null
     ) {
@@ -458,11 +494,11 @@ class SyncUseCase @Inject constructor(
         finishSyncGroupVersions(actions = actions, updateCount = toUpdate.size)
     }
 
-    private suspend fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
+    private fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
         enqueue(actions = actions, index = 0)
     }
 
-    private suspend fun enqueue(
+    private fun enqueue(
         actions: List<Action>,
         index: Int? = null,
         delayInSeconds: Int? = null
@@ -476,9 +512,10 @@ class SyncUseCase @Inject constructor(
         }
 
         if (delayInSeconds != null && delayInSeconds > 0) {
-            //TODO another delay implementation?
-            delay(delayInSeconds * 1000L)
-            processNextAction()
+            runningSyncJob = coroutineScope.launch {
+                delay(delayInSeconds * 1000L)
+                processNextAction()
+            }
         } else {
             processNextAction()
         }
@@ -586,20 +623,28 @@ class SyncUseCase @Inject constructor(
 
 
     private fun finish() {
-        //TODO handle reportFinish - handle errors
+        Timber.i("Sync: finished")
+        if (!this.nonFatalErrors.isEmpty()) {
+            Timber.i("Errors: ${this.nonFatalErrors}")
+        }
+
+        //TODO report finish progress
+
+        reportFinish(this.nonFatalErrors)
         cleanup()
     }
 
     private fun abort(error: SyncError.Fatal) {
         Timber.i("Sync: aborted")
         Timber.i("Error: $error")
+        //TODO report finish progress
 
-        //TODO display error
+        report(fatalError = error)
         cleanup()
     }
 
     private fun handleNonFatal(
-        error: SyncError.NonFatal,
+        error: NonFatal,
         libraryId: LibraryIdentifier,
         version: Int?,
         additionalAction: (() -> Unit)? = null
@@ -609,31 +654,27 @@ class SyncUseCase @Inject constructor(
             if (additionalAction != null) {
                 additionalAction()
             }
-            coroutineScope.launch {
-                processNextAction()
-            }
+            processNextAction()
         }
 
         when (error) {
-            is SyncError.NonFatal.versionMismatch -> {
+            is NonFatal.versionMismatch -> {
                 removeAllActions(libraryId = libraryId)
                 appendAndContinue()
             }
 
 
-            is SyncError.NonFatal.unchanged -> {
+            is NonFatal.unchanged -> {
                 if (version != null) {
                     //TODO handleUnchangedFailure
                 } else {
                     if (additionalAction != null) {
                         additionalAction()
                     }
-                    coroutineScope.launch {
-                        processNextAction()
-                    }
+                    processNextAction()
                 }
             }
-            is SyncError.NonFatal.quotaLimit -> {
+            is NonFatal.quotaLimit -> {
                 //TODO handleQuotaLimitFailure
             }
 
@@ -655,6 +696,7 @@ class SyncUseCase @Inject constructor(
 
 
     private fun cleanup() {
+        runningSyncJob?.cancel()
         processingAction = null
         queue = mutableListOf()
         type = SyncType.normal
@@ -917,7 +959,7 @@ class SyncUseCase @Inject constructor(
                     return SyncError.fatal2(error)
                 }
 
-                val nonFatalError = error as? SyncError.NonFatal
+                val nonFatalError = error as? NonFatal
                 if (nonFatalError != null) {
                     return SyncError.nonFatal2(error)
                 }
@@ -928,13 +970,13 @@ class SyncUseCase @Inject constructor(
                     when (syncActionError) {
                         is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
                             return SyncError.nonFatal2(
-                                SyncError.NonFatal.unknown(
+                                NonFatal.unknown(
                                     syncActionError.localizedMessage ?: ""
                                 )
                             )
                         is SyncActionError.attachmentMissing ->
                             return SyncError.nonFatal2(
-                                SyncError.NonFatal.attachmentMissing(
+                                NonFatal.attachmentMissing(
                                     key = syncActionError.key,
                                     libraryId = syncActionError.libraryId,
                                     title = syncActionError.title
@@ -942,13 +984,13 @@ class SyncUseCase @Inject constructor(
                             )
                         is SyncActionError.annotationNeededSplitting ->
                             return SyncError.nonFatal2(
-                                SyncError.NonFatal.annotationDidSplit(
+                                NonFatal.annotationDidSplit(
                                     messageS = syncActionError.messageS,
                                     libraryId = syncActionError.libraryId
                                 )
                             )
                         is SyncActionError.submitUpdateFailures ->
-                            return SyncError.nonFatal2(SyncError.NonFatal.unknown(syncActionError.messages))
+                            return SyncError.nonFatal2(NonFatal.unknown(syncActionError.messages))
                     }
                 }
 
@@ -959,15 +1001,15 @@ class SyncUseCase @Inject constructor(
                 }
                 val schemaError = error as? SchemaError
                 if (schemaError != null) {
-                    return SyncError.nonFatal2(SyncError.NonFatal.schema(error))
+                    return SyncError.nonFatal2(NonFatal.schema(error))
                 }
                 val parsingError = error as? Parsing.Error
                 if (parsingError != null) {
-                    return SyncError.nonFatal2(SyncError.NonFatal.parsing(error))
+                    return SyncError.nonFatal2(NonFatal.parsing(error))
                 }
                 Timber.e("received unknown error - $error")
                 return SyncError.nonFatal2(
-                    SyncError.NonFatal.unknown(
+                    NonFatal.unknown(
                         error?.localizedMessage ?: ""
                     )
                 )
@@ -978,7 +1020,7 @@ class SyncUseCase @Inject constructor(
 
                 //TODO handle reportMissing
                 if (customResultError.isUnchanged()) {
-                    return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
+                    return SyncError.nonFatal2(NonFatal.unchanged)
                 }
 
 
@@ -1007,11 +1049,11 @@ class SyncUseCase @Inject constructor(
         val code = error.httpCode
         when (code) {
             304 ->
-                return SyncError.nonFatal2(SyncError.NonFatal.unchanged)
+                return SyncError.nonFatal2(NonFatal.unchanged)
             413 ->
-                return SyncError.nonFatal2(SyncError.NonFatal.quotaLimit(data.libraryId))
+                return SyncError.nonFatal2(NonFatal.quotaLimit(data.libraryId))
             507 ->
-                return SyncError.nonFatal2(SyncError.NonFatal.insufficientSpace)
+                return SyncError.nonFatal2(NonFatal.insufficientSpace)
             503 ->
                 return SyncError.fatal2(SyncError.Fatal.serviceUnavailable)
             403 ->
@@ -1026,7 +1068,7 @@ class SyncUseCase @Inject constructor(
                     )
                 } else {
                     return SyncError.nonFatal2(
-                        SyncError.NonFatal.apiError(
+                        NonFatal.apiError(
                             response = responseMessage(),
                             data = data
                         )
@@ -1036,7 +1078,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-        private suspend fun processStoreVersion(libraryId: LibraryIdentifier, type: UpdateVersionType, version: Int) {
+    private suspend fun processStoreVersion(libraryId: LibraryIdentifier, type: UpdateVersionType, version: Int) {
         try {
             StoreVersionSyncAction(version =  version, type =  type, libraryId = libraryId, dbWrapper = this.dbWrapper).result()
             finishCompletableAction(null)
@@ -1045,7 +1087,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun finishCompletableAction(errorData: Pair<Throwable, SyncError.ErrorData>?) {
+    private fun finishCompletableAction(errorData: Pair<Throwable, SyncError.ErrorData>?) {
         if (errorData == null) {
             processNextAction()
             return
@@ -1076,7 +1118,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun finishDeletionsSync(
+    private fun finishDeletionsSync(
         e: Throwable? = null,
         result: List<Pair<String, String>>? = null,
         libraryId: LibraryIdentifier, version: Int? = null
@@ -1103,7 +1145,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun resolve(conflict: Conflict) {
+    private fun resolve(conflict: Conflict) {
         //TODO implement conflict resolution
         processNextAction()
     }
@@ -1153,7 +1195,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun process(uploads: List<AttachmentUpload>, hadOtherWriteActions: Boolean, libraryId: LibraryIdentifier) {
+    private fun process(uploads: List<AttachmentUpload>, hadOtherWriteActions: Boolean, libraryId: LibraryIdentifier) {
         if (uploads.isEmpty()) {
             if (hadOtherWriteActions) {
                 processNextAction()
@@ -1171,15 +1213,13 @@ class SyncUseCase @Inject constructor(
         enqueue(actions = uploads.map { Action.uploadAttachment(it) }, index = 0)
     }
 
-    private suspend fun finishSubmission(error: CustomResult.GeneralError?, newVersion: Int?, keys: List<String>, libraryId: LibraryIdentifier,
+    private fun finishSubmission(error: CustomResult.GeneralError?, newVersion: Int?, keys: List<String>, libraryId: LibraryIdentifier,
                                          objectS: SyncObject, failedBeforeReachingApi: Boolean = false, ignoreWebDav: Boolean = false) {
         val nextAction = {
             if (newVersion != null) {
                 updateVersionInNextWriteBatch(newVersion)
             }
-            coroutineScope.launch {
-                processNextAction()
-            }
+            processNextAction()
         }
 
          if (error == null) {
@@ -1203,7 +1243,6 @@ class SyncUseCase @Inject constructor(
         }
 
        //TODO handle webdav error
-
 
         val er = syncError(
             customResultError = error, data = SyncError.ErrorData.from(
@@ -1242,7 +1281,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun handleUpdatePreconditionFailureIfNeeded(error: CustomResult.GeneralError, libraryId: LibraryIdentifier): Boolean {
+    private fun handleUpdatePreconditionFailureIfNeeded(error: CustomResult.GeneralError, libraryId: LibraryIdentifier): Boolean {
         val preconditionError = error.preconditionError
         if (preconditionError == null) {
             return false
@@ -1317,5 +1356,71 @@ class SyncUseCase @Inject constructor(
             CreateLibraryActionsOptions.onlyDownloads
         ), index = 0)
     }
+
+    fun cancel() {
+        if (!this.isSyncing) {
+            return
+        }
+        Timber.i("Sync: cancelled")
+        cleanup()
+        report(fatalError = SyncError.Fatal.cancelled)
+    }
+
+    private fun report(fatalError: SyncError.Fatal) {
+        //TODO report abort progress
+        this.previousType = null
+
+        when (fatalError) {
+            SyncError.Fatal.uploadObjectConflict ->
+                this.observable.emit(SchedulerAction(SyncType.full, LibrarySyncType.all))
+            else ->
+                this.observable.emit(null)
+        }
+
+    }
+
+    private fun reportFinish(errors: List<NonFatal>) {
+        // Find libraries which reported version mismatch.
+        var retryLibraries = mutableListOf<LibraryIdentifier>()
+        var reportErrors = mutableListOf<NonFatal>()
+
+        for (error in errors) {
+            when (error) {
+                is NonFatal.versionMismatch -> {
+                    if (!retryLibraries.contains(error.libraryId)) {
+                        retryLibraries.add(error.libraryId)
+                    }
+                }
+                is NonFatal.annotationDidSplit -> {
+                    if (!retryLibraries.contains(error.libraryId)) {
+                        retryLibraries.add(error.libraryId)
+                    }
+                }
+                //TODO handle webDavVerification && webDavDownload
+                is NonFatal.unknown, is NonFatal.schema, is NonFatal.parsing, is NonFatal.apiError,
+                is NonFatal.unchanged, is NonFatal.quotaLimit, is NonFatal.attachmentMissing,
+                is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed ->
+                reportErrors.add(error)
+            }
+        }
+
+        if (retryLibraries.isEmpty()) {
+            //TODO report progress finish
+            this.previousType = null
+            this.observable.emit(null)
+            return
+        }
+
+        if (this.previousType == null) {
+            //TODO report progress finish
+            this.previousType = this.type
+            this.observable.emit(SchedulerAction(this.type, LibrarySyncType.specific(retryLibraries)))
+        } else {
+            //TODO report progress finish
+            this.previousType = null
+            this.observable.emit(null)
+        }
+    }
+
 
 }

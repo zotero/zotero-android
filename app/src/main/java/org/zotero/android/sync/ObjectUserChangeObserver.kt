@@ -1,0 +1,111 @@
+package org.zotero.android.sync
+
+import io.realm.OrderedCollectionChangeSet
+import io.realm.OrderedRealmCollectionChangeListener
+import io.realm.RealmModel
+import io.realm.RealmResults
+import org.zotero.android.architecture.core.EventStream
+import org.zotero.android.architecture.database.Database
+import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.architecture.database.RealmDbCoordinator
+import org.zotero.android.architecture.database.objects.RCollection
+import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.architecture.database.objects.RItem
+import org.zotero.android.architecture.database.objects.RPageIndex
+import org.zotero.android.architecture.database.objects.RSearch
+import org.zotero.android.architecture.database.objects.Syncable
+import org.zotero.android.architecture.database.requests.ReadUserChangedObjectsDbRequest
+import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class ObjectUserChangeEventStream @Inject constructor() :
+    EventStream<List<LibraryIdentifier>>()
+
+class ObjectUserChangeObserver(val dbWrapper: DbWrapper, val observable: ObjectUserChangeEventStream){
+
+    private lateinit var pagesToken: RealmResults<RPageIndex>
+    private lateinit var searchesToken: RealmResults<RSearch>
+    private lateinit var itemsToken: RealmResults<RItem>
+    private lateinit var collectionsToken: RealmResults<RCollection>
+
+    init {
+        setupObserving()
+    }
+
+    private fun setupObserving() {
+        try {
+            this.dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+                this@ObjectUserChangeObserver.collectionsToken =
+                    registerObserver<RCollection>(coordinator = coordinator)
+                this@ObjectUserChangeObserver.itemsToken =
+                    registerObserver<RItem>(coordinator = coordinator)
+                this@ObjectUserChangeObserver.searchesToken =
+                    registerObserver<RSearch>(coordinator = coordinator)
+                this@ObjectUserChangeObserver.pagesToken =
+                    registerSettingsObserver(coordinator = coordinator)
+            })
+            } catch (error: Exception) {
+                Timber.e(error, "RealmObjectChangeObserver: can't load objects to observe")
+            }
+    }
+
+    private fun registerSettingsObserver(coordinator: RealmDbCoordinator): RealmResults<RPageIndex> {
+        val objects = coordinator.perform(request = ReadUserChangedObjectsDbRequest(clazz = RPageIndex::class))
+
+        objects.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RPageIndex>> { results, changeSet ->
+            val state = changeSet.state
+            when (state) {
+                OrderedCollectionChangeSet.State.INITIAL -> {
+                    //no-op
+                }
+                OrderedCollectionChangeSet.State.UPDATE ->  {
+                    if (changeSet.insertions.isEmpty() && changeSet.changes.isEmpty()) {
+                        return@OrderedRealmCollectionChangeListener
+                    }
+                    this.observable.emit(listOf(LibraryIdentifier.custom(RCustomLibraryType.myLibrary)))
+                }
+                OrderedCollectionChangeSet.State.ERROR -> {
+                    Timber.e(changeSet.error, "RealmObjectChangeObserver: RPageIndex observing error)")
+                }
+            }
+        })
+        return objects
+    }
+
+    private inline fun <reified T: RealmModel> registerObserver(coordinator: RealmDbCoordinator): RealmResults<T> {
+        val objects = coordinator.perform(request = ReadUserChangedObjectsDbRequest(clazz = T::class))
+
+        objects.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<T>> { results, changeSet ->
+                val state = changeSet.state
+                when (state) {
+                    OrderedCollectionChangeSet.State.INITIAL -> {
+                        //no-op
+                    }
+                    OrderedCollectionChangeSet.State.UPDATE ->  {
+                        val correctedModifications = Database.correctedModifications(changeSet.changes,
+                            insertions = changeSet.insertions, deletions = changeSet.deletions)
+                        val updated = (changeSet.insertions + correctedModifications).map({ results[it] })
+                        reportChangedLibraries(updated)
+                    }
+                    OrderedCollectionChangeSet.State.ERROR -> {
+                        Timber.e(changeSet.error, "RealmObjectChangeObserver: ${T::class} observing error)")
+                    }
+                }
+            })
+
+        return objects
+    }
+
+    private inline fun <reified T: RealmModel> reportChangedLibraries(objects: List<T?>) {
+        val libraryIds = objects.mapNotNull {
+            (it as? Syncable)?.libraryId
+        }.toSet().toList()
+        if (libraryIds.isEmpty()) {
+            return
+        }
+        this.observable.emit(libraryIds)
+    }
+
+}

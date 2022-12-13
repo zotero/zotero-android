@@ -3,8 +3,10 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
@@ -33,7 +35,8 @@ class SyncBatchProcessor(
     val collectionResponseMapper: CollectionResponseMapper,
     val searchResponseMapper: SearchResponseMapper,
     val schemaController: SchemaController,
-    val completion: (CustomResult<SyncBatchResponse>) -> Unit
+    private val dispatcher: CoroutineDispatcher,
+    val completion: (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
 
     private var failedIds: MutableList<String> = mutableListOf()
@@ -42,33 +45,36 @@ class SyncBatchProcessor(
     private var isFinished: Boolean = false
     private var processedCount: Int = 0
 
-    suspend fun start() = withContext(Dispatchers.IO) {
-        this@SyncBatchProcessor.batches.map { batch ->
-            val keysString = batch.keys.joinToString(separator = ",")
-            val url =
-                BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
+    private var coroutineScope = CoroutineScope(dispatcher)
+    private var runningBatchJob: Job? = null
 
-            val networkResult = safeApiCall {
-                val parameters = mutableMapOf<String, String>()
-                when (batch.objectS) {
-                    SyncObject.collection ->
-                        parameters["collectionKey"] = keysString
-                    SyncObject.item, SyncObject.trash ->
-                        parameters["itemKey"] = keysString
-                    SyncObject.search ->
-                        parameters["searchKey"] = keysString
-                    SyncObject.settings -> {}
+    fun start() {
+        runningBatchJob = coroutineScope.launch {
+            this@SyncBatchProcessor.batches.map { batch ->
+                val keysString = batch.keys.joinToString(separator = ",")
+                val url =
+                    BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
+
+                val networkResult = safeApiCall {
+                    val parameters = mutableMapOf<String, String>()
+                    when (batch.objectS) {
+                        SyncObject.collection ->
+                            parameters["collectionKey"] = keysString
+                        SyncObject.item, SyncObject.trash ->
+                            parameters["itemKey"] = keysString
+                        SyncObject.search ->
+                            parameters["searchKey"] = keysString
+                        SyncObject.settings -> {}
+                    }
+                    syncApi.objects(url = url, queryMap = parameters)
+
                 }
-                syncApi.objects(url = url, queryMap = parameters)
-
+                process(result = networkResult, batch = batch)
             }
-
-            process(result = networkResult, batch = batch)
         }
-
     }
 
-    private suspend fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
+    private fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
         if (isFinished) {
             return
         }
@@ -85,7 +91,7 @@ class SyncBatchProcessor(
         }
     }
 
-    private suspend fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
+    private fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
         if (this.isFinished) {
             return
         }
@@ -135,7 +141,7 @@ class SyncBatchProcessor(
 
     }
 
-    private suspend fun sync(
+    private fun sync(
         dataArray: JsonArray,
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
@@ -258,10 +264,9 @@ class SyncBatchProcessor(
     }
 
     private fun cancel(error: CustomResult.GeneralError) {
-        //TODO cancel queue
+        runningBatchJob?.cancel()
         this.isFinished = true
         completion(error)
     }
-
 
 }

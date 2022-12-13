@@ -8,7 +8,6 @@ import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.RSearch
 import org.zotero.android.architecture.database.objects.RTag
 import org.zotero.android.sync.LibraryIdentifier
-import kotlin.reflect.KClass
 
 class PerformDeletionsDbRequest constructor(
     val libraryId: LibraryIdentifier,
@@ -17,7 +16,7 @@ class PerformDeletionsDbRequest constructor(
     val searches: List<String>,
     val tags: List<String>,
     val conflictMode: ConflictResolutionMode,
-) : DbResponseRequest<List<Pair<String, String>>, List<Pair<String, String>>> {
+) : DbResponseRequest<List<Pair<String, String>>> {
     enum class ConflictResolutionMode {
         resolveConflicts,
         deleteConflicts,
@@ -29,7 +28,6 @@ class PerformDeletionsDbRequest constructor(
 
     override fun process(
         database: Realm,
-        clazz: KClass<List<Pair<String, String>>>?
     ): List<Pair<String, String>> {
         deleteCollections(this.collections, database = database)
         deleteSearches(this.searches, database = database)

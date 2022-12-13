@@ -1,6 +1,5 @@
 package org.zotero.android.architecture.database
 import io.realm.Realm
-import kotlin.reflect.KClass
 
 sealed class DbError: Throwable() {
     object objectNotFound: DbError()
@@ -23,7 +22,7 @@ interface DbRequest {
     fun process(database: Realm)
 }
 
-interface DbResponseRequest<A : Any, B: Any> {
+interface DbResponseRequest<T> {
     val needsWrite: Boolean
-    fun process(database: Realm, clazz: KClass<A>? = null): B
+    fun process(database: Realm): T
 }

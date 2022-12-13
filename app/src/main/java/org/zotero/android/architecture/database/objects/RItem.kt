@@ -378,9 +378,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             children.deleteAllFromRealm()
         }
         if (this.tags!!.isValid) {
-            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest<RTypedTag>(this.tags).process(
+            val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest(this.tags).process(
                 database,
-                RTypedTag::class
             ) ?: emptyList()
             this.tags.deleteAllFromRealm()
             if (!baseTagsToRemove.isEmpty()) {

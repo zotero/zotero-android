@@ -18,7 +18,6 @@ import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LinkMode
 import timber.log.Timber
-import kotlin.reflect.KClass
 
 class CreateAttachmentDbRequest(
     val attachment: Attachment,
@@ -27,7 +26,7 @@ class CreateAttachmentDbRequest(
     val collections: Set<String>,
     val tags: List<TagResponse>,
     val fileStore: FileStore
-) : DbResponseRequest<RItem, RItem> {
+) : DbResponseRequest<RItem> {
 
     sealed class Error : Exception() {
         object cantCreateMd5 : Error()
@@ -37,7 +36,7 @@ class CreateAttachmentDbRequest(
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm, clazz: KClass<RItem>?): RItem {
+    override fun process(database: Realm): RItem {
         val changes = mutableListOf(
             RItemChanges.type,
             RItemChanges.fields,

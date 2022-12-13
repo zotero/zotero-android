@@ -6,13 +6,12 @@ import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RCustomLibrary
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.architecture.database.objects.RVersions
-import kotlin.reflect.KClass
 
-class InitializeCustomLibrariesDbRequest : DbResponseRequest<Boolean, Boolean> {
+class InitializeCustomLibrariesDbRequest : DbResponseRequest<Boolean> {
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm, clazz: KClass<Boolean>?): Boolean {
+    override fun process(database: Realm): Boolean {
         val existingRecord = database
             .where<RCustomLibrary>()
             .findAll()

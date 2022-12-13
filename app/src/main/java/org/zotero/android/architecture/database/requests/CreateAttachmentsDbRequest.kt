@@ -9,7 +9,6 @@ import org.zotero.android.architecture.database.objects.RItemChanges
 import org.zotero.android.architecture.database.objects.RObjectChange
 import org.zotero.android.files.FileStore
 import timber.log.Timber
-import kotlin.reflect.KClass
 
 class CreateAttachmentsDbRequest(
     val attachments: List<Attachment>,
@@ -17,13 +16,12 @@ class CreateAttachmentsDbRequest(
     val localizedType: String,
     val collections: Set<String>,
     val fileStore: FileStore
-) : DbResponseRequest<List<Pair<String, String>>, List<Pair<String, String>>> {
+) : DbResponseRequest<List<Pair<String, String>>> {
     override val needsWrite: Boolean
         get() = true
 
     override fun process(
         database: Realm,
-        clazz: KClass<List<Pair<String, String>>>?
     ): List<Pair<String, String>> {
 
         val libraryId = this.attachments.firstOrNull()?.libraryId ?: return emptyList()

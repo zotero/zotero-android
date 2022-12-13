@@ -160,11 +160,11 @@ class SubmitUpdateSyncAction(
         if (!parsingFailedKeys.isEmpty()) {
             when (this.objectS) {
                 SyncObject.collection ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RCollection::class.java))
+                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RCollection::class))
                 SyncObject.item, SyncObject.trash ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RItem::class.java))
+                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RItem::class))
                 SyncObject.search ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RSearch::class.java))
+                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RSearch::class))
                 SyncObject.settings -> {
                     //no-op
                 }

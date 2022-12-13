@@ -38,11 +38,11 @@ class RealmDbStorage(val config: RealmConfiguration) {
         coordinatorAction(coordinator)
     }
 
-    inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>): T {
+    inline fun <reified T : Any> perform(request: DbResponseRequest<T>): T {
         return perform(request = request, invalidateRealm = false, refreshRealm = false)
     }
 
-    inline fun <reified T : Any> perform(request: DbResponseRequest<T, T>, refreshRealm: Boolean): T {
+    inline fun <reified T : Any> perform(request: DbResponseRequest<T>, refreshRealm: Boolean): T {
             return perform(
                 request = request,
                 invalidateRealm = false,
@@ -51,7 +51,7 @@ class RealmDbStorage(val config: RealmConfiguration) {
         }
 
     inline fun <reified T: Any> perform(
-        request: DbResponseRequest<T, T>,
+        request: DbResponseRequest<T>,
         invalidateRealm: Boolean,
         q: String = ""
     ): T {
@@ -63,7 +63,7 @@ class RealmDbStorage(val config: RealmConfiguration) {
         }
 
     inline fun <reified T: Any> perform(
-        request: DbResponseRequest<T, T>,
+        request: DbResponseRequest<T>,
         invalidateRealm: Boolean,
         refreshRealm: Boolean
     ): T {
@@ -118,18 +118,18 @@ class RealmDbCoordinator {
         }
     }
 
-    inline fun <reified T: Any> perform(request: DbResponseRequest<T, T>): T {
+    inline fun <reified T: Any> perform(request: DbResponseRequest<T>): T {
          if (!request.needsWrite) {
-             return request.process(realm, T::class)
+             return request.process(realm)
          }
 
          if (realm.isInTransaction) {
              Timber.e("RealmDbCoordinator: realm already in transaction $request")
-             return request.process(realm, T::class)
+             return request.process(realm)
          }
          var result: T? = null
          realm.executeTransaction {
-             result = request.process(realm, T::class)
+             result = request.process(realm)
          }
          return result!!
     }

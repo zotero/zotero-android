@@ -9,20 +9,18 @@ import org.zotero.android.architecture.database.objects.RCollection
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
-import kotlin.reflect.KClass
 
 class ReadItemsDbRequest(
     val libraryId: LibraryIdentifier,
     val collectionId: CollectionIdentifier,
     val sdkPrefs: SdkPrefs
-) : DbResponseRequest<RealmResults<RItem>, RealmResults<RItem>> {
+) : DbResponseRequest<RealmResults<RItem>> {
 
     override val needsWrite: Boolean
         get() = false
 
     override fun process(
         database: Realm,
-        clazz: KClass<RealmResults<RItem>>?
     ): RealmResults<RItem> {
         if (sdkPrefs.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
             val keys = selfAndSubcollectionKeys(collectionId.key, database)

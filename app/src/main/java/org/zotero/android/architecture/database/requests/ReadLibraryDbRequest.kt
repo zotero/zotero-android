@@ -7,15 +7,14 @@ import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RGroup
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import kotlin.reflect.KClass
 
 class ReadLibraryDbRequest(
     val libraryId: LibraryIdentifier
-) : DbResponseRequest<Library, Library> {
+) : DbResponseRequest<Library> {
     override val needsWrite: Boolean
         get() = false
 
-    override fun process(database: Realm, clazz: KClass<Library>?): Library {
+    override fun process(database: Realm): Library {
         when (this.libraryId) {
             is LibraryIdentifier.custom -> return Library(
                 identifier = this.libraryId,

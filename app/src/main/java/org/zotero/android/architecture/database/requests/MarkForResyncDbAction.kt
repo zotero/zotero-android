@@ -9,11 +9,12 @@ import org.zotero.android.architecture.database.objects.Updatable
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
+import kotlin.reflect.KClass
 
 class MarkForResyncDbAction(
     val libraryId: LibraryIdentifier,
     val keys: List<String>,
-    var clazz: Class<out RealmModel>,
+    var clazz: KClass<out RealmModel>,
 ): DbRequest {
     override val needsWrite: Boolean
         get() = true
@@ -21,7 +22,7 @@ class MarkForResyncDbAction(
     override fun process(database: Realm) {
         val syncDate = Date()
         var toCreate = this.keys.toMutableList()
-        val objects = database.where(clazz).keys(this.keys, this.libraryId).findAll()
+        val objects = database.where(clazz.java).keys(this.keys, this.libraryId).findAll()
         for (objectS in objects) {
             objectS as Syncable
             objectS as Updatable
@@ -36,7 +37,7 @@ class MarkForResyncDbAction(
                 toCreate.removeAt(index)
         }
         for (key in toCreate) {
-            val objectS = database.createObject(clazz)
+            val objectS = database.createObject(clazz.java)
             objectS as Syncable
             objectS as Updatable
             objectS.key = key
