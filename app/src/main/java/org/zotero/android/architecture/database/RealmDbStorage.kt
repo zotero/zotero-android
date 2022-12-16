@@ -16,6 +16,7 @@ class RealmDbStorage(val config: RealmConfiguration) {
         }
 
     fun clear() {
+        Realm.deleteRealm(config)
         val realmUrl = config.path ?: return
 
         val realmUrls = arrayOf(
@@ -31,6 +32,7 @@ class RealmDbStorage(val config: RealmConfiguration) {
                 Timber.e("org.zotero.android.architecture.database.RealmDbStorage: couldn't delete file at $url")
             }
         }
+
     }
 
     fun perform(coordinatorAction: (RealmDbCoordinator) -> Unit) {

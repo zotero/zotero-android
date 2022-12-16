@@ -99,6 +99,6 @@ object ApiModule {
     fun provideDbWrapper(
         fileStore: FileStore,
     ): DbWrapper {
-       return DbWrapper(fileStore = fileStore)
+       return DbWrapper()
     }
 }

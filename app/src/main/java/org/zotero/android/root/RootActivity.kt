@@ -32,7 +32,7 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
 
     override fun trigger(effect: RootViewEffect) = when (effect) {
         RootViewEffect.NavigateToSignIn -> navigateToOnboarding()
-        RootViewEffect.NavigateToRoom -> navigateToDashboard()
+        RootViewEffect.NavigateToDashboard -> navigateToDashboard()
     }
 
     private fun navigateToOnboarding() {

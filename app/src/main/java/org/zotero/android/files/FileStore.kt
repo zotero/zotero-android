@@ -9,7 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
 import org.zotero.android.androidx.content.getFileSize
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.helpers.MimeType
 import org.zotero.android.sync.LibraryIdentifier
@@ -29,15 +29,12 @@ import javax.inject.Singleton
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,
-    private val sdkPrefs: SdkPrefs,
+    private val defaults: Defaults,
     val dataMarshaller: DataMarshaller,
 ) {
 
     private lateinit var rootDirectory: File
     private lateinit var cachesDirectory: File
-
-    private lateinit var dbFile: File
-    private lateinit var bundledDataDbFile: File
 
     companion object {
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
@@ -49,13 +46,12 @@ class FileStore @Inject constructor (
 
     fun init() {
         initializeDirectories()
-        initDbFiles()
     }
 
-    private fun initDbFiles() {
-        val userId = sdkPrefs.getUserId()
-        dbFile = fileURLForFilename("maindb_$userId.realm")!!
-        bundledDataDbFile = fileURLForFilename("translators.realm")!!
+    fun dbFile(userId: Long): File {
+        val dbDir = File(getRootDirectory(), "database")
+        dbDir.mkdirs()
+        return File(dbDir, "maindb_$userId.realm")
     }
 
     private fun initializeDirectories() {
@@ -63,7 +59,7 @@ class FileStore @Inject constructor (
         rootDirectory = filesDir
         rootDirectory.mkdirs()
 
-        cachesDirectory = File(context.cacheDir, "cache")
+        cachesDirectory = File(context.cacheDir, "Zotero")
         cachesDirectory.mkdirs()
     }
 
@@ -79,9 +75,6 @@ class FileStore @Inject constructor (
             null
         } else File(pathForFilename(filename))
     }
-
-    fun getDbFile() = dbFile
-    fun getBundledDataDbFile() = bundledDataDbFile
 
     fun getRootDirectory() = rootDirectory
 
@@ -305,7 +298,7 @@ class FileStore @Inject constructor (
         return buffer.contentEquals(byteArrayOf(0x25, 0x50, 0x44, 0x46))
     }
 
-    fun getCachesDirectory(): File {
+    fun cache(): File {
         cachesDirectory.mkdirs()
         return cachesDirectory
     }
@@ -316,5 +309,17 @@ class FileStore @Inject constructor (
         context.contentResolver.openInputStream(uri)
 
     fun getType(uri: Uri): MimeType? = context.contentResolver.getType(uri)
+
+    val jsonCache: File get() {
+        return File(getRootDirectory(), "jsons")
+    }
+
+    val uploads: File get() {
+        return File(getRootDirectory(), "uploads")
+    }
+
+    val downloads: File get() {
+        return File(getRootDirectory(), "downloads")
+    }
 
 }

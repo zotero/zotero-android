@@ -7,8 +7,8 @@ import io.realm.ObjectChangeSet
 import io.realm.RealmObjectChangeListener
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
-import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.DbWrapper
@@ -35,7 +35,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ItemDetailsViewModel @Inject constructor(
     stateHandle: SavedStateHandle,
-    private val sdkPrefs: SdkPrefs,
+    private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
     private val urlDetector: UrlDetector,
@@ -53,7 +53,7 @@ internal class ItemDetailsViewModel @Inject constructor(
         val type = args.type
         val library = args.library
         val preScrolledChildKey = args.childKey
-        val userId = sdkPrefs.getUserId()
+        val userId = defaults.getUserId()
 
         when (type) {
             is DetailType.preview -> {

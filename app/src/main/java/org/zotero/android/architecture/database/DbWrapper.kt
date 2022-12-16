@@ -1,14 +1,16 @@
 package org.zotero.android.architecture.database
 
 import android.content.Context
-import org.zotero.android.files.FileStore
+import java.io.File
 
-class DbWrapper constructor(private val fileStore: FileStore) {
+class DbWrapper constructor() {
 
     lateinit var realmDbStorage: RealmDbStorage
+    var isInitialized = false
 
-    fun initDb(context: Context) {
-        realmDbStorage = RealmDbStorage(config = Database.mainConfiguration(fileStore = fileStore, context = context))
+    fun initWithMainConfiguration(context: Context, dbFile: File) {
+        realmDbStorage = RealmDbStorage(config = Database.mainConfiguration(dbFile = dbFile, context = context))
+        isInitialized = true
 
     }
 }

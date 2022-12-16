@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.core.EventStream
+import org.zotero.android.architecture.coroutines.ApplicationScope
 import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
@@ -141,6 +142,23 @@ class SyncScheduler @Inject constructor(
         }
     }
 
+    fun request(type: SyncType, libraries: LibrarySyncType) {
+        request(type = type, libraries = libraries, applyDelay = false)
+    }
+
+    fun request(type: SyncType, libraries: LibrarySyncType, applyDelay: Boolean) {
+        if (applyDelay) {
+            this.enqueueAndStartTimer(action = SchedulerAction(type, libraries))
+        } else {
+            this.enqueueAndStart(action = SchedulerAction(type, libraries))
+        }
+    }
+
+    fun webSocketUpdate(libraryId: LibraryIdentifier) {
+        this.enqueueAndStartTimer(action = SchedulerAction(SyncType.normal, LibrarySyncType.specific(
+            listOf(libraryId))))
+    }
+
     fun cancelSync() {
         runningJob?.cancel()
         this.syncController.cancel()
@@ -165,5 +183,5 @@ class SyncScheduler @Inject constructor(
 }
 
 @Singleton
-class SyncObservableEventStream @Inject constructor() :
-    EventStream<SchedulerAction?>()
+class SyncObservableEventStream @Inject constructor(applicationScope: ApplicationScope) :
+    EventStream<SchedulerAction?>(applicationScope)

@@ -4,7 +4,11 @@ import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.core.EventStream
+import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.database.Database
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.RealmDbCoordinator
@@ -20,10 +24,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ObjectUserChangeEventStream @Inject constructor() :
-    EventStream<List<LibraryIdentifier>>()
+class ObjectUserChangeEventStream @Inject constructor(applicationScope: ApplicationScope) :
+    EventStream<List<LibraryIdentifier>>(applicationScope)
 
-class ObjectUserChangeObserver(val dbWrapper: DbWrapper, val observable: ObjectUserChangeEventStream){
+class ObjectUserChangeObserver(
+    val dbWrapper: DbWrapper,
+    val observable: ObjectUserChangeEventStream,
+    val applicationScope: ApplicationScope,
+    val dispatchers: Dispatchers
+) {
 
     private lateinit var pagesToken: RealmResults<RPageIndex>
     private lateinit var searchesToken: RealmResults<RSearch>
@@ -31,7 +40,11 @@ class ObjectUserChangeObserver(val dbWrapper: DbWrapper, val observable: ObjectU
     private lateinit var collectionsToken: RealmResults<RCollection>
 
     init {
-        setupObserving()
+        applicationScope.launch {
+            withContext(dispatchers.main) {
+                setupObserving()
+            }
+        }
     }
 
     private fun setupObserving() {
@@ -64,7 +77,7 @@ class ObjectUserChangeObserver(val dbWrapper: DbWrapper, val observable: ObjectU
                     if (changeSet.insertions.isEmpty() && changeSet.changes.isEmpty()) {
                         return@OrderedRealmCollectionChangeListener
                     }
-                    this.observable.emit(listOf(LibraryIdentifier.custom(RCustomLibraryType.myLibrary)))
+                    this.observable.emitAsync(listOf(LibraryIdentifier.custom(RCustomLibraryType.myLibrary)))
                 }
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "RealmObjectChangeObserver: RPageIndex observing error)")
@@ -105,7 +118,7 @@ class ObjectUserChangeObserver(val dbWrapper: DbWrapper, val observable: ObjectU
         if (libraryIds.isEmpty()) {
             return
         }
-        this.observable.emit(libraryIds)
+        this.observable.emitAsync(libraryIds)
     }
 
 }

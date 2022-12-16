@@ -6,16 +6,16 @@ import okhttp3.Interceptor.Chain
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import javax.inject.Inject
 
 class AuthNetworkInterceptor @Inject constructor(
-    private val sdkPrefs: SdkPrefs,
+    private val defaults: Defaults,
 ) : Interceptor {
 
     override fun intercept(chain: Chain): Response {
         val request = chain.request()
-        return when (val token = sdkPrefs.getApiToken()) {
+        return when (val token = defaults.getApiToken()) {
             null -> chain.proceed(request)
             else -> runBlocking { authenticateRequest(request, token, chain) }
         }

@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.Conflict
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
@@ -36,6 +36,7 @@ import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
 import timber.log.Timber
 import java.lang.Integer.min
 import javax.inject.Inject
+import javax.inject.Singleton
 
 
 interface SyncAction<A : Any> {
@@ -46,11 +47,11 @@ interface SyncActionWithError<A : Any> {
     suspend fun result(): CustomResult<A>
 }
 
-
+@Singleton
 class SyncUseCase @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
     private val syncRepository: SyncRepository,
-    private val sdkPrefs: SdkPrefs,
+    private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val syncApi: SyncApi,
     private val fileStore: FileStore,
@@ -218,12 +219,20 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processSubmitUpdate(batch: WriteBatch) {
-        val actionResult = SubmitUpdateSyncAction(parameters = batch.parameters, changeUuids = batch.changeUuids,
-            sinceVersion = batch.version, objectS = batch.objectS, libraryId = batch.libraryId,
-        userId = this.userId, updateLibraryVersion = true, syncApi = this.syncApi,
-            dbStorage = this.dbWrapper, fileStorage = this.fileStore,
-        schemaController = this.schemaController, collectionResponseMapper = collectionResponseMapper,
-        itemResponseMapper = itemResponseMapper,
+        val actionResult = SubmitUpdateSyncAction(
+            parameters = batch.parameters,
+            changeUuids = batch.changeUuids,
+            sinceVersion = batch.version,
+            objectS = batch.objectS,
+            libraryId = batch.libraryId,
+            userId = this.userId,
+            updateLibraryVersion = true,
+            syncApi = this.syncApi,
+            dbStorage = this.dbWrapper,
+            fileStorage = this.fileStore,
+            schemaController = this.schemaController,
+            collectionResponseMapper = collectionResponseMapper,
+            itemResponseMapper = itemResponseMapper,
         searchResponseMapper = searchResponseMapper,
         updatesResponseMapper = updatesResponseMapper, dispatcher = dispatcher).result()
 
@@ -271,7 +280,7 @@ class SyncUseCase @Inject constructor(
         val objectS = batch.objectS
 
         this.batchProcessor =
-            SyncBatchProcessor(batches = batches, userId = sdkPrefs.getUserId(), syncApi = syncApi,
+            SyncBatchProcessor(batches = batches, userId = defaults.getUserId(), syncApi = syncApi,
                 dbWrapper = this.dbWrapper, fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
                 collectionResponseMapper = collectionResponseMapper,
@@ -351,7 +360,7 @@ class SyncUseCase @Inject constructor(
                 currentVersion = lastVersion,
                 syncType = this.type,
                 libraryId = libraryId,
-                userId = sdkPrefs.getUserId(),
+                userId = defaults.getUserId(),
                 syncDelayIntervals = this.syncDelayIntervals,
                 checkRemote = checkRemote,
                 syncApi = this.syncApi,
@@ -424,7 +433,7 @@ class SyncUseCase @Inject constructor(
                 loadVersions = (this.type != SyncType.full),
                 webDavEnabled = false,
                 dbStorage = dbWrapper.realmDbStorage,
-                sdkPrefs = sdkPrefs
+                defaults = defaults
             ).result()
             finishCreateLibraryActions(pair = result to options)
         } catch (e: Exception) {
@@ -1372,9 +1381,9 @@ class SyncUseCase @Inject constructor(
 
         when (fatalError) {
             SyncError.Fatal.uploadObjectConflict ->
-                this.observable.emit(SchedulerAction(SyncType.full, LibrarySyncType.all))
+                this.observable.emitAsync(SchedulerAction(SyncType.full, LibrarySyncType.all))
             else ->
-                this.observable.emit(null)
+                this.observable.emitAsync(null)
         }
 
     }
@@ -1407,18 +1416,18 @@ class SyncUseCase @Inject constructor(
         if (retryLibraries.isEmpty()) {
             //TODO report progress finish
             this.previousType = null
-            this.observable.emit(null)
+            this.observable.emitAsync(null)
             return
         }
 
         if (this.previousType == null) {
             //TODO report progress finish
             this.previousType = this.type
-            this.observable.emit(SchedulerAction(this.type, LibrarySyncType.specific(retryLibraries)))
+            this.observable.emitAsync(SchedulerAction(this.type, LibrarySyncType.specific(retryLibraries)))
         } else {
             //TODO report progress finish
             this.previousType = null
-            this.observable.emit(null)
+            this.observable.emitAsync(null)
         }
     }
 

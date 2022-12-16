@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-open class SdkPrefs @Inject constructor(
+open class Defaults @Inject constructor(
     private val context: Context,
     private val dataMarshaller: DataMarshaller,
 ) {
@@ -21,6 +21,7 @@ open class SdkPrefs @Inject constructor(
     private val username = "username"
     private val displayName = "displayName"
     private val apiToken = "apiToken"
+    private val webDavPassword = "webDavPassword"
     private val showSubcollectionItems = "showSubcollectionItems"
     private val selectedLibrary = "selectedLibrary"
     private val selectedCollectionId = "selectedCollectionId"
@@ -48,12 +49,20 @@ open class SdkPrefs @Inject constructor(
         sharedPreferences.edit { putString(displayName, str) }
     }
 
-    fun setApiToken(str: String) {
+    fun setApiToken(str: String?) {
         sharedPreferences.edit { putString(apiToken, str) }
     }
 
     fun getApiToken(): String? {
         return sharedPreferences.getString(apiToken, null )
+    }
+
+    fun setWebDavPassword(str: String?) {
+        sharedPreferences.edit { putString(webDavPassword, str) }
+    }
+
+    fun getWebDavPassword(): String? {
+        return sharedPreferences.getString(webDavPassword, null )
     }
 
     fun isUserLoggedIn() :Boolean {
@@ -104,6 +113,17 @@ open class SdkPrefs @Inject constructor(
     ) {
         val json = dataMarshaller.marshal(collectionIdentifier)
         sharedPreferences.edit { putString(selectedCollectionId, json) }
+    }
+
+    fun reset() {
+        setUsername("")
+        setDisplayName("")
+        setUserId(0L)
+        setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
+        setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
+        setShowSubcollectionItems(false)
+        setApiToken(null)
+        setWebDavPassword(null)
     }
 
 }

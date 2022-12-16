@@ -3,7 +3,7 @@ package org.zotero.android.sync
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.requests.SyncGroupVersionsDbRequest
 import org.zotero.android.data.AccessPermissions
@@ -13,7 +13,7 @@ import javax.inject.Inject
 class SyncRepository @Inject constructor(
     private val syncApi: SyncApi,
     private val dbWrapper: DbWrapper,
-    private val sdkPrefs: SdkPrefs
+    private val defaults: Defaults
 ) {
     suspend fun processKeyCheckAction(): CustomResult<AccessPermissions> {
         val networkResult = safeApiCall {
@@ -26,8 +26,8 @@ class SyncRepository @Inject constructor(
 
         val keyResponse = KeyResponse.fromJson(networkResult.value)
 
-        sdkPrefs.setUsername( keyResponse.username)
-        sdkPrefs.setDisplayName( keyResponse.displayName)
+        defaults.setUsername( keyResponse.username)
+        defaults.setDisplayName( keyResponse.displayName)
 
         return CustomResult.GeneralSuccess(
             AccessPermissions(
@@ -40,7 +40,7 @@ class SyncRepository @Inject constructor(
 
     suspend fun processSyncGroupVersions(): CustomResult<Pair<List<Int>, List<Pair<Int, String>>>> {
         val networkResult = safeApiCall {
-            syncApi.groupVersionsRequest(userId = sdkPrefs.getUserId())
+            syncApi.groupVersionsRequest(userId = defaults.getUserId())
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {

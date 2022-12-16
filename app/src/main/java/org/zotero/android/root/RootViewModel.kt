@@ -4,23 +4,24 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.root.RootViewEffect.NavigateToRoom
-import org.zotero.android.root.RootViewEffect.NavigateToSignIn
-import org.zotero.android.root.usecase.UserIsLoggedInUseCase
+import org.zotero.android.sync.Controllers
+import org.zotero.android.sync.SessionController
 import javax.inject.Inject
 
 @HiltViewModel
 class RootViewModel @Inject constructor(
-    private val userIsLoggedIn: UserIsLoggedInUseCase,
+    private val sessionController: SessionController,
+    private val controller: Controllers
+
 ) : BaseViewModel2<
         RootViewState,
         RootViewEffect>(initialState = RootViewState()) {
 
     fun init() {
-        if (!userIsLoggedIn.execute()) {
-            triggerEffect(NavigateToSignIn)
+        if (sessionController.isLoggedIn) {
+            triggerEffect(RootViewEffect.NavigateToDashboard)
         } else {
-            triggerEffect(NavigateToRoom)
+            triggerEffect(RootViewEffect.NavigateToSignIn)
         }
     }
 }
@@ -29,5 +30,5 @@ class RootViewState : ViewState
 
 sealed class RootViewEffect : ViewEffect {
     object NavigateToSignIn : RootViewEffect()
-    object NavigateToRoom : RootViewEffect()
+    object NavigateToDashboard : RootViewEffect()
 }

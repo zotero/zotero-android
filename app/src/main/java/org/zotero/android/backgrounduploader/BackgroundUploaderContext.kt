@@ -1,10 +1,10 @@
 package org.zotero.android.backgrounduploader
 
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.files.FileStore
 import javax.inject.Inject
 
-class BackgroundUploaderContext @Inject constructor(private val sdkPrefs: SdkPrefs, private val fileStore: FileStore) {
+class BackgroundUploaderContext @Inject constructor(private val defaults: Defaults, private val fileStore: FileStore) {
     private val activeKey = "uploads"
     private val sessionIdsKey = "activeUrlSessionIds"
     private val extensionSessionIdsKey = "shareExtensionObservedUrlSessionIds"

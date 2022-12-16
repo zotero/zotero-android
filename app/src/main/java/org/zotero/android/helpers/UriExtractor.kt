@@ -107,7 +107,7 @@ class UriExtractor @Inject constructor(private val mContext: Context, private va
         val fileExtension = queryUriFileExtension(uri)
             ?: throw UriMediaExtractorException("File extension is null")
         val tempFile: File = File(
-            mFileStore.getCachesDirectory(),
+            mFileStore.cache(),
             "selectedCloudFileCopy.$fileExtension"
         )
         downloadMediaFromCloud(uri, tempFile)

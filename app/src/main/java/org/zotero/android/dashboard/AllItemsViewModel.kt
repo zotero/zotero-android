@@ -13,10 +13,10 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
-import org.zotero.android.architecture.SdkPrefs
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.Database
@@ -55,7 +55,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class AllItemsViewModel @Inject constructor(
-    private val sdkPrefs: SdkPrefs,
+    private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val dispatcher: CoroutineDispatcher,
     private val uriExtractor: UriExtractor,
@@ -69,8 +69,8 @@ internal class AllItemsViewModel @Inject constructor(
         EventBus.getDefault().register(this)
         viewModelScope.launch {
             val data = loadInitialDetailData(
-                collectionId = sdkPrefs.getSelectedCollectionId(),
-                libraryId = sdkPrefs.getSelectedLibrary()
+                collectionId = defaults.getSelectedCollectionId(),
+                libraryId = defaults.getSelectedLibrary()
             )
             if (data != null) {
                 showItems(data.collection, data.library, searchItemKeys = null)
@@ -256,7 +256,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private suspend fun loadInitialState() {
-        val request = ReadItemsDbRequest(collectionId = viewState.collection.identifier, libraryId = viewState.library.identifier, sdkPrefs = sdkPrefs)
+        val request = ReadItemsDbRequest(collectionId = viewState.collection.identifier, libraryId = viewState.library.identifier, defaults = defaults)
         val results = dbWrapper.realmDbStorage.perform(request = request)//TODO sort by descriptors
 
         updateState {
@@ -307,17 +307,17 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
-        if (sdkPrefs.getSelectedLibrary() == libraryId) {
+        if (defaults.getSelectedLibrary() == libraryId) {
             if (collectionId != null) {
-                sdkPrefs.setSelectedCollectionId(collectionId)
+                defaults.setSelectedCollectionId(collectionId)
                 return collectionId
             }
-            return sdkPrefs.getSelectedCollectionId()
+            return defaults.getSelectedCollectionId()
         }
 
         val collectionId = collectionId ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
-        sdkPrefs.setSelectedLibrary(libraryId)
-        sdkPrefs.setSelectedCollectionId(collectionId)
+        defaults.setSelectedLibrary(libraryId)
+        defaults.setSelectedCollectionId(collectionId)
         return collectionId
 
     }

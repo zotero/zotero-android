@@ -52,7 +52,7 @@ class SaveFileToInternalStorageUseCase @Inject constructor(
             "Failed to get MimeType for uri $uri"
         }
 
-        val cacheDir: File = fileRepo.getCachesDirectory()
+        val cacheDir: File = fileRepo.cache()
         val internalFile = File(cacheDir, getFileName(uri))
         if (internalFile.exists()) {
             internalFile.delete()

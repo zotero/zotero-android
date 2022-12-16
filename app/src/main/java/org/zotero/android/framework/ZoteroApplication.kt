@@ -2,29 +2,46 @@ package org.zotero.android.framework
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.Job
 import org.zotero.android.BuildConfig
+import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.sync.Controllers
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltAndroidApp
-open class ZoteroApplication : Configuration.Provider, Application() {
+open class ZoteroApplication : Configuration.Provider, Application(), DefaultLifecycleObserver {
+
+    private lateinit var job: Job
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var controllers: Controllers
+
+    @Inject
+    lateinit var applicationScope: ApplicationScope
 
     companion object {
         lateinit var instance: ZoteroApplication
     }
 
     override fun onCreate() {
-        super.onCreate()
+        super<Application>.onCreate()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
         instance = this
+
+        controllers.init()
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
     override fun getWorkManagerConfiguration() =
@@ -32,4 +49,15 @@ open class ZoteroApplication : Configuration.Provider, Application() {
             .setWorkerFactory(workerFactory)
             .build()
 
+    override fun onStart(owner: LifecycleOwner) {
+        controllers.willEnterForeground()
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        controllers.didEnterBackground()
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        controllers.willTerminate()
+    }
 }

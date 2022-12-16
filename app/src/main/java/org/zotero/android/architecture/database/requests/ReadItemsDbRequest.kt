@@ -3,7 +3,7 @@ package org.zotero.android.architecture.database.requests
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.kotlin.where
-import org.zotero.android.architecture.SdkPrefs
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.objects.RCollection
 import org.zotero.android.architecture.database.objects.RItem
@@ -13,7 +13,7 @@ import org.zotero.android.sync.LibraryIdentifier
 class ReadItemsDbRequest(
     val libraryId: LibraryIdentifier,
     val collectionId: CollectionIdentifier,
-    val sdkPrefs: SdkPrefs
+    val defaults: Defaults
 ) : DbResponseRequest<RealmResults<RItem>> {
 
     override val needsWrite: Boolean
@@ -22,7 +22,7 @@ class ReadItemsDbRequest(
     override fun process(
         database: Realm,
     ): RealmResults<RItem> {
-        if (sdkPrefs.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
+        if (defaults.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
             val keys = selfAndSubcollectionKeys(collectionId.key, database)
             return database
                 .where<RItem>()
