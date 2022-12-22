@@ -2,6 +2,7 @@ package org.zotero.android.sync.syncactions
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -31,10 +32,12 @@ class AuthorizeUploadSyncAction(
                 } else {
                     headers.put("If-None-Match", "*")
                 }
-
+                val url =
+                    BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) +
+                            "/items/" + this.key + "/file"
+                println(url)
                 syncApi.authorizeUpload(
-                    basePath = this.libraryId.apiPath(userId = this.userId),
-                    key = this.key,
+                    url = url,
                     headers = headers,
                     filename = this.filename,
                     filesize = this.filesize,
@@ -50,7 +53,7 @@ class AuthorizeUploadSyncAction(
             }
 
             try {
-                val authorizeUploadResponse = AuthorizeUploadResponse.fromJson(networkResult.value, networkResult.lastModifiedVersion)
+                val authorizeUploadResponse = AuthorizeUploadResponse.fromJson(networkResult.value!!, networkResult.lastModifiedVersion)
                 return@run CustomResult.GeneralSuccess(authorizeUploadResponse)
             }catch (e : Exception) {
                 Timber.e(e, "AuthorizeUploadSyncAction: can't authorize upload")

@@ -24,7 +24,7 @@ class SyncRepository @Inject constructor(
             return networkResult as CustomResult.GeneralError
         }
 
-        val keyResponse = KeyResponse.fromJson(networkResult.value)
+        val keyResponse = KeyResponse.fromJson(networkResult.value!!)
 
         defaults.setUsername( keyResponse.username)
         defaults.setDisplayName( keyResponse.displayName)
@@ -48,7 +48,7 @@ class SyncRepository @Inject constructor(
         }
 
         val dbRes: Pair<List<Int>, List<Pair<Int, String>>> = dbWrapper.realmDbStorage.perform(
-            request = SyncGroupVersionsDbRequest(versions = networkResult.value),
+            request = SyncGroupVersionsDbRequest(versions = networkResult.value!!),
             invalidateRealm = true
         )
 

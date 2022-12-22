@@ -63,7 +63,8 @@ class ReadAttachmentUploadsDbRequest(
             val attachmentType = AttachmentCreator.attachmentType(
                 item,
                 options = AttachmentCreator.Options.light,
-                fileStorage = null,
+                fileStorage = fileStorage,
+                isForceRemote = true,
                 urlDetector = null
             )
             if (attachmentType == null) {

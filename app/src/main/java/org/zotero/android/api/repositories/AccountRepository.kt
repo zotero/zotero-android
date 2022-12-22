@@ -30,8 +30,8 @@ class AccountRepository @Inject constructor(
         if (networkResult !is CustomResult.GeneralSuccess) {
             return networkResult as CustomResult.GeneralError
         }
-        sessionController.register(userId = networkResult.value.userId, username = networkResult.value.name,
-            displayName = networkResult.value.displayName, apiToken = networkResult.value.key)
+        sessionController.register(userId = networkResult.value!!.userId, username = networkResult.value!!.name,
+            displayName = networkResult.value!!.displayName, apiToken = networkResult.value!!.key)
 
         return CustomResult.GeneralSuccess(Unit)
     }

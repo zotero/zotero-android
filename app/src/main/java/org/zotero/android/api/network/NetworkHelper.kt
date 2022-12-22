@@ -29,7 +29,7 @@ object NetworkHelper {
     fun <T> parseNetworkResponse(networkResponse: Response<T>): CustomResult<T> {
         if (networkResponse.isSuccessful) {
             return CustomResult.GeneralSuccess.NetworkSuccess(
-                value = networkResponse.body()!!,
+                value = networkResponse.body(),
                 httpCode = networkResponse.code(),
                 headers = networkResponse.headers()
             )

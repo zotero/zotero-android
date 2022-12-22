@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
@@ -54,6 +55,7 @@ class SyncUseCase @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val syncApi: SyncApi,
+    private val noAuthenticationApi: NoAuthenticationApi,
     private val fileStore: FileStore,
     private val backgroundUploaderContext: BackgroundUploaderContext,
     private val itemResponseMapper: ItemResponseMapper,
@@ -244,7 +246,7 @@ class SyncUseCase @Inject constructor(
             )
         } else {
             //TODO report uploaded progress
-            finishSubmission(error = actionResult.value.second, newVersion = actionResult.value.first,
+            finishSubmission(error = actionResult.value!!.second, newVersion = actionResult.value!!.first,
                 keys = batch.parameters.mapNotNull { it["key"]?.toString() }, libraryId = batch.libraryId,
                 objectS = batch.objectS
             )
@@ -253,9 +255,21 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processUploadAttachment(upload: AttachmentUpload) {
-        val action = UploadAttachmentSyncAction(key = upload.key, file = upload. file, filename = upload.filename, md5 = upload.md5, mtime = upload.mtime,
-            libraryId = upload.libraryId, userId = this.userId, oldMd5 = upload.oldMd5, syncApi =  this.syncApi, dbWrapper = dbWrapper, fileStore = this.fileStore,
-        schemaController = this.schemaController)
+        val action = UploadAttachmentSyncAction(
+            key = upload.key,
+            file = upload.file,
+            filename = upload.filename,
+            md5 = upload.md5,
+            mtime = upload.mtime,
+            libraryId = upload.libraryId,
+            userId = this.userId,
+            oldMd5 = upload.oldMd5,
+            syncApi = this.syncApi,
+            dbWrapper = dbWrapper,
+            fileStore = this.fileStore,
+            schemaController = this.schemaController,
+            noAuthenticationApi = noAuthenticationApi
+        )
 
         val actionResult = action.result()
         if (actionResult !is CustomResult.GeneralSuccess) {
@@ -302,7 +316,7 @@ class SyncUseCase @Inject constructor(
     ) {
         when (result) {
             is CustomResult.GeneralSuccess -> {
-                val (failedKeys, parseErrors) = result.value
+                val (failedKeys, parseErrors) = result.value!!
                 this.nonFatalErrors.addAll(parseErrors.map({
                     syncError(customResultError = CustomResult.GeneralError.CodeError(it),
                         data = SyncError.ErrorData.from(libraryId = libraryId)).nonFatal2S
@@ -497,7 +511,7 @@ class SyncUseCase @Inject constructor(
             abort(er)
             return
         }
-        val (toUpdate, toRemove) = result.value
+        val (toUpdate, toRemove) = result.value!!
         val actions =
             createGroupActions(updateIds = toUpdate, deleteGroups = toRemove, syncType = type)
         finishSyncGroupVersions(actions = actions, updateCount = toUpdate.size)

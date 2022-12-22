@@ -2,7 +2,11 @@ package org.zotero.android.sync.syncactions
 
 import android.webkit.MimeTypeMap
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.zotero.android.BuildConfig
+import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -33,7 +37,7 @@ class UploadAttachmentSyncAction(
     val userId: Long,
     val oldMd5: String?,
     var failedBeforeZoteroApiRequest: Boolean = true,
-
+    val noAuthenticationApi: NoAuthenticationApi,
     val syncApi: SyncApi,
     val dbWrapper: DbWrapper,
     val fileStore: FileStore,
@@ -44,7 +48,8 @@ class UploadAttachmentSyncAction(
         try {
             when (this.libraryId) {
                 is LibraryIdentifier.custom ->
-                    throw RuntimeException("Not implemented yet")
+                    //TODO implement WebDav
+                   return zoteroResult()
                 is LibraryIdentifier.group ->
                     return zoteroResult()
             }
@@ -52,6 +57,19 @@ class UploadAttachmentSyncAction(
             return CustomResult.GeneralError.CodeError(e)
         }
 
+    }
+
+    fun createRequestBody(file: File): RequestBody {
+        val mediaType =
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
+                ?.toMediaTypeOrNull()
+
+        val requestBody = file.asRequestBody(mediaType)
+        return requestBody
+    }
+
+    fun createPart(file: File, requestBody: RequestBody): MultipartBody.Part {
+        return MultipartBody.Part.createFormData("file", file.name, requestBody)
     }
 
     private suspend fun zoteroResult(): CustomResult<Unit> {
@@ -66,7 +84,7 @@ class UploadAttachmentSyncAction(
             processError(authorizeUploadSyncActionNetworkResult as CustomResult.GeneralError)
             return authorizeUploadSyncActionNetworkResult
         }
-        val authorizedUploadResultValue = authorizeUploadSyncActionNetworkResult.value
+        val authorizedUploadResultValue = authorizeUploadSyncActionNetworkResult.value!!
         val uploadKey: String
         when(authorizedUploadResultValue) {
             is AuthorizeUploadResponse.exists -> {
@@ -81,20 +99,14 @@ class UploadAttachmentSyncAction(
                     val headers = mutableMapOf<String, String>()
                     headers.put("If-None-Match", "*")
 
-                    for (entry in authorizedUploadResultValue.authorizeNewUploadResponse.params) {
-                        headers.put(entry.key, entry.value)
-                    }
+                    val requestBody = createRequestBody(file)
+                    val part = createPart(file, requestBody)
 
-                    val mediaType =
-                        MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
-                            ?.toMediaTypeOrNull()
-
-                    val requestBody = file.asRequestBody(mediaType)
-
-                    syncApi.uploadAttachment(
+                    noAuthenticationApi.uploadAttachment(
                         url = authorizedUploadResultValue.authorizeNewUploadResponse.url,
                         headers = headers,
-                        requestBody =requestBody,
+                        file = part,
+                        params = authorizedUploadResultValue.authorizeNewUploadResponse.params
                     )
                 }
 
@@ -116,10 +128,10 @@ class UploadAttachmentSyncAction(
             } else {
                 headers.put("If-None-Match", "*")
             }
-
+            val url =
+                BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/items/" + this.key + "/file"
             syncApi.registerUpload(
-                basePath = this.libraryId.apiPath(userId = this.userId),
-                key = this.key,
+                url = url,
                 headers = headers,
                 upload = uploadKey
             )
@@ -208,6 +220,4 @@ class UploadAttachmentSyncAction(
         )
 
     }
-
-
 }

@@ -67,7 +67,7 @@ internal class ItemDetailsViewModel @Inject constructor(
             is DetailType.creation, is DetailType.duplication -> {
                 updateState {
                     copy(
-                        key = KeyGenerator.newKey,
+                        key = KeyGenerator.newKey(),
                         isEditing = true,
                     )
                 }
@@ -77,7 +77,7 @@ internal class ItemDetailsViewModel @Inject constructor(
         }
         updateState {
             copy(
-                initialType = type,
+                type = type,
                 userId = userId,
                 library = library,
                 preScrolledChildKey = preScrolledChildKey)
@@ -98,7 +98,7 @@ internal class ItemDetailsViewModel @Inject constructor(
         var collectionKey: String?
 
         try {
-            when (viewState.initialType) {
+            when (viewState.type) {
                 is DetailType.preview -> {
                     reloadData(isEditing = viewState.isEditing)
                     return
@@ -125,7 +125,8 @@ internal class ItemDetailsViewModel @Inject constructor(
             )
 
             var (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
-                ItemDetailDataCreator.Kind.existing(item), schemaController = this@ItemDetailsViewModel.schemaController,
+                ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
+                schemaController = this@ItemDetailsViewModel.schemaController,
                 fileStorage = this@ItemDetailsViewModel.fileStore, urlDetector = this@ItemDetailsViewModel.urlDetector,
                 doiDetector = {doiValue -> FieldKeys.Item.isDoi(doiValue)})
 
@@ -203,10 +204,10 @@ internal class ItemDetailsViewModel @Inject constructor(
 }
 
 internal data class ItemDetailsViewState(
-    val initialType : DetailType? = null,
     val key : String = "",
     val library : Library? = null,
     val userId : Long = 0,
+    val type: DetailType? = null,
     val preScrolledChildKey: String? = null,
     val isEditing: Boolean = false,
     var error: ItemDetailError? = null,

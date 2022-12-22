@@ -103,7 +103,7 @@ class SubmitUpdateSyncAction(
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val newVersion = networkResult.lastModifiedVersion
-        val json = networkResult.value
+        val json = networkResult.value!!
         val keys = this.parameters.map{ it["key"]?.toString() }
         val updatesResponse = updatesResponseMapper.fromJson(dictionary = json, keys = keys)
         return process(response = updatesResponse, newVersion = newVersion)

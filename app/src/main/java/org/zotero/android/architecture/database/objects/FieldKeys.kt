@@ -97,13 +97,14 @@ class FieldKeys {
                 val fieldKeys: List<String>
                     get() {
                         return listOf(
-                            Item.title,
+                            title,
                             filename,
                             contentType,
                             linkMode,
                             md5,
                             mtime,
-                            url
+                            url,
+                            accessDate
                         )
                     }
             }

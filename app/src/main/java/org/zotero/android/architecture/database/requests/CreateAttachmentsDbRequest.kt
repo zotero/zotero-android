@@ -44,6 +44,7 @@ class CreateAttachmentsDbRequest(
                     attachment = attachment,
                     parentKey = null,
                     localizedType = this.localizedType,
+                    includeAccessDate = attachment.hasUrl,
                     collections = this.collections,
                     tags = emptyList(),
                     fileStore = fileStore

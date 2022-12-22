@@ -2,7 +2,6 @@ package org.zotero.android.api
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -40,30 +39,21 @@ interface SyncApi {
     ): retrofit2.Response<JsonArray>
 
     @FormUrlEncoded
-    @POST("{basePath}/items/{key}/file")
-    fun authorizeUpload(
+    @POST
+    suspend fun authorizeUpload(
+        @Url url: String,
         @HeaderMap headers: Map<String, String>,
-        @Path("basePath") basePath: String,
-        @Path("key") key: String,
         @Field("filename") filename: String,
         @Field("filesize") filesize: Long,
         @Field("md5") md5: String,
         @Field("mtime") mtime: Long,
         @Field("params") params: Int): retrofit2.Response<JsonObject>
 
-    @POST
-    fun uploadAttachment(
-        @Body requestBody: RequestBody,
-        @Url url: String,
-        @HeaderMap headers: Map<String, String>
-    ): retrofit2.Response<Unit>
-
     @FormUrlEncoded
-    @POST("{basePath}/items/{key}/file")
-    fun registerUpload(
+    @POST
+    suspend fun registerUpload(
+        @Url url: String,
         @HeaderMap headers: Map<String, String>,
-        @Path("basePath") basePath: String,
-        @Path("key") key: String,
         @Field("upload") upload: String,
     ) : retrofit2.Response<JsonObject>
 

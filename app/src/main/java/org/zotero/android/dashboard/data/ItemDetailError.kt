@@ -15,4 +15,5 @@ sealed class ItemDetailError: Exception() {
     object cantSaveNote: ItemDetailError()
     data class cantAddAttachments(val attachmentError: AttachmentAddError): ItemDetailError()
     object cantSaveTags: ItemDetailError()
+    object cantRemoveDuplicatedItem: ItemDetailError()
 }

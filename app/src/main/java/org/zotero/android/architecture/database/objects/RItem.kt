@@ -221,8 +221,9 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                     }
 
                     when (field.key) {
-                        FieldKeys.Item.Attachment.md5, FieldKeys.Item.Attachment.mtime ->
-                            parameters[field.key] = ""
+//                        FieldKeys.Item.Attachment.mtime,
+//                        FieldKeys.Item.Attachment.md5 ->
+//                            parameters[field.key] = ""
                         else ->
                             parameters[field.key] = field.value
                     }

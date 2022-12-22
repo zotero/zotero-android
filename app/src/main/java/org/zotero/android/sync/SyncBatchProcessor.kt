@@ -82,7 +82,7 @@ class SyncBatchProcessor(
         when (result) {
             is CustomResult.GeneralSuccess.NetworkSuccess -> {
                 val lastModifiedVersion = result.lastModifiedVersion
-                val payload = result.value
+                val payload = result.value!!
                 process(data = payload, lastModifiedVersion = lastModifiedVersion, batch = batch)
             }
             is CustomResult.GeneralError -> {

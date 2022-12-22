@@ -30,9 +30,9 @@ sealed class CustomResult<out T> {
         }
     }
 
-    open class GeneralSuccess<out T>(open val value: T) : CustomResult<T>() {
+    open class GeneralSuccess<out T>(open val value: T?) : CustomResult<T>() {
         class NetworkSuccess<out T>(
-            override val value: T,
+            override val value: T?,
             val headers: Headers,
             val httpCode: Int
         ) : GeneralSuccess<T>(value) {

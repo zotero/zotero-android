@@ -16,6 +16,7 @@ import org.zotero.android.architecture.database.objects.RItemField
 import org.zotero.android.architecture.database.objects.RObjectChange
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.files.FileStore
+import org.zotero.android.formatter.iso8601DateFormatV2
 import org.zotero.android.sync.LinkMode
 import timber.log.Timber
 
@@ -23,6 +24,7 @@ class CreateAttachmentDbRequest(
     val attachment: Attachment,
     val parentKey: String?,
     val localizedType: String,
+    val includeAccessDate: Boolean,
     val collections: Set<String>,
     val tags: List<TagResponse>,
     val fileStore: FileStore
@@ -31,12 +33,17 @@ class CreateAttachmentDbRequest(
     sealed class Error : Exception() {
         object cantCreateMd5 : Error()
         object incorrectMd5Value : Error()
+        object alreadyExists : Error()
     }
 
     override val needsWrite: Boolean
         get() = true
 
     override fun process(database: Realm): RItem {
+        if(database.where<RItem>().key(this.attachment.key, this.attachment.libraryId).findFirst() != null) {
+            Timber.e("CreateAttachmentDbRequest: Trying to create attachment that already exists!")
+            throw Error.alreadyExists
+        }
         val changes = mutableListOf(
             RItemChanges.type,
             RItemChanges.fields,
@@ -150,6 +157,10 @@ class CreateAttachmentDbRequest(
                         }
                         else -> continue
                     }
+                }
+                FieldKeys.Item.accessDate -> {
+                    if(!this.includeAccessDate) { continue }
+                    value = iso8601DateFormatV2.format(this.attachment.dateAdded)
                 }
                 else -> continue
             }

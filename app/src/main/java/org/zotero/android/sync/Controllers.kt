@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import io.realm.exceptions.RealmError
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
@@ -90,13 +91,19 @@ class Controllers @Inject constructor(
                 userControllers.enableSync(apiKey = data.apiToken)
             }
             isUserInitializedEventStream.emit(true)
-        } catch (error: Exception) {
+        } catch (error: Throwable) {
             Timber.e(error, "Controllers: can't create UserControllers")
 
             this.sessionCancellable?.cancel()
             this.sessionCancellable = null
             this.sessionController.reset()
             startObservingSession()
+
+            val realmError = error as? RealmError
+            if (realmError != null) {
+                dbWrapper.clearDatabaseFiles()
+            }
+
             isUserInitializedEventStream.emit(false)
         }
     }
@@ -114,7 +121,7 @@ class Controllers @Inject constructor(
         FileUtils.deleteDirectory(fileStore.downloads)
         isUserInitializedEventStream.emit(false)
         if (dbWrapper.isInitialized) {
-            dbWrapper.realmDbStorage.clear()
+            dbWrapper.clearDatabaseFiles()
         }
     }
 

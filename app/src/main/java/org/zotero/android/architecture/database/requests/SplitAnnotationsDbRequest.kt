@@ -128,7 +128,7 @@ class SplitAnnotationsDbRequest(
 
     private fun createCopyWithoutPathsAndRects(item: RItem, database: Realm, additionalChange: (RItem) -> Unit) {
         var new = database.createObject<RItem>()
-        new.key = KeyGenerator.newKey
+        new.key = KeyGenerator.newKey()
         new.rawType = item.rawType
         new.localizedType = item.localizedType
         new.dateAdded = item.dateAdded

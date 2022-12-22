@@ -39,6 +39,19 @@ inline fun <reified K, reified V> JsonElement?.unmarshalMap(): Map<K, V>? {
     }
 }
 
+inline fun <reified K, reified V> JsonElement?.unmarshalLinkedHashMap(): LinkedHashMap<K, V>? {
+    if (this == null || isJsonNull) {
+        return null
+    }
+    return try {
+        val type = TypeToken.getParameterized(LinkedHashMap::class.java, K::class.java, V::class.java).type
+        return Gson().fromJson(this, type)
+    } catch (e: Exception) {
+        Timber.e(e, "Error parsing json map = $this")
+        null
+    }
+}
+
 fun JsonElement?.unmarshalMapOfListToInt(): Map<String, List<Int>>? {
     return try {
         val type = object : TypeToken<Map<String, List<Int>>>() {}.type

@@ -2,7 +2,6 @@ package org.zotero.android.architecture.database
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import timber.log.Timber
-import java.io.File
 
 enum class RealmDbError {
     autocreateMissingPrimaryKey
@@ -14,26 +13,6 @@ class RealmDbStorage(val config: RealmConfiguration) {
         get() {
             return config.shouldDeleteRealmIfMigrationNeeded()
         }
-
-    fun clear() {
-        Realm.deleteRealm(config)
-        val realmUrl = config.path ?: return
-
-        val realmUrls = arrayOf(
-            realmUrl,
-            "$realmUrl.lock",
-            "$realmUrl.note",
-            "$realmUrl.management"
-        )
-
-        for (url in realmUrls) {
-            val result = File(url).delete()
-            if (!result) {
-                Timber.e("org.zotero.android.architecture.database.RealmDbStorage: couldn't delete file at $url")
-            }
-        }
-
-    }
 
     fun perform(coordinatorAction: (RealmDbCoordinator) -> Unit) {
         val coordinator = RealmDbCoordinator().init(config)

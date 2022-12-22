@@ -14,10 +14,10 @@ import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
 import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.files.FileStore
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -27,41 +27,114 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(
-        gson: Gson, authInterceptor:
-        AuthNetworkInterceptor,
+    fun provideNoAuthenticationApi(@ForBaseApi retrofit: Retrofit): NoAuthenticationApi {
+        return retrofit.create(NoAuthenticationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    @ForApiWithAuthentication
+    fun provideOkHttpWithAuthentication(
+        @ForBaseApi baseClient: OkHttpClient,
+        authInterceptor: AuthNetworkInterceptor,
+    ): OkHttpClient {
+        val clientBuilder = baseClient.newBuilder()
+        clientBuilder.addInterceptor(authInterceptor)
+        return clientBuilder.build()
+    }
+
+    @Provides
+    @Singleton
+    @ForBaseApi
+    fun provideBaseOkHttp(
         clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
         configuration: NetworkConfiguration
-    ): Retrofit {
-        val stringConverter = ScalarsConverterFactory.create()
-        val gsonConverter = GsonConverterFactory.create(gson)
-
-        val okHttpClient = OkHttpClient.Builder()
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
             .setNetworkTimeout(configuration.networkTimeout)
             .addInterceptor(run {
                 val httpLoggingInterceptor = HttpLoggingInterceptor()
                 httpLoggingInterceptor.apply {
-                    httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+                    httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.HEADERS
                 }
             })
-            .addInterceptor(authInterceptor)
             .addInterceptor(clientInfoNetworkInterceptor)
-            .build()
-        return Retrofit.Builder()
-            .addConverterFactory(stringConverter)
-            .addConverterFactory(gsonConverter)
-            .client(okHttpClient)
-            .baseUrl(BuildConfig.BASE_API_URL)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideAccountApi(retrofit: Retrofit) = retrofit.create(AccountApi::class.java)
+    @ForWebSocket
+    fun provideSocketOkHttpClient(
+    ): OkHttpClient {
+        val timeout = 15L
+        return OkHttpClient.Builder()
+            .addInterceptor(
+                HttpLoggingInterceptor { message ->
+                    Timber.tag("SvcSocket")
+                    Timber.d(message)
+                }
+                    .apply { level = HttpLoggingInterceptor.Level.BODY }
+            )
+            .connectTimeout(timeout, TimeUnit.SECONDS)
+            .readTimeout(timeout, TimeUnit.SECONDS)
+            .writeTimeout(timeout, TimeUnit.SECONDS)
+            .build()
+    }
 
     @Provides
     @Singleton
-    fun provideSyncApi(retrofit: Retrofit) = retrofit.create(SyncApi::class.java)
+    @ForApiWithAuthentication
+    fun provideRetrofitWithAuthenticationBuilder(
+        @ForBaseApi baseBuilder: Retrofit.Builder,
+        @ForApiWithAuthentication okHttpClient: OkHttpClient
+    ): Retrofit.Builder {
+        return baseBuilder.client(okHttpClient)
+    }
+
+    @Provides
+    @ForBaseApi
+    fun provideBaseRetrofitBuilder(gson: Gson): Retrofit.Builder {
+        val stringConverter = ScalarsConverterFactory.create()
+        val gsonConverter = GsonConverterFactory.create(gson)
+        return Retrofit.Builder()
+            .addConverterFactory(stringConverter)
+            .addConverterFactory(gsonConverter)
+    }
+
+    @Provides
+    @Singleton
+    @ForBaseApi
+    fun provideRetrofit(
+        @ForBaseApi baseBuilder: Retrofit.Builder,
+        @ForBaseApi okHttpClient: OkHttpClient
+    ): Retrofit {
+        return baseBuilder
+            .baseUrl(BuildConfig.BASE_API_URL)
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @ForApiWithAuthentication
+    fun provideRetrofitWithAuthentication(
+        @ForApiWithAuthentication baseBuilder: Retrofit.Builder,
+        @ForApiWithAuthentication okHttpClient: OkHttpClient
+    ): Retrofit {
+        return baseBuilder
+            .baseUrl(BuildConfig.BASE_API_URL)
+            .client(okHttpClient)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAccountApi(@ForApiWithAuthentication retrofit: Retrofit) = retrofit.create(AccountApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideSyncApi(@ForApiWithAuthentication retrofit: Retrofit) = retrofit.create(SyncApi::class.java)
 
     private fun OkHttpClient.Builder.setNetworkTimeout(seconds: Long) =
         connectTimeout(seconds, TimeUnit.SECONDS)
@@ -97,7 +170,6 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideDbWrapper(
-        fileStore: FileStore,
     ): DbWrapper {
        return DbWrapper()
     }

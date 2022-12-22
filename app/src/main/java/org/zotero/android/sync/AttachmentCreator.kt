@@ -28,27 +28,45 @@ class AttachmentCreator {
 
         fun mainAttachment(item: RItem, fileStorage: FileStore): Attachment? {
             if (item.rawType == ItemTypes.attachment) {
-                val attachment = attachment(item = item, fileStorage = fileStorage, urlDetector = null)
+                val attachment = attachment(
+                    item = item,
+                    fileStorage = fileStorage,
+                    urlDetector = null,
+                    isForceRemote = false
+                )
                 if (attachment != null) {
-                when {
-                    attachment.type is Attachment.Kind.url ->
-                    return attachment
-                    attachment.type is Attachment.Kind.file && (attachment.type.linkType == Attachment.FileLinkType.importedFile ||  attachment.type.linkType == Attachment.FileLinkType.importedUrl)->
-                    return attachment
-                    else -> {
-                      //no-op
+                    when {
+                        attachment.type is Attachment.Kind.url ->
+                            return attachment
+                        attachment.type is Attachment.Kind.file && (attachment.type.linkType == Attachment.FileLinkType.importedFile || attachment.type.linkType == Attachment.FileLinkType.importedUrl) ->
+                            return attachment
+                        else -> {
+                            //no-op
+                        }
                     }
-                }
                 }
                 return null
             }
 
             var attachmentData = attachmentData(item)
 
-            if (attachmentData.isEmpty()) { return null }
+            if (attachmentData.isEmpty()) {
+                return null
+            }
 
             attachmentData = attachmentData.sortedWith { lData, rData ->
-                mainAttachmentsAreInIncreasingOrder(lData = Triple(lData.contentType, lData.hasMatchingUrlWithParent, lData.dateAdded), rData = Triple(rData.contentType, rData.hasMatchingUrlWithParent, rData.dateAdded))
+                mainAttachmentsAreInIncreasingOrder(
+                    lData = Triple(
+                        lData.contentType,
+                        lData.hasMatchingUrlWithParent,
+                        lData.dateAdded
+                    ),
+                    rData = Triple(
+                        rData.contentType,
+                        rData.hasMatchingUrlWithParent,
+                        rData.dateAdded
+                    )
+                )
             }
 
             val firstAttachmentData = attachmentData.firstOrNull()
@@ -60,12 +78,20 @@ class AttachmentCreator {
             val linkMode = firstAttachmentData.linkMode
 
             val rAttachment = item.children?.get(idx)
-            val linkType: Attachment.FileLinkType = if(linkMode == LinkMode.importedFile) Attachment.FileLinkType.importedFile else Attachment.FileLinkType.importedUrl
+            val linkType: Attachment.FileLinkType =
+                if (linkMode == LinkMode.importedFile) Attachment.FileLinkType.importedFile else Attachment.FileLinkType.importedUrl
 
 
             val libraryId = rAttachment?.libraryId
             if (libraryId != null) {
-                val type = importedType(rAttachment, contentType = contentType, libraryId = libraryId, fileStorage = fileStorage, linkType = linkType)
+                val type = importedType(
+                    rAttachment,
+                    contentType = contentType,
+                    libraryId = libraryId,
+                    fileStorage = fileStorage,
+                    isForceRemote = false,
+                    linkType = linkType
+                )
                 if (type != null) {
                     return Attachment.initWithItemAndKind(item = rAttachment, type = type)
                 }
@@ -101,12 +127,31 @@ class AttachmentCreator {
         }
 
 
-        fun attachment(item: RItem, options: Options = Options.light, fileStorage: FileStore?, urlDetector: UrlDetector?): Attachment? {
-            return attachmentType(item, options = options, fileStorage = fileStorage, urlDetector = urlDetector)?.let {Attachment.initWithItemAndKind(item = item, type = it) }
+        fun attachment(
+            item: RItem,
+            options: Options = Options.light,
+            fileStorage: FileStore,
+            isForceRemote: Boolean,
+            urlDetector: UrlDetector?
+        ): Attachment? {
+            return attachmentType(
+                item,
+                options = options,
+                fileStorage = fileStorage,
+                urlDetector = urlDetector,
+                isForceRemote = isForceRemote
+            )?.let { Attachment.initWithItemAndKind(item = item, type = it) }
         }
 
-        fun attachmentType(item: RItem, options: Options = Options.light, fileStorage: FileStore?, urlDetector: UrlDetector?): Attachment.Kind? {
-            val linkMode = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.let { LinkMode.from(it.value) }
+        fun attachmentType(
+            item: RItem,
+            options: Options = Options.light,
+            fileStorage: FileStore,
+            isForceRemote: Boolean,
+            urlDetector: UrlDetector?
+        ): Attachment.Kind? {
+            val linkMode = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }
+                ?.let { LinkMode.from(it.value) }
             if (linkMode == null) {
                 Timber.e("AttachmentCreator: missing link mode for item ${item.key}")
                 return null
@@ -118,13 +163,31 @@ class AttachmentCreator {
             }
             when (linkMode) {
                 LinkMode.importedFile -> {
-                    return importedType(item, libraryId = libraryId, fileStorage = fileStorage, linkType = Attachment.FileLinkType.importedFile)
+                    return importedType(
+                        item,
+                        libraryId = libraryId,
+                        fileStorage = fileStorage,
+                        isForceRemote = isForceRemote,
+                        linkType = Attachment.FileLinkType.importedFile
+                    )
                 }
                 LinkMode.embeddedImage -> {
-                    return embeddedImageType(item, libraryId = libraryId, options = options, fileStorage = fileStorage)
+                    return embeddedImageType(
+                        item,
+                        libraryId = libraryId,
+                        options = options,
+                        isForceRemote = isForceRemote,
+                        fileStorage = fileStorage
+                    )
                 }
-                LinkMode.importedUrl ->  {
-                    return importedType(item, libraryId = libraryId, fileStorage = fileStorage, linkType = Attachment.FileLinkType.importedUrl)
+                LinkMode.importedUrl -> {
+                    return importedType(
+                        item,
+                        libraryId = libraryId,
+                        fileStorage = fileStorage,
+                        isForceRemote = isForceRemote,
+                        linkType = Attachment.FileLinkType.importedUrl
+                    )
                 }
 
                 LinkMode.linkedFile -> {
@@ -140,16 +203,49 @@ class AttachmentCreator {
             }
         }
 
-        private fun importedType(item: RItem, libraryId: LibraryIdentifier, fileStorage: FileStore?, linkType: Attachment.FileLinkType): Attachment.Kind? {
+        private fun importedType(
+            item: RItem,
+            libraryId: LibraryIdentifier,
+            fileStorage: FileStore,
+            isForceRemote: Boolean,
+            linkType: Attachment.FileLinkType
+        ): Attachment.Kind? {
             val contentType = contentType(item) ?: return null
-            return importedType(item, contentType = contentType, libraryId = libraryId, fileStorage = fileStorage, linkType = linkType)
+            return importedType(
+                item,
+                contentType = contentType,
+                libraryId = libraryId,
+                fileStorage = fileStorage,
+                isForceRemote = isForceRemote,
+                linkType = linkType
+            )
         }
 
-        private fun importedType(item: RItem, contentType: String, libraryId: LibraryIdentifier, fileStorage: FileStore?, linkType: Attachment.FileLinkType): Attachment.Kind? {
-            val filename = filename(item, ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(contentType))
-            val file = fileStorage!!.attachmentFile(libraryId, key = item.key, filename = filename, contentType = contentType)
-            val location = location(item, file = file, fileStorage = fileStorage)
-            return Attachment.Kind.file(filename = filename, contentType = contentType, location = location, linkType = linkType)
+        private fun importedType(
+            item: RItem,
+            contentType: String,
+            libraryId: LibraryIdentifier,
+            fileStorage: FileStore,
+            isForceRemote: Boolean,
+            linkType: Attachment.FileLinkType
+        ): Attachment.Kind {
+            val filename = filename(
+                item,
+                ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(contentType)
+            )
+            val file = fileStorage.attachmentFile(
+                libraryId,
+                key = item.key,
+                filename = filename,
+                contentType = contentType
+            )
+            val location = location(item, file = file, fileStorage = fileStorage, isForceRemote = isForceRemote)
+            return Attachment.Kind.file(
+                filename = filename,
+                contentType = contentType,
+                location = location,
+                linkType = linkType
+            )
         }
 
         fun contentType(item: RItem): String? {
@@ -207,9 +303,10 @@ class AttachmentCreator {
         private fun location(
             item: RItem,
             file: File,
-            fileStorage: FileStore?
+            fileStorage: FileStore,
+            isForceRemote: Boolean
         ): Attachment.FileLocation {
-            if (fileStorage == null) {
+            if (isForceRemote) {
                 return Attachment.FileLocation.remote
             }
             if (file.exists()) {
@@ -227,7 +324,13 @@ class AttachmentCreator {
             }
         }
 
-        private fun embeddedImageType(item: RItem, libraryId: LibraryIdentifier, options: Options, fileStorage: FileStore?): Attachment.Kind? {
+        private fun embeddedImageType(
+            item: RItem,
+            libraryId: LibraryIdentifier,
+            options: Options,
+            fileStorage: FileStore,
+            isForceRemote: Boolean,
+        ): Attachment.Kind? {
             val parent = item.parent
             if (parent == null) {
                 Timber.e("AttachmentCreator: embedded image without parent ${item.key}")
@@ -243,10 +346,20 @@ class AttachmentCreator {
                 Timber.e("AttachmentCreator: embedded image ${item.key} annotation without assigned parent ${parent.key}")
                 return null
             }
-            val file = fileStorage!!.annotationPreview(annotationKey =  parent.key, pdfKey = attachmentItem.key, libraryId = libraryId, isDark = options == Options.dark)
-            val location = location(item, file = file, fileStorage = fileStorage)
+            val file = fileStorage.annotationPreview(
+                annotationKey = parent.key,
+                pdfKey = attachmentItem.key,
+                libraryId = libraryId,
+                isDark = options == Options.dark
+            )
+            val location = location(item, file = file, fileStorage = fileStorage, isForceRemote)
             val filename = filename(item, ext = "png")
-            return Attachment.Kind.file(filename = filename, contentType = "image/png", location = location, linkType = Attachment.FileLinkType.embeddedImage)
+            return Attachment.Kind.file(
+                filename = filename,
+                contentType = "image/png",
+                location = location,
+                linkType = Attachment.FileLinkType.embeddedImage
+            )
         }
 
         private fun linkedUrlType(item: RItem, libraryId: LibraryIdentifier, urlDetector: UrlDetector): Attachment.Kind? {

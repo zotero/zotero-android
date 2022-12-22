@@ -13,6 +13,7 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.requests.CleanupUnusedTags
 import org.zotero.android.files.FileStore
+import org.zotero.android.websocket.ChangeWsResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,7 +27,9 @@ class UserControllers @Inject constructor(
     private val syncScheduler: SyncScheduler,
     private val objectUserChangeEventStream: ObjectUserChangeEventStream,
     private val applicationScope: ApplicationScope,
-    private val dispatchers: Dispatchers
+    private val dispatchers: Dispatchers,
+    private val webSocketController: WebSocketController,
+    private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -73,14 +76,27 @@ class UserControllers @Inject constructor(
                 applyDelay = true
             )
         }.launchIn(applicationScope)
-        //TODO listen to websockets
 
-        this.syncScheduler.request(type = SyncType.normal, libraries = LibrarySyncType.all)
+        changeWsResponseKindEventStream.flow().onEach { change ->
+            when(change) {
+                is ChangeWsResponse.Kind.translators -> {
+                    // TODO update translations
+                }
+                is ChangeWsResponse.Kind.library -> {
+                    syncScheduler.webSocketUpdate(libraryId = change.libraryIdentifier)
+                }
+            }
+        }.launchIn(applicationScope)
+
+        this.webSocketController.connect(apiKey = apiKey, completed = {
+            this.syncScheduler.request(type = SyncType.normal, libraries = LibrarySyncType.all)
+        })
 
     }
 
     fun disableSync(apiKey: String?) {
         this.syncScheduler.cancelSync()
+        this.webSocketController.disconnect(apiKey = apiKey)
         runningSyncJob?.cancel()
     }
 

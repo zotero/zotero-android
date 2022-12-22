@@ -22,19 +22,22 @@ object ItemDetailDataCreator {
 
     sealed class Kind {
         data class new(val itemType: String, val child: Attachment?): Kind()
-        data class existing(val item: RItem): Kind()
+        data class existing(val item: RItem, val ignoreChildren: Boolean): Kind()
     }
 
     fun createData(type: Kind, schemaController: SchemaController, fileStorage: FileStore, urlDetector: UrlDetector, doiDetector: (String) -> Boolean): ItemDetailCreateDataResult{
         when (type) {
             is Kind.new ->
-            return creationData(itemType = type.itemType, child = type.child, schemaController = schemaController, urlDetector = urlDetector, doiDetector = doiDetector)
+            return creationData(itemType = type.itemType, child = type.child, schemaController = schemaController,
+                urlDetector = urlDetector, doiDetector = doiDetector)
             is Kind.existing ->
-            return itemData(item = type.item, schemaController = schemaController, fileStorage = fileStorage, urlDetector = urlDetector, doiDetector = doiDetector)
+            return itemData(item = type.item, ignoreChildren = type.ignoreChildren, schemaController = schemaController,
+                fileStorage = fileStorage, urlDetector = urlDetector, doiDetector = doiDetector)
         }
     }
 
-    private fun itemData(item: RItem, schemaController: SchemaController, fileStorage: FileStore, urlDetector: UrlDetector, doiDetector: (String) -> Boolean)
+    private fun itemData(item: RItem, ignoreChildren: Boolean,schemaController: SchemaController,
+                         fileStorage: FileStore, urlDetector: UrlDetector, doiDetector: (String) -> Boolean)
     : ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(item.rawType)
         if (localizedType == null) {
@@ -76,18 +79,28 @@ object ItemDetailDataCreator {
             creators[creator.id] = creator
         }
 
-        val notes = item.children!!.where().items(type = ItemTypes.note, notSyncState = ObjectSyncState.dirty, trash = false)
-        .sort("displayTitle").findAll().mapNotNull {Note.init(it)}
+        val notes:MutableList<Note>
+        if (ignoreChildren) {
+            notes = mutableListOf()
+        } else {
+            notes = item.children!!.where()
+                .items(type = ItemTypes.note, notSyncState = ObjectSyncState.dirty, trash = false)
+                .sort("displayTitle")
+                .findAll().mapNotNull { Note.init(it) }.toMutableList()
+        }
         val attachments: List<Attachment>
-        if (item.rawType == ItemTypes.attachment) {
-            val attachment = AttachmentCreator.attachment(item, fileStorage = fileStorage, urlDetector = urlDetector)
+        if(ignoreChildren) {
+            attachments = mutableListOf()
+        } else if (item.rawType == ItemTypes.attachment) {
+            val attachment = AttachmentCreator.attachment(item, fileStorage = fileStorage, urlDetector = urlDetector, isForceRemote = false)
             attachments = attachment?.let { listOf(it) } ?: emptyList()
         } else {
-            val mappedAttachments = item.children.where().items(type = ItemTypes.attachment, notSyncState = ObjectSyncState.dirty, trash=  false)
+            val mappedAttachments = item.children!!.where().items(type = ItemTypes.attachment, notSyncState = ObjectSyncState.dirty, trash=  false)
             .sort("displayTitle")
             .findAll().mapNotNull{ item ->
                 AttachmentCreator.attachment(item = item,
                     fileStorage = fileStorage,
+                    isForceRemote = false,
                     urlDetector = urlDetector)
             }
             attachments = mappedAttachments

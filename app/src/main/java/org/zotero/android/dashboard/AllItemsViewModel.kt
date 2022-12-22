@@ -364,7 +364,7 @@ internal class AllItemsViewModel @Inject constructor(
         val libraryId = viewState.library.identifier
         val attachments = mutableListOf<Attachment>()
         for (url in urls) {
-            val key = KeyGenerator.newKey
+            val key = KeyGenerator.newKey()
 
             val selectionResult = selectMedia.execute(
                 uri = url.toString(),
