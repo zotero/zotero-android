@@ -31,6 +31,7 @@ import org.zotero.android.architecture.database.requests.ReadItemsDbRequest
 import org.zotero.android.architecture.database.requests.ReadLibraryDbRequest
 import org.zotero.android.architecture.database.requests.ReadSearchDbRequest
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.dashboard.data.AddOrEditNoteArgs
 import org.zotero.android.dashboard.data.DetailType
 import org.zotero.android.dashboard.data.InitialLoadData
 import org.zotero.android.dashboard.data.ItemAccessory
@@ -45,8 +46,10 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncUseCase
+import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uidata.Collection
@@ -437,10 +440,32 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
+    fun onAddNote() {
+        showNoteCreation(title = null, libraryId = viewState.library.identifier)
+    }
+
+    private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
+        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(text = "", tags = listOf(),
+            title = title, key = KeyGenerator.newKey(), libraryId = libraryId, readOnly = false,
+            collection = viewState.collection, library = viewState.library)
+        triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
+    }
+
     fun showItemDetail(item: RItem) {
         when (item.rawType) {
             ItemTypes.note -> {
-                //TODO support displaying of notes
+                val note = Note.init(item = item)
+                if (note == null) {
+                    return
+                }
+                val tags = item.tags!!.map({ Tag(tag = it) })
+                val library = viewState.library
+                ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+                    text = note.text, tags = tags, title = null, libraryId = library.identifier,
+                    readOnly = !library.metadataEditable, collection = viewState.collection,
+                    library = viewState.library, key = note.key
+                )
+                triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
             }
             else -> {
                 ScreenArguments.showItemDetailsArgs = ShowItemDetailsArgs(DetailType.preview(key = item.key), library = viewState.library, childKey = null)
@@ -469,6 +494,7 @@ internal data class AllItemsViewState(
 
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowItemDetailEffect: AllItemsViewEffect()
+    object ShowAddOrEditNoteEffect: AllItemsViewEffect()
 }
 
 sealed class ItemsAction {

@@ -3,6 +3,7 @@ package org.zotero.android.data.mappers
 import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.architecture.database.objects.FieldKeys
+import org.zotero.android.ktx.convertFromBooleanOrIntToBoolean
 import org.zotero.android.sync.SchemaError
 import javax.inject.Inject
 
@@ -18,7 +19,7 @@ class CollectionResponseDataMapper @Inject constructor(
 
         val name = response["name"].asString
         val parentCollection = response["parentCollection"]?.asString
-        val isTrash = response["deleted"]?.asBoolean ?: (response["deleted"]?.asInt == 1)
+        val isTrash = response["deleted"].convertFromBooleanOrIntToBoolean()
 
         return CollectionResponse.Data(
             name = name,

@@ -11,6 +11,7 @@ import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.formatter.iso8601DateFormatV2
+import org.zotero.android.ktx.convertFromBooleanOrIntToBoolean
 import org.zotero.android.ktx.unmarshalList
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
@@ -101,12 +102,11 @@ class ItemResponseMapper @Inject constructor(
         val parentKey = data["parentItem"]?.asString
         val dateAddedParsed = dateAdded?.let { iso8601DateFormatV2.parse(it) } ?: Date()
         val dateModifiedParsed = dateModified?.let { iso8601DateFormatV2.parse(it) } ?: Date()
-        val isTrash = data["deleted"]?.asBoolean ?: (data["deleted"]?.asInt == 1)
+        val isTrash = data["deleted"].convertFromBooleanOrIntToBoolean()
         val tagsParsed = tags.map { tagResponseMapper.fromJson(it.asJsonObject) }
         val creatorsParsed = creators.map { creatorResponseMapper.fromJson(it.asJsonObject) }
         val relations = data["relations"]?.asJsonObject ?: JsonObject()
-        val inPublications =
-            data["inPublications"]?.asBoolean ?: (data["inPublications"]?.asInt == 1)
+        val inPublications = data["inPublications"].convertFromBooleanOrIntToBoolean()
 
         val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = schemaController).first
 
@@ -126,12 +126,6 @@ class ItemResponseMapper @Inject constructor(
             }
         }
 
-
-
-        //TODO this is not needed
-        val title = data["title"]?.asString
-        val note = data["note"]?.asString
-
         return ItemResponse(
             rawType = rawType,
             collectionKeys = collectionKeys,
@@ -150,8 +144,6 @@ class ItemResponseMapper @Inject constructor(
             parsedDate = parsedDate,
             tags = tagsParsed,
             version = version,
-            title = title,
-            note = note,
             paths = null,
             rects = null,
             fields = fields
@@ -181,7 +173,7 @@ class ItemResponseMapper @Inject constructor(
         val dateAddedParsed = dateAdded?.let { iso8601DateFormatV2.parse(it) } ?: Date()
         val dateModifiedParsed = dateModified?.let { iso8601DateFormatV2.parse(it) } ?: Date()
 
-        val isTrash = data["deleted"]?.asBoolean ?: (data["deleted"]?.asInt == 1)
+        val isTrash = data["deleted"].convertFromBooleanOrIntToBoolean()
         val tagsParsed = tags.map { tagResponseMapper.fromJson(it.asJsonObject) }
         val relations = JsonObject()
         val inPublications = false
@@ -206,8 +198,6 @@ class ItemResponseMapper @Inject constructor(
             createdBy = createdBy,
             collectionKeys = collectionKeys,
             rawType = rawType,
-            title = null,
-            note = null,
             fields = fields,
             rects = rects,
             paths = paths

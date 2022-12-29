@@ -62,6 +62,7 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Suppress("UNUSED_PARAMETER")
 internal fun AllItemsScreen(
     navigateToItemDetails: () -> Unit,
+    navigateToAddOrEditNote: () -> Unit,
     onBack: () -> Unit,
     viewModel: AllItemsViewModel = hiltViewModel(),
     onPickFile: () -> Unit,
@@ -76,6 +77,7 @@ internal fun AllItemsScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
+            is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
             null -> Unit
         }
     }
@@ -140,6 +142,7 @@ internal fun AllItemsScreen(
 
         AddBottomSheet(
             onAddFile = onPickFile,
+            onAddNote = viewModel::onAddNote,
             onClose = viewModel::onAddBottomSheetCollapse,
             showBottomSheet = viewState.shouldShowAddBottomSheet
         )
@@ -216,6 +219,7 @@ private fun TopBar(
 @Composable
 internal fun AddBottomSheet(
     onAddFile:() -> Unit,
+    onAddNote:() -> Unit,
     onClose: () -> Unit,
     showBottomSheet: Boolean,
 ) {
@@ -234,6 +238,9 @@ internal fun AddBottomSheet(
                 AddBottomSheetContent(onAddFile = {
                     onClose()
                     onAddFile()
+                }, onAddNote = {
+                    onClose()
+                    onAddNote()
                 })
             },
             onCollapse = {
@@ -248,12 +255,17 @@ internal fun AddBottomSheet(
 @Composable
 private fun AddBottomSheetContent(
     onAddFile:() -> Unit,
+    onAddNote:() -> Unit
 ) {
     Box {
         Column(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-//            CustomDivider(modifier = Modifier.padding(16.dp))
+            RowItemWithArrow(
+                title = stringResource(id = Strings.add_item_bottom_sheet_note),
+                onClick = { onAddNote() }
+            )
+            CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
                 title = stringResource(id = Strings.add_item_bottom_sheet_file),
                 onClick = { onAddFile() }

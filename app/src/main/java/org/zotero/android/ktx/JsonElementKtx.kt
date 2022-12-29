@@ -76,3 +76,15 @@ inline fun <reified K> JsonElement?.unmarshalList(): List<K>? {
         null
     }
 }
+
+fun JsonElement?.convertFromBooleanOrIntToBoolean(): Boolean {
+    val jsonPrimitive = this?.asJsonPrimitive
+    if (jsonPrimitive == null) {
+        return false
+    }
+    return when {
+        jsonPrimitive.isBoolean -> jsonPrimitive.asBoolean
+        jsonPrimitive.isNumber -> jsonPrimitive.asInt == 1
+        else -> false
+    }
+}

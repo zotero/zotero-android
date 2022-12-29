@@ -43,6 +43,8 @@
     <string name="errors.sync_toolbar.forbidden_message">The Zotero sync server did not accept your username and password.\n\nPlease log out and log in with correct login information.</string>
 
     <string name="add">Add</string>
+    <string name="done">Done</string>
     <string name="add_item_bottom_sheet_file">Add File</string>
+    <string name="add_item_bottom_sheet_note">New Standalone Note</string>
 
 </resources>

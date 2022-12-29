@@ -31,5 +31,5 @@ internal fun SampleScreen(
 
     SolidStatusBar()
 
-    CustomTextField(value = viewState.testText, onValueChange = {})
+    CustomTextField(value = viewState.testText, onValueChange = {}, hint = "")
 }

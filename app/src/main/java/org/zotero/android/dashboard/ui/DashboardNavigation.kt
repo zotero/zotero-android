@@ -31,9 +31,13 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
         allItemsScreen(
             onBack = navigation::onBack,
             onPickFile = onPickFile,
-                navigateToItemDetails = navigation::toItemDetails,
+            navigateToItemDetails = navigation::toItemDetails,
+            navigateToAddOrEditNote = navigation::toAddOrEditNote
         )
         itemDetailsScreen(
+            onBack = navigation::onBack
+        )
+        addNoteScreen(
             onBack = navigation::onBack
         )
     }
@@ -43,11 +47,13 @@ private fun NavGraphBuilder.allItemsScreen(
     onBack: () -> Unit,
     navigateToItemDetails: () -> Unit,
     onPickFile: () -> Unit,
+    navigateToAddOrEditNote: () -> Unit,
 ) {
     composable(route = Destinations.ALL_ITEMS) {
         AllItemsScreen(
             onBack = onBack,
             onPickFile = onPickFile,
+            navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
         )
     }
@@ -66,9 +72,23 @@ private fun NavGraphBuilder.itemDetailsScreen(
     }
 }
 
+private fun NavGraphBuilder.addNoteScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = "${Destinations.ADD_NOTE}",
+        arguments = listOf(),
+    ) {
+        AddNoteScreen(
+            onBack = onBack,
+        )
+    }
+}
+
 private object Destinations {
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
+    const val ADD_NOTE = "addNote"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -80,5 +100,9 @@ private class Navigation(
 
     fun toItemDetails() {
         navController.navigate("${Destinations.ITEM_DETAILS}")
+    }
+
+    fun toAddOrEditNote() {
+        navController.navigate("${Destinations.ADD_NOTE}")
     }
 }

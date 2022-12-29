@@ -37,8 +37,6 @@ data class ItemResponse(
     val rects: List<List<Double>>?,
     val paths: List<List<Double>>?,
 
-    val title: String?,
-    val note: String?
     ) {
 
     var notes: MutableList<String> = mutableListOf()

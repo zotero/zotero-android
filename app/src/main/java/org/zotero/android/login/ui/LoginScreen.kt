@@ -94,15 +94,12 @@ internal fun LoginScreen(
                 CustomTextField(
                     value = viewState.username,
                     hint = stringResource(id = Strings.login_username),
-                    contentAlignment = Alignment.CenterStart,
                     onValueChange = viewModel::onUsernameChanged
                 )
                 CustomDivider(modifier = Modifier.padding(vertical = 16.dp))
                 CustomTextField(
                     value = viewState.password,
                     hint = stringResource(id = Strings.login_password),
-                    contentAlignment = Alignment.CenterStart,
-                    horizontalAlignment = Alignment.Start,
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     onValueChange = viewModel::onPasswordChanged

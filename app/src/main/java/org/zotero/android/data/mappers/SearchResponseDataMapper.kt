@@ -3,6 +3,7 @@ package org.zotero.android.data.mappers
 import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.architecture.database.objects.FieldKeys
+import org.zotero.android.ktx.convertFromBooleanOrIntToBoolean
 import org.zotero.android.sync.SchemaError
 import javax.inject.Inject
 
@@ -20,7 +21,7 @@ class SearchResponseDataMapper @Inject constructor(
         val name = response["name"].asString
         val conditions =
             response["conditions"].asJsonArray.map { conditionResponseMapper.fromJson(it.asJsonObject) }
-        val isTrash = response["deleted"]?.asBoolean ?: (response["deleted"]?.asInt == 1)
+        val isTrash = response["deleted"].convertFromBooleanOrIntToBoolean()
 
         return SearchResponse.Data(
             name = name,
