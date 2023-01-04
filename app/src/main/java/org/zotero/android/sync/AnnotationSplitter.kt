@@ -9,8 +9,8 @@ interface SplittablePathPoint {
     val y: Double
 }
 
-object AnnotationSplitter{
-    fun splitRectsIfNeeded(rects:List<CGRect>): List<List<CGRect>>? {
+object AnnotationSplitter {
+    fun splitRectsIfNeeded(rects: List<CGRect>): List<List<CGRect>>? {
         if (rects.isEmpty()) {
             return null
         }
@@ -22,27 +22,29 @@ object AnnotationSplitter{
         }
 
         var count = 2
-        var splitRects: MutableList<List<CGRect>> = mutableListOf()
+        val splitRects = mutableListOf<List<CGRect>>()
         var currentRects = mutableListOf<CGRect>()
 
         for (rect in sortedRects) {
             val size =
-                rect.minX.rounded(3).toString().length + rect.minY.rounded(3).toString().length +
-                        rect.maxX.rounded(3).toString().length + rect.maxY.rounded(3).toString().length + 6
+                rect.minX.rounded(3).toString().length +
+                        rect.minY.rounded(3).toString().length +
+                        rect.maxX.rounded(3).toString().length +
+                        rect.maxY.rounded(3)
+                            .toString().length + 6
 
             if (count + size > AnnotationsConfig.positionSizeLimit) {
-                if (!currentRects.isEmpty()) {
+                if (currentRects.isNotEmpty()) {
                     splitRects.add(currentRects)
-                    currentRects = mutableListOf<CGRect>()
+                    currentRects = mutableListOf()
                 }
                 count = 2
             }
-
             currentRects.add(rect)
             count += size
         }
 
-        if (!currentRects.isEmpty()) {
+        if (currentRects.isNotEmpty()) {
             splitRects.add(currentRects)
         }
 
@@ -53,62 +55,61 @@ object AnnotationSplitter{
     }
 
     fun splitPathsIfNeeded(paths: List<List<SplittablePathPoint>>): List<List<List<SplittablePathPoint>>>? {
-        if (paths.isEmpty()) { return emptyList() }
+        if (paths.isEmpty()) {
+            return emptyList()
+        }
 
         var count = 2
-        var splitPaths = mutableListOf<MutableList<MutableList<SplittablePathPoint>>>()
+        val splitPaths = mutableListOf<MutableList<MutableList<SplittablePathPoint>>>()
         var currentLines = mutableListOf<MutableList<SplittablePathPoint>>()
         var currentPoints = mutableListOf<SplittablePathPoint>()
 
         for (subpaths in paths) {
             if (count + 3 > AnnotationsConfig.positionSizeLimit) {
-                if (!currentPoints.isEmpty()) {
+                if (currentPoints.isNotEmpty()) {
                     currentLines.add(currentPoints)
-                    currentPoints = mutableListOf<SplittablePathPoint>()
+                    currentPoints = mutableListOf()
                 }
-                if (!currentLines.isEmpty()) {
+                if (currentLines.isNotEmpty()) {
                     splitPaths.add(currentLines)
                     currentLines = mutableListOf()
                 }
                 count = 2
             }
-
             count += 3
-
             for (point in subpaths) {
-                val size = point.x.rounded(3).toString().length + point.y.rounded(3).toString().length + 2
+                val size =
+                    point.x.rounded(3).toString().length +
+                            point.y.rounded(3).toString().length + 2
 
                 if (count + size > AnnotationsConfig.positionSizeLimit) {
-                    if (!currentPoints.isEmpty()) {
+                    if (currentPoints.isNotEmpty()) {
                         currentLines.add(currentPoints)
-                        currentPoints = mutableListOf<SplittablePathPoint>()
+                        currentPoints = mutableListOf()
                     }
-                    if (!currentLines.isEmpty()) {
+                    if (currentLines.isNotEmpty()) {
                         splitPaths.add(currentLines)
                         currentLines = mutableListOf()
                     }
                     count = 5
                 }
-
                 count += size
                 currentPoints.add(point)
             }
 
             currentLines.add(currentPoints)
-            currentPoints = mutableListOf<SplittablePathPoint>()
+            currentPoints = mutableListOf()
         }
 
-        if (!currentPoints.isEmpty()) {
+        if (currentPoints.isNotEmpty()) {
             currentLines.add(currentPoints)
         }
-        if (!currentLines.isEmpty()) {
+        if (currentLines.isNotEmpty()) {
             splitPaths.add(currentLines)
         }
-
         if (splitPaths.size == 1) {
             return null
         }
         return splitPaths
     }
-
 }

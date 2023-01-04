@@ -10,75 +10,100 @@ sealed class Action {
         val createLibraryActionsOptions: CreateLibraryActionsOptions
     ) : Action()
 
-    data class resolveDeletedGroup(val a: Int, val b: String) : Action()
+    data class resolveDeletedGroup(
+        val a: Int,
+        val b: String
+    ) : Action()
 
     data class syncGroupToDb(val a: Int) : Action()
 
-    data class resolveGroupMetadataWritePermission(val groupId: Int, val libraryDataName: String): Action()
+    data class resolveGroupMetadataWritePermission(
+        val groupId: Int,
+        val libraryDataName: String
+    ) : Action()
 
-    data class performWebDavDeletions(override val libraryId: LibraryIdentifier): Action()
+    data class performWebDavDeletions(override val libraryId: LibraryIdentifier) : Action()
 
-    data class submitDeleteBatch(val batch: DeleteBatch): Action()
+    data class submitDeleteBatch(val batch: DeleteBatch) : Action()
 
-    data class createUploadActions(override val libraryId: LibraryIdentifier, val hadOtherWriteActions: Boolean): Action()
+    data class createUploadActions(
+        override val libraryId: LibraryIdentifier,
+        val hadOtherWriteActions: Boolean
+    ) : Action()
 
     data class syncVersions(
         override val libraryId: LibraryIdentifier,
         val objectS: SyncObject,
         val version: Int,
         val checkRemote: Boolean
-    ): Action()
+    ) : Action()
 
-    data class submitWriteBatch(val batch: WriteBatch): Action()
+    data class submitWriteBatch(val batch: WriteBatch) : Action()
 
-    data class uploadAttachment(val upload: AttachmentUpload): Action()
+    data class uploadAttachment(val upload: AttachmentUpload) : Action()
 
-    data class syncDeletions(override val libraryId: LibraryIdentifier, val int: Int): Action()
+    data class syncDeletions(
+        override val libraryId: LibraryIdentifier,
+        val int: Int
+    ) : Action()
 
-    data class storeDeletionVersion(override val libraryId: LibraryIdentifier, val version: Int): Action()
+    data class storeDeletionVersion(
+        override val libraryId: LibraryIdentifier,
+        val version: Int
+    ) : Action()
 
     data class syncBatchesToDb(val batches: List<DownloadBatch>) : Action()
 
-    data class syncSettings(override val libraryId: LibraryIdentifier, val int: Int): Action()
+    data class syncSettings(
+        override val libraryId: LibraryIdentifier,
+        val int: Int
+    ) : Action()
 
-    data class storeVersion(val version: Int, override val libraryId: LibraryIdentifier, val syncObject: SyncObject): Action()
+    data class storeVersion(
+        val version: Int,
+        override val libraryId: LibraryIdentifier,
+        val syncObject: SyncObject
+    ) : Action()
 
-    data class markChangesAsResolved(override val libraryId: LibraryIdentifier):Action()
+    data class markChangesAsResolved(override val libraryId: LibraryIdentifier) : Action()
 
-    data class markGroupAsLocalOnly(val groupId: Int):Action()
+    data class markGroupAsLocalOnly(val groupId: Int) : Action()
 
-    data class deleteGroup(val groupId: Int):Action()
+    data class deleteGroup(val groupId: Int) : Action()
 
     data class performDeletions(
-        override val libraryId: LibraryIdentifier, val collections: List<String>,
-        val items: List<String>, val searches: List<String>, val tags: List<String>,
+        override val libraryId: LibraryIdentifier,
+        val collections: List<String>,
+        val items: List<String>,
+        val searches: List<String>,
+        val tags: List<String>,
         val conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
     ) : Action()
 
-        open val libraryId: LibraryIdentifier?
+    open val libraryId: LibraryIdentifier?
         get() {
-            val q = this
-            return when (q) {
+            val action = this
+            return when (action) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return null
-                is resolveDeletedGroup -> return LibraryIdentifier.group(q.a)
-                is syncGroupToDb -> return LibraryIdentifier.group(q.a)
-                is createUploadActions -> q.libraryId
-                is performWebDavDeletions -> q.libraryId
-                is resolveGroupMetadataWritePermission -> return LibraryIdentifier.group(q.groupId)
-                is storeDeletionVersion -> q.libraryId
-                is submitDeleteBatch -> q.libraryId
-                is submitWriteBatch -> q.libraryId
-                is syncDeletions -> q.libraryId
-                is syncSettings -> q.libraryId
-                is syncVersions -> q.libraryId
-                is storeVersion -> q.libraryId
-                is performDeletions -> q.libraryId
-                is syncBatchesToDb -> q.batches.firstOrNull()?.libraryId
-                is markChangesAsResolved -> q.libraryId
-                is markGroupAsLocalOnly -> LibraryIdentifier.group(q.groupId)
-                is deleteGroup -> LibraryIdentifier.group(q.groupId)
-                is uploadAttachment -> q.upload.libraryId
+                is resolveDeletedGroup -> return LibraryIdentifier.group(action.a)
+                is syncGroupToDb -> return LibraryIdentifier.group(action.a)
+                is createUploadActions -> action.libraryId
+                is performWebDavDeletions -> action.libraryId
+                is resolveGroupMetadataWritePermission -> return LibraryIdentifier.group(action.groupId)
+                is storeDeletionVersion -> action.libraryId
+                is submitDeleteBatch -> action.libraryId
+                is submitWriteBatch -> action.libraryId
+                is syncDeletions -> action.libraryId
+                is syncSettings -> action.libraryId
+                is syncVersions -> action.libraryId
+                is storeVersion -> action.libraryId
+                is performDeletions -> action.libraryId
+                is syncBatchesToDb -> action.batches.firstOrNull()?.libraryId
+                is markChangesAsResolved -> action.libraryId
+                is markGroupAsLocalOnly -> LibraryIdentifier.group(action.groupId)
+                is deleteGroup -> LibraryIdentifier.group(action.groupId)
+                is uploadAttachment -> action.upload.libraryId
             }
         }
 
@@ -92,8 +117,8 @@ sealed class Action {
                 is createUploadActions -> false
                 is performWebDavDeletions -> false
                 is resolveGroupMetadataWritePermission -> true
-                    is storeDeletionVersion -> false
-                    is submitDeleteBatch -> false
+                is storeDeletionVersion -> false
+                is submitDeleteBatch -> false
                 is submitWriteBatch -> false
                 is syncDeletions -> true
                 is syncSettings -> false
@@ -107,5 +132,4 @@ sealed class Action {
                 is uploadAttachment -> false
             }
         }
-
 }

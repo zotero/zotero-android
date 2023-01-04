@@ -235,5 +235,23 @@ dependencies {
     //Ok HTTP
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+
+    //Unit Tests
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.test:core:1.4.0")
+    testImplementation("androidx.arch.core:core-testing:2.1.0")
+
+    testImplementation("org.mockito:mockito-core:3.6.0")
+    testImplementation("org.mockito:mockito-inline:3.11.0")
+
+    testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
+    testImplementation("org.amshove.kluent:kluent-android:1.61")
+
+    //Instrumented Tests
+    androidTestImplementation("androidx.test:rules:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.2")
+
     
 }

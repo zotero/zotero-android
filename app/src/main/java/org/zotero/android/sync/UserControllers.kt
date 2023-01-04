@@ -38,7 +38,7 @@ class UserControllers @Inject constructor(
     private var coroutineScope = CoroutineScope(dispatcher)
     private var runningSyncJob: Job? = null
 
-    var isControllerInitialized:Boolean = false
+    var isControllerInitialized: Boolean = false
 
     fun init(userId: Long, controllers: Controllers) {
         createDbStorage(userId)
@@ -78,7 +78,7 @@ class UserControllers @Inject constructor(
         }.launchIn(applicationScope)
 
         changeWsResponseKindEventStream.flow().onEach { change ->
-            when(change) {
+            when (change) {
                 is ChangeWsResponse.Kind.translators -> {
                     // TODO update translations
                 }

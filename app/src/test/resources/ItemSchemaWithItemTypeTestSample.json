@@ -1,0 +1,60 @@
+{
+  "itemType": "artwork",
+  "fields": [
+    {
+      "field": "title"
+    },
+    {
+      "field": "abstractNote"
+    },
+    {
+      "field": "artworkMedium",
+      "baseField": "medium"
+    },
+    {
+      "field": "artworkSize"
+    },
+    {
+      "field": "date"
+    },
+    {
+      "field": "language"
+    },
+    {
+      "field": "shortTitle"
+    },
+    {
+      "field": "archive"
+    },
+    {
+      "field": "archiveLocation"
+    },
+    {
+      "field": "libraryCatalog"
+    },
+    {
+      "field": "callNumber"
+    },
+    {
+      "field": "url"
+    },
+    {
+      "field": "accessDate"
+    },
+    {
+      "field": "rights"
+    },
+    {
+      "field": "extra"
+    }
+  ],
+  "creatorTypes": [
+    {
+      "creatorType": "artist",
+      "primary": true
+    },
+    {
+      "creatorType": "contributor"
+    }
+  ]
+}

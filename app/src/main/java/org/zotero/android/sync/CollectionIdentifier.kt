@@ -9,32 +9,34 @@ sealed class CollectionIdentifier {
     data class search(val key: String) : CollectionIdentifier()
     data class custom(val type: CustomType) : CollectionIdentifier()
 
-    val id: String get() {
-        when(this) {
-            is CollectionIdentifier.custom -> {
-                when (this.type) {
-                    CustomType.all -> return "all"
-                    CustomType.publications -> return "publications"
-                    CustomType.trash -> return "trash"
-                    CustomType.unfiled -> return "unfiled"
+    val id: String
+        get() {
+            return when (this) {
+                is custom -> {
+                    when (this.type) {
+                        CustomType.all -> "all"
+                        CustomType.publications -> "publications"
+                        CustomType.trash -> "trash"
+                        CustomType.unfiled -> "unfiled"
+                    }
                 }
+                is collection ->
+                    "c_" + this.key
+                is search ->
+                    "s_" + this.key
             }
-            is CollectionIdentifier.collection ->
-            return "c_" + this.key
-            is CollectionIdentifier.search ->
-            return "s_" + this.key
         }
-    }
 
-    val isTrash: Boolean get() {
-        when (this) {
-            is CollectionIdentifier.custom -> {
-                when (this.type) {
-                    CustomType.trash -> return true
-                    CustomType.all, CustomType.publications, CustomType.unfiled -> return false
+    val isTrash: Boolean
+        get() {
+            return when (this) {
+                is custom -> {
+                    when (this.type) {
+                        CustomType.trash -> true
+                        CustomType.all, CustomType.publications, CustomType.unfiled -> false
+                    }
                 }
+                else -> false
             }
-            else -> return false
         }
-    }
 }

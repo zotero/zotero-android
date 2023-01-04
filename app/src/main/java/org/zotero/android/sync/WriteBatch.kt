@@ -9,7 +9,6 @@ class WriteBatch(
 ) {
     companion object {
         val maxCount = 50
-
     }
 
     fun copy(version: Int): WriteBatch {

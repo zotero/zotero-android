@@ -9,7 +9,8 @@ import javax.inject.Singleton
 @Singleton
 class SessionController @Inject constructor(
     private val defaults: Defaults,
-    private val sessionDataEventStream: SessionDataEventStream) {
+    private val sessionDataEventStream: SessionDataEventStream
+) {
 
     val isLoggedIn: Boolean
         get() {
@@ -18,8 +19,8 @@ class SessionController @Inject constructor(
     private var isInitialized: Boolean = false
 
     fun initializeSession() {
-        var apiToken = this.defaults.getApiToken()
-        var userId = this.defaults.getUserId()
+        val apiToken = this.defaults.getApiToken()
+        val userId = this.defaults.getUserId()
 
         this.isInitialized = true
 
@@ -30,7 +31,6 @@ class SessionController @Inject constructor(
             this.sessionDataEventStream.emit(null)
         }
     }
-
 
     fun register(userId: Long, username: String, displayName: String, apiToken: String) {
         this.defaults.setUserId(userId)
