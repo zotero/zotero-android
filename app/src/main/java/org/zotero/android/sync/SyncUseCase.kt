@@ -63,7 +63,8 @@ class SyncUseCase @Inject constructor(
     private val searchResponseMapper: SearchResponseMapper,
     private val schemaController: SchemaController,
     private val updatesResponseMapper: UpdatesResponseMapper,
-    private val observable: SyncObservableEventStream
+    private val observable: SyncObservableEventStream,
+    private val actionsCreator: ActionsCreator
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -111,7 +112,7 @@ class SyncUseCase @Inject constructor(
                 }
                 this.type = type
                 this.libraryType = libraries
-                queue.addAll(createInitialActions(libraries = libraries, syncType = type))
+                queue.addAll(actionsCreator.createInitialActions(libraries = libraries, syncType = type))
 
                 processNextAction()
             }
@@ -383,7 +384,7 @@ class SyncUseCase @Inject constructor(
             ).result()
 
             val versionDidChange = version != lastVersion
-            val actions = createBatchedObjectActions(
+            val actions = actionsCreator.createBatchedObjectActions(
                 libraryId = libraryId,
                 objectS = objectS,
                 keys = toUpdate,
@@ -482,9 +483,10 @@ class SyncUseCase @Inject constructor(
             }
             libraryNames = nameDictionary
         }
-        val (actions, queueIndex, writeCount) = createLibraryActions(
-            data,
-            options
+        val (actions, queueIndex, writeCount) = actionsCreator.createLibraryActions(
+            data = data,
+            creationOptions = options,
+            type = this.type
         )
         this.didEnqueueWriteActionsToZoteroBackend =
             options != CreateLibraryActionsOptions.automatic || writeCount > 0
@@ -513,7 +515,12 @@ class SyncUseCase @Inject constructor(
         }
         val (toUpdate, toRemove) = result.value!!
         val actions =
-            createGroupActions(updateIds = toUpdate, deleteGroups = toRemove, syncType = type)
+            actionsCreator.createGroupActions(
+                updateIds = toUpdate,
+                deleteGroups = toRemove,
+                syncType = type,
+                libraryType = this.libraryType
+            )
         finishSyncGroupVersions(actions = actions, updateCount = toUpdate.size)
     }
 
@@ -542,106 +549,6 @@ class SyncUseCase @Inject constructor(
         } else {
             processNextAction()
         }
-    }
-
-    private fun createGroupActions(
-        updateIds: List<Int>,
-        deleteGroups: List<Pair<Int, String>>,
-        syncType: SyncType
-    ): List<Action> {
-        var idsToSync: MutableList<Int>
-        when (val libraryTypeL = libraryType) {
-            is LibrarySyncType.all -> {
-                idsToSync = updateIds.toMutableList()
-            }
-            is LibrarySyncType.specific -> {
-                idsToSync = mutableListOf()
-                val libraryIds = libraryTypeL.identifiers
-                libraryIds.forEach { libraryId ->
-                    when (libraryId) {
-                        is LibraryIdentifier.group -> {
-                            val groupId = libraryId.groupId
-                            if (updateIds.contains(groupId)) {
-                                idsToSync.add(groupId)
-                            }
-                        }
-
-                        is LibraryIdentifier.custom -> return@forEach
-                    }
-                }
-            }
-        }
-
-        val actions = deleteGroups.map { Action.resolveDeletedGroup(it.first, it.second) }
-            .toMutableList<Action>()
-        actions.addAll(idsToSync.map { Action.syncGroupToDb(it) })
-        val options: CreateLibraryActionsOptions = libraryActionsOptions(syncType)
-        actions.add(Action.createLibraryActions(libraryType, options))
-        return actions
-    }
-
-    private fun createBatchedObjectActions(
-        libraryId: LibraryIdentifier,
-        objectS: SyncObject,
-        keys: List<String>,
-        version: Int,
-        shouldStoreVersion: Boolean,
-        syncType: SyncType
-    ): List<Action> {
-        val batches = createBatchObjects(
-            keys = keys,
-            libraryId = libraryId,
-            objectS = objectS,
-            version = version
-        )
-
-        if (batches.isEmpty()) {
-            if (shouldStoreVersion) {
-                return listOf(Action.storeVersion(version, libraryId, objectS))
-            } else {
-                return listOf()
-            }
-        }
-
-
-        var actions: MutableList<Action> = mutableListOf(Action.syncBatchesToDb(batches))
-        if (shouldStoreVersion) {
-            actions.add(Action.storeVersion(version, libraryId, objectS))
-        }
-        return actions
-    }
-
-    private fun createBatchObjects(
-        keys: List<String>,
-        libraryId: LibraryIdentifier,
-        objectS: SyncObject,
-        version: Int
-    ): List<DownloadBatch> {
-        val maxBatchSize = DownloadBatch.maxCount
-        var batchSize = 10
-        var lowerBound = 0
-        var batches: MutableList<DownloadBatch> = mutableListOf()
-
-        while (lowerBound < keys.size) {
-            val upperBound = min((keys.size - lowerBound), batchSize) + lowerBound
-            val batchKeys = keys.subList(lowerBound, upperBound)
-
-            batches.add(
-                DownloadBatch(
-                    libraryId = libraryId,
-                    objectS = objectS,
-                    keys = batchKeys,
-                    version = version
-                )
-            )
-
-            lowerBound += batchSize
-            if (batchSize < maxBatchSize) {
-                batchSize = min(batchSize * 2, maxBatchSize)
-            }
-        }
-
-        return batches
     }
 
 
@@ -733,241 +640,6 @@ class SyncUseCase @Inject constructor(
         enqueuedUploads = 0
         uploadsFailedBeforeReachingZoteroBackend = 0
     }
-
-
-    private fun createInitialActions(libraries: LibrarySyncType, syncType: SyncType): List<Action> {
-        if (SyncType.keysOnly == syncType) {
-            return listOf(Action.loadKeyPermissions)
-        }
-
-        when (libraries) {
-            is LibrarySyncType.all ->
-                return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
-            is LibrarySyncType.specific -> {
-                for (identifier in libraries.identifiers) {
-                    if (identifier is LibraryIdentifier.group) {
-                        return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
-                    }
-                }
-                val options = libraryActionsOptions(syncType)
-                return listOf(
-                    Action.loadKeyPermissions,
-                    Action.createLibraryActions(libraries, options)
-                )
-
-            }
-        }
-    }
-
-    private fun libraryActionsOptions(syncType: SyncType): CreateLibraryActionsOptions {
-        return when (syncType) {
-            SyncType.full, SyncType.collectionsOnly ->
-                CreateLibraryActionsOptions.onlyDownloads
-            SyncType.ignoreIndividualDelays,SyncType.normal, SyncType.keysOnly ->
-                CreateLibraryActionsOptions.automatic
-        }
-    }
-
-    private fun createLibraryActions(data: List<LibraryData>, creationOptions: CreateLibraryActionsOptions): Triple<List<Action>, Int?, Int> {
-        var writeCount = 0
-        var actions = mutableListOf<Action>()
-
-        for (libraryData in data) {
-            val (_actions, _writeCount) = createLibraryActions(
-                libraryData,
-                creationOptions = creationOptions
-            )
-            writeCount += _writeCount
-            _actions.forEach {
-                actions.add(it)
-            }
-        }
-
-        val index: Int? = if (creationOptions == CreateLibraryActionsOptions.automatic) null else 0
-        return Triple(actions, index, writeCount)
-    }
-
-    private fun createLibraryActions(libraryData: LibraryData, creationOptions: CreateLibraryActionsOptions): Pair<List<Action>, Int> {
-        when (creationOptions) {
-            CreateLibraryActionsOptions.onlyDownloads -> {
-                val actions = createDownloadActions(libraryData.identifier, versions =  libraryData.versions)
-                return actions to 0
-            }
-
-
-            CreateLibraryActionsOptions.onlyWrites -> {
-                var actions = mutableListOf<Action>()
-                var writeCount = 0
-
-                if (!libraryData.updates.isEmpty() || !libraryData.deletions.isEmpty() || libraryData.hasUpload) {
-                    val (_actions, _writeCount) = createLibraryWriteActions(libraryData)
-                    actions = _actions.toMutableList()
-                    writeCount = _writeCount
-                }
-
-                if (libraryData.hasWebDavDeletions) {
-                    actions.add(Action.performWebDavDeletions(libraryData.identifier))
-                }
-
-                return actions to writeCount
-            }
-
-
-            CreateLibraryActionsOptions.automatic -> {
-                var actions: MutableList<Action>
-                var writeCount = 0
-
-                if (!libraryData.updates.isEmpty() || !libraryData.deletions.isEmpty() || libraryData.hasUpload) {
-                    val (_actions, _writeCount) = this.createLibraryWriteActions(libraryData)
-                    actions = _actions.toMutableList()
-                    writeCount = _writeCount
-                } else {
-                    actions = createDownloadActions(libraryData.identifier, versions = libraryData.versions).toMutableList()
-                }
-
-                if (libraryData.hasWebDavDeletions) {
-                    actions.add(Action.performWebDavDeletions(libraryData.identifier))
-                }
-
-                return actions to writeCount
-            }
-
-        }
-    }
-
-    private fun createLibraryWriteActions(libraryData: LibraryData): Pair<List<Action>, Int> {
-        when (libraryData.identifier) {
-            is LibraryIdentifier.custom -> {
-                val actions = createUpdateActions(
-                    updates = libraryData.updates,
-                    deletions = libraryData.deletions,
-                    libraryId = libraryData.identifier
-                )
-                return actions to actions.size - 1
-            }
-
-            is LibraryIdentifier.group -> {
-                if (!libraryData.canEditMetadata) {
-                    return listOf(
-                        Action.resolveGroupMetadataWritePermission(
-                            libraryData.identifier.groupId,
-                            libraryData.name
-                        )
-                    ) to 0
-                }
-                val actions = createUpdateActions(
-                    updates = libraryData.updates,
-                    deletions = libraryData.deletions,
-                    libraryId = libraryData.identifier
-                )
-                return actions to actions.size - 1
-            }
-        }
-    }
-
-    private fun createDownloadActions(
-        libraryId: LibraryIdentifier,
-        versions: Versions
-    ): List<Action> {
-        when (this.type) {
-            SyncType.keysOnly -> return listOf()
-            SyncType.collectionsOnly ->
-                return listOf(
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        objectS = SyncObject.collection,
-                        version = versions.collections, checkRemote = true
-                    )
-                )
-
-            SyncType.full ->
-                return listOf(
-                    Action.syncSettings(libraryId, versions.settings),
-                    Action.syncDeletions(libraryId, versions.deletions),
-                    Action.storeDeletionVersion(
-                        libraryId = libraryId,
-                        version = versions.deletions
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.collection,
-                        version = versions.collections, checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.search,
-                        version = versions.searches, checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.item,
-                        version = versions.items,
-                        checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        objectS = SyncObject.trash,
-                        version = versions.trash,
-                        checkRemote = true
-                    )
-                )
-
-            SyncType.ignoreIndividualDelays, SyncType.normal ->
-                return listOf(
-                    Action.syncSettings(libraryId, versions.settings),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.collection,
-                        version = versions.collections, checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.search,
-                        version = versions.searches, checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        SyncObject.item,
-                        version = versions.items,
-                        checkRemote = true
-                    ),
-                    Action.syncVersions(
-                        libraryId = libraryId,
-                        objectS = SyncObject.trash,
-                        version = versions.trash,
-                        checkRemote = true
-                    ),
-                    Action.syncDeletions(libraryId, versions.deletions),
-                    Action.storeDeletionVersion(libraryId = libraryId, version = versions.deletions)
-                )
-        }
-    }
-
-    private fun createUpdateActions(
-        updates: List<WriteBatch>,
-        deletions: List<DeleteBatch>,
-        libraryId: LibraryIdentifier
-    ): List<Action> {
-        var actions = mutableListOf<Action>()
-        if (!updates.isEmpty()) {
-            updates.forEach {
-                actions.add(Action.submitWriteBatch(it))
-            }
-        }
-        if (!deletions.isEmpty()) {
-            deletions.forEach {
-                actions.add(Action.submitDeleteBatch(it))
-            }
-        }
-        actions.add(
-            Action.createUploadActions(
-                libraryId = libraryId,
-                hadOtherWriteActions = (!updates.isEmpty() || !deletions.isEmpty())
-            )
-        )
-        return actions
-    }
-
 
     private fun syncError(
         customResultError: CustomResult.GeneralError,
@@ -1325,7 +997,7 @@ class SyncUseCase @Inject constructor(
                 Timber.e("SyncController: object conflict - trying full sync")
 
                 val delay = this.conflictDelays[min(this.conflictRetries, (this.conflictDelays.size - 1))]
-                val actions = createInitialActions(this.libraryType, syncType = SyncType.full)
+                val actions = actionsCreator.createInitialActions(this.libraryType, syncType = SyncType.full)
 
                 this.type = SyncType.full
                 this.conflictRetries = this.conflictDelays.size
