@@ -15,6 +15,7 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
+@ExperimentalAnimationApi
 @Composable
 internal fun DashboardNavigation(onPickFile: () -> Unit) {
     val navController = rememberAnimatedNavController()
@@ -35,9 +36,13 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
             navigateToAddOrEditNote = navigation::toAddOrEditNote
         )
         itemDetailsScreen(
+            navigateToCreatorEdit = navigation::toCreatorEdit,
             onBack = navigation::onBack
         )
         addNoteScreen(
+            onBack = navigation::onBack
+        )
+        creatorEditScreen(
             onBack = navigation::onBack
         )
     }
@@ -61,6 +66,7 @@ private fun NavGraphBuilder.allItemsScreen(
 
 private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
+    navigateToCreatorEdit: () -> Unit,
 ) {
     composable(
         route = "${Destinations.ITEM_DETAILS}",
@@ -68,6 +74,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     ) {
         ItemDetailsScreen(
             onBack = onBack,
+            navigateToCreatorEdit = navigateToCreatorEdit
         )
     }
 }
@@ -85,10 +92,24 @@ private fun NavGraphBuilder.addNoteScreen(
     }
 }
 
+private fun NavGraphBuilder.creatorEditScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = "${Destinations.CREATOR_EDIT}",
+        arguments = listOf(),
+    ) {
+        CreatorEditScreen(
+            onBack = onBack,
+        )
+    }
+}
+
 private object Destinations {
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
     const val ADD_NOTE = "addNote"
+    const val CREATOR_EDIT = "creatorEdit"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -104,5 +125,8 @@ private class Navigation(
 
     fun toAddOrEditNote() {
         navController.navigate("${Destinations.ADD_NOTE}")
+    }
+    fun toCreatorEdit() {
+        navController.navigate("${Destinations.CREATOR_EDIT}")
     }
 }

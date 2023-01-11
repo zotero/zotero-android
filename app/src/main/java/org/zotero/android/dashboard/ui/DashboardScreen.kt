@@ -2,6 +2,7 @@
 
 package org.zotero.android.dashboard.ui
 
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +14,7 @@ import org.zotero.android.dashboard.DashboardViewModel
 import org.zotero.android.dashboard.DashboardViewState
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
 
+@ExperimentalAnimationApi
 @Composable
 @Suppress("UNUSED_PARAMETER")
 internal fun DashboardScreen(

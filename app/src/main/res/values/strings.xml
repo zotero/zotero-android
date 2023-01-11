@@ -2,6 +2,7 @@
     <string name="app_name">Zotero Android</string>
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
 
 
     <string name="onboarding_access"><annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
@@ -47,4 +48,11 @@
     <string name="add_item_bottom_sheet_file">Add File</string>
     <string name="add_item_bottom_sheet_note">New Standalone Note</string>
 
+    <string name="last_name">Last Name</string>
+    <string name="first_name">First Name</string>
+    <string name="name">Name</string>
+    <string name="add_creator">Add Creator</string>
+    <string name="switch_to_single_field">Switch to single field</string>
+    <string name="switch_to_two_field">Switch to two field</string>
+    <string name="creator_type">Creator Type</string>
 </resources>

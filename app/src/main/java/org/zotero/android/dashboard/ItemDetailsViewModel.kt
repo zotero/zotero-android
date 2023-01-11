@@ -1,6 +1,5 @@
 package org.zotero.android.dashboard
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
@@ -17,7 +16,9 @@ import org.zotero.android.architecture.database.objects.FieldKeys
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.architecture.database.requests.ReadItemDbRequest
+import org.zotero.android.dashboard.data.CreatorEditArgs
 import org.zotero.android.dashboard.data.DetailType
+import org.zotero.android.dashboard.data.ItemDetailCreator
 import org.zotero.android.dashboard.data.ItemDetailData
 import org.zotero.android.dashboard.data.ItemDetailError
 import org.zotero.android.dashboard.data.ShowItemDetailsArgs
@@ -34,7 +35,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ItemDetailsViewModel @Inject constructor(
-    stateHandle: SavedStateHandle,
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
@@ -201,6 +201,33 @@ internal class ItemDetailsViewModel @Inject constructor(
         //TODO show Data Reloaded dialog for editing case
     }
     //End Of Changes
+
+    fun onAddCreator() {
+        showCreatorCreation(itemType = viewState.data.type)
+    }
+
+    fun showCreatorCreation(itemType: String) {
+        val schema = schemaController.creators(itemType)?.firstOrNull { it.primary }
+        if (schema == null) {
+            return
+        }
+        val localized = schemaController.localizedCreator(schema.creatorType)
+        if (localized == null) {
+            return
+        }
+        val creator = ItemDetailCreator.init(
+            type = schema.creatorType, primary = schema.primary,
+            localizedType = localized, namePresentation = defaults.getCreatorNamePresentation())
+        _showCreatorEditor(creator, itemType = itemType)
+    }
+
+    fun showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
+        _showCreatorEditor(creator, itemType = itemType)
+    }
+    private fun _showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
+        ScreenArguments.creatorEditArgs = CreatorEditArgs(creator = creator, itemType = itemType)
+        triggerEffect(ItemDetailsViewEffect.ShowCreatorEditEffect)
+    }
 }
 
 internal data class ItemDetailsViewState(
@@ -220,6 +247,7 @@ internal data class ItemDetailsViewState(
 ) : ViewState
 
 internal sealed class ItemDetailsViewEffect : ViewEffect {
+    object ShowCreatorEditEffect: ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {

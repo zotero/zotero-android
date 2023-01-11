@@ -9,6 +9,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.ExperimentalAnimationApi
 import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseActivity
@@ -16,6 +17,7 @@ import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.dashboard.ui.DashboardScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
 
+@ExperimentalAnimationApi
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.dashboard.data.ItemDetailCreator
 import org.zotero.android.files.DataMarshaller
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
@@ -25,6 +26,7 @@ open class Defaults @Inject constructor(
     private val showSubcollectionItems = "showSubcollectionItems"
     private val selectedLibrary = "selectedLibrary"
     private val selectedCollectionId = "selectedCollectionId"
+    private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -124,6 +126,20 @@ open class Defaults @Inject constructor(
         setShowSubcollectionItems(false)
         setApiToken(null)
         setWebDavPassword(null)
+    }
+
+    fun setCreatorNamePresentation(namePresentation: ItemDetailCreator.NamePresentation) {
+        val json = dataMarshaller.marshal(namePresentation)
+        sharedPreferences.edit { putString(lastUsedCreatorNamePresentation, json) }
+    }
+
+    fun getCreatorNamePresentation(): ItemDetailCreator.NamePresentation {
+        val json: String = sharedPreferences.getString(
+            lastUsedCreatorNamePresentation,
+            null
+        )
+            ?: return ItemDetailCreator.NamePresentation.separate
+        return dataMarshaller.unmarshal(json)
     }
 
 }
