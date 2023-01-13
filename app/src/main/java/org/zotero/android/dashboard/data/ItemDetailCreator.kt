@@ -1,7 +1,10 @@
 package org.zotero.android.dashboard.data
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.util.UUID
 
+@Parcelize
 data class ItemDetailCreator(
     var id: UUID,
     var type: String,
@@ -11,7 +14,7 @@ data class ItemDetailCreator(
     var firstName: String,
     var lastName: String,
     var namePresentation: NamePresentation
-) {
+): Parcelable {
     enum class NamePresentation {
         separate,
         full;

@@ -58,22 +58,27 @@ import org.zotero.android.uicomponents.topbar.CloseIconTopBar
 @Composable
 @Suppress("UNUSED_PARAMETER")
 internal fun ItemDetailsScreen(
-    onBack: () -> Unit,
     viewModel: ItemDetailsViewModel = hiltViewModel(),
     navigateToCreatorEdit: () -> Unit,
-) {
+    onBack: () -> Unit,
+
+    ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+
     LaunchedEffect(key1 = viewModel) {
         viewModel.init()
     }
-//
+
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
             ItemDetailsViewEffect.ShowCreatorEditEffect -> {
                 navigateToCreatorEdit()
+            }
+            ItemDetailsViewEffect.ScreenRefersh -> {
+                println()
             }
         }
     }
@@ -227,8 +232,16 @@ private fun ItemType(viewState: ItemDetailsViewState, layoutType: LayoutType) {
 
 @Composable
 private fun DatesRows(viewState: ItemDetailsViewState, layoutType: LayoutType) {
-    FieldRow(stringResource(id = Strings.date_added), dateFormatItemDetails.format(viewState.data.dateAdded), layoutType)
-    FieldRow(stringResource(id = Strings.date_modified), dateFormatItemDetails.format(viewState.data.dateModified), layoutType)
+    FieldRow(
+        stringResource(id = Strings.date_added),
+        dateFormatItemDetails.format(viewState.data.dateAdded),
+        layoutType
+    )
+    FieldRow(
+        stringResource(id = Strings.date_modified),
+        dateFormatItemDetails.format(viewState.data.dateModified),
+        layoutType
+    )
 }
 
 @Composable
@@ -268,7 +281,7 @@ private fun FieldRow(
     detailValue: String,
     layoutType: LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
-    ) {
+) {
     Row {
         Column(modifier = Modifier.width(140.dp)) {
             Text(
@@ -454,7 +467,7 @@ private fun TopBar(
 }
 
 private sealed class CellType {
-    data class field(val field: ItemDetailField): CellType()
-    data class creator(val creator: ItemDetailCreator): CellType()
-    data class value(val value: String, val title: String): CellType()
+    data class field(val field: ItemDetailField) : CellType()
+    data class creator(val creator: ItemDetailCreator) : CellType()
+    data class value(val value: String, val title: String) : CellType()
 }

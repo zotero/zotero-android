@@ -43,7 +43,7 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
             onBack = navigation::onBack
         )
         creatorEditScreen(
-            onBack = navigation::onBack
+            onBack = navigation::onBack,
         )
     }
 }

@@ -1,5 +1,6 @@
 package org.zotero.android.dashboard
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
@@ -39,7 +40,8 @@ internal class ItemDetailsViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
     private val urlDetector: UrlDetector,
-    private val schemaController: SchemaController
+    private val schemaController: SchemaController,
+    private val stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     fun init() = initOnce {
@@ -228,6 +230,20 @@ internal class ItemDetailsViewModel @Inject constructor(
         ScreenArguments.creatorEditArgs = CreatorEditArgs(creator = creator, itemType = itemType)
         triggerEffect(ItemDetailsViewEffect.ShowCreatorEditEffect)
     }
+
+    fun onSaveCreator(creator: ItemDetailCreator) {
+        if (!viewState.data.creatorIds.contains(creator.id)) {
+            updateState {
+                copy(
+                    data = viewState.data.copy(
+                        creatorIds = viewState.data.creatorIds + creator.id,
+                        creators = viewState.data.creators + (creator.id to creator)
+                    )
+                )
+            }
+            triggerEffect(ItemDetailsViewEffect.ScreenRefersh)
+        }
+    }
 }
 
 internal data class ItemDetailsViewState(
@@ -248,6 +264,7 @@ internal data class ItemDetailsViewState(
 
 internal sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowCreatorEditEffect: ItemDetailsViewEffect()
+    object ScreenRefersh: ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {

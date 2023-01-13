@@ -30,8 +30,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.CustomLayoutSize.LayoutType
+import org.zotero.android.dashboard.CreatorEditViewEffect
 import org.zotero.android.dashboard.CreatorEditViewModel
 import org.zotero.android.dashboard.CreatorEditViewState
+import org.zotero.android.dashboard.ItemDetailsViewModel
 import org.zotero.android.dashboard.data.ItemDetailCreator
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
@@ -47,6 +49,7 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 internal fun CreatorEditScreen(
     onBack: () -> Unit,
     viewModel: CreatorEditViewModel = hiltViewModel(),
+    parentViewModel: ItemDetailsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
@@ -58,7 +61,10 @@ internal fun CreatorEditScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
-
+            is CreatorEditViewEffect.OnCreatorCreated -> {
+                parentViewModel.onSaveCreator(consumedEffect.itemDetailCreator)
+                onBack()
+            }
         }
     }
     CustomScaffold(
@@ -103,6 +109,12 @@ internal fun CreatorEditScreen(
                 )
             }
         }
+        SinglePickerViewBottomSheet(
+            singlePickerState = viewState.singlePickerState,
+            onOptionSelected = viewModel::onCreatorTypeSelected,
+            onClose = viewModel::onCreatorTypeSheetCollapse,
+            showBottomSheet = viewState.shouldShowCreatorTypeBottomSheet
+        )
     }
 }
 
@@ -122,7 +134,8 @@ private fun displayFields(
                 FieldTappableRow(
                     detailTitle = stringResource(id = Strings.creator_type),
                     detailValue = viewState.creator?.localizedType ?: "",
-                    layoutType = layoutType
+                    layoutType = layoutType,
+                    onClick = viewModel::onCreatorTypeClicked
                 )
                 if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.separate) {
                     FieldEditableRow(
@@ -162,7 +175,9 @@ private fun FieldEditableRow(
     onValueChange: (String) -> Unit,
 ) {
     Row {
-        Column(modifier = Modifier.width(90.dp)) {
+        Column(modifier = Modifier
+            .padding(start = 12.dp)
+            .width(90.dp)) {
             Text(
                 modifier = Modifier.align(Alignment.Start),
                 text = detailTitle,
@@ -197,10 +212,21 @@ private fun FieldTappableRow(
     detailTitle: String,
     detailValue: String,
     layoutType: LayoutType,
+    onClick: () ->Unit,
     textColor: Color = CustomTheme.colors.primaryContent,
 ) {
-    Row {
-        Column(modifier = Modifier.width(90.dp)) {
+    Row(
+        modifier = Modifier.safeClickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = onClick
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .width(90.dp),
+        ) {
             Text(
                 modifier = Modifier.align(Alignment.Start),
                 text = detailTitle,
