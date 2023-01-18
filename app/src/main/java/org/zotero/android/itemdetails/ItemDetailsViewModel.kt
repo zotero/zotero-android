@@ -1,4 +1,4 @@
-package org.zotero.android.dashboard
+package org.zotero.android.itemdetails
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -87,6 +87,29 @@ internal class ItemDetailsViewModel @Inject constructor(
 
     }
 
+    fun onSaveOrEditClicked() {
+        if (viewState.isEditing) {
+            //save
+        } else {
+            val updatedStateData = viewState.data.copy()
+            val updatedData = viewState.data.copy(
+                fieldIds = ItemDetailDataCreator.allFieldKeys(
+                    viewState.data.type,
+                    schemaController = this.schemaController
+                )
+            )
+            updateState {
+                copy(
+                    snapshot = updatedStateData,
+                    data = updatedData,
+                    isEditing = true,
+                )
+            }
+        }
+
+
+    }
+
     private fun process(action: ItemDetailAction) {
         when (action) {
             ItemDetailAction.loadInitialData -> loadInitialData()
@@ -150,11 +173,17 @@ internal class ItemDetailsViewModel @Inject constructor(
         updateState {
             copy(data = data)
         }
-
         if (viewState.snapshot != null || isEditing) {
+            val updatedSnapshot = data.copy(
+                fieldIds = ItemDetailDataCreator.filteredFieldKeys(
+                    data.fieldIds,
+                    fields = data.fields
+                )
+            )
             updateState {
-                val updatedData = data.copy(fieldIds = ItemDetailDataCreator.filteredFieldKeys(data.fieldIds, fields = data.fields))
-                copy(snapshot = updatedData)
+                copy(
+                    snapshot = updatedSnapshot,
+                )
             }
         }
         updateState {
@@ -244,6 +273,43 @@ internal class ItemDetailsViewModel @Inject constructor(
             triggerEffect(ItemDetailsViewEffect.ScreenRefersh)
         }
     }
+    fun setFieldValue(id: String, value: String) {
+        val field = viewState.data.fields[id]
+        if (field == null) {
+            return
+        }
+
+        field.value = value
+        field.isTappable = ItemDetailDataCreator.isTappable(
+            key = field.key,
+            value = field.value,
+            urlDetector = this.urlDetector,
+            doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) }
+        )
+
+        if (field.key == FieldKeys.Item.date || field.baseField == FieldKeys.Item.date) {
+            //TODO parse order
+        } else if (field.additionalInfo != null) {
+            field.additionalInfo = null
+        }
+
+        val updatedFieldsMap = viewState.data.fields.toMutableMap()
+        updatedFieldsMap[id] = field
+
+        val updatedData = viewState.data.copy(fields = updatedFieldsMap)
+        updateState {
+            copy(data = updatedData)
+        }
+        triggerEffect(ItemDetailsViewEffect.ScreenRefersh)
+    }
+
+    fun onTitleEdit(newTitle: String) {
+        val updatedData = viewState.data.copy(title = newTitle)
+        updateState {
+            copy(data = updatedData)
+        }
+        triggerEffect(ItemDetailsViewEffect.ScreenRefersh)
+    }
 }
 
 internal data class ItemDetailsViewState(
@@ -254,7 +320,7 @@ internal data class ItemDetailsViewState(
     val preScrolledChildKey: String? = null,
     val isEditing: Boolean = false,
     var error: ItemDetailError? = null,
-    var data: ItemDetailData = ItemDetailData.empty,
+    val data: ItemDetailData = ItemDetailData.empty,
     var snapshot: ItemDetailData? = null,
     var notes: List<Note> = emptyList(),
     var attachments: List<Attachment> = emptyList(),

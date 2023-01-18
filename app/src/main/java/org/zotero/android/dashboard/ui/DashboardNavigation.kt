@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import org.zotero.android.itemdetails.ItemDetailsScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 @ExperimentalAnimationApi

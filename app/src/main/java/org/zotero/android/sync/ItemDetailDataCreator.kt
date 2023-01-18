@@ -225,6 +225,23 @@ object ItemDetailDataCreator {
         return newFieldKeys
     }
 
+    fun allFieldKeys(itemType: String, schemaController: SchemaController): List<String> {
+        val fieldSchemas = schemaController.fields(itemType)
+        if (fieldSchemas == null) {
+            return emptyList()
+        }
+        var fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
+        val indexOfAbstract = fieldKeys.indexOf(FieldKeys.Item.abstractN)
+        if (indexOfAbstract != -1) {
+            fieldKeys.removeAt(indexOfAbstract)
+        }
+        val key = schemaController.titleKey(itemType)
+        val index = fieldKeys.indexOf(key)
+        if (key != null && index != -1) {
+            fieldKeys.removeAt(index)
+        }
+        return fieldKeys
+    }
 
 }
 
