@@ -43,6 +43,7 @@
     <string name="errors.sync_toolbar.forbidden">Invalid username or password</string>
     <string name="errors.sync_toolbar.forbidden_message">The Zotero sync server did not accept your username and password.\n\nPlease log out and log in with correct login information.</string>
 
+    <string name="back">Back</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
     <string name="view">View</string>
@@ -58,4 +59,5 @@
     <string name="switch_to_single_field">Switch to single field</string>
     <string name="switch_to_two_field">Switch to two field</string>
     <string name="creator_type">Creator Type</string>
+    <string name="abstractS">Abstract</string>
 </resources>

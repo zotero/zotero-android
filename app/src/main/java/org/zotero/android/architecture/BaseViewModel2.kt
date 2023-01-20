@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.zotero.android.architecture.database.DbRequest
 import org.zotero.android.architecture.database.DbResponseRequest
 import org.zotero.android.architecture.database.DbWrapper
 import timber.log.Timber
@@ -107,6 +108,15 @@ abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
         if (!isInitialized) {
             isInitialized = true
             block()
+        }
+    }
+
+    suspend fun perform(dbWrapper: DbWrapper, request: DbRequest):Result<Unit> = withContext(Dispatchers.IO)  {
+        try {
+            dbWrapper.realmDbStorage.perform(request)
+            Result.Success(Unit)
+        }catch (e: Exception) {
+            Result.Failure(e)
         }
     }
 

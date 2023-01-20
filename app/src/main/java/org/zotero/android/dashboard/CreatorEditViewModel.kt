@@ -1,6 +1,7 @@
 package org.zotero.android.dashboard
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -35,7 +36,8 @@ internal class CreatorEditViewModel @Inject constructor(
         if (!viewState.isValid) {
             return
         }
-        triggerEffect(CreatorEditViewEffect.OnCreatorCreated(viewState.creator!!))
+        EventBus.getDefault().post(viewState.creator!!)
+        triggerEffect(CreatorEditViewEffect.OnBack)
     }
 
     fun onLastNameChange(text: String) {
@@ -132,5 +134,5 @@ internal data class CreatorEditViewState(
 }
 
 internal sealed class CreatorEditViewEffect : ViewEffect {
-    data class OnCreatorCreated(val itemDetailCreator: ItemDetailCreator): CreatorEditViewEffect()
+    object OnBack: CreatorEditViewEffect()
 }

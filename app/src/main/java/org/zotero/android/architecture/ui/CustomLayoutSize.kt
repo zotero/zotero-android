@@ -19,6 +19,13 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateItemFieldLabelWidth(): Dp {
+            return when (this) {
+                big, medium -> 160.dp
+                small -> 120.dp
+            }
+        }
+
         fun calculateTitleTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 26.sp

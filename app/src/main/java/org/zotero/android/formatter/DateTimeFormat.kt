@@ -34,3 +34,6 @@ val deadlineTimeFormat: SimpleDateFormat
 
 val sqlFormat: SimpleDateFormat
     get() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+val fullDateWithDashes: SimpleDateFormat
+    get() = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

@@ -550,9 +550,7 @@ class StoreItemDbRequest(
             schemaController: SchemaController,
             database: Realm
         ) {
-            item.creators.forEach {
-                it.deleteFromRealm()
-            }
+            item.creators.deleteAllFromRealm()
 
             for (objectS in creators.withIndex()) {
                 val firstName = objectS.value.firstName ?: ""

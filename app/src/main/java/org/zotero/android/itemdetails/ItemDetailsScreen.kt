@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.AppBarDefaults
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -23,7 +26,6 @@ import org.zotero.android.dashboard.data.ItemDetailField
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.CloseIconTopBar
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
@@ -48,16 +50,19 @@ internal fun ItemDetailsScreen(
             ItemDetailsViewEffect.ShowCreatorEditEffect -> {
                 navigateToCreatorEdit()
             }
-            ItemDetailsViewEffect.ScreenRefersh -> {
+            ItemDetailsViewEffect.ScreenRefresh -> {
                 //no-op
+            }
+            ItemDetailsViewEffect.OnBack -> {
+                onBack()
             }
         }
     }
     CustomScaffold(
         topBar = {
             TopBar(
-                onCloseClicked = onBack,
                 onViewOrEditClicked = viewModel::onSaveOrEditClicked,
+                onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
                 isEditing = viewState.isEditing
             )
         },
@@ -89,18 +94,24 @@ internal fun ItemDetailsScreen(
         }
 
     }
-
 }
 
 @Composable
 private fun TopBar(
-    onCloseClicked: () -> Unit,
     onViewOrEditClicked: () -> Unit,
+    onCancelOrBackClicked: () -> Unit,
     isEditing: Boolean,
+    elevation: Dp = AppBarDefaults.TopAppBarElevation,
 ) {
-    CloseIconTopBar(
-        title = stringResource(id = Strings.item_details),
-        onClose = onCloseClicked,
+
+    TopAppBar(
+        title = {
+            HeadingTextButton(
+                isEnabled = true,
+                onClick = onCancelOrBackClicked,
+                text = if (isEditing) stringResource(Strings.cancel) else stringResource(Strings.all_items)
+            )
+        },
         actions = {
             HeadingTextButton(
                 isEnabled = true,
@@ -108,8 +119,11 @@ private fun TopBar(
                 text = if (isEditing) stringResource(Strings.save) else stringResource(Strings.edit)
             )
             Spacer(modifier = Modifier.width(8.dp))
-        }
+        },
+        backgroundColor = CustomTheme.colors.surface,
+        elevation = elevation,
     )
+
 }
 
 private sealed class CellType {

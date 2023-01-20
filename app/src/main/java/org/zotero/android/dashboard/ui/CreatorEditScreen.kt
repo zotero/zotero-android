@@ -34,7 +34,6 @@ import org.zotero.android.dashboard.CreatorEditViewEffect
 import org.zotero.android.dashboard.CreatorEditViewModel
 import org.zotero.android.dashboard.CreatorEditViewState
 import org.zotero.android.dashboard.data.ItemDetailCreator
-import org.zotero.android.itemdetails.ItemDetailsViewModel
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -49,7 +48,6 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 internal fun CreatorEditScreen(
     onBack: () -> Unit,
     viewModel: CreatorEditViewModel = hiltViewModel(),
-    parentViewModel: ItemDetailsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
@@ -61,8 +59,7 @@ internal fun CreatorEditScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
-            is CreatorEditViewEffect.OnCreatorCreated -> {
-                parentViewModel.onSaveCreator(consumedEffect.itemDetailCreator)
+            is CreatorEditViewEffect.OnBack -> {
                 onBack()
             }
         }

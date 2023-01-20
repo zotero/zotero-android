@@ -47,6 +47,47 @@ data class ItemDetailData(
         return allFields
     }
 
+    fun deepCopy(
+        title: String = this.title,
+        type: String = this.type,
+        isAttachment: Boolean = this.isAttachment,
+        localizedType: String = this.localizedType,
+        creators: Map<UUID, ItemDetailCreator> = this.creators,
+        creatorIds: List<UUID> = this.creatorIds,
+        fields: Map<String, ItemDetailField> = this.fields,
+        fieldIds: List<String> = this.fieldIds,
+        abstract: String? = this.abstract,
+        dateModified: Date = this.dateModified,
+        dateAdded: Date = this.dateAdded,
+        maxFieldTitleWidth: Double = this.maxFieldTitleWidth,
+        maxNonemptyFieldTitleWidth: Double = this.maxNonemptyFieldTitleWidth
+    ): ItemDetailData {
+        val clonedCreatorsMap = mutableMapOf<UUID, ItemDetailCreator>()
+        for (cr in creators) {
+            clonedCreatorsMap[cr.key] = cr.value.copy()
+        }
+        val clonedFieldsMap = mutableMapOf<String, ItemDetailField>()
+        for (cf in fields) {
+            clonedFieldsMap[cf.key] = cf.value.deepClone()
+        }
+        return copy(
+            title = title,
+            type = type,
+            isAttachment = isAttachment,
+            localizedType = localizedType,
+            creators = clonedCreatorsMap,
+            creatorIds = creatorIds.map { it },
+            fields = clonedFieldsMap,
+            fieldIds = fieldIds.map { it },
+            abstract = abstract,
+            dateModified = dateModified.clone() as Date,
+            dateAdded = dateAdded.clone() as Date,
+            maxFieldTitleWidth = maxFieldTitleWidth,
+            maxNonemptyFieldTitleWidth = maxNonemptyFieldTitleWidth
+        )
+
+    }
+
     companion object {
         val empty: ItemDetailData get() {
             val date = Date()

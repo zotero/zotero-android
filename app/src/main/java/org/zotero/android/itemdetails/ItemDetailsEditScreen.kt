@@ -65,12 +65,12 @@ internal fun ItemDetailsEditScreen(
 
             item {
                 ItemType(viewState, layoutType)
-//                ListOfCreatorRows(viewState, layoutType)
-//                CustomDivider(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(2.dp)
-//                )
+                ListOfCreatorRows(viewState, layoutType)
+                CustomDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                )
                 AddItemRow(
                     layoutType = layoutType,
                     icon = Drawables.add_icon,
@@ -84,12 +84,8 @@ internal fun ItemDetailsEditScreen(
                 )
                 ListOfEditFieldRows(viewState, layoutType, viewModel::setFieldValue)
                 DatesRows(viewState, layoutType)
-                CustomDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
-                        .height(2.dp)
-                )
+                EditAbstractRow(  detailValue = viewState.data.abstract ?: "",
+                    layoutType = layoutType, onValueChange = viewModel::onAbstractEdit)
             }
 
             listOfNotesOrTags(
@@ -182,15 +178,15 @@ private fun DatesRows(viewState: ItemDetailsViewState, layoutType: CustomLayoutS
     )
 }
 
-//@Composable
-//private fun ListOfCreatorRows(viewState: ItemDetailsViewState, layoutType: CustomLayoutSize.LayoutType) {
-//    for (creatorId in viewState.data.creatorIds) {
-//        val creator = viewState.data.creators.get(creatorId) ?: continue
-//        val title = creator.localizedType
-//        val value = creator.name
-//        FieldRow(title, value, layoutType)
-//    }
-//}
+@Composable
+private fun ListOfCreatorRows(viewState: ItemDetailsViewState, layoutType: CustomLayoutSize.LayoutType) {
+    for (creatorId in viewState.data.creatorIds) {
+        val creator = viewState.data.creators.get(creatorId) ?: continue
+        val title = creator.localizedType
+        val value = creator.name
+        FieldRow(title, value, layoutType, showDivider = true)
+    }
+}
 
 @Composable
 private fun ListOfEditFieldRows(
@@ -228,11 +224,13 @@ private fun FieldEditableRow(
         Row {
             Column(
                 modifier = Modifier
-                    .width(140.dp)
+                    .width(layoutType.calculateItemFieldLabelWidth())
             ) {
                 Text(
                     modifier = Modifier.align(Alignment.End),
                     text = detailTitle,
+                    overflow =TextOverflow.Ellipsis,
+                    maxLines = 1,
                     color = CustomTheme.colors.secondaryContent,
                     style = CustomTheme.typography.default,
                     fontSize = layoutType.calculateTextSize(),
@@ -248,7 +246,7 @@ private fun FieldEditableRow(
                     textColor = textColor,
                     maxLines = 1,
                     onValueChange = { onValueChange(key, it) },
-                    textStyle = CustomTheme.typography.default,
+                    textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
                 )
             }
         }
@@ -275,7 +273,7 @@ private fun ColumnScope.EditTitle(
         hint = stringResource(id = Strings.untitled),
         maxLines = 1,
         onValueChange = onValueChange,
-        textStyle = CustomTheme.typography.default,
+        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize())
     )
 }
 
@@ -409,5 +407,35 @@ private fun LazyListScope.listOfAttachments(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun EditAbstractRow(
+    detailValue: String,
+    layoutType: CustomLayoutSize.LayoutType,
+    textColor: Color = CustomTheme.colors.primaryContent,
+    onValueChange: (String) -> Unit,
+) {
+    Column {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            modifier = Modifier.align(Alignment.Start),
+            text = stringResource(id = Strings.abstractS),
+            color = CustomTheme.colors.secondaryContent,
+            style = CustomTheme.typography.default,
+            fontSize = layoutType.calculateTextSize(),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        CustomTextField(
+            modifier = Modifier
+                .fillMaxSize(),
+            value = detailValue,
+            hint = "",
+            textColor = textColor,
+            onValueChange = onValueChange,
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

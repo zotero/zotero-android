@@ -32,5 +32,28 @@ class ItemDetailField(
         return result
     }
 
+    fun deepClone(
+        key: String = this.key,
+        baseField: String? = this.baseField,
+        name: String = this.name,
+        value: String = this.value,
+        isTitle: Boolean = this.isTitle,
+        isTappable: Boolean = this.isTappable,
+        additionalInfo: Map<AdditionalInfoKey, String>? = this.additionalInfo
+    ): ItemDetailField {
+        val clonedAdditionalInfo = mutableMapOf<AdditionalInfoKey, String>()
+        for (ca in additionalInfo ?: emptyMap()) {
+            clonedAdditionalInfo[ca.key] = ca.value
+        }
+        return ItemDetailField(
+            key = key,
+            baseField = baseField,
+            name = name,
+            value = value,
+            isTitle = isTitle,
+            isTappable = isTappable,
+            additionalInfo = clonedAdditionalInfo
+        )
+    }
 
 }

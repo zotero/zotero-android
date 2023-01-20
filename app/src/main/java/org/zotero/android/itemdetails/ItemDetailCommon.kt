@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -28,10 +29,12 @@ internal fun FieldRow(
     Column {
         Spacer(modifier = Modifier.height(8.dp))
         Row {
-            Column(modifier = Modifier.width(140.dp)) {
+            Column(modifier = Modifier.width(layoutType.calculateItemFieldLabelWidth())) {
                 Text(
                     modifier = Modifier.align(Alignment.End),
                     text = detailTitle,
+                    overflow =TextOverflow.Ellipsis,
+                    maxLines = 1,
                     color = CustomTheme.colors.secondaryContent,
                     style = CustomTheme.typography.default,
                     fontSize = layoutType.calculateTextSize(),
