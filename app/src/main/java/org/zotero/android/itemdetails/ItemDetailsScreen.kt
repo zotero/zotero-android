@@ -33,6 +33,7 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 internal fun ItemDetailsScreen(
     viewModel: ItemDetailsViewModel = hiltViewModel(),
     navigateToCreatorEdit: () -> Unit,
+    navigateToAddOrEditNote: () -> Unit,
     onBack: () -> Unit,
 
     ) {
@@ -55,6 +56,9 @@ internal fun ItemDetailsScreen(
             }
             ItemDetailsViewEffect.OnBack -> {
                 onBack()
+            }
+            ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
+                navigateToAddOrEditNote()
             }
         }
     }

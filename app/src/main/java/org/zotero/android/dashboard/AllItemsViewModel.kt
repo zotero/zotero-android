@@ -9,6 +9,7 @@ import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -20,12 +21,15 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.Database
+import org.zotero.android.architecture.database.DbError
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.Attachment
 import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.RCustomLibraryType
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.requests.CreateAttachmentsDbRequest
+import org.zotero.android.architecture.database.requests.CreateNoteDbRequest
+import org.zotero.android.architecture.database.requests.EditNoteDbRequest
 import org.zotero.android.architecture.database.requests.ReadCollectionDbRequest
 import org.zotero.android.architecture.database.requests.ReadItemsDbRequest
 import org.zotero.android.architecture.database.requests.ReadLibraryDbRequest
@@ -36,6 +40,7 @@ import org.zotero.android.dashboard.data.DetailType
 import org.zotero.android.dashboard.data.InitialLoadData
 import org.zotero.android.dashboard.data.ItemAccessory
 import org.zotero.android.dashboard.data.ItemsError
+import org.zotero.android.dashboard.data.SaveNoteAction
 import org.zotero.android.dashboard.data.ShowItemDetailsArgs
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.MediaSelectionResult
@@ -67,6 +72,13 @@ internal class AllItemsViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val syncUseCase: SyncUseCase
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(saveNoteAction: SaveNoteAction) {
+        viewModelScope.launch {
+            saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+        }
+    }
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
@@ -446,8 +458,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
         ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(text = "", tags = listOf(),
-            title = title, key = KeyGenerator.newKey(), libraryId = libraryId, readOnly = false,
-            collection = viewState.collection, library = viewState.library)
+            title = title, key = KeyGenerator.newKey(), libraryId = libraryId, readOnly = false)
         triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
     }
 
@@ -462,8 +473,7 @@ internal class AllItemsViewModel @Inject constructor(
                 val library = viewState.library
                 ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
                     text = note.text, tags = tags, title = null, libraryId = library.identifier,
-                    readOnly = !library.metadataEditable, collection = viewState.collection,
-                    library = viewState.library, key = note.key
+                    readOnly = !library.metadataEditable, key = note.key
                 )
                 triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
             }
@@ -473,6 +483,45 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
     }
+
+    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) = withContext(dispatcher) {
+        val note = Note(key = key, text = text, tags = tags)
+        val libraryId = viewState.library.identifier
+        var collectionKey: String? = null
+
+        val identifier = viewState.collection.identifier
+        when (identifier) {
+            is CollectionIdentifier.collection ->
+                collectionKey = identifier.key
+            is CollectionIdentifier.custom, is CollectionIdentifier.search ->
+                collectionKey = null
+        }
+
+        try {
+            dbWrapper.realmDbStorage.perform(
+                EditNoteDbRequest(
+                    note = note,
+                    libraryId = libraryId
+                )
+            )
+        } catch (e: Throwable) {
+            if (e is DbError.objectNotFound) {
+                val request = CreateNoteDbRequest(
+                    note = note,
+                    localizedType = (schemaController.localizedItemType(
+                        ItemTypes.note
+                    ) ?: ""),
+                    libraryId = libraryId,
+                    collectionKey = collectionKey,
+                    parentKey = null
+                )
+                dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+            } else {
+                Timber.e(e)
+            }
+        }
+    }
+
 
 }
 

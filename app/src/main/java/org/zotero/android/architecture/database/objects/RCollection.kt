@@ -31,7 +31,7 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
     @Index
     override var version: Int = 0
     override lateinit var syncState: String//ObjectSyncState
-    override lateinit var lastSyncDate: Date
+    override var lastSyncDate: Date? = null
     override var syncRetries: Int = 0
     override val isInvalidated: Boolean
         get() = !isValid

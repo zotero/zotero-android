@@ -113,7 +113,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     override var version: Int = 0
     var attachmentNeedsSync: Boolean = false
     override var syncState: String = "" //ObjectSyncState
-    override lateinit var lastSyncDate: Date
+    override var lastSyncDate: Date? = null
     override var syncRetries: Int = 0
     override var changes: RealmList<RObjectChange> = RealmList()
     override lateinit var changeType: String //UpdatableChangeType

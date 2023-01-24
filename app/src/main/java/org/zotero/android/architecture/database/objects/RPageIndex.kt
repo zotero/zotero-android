@@ -22,7 +22,7 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
     @Index
     override var version: Int = 0
     override lateinit var syncState: String
-    override lateinit var lastSyncDate: Date
+    override var lastSyncDate: Date? = null
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType

@@ -29,6 +29,7 @@ object CustomPalette {
     val ErrorRedLight = Color(0xFFF8E6EA)
     val ErrorRedLightShadeFour = Color(0xFFF8E6EA)
     val PendingYellow = Color(0xFFF2C94C)
+    val zoteroItemDetailSectionTitle = Color(0xFF6C6C73)
 }
 
 /**
@@ -71,6 +72,7 @@ data class CustomSemanticColors(
     val uiControl: Color,
     val windowBackground: Color,
     val zoteroBlueWithDarkMode: Color,
+    val zoteroItemDetailSectionBackground: Color,
 ) {
 
     data class DynamicTheme(
@@ -103,7 +105,8 @@ fun lightCustomColors(
     surface = CustomPalette.White,
     uiControl = CustomPalette.Charcoal,
     windowBackground = CustomPalette.FogGray,
-    zoteroBlueWithDarkMode = Color(0xFF4071E6)
+    zoteroBlueWithDarkMode = Color(0xFF4071E6),
+    zoteroItemDetailSectionBackground = Color(0xFFF2F2F7)
 )
 
 fun darkCustomColors(
@@ -125,7 +128,8 @@ fun darkCustomColors(
     surface = CustomPalette.Black,
     uiControl = CustomPalette.CoolGray,
     windowBackground = CustomPalette.DarkCharcoal,
-    zoteroBlueWithDarkMode = Color(0xFF335BB8)
+    zoteroBlueWithDarkMode = Color(0xFF335BB8),
+    zoteroItemDetailSectionBackground = Color(0xFF1C1C1E)
 )
 
 internal fun createSemanticColors(

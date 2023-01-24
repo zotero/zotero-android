@@ -20,18 +20,23 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.architecture.database.objects.Attachment
 import org.zotero.android.architecture.database.objects.FieldKeys
+import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
+import org.zotero.android.architecture.database.requests.CreateNoteDbRequest
 import org.zotero.android.architecture.database.requests.EditItemFromDetailDbRequest
+import org.zotero.android.architecture.database.requests.EditNoteDbRequest
 import org.zotero.android.architecture.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.architecture.database.requests.ReadItemDbRequest
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.dashboard.data.AddOrEditNoteArgs
 import org.zotero.android.dashboard.data.CreatorEditArgs
 import org.zotero.android.dashboard.data.DetailType
 import org.zotero.android.dashboard.data.ItemDetailCreator
 import org.zotero.android.dashboard.data.ItemDetailData
 import org.zotero.android.dashboard.data.ItemDetailError
 import org.zotero.android.dashboard.data.ItemDetailField
+import org.zotero.android.dashboard.data.SaveNoteAction
 import org.zotero.android.dashboard.data.ShowItemDetailsArgs
 import org.zotero.android.files.FileStore
 import org.zotero.android.formatter.dateAndTimeFormat
@@ -47,6 +52,7 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import timber.log.Timber
 import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -65,6 +71,13 @@ internal class ItemDetailsViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(itemDetailCreator: ItemDetailCreator) {
         onSaveCreator(itemDetailCreator)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(saveNoteAction: SaveNoteAction) {
+        viewModelScope.launch {
+            saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+        }
     }
 
     fun init() = initOnce {
@@ -92,7 +105,8 @@ internal class ItemDetailsViewModel @Inject constructor(
                 updateState {
                     copy(
                         key = type.key,
-                        isEditing = false)
+                        isEditing = false
+                    )
                 }
 
             }
@@ -112,7 +126,8 @@ internal class ItemDetailsViewModel @Inject constructor(
                 type = type,
                 userId = userId,
                 library = library,
-                preScrolledChildKey = preScrolledChildKey)
+                preScrolledChildKey = preScrolledChildKey
+            )
         }
 
     }
@@ -170,10 +185,19 @@ internal class ItemDetailsViewModel @Inject constructor(
 
     private fun reloadData(isEditing: Boolean) = viewModelScope.launch {
         try {
-            val item = dbWrapper.realmDbStorage.perform(request = ReadItemDbRequest(libraryId = viewState.library!!.identifier, key = viewState.key), refreshRealm = true)
+            val item = dbWrapper.realmDbStorage.perform(
+                request = ReadItemDbRequest(
+                    libraryId = viewState.library!!.identifier,
+                    key = viewState.key
+                ), refreshRealm = true
+            )
 
             item.addChangeListener(RealmObjectChangeListener<RItem> { items, changeSet ->
-                if(changeSet?.changedFields?.any { RItem.observableKeypathsForItemDetail.contains(it) } == true) {
+                if (changeSet?.changedFields?.any {
+                        RItem.observableKeypathsForItemDetail.contains(
+                            it
+                        )
+                    } == true) {
                     itemChanged(items, changeSet)
                 }
             }
@@ -182,16 +206,24 @@ internal class ItemDetailsViewModel @Inject constructor(
             var (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
                 ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
                 schemaController = this@ItemDetailsViewModel.schemaController,
-                fileStorage = this@ItemDetailsViewModel.fileStore, urlDetector = this@ItemDetailsViewModel.urlDetector,
-                doiDetector = {doiValue -> FieldKeys.Item.isDoi(doiValue)})
+                fileStorage = this@ItemDetailsViewModel.fileStore,
+                urlDetector = this@ItemDetailsViewModel.urlDetector,
+                doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
 
             if (!isEditing) {
-                data.fieldIds = ItemDetailDataCreator.filteredFieldKeys(data.fieldIds, fields = data.fields)
+                data.fieldIds =
+                    ItemDetailDataCreator.filteredFieldKeys(data.fieldIds, fields = data.fields)
             }
 
-            saveReloaded(data = data, attachments = attachments, notes = notes, tags = tags, isEditing = isEditing)
+            saveReloaded(
+                data = data,
+                attachments = attachments,
+                notes = notes,
+                tags = tags,
+                isEditing = isEditing
+            )
         } catch (e: Exception) {
-            Timber.e(e,"ItemDetailActionHandler: can't load data")
+            Timber.e(e, "ItemDetailActionHandler: can't load data")
             updateState {
                 copy(error = ItemDetailError.cantCreateData)
             }
@@ -272,6 +304,17 @@ internal class ItemDetailsViewModel @Inject constructor(
         showCreatorCreation(itemType = viewState.data.type)
     }
 
+    fun onAddNote() {
+        openNoteEditor(null)
+    }
+
+    fun onAddTag() {
+    }
+
+    fun onAddAttachment() {
+
+    }
+
     fun showCreatorCreation(itemType: String) {
         val schema = schemaController.creators(itemType)?.firstOrNull { it.primary }
         if (schema == null) {
@@ -283,13 +326,15 @@ internal class ItemDetailsViewModel @Inject constructor(
         }
         val creator = ItemDetailCreator.init(
             type = schema.creatorType, primary = schema.primary,
-            localizedType = localized, namePresentation = defaults.getCreatorNamePresentation())
+            localizedType = localized, namePresentation = defaults.getCreatorNamePresentation()
+        )
         _showCreatorEditor(creator, itemType = itemType)
     }
 
-    fun showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
+    private fun showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
         _showCreatorEditor(creator, itemType = itemType)
     }
+
     private fun _showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
         ScreenArguments.creatorEditArgs = CreatorEditArgs(creator = creator, itemType = itemType)
         triggerEffect(ItemDetailsViewEffect.ShowCreatorEditEffect)
@@ -301,12 +346,21 @@ internal class ItemDetailsViewModel @Inject constructor(
                 copy(
                     data = viewState.data.deepCopy(
                         creatorIds = viewState.data.creatorIds + creator.id,
-                        creators = viewState.data.creators + (creator.id to creator)
                     )
                 )
             }
         }
+        val updatedCreators = viewState.data.creators.toMutableMap()
+        updatedCreators[creator.id] = creator
+        updateState {
+            copy(
+                data = viewState.data.deepCopy(
+                    creators = updatedCreators
+                )
+            )
+        }
     }
+
     fun setFieldValue(id: String, value: String) {
         val field = viewState.data.fields[id]
         if (field == null) {
@@ -362,7 +416,8 @@ internal class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun updateDateFieldIfNeeded() {
-        val field = viewState.data.fields.values.firstOrNull { it.baseField == FieldKeys.Item.date || it.key == FieldKeys.Item.date }
+        val field =
+            viewState.data.fields.values.firstOrNull { it.baseField == FieldKeys.Item.date || it.key == FieldKeys.Item.date }
         if (field != null) {
             val date = parseDateSpecialValue(field.value)
             if (date != null) {
@@ -459,8 +514,10 @@ internal class ItemDetailsViewModel @Inject constructor(
 
         if (date != null) {
             field.value = iso8601DateFormatV2.format(date)
-            field.additionalInfo = mapOf(ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
-                ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
+            field.additionalInfo = mapOf(
+                ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
+                ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date)
+            )
         } else {
             val snapshotField = viewState.snapshot?.fields?.get(FieldKeys.Item.accessDate)
             if (snapshotField != null) {
@@ -526,12 +583,124 @@ internal class ItemDetailsViewModel @Inject constructor(
         }
     }
 
+    fun onCreatorClicked(creator: ItemDetailCreator) {
+        showCreatorEditor(creator = creator, itemType = viewState.data.type)
+    }
+
+    fun onDeleteCreator(creatorId: UUID) {
+        val index = viewState.data.creatorIds.indexOf(creatorId)
+        if (index == -1) {
+            return
+        }
+        val updatedCreators = viewState.data.creators.toMutableMap()
+        updatedCreators.remove(creatorId)
+        updateState {
+            copy(
+                data = viewState.data.deepCopy(
+                    creatorIds = viewState.data.creatorIds - creatorId,
+                    creators = updatedCreators
+                )
+            )
+        }
+    }
+
+    fun openNoteEditor(note: Note?) {
+        val library = viewState.library!!
+        val key = note?.key ?: KeyGenerator.newKey()
+        val title =
+            AddOrEditNoteArgs.TitleData(type = viewState.data.type, title = viewState.data.title)
+
+        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+            text = note?.text ?: "",
+            tags = note?.tags ?: listOf(),
+            title = title,
+            key = key,
+            libraryId = library.identifier,
+            readOnly = !library.metadataEditable
+        )
+        triggerEffect(ItemDetailsViewEffect.ShowAddOrEditNoteEffect)
+    }
+
+    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) {
+        val oldNote = viewState.notes.firstOrNull { it.key == key }
+        val note = Note(key = key, text = text, tags = tags)
+
+        val indexNote = viewState.notes.indexOfFirst { it.key == key }
+        val updatedNotes = viewState.notes.toMutableList()
+        if (indexNote != -1) {
+            updatedNotes[indexNote] = note
+        } else {
+            updatedNotes.add(note)
+        }
+        updateState {
+            copy(notes = updatedNotes)
+        }
+
+        fun finishSave(error: Throwable?) {
+            if (error == null) {
+                return
+            }
+
+            Timber.e(error, "Can't edit/save note $key")
+            updateState {
+                copy(error = ItemDetailError.cantSaveNote)
+            }
+            val index = viewState.notes.indexOfFirst { it.key == key }
+            if (index == -1) {
+                return
+            }
+            val updatedNotes = viewState.notes.toMutableList()
+            if (oldNote != null) {
+                updatedNotes[index] = oldNote
+            } else {
+                updatedNotes.removeAt(index)
+            }
+            updateState {
+                copy(notes = updatedNotes)
+            }
+        }
+
+        if (oldNote != null) {
+            val request = EditNoteDbRequest (note = note, libraryId = viewState.library!!.identifier)
+            perform(dbWrapper = dbWrapper, request = request).ifFailure {
+                finishSave(it)
+                return
+            }
+            return
+        }
+
+        val type = schemaController.localizedItemType(ItemTypes.note) ?: ItemTypes.note
+        val request = CreateNoteDbRequest(
+            note = note,
+            localizedType = type,
+            libraryId = viewState.library!!.identifier,
+            collectionKey = null,
+            parentKey = viewState.key
+        )
+        val result = perform(
+            dbWrapper = dbWrapper,
+            request = request,
+            invalidateRealm = true
+        ).ifFailure { error ->
+            finishSave(error)
+            return
+        }
+        finishSave(null)
+    }
+
+    fun openTag(tag: Tag) {
+
+    }
+
+    fun openAttachment(attachment: Attachment) {
+
+    }
 }
 
-internal data class ItemDetailsViewState(
-    val key : String = "",
-    val library : Library? = null,
-    val userId : Long = 0,
+data class ItemDetailsViewState(
+    val key: String = "",
+    val library: Library? = null,
+    val userId: Long = 0,
     val type: DetailType? = null,
     val preScrolledChildKey: String? = null,
     val isEditing: Boolean = false,
@@ -545,12 +714,13 @@ internal data class ItemDetailsViewState(
 ) : ViewState
 
 internal sealed class ItemDetailsViewEffect : ViewEffect {
-    object ShowCreatorEditEffect: ItemDetailsViewEffect()
-    object ScreenRefresh: ItemDetailsViewEffect()
-    object OnBack: ItemDetailsViewEffect()
+    object ShowCreatorEditEffect : ItemDetailsViewEffect()
+    object ScreenRefresh : ItemDetailsViewEffect()
+    object OnBack : ItemDetailsViewEffect()
+    object ShowAddOrEditNoteEffect : ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {
-    object loadInitialData: ItemDetailAction()
-    object reloadData: ItemDetailAction()
+    object loadInitialData : ItemDetailAction()
+    object reloadData : ItemDetailAction()
 }

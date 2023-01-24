@@ -9,12 +9,12 @@ plugins {
 }
 
 android {
-    compileSdk = 32
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "org.zotero.android"
         minSdk = 23
-        targetSdk = 32
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -142,35 +142,35 @@ android {
 dependencies {
 
     //AndroidX
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.4.1")
-    implementation("androidx.lifecycle:lifecycle-common-java8:2.4.1")
-    implementation("androidx.lifecycle:lifecycle-process:2.4.1")
-    implementation("androidx.fragment:fragment-ktx:1.4.1")
-    implementation("androidx.activity:activity-ktx:1.4.0")
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-common-java8:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-process:2.5.1")
+    implementation("androidx.fragment:fragment-ktx:1.5.5")
+    implementation("androidx.activity:activity-ktx:1.6.1")
     implementation("androidx.vectordrawable:vectordrawable:1.1.0")
-    implementation("androidx.preference:preference-ktx:1.1.1")
-    implementation("androidx.appcompat:appcompat:1.4.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
+    implementation("androidx.preference:preference-ktx:1.2.0")
+    implementation("androidx.appcompat:appcompat:1.6.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.constraintlayout:constraintlayout-solver:2.0.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
-    implementation("com.google.android.material:material:1.5.0")
+    implementation("com.google.android.material:material:1.7.0")
 
     //Compose
-    implementation("androidx.compose.ui:ui-viewbinding:1.2.0-beta02")
-    implementation("androidx.compose.ui:ui-util:1.2.0-beta02")
-    implementation("androidx.compose.ui:ui-tooling:1.2.0-beta02")
-    implementation("androidx.compose.ui:ui:1.2.0-beta02")
-    implementation("androidx.navigation:navigation-compose:2.5.0-rc01")
-    implementation("androidx.compose.material:material:1.2.0-beta02")
-    implementation("androidx.compose.runtime:runtime-livedata:1.2.0-beta02")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.0-rc01")
-    implementation("androidx.compose.foundation:foundation:1.2.0-beta02")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0")
-    implementation("androidx.activity:activity-compose:1.5.0-rc01")
+    implementation("androidx.compose.ui:ui-viewbinding:1.4.0-alpha04")
+    implementation("androidx.compose.ui:ui-util:1.4.0-alpha04")
+    implementation("androidx.compose.ui:ui-tooling:1.4.0-alpha04")
+    implementation("androidx.compose.ui:ui:1.4.0-alpha04")
+    implementation("androidx.navigation:navigation-compose:2.6.0-alpha04")
+    implementation("androidx.compose.material:material:1.4.0-alpha04")
+    implementation("androidx.compose.runtime:runtime-livedata:1.4.0-alpha04")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha04")
+    implementation("androidx.compose.foundation:foundation:1.4.0-alpha04")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation("androidx.activity:activity-compose:1.7.0-alpha03")
 
     //Accompanist
     implementation("com.google.accompanist:accompanist-insets:0.23.1")
@@ -186,7 +186,7 @@ dependencies {
 
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.10")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.10")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.20")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.6.21")
@@ -204,10 +204,10 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     //Crash & Analytics
-    implementation("com.google.android.gms:play-services-auth:20.2.0")
+    implementation("com.google.android.gms:play-services-auth:20.4.1")
     implementation("com.google.android.play:core-ktx:1.8.1")
-    implementation("com.google.firebase:firebase-crashlytics-ktx:18.2.12")
-    implementation("com.google.firebase:firebase-analytics-ktx:21.1.0")
+    implementation("com.google.firebase:firebase-crashlytics-ktx:18.3.3")
+    implementation("com.google.firebase:firebase-analytics-ktx:21.2.0")
 
     //Other
     implementation("com.jakewharton.timber:timber:4.7.1")
@@ -230,18 +230,18 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
     //GSON
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation("com.google.code.gson:gson:2.8.9")
 
     //Ok HTTP
-    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
 
     //Unit Tests
     testImplementation("junit:junit:4.13.2")
-    testImplementation("androidx.test:core:1.4.0")
+    testImplementation("androidx.test:core:1.5.0")
     testImplementation("androidx.arch.core:core-testing:2.1.0")
 
-    testImplementation("org.mockito:mockito-core:3.6.0")
+    testImplementation("org.mockito:mockito-core:3.11.0")
     testImplementation("org.mockito:mockito-inline:3.11.0")
 
     testImplementation("io.mockk:mockk:1.11.0")
@@ -249,9 +249,9 @@ dependencies {
     testImplementation("org.amshove.kluent:kluent-android:1.61")
 
     //Instrumented Tests
-    androidTestImplementation("androidx.test:rules:1.3.0")
-    androidTestImplementation("androidx.test:runner:1.3.0")
-    androidTestImplementation("androidx.test.ext:junit:1.1.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 
     
 }

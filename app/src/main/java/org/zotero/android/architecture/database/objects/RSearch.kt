@@ -25,7 +25,7 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
     @Index
     override var version: Int = 0
     override lateinit var syncState: String// ObjectSyncState
-    override lateinit var lastSyncDate: Date
+    override var lastSyncDate: Date? = null
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType

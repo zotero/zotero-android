@@ -38,6 +38,7 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
         )
         itemDetailsScreen(
             navigateToCreatorEdit = navigation::toCreatorEdit,
+            navigateToAddOrEditNote = navigation::toAddOrEditNote,
             onBack = navigation::onBack
         )
         addNoteScreen(
@@ -68,6 +69,7 @@ private fun NavGraphBuilder.allItemsScreen(
 private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
     navigateToCreatorEdit: () -> Unit,
+    navigateToAddOrEditNote: () -> Unit,
 ) {
     composable(
         route = "${Destinations.ITEM_DETAILS}",
@@ -75,6 +77,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     ) {
         ItemDetailsScreen(
             onBack = onBack,
+            navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToCreatorEdit = navigateToCreatorEdit
         )
     }

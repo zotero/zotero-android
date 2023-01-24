@@ -12,6 +12,13 @@ object CustomLayoutSize {
     enum class LayoutType {
         big, medium, small;
 
+        fun calculateIconSize(): Dp {
+            return when (this) {
+                big, medium -> 30.dp
+                small -> 22.dp
+            }
+        }
+
         fun calculateTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 20.sp

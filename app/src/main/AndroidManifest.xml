@@ -44,14 +44,17 @@
         <activity
             android:name=".onboarding.ui.OnboardingActivity"
             android:theme="@style/AppTheme.IntroActivity"
+            android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
         </activity>
 
         <activity
+            android:exported="false"
             android:name=".dashboard.DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:exported="false"
             android:name=".login.LoginActivity"
             android:windowSoftInputMode="adjustResize" />
 

@@ -15,7 +15,7 @@ interface Syncable {
     var groupKey: Int?
     var version: Int
     var syncState: String
-    var lastSyncDate: Date
+    var lastSyncDate: Date?
     var syncRetries: Int
     fun isValid(): Boolean
     val isInvalidated: Boolean

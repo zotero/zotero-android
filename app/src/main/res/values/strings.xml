@@ -56,6 +56,9 @@
     <string name="first_name">First Name</string>
     <string name="name">Name</string>
     <string name="add_creator">Add Creator</string>
+    <string name="add_note">Add note</string>
+    <string name="add_tag">Add tag</string>
+    <string name="add_attachment">Add attachment</string>
     <string name="switch_to_single_field">Switch to single field</string>
     <string name="switch_to_two_field">Switch to two field</string>
     <string name="creator_type">Creator Type</string>
