@@ -63,4 +63,8 @@
     <string name="switch_to_two_field">Switch to two field</string>
     <string name="creator_type">Creator Type</string>
     <string name="abstractS">Abstract</string>
+    <string name="delete_item_title">Item Deletion</string>
+    <string name="delete_item_body">Are you sure you want to delete this item?</string>
+    <string name="delete_item_yes">Yes</string>
+    <string name="clear_search">Clear search</string>
 </resources>

@@ -47,6 +47,14 @@ object CustomLayoutSize {
             }
         }
 
+        fun showScreenOrDialog(): ScreenOrDialogToShow {
+            return when (this) {
+                LayoutType.big, LayoutType.medium -> ScreenOrDialogToShow.DIALOG
+                LayoutType.small -> ScreenOrDialogToShow.SCREEN
+            }
+        }
+
+
     }
 
     @Composable
@@ -63,5 +71,8 @@ object CustomLayoutSize {
             return LayoutType.medium
         }
         return LayoutType.small
+    }
+    enum class ScreenOrDialogToShow {
+        SCREEN, DIALOG
     }
 }
