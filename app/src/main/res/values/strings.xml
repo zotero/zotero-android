@@ -3,6 +3,7 @@
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="ok">OK</string>
 
 
     <string name="onboarding_access"><annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
@@ -67,4 +68,20 @@
     <string name="delete_item_body">Are you sure you want to delete this item?</string>
     <string name="delete_item_yes">Yes</string>
     <string name="clear_search">Clear search</string>
+
+    <string name="error">Error</string>
+    <string name="warning">Warning</string>
+    <string name="cantCreateAttachmentsWithNames">Could not create attachments: %s</string>
+    <string name="cantLoadData">Could not load data. Please try again.</string>
+    <string name="unknown">Unknown error</string>
+    <string name="cantSaveTags">Could not save tags.</string>
+    <string name="cantSaveNotes">Could not save note.</string>
+    <string name="cantStoreChanges">Could not save changes.</string>
+    <string name="cantTrashItem">Could not move item to trash.</string>
+    <string name="droppedFieldsTitle">Change Item Type</string>
+    <string name="droppedFieldsMessage">Are you sure you want to change the item type?\n\nThe following fields will be lost:\n\n%s</string>
+    <string name="unsupportedType">Type "%s" not supported.</string>
+    <string name="dataReloaded">This item has been changed remotely. It will now reload.</string>
+    <string name="delete">Delete</string>
+    <string name="moveToTrash">Move to Trash</string>
 </resources>

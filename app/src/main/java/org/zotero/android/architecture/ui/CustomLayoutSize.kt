@@ -12,6 +12,13 @@ object CustomLayoutSize {
     enum class LayoutType {
         big, medium, small;
 
+        fun calculateItemCreatorDeleteStartPadding(): Dp {
+            return when (this) {
+                big, medium -> 18.dp
+                small -> 11.dp
+            }
+        }
+
         fun calculateIconSize(): Dp {
             return when (this) {
                 big, medium -> 30.dp

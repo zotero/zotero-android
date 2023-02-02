@@ -33,6 +33,8 @@ fun BaseRowItem(
     title: String,
     description: String? = null,
     titleStyle: TextStyle = CustomTheme.typography.h3,
+    textColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
+    heightIn: Dp = 64.dp,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     startContentPadding: Dp = 0.dp,
@@ -49,7 +51,7 @@ fun BaseRowItem(
                 enabled = enabled,
                 onClick = onClick
             )
-            .heightIn(min = 64.dp)
+            .heightIn(min = heightIn)
             .then(modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -61,7 +63,7 @@ fun BaseRowItem(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                color = CustomTheme.colors.primaryContent,
+                color = textColor,
                 text = title,
                 style = titleStyle,
                 maxLines = 1,
@@ -90,10 +92,12 @@ fun BaseRowItemWithIcon(
     iconResId: Int? = null,
     iconTint: Color = CustomTheme.colors.dynamicTheme.primaryColor,
     titleStyle: TextStyle = CustomTheme.typography.h3,
+    textColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
     verticalPadding: Dp = 16.dp,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     startContentPadding: Dp = 0.dp,
+    heightIn: Dp = 64.dp,
     endContent: @Composable (RowScope.() -> Unit)? = null,
 ) {
     BaseRowItem(
@@ -102,8 +106,10 @@ fun BaseRowItemWithIcon(
             horizontal = 16.dp
         ),
         title = title,
+        textColor = textColor,
         description = description,
         titleStyle = titleStyle,
+        heightIn = heightIn,
         onClick = onClick,
         enabled = enabled,
         startContent = {

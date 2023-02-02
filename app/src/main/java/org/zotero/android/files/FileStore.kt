@@ -8,6 +8,8 @@ import com.google.common.io.Files
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.internal.closeQuietly
+import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
 import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
@@ -195,7 +197,7 @@ class FileStore @Inject constructor (
 
     fun md5(file: File): String {
         val inputStream = FileInputStream(file)
-        val md5: String = org.apache.commons.codec.digest.DigestUtils.md5Hex(inputStream)
+        val md5 = String(Hex.encodeHex(DigestUtils.md5(inputStream)))
         return md5
     }
 

@@ -32,11 +32,13 @@ internal class AddNoteViewModel @Inject constructor(
     }
 
     fun onDoneClicked() {
+        val args = ScreenArguments.addOrEditNoteArgs
         EventBus.getDefault().post(
             SaveNoteAction(
                 text = viewState.text,
-                tags = ScreenArguments.addOrEditNoteArgs.tags,
-                key = ScreenArguments.addOrEditNoteArgs.key
+                tags = args.tags,
+                key = args.key,
+                isFromDashboard = args.isFromDashboard
             )
         )
         triggerEffect(AddNoteViewEffect.NavigateBack)

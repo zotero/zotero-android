@@ -75,8 +75,10 @@ internal class AllItemsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(saveNoteAction: SaveNoteAction) {
-        viewModelScope.launch {
-            saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+        if (saveNoteAction.isFromDashboard) {
+            viewModelScope.launch {
+                saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+            }
         }
     }
 
@@ -457,8 +459,15 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
-        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(text = "", tags = listOf(),
-            title = title, key = KeyGenerator.newKey(), libraryId = libraryId, readOnly = false)
+        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+            text = "",
+            tags = listOf(),
+            title = title,
+            key = KeyGenerator.newKey(),
+            libraryId = libraryId,
+            readOnly = false,
+            isFromDashboard = true,
+        )
         triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
     }
 
@@ -472,8 +481,13 @@ internal class AllItemsViewModel @Inject constructor(
                 val tags = item.tags!!.map({ Tag(tag = it) })
                 val library = viewState.library
                 ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
-                    text = note.text, tags = tags, title = null, libraryId = library.identifier,
-                    readOnly = !library.metadataEditable, key = note.key
+                    text = note.text,
+                    tags = tags,
+                    title = null,
+                    libraryId = library.identifier,
+                    readOnly = !library.metadataEditable,
+                    key = note.key,
+                    isFromDashboard = true
                 )
                 triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
             }
@@ -521,8 +535,6 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
     }
-
-
 }
 
 internal data class AllItemsViewState(

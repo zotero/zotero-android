@@ -49,28 +49,33 @@ internal fun ItemDetailsViewScreen(
                     layoutType = layoutType,
                     showDivider = false
                 )
-                CustomDivider(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                )
-                AbstractFieldRow(
-                    detailValue = viewState.data.abstract ?: "",
-                    layoutType = layoutType
-                )
+
+                if (!viewState.data.isAttachment) {
+                    CustomDivider(
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                    )
+                    AbstractFieldRow(
+                        detailValue = viewState.data.abstract ?: "",
+                        layoutType = layoutType
+                    )
+                }
+
             }
 
         }
         notesTagsAndAttachmentsBlock(
-            notes = viewState.notes,
-            tags = viewState.tags,
-            attachments = viewState.attachments,
+            viewState = viewState,
             layoutType = layoutType,
             onNoteClicked = { viewModel.openNoteEditor(it) },
             onAddNote = { viewModel.onAddNote() },
             onAttachmentClicked = { viewModel.openAttachment(it) },
             onAddAttachment = { viewModel.onAddAttachment() },
             onTagClicked = { viewModel.openTag(it) },
-            onAddTag = { viewModel.onAddTag() }
+            onAddTag = { viewModel.onAddTag() },
+            onNoteLongClicked = viewModel::onNoteLongClick,
+            onAttachmentLongClicked = {},
+            onTagLongClicked = viewModel::onTagLongClick,
         )
     }
 }

@@ -48,20 +48,27 @@ internal fun ItemDetailsEditScreen(
         }
         item {
             Column(modifier = Modifier.padding(start = 12.dp)) {
-                ItemType(viewState, layoutType)
-                ListOfCreatorRows(
+                ItemType(
                     viewState = viewState,
                     layoutType = layoutType,
-                    onDeleteCreator = viewModel::onDeleteCreator,
-                    onCreatorClicked = viewModel::onCreatorClicked
+                    onItemTypeClicked = viewModel::onItemTypeClicked
                 )
-                CustomDivider()
-                AddItemRow(
-                    layoutType = layoutType,
-                    titleRes = Strings.add_creator,
-                    onClick = viewModel::onAddCreator
-                )
-                CustomDivider()
+                if (!viewState.data.isAttachment) {
+                    ListOfCreatorRows(
+                        viewState = viewState,
+                        layoutType = layoutType,
+                        onDeleteCreator = viewModel::onDeleteCreator,
+                        onCreatorClicked = viewModel::onCreatorClicked
+                    )
+                    CustomDivider()
+                    AddItemRow(
+                        layoutType = layoutType,
+                        titleRes = Strings.add_creator,
+                        onClick = viewModel::onAddCreator
+                    )
+                    CustomDivider()
+                }
+
                 ListOfEditFieldRows(viewState, layoutType, viewModel::setFieldValue)
                 DatesRows(
                     dateAdded = viewState.data.dateAdded,
@@ -69,17 +76,18 @@ internal fun ItemDetailsEditScreen(
                     layoutType = layoutType,
                     showDivider = true
                 )
-                EditAbstractRow(
-                    detailValue = viewState.data.abstract ?: "",
-                    layoutType = layoutType, onValueChange = viewModel::onAbstractEdit
-                )
+                if (!viewState.data.isAttachment) {
+                    EditAbstractRow(
+                        detailValue = viewState.data.abstract ?: "",
+                        layoutType = layoutType, onValueChange = viewModel::onAbstractEdit
+                    )
+                }
+
             }
 
         }
         notesTagsAndAttachmentsBlock(
-            notes = viewState.notes,
-            tags = viewState.tags,
-            attachments = viewState.attachments,
+            viewState = viewState,
             layoutType = layoutType,
             onNoteClicked = { viewModel.openNoteEditor(it) },
             onAddNote = { viewModel.onAddNote() },
@@ -92,13 +100,31 @@ internal fun ItemDetailsEditScreen(
 }
 
 @Composable
-private fun ItemType(viewState: ItemDetailsViewState, layoutType: CustomLayoutSize.LayoutType) {
-    FieldRow(
-        detailTitle = stringResource(id = Strings.item_type),
-        detailValue = viewState.data.localizedType,
-        layoutType = layoutType,
-        showDivider = true
-    )
+private fun ItemType(
+    viewState: ItemDetailsViewState,
+    layoutType: CustomLayoutSize.LayoutType,
+    onItemTypeClicked: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .safeClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = onItemTypeClicked
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(start = 28.dp + layoutType.calculateItemCreatorDeleteStartPadding())
+        ) {
+            FieldRow(
+                detailTitle = stringResource(id = Strings.item_type),
+                detailValue = viewState.data.localizedType,
+                layoutType = layoutType,
+                showDivider = false
+            )
+        }
+        CustomDivider()
+    }
 }
 
 @Composable
@@ -125,8 +151,8 @@ private fun ListOfCreatorRows(
                 detailValue = value,
                 layoutType = layoutType,
                 showDivider = true,
-                showDelete = true,
-                onDelete = { onDeleteCreator(creatorId) })
+                onDelete = { onDeleteCreator(creatorId) }
+            )
         }
 
     }

@@ -22,9 +22,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.dashboard.data.ItemDetailCreator
+import org.zotero.android.dashboard.data.ItemDetailError
 import org.zotero.android.dashboard.data.ItemDetailField
+import org.zotero.android.itemdetails.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
@@ -32,7 +35,10 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Suppress("UNUSED_PARAMETER")
 internal fun ItemDetailsScreen(
     viewModel: ItemDetailsViewModel = hiltViewModel(),
-    navigateToCreatorEdit: () -> Unit,
+    navigateToCreatorEditScreen: () -> Unit,
+    navigateToCreatorEditDialog: () -> Unit,
+    navigateToSinglePickerScreen: () -> Unit,
+    navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     onBack: () -> Unit,
 
@@ -49,7 +55,24 @@ internal fun ItemDetailsScreen(
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
             ItemDetailsViewEffect.ShowCreatorEditEffect -> {
-                navigateToCreatorEdit()
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToCreatorEditScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToCreatorEditDialog()
+                    }
+                }
+            }
+            ItemDetailsViewEffect.ShowItemTypePickerEffect -> {
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToSinglePickerScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToSinglePickerDialog()
+                    }
+                }
             }
             ItemDetailsViewEffect.ScreenRefresh -> {
                 //no-op
@@ -60,6 +83,7 @@ internal fun ItemDetailsScreen(
             ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
                 navigateToAddOrEditNote()
             }
+
         }
     }
     CustomScaffold(
@@ -96,8 +120,196 @@ internal fun ItemDetailsScreen(
 
             }
         }
-
+        val itemDetailError = viewState.error
+        if (itemDetailError != null) {
+            ShowError(
+                itemDetailError = itemDetailError,
+                onDismissErrorDialog = viewModel::onDismissErrorDialog,
+                onBack = onBack,
+                acceptPrompt = viewModel::acceptPrompt,
+                cancelPrompt = viewModel::cancelPrompt,
+                acceptItemWasChangedRemotely = viewModel::acceptItemWasChangedRemotely,
+            )
+        }
+        LongPressBottomSheet(
+            layoutType = layoutType,
+            longPressOptionsHolder = viewState.longPressOptionsHolder,
+            onCollapse = viewModel::dismissBottomSheet,
+            onOptionClick = viewModel::onLongPressOptionsItemSelected
+        )
     }
+}
+
+@Composable
+private fun ShowError(
+    itemDetailError: ItemDetailError,
+    onDismissErrorDialog: () -> Unit,
+    onBack: () -> Unit,
+    acceptPrompt: () -> Unit,
+    cancelPrompt: () -> Unit,
+    acceptItemWasChangedRemotely: () -> Unit,
+) {
+    when (itemDetailError) {
+        is ItemDetailError.cantAddAttachments -> {
+            when (itemDetailError.attachmentError) {
+                ItemDetailError.AttachmentAddError.allFailedCreation -> TODO()
+                is ItemDetailError.AttachmentAddError.couldNotMoveFromSource -> {
+                    CustomAlertDialog(
+                        title = stringResource(id = Strings.error),
+                        description = stringResource(
+                            id = Strings.cantCreateAttachmentsWithNames,
+                            itemDetailError.attachmentError.names.joinToString(separator = ", ")
+                        ),
+                        primaryAction = CustomAlertDialog.ActionConfig(
+                            text = stringResource(id = Strings.ok),
+                            onClick = onDismissErrorDialog
+                        ),
+                        onDismiss = onDismissErrorDialog
+                    )
+                }
+                is ItemDetailError.AttachmentAddError.someFailedCreation -> {
+                    CustomAlertDialog(
+                        title = stringResource(id = Strings.error),
+                        description = stringResource(
+                            id = Strings.cantCreateAttachmentsWithNames,
+                            itemDetailError.attachmentError.names.joinToString(separator = ", ")
+                        ),
+                        primaryAction = CustomAlertDialog.ActionConfig(
+                            text = stringResource(id = Strings.ok),
+                            onClick = onDismissErrorDialog
+                        ),
+                        onDismiss = onDismissErrorDialog
+                    )
+                }
+            }
+        }
+        ItemDetailError.cantCreateData -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.cantLoadData
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onBack
+                ),
+                onDismiss = onBack
+            )
+        }
+        ItemDetailError.cantRemoveDuplicatedItem -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.unknown
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        ItemDetailError.cantSaveNote -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.cantSaveNotes
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        ItemDetailError.cantSaveTags -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.cantSaveTags
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        ItemDetailError.cantStoreChanges -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.cantStoreChanges
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        ItemDetailError.cantTrashItem -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.cantTrashItem
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        is ItemDetailError.droppedFields -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.droppedFieldsTitle),
+                description = droppedFieldsMessage(names = itemDetailError.fields),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = acceptPrompt
+                ),
+                secondaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.cancel),
+                    onClick = cancelPrompt
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        is ItemDetailError.typeNotSupported -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.error),
+                description = stringResource(
+                    id = Strings.unsupportedType,
+                    itemDetailError.type
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = onDismissErrorDialog
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        is ItemDetailError.itemWasChangedRemotely -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.warning),
+                description = stringResource(
+                    id = Strings.dataReloaded,
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.ok),
+                    onClick = acceptItemWasChangedRemotely
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+    }
+}
+
+@Composable
+private fun droppedFieldsMessage(names: List<String>): String {
+    val formattedNames = names.map { "- $it\n" }.joinToString(separator = "")
+    return stringResource(id = Strings.droppedFieldsMessage, formattedNames)
 }
 
 @Composable

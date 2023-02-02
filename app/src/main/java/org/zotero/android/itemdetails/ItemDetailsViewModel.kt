@@ -24,11 +24,14 @@ import org.zotero.android.architecture.database.objects.ItemTypes
 import org.zotero.android.architecture.database.objects.RItem
 import org.zotero.android.architecture.database.objects.UpdatableChangeType
 import org.zotero.android.architecture.database.requests.CreateNoteDbRequest
+import org.zotero.android.architecture.database.requests.DeleteTagFromItemDbRequest
 import org.zotero.android.architecture.database.requests.EditItemFromDetailDbRequest
 import org.zotero.android.architecture.database.requests.EditNoteDbRequest
+import org.zotero.android.architecture.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.architecture.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.architecture.database.requests.ReadItemDbRequest
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.dashboard.SinglePickerResult
 import org.zotero.android.dashboard.data.AddOrEditNoteArgs
 import org.zotero.android.dashboard.data.CreatorEditArgs
 import org.zotero.android.dashboard.data.DetailType
@@ -38,11 +41,17 @@ import org.zotero.android.dashboard.data.ItemDetailError
 import org.zotero.android.dashboard.data.ItemDetailField
 import org.zotero.android.dashboard.data.SaveNoteAction
 import org.zotero.android.dashboard.data.ShowItemDetailsArgs
+import org.zotero.android.dashboard.data.SinglePickerArgs
+import org.zotero.android.dashboard.ui.SinglePickerItem
+import org.zotero.android.dashboard.ui.SinglePickerState
 import org.zotero.android.files.FileStore
 import org.zotero.android.formatter.dateAndTimeFormat
 import org.zotero.android.formatter.fullDateWithDashes
 import org.zotero.android.formatter.iso8601DateFormatV2
 import org.zotero.android.formatter.sqlFormat
+import org.zotero.android.itemdetails.ItemDetailsViewEffect.ScreenRefresh
+import org.zotero.android.itemdetails.bottomsheet.LongPressOptionItem
+import org.zotero.android.itemdetails.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.sync.ItemDetailDataCreator
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
@@ -75,8 +84,17 @@ internal class ItemDetailsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(saveNoteAction: SaveNoteAction) {
+        if (!saveNoteAction.isFromDashboard) {
+            viewModelScope.launch {
+                saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(singlePickerResult: SinglePickerResult) {
         viewModelScope.launch {
-            saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
+            changeType(singlePickerResult.id)
         }
     }
 
@@ -290,15 +308,15 @@ internal class ItemDetailsViewModel @Inject constructor(
         return false
     }
 
-    //Start of Changes
     private fun itemChanged(state: ItemDetailsViewState) {
         if (!state.isEditing) {
             process(ItemDetailAction.reloadData)
             return
         }
-        //TODO show Data Reloaded dialog for editing case
+        updateState {
+            copy(error = ItemDetailError.itemWasChangedRemotely)
+        }
     }
-    //End Of Changes
 
     fun onAddCreator() {
         showCreatorCreation(itemType = viewState.data.type)
@@ -385,7 +403,7 @@ internal class ItemDetailsViewModel @Inject constructor(
         updateState {
             copy(data = updatedData)
         }
-        triggerEffect(ItemDetailsViewEffect.ScreenRefresh)
+        triggerEffect(ScreenRefresh)
     }
 
     fun onTitleEdit(newTitle: String) {
@@ -616,7 +634,8 @@ internal class ItemDetailsViewModel @Inject constructor(
             title = title,
             key = key,
             libraryId = library.identifier,
-            readOnly = !library.metadataEditable
+            readOnly = !library.metadataEditable,
+            isFromDashboard = false
         )
         triggerEffect(ItemDetailsViewEffect.ShowAddOrEditNoteEffect)
     }
@@ -695,6 +714,270 @@ internal class ItemDetailsViewModel @Inject constructor(
     fun openAttachment(attachment: Attachment) {
 
     }
+
+    fun onItemTypeClicked() {
+        if (viewState.data.isAttachment) {
+            return
+        }
+        val selected = viewState.data.type
+        val types = schemaController.itemTypes.mapNotNull { type ->
+            if (ItemTypes.excludedFromTypePicker.contains(type)) {
+                return@mapNotNull null
+            }
+            val name = schemaController.localizedItemType(type)
+            if (name == null) {
+                return@mapNotNull null
+            }
+
+            SinglePickerItem(id = type, name = name)
+        }.sortedBy { it.name }
+        val state = SinglePickerState(objects = types, selectedRow = selected)
+        ScreenArguments.singlePickerArgs = SinglePickerArgs(singlePickerState = state, showSaveButton = false)
+        triggerEffect(ItemDetailsViewEffect.ShowItemTypePickerEffect)
+    }
+
+    private fun changeType(newType: String) {
+        val data: ItemDetailData
+        try {
+            data = data(newType, viewState.data)
+        } catch (error: Throwable) {
+            Timber.e(error)
+            updateState {
+                copy(
+                    error = (error as? ItemDetailError) ?: ItemDetailError.typeNotSupported(newType)
+                )
+            }
+            return
+        }
+
+        val droppedFields = droppedFields(viewState.data, data)
+        updateState {
+            if (droppedFields.isEmpty()) {
+                copy(data = data)
+            } else {
+                copy(
+                    promptSnapshot = data,
+                    error = ItemDetailError.droppedFields(droppedFields)
+                )
+            }
+        }
+    }
+
+    private fun droppedFields(fromData: ItemDetailData, toData: ItemDetailData): List<String> {
+        val newFields = toData.fields.values.toMutableSet()
+        val subtracted = fromData.fields.values.filter{ !it.value.isEmpty() }.toMutableSet()
+        for (field in newFields) {
+            val oldField = subtracted.firstOrNull {(it.baseField ?: it.name) == (field.baseField ?: field.name) }
+            if (oldField == null) {
+                continue
+            }
+            subtracted.remove(oldField)
+        }
+        return subtracted.map{ it.name }.sorted()
+    }
+
+    private fun creators(type: String, originalData: Map<UUID, ItemDetailCreator>): Map<UUID, ItemDetailCreator> {
+        val schemas = schemaController.creators(type)
+        if (schemas == null) {
+            throw ItemDetailError.typeNotSupported(type)
+        }
+        val primary = schemas.firstOrNull { it.primary }
+        if (primary == null) {
+            throw ItemDetailError.typeNotSupported(type)
+        }
+
+        var creators = originalData.toMutableMap()
+        for ((key, originalCreator) in originalData) {
+            if(schemas.firstOrNull{ it.creatorType == originalCreator.type } != null) {
+                continue
+            }
+
+            var creator = originalCreator.copy()
+
+            if (originalCreator.primary) {
+                creator.type = primary.creatorType
+            } else {
+                creator.type = "contributor"
+            }
+            creator.localizedType = schemaController.localizedCreator(creator.type) ?: ""
+            creators[key] = creator
+        }
+
+        return creators
+    }
+
+    private fun data(type: String, originalData: ItemDetailData): ItemDetailData {
+        val localizedType = schemaController.localizedItemType(itemType = type)
+        if (localizedType == null) {
+            throw ItemDetailError.typeNotSupported(type)
+        }
+
+        val (fieldIds, fields, hasAbstract) = ItemDetailDataCreator.fieldData(type,
+            schemaController = this.schemaController,
+            urlDetector = this.urlDetector,
+            doiDetector = { FieldKeys.Item.isDoi(it) },
+            getExistingData = { key, baseField ->
+                val originalDataField = originalData.fields[key]
+                if (originalDataField != null) {
+                    return@fieldData originalDataField.name to originalDataField.value
+                }
+                val base = baseField
+                if (base == null) {
+                    return@fieldData null to null
+                }
+
+                val field = originalData.fields.values.firstOrNull { it.baseField == base }
+                if (field != null) {
+                    return@fieldData null to field.value
+                }
+                return@fieldData null to null
+            })
+
+        var data = originalData
+            .deepCopy(
+                type = type,
+                isAttachment = type == ItemTypes.attachment,
+                localizedType = localizedType,
+                fields = fields,
+                fieldIds = fieldIds,
+                abstract = if (hasAbstract) (originalData.abstract ?: "") else null,
+                creators = creators(type, originalData.creators),
+                creatorIds = originalData.creatorIds,
+            )
+        return data
+    }
+
+    fun onDismissErrorDialog() {
+        updateState {
+            copy(
+                error = null,
+            )
+        }
+    }
+
+    fun acceptPrompt() {
+        val snapshot = viewState.promptSnapshot
+        if (snapshot == null) {
+            return
+        }
+        updateState {
+            copy(
+                data = snapshot.deepCopy(),
+                promptSnapshot = null
+            )
+        }
+    }
+
+    fun acceptItemWasChangedRemotely() {
+        process(ItemDetailAction.reloadData)
+    }
+
+    fun cancelPrompt() {
+        updateState {
+            copy(
+                promptSnapshot = null,
+            )
+        }
+    }
+
+    fun dismissBottomSheet() {
+        updateState {
+            copy(longPressOptionsHolder = null,)
+        }
+    }
+
+    fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+        viewModelScope.launch {
+            when (longPressOptionItem) {
+                is LongPressOptionItem.TrashNote -> {
+                    delete(longPressOptionItem.note)
+                }
+                is LongPressOptionItem.DeleteTag -> {
+                    delete(longPressOptionItem.tag)
+                }
+            }
+        }
+    }
+
+    fun onNoteLongClick(note: Note) {
+        updateState {
+            copy(
+                longPressOptionsHolder = LongPressOptionsHolder(
+                    title = note.title,
+                    longPressOptionItems = listOf(LongPressOptionItem.TrashNote(note))
+                )
+            )
+        }
+    }
+    fun onTagLongClick(tag: Tag) {
+        updateState {
+            copy(
+                longPressOptionsHolder = LongPressOptionsHolder(
+                    title = tag.name,
+                    longPressOptionItems = listOf(LongPressOptionItem.DeleteTag(tag))
+                )
+            )
+        }
+    }
+
+    private suspend fun delete(tag: Tag) {
+        val request = DeleteTagFromItemDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library!!.identifier,
+            tagName = tag.name
+        )
+        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+            Timber.e(error, "ItemDetailActionHandler: can't delete tag ${tag.name}")
+            updateState {
+                copy(error = ItemDetailError.cantSaveTags)
+            }
+            return
+        }
+        val index = viewState.tags.indexOf(tag)
+        if (index != -1) {
+            val updatedTags = viewState.tags.toMutableList()
+            updatedTags.removeAt(index)
+            updateState {
+                copy(tags = updatedTags)
+            }
+        }
+    }
+
+    private suspend fun delete(note: Note) {
+        if (!viewState.notes.contains(note)) {
+            return
+        }
+        trashItem(key = note.key) {
+            val index = viewState.notes.indexOf(note)
+            if (index == -1) {
+                return@trashItem
+            }
+            val updatedNotes = viewState.notes.toMutableList()
+            updatedNotes.removeAt(index)
+            updateState {
+                copy(notes = updatedNotes)
+            }
+        }
+    }
+
+    private suspend fun trashItem(key: String, onSuccess: () -> Unit) {
+        val request = MarkItemsAsTrashedDbRequest(
+            keys = listOf(key),
+            libraryId = viewState.library!!.identifier,
+            trashed = true
+        )
+        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+            Timber.e(error, "ItemDetailActionHandler: can't trash item $key")
+            updateState {
+                copy(error = ItemDetailError.cantTrashItem)
+            }
+            return
+        }
+        onSuccess()
+
+    }
+
+
 }
 
 data class ItemDetailsViewState(
@@ -707,14 +990,17 @@ data class ItemDetailsViewState(
     var error: ItemDetailError? = null,
     val data: ItemDetailData = ItemDetailData.empty,
     var snapshot: ItemDetailData? = null,
+    var promptSnapshot: ItemDetailData? = null,
     var notes: List<Note> = emptyList(),
     var attachments: List<Attachment> = emptyList(),
     var tags: List<Tag> = emptyList(),
     var isLoadingData: Boolean = false,
+    val longPressOptionsHolder: LongPressOptionsHolder? = null,
 ) : ViewState
 
 internal sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowCreatorEditEffect : ItemDetailsViewEffect()
+    object ShowItemTypePickerEffect : ItemDetailsViewEffect()
     object ScreenRefresh : ItemDetailsViewEffect()
     object OnBack : ItemDetailsViewEffect()
     object ShowAddOrEditNoteEffect : ItemDetailsViewEffect()

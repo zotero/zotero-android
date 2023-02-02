@@ -10,6 +10,7 @@ data class AddOrEditNoteArgs(
     val readOnly: Boolean,
     var text: String,
     var tags: List<Tag>,
+    val isFromDashboard: Boolean,
 ) {
     data class TitleData(
         val type: String,

@@ -1,7 +1,11 @@
 package org.zotero.android.dashboard
 
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -9,6 +13,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.database.DbWrapper
 import org.zotero.android.dashboard.data.ItemDetailCreator
+import org.zotero.android.dashboard.data.SinglePickerArgs
 import org.zotero.android.dashboard.ui.SinglePickerItem
 import org.zotero.android.dashboard.ui.SinglePickerState
 import org.zotero.android.files.FileStore
@@ -25,7 +30,15 @@ internal class CreatorEditViewModel @Inject constructor(
     private val schemaController: SchemaController
 ) : BaseViewModel2<CreatorEditViewState, CreatorEditViewEffect>(CreatorEditViewState()) {
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(singlePickerResult: SinglePickerResult) {
+        viewModelScope.launch {
+            onCreatorTypeSelected(singlePickerResult.id)
+        }
+    }
+
     fun init() = initOnce {
+        EventBus.getDefault().register(this)
         val args = ScreenArguments.creatorEditArgs
         updateState {
             copy(itemType = args.itemType, creator = args.creator)
@@ -78,24 +91,16 @@ internal class CreatorEditViewModel @Inject constructor(
         }
     }
 
-    fun onCreatorTypeSheetCollapse() {
-        updateState {
-            copy(
-                shouldShowCreatorTypeBottomSheet = false
-            )
-        }
-    }
-
     fun onCreatorTypeClicked() {
         val pickerState = createSinglePickerState(
             itemType = viewState.itemType, selected = viewState.creator!!.type
         )
-        updateState {
-            copy(
+        ScreenArguments.singlePickerArgs =
+            SinglePickerArgs(
                 singlePickerState = pickerState,
-                shouldShowCreatorTypeBottomSheet = true
+                title = viewState.creator!!.localizedType
             )
-        }
+        triggerEffect(CreatorEditViewEffect.NavigateToSinglePickerScreen)
     }
 
     fun createSinglePickerState(
@@ -113,13 +118,16 @@ internal class CreatorEditViewModel @Inject constructor(
         val state = SinglePickerState(objects = items, selectedRow = selected)
         return state
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        EventBus.getDefault().unregister(this)
+    }
 }
 
 internal data class CreatorEditViewState(
     val itemType: String = "",
     val creator: ItemDetailCreator? = null,
-    val shouldShowCreatorTypeBottomSheet: Boolean = false,
-    val singlePickerState: SinglePickerState = SinglePickerState(emptyList(), "")
 ) : ViewState {
     val isValid: Boolean
         get() {
@@ -135,4 +143,5 @@ internal data class CreatorEditViewState(
 
 internal sealed class CreatorEditViewEffect : ViewEffect {
     object OnBack: CreatorEditViewEffect()
+    object NavigateToSinglePickerScreen: CreatorEditViewEffect()
 }

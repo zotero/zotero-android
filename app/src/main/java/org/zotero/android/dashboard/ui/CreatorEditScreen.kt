@@ -7,13 +7,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -47,6 +47,8 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Suppress("UNUSED_PARAMETER")
 internal fun CreatorEditScreen(
     onBack: () -> Unit,
+    navigateToSinglePickerScreen: () -> Unit,
+    scaffoldModifier: Modifier,
     viewModel: CreatorEditViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -62,9 +64,13 @@ internal fun CreatorEditScreen(
             is CreatorEditViewEffect.OnBack -> {
                 onBack()
             }
+            is CreatorEditViewEffect.NavigateToSinglePickerScreen -> {
+                navigateToSinglePickerScreen()
+            }
         }
     }
     CustomScaffold(
+        modifier = scaffoldModifier,
         topBar = {
             TopBar(
                 onCloseClicked = onBack,
@@ -73,23 +79,20 @@ internal fun CreatorEditScreen(
             )
         },
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.surface),
+                .background(color = CustomTheme.colors.surface)
+                .padding(start = 16.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight(),
-            ) {
-                displayFields(
-                    viewState = viewState,
-                    layoutType = layoutType,
-                    viewModel = viewModel,
-                )
+            displayFields(
+                viewState = viewState,
+                layoutType = layoutType,
+                viewModel = viewModel,
+            )
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     modifier = Modifier
-                        .padding(start = 12.dp)
                         .fillMaxWidth()
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -104,63 +107,58 @@ internal fun CreatorEditScreen(
                     style = CustomTheme.typography.default,
                     fontSize = layoutType.calculateTextSize(),
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                CustomDivider()
             }
         }
-        SinglePickerViewBottomSheet(
-            singlePickerState = viewState.singlePickerState,
-            onOptionSelected = viewModel::onCreatorTypeSelected,
-            onClose = viewModel::onCreatorTypeSheetCollapse,
-            showBottomSheet = viewState.shouldShowCreatorTypeBottomSheet
-        )
     }
 }
 
-@Composable
-private fun displayFields(
+private fun LazyListScope.displayFields(
     viewState: CreatorEditViewState,
     viewModel: CreatorEditViewModel,
     layoutType: LayoutType
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp)
-    ) {
-        LazyColumn {
-            item {
-                FieldTappableRow(
-                    detailTitle = stringResource(id = Strings.creator_type),
-                    detailValue = viewState.creator?.localizedType ?: "",
-                    layoutType = layoutType,
-                    onClick = viewModel::onCreatorTypeClicked
-                )
-                if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.separate) {
-                    FieldEditableRow(
-                        detailTitle = stringResource(id = Strings.last_name),
-                        detailValue = viewState.creator?.lastName ?: "",
-                        onValueChange = viewModel::onLastNameChange,
-                        layoutType = layoutType
-                    )
-                    FieldEditableRow(
-                        detailTitle = stringResource(id = Strings.first_name),
-                        detailValue = viewState.creator?.firstName ?: "",
-                        onValueChange = viewModel::onFirstNameChange,
-                        layoutType = layoutType
-                    )
-                } else {
-                    FieldEditableRow(
-                        detailTitle = stringResource(id = Strings.name),
-                        detailValue = viewState.creator?.fullName ?: "",
-                        onValueChange = viewModel::onFullNameChange,
-                        layoutType = layoutType
-                    )
-                }
-
-            }
-        }
-
+    item {
+        Spacer(modifier = Modifier.height(20.dp))
+        CustomDivider()
+        FieldTappableRow(
+            detailTitle = stringResource(id = Strings.creator_type),
+            detailValue = viewState.creator?.localizedType ?: "",
+            layoutType = layoutType,
+            onClick = viewModel::onCreatorTypeClicked
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        CustomDivider()
     }
 
+    if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.separate) {
+        item {
+            FieldEditableRow(
+                detailTitle = stringResource(id = Strings.last_name),
+                detailValue = viewState.creator?.lastName ?: "",
+                onValueChange = viewModel::onLastNameChange,
+                layoutType = layoutType
+            )
+        }
+        item {
+            FieldEditableRow(
+                detailTitle = stringResource(id = Strings.first_name),
+                detailValue = viewState.creator?.firstName ?: "",
+                onValueChange = viewModel::onFirstNameChange,
+                layoutType = layoutType
+            )
+        }
+    } else {
+        item {
+            FieldEditableRow(
+                detailTitle = stringResource(id = Strings.name),
+                detailValue = viewState.creator?.fullName ?: "",
+                onValueChange = viewModel::onFullNameChange,
+                layoutType = layoutType
+            )
+        }
+    }
 }
 
 @Composable
@@ -171,37 +169,38 @@ private fun FieldEditableRow(
     textColor: Color = CustomTheme.colors.primaryContent,
     onValueChange: (String) -> Unit,
 ) {
-    Row {
-        Column(modifier = Modifier
-            .padding(start = 12.dp)
-            .width(90.dp)) {
-            Text(
-                modifier = Modifier.align(Alignment.Start),
-                text = detailTitle,
-                color = CustomTheme.colors.secondaryContent,
-                style = CustomTheme.typography.default,
-                fontSize = layoutType.calculateTextSize(),
-            )
-        }
+    Column {
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Column(modifier = Modifier.padding(start = 12.dp)) {
-            CustomTextField(
+        Row {
+            Column(
                 modifier = Modifier
-                    .fillMaxSize(),
-                value = detailValue,
-                hint = "",
-                textColor = textColor,
-                onValueChange = onValueChange,
-                textStyle = CustomTheme.typography.default,
-            )
+                    .width(layoutType.calculateItemFieldLabelWidth())
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Start),
+                    text = detailTitle,
+                    color = CustomTheme.colors.secondaryContent,
+                    style = CustomTheme.typography.default,
+                    fontSize = layoutType.calculateTextSize(),
+                )
+            }
+
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                CustomTextField(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    value = detailValue,
+                    hint = "",
+                    textColor = textColor,
+                    onValueChange = onValueChange,
+                    textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        CustomDivider()
     }
-    CustomDivider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp)
-            .height(2.dp)
-    )
 }
 
 @Composable
@@ -212,43 +211,41 @@ private fun FieldTappableRow(
     onClick: () ->Unit,
     textColor: Color = CustomTheme.colors.primaryContent,
 ) {
-    Row(
-        modifier = Modifier.safeClickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = onClick
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .width(90.dp),
+    Column {
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.safeClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
         ) {
-            Text(
-                modifier = Modifier.align(Alignment.Start),
-                text = detailTitle,
-                color = CustomTheme.colors.secondaryContent,
-                style = CustomTheme.typography.default,
-                fontSize = layoutType.calculateTextSize(),
-            )
-        }
+            Column(
+                modifier = Modifier
+                    .width(layoutType.calculateItemFieldLabelWidth()),
+            ) {
+                Text(
+                    modifier = Modifier.align(Alignment.Start),
+                    text = detailTitle,
+                    color = CustomTheme.colors.secondaryContent,
+                    style = CustomTheme.typography.default,
+                    fontSize = layoutType.calculateTextSize(),
+                )
+            }
 
-        Column(modifier = Modifier.padding(start = 12.dp)) {
-            Text(
-                modifier = Modifier,
-                text = detailValue,
-                color = textColor,
-                style = CustomTheme.typography.default,
-                fontSize = layoutType.calculateTextSize(),
-            )
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(
+                    modifier = Modifier,
+                    text = detailValue,
+                    color = textColor,
+                    style = CustomTheme.typography.default,
+                    fontSize = layoutType.calculateTextSize(),
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        CustomDivider()
     }
-    CustomDivider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp)
-            .height(2.dp)
-    )
 }
 
 

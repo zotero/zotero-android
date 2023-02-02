@@ -1,76 +1,63 @@
 package org.zotero.android.dashboard.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.greenrobot.eventbus.EventBus
+import org.zotero.android.architecture.ScreenArguments
+import org.zotero.android.dashboard.SinglePickerResult
+import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.misc.CustomDivider
-import org.zotero.android.uicomponents.modal.CustomModalBottomSheet
 import org.zotero.android.uicomponents.row.RowItemWithCheckbox
-
-
-@Composable
-internal fun SinglePickerViewBottomSheet(
-    singlePickerState: SinglePickerState,
-    onOptionSelected: (String) -> Unit,
-    onClose: () -> Unit,
-    showBottomSheet: Boolean,
-) {
-
-    var shouldShow by remember { mutableStateOf(false) }
-    LaunchedEffect(showBottomSheet) {
-        if (showBottomSheet) {
-            shouldShow = true
-        }
-    }
-
-    if (shouldShow) {
-        CustomModalBottomSheet(
-            shouldCollapse = !showBottomSheet,
-            sheetContent = {
-                SinglePickerViewSheetContent(onOptionSelected = {
-                    onClose()
-                    onOptionSelected(it)
-                },
-                    singlePickerState = singlePickerState)
-            },
-            onCollapse = {
-                shouldShow = false
-                onClose()
-            },
-        )
-    }
-
-}
+import org.zotero.android.uicomponents.topbar.CloseIconTopBar
 
 @Composable
-private fun SinglePickerViewSheetContent(
-    onOptionSelected:(String) -> Unit,
-    singlePickerState: SinglePickerState,
-) {
-    Box {
-        Column(
+fun SinglePickerScreen(onCloseClicked: () -> Unit, scaffoldModifier: Modifier = Modifier) {
+    val pickerArgs = ScreenArguments.singlePickerArgs
+    val singlePickerState = pickerArgs.singlePickerState
+    CustomScaffold(
+        modifier = scaffoldModifier,
+        topBar = {
+            TopBar(
+                title = pickerArgs.title,
+                onCloseClicked = onCloseClicked
+            )
+        },
+    ) {
+        LazyColumn(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            for (option in singlePickerState.objects) {
+            items(
+                singlePickerState.objects
+            ) {option ->
                 RowItemWithCheckbox(
                     title = option.name,
                     checked = option.id == singlePickerState.selectedRow,
-                    onCheckedChange = { onOptionSelected(option.id) }
+                    onCheckedChange = {
+                        onCloseClicked()
+                        EventBus.getDefault().post(SinglePickerResult(option.id))
+                    }
                 )
                 CustomDivider(modifier = Modifier.padding(2.dp))
             }
-
         }
     }
 }
+
+@Composable
+private fun TopBar(
+    title: String?,
+    onCloseClicked: () -> Unit,
+) {
+    CloseIconTopBar(
+        title = title,
+        onClose = onCloseClicked,
+    )
+}
+
 
 data class SinglePickerState(
     val objects: List<SinglePickerItem>,

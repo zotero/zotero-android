@@ -1,11 +1,15 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package org.zotero.android.itemdetails
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,18 +52,17 @@ internal fun FieldRow(
     layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     showDivider: Boolean,
-    showDelete: Boolean = false,
-    onDelete: () -> Unit = {},
+    onDelete: (() -> Unit)? = null
 ) {
     Column {
         Spacer(modifier = Modifier.height(8.dp))
         Row {
-            if (showDelete) {
+            if (onDelete != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Image(
                     modifier = Modifier
                         .size(layoutType.calculateIconSize())
-                        .clickable(
+                        .safeClickable(
                             onClick = onDelete,
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(bounded = false)
@@ -163,36 +166,45 @@ fun DatesRows(
 }
 
 fun LazyListScope.notesTagsAndAttachmentsBlock(
-    notes: List<Note>,
-    attachments: List<Attachment>,
-    tags: List<Tag>,
+    viewState:ItemDetailsViewState,
     layoutType: CustomLayoutSize.LayoutType,
     onNoteClicked: (Note) -> Unit,
+    onNoteLongClicked: (Note) -> Unit = {},
     onAddNote: () -> Unit,
     onTagClicked: (Tag) -> Unit,
+    onTagLongClicked: (Tag) -> Unit = {},
     onAddTag: () -> Unit,
-    onAttachmentClicked: (Attachment) -> Unit,
-    onAddAttachment: () -> Unit,
+    onAttachmentClicked: (Attachment) -> Unit = {},
+    onAttachmentLongClicked: (Attachment) -> Unit = {},
+    onAddAttachment: () -> Unit = {},
 ) {
-    listOfItems(
-        sectionTitle = Strings.notes,
-        itemIcon = Drawables.item_note,
-        itemTitles = notes.map { it.title },
-        layoutType = layoutType,
-        onItemClicked = {
-            onNoteClicked(notes[it])
-        },
-        onAddItemClick = onAddNote,
-        addTitleRes = Strings.add_note
-    )
+    if (!viewState.data.isAttachment) {
+        listOfItems(
+            sectionTitle = Strings.notes,
+            itemIcon = Drawables.item_note,
+            itemTitles = viewState.notes.map { it.title },
+            layoutType = layoutType,
+            onItemClicked = {
+                onNoteClicked(viewState.notes[it])
+            },
+            onItemLongClicked = {
+                onNoteLongClicked(viewState.notes[it])
+            },
+            onAddItemClick = onAddNote,
+            addTitleRes = Strings.add_note
+        )
+    }
 
     listOfItems(
         sectionTitle = Strings.tags,
         itemIcon = Drawables.ic_tag,
-        itemTitles = tags.map { it.name },
+        itemTitles = viewState.tags.map { it.name },
         layoutType = layoutType,
         onItemClicked = {
-            onTagClicked(tags[it])
+            onTagClicked(viewState.tags[it])
+        },
+        onItemLongClicked = {
+            onTagLongClicked(viewState.tags[it])
         },
         onAddItemClick = onAddTag,
         addTitleRes = Strings.add_tag
@@ -201,12 +213,15 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
     listOfItems(
         sectionTitle = Strings.attachments,
         itemIcon = Drawables.attachment_list_pdf,
-        itemTitles = attachments.map { it.title },
+        itemTitles = viewState.attachments.map { it.title },
         layoutType = layoutType,
         onItemClicked = {
-            onAttachmentClicked(attachments[it])
+            onAttachmentClicked(viewState.attachments[it])
         },
-        onAddItemClick = onAddAttachment,
+        onItemLongClicked = {
+            onAttachmentLongClicked(viewState.attachments[it])
+        },
+        onAddItemClick = if (viewState.data.isAttachment) null else onAddAttachment,
         addTitleRes = Strings.add_attachment
     )
 }
@@ -216,56 +231,64 @@ private fun LazyListScope.listOfItems(
     @DrawableRes itemIcon: Int,
     itemTitles: List<String>,
     onItemClicked: (Int) -> Unit,
+    onItemLongClicked: (Int) -> Unit,
     @StringRes addTitleRes: Int,
-    onAddItemClick: () -> Unit,
+    onAddItemClick: (() -> Unit)? = null,
     layoutType: CustomLayoutSize.LayoutType
 ) {
     itemDetailHeaderSection(sectionTitle, layoutType)
     itemsIndexed(
         itemTitles
     ) { index, item ->
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .safeClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
-                    onClick = { onItemClicked(index) }
-                )
-                .padding(all = 8.dp)
-                .padding(start = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = itemIcon),
-                modifier = Modifier.size(layoutType.calculateIconSize()),
-                contentDescription = null,
-            )
-            Column(
+        Box {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp, top = 8.dp)
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = { onItemClicked(index) },
+                        onLongClick = { onItemLongClicked(index) }
+                    )
+                    .padding(all = 8.dp)
+                    .padding(start = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = HtmlCompat.fromHtml(
-                        item,
-                        HtmlCompat.FROM_HTML_MODE_LEGACY
-                    ).toString(),
-                    fontSize = layoutType.calculateTextSize(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Image(
+                    painter = painterResource(id = itemIcon),
+                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                    contentDescription = null,
                 )
-                CustomDivider(modifier = Modifier.padding(top = 8.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, top = 8.dp)
+                ) {
+                    Text(
+                        text = HtmlCompat.fromHtml(
+                            item,
+                            HtmlCompat.FROM_HTML_MODE_LEGACY
+                        ).toString(),
+                        fontSize = layoutType.calculateTextSize(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    CustomDivider(modifier = Modifier.padding(top = 8.dp))
+                }
             }
         }
+
     }
-    item {
-        AddItemRow(
-            layoutType = layoutType,
-            titleRes = addTitleRes,
-            onClick = onAddItemClick
-        )
+    if (onAddItemClick != null) {
+        item {
+            AddItemRow(
+                layoutType = layoutType,
+                titleRes = addTitleRes,
+                onClick = onAddItemClick
+            )
+        }
     }
+
 }
 
 private fun LazyListScope.itemDetailHeaderSection(
@@ -290,4 +313,5 @@ private fun LazyListScope.itemDetailHeaderSection(
         }
     }
 }
+
 

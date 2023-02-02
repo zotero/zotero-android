@@ -217,7 +217,7 @@ dependencies {
     implementation("org.greenrobot:eventbus:3.2.0")
     implementation("com.airbnb.android:lottie:5.0.3")
 
-    implementation("commons-io:commons-io:2.6")
+    implementation("commons-io:commons-io:2.4")
     implementation ("commons-codec:commons-codec:1.13")
 
 

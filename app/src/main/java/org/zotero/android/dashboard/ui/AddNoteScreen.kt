@@ -69,6 +69,7 @@ internal fun AddNoteScreen(
         ) {
 
             Body(
+                layoutType = layoutType,
                 text = viewState.text,
                 focusRequester = bodyFocusRequester,
                 onValueChange = viewModel::onBodyTextChange
@@ -82,6 +83,7 @@ internal fun AddNoteScreen(
 
 @Composable
 private fun Body(
+    layoutType: CustomLayoutSize.LayoutType,
     text: String,
     focusRequester: FocusRequester,
     onValueChange: (String) -> Unit
@@ -98,7 +100,7 @@ private fun Body(
             hint = "",
             focusRequester = focusRequester,
             onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default,
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
         )
     }
 }
