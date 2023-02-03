@@ -15,7 +15,7 @@ data class LoginRequest(
 
     @SerializedName("name")
     @Expose
-    val name: String = "Automatic Zotero iOS Client Key",
+    val name: String = "Automatic Zotero Android Client Key",
 
     @SerializedName("access")
     @Expose
