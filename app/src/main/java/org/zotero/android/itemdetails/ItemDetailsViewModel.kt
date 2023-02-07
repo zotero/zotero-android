@@ -895,6 +895,13 @@ internal class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.DeleteTag -> {
                     delete(longPressOptionItem.tag)
                 }
+                is LongPressOptionItem.DeleteCreator -> {
+                    delete(longPressOptionItem.creator)
+                }
+                is LongPressOptionItem.MoveToTrashAttachment -> {
+                    delete(longPressOptionItem.attachment)
+                }
+                is LongPressOptionItem.RemoveDownloadAttachment -> TODO()
             }
         }
     }
@@ -917,6 +924,39 @@ internal class ItemDetailsViewModel @Inject constructor(
                     longPressOptionItems = listOf(LongPressOptionItem.DeleteTag(tag))
                 )
             )
+        }
+    }
+
+    fun onCreatorLongClick(creator: ItemDetailCreator) {
+        updateState {
+            copy(
+                longPressOptionsHolder = LongPressOptionsHolder(
+                    title = creator.name,
+                    longPressOptionItems = listOf(LongPressOptionItem.DeleteCreator(creator))
+                )
+            )
+        }
+    }
+
+    fun onAttachmentLongClick(attachment: Attachment) {
+        val actions = mutableListOf<LongPressOptionItem>()
+        val attachmentType = attachment.type
+        if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
+            actions.add(LongPressOptionItem.RemoveDownloadAttachment(attachment))
+        }
+
+        if (!viewState.data.isAttachment) {
+            actions.add(LongPressOptionItem.MoveToTrashAttachment(attachment))
+        }
+        if (actions.isNotEmpty()) {
+            updateState {
+                copy(
+                    longPressOptionsHolder = LongPressOptionsHolder(
+                        title = attachment.title,
+                        longPressOptionItems = actions
+                    )
+                )
+            }
         }
     }
 
@@ -956,6 +996,42 @@ internal class ItemDetailsViewModel @Inject constructor(
             updatedNotes.removeAt(index)
             updateState {
                 copy(notes = updatedNotes)
+            }
+        }
+    }
+
+    private fun delete(creator: ItemDetailCreator) {
+        val id = creator.id
+
+        val index = viewState.data.creatorIds.indexOf(id)
+        if (index == -1) {
+            return
+        }
+        val updatedCreatorIds = viewState.data.creatorIds.toMutableList()
+        updatedCreatorIds.removeAt(index)
+
+        val updatedCreators = viewState.data.creators.toMutableMap()
+        updatedCreators.remove(id)
+
+        updateState {
+            copy(data = data.deepCopy(creatorIds = updatedCreatorIds, creators = updatedCreators))
+        }
+    }
+
+    private suspend fun delete(attachment: Attachment) {
+        if (!viewState.attachments.contains(attachment)) {
+            return
+        }
+
+        trashItem(key = attachment.key) {
+            val index = viewState.attachments.indexOf(attachment)
+            if (index == -1) {
+                return@trashItem
+            }
+            val updatedAttachments = viewState.attachments.toMutableList()
+            updatedAttachments.removeAt(index)
+            updateState {
+                copy(attachments = updatedAttachments)
             }
         }
     }

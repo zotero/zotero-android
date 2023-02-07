@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.zotero.android.architecture.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.database.DbWrapper
@@ -29,7 +30,8 @@ class UserControllers @Inject constructor(
     private val applicationScope: ApplicationScope,
     private val dispatchers: Dispatchers,
     private val webSocketController: WebSocketController,
-    private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream
+    private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
+    private val attachmentDownloader: AttachmentDownloader,
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -47,6 +49,7 @@ class UserControllers @Inject constructor(
             syncDelayIntervals = DelayIntervals.sync,
             conflictDelays = DelayIntervals.conflict
         )
+        attachmentDownloader.init(userId = userId)
         var isFirstLaunch = false
         coroutineScope.launch {
             dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->

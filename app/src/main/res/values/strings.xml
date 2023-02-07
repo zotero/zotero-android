@@ -84,4 +84,5 @@
     <string name="dataReloaded">This item has been changed remotely. It will now reload.</string>
     <string name="delete">Delete</string>
     <string name="moveToTrash">Move to Trash</string>
+    <string name="removeDownload">Remove Download</string>
 </resources>

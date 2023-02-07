@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -20,6 +21,7 @@ import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.attachmentdownloader.RemoteAttachmentDownloadOperation
 import org.zotero.android.architecture.database.Database
 import org.zotero.android.architecture.database.DbError
 import org.zotero.android.architecture.database.DbWrapper
@@ -43,6 +45,8 @@ import org.zotero.android.dashboard.data.ItemsError
 import org.zotero.android.dashboard.data.SaveNoteAction
 import org.zotero.android.dashboard.data.ShowItemDetailsArgs
 import org.zotero.android.files.FileStore
+import org.zotero.android.framework.ZoteroApplication
+import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.UriExtractor
@@ -59,6 +63,7 @@ import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uidata.Collection
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -70,7 +75,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
     private val schemaController: SchemaController,
-    private val syncUseCase: SyncUseCase
+    private val syncUseCase: SyncUseCase,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
