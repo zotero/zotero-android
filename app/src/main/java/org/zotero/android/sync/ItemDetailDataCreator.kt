@@ -1,19 +1,19 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.Attachment
-import org.zotero.android.architecture.database.objects.FieldKeys
-import org.zotero.android.architecture.database.objects.ItemTypes
-import org.zotero.android.architecture.database.objects.ObjectSyncState
-import org.zotero.android.architecture.database.objects.RItem
-import org.zotero.android.architecture.database.requests.items
-import org.zotero.android.dashboard.data.ItemDetailCreator
-import org.zotero.android.dashboard.data.ItemDetailData
-import org.zotero.android.dashboard.data.ItemDetailError
-import org.zotero.android.dashboard.data.ItemDetailField
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.ObjectSyncState
+import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.requests.items
 import org.zotero.android.files.FileStore
-import org.zotero.android.formatter.dateAndTimeFormat
-import org.zotero.android.formatter.iso8601DateFormatV2
-import org.zotero.android.formatter.sqlFormat
+import org.zotero.android.helpers.formatter.dateAndTimeFormat
+import org.zotero.android.helpers.formatter.iso8601DateFormatV2
+import org.zotero.android.helpers.formatter.sqlFormat
+import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.itemdetails.data.ItemDetailData
+import org.zotero.android.screens.itemdetails.data.ItemDetailError
+import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import timber.log.Timber
 import java.util.Date
 import java.util.UUID
@@ -186,7 +186,8 @@ object ItemDetailDataCreator {
             if (key == FieldKeys.Item.accessDate) {
                 if (value.isNotEmpty()) {
                     val date = iso8601DateFormatV2.parse(value)!!
-                    additionalInfo = mapOf(ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
+                    additionalInfo = mapOf(
+                        ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
                         ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
                 }
             }

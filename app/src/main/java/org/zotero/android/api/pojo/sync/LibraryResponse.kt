@@ -1,6 +1,6 @@
 package org.zotero.android.api.pojo.sync
 
-import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.sync.LibraryIdentifier
 
 data class LibraryResponse(

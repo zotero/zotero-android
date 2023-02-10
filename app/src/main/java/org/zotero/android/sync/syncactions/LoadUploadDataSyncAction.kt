@@ -1,7 +1,7 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.ReadAttachmentUploadsDbRequest
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.ReadAttachmentUploadsDbRequest
 import org.zotero.android.backgrounduploader.BackgroundUploaderContext
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.AttachmentUpload

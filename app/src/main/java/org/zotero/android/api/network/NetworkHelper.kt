@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.zotero.android.framework.ZoteroApplication
+import org.zotero.android.ZoteroApplication
 import retrofit2.Response
 
 object NetworkHelper {

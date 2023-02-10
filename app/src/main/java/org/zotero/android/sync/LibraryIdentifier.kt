@@ -2,7 +2,7 @@ package org.zotero.android.sync
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
-import org.zotero.android.architecture.database.objects.RCustomLibraryType
+import org.zotero.android.database.objects.RCustomLibraryType
 
 sealed class LibraryIdentifier: Parcelable {
     @Parcelize

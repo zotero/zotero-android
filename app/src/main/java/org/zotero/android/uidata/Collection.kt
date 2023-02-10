@@ -1,7 +1,7 @@
 package org.zotero.android.uidata
 
-import org.zotero.android.architecture.database.objects.RCollection
-import org.zotero.android.architecture.database.objects.RSearch
+import org.zotero.android.database.objects.RCollection
+import org.zotero.android.database.objects.RSearch
 import org.zotero.android.sync.CollectionIdentifier
 
 data class Collection(

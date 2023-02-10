@@ -4,10 +4,10 @@ import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.SyncGroupVersionsDbRequest
-import org.zotero.android.data.AccessPermissions
-import org.zotero.android.data.KeyResponse
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.SyncGroupVersionsDbRequest
+import org.zotero.android.sync.syncactions.data.AccessPermissions
+import org.zotero.android.sync.syncactions.data.KeyResponse
 import javax.inject.Inject
 
 class SyncRepository @Inject constructor(

@@ -1,12 +1,12 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.architecture.database.DbRequest
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.objects.RCollection
-import org.zotero.android.architecture.database.objects.RItem
-import org.zotero.android.architecture.database.objects.RPageIndex
-import org.zotero.android.architecture.database.objects.RSearch
-import org.zotero.android.architecture.database.requests.MarkForResyncDbAction
+import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.objects.RCollection
+import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RPageIndex
+import org.zotero.android.database.objects.RSearch
+import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncObject

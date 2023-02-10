@@ -55,7 +55,7 @@ class SaveFileToInternalStorageUseCase @Inject constructor(
         val cacheDir: File = fileRepo.cache()
         val internalFile = File(cacheDir, getFileName(uri))
         if (internalFile.exists()) {
-            internalFile.delete()
+            internalFile.deleteRecursively()
         }
 
         internalFile.createNewFile()

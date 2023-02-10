@@ -1,8 +1,8 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.architecture.Defaults
-import org.zotero.android.architecture.database.RealmDbStorage
-import org.zotero.android.architecture.database.requests.ReadLibrariesDataDbRequest
+import org.zotero.android.database.RealmDbStorage
+import org.zotero.android.database.requests.ReadLibrariesDataDbRequest
 import org.zotero.android.sync.LibraryData
 import org.zotero.android.sync.LibrarySyncType
 import org.zotero.android.sync.SyncAction

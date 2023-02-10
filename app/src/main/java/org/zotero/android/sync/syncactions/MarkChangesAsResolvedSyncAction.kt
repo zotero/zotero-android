@@ -1,7 +1,7 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.MarkAllLibraryObjectChangesAsSyncedDbRequest
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.MarkAllLibraryObjectChangesAsSyncedDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
 

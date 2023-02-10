@@ -4,8 +4,8 @@ import org.zotero.android.api.pojo.sync.CreatorSchema
 import org.zotero.android.api.pojo.sync.FieldSchema
 import org.zotero.android.api.pojo.sync.ItemSchema
 import org.zotero.android.api.pojo.sync.SchemaLocale
-import org.zotero.android.architecture.database.objects.FieldKeys
-import org.zotero.android.data.mappers.SchemaResponseMapper
+import org.zotero.android.api.mappers.SchemaResponseMapper
+import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
 import java.util.Locale
 import javax.inject.Inject

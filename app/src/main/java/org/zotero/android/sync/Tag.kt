@@ -1,7 +1,7 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.RTag
-import org.zotero.android.architecture.database.objects.RTypedTag
+import org.zotero.android.database.objects.RTag
+import org.zotero.android.database.objects.RTypedTag
 
 class Tag(
     val name: String,

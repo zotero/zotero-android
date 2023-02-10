@@ -6,9 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.zotero.android.architecture.database.DbRequest
-import org.zotero.android.architecture.database.DbResponseRequest
-import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.DbWrapper
 import timber.log.Timber
 
 abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(

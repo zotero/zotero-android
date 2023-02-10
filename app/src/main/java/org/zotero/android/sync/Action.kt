@@ -1,6 +1,6 @@
 package org.zotero.android.sync;
 
-import org.zotero.android.architecture.database.requests.PerformDeletionsDbRequest
+import org.zotero.android.database.requests.PerformDeletionsDbRequest
 
 sealed class Action {
     object loadKeyPermissions : Action()

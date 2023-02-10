@@ -1,8 +1,8 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.CreatorTypes
-import org.zotero.android.architecture.database.objects.RCreator
-import org.zotero.android.framework.ZoteroApplication
+import org.zotero.android.database.objects.CreatorTypes
+import org.zotero.android.database.objects.RCreator
+import org.zotero.android.ZoteroApplication
 import org.zotero.android.uicomponents.Strings
 
 class CreatorSummaryFormatter {

@@ -12,10 +12,10 @@ import okio.ByteString
 import org.zotero.android.api.ForWebSocket
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.ReadVersionDbRequest
-import org.zotero.android.data.mappers.ChangeWsResponseMapper
-import org.zotero.android.data.mappers.WsResponseMapper
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.ReadVersionDbRequest
+import org.zotero.android.api.mappers.ChangeWsResponseMapper
+import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.websocket.ChangeWsResponse
 import org.zotero.android.websocket.Command
 import org.zotero.android.websocket.SubscribeWsMessage

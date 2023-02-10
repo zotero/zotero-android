@@ -6,9 +6,9 @@ import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.data.AuthorizeUploadResponse
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
+import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 
 class AuthorizeUploadSyncAction(

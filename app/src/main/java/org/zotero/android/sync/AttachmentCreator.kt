@@ -1,12 +1,12 @@
 package org.zotero.android.sync
 
 import android.webkit.MimeTypeMap
-import org.zotero.android.architecture.database.objects.Attachment
-import org.zotero.android.architecture.database.objects.FieldKeys
-import org.zotero.android.architecture.database.objects.ItemTypes
-import org.zotero.android.architecture.database.objects.LinkType
-import org.zotero.android.architecture.database.objects.ObjectSyncState
-import org.zotero.android.architecture.database.objects.RItem
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.LinkType
+import org.zotero.android.database.objects.ObjectSyncState
+import org.zotero.android.database.objects.RItem
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.File

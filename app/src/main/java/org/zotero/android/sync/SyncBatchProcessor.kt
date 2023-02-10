@@ -9,15 +9,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
+import org.zotero.android.api.mappers.CollectionResponseMapper
+import org.zotero.android.api.mappers.ItemResponseMapper
+import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.StoreCollectionsDbRequest
-import org.zotero.android.architecture.database.requests.StoreItemsDbResponseRequest
-import org.zotero.android.architecture.database.requests.StoreSearchesDbRequest
-import org.zotero.android.data.mappers.CollectionResponseMapper
-import org.zotero.android.data.mappers.ItemResponseMapper
-import org.zotero.android.data.mappers.SearchResponseMapper
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.StoreCollectionsDbRequest
+import org.zotero.android.database.requests.StoreItemsDbResponseRequest
+import org.zotero.android.database.requests.StoreSearchesDbRequest
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.FileWriter
@@ -241,7 +241,7 @@ class SyncBatchProcessor(
             val newFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.newName, contentType =  change.contentType)
             if (!oldFile.renameTo(newFile)) {
                 Timber.e("SyncBatchProcessor: can't rename file")
-                oldFile.delete()
+                oldFile.deleteRecursively()
             }
         }
     }

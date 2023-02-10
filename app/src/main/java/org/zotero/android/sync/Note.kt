@@ -1,9 +1,9 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.FieldKeys
-import org.zotero.android.architecture.database.objects.ItemTypes
-import org.zotero.android.architecture.database.objects.RItem
-import org.zotero.android.architecture.database.requests.key
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.requests.key
 import timber.log.Timber
 
 class Note(

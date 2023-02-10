@@ -3,9 +3,9 @@ package org.zotero.android.architecture
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import org.zotero.android.architecture.database.objects.RCustomLibraryType
-import org.zotero.android.dashboard.data.ItemDetailCreator
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.files.DataMarshaller
+import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject

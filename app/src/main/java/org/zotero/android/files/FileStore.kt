@@ -287,7 +287,7 @@ class FileStore @Inject constructor (
             return
         }
         val file = fileURLForFilename(filename)
-        file?.delete()
+        file?.deleteRecursively()
     }
 
     fun isPdf(file: File): Boolean {

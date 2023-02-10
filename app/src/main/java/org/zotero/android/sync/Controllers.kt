@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.onEach
 import org.apache.commons.io.FileUtils
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.attachmentdownloader.AttachmentDownloader
+import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,9 +25,9 @@ class Controllers @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val isUserInitializedEventStream: IsUserInitializedEventStream,
     private val sessionController: SessionController,
-    private val userControllers: UserControllers
-
-) {
+    private val userControllers: UserControllers,
+    private val fileDownloader: AttachmentDownloader,
+    ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
     private var didInitialize: Boolean = false
@@ -111,7 +112,7 @@ class Controllers @Inject constructor(
     private fun clearSession() {
         val controllers = this.userControllers
         controllers.disableSync(apiKey = this.apiKey)
-        // TODO Cancel all downloads
+        fileDownloader.stop()
         // TODO Cancel all background uploads
 
         FileUtils.deleteDirectory(fileStore.cache())

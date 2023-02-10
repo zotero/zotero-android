@@ -13,7 +13,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
-import org.zotero.android.architecture.database.DbWrapper
+import org.zotero.android.database.DbWrapper
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory

@@ -1,6 +1,6 @@
 package org.zotero.android.api.pojo.sync
 
-import org.zotero.android.architecture.database.objects.RTypedTag
+import org.zotero.android.database.objects.RTypedTag
 
 data class TagResponse(
     val tag: String,

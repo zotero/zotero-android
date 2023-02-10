@@ -10,20 +10,20 @@ import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.architecture.database.DbRequest
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.CheckItemIsChangedDbRequest
-import org.zotero.android.architecture.database.requests.MarkAttachmentUploadedDbRequest
-import org.zotero.android.architecture.database.requests.ReadItemDbRequest
-import org.zotero.android.architecture.database.requests.UpdateVersionType
-import org.zotero.android.architecture.database.requests.UpdateVersionsDbRequest
-import org.zotero.android.data.AuthorizeUploadResponse
+import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.CheckItemIsChangedDbRequest
+import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
+import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.database.requests.UpdateVersionType
+import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncActionWithError
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 import java.io.File
 
@@ -201,7 +201,7 @@ class UploadAttachmentSyncAction(
             if (this.file.extension != "pdf" || fileStore.isPdf(file = this.file)) {
                 return size
             }
-            this.file.delete()
+            this.file.deleteRecursively()
         }
 
         Timber.e("UploadAttachmentSyncAction: missing attachment - ${this.file.absolutePath}")

@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import org.zotero.android.itemdetails.bottomsheet.LongPressOptionItem
-import org.zotero.android.itemdetails.bottomsheet.LongPressOptionRow
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionRow
 import org.zotero.android.uicomponents.theme.CustomPalette
 
 @Composable

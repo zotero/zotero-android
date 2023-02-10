@@ -3,10 +3,10 @@ package org.zotero.android.api.pojo.sync
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import org.zotero.android.architecture.database.objects.AnnotationType
-import org.zotero.android.architecture.database.objects.FieldKeys
-import org.zotero.android.architecture.database.objects.ItemTypes
-import org.zotero.android.formatter.iso8601DateFormat
+import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.helpers.formatter.iso8601DateFormat
 import org.zotero.android.ktx.rounded
 import org.zotero.android.ktx.unmarshalList
 import org.zotero.android.sync.LinkMode

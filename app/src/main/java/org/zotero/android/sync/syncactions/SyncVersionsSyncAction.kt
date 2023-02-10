@@ -6,9 +6,9 @@ import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.architecture.database.DbWrapper
-import org.zotero.android.architecture.database.requests.MarkOtherObjectsAsChangedByUser
-import org.zotero.android.architecture.database.requests.SyncVersionsDbRequest
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.MarkOtherObjectsAsChangedByUser
+import org.zotero.android.database.requests.SyncVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncError

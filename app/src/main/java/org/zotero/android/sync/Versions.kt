@@ -1,6 +1,6 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.RVersions
+import org.zotero.android.database.objects.RVersions
 
 class Versions(
     var collections: Int,

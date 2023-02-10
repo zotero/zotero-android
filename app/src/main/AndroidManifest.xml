@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".framework.ZoteroApplication"
+        android:name=".ZoteroApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -28,7 +28,7 @@
             android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
             android:value="${enableCrashReporting}" />
         <activity
-            android:name=".root.RootActivity"
+            android:name=".screens.root.RootActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.Transparent"
@@ -42,7 +42,7 @@
 
 
         <activity
-            android:name=".onboarding.ui.OnboardingActivity"
+            android:name=".screens.onboarding.OnboardingActivity"
             android:theme="@style/AppTheme.IntroActivity"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
@@ -50,12 +50,12 @@
 
         <activity
             android:exported="false"
-            android:name=".dashboard.DashboardActivity"
+            android:name=".screens.dashboard.DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:exported="false"
-            android:name=".login.LoginActivity"
+            android:name=".screens.login.LoginActivity"
             android:windowSoftInputMode="adjustResize" />
 
         <activity

@@ -1,7 +1,6 @@
 package org.zotero.android.sync
 
-import org.zotero.android.architecture.database.objects.AnnotationsConfig
-import org.zotero.android.data.CGRect
+import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.ktx.rounded
 
 interface SplittablePathPoint {
