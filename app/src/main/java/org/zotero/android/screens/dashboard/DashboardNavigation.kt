@@ -2,6 +2,7 @@
 
 package org.zotero.android.screens.dashboard
 
+import android.net.Uri
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -30,7 +31,11 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @ExperimentalAnimationApi
 @Composable
-internal fun DashboardNavigation(onPickFile: () -> Unit) {
+internal fun DashboardNavigation(
+    onPickFile: () -> Unit,
+    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
+) {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -54,7 +59,9 @@ internal fun DashboardNavigation(onPickFile: () -> Unit) {
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
             navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
-            onBack = navigation::onBack
+            onBack = navigation::onBack,
+            onOpenGeneralUri = onOpenGeneralUri,
+            onOpenWebpage = onOpenWebpage,
         )
         addNoteScreen(
             onBack = navigation::onBack
@@ -89,6 +96,8 @@ private fun NavGraphBuilder.itemDetailsScreen(
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
+    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
 ) {
     composable(
         route = "${Destinations.ITEM_DETAILS}",
@@ -101,6 +110,8 @@ private fun NavGraphBuilder.itemDetailsScreen(
             navigateToCreatorEditDialog = navigateToCreatorEditDialog,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
             navigateToSinglePickerDialog = navigateToSinglePickerDialog,
+            onOpenGeneralUri = onOpenGeneralUri,
+            onOpenWebpage = onOpenWebpage,
         )
     }
 }

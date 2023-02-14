@@ -2,6 +2,7 @@
 
 package org.zotero.android.screens.itemdetails
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +42,8 @@ internal fun ItemDetailsScreen(
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     onBack: () -> Unit,
+    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
 
     ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -82,6 +85,12 @@ internal fun ItemDetailsScreen(
             }
             ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
                 navigateToAddOrEditNote()
+            }
+            is ItemDetailsViewEffect.OpenGeneralUri -> {
+                onOpenGeneralUri(consumedEffect.uri, consumedEffect.mimeType)
+            }
+            is ItemDetailsViewEffect.OpenWebpage -> {
+                onOpenWebpage(consumedEffect.uri)
             }
 
         }

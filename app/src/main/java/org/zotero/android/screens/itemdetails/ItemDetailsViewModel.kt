@@ -1,5 +1,8 @@
 package org.zotero.android.screens.itemdetails
 
+import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +17,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.joda.time.DateTime
+import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -36,6 +40,7 @@ import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.formatter.dateAndTimeFormat
 import org.zotero.android.helpers.formatter.fullDateWithDashes
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
@@ -43,8 +48,11 @@ import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenGeneralUri
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenWebpage
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ScreenRefresh
 import org.zotero.android.screens.itemdetails.data.DetailType
+import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
@@ -53,6 +61,7 @@ import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
 import org.zotero.android.sync.ItemDetailDataCreator
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
@@ -64,12 +73,14 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerState
 import timber.log.Timber
+import java.io.File
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
+
 @HiltViewModel
-internal class ItemDetailsViewModel @Inject constructor(
+class ItemDetailsViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
@@ -79,6 +90,8 @@ internal class ItemDetailsViewModel @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
     private val fileDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
+    private val context: Context,
+    private val getMimeTypeUseCase: GetMimeTypeUseCase,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -125,16 +138,15 @@ internal class ItemDetailsViewModel @Inject constructor(
                     return@onEach
                 }
 
-               attachmentOpened(update.key)
-                when(update.kind) {
+                attachmentOpened(update.key)
+                when (update.kind) {
                     AttachmentDownloader.Update.Kind.ready -> {
-                        //TODO show attachment and error
+                        showAttachment(key = update.key, parentKey = update.parentKey, libraryId = update.libraryId)
                     }
                     is AttachmentDownloader.Update.Kind.failed -> {
-
+                        //TODO
                     }
                 }
-
             }
             .launchIn(coroutineScope)
 
@@ -144,8 +156,10 @@ internal class ItemDetailsViewModel @Inject constructor(
         if (viewState.attachmentToOpen != key) {
             return
         }
-        updateState {
-            copy(attachmentToOpen = null)
+        viewModelScope.launch {
+            updateState {
+                copy(attachmentToOpen = null)
+            }
         }
     }
 
@@ -609,24 +623,26 @@ internal class ItemDetailsViewModel @Inject constructor(
             return
         }
         val attachment = viewState.attachments[index]
-
-        when (update.kind) {
-            AttachmentDownloader.Update.Kind.cancelled, is AttachmentDownloader.Update.Kind.failed, is AttachmentDownloader.Update.Kind.progress -> {
-                updateState {
-                    copy(updateAttachmentKey = attachment.key)
+        viewModelScope.launch {
+            when (update.kind) {
+                AttachmentDownloader.Update.Kind.cancelled, is AttachmentDownloader.Update.Kind.failed, is AttachmentDownloader.Update.Kind.progress -> {
+                    updateState {
+                        copy(updateAttachmentKey = attachment.key)
+                    }
+                }
+                AttachmentDownloader.Update.Kind.ready -> {
+                    val new = attachment.changed(location = Attachment.FileLocation.local)
+                    if (new == null) {
+                        return@launch
+                    }
+                    val attachmentsMutable = viewState.attachments.toMutableList()
+                    attachmentsMutable[index] = new
+                    updateState {
+                        copy(attachments = attachmentsMutable, updateAttachmentKey = new.key)
+                    }
                 }
             }
-            AttachmentDownloader.Update.Kind.ready -> {
-                val new = attachment.changed(location = Attachment.FileLocation.local)
-                if (new == null) {
-                    return
-                }
-                val attachmentsMutable = viewState.attachments.toMutableList()
-                attachmentsMutable[index] = new
-                updateState {
-                    copy(attachments = attachmentsMutable, updateAttachmentKey = new.key)
-                }
-            }
+            triggerEffect(ItemDetailsViewEffect.ScreenRefresh)
         }
     }
 
@@ -725,10 +741,16 @@ internal class ItemDetailsViewModel @Inject constructor(
             updatedNotes.add(note)
         }
         updateState {
-            copy(notes = updatedNotes)
+            copy(
+                notes = updatedNotes,
+                backgroundProcessedItems = backgroundProcessedItems + key
+            )
         }
 
         fun finishSave(error: Throwable?) {
+            updateState {
+                copy(backgroundProcessedItems = backgroundProcessedItems - key)
+            }
             if (error == null) {
                 return
             }
@@ -979,7 +1001,7 @@ internal class ItemDetailsViewModel @Inject constructor(
 
     fun dismissBottomSheet() {
         updateState {
-            copy(longPressOptionsHolder = null,)
+            copy(longPressOptionsHolder = null)
         }
     }
 
@@ -1058,6 +1080,9 @@ internal class ItemDetailsViewModel @Inject constructor(
     }
 
     private suspend fun delete(tag: Tag) {
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems + tag.name)
+        }
         val request = DeleteTagFromItemDbRequest(
             key = viewState.key,
             libraryId = viewState.library!!.identifier,
@@ -1066,7 +1091,10 @@ internal class ItemDetailsViewModel @Inject constructor(
         perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
             Timber.e(error, "ItemDetailActionHandler: can't delete tag ${tag.name}")
             updateState {
-                copy(error = ItemDetailError.cantSaveTags)
+                copy(
+                    error = ItemDetailError.cantSaveTags,
+                    backgroundProcessedItems = backgroundProcessedItems - tag.name
+                )
             }
             return
         }
@@ -1075,7 +1103,10 @@ internal class ItemDetailsViewModel @Inject constructor(
             val updatedTags = viewState.tags.toMutableList()
             updatedTags.removeAt(index)
             updateState {
-                copy(tags = updatedTags)
+                copy(
+                    tags = updatedTags,
+                    backgroundProcessedItems = backgroundProcessedItems - tag.name
+                )
             }
         }
     }
@@ -1134,6 +1165,9 @@ internal class ItemDetailsViewModel @Inject constructor(
     }
 
     private suspend fun trashItem(key: String, onSuccess: () -> Unit) {
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems + key)
+        }
         val request = MarkItemsAsTrashedDbRequest(
             keys = listOf(key),
             libraryId = viewState.library!!.identifier,
@@ -1142,14 +1176,111 @@ internal class ItemDetailsViewModel @Inject constructor(
         perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
             Timber.e(error, "ItemDetailActionHandler: can't trash item $key")
             updateState {
-                copy(error = ItemDetailError.cantTrashItem)
+                copy(
+                    error = ItemDetailError.cantTrashItem,
+                    backgroundProcessedItems = backgroundProcessedItems - key
+                )
             }
             return
+        }
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems - key)
         }
         onSuccess()
 
     }
 
+    private suspend fun showAttachment(key: String, parentKey: String?, libraryId: LibraryIdentifier) {
+        val attachmentResult = attachment(key = key, parentKey = parentKey, libraryId = libraryId)
+        if (attachmentResult == null) {
+            return
+        }
+        val (attachment, library) = attachmentResult
+        viewModelScope.launch {
+            show(attachment = attachment, library = library)
+        }
+    }
+
+    fun attachment(key: String, parentKey: String?, libraryId: LibraryIdentifier): Pair<Attachment, Library>? {
+        val index = viewState.attachments.indexOfFirst { it.key == key && it.libraryId == libraryId }
+        if (index == -1) {
+            return null
+        }
+        val attachment = viewState.attachments[index]
+        val library = viewState.library!!
+        return attachment to library
+    }
+
+    private suspend fun show(attachment: Attachment, library: Library) {
+        val attachmentType = attachment.type
+        when (attachmentType) {
+            is Attachment.Kind.url -> {
+                showUrl(attachmentType.url)
+            }
+            is Attachment.Kind.file -> {
+                val filename = attachmentType.filename
+                val contentType = attachmentType.contentType
+                val url = fileStore.attachmentFile(
+                    libraryId = library.identifier,
+                    key = attachment.key,
+                    filename = filename,
+                    contentType = contentType
+                )
+                when (contentType) {
+                    "application/pdf" -> {
+                        showPdf(url = url, key = attachment.key, library = library)
+                    }
+                    "text/html", "text/plain" -> {
+                        showGeneralFile(url = url, mime = contentType)
+                    }
+                    else -> {
+                        if (contentType.contains("image") || contentType.contains("video")) {
+                            showGeneralFile(url = url, mime = contentType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun showUrl(url: String) {
+        val uri = Uri.parse(url)
+        if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
+            val mimeType = getMimeTypeUseCase.execute(url)!!
+            triggerEffect(OpenGeneralUri(uri, mimeType))
+        } else {
+            triggerEffect(OpenWebpage(uri))
+        }
+    }
+
+    private fun showPdf(url: File, key: String, library: Library) {
+        showGeneralFile(url, "application/pdf")
+    }
+
+    private fun showGeneralFile(url: File, mime: String) {
+        val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
+        val resultUri = FileProvider.getUriForFile(context, fileProviderAuthority, url)
+        triggerEffect(OpenGeneralUri(resultUri, mime))
+    }
+
+    fun calculateAttachmentKind(attachment: Attachment): ItemDetailAttachmentKind {
+        val isProcessing = viewState.backgroundProcessedItems.contains(attachment.key)
+        if (isProcessing) {
+            return ItemDetailAttachmentKind.disabled
+        }
+
+        val (progress, error) = fileDownloader.data(key = attachment.key, libraryId = attachment.libraryId)
+
+        if (error != null) {
+            return ItemDetailAttachmentKind.failed(error)
+        }
+
+        if (progress != null) {
+            return ItemDetailAttachmentKind.inProgress(progress)
+        }
+
+        return ItemDetailAttachmentKind.default
+    }
 
 }
 
@@ -1170,15 +1301,18 @@ data class ItemDetailsViewState(
     var updateAttachmentKey: String? = null,
     var attachmentToOpen: String? = null,
     var isLoadingData: Boolean = false,
+    var backgroundProcessedItems: Set<String> = emptySet(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
 ) : ViewState
 
-internal sealed class ItemDetailsViewEffect : ViewEffect {
+sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowCreatorEditEffect : ItemDetailsViewEffect()
     object ShowItemTypePickerEffect : ItemDetailsViewEffect()
     object ScreenRefresh : ItemDetailsViewEffect()
     object OnBack : ItemDetailsViewEffect()
     object ShowAddOrEditNoteEffect : ItemDetailsViewEffect()
+    data class OpenGeneralUri(val uri: Uri, val mimeType: String): ItemDetailsViewEffect()
+    data class OpenWebpage(val uri: Uri): ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {

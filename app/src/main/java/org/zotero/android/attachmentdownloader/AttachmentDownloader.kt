@@ -323,8 +323,6 @@ class AttachmentDownloader @Inject constructor(
 
         when(result) {
             is CustomResult.GeneralError.CodeError -> {
-                Timber.e(result.throwable, "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}")
-
                 val isCancelError = result.throwable is AttachmentDownloadOperation.Error.cancelled
                 if (isCancelError || hasLocalCopy) {
                     this.errors.remove(download)
@@ -336,6 +334,7 @@ class AttachmentDownloader @Inject constructor(
                 } else if (hasLocalCopy) {
                     attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.ready))
                 } else {
+                    Timber.e(result.throwable, "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}")
                     attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.failed(result.throwable)))
                 }
             }

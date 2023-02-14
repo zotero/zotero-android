@@ -134,10 +134,9 @@ class FileStore @Inject constructor (
     }
 
     fun attachmentFile(libraryId: LibraryIdentifier, key: String, filename: String, contentType: String): File {
-        val name = split(filename = filename).first
         val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
         folderPath.mkdirs()
-        val result = File(folderPath, name)
+        val result = File(folderPath, filename)
         return result
     }
 

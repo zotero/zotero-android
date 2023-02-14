@@ -79,6 +79,7 @@ internal fun ItemDetailsViewScreen(
         }
         notesTagsAndAttachmentsBlock(
             viewState = viewState,
+            viewModel = viewModel,
             layoutType = layoutType,
             onNoteClicked = { viewModel.openNoteEditor(it) },
             onAddNote = { viewModel.onAddNote() },

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -32,13 +33,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
-import org.zotero.android.database.objects.Attachment
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.database.objects.Attachment
 import org.zotero.android.helpers.formatter.dateFormatItemDetails
+import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
+import org.zotero.android.uicomponents.attachmentprogress.State
+import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -167,6 +172,7 @@ fun DatesRows(
 
 fun LazyListScope.notesTagsAndAttachmentsBlock(
     viewState: ItemDetailsViewState,
+    viewModel: ItemDetailsViewModel,
     layoutType: CustomLayoutSize.LayoutType,
     onNoteClicked: (Note) -> Unit,
     onNoteLongClicked: (Note) -> Unit = {},
@@ -210,17 +216,12 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
         addTitleRes = Strings.add_tag
     )
 
-    listOfItems(
-        sectionTitle = Strings.attachments,
-        itemIcon = Drawables.attachment_list_pdf,
-        itemTitles = viewState.attachments.map { it.title },
+    listOfAttachments(
+        viewState = viewState,
+        viewModel = viewModel,
         layoutType = layoutType,
-        onItemClicked = {
-            onAttachmentClicked(viewState.attachments[it])
-        },
-        onItemLongClicked = {
-            onAttachmentLongClicked(viewState.attachments[it])
-        },
+        onItemClicked = onAttachmentClicked,
+        onItemLongClicked = onAttachmentLongClicked,
         onAddItemClick = if (viewState.data.isAttachment) null else onAddAttachment,
         addTitleRes = Strings.add_attachment
     )
@@ -312,6 +313,100 @@ private fun LazyListScope.itemDetailHeaderSection(
             CustomDivider()
         }
     }
+}
+
+private fun LazyListScope.listOfAttachments(
+    onItemClicked: (Attachment) -> Unit,
+    onItemLongClicked: (Attachment) -> Unit,
+    @StringRes addTitleRes: Int,
+    onAddItemClick: (() -> Unit)? = null,
+    layoutType: CustomLayoutSize.LayoutType,
+    viewState: ItemDetailsViewState,
+    viewModel: ItemDetailsViewModel,
+) {
+    itemDetailHeaderSection(Strings.attachments, layoutType)
+    items(
+        items = viewState.attachments
+    ) { item ->
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = { onItemClicked(item) },
+                        onLongClick = { onItemLongClicked(item) }
+                    )
+                    .padding(all = 8.dp)
+                    .padding(start = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val type = viewModel.calculateAttachmentKind(attachment = item)
+                when (item.type) {
+                    is Attachment.Kind.file -> {
+                        when (type) {
+                            ItemDetailAttachmentKind.default, ItemDetailAttachmentKind.disabled -> {
+                                FileAttachmentView(
+                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    state = State.ready(item.type),
+                                    style = Style.detail,
+                                )
+                            }
+                            is ItemDetailAttachmentKind.inProgress -> {
+                                FileAttachmentView(
+                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    state = State.progress(type.progressInHundreds),
+                                    style = Style.detail,
+                                )
+                            }
+                            is ItemDetailAttachmentKind.failed -> {
+                                FileAttachmentView(
+                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    state = State.failed(item.type, type.error),
+                                    style = Style.detail,
+                                )
+                            }
+                        }
+                    }
+                    is Attachment.Kind.url -> {
+                        Image(
+                            modifier = Modifier.size(layoutType.calculateIconSize()),
+                            painter = painterResource(id = Drawables.web_page),
+                            contentDescription = null,
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, top = 8.dp)
+                ) {
+                    Text(
+                        text = HtmlCompat.fromHtml(
+                            item.title,
+                            HtmlCompat.FROM_HTML_MODE_LEGACY
+                        ).toString(),
+                        fontSize = layoutType.calculateTextSize(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    CustomDivider(modifier = Modifier.padding(top = 8.dp))
+                }
+            }
+        }
+
+    }
+    if (onAddItemClick != null) {
+        item {
+            AddItemRow(
+                layoutType = layoutType,
+                titleRes = addTitleRes,
+                onClick = onAddItemClick
+            )
+        }
+    }
+
 }
 
 

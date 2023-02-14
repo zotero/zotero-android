@@ -2,6 +2,7 @@
 
 package org.zotero.android.screens.dashboard
 
+import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,6 +19,8 @@ import org.zotero.android.uicomponents.systemui.SolidStatusBar
 internal fun DashboardScreen(
     onBack: () -> Unit,
     onPickFile: () -> Unit,
+    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -35,7 +38,11 @@ internal fun DashboardScreen(
     }
     SolidStatusBar()
 
-    DashboardNavigation(onPickFile = onPickFile,)
+    DashboardNavigation(
+        onPickFile = onPickFile,
+        onOpenWebpage = onOpenWebpage,
+        onOpenGeneralUri = onOpenGeneralUri
+    )
 
 }
 
