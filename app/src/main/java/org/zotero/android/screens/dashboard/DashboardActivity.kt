@@ -13,11 +13,14 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.core.content.FileProvider
 import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
+import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.uicomponents.theme.CustomTheme
+import java.io.File
 
 @ExperimentalAnimationApi
 @AndroidEntryPoint
@@ -42,11 +45,13 @@ internal class DashboardActivity : BaseActivity() {
         val onPickFile: () -> Unit = {
             pickFileLauncher.launch(pickFileIntent())
         }
-        val onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit = { uri, mimeType ->
+        val onOpenFile: (file: File, mimeType: String) -> Unit = { file, mimeType ->
+            val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
+            val resultUri = FileProvider.getUriForFile(this, fileProviderAuthority, file)
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.setDataAndType(uri, mimeType)
+            intent.setDataAndType(resultUri, mimeType)
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, resultUri)
             intent.flags = FLAG_GRANT_READ_URI_PERMISSION
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, uri)
             startActivity(intent)
         }
 
@@ -61,7 +66,7 @@ internal class DashboardActivity : BaseActivity() {
                     onBack = { finish() },
                     onPickFile = onPickFile,
                     viewModel = viewModel,
-                    onOpenGeneralUri = onOpenGeneralUri,
+                    onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,
                 )
             }

@@ -9,6 +9,9 @@ import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.RealmClass
 import io.realm.kotlin.where
+import org.greenrobot.eventbus.EventBus
+import org.zotero.android.ZoteroApplication
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.database.requests.ReadBaseTagsToDeleteDbRequest
 import org.zotero.android.database.requests.baseKey
 import org.zotero.android.database.requests.key
@@ -16,6 +19,7 @@ import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
 import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.rounded
+import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.LinkMode
 import java.util.Date
@@ -440,11 +444,65 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     }
 
     private fun cleanupAnnotationFiles() {
-        //TODO cleanup annotations & fire event bus events.
+        val parentKey = this.parent?.key
+        val libraryId = this.libraryId
+        if (parentKey == null || libraryId == null) {
+            return
+        }
+
+        val fileStorage = ZoteroApplication.instance.fileStore
+        val light = fileStorage.annotationPreview(annotationKey = this.key, pdfKey = parentKey, libraryId = libraryId, isDark =false)
+        val dark = fileStorage.annotationPreview(annotationKey = this.key, pdfKey = parentKey, libraryId = libraryId, isDark = true)
+
+        EventBus.getDefault().post(EventBusConstants.AttachmentDeleted(light))
+        EventBus.getDefault().post(EventBusConstants.AttachmentDeleted(dark))
     }
 
     private fun cleanupAttachmentFiles() {
-        //TODO cleanup attachments & fire event bus events.
+        val fileStorage = ZoteroApplication.instance.fileStore
+        val type = AttachmentCreator.attachmentType(
+            item = this,
+            options = AttachmentCreator.Options.light,
+            fileStorage = fileStorage,
+            urlDetector = null,
+            isForceRemote = true
+        )
+        if (type == null) {
+            return
+        }
+        when (type) {
+            is Attachment.Kind.url -> {
+                //no-op
+            }
+            is Attachment.Kind.file -> {
+                val contentType = type.contentType
+                val linkType = type.linkType
+                val libraryId = this.libraryId
+                if (linkType == Attachment.FileLinkType.linkedFile || libraryId == null) {
+                    return
+                }
+
+                EventBus.getDefault().post(
+                    EventBusConstants.AttachmentDeleted(
+                        fileStorage.attachmentDirectory(
+                            libraryId,
+                            this.key
+                        )
+                    )
+                )
+
+                if (contentType == "application/pdf") {
+                    EventBus.getDefault().post(
+                        EventBusConstants.AttachmentDeleted(
+                            fileStorage.annotationPreviews(
+                                this.key,
+                                libraryId = libraryId
+                            )
+                        )
+                    )
+                }
+            }
+        }
     }
 
     override fun deleteChanges(uuids: List<String>, database: Realm) {

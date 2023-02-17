@@ -1,9 +1,7 @@
 package org.zotero.android.screens.itemdetails
 
-import android.content.Context
 import android.net.Uri
-import androidx.core.content.FileProvider
-import androidx.lifecycle.SavedStateHandle
+import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
@@ -17,9 +15,9 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.joda.time.DateTime
-import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -48,9 +46,15 @@ import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
-import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenGeneralUri
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OnBack
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenFile
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenWebpage
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ScreenRefresh
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowAddOrEditNoteEffect
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowCreatorEditEffect
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowImageViewer
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowItemTypePickerEffect
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowVideoPlayer
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
@@ -58,6 +62,10 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
+import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
+import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.sync.AttachmentFileCleanupController
+import org.zotero.android.sync.AttachmentFileDeletedNotification
 import org.zotero.android.sync.ItemDetailDataCreator
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
@@ -81,17 +89,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ItemDetailsViewModel @Inject constructor(
+    dispatcher: CoroutineDispatcher,
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
     private val urlDetector: UrlDetector,
     private val schemaController: SchemaController,
-    private val stateHandle: SavedStateHandle,
-    private val dispatcher: CoroutineDispatcher,
     private val fileDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-    private val context: Context,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    private val fileCleanupController: AttachmentFileCleanupController,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -115,6 +122,11 @@ class ItemDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             changeType(singlePickerResult.id)
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(attachmentFileDeleted: EventBusConstants.AttachmentFileDeleted) {
+        updateDeletedAttachmentFiles(attachmentFileDeleted.notification)
     }
 
     fun init() = initOnce {
@@ -144,7 +156,7 @@ class ItemDetailsViewModel @Inject constructor(
                         showAttachment(key = update.key, parentKey = update.parentKey, libraryId = update.libraryId)
                     }
                     is AttachmentDownloader.Update.Kind.failed -> {
-                        //TODO
+                        //TODO implement when unzipping is supported
                     }
                 }
             }
@@ -411,7 +423,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun _showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
         ScreenArguments.creatorEditArgs = CreatorEditArgs(creator = creator, itemType = itemType)
-        triggerEffect(ItemDetailsViewEffect.ShowCreatorEditEffect)
+        triggerEffect(ShowCreatorEditEffect)
     }
 
     private fun onSaveCreator(creator: ItemDetailCreator) {
@@ -642,7 +654,7 @@ class ItemDetailsViewModel @Inject constructor(
                     }
                 }
             }
-            triggerEffect(ItemDetailsViewEffect.ScreenRefresh)
+            triggerEffect(ScreenRefresh)
         }
     }
 
@@ -650,7 +662,7 @@ class ItemDetailsViewModel @Inject constructor(
         if (viewState.isEditing) {
             cancelChanges()
         } else {
-            triggerEffect(ItemDetailsViewEffect.OnBack)
+            triggerEffect(OnBack)
         }
     }
 
@@ -726,7 +738,7 @@ class ItemDetailsViewModel @Inject constructor(
             readOnly = !library.metadataEditable,
             isFromDashboard = false
         )
-        triggerEffect(ItemDetailsViewEffect.ShowAddOrEditNoteEffect)
+        triggerEffect(ShowAddOrEditNoteEffect)
     }
 
     private suspend fun saveNote(text: String, tags: List<Tag>, key: String) {
@@ -852,7 +864,7 @@ class ItemDetailsViewModel @Inject constructor(
         }.sortedBy { it.name }
         val state = SinglePickerState(objects = types, selectedRow = selected)
         ScreenArguments.singlePickerArgs = SinglePickerArgs(singlePickerState = state, showSaveButton = false)
-        triggerEffect(ItemDetailsViewEffect.ShowItemTypePickerEffect)
+        triggerEffect(ShowItemTypePickerEffect)
     }
 
     private fun changeType(newType: String) {
@@ -1020,7 +1032,9 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToTrashAttachment -> {
                     delete(longPressOptionItem.attachment)
                 }
-                is LongPressOptionItem.RemoveDownloadAttachment -> TODO()
+                is LongPressOptionItem.DeleteAttachmentFile -> {
+                    deleteFile(longPressOptionItem.attachment)
+                }
             }
         }
     }
@@ -1061,7 +1075,7 @@ class ItemDetailsViewModel @Inject constructor(
         val actions = mutableListOf<LongPressOptionItem>()
         val attachmentType = attachment.type
         if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
-            actions.add(LongPressOptionItem.RemoveDownloadAttachment(attachment))
+            actions.add(LongPressOptionItem.DeleteAttachmentFile(attachment))
         }
 
         if (!viewState.data.isAttachment) {
@@ -1146,6 +1160,15 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
+    private fun deleteFile(attachment: Attachment) {
+        this.fileCleanupController.delete(
+            AttachmentFileCleanupController.DeletionType.individual(
+                attachment = attachment,
+                parentKey = viewState.key
+            ), completed = null
+        )
+    }
+
     private suspend fun delete(attachment: Attachment) {
         if (!viewState.attachments.contains(attachment)) {
             return
@@ -1220,7 +1243,7 @@ class ItemDetailsViewModel @Inject constructor(
             is Attachment.Kind.file -> {
                 val filename = attachmentType.filename
                 val contentType = attachmentType.contentType
-                val url = fileStore.attachmentFile(
+                val file = fileStore.attachmentFile(
                     libraryId = library.identifier,
                     key = attachment.key,
                     filename = filename,
@@ -1228,14 +1251,16 @@ class ItemDetailsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(url = url, key = attachment.key, library = library)
+                        showPdf(file = file, key = attachment.key, library = library)
                     }
                     "text/html", "text/plain" -> {
-                        showGeneralFile(url = url, mime = contentType)
+                        openFile(file = file, mime = contentType)
                     }
                     else -> {
-                        if (contentType.contains("image") || contentType.contains("video")) {
-                            showGeneralFile(url = url, mime = contentType)
+                        if (contentType.contains("image")) {
+                            showImageFile(file)
+                        } else if (contentType.contains("video")) {
+                            showVideoFile(file)
                         }
                     }
                 }
@@ -1247,20 +1272,28 @@ class ItemDetailsViewModel @Inject constructor(
         val uri = Uri.parse(url)
         if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
             val mimeType = getMimeTypeUseCase.execute(url)!!
-            triggerEffect(OpenGeneralUri(uri, mimeType))
+            triggerEffect(OpenFile(uri.toFile(), mimeType))
         } else {
             triggerEffect(OpenWebpage(uri))
         }
     }
 
-    private fun showPdf(url: File, key: String, library: Library) {
-        showGeneralFile(url, "application/pdf")
+    private fun showPdf(file: File, key: String, library: Library) {
+        openFile(file, "application/pdf")
     }
 
-    private fun showGeneralFile(url: File, mime: String) {
-        val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
-        val resultUri = FileProvider.getUriForFile(context, fileProviderAuthority, url)
-        triggerEffect(OpenGeneralUri(resultUri, mime))
+    private fun openFile(file: File, mime: String) {
+        triggerEffect(OpenFile(file, mime))
+    }
+
+    private fun showVideoFile(file: File) {
+        ScreenArguments.videoPlayerArgs = VideoPlayerArgs(Uri.fromFile(file))
+        triggerEffect(ShowVideoPlayer)
+    }
+
+    private fun showImageFile(file: File) {
+        ScreenArguments.imageViewerArgs = ImageViewerArgs(Uri.fromFile(file), file.name)
+        triggerEffect(ShowImageViewer)
     }
 
     fun calculateAttachmentKind(attachment: Attachment): ItemDetailAttachmentKind {
@@ -1282,6 +1315,69 @@ class ItemDetailsViewModel @Inject constructor(
         return ItemDetailAttachmentKind.default
     }
 
+    private fun updateDeletedAttachmentFiles(notification: AttachmentFileDeletedNotification) {
+        when (notification) {
+            AttachmentFileDeletedNotification.all -> {
+                if(viewState.attachments.firstOrNull{ it.location == Attachment.FileLocation.local } == null) {
+                    return
+                }
+                setAllAttachmentFilesAsDeleted()
+            }
+            is AttachmentFileDeletedNotification.library -> {
+                val libraryId = notification.libraryId
+                if (libraryId != viewState.library!!.identifier || viewState.attachments.firstOrNull { it.location == Attachment.FileLocation.local } == null) {
+                    return
+                }
+                setAllAttachmentFilesAsDeleted()
+            }
+            is AttachmentFileDeletedNotification.allForItems -> {
+                val libraryId = notification.libraryId
+                val keys = notification.keys
+                if (libraryId != viewState.library!!.identifier
+                    || !keys.contains(viewState.key)
+                    || viewState.attachments.firstOrNull { it.location == Attachment.FileLocation.local } == null) {
+                    return
+                }
+                setAllAttachmentFilesAsDeleted()
+            }
+            is AttachmentFileDeletedNotification.individual -> {
+                val libraryId = notification.libraryId
+                val key = notification.key
+                val index = viewState.attachments.indexOfFirst {  it.key == key && it.libraryId == libraryId }
+                if (index == -1) {
+                    return
+                }
+                val new = viewState.attachments[index].changed(location = Attachment.FileLocation.remote, condition = { it == Attachment.FileLocation.local })
+                if (new == null) {
+                    return
+                }
+                val updatedAttachments = viewState.attachments.toMutableList()
+                updatedAttachments[index] = new
+                updateState {
+                    copy(
+                        attachments = updatedAttachments,
+                        updateAttachmentKey = new.key
+                    )
+                }
+            }
+        }
+    }
+
+    private fun setAllAttachmentFilesAsDeleted() {
+        val updatedAttachments = viewState.attachments.toMutableList()
+        for ((index, attachment) in viewState.attachments.withIndex()) {
+            val new = attachment.changed(
+                location = Attachment.FileLocation.remote,
+                condition = { it == Attachment.FileLocation.local })
+            if (new == null) {
+                continue
+            }
+            updatedAttachments[index] = new
+        }
+        updateState {
+            copy(attachments = updatedAttachments)
+        }
+    }
 }
 
 data class ItemDetailsViewState(
@@ -1311,8 +1407,10 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ScreenRefresh : ItemDetailsViewEffect()
     object OnBack : ItemDetailsViewEffect()
     object ShowAddOrEditNoteEffect : ItemDetailsViewEffect()
-    data class OpenGeneralUri(val uri: Uri, val mimeType: String): ItemDetailsViewEffect()
-    data class OpenWebpage(val uri: Uri): ItemDetailsViewEffect()
+    object ShowVideoPlayer : ItemDetailsViewEffect()
+    object ShowImageViewer : ItemDetailsViewEffect()
+    data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
+    data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {

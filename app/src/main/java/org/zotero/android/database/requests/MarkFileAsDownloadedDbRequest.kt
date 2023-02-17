@@ -26,5 +26,63 @@ class MarkFileAsDownloadedDbRequest(
             item.fileDownloaded = this.downloaded
         }
     }
+}
 
+class MarkItemsFilesAsNotDownloadedDbRequest(
+    private val keys: Set<String>,
+    private val libraryId: LibraryIdentifier,
+): DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val items = database.where<RItem>()
+            .keys(this.keys, this.libraryId).and()
+            .item(type = ItemTypes.attachment).and()
+            .file(downloaded = true).findAll()
+        for (item in items) {
+            if (item.attachmentNeedsSync) {
+                continue
+            }
+            item.fileDownloaded = false
+        }
+    }
+}
+
+class MarkLibraryFilesAsNotDownloadedDbRequest(
+    private val libraryId: LibraryIdentifier
+): DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val items =
+            database.where<RItem>()
+                .library(this.libraryId).and()
+                .item(type = ItemTypes.attachment).and()
+                .file(downloaded = true).findAll()
+        for (item in items) {
+            if (item.attachmentNeedsSync) {
+                continue
+            }
+            item.fileDownloaded = false
+        }
+    }
+
+}
+
+class MarkAllFilesAsNotDownloadedDbRequest: DbRequest {
+
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val items = database.where<RItem>().item(type = ItemTypes.attachment).and().file(downloaded = true).findAll()
+        for (item in items) {
+            if (item.attachmentNeedsSync) {
+                continue
+            }
+            item.fileDownloaded = false
+        }
+    }
 }

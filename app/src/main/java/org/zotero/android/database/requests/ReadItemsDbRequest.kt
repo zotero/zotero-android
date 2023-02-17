@@ -51,3 +51,16 @@ class ReadItemsDbRequest(
         return keys
     }
 }
+
+class ReadItemsWithKeysDbRequest(
+    val keys: Set<String>,
+    val libraryId: LibraryIdentifier,
+) : DbResponseRequest<RealmResults<RItem>> {
+    override val needsWrite: Boolean
+        get() = false
+
+    override fun process(database: Realm): RealmResults<RItem> {
+        return database.where<RItem>().keys(this.keys, this.libraryId).findAll()
+    }
+
+}

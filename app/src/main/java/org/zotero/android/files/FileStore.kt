@@ -133,11 +133,21 @@ class FileStore @Inject constructor (
         }
     }
 
-    fun attachmentFile(libraryId: LibraryIdentifier, key: String, filename: String, contentType: String): File {
+    fun attachmentFile(
+        libraryId: LibraryIdentifier,
+        key: String,
+        filename: String,
+        contentType: String
+    ): File {
         val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
         folderPath.mkdirs()
-        val result = File(folderPath, filename)
-        return result
+        return File(folderPath, filename)
+    }
+
+    fun attachmentDirectory(libraryId: LibraryIdentifier, key: String): File {
+        val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
+        folderPath.mkdirs()
+        return folderPath
     }
 
     fun annotationPreview(annotationKey: String, pdfKey: String, libraryId: LibraryIdentifier, isDark: Boolean): File {
@@ -168,15 +178,15 @@ class FileStore @Inject constructor (
 
     fun jsonCacheFile(objectS: SyncObject, libraryId: LibraryIdentifier, key: String): File {
         val objectName: String
-                when(objectS) {
+        when (objectS) {
             SyncObject.collection ->
-            objectName = "collection"
+                objectName = "collection"
             SyncObject.item, SyncObject.trash ->
-            objectName = "item"
+                objectName = "item"
             SyncObject.search ->
-            objectName = "search"
+                objectName = "search"
             SyncObject.settings ->
-            objectName = "settings"
+                objectName = "settings"
         }
         val folderPath = File(getRootDirectory(), "jsons/${libraryId.folderName}/$objectName")
         folderPath.mkdirs()
@@ -321,6 +331,11 @@ class FileStore @Inject constructor (
 
     val downloads: File get() {
         return File(getRootDirectory(), "downloads")
+    }
+
+    fun downloads(libraryId: LibraryIdentifier) : File {
+        val folder = File(getRootDirectory(), "downloads")
+        return File(folder, libraryId.folderName)
     }
 
 }

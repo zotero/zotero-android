@@ -26,14 +26,17 @@ import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.itemdetails.ItemDetailsScreen
+import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
+import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
+import java.io.File
 
 @ExperimentalAnimationApi
 @Composable
 internal fun DashboardNavigation(
     onPickFile: () -> Unit,
-    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
 ) {
     val navController = rememberAnimatedNavController()
@@ -59,8 +62,10 @@ internal fun DashboardNavigation(
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
             navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
+            navigateToImageViewerScreen = navigation::toImageViewerScreen,
             onBack = navigation::onBack,
-            onOpenGeneralUri = onOpenGeneralUri,
+            onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
         )
         addNoteScreen(
@@ -70,6 +75,8 @@ internal fun DashboardNavigation(
         creatorEditDialog()
         singlePickerScreen(onBack = navigation::onBack)
         singlePickerDialog(onBack = navigation::onBack)
+        videoPlayerScreen()
+        imageViewerScreen(onBack = navigation::onBack)
     }
 }
 
@@ -96,7 +103,9 @@ private fun NavGraphBuilder.itemDetailsScreen(
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
-    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    navigateToVideoPlayerScreen: () -> Unit,
+    navigateToImageViewerScreen: () -> Unit,
+    onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
 ) {
     composable(
@@ -110,7 +119,9 @@ private fun NavGraphBuilder.itemDetailsScreen(
             navigateToCreatorEditDialog = navigateToCreatorEditDialog,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
             navigateToSinglePickerDialog = navigateToSinglePickerDialog,
-            onOpenGeneralUri = onOpenGeneralUri,
+            navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
+            navigateToImageViewerScreen = navigateToImageViewerScreen,
+            onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
         )
     }
@@ -136,6 +147,27 @@ private fun NavGraphBuilder.creatorEditScreen(
         arguments = listOf(),
     ) {
         CreatorEditNavigation()
+    }
+}
+
+private fun NavGraphBuilder.videoPlayerScreen(
+) {
+    composable(
+        route = "${Destinations.VIDEO_PLAYER_SCREEN}",
+        arguments = listOf(),
+    ) {
+        VideoPlayerView()
+    }
+}
+
+private fun NavGraphBuilder.imageViewerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = "${Destinations.IMAGE_VIEWER_SCREEN}",
+        arguments = listOf(),
+    ) {
+        ImageViewerScreen(onBack = onBack)
     }
 }
 
@@ -194,6 +226,8 @@ private object Destinations {
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
     const val ADD_NOTE = "addNote"
+    const val VIDEO_PLAYER_SCREEN = "videoPlayerScreen"
+    const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
     const val CREATOR_EDIT_SCREEN = "creatorEditScreen"
     const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
@@ -227,5 +261,11 @@ private class Navigation(
 
     fun toSinglePickerDialog() {
         navController.navigate("${Destinations.SINGLE_PICKER_DIALOG}")
+    }
+    fun toVideoPlayerScreen() {
+        navController.navigate("${Destinations.VIDEO_PLAYER_SCREEN}")
+    }
+    fun toImageViewerScreen() {
+        navController.navigate("${Destinations.IMAGE_VIEWER_SCREEN}")
     }
 }

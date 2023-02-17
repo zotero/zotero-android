@@ -52,12 +52,6 @@ object ApiModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .setNetworkTimeout(configuration.networkTimeout)
-            .addInterceptor(run {
-                val httpLoggingInterceptor = HttpLoggingInterceptor()
-                httpLoggingInterceptor.apply {
-                    httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.HEADERS
-                }
-            })
             .addInterceptor(clientInfoNetworkInterceptor)
             .build()
     }
@@ -66,8 +60,8 @@ object ApiModule {
     @Singleton
     @ForWebSocket
     fun provideSocketOkHttpClient(
+        configuration: NetworkConfiguration
     ): OkHttpClient {
-        val timeout = 15L
         return OkHttpClient.Builder()
             .addInterceptor(
                 HttpLoggingInterceptor { message ->
@@ -75,10 +69,7 @@ object ApiModule {
                     Timber.d(message)
                 }
                     .apply { level = HttpLoggingInterceptor.Level.BODY }
-            )
-            .connectTimeout(timeout, TimeUnit.SECONDS)
-            .readTimeout(timeout, TimeUnit.SECONDS)
-            .writeTimeout(timeout, TimeUnit.SECONDS)
+            ).setNetworkTimeout(configuration.networkTimeout)
             .build()
     }
 
@@ -130,11 +121,13 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideAccountApi(@ForApiWithAuthentication retrofit: Retrofit) = retrofit.create(AccountApi::class.java)
+    fun provideAccountApi(@ForApiWithAuthentication retrofit: Retrofit) =
+        retrofit.create(AccountApi::class.java)
 
     @Provides
     @Singleton
-    fun provideSyncApi(@ForApiWithAuthentication retrofit: Retrofit) = retrofit.create(SyncApi::class.java)
+    fun provideSyncApi(@ForApiWithAuthentication retrofit: Retrofit) =
+        retrofit.create(SyncApi::class.java)
 
     private fun OkHttpClient.Builder.setNetworkTimeout(seconds: Long) =
         connectTimeout(seconds, TimeUnit.SECONDS)
@@ -171,6 +164,6 @@ object ApiModule {
     @Singleton
     fun provideDbWrapper(
     ): DbWrapper {
-       return DbWrapper()
+        return DbWrapper()
     }
 }

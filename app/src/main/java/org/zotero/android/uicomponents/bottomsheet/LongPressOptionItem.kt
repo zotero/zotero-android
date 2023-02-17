@@ -34,7 +34,7 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.ic_delete_20dp
     )
 
-    data class RemoveDownloadAttachment(val attachment: Attachment): LongPressOptionItem(
+    data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.removeDownload,
         resIcon = Drawables.ic_delete_20dp
     )

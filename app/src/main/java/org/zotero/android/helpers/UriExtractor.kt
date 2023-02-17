@@ -155,7 +155,7 @@ class UriExtractor @Inject constructor(private val mContext: Context, private va
         if (dateTakenColumnIndex != -1) {
             val dateTaken = cursor.getLong(dateTakenColumnIndex)
             resultFile.setLastModified(dateTaken)
-            exifNew.dateTime = dateTaken
+            exifNew.setDateTime(dateTaken)
         }
         if (latitudeColumnIndex != -1 && longitudeColumnIndex != -1) {
             exifNew.setLatLong(

@@ -282,3 +282,10 @@ fun <T> RealmQuery<T>.userChanges(
     return changed.and().changedByUser()
 }
 
+fun <T> RealmQuery<T>.file(
+    downloaded: Boolean
+): RealmQuery<T> {
+    return equalTo("fileDownloaded", downloaded)
+}
+
+

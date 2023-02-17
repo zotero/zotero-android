@@ -236,6 +236,13 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
 
+    //ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.0.0-beta03")
+    implementation("androidx.media3:media3-ui:1.0.0-beta03")
+
+    //Coil
+    implementation("io.coil-kt:coil-compose:2.2.2")
+
     //Unit Tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.test:core:1.5.0")

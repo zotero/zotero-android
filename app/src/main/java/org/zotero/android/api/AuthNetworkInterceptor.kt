@@ -5,7 +5,6 @@ import okhttp3.Interceptor
 import okhttp3.Interceptor.Chain
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.zotero.android.architecture.Defaults
 import javax.inject.Inject
 
@@ -27,19 +26,12 @@ class AuthNetworkInterceptor @Inject constructor(
             .build()
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private suspend fun authenticateRequest(
+    private fun authenticateRequest(
         request: Request,
         token: String,
         chain: Chain,
     ): Response {
         val authRequest = request.setAuthorizationHeader(token)
-        val response = chain.proceed(authRequest)
-        val body = response.body
-        val bodyString = body?.string() ?: ""
-        val defaultResponse = response
-            .newBuilder()
-            .body(bodyString.toResponseBody(body?.contentType()))
-            .build()
-        return defaultResponse
+        return chain.proceed(authRequest)
     }
 }

@@ -9,6 +9,7 @@ import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.Job
 import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.Controllers
 import timber.log.Timber
 import javax.inject.Inject
@@ -26,6 +27,9 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     @Inject
     lateinit var applicationScope: ApplicationScope
+
+    @Inject
+    lateinit var fileStore: FileStore
 
     companion object {
         lateinit var instance: ZoteroApplication

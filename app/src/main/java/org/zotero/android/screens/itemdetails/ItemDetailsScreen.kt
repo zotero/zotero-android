@@ -31,6 +31,7 @@ import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
+import java.io.File
 
 @Composable
 @Suppress("UNUSED_PARAMETER")
@@ -41,8 +42,10 @@ internal fun ItemDetailsScreen(
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
+    navigateToVideoPlayerScreen: () -> Unit,
+    navigateToImageViewerScreen: () -> Unit,
     onBack: () -> Unit,
-    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
 
     ) {
@@ -86,11 +89,18 @@ internal fun ItemDetailsScreen(
             ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
                 navigateToAddOrEditNote()
             }
-            is ItemDetailsViewEffect.OpenGeneralUri -> {
-                onOpenGeneralUri(consumedEffect.uri, consumedEffect.mimeType)
+            is ItemDetailsViewEffect.OpenFile -> {
+                onOpenFile(consumedEffect.file, consumedEffect.mimeType)
             }
             is ItemDetailsViewEffect.OpenWebpage -> {
                 onOpenWebpage(consumedEffect.uri)
+            }
+            is ItemDetailsViewEffect.ShowVideoPlayer -> {
+                navigateToVideoPlayerScreen()
+            }
+
+            is ItemDetailsViewEffect.ShowImageViewer -> {
+                navigateToImageViewerScreen()
             }
 
         }

@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
+import java.io.File
 
 @ExperimentalAnimationApi
 @Composable
@@ -19,7 +20,7 @@ import org.zotero.android.uicomponents.systemui.SolidStatusBar
 internal fun DashboardScreen(
     onBack: () -> Unit,
     onPickFile: () -> Unit,
-    onOpenGeneralUri: (uri: Uri, mimeType: String) -> Unit,
+    onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
@@ -41,7 +42,7 @@ internal fun DashboardScreen(
     DashboardNavigation(
         onPickFile = onPickFile,
         onOpenWebpage = onOpenWebpage,
-        onOpenGeneralUri = onOpenGeneralUri
+        onOpenFile = onOpenFile
     )
 
 }

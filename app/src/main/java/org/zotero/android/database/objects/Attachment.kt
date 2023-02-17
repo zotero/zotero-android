@@ -105,26 +105,6 @@ data class Attachment(
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Attachment
-
-        if (title != other.title) return false
-        if (key != other.key) return false
-        if (libraryId != other.libraryId) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = title.hashCode()
-        result = 31 * result + key.hashCode()
-        result = 31 * result + libraryId.hashCode()
-        return result
-    }
-
     companion object {
         fun initWithItemAndKind(item: RItem, type: Kind): Attachment? {
             val libraryId = item.libraryId
