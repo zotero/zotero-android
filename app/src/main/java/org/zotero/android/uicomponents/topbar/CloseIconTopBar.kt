@@ -9,6 +9,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -33,6 +34,7 @@ fun CloseIconTopBar(
     title: String?,
     onClose: () -> Unit = {},
     elevation: Dp = AppBarDefaults.TopAppBarElevation,
+    backgroundColor: Color = CustomTheme.colors.surface,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
@@ -54,7 +56,7 @@ fun CloseIconTopBar(
             }
         },
         actions = actions,
-        backgroundColor = CustomTheme.colors.surface,
+        backgroundColor = backgroundColor,
         elevation = elevation,
     )
 }

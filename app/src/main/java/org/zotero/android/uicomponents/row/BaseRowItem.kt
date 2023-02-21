@@ -34,6 +34,7 @@ fun BaseRowItem(
     description: String? = null,
     titleStyle: TextStyle = CustomTheme.typography.h3,
     textColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
+    backgroundColor: Color = CustomTheme.colors.surface,
     heightIn: Dp = 64.dp,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -43,7 +44,7 @@ fun BaseRowItem(
 ) {
     Row(
         modifier = Modifier
-            .background(CustomTheme.colors.surface)
+            .background(backgroundColor)
             .fillMaxWidth()
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },

@@ -196,7 +196,12 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 parameters["deleted"] = this.trash
             }
             if (changes.contains(RItemChanges.tags)) {
-                parameters["tags"] =this.tags!!.map { mapOf("tag" to it.tag?.name, "type" to it.type) }
+                parameters["tags"] = this.tags!!.map {
+                    mapOf(
+                        "tag" to it.tag?.name,
+                        "type" to RTypedTag.Kind.valueOf(it.type).int
+                    )
+                }
             }
             if (changes.contains(RItemChanges.collections)) {
                 parameters["collections"] =

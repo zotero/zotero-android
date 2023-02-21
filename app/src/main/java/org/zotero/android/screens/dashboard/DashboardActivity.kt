@@ -19,6 +19,8 @@ import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
+import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -30,6 +32,8 @@ internal class DashboardActivity : BaseActivity() {
 
     private val viewModel: DashboardViewModel by viewModels()
 
+    private var pickFileCallPoint: CallPoint = AllItems
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -38,11 +42,12 @@ internal class DashboardActivity : BaseActivity() {
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
-                EventBus.getDefault().post(EventBusConstants.FileWasSelected(uri))
+                EventBus.getDefault().post(EventBusConstants.FileWasSelected(uri, pickFileCallPoint))
             }
         }
 
-        val onPickFile: () -> Unit = {
+        val onPickFile: (callPoint: CallPoint) -> Unit = { callPoint ->
+            pickFileCallPoint = callPoint
             pickFileLauncher.launch(pickFileIntent())
         }
         val onOpenFile: (file: File, mimeType: String) -> Unit = { file, mimeType ->

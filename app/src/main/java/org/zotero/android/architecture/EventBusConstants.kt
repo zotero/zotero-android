@@ -6,8 +6,13 @@ import java.io.File
 
 object EventBusConstants {
     data class FileWasSelected(
-        val uri: Uri?
-    )
+        val uri: Uri?,
+        val callPoint: CallPoint
+    ) {
+        enum class CallPoint{
+            AllItems, ItemDetails
+        }
+    }
 
     data class AttachmentDeleted(val file: File)
     data class AttachmentFileDeleted(val notification: AttachmentFileDeletedNotification)

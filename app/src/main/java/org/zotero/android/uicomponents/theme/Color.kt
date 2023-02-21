@@ -73,6 +73,9 @@ data class CustomSemanticColors(
     val windowBackground: Color,
     val zoteroBlueWithDarkMode: Color,
     val zoteroItemDetailSectionBackground: Color,
+    val popupBackgroundTop: Color,
+    val popupBackgroundContent: Color,
+    val popupSelectedRow: Color,
 ) {
 
     data class DynamicTheme(
@@ -106,7 +109,10 @@ fun lightCustomColors(
     uiControl = CustomPalette.Charcoal,
     windowBackground = CustomPalette.FogGray,
     zoteroBlueWithDarkMode = Color(0xFF4071E6),
-    zoteroItemDetailSectionBackground = Color(0xFFF2F2F7)
+    zoteroItemDetailSectionBackground = Color(0xFFF2F2F7),
+    popupBackgroundTop = Color(0xFFF8F8F8),
+    popupBackgroundContent = Color(0xFFFFFFFF),
+    popupSelectedRow = Color(0xFFD1D1D6),
 )
 
 fun darkCustomColors(
@@ -129,7 +135,10 @@ fun darkCustomColors(
     uiControl = CustomPalette.CoolGray,
     windowBackground = CustomPalette.DarkCharcoal,
     zoteroBlueWithDarkMode = Color(0xFF335BB8),
-    zoteroItemDetailSectionBackground = Color(0xFF1C1C1E)
+    zoteroItemDetailSectionBackground = Color(0xFF1C1C1E),
+    popupBackgroundTop = Color(0xFF282828),
+    popupBackgroundContent = Color(0xFF1C1C1E),
+    popupSelectedRow = Color(0xFF3A3A3D),
 )
 
 internal fun createSemanticColors(

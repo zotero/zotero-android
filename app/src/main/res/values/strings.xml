@@ -85,4 +85,5 @@
     <string name="delete">Delete</string>
     <string name="moveToTrash">Move to Trash</string>
     <string name="removeDownload">Remove Download</string>
+    <string name="num_of_selected">%d selected</string>
 </resources>

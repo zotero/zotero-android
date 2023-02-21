@@ -1,6 +1,7 @@
 package org.zotero.android.screens.itemdetails
 
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ import org.joda.time.DateTime
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -30,19 +32,24 @@ import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
 import org.zotero.android.database.requests.DeleteTagFromItemDbRequest
 import org.zotero.android.database.requests.EditItemFromDetailDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
+import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
+import org.zotero.android.helpers.MediaSelectionResult
+import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.formatter.dateAndTimeFormat
 import org.zotero.android.helpers.formatter.fullDateWithDashes
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
+import org.zotero.android.ktx.index
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
@@ -64,6 +71,8 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.tagpicker.data.TagPickerArgs
+import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileDeletedNotification
 import org.zotero.android.sync.ItemDetailDataCreator
@@ -95,6 +104,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val urlDetector: UrlDetector,
     private val schemaController: SchemaController,
+    private val selectMedia: SelectMediaUseCase,
     private val fileDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
@@ -102,6 +112,9 @@ class ItemDetailsViewModel @Inject constructor(
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
+
+    //required to keep item change listener alive
+    private var currentItem: RItem? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(itemDetailCreator: ItemDetailCreator) {
@@ -125,8 +138,24 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(tagPickerResult: TagPickerResult) {
+        viewModelScope.launch {
+            setTags(tagPickerResult.tags)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(attachmentFileDeleted: EventBusConstants.AttachmentFileDeleted) {
         updateDeletedAttachmentFiles(attachmentFileDeleted.notification)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.FileWasSelected) {
+        if (event.uri != null && event.callPoint == EventBusConstants.FileWasSelected.CallPoint.ItemDetails) {
+            viewModelScope.launch {
+                addAttachments(listOf(event.uri))
+            }
+        }
     }
 
     fun init() = initOnce {
@@ -271,12 +300,14 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun reloadData(isEditing: Boolean) = viewModelScope.launch {
         try {
+            currentItem?.removeAllChangeListeners()
             val item = dbWrapper.realmDbStorage.perform(
                 request = ReadItemDbRequest(
                     libraryId = viewState.library!!.identifier,
                     key = viewState.key
                 ), refreshRealm = true
             )
+            currentItem = item
 
             item.addChangeListener(RealmObjectChangeListener<RItem> { items, changeSet ->
                 if (changeSet?.changedFields?.any {
@@ -286,10 +317,9 @@ class ItemDetailsViewModel @Inject constructor(
                     } == true) {
                     itemChanged(items, changeSet)
                 }
-            }
-            )
+            })
 
-            var (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
+            val (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
                 ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
                 schemaController = this@ItemDetailsViewModel.schemaController,
                 fileStorage = this@ItemDetailsViewModel.fileStore,
@@ -395,10 +425,15 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     fun onAddTag() {
+        val libraryId = viewState.library!!.identifier
+        val selected = viewState.tags.map { it.id }.toSet()
+        ScreenArguments.tagPickerArgs =
+            TagPickerArgs(libraryId = libraryId, selectedTags = selected)
+        triggerEffect(ItemDetailsViewEffect.ShowTagPickerEffect)
     }
 
     fun onAddAttachment() {
-
+        triggerEffect(ItemDetailsViewEffect.AddAttachment)
     }
 
     fun showCreatorCreation(itemType: String) {
@@ -1378,6 +1413,180 @@ class ItemDetailsViewModel @Inject constructor(
             copy(attachments = updatedAttachments)
         }
     }
+
+    private suspend fun setTags(tags: List<Tag>) {
+        val oldTags = viewState.tags
+        updateState {
+            copy(
+                tags = tags,
+                backgroundProcessedItems = backgroundProcessedItems + tags.map { it.name }
+            )
+        }
+
+        val request = EditTagsForItemDbRequest(key = viewState.key, libraryId = viewState.library!!.identifier, tags = tags)
+        val result = perform(dbWrapper = dbWrapper, request = request)
+
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems - tags.map { it.name })
+        }
+        if (result is Result.Failure) {
+            Timber.e(result.exception, "ItemDetailActionHandler: can't set tags to item")
+            updateState {
+                copy(tags = oldTags)
+            }
+        }
+    }
+
+    private suspend fun addAttachments(urls: List<Uri>) {
+        createAttachments(urls, libraryId = viewState.library!!.identifier) { attachments, failedCopyNames ->
+            if (attachments.isEmpty()) {
+                updateState {
+                    copy(error = ItemDetailError.cantAddAttachments(ItemDetailError.AttachmentAddError.couldNotMoveFromSource(failedCopyNames)))
+                }
+                return@createAttachments
+            }
+            for (attachment in attachments) {
+                val index = viewState.attachments.index(
+                    attachment,
+                    sortedBy = { first, second ->
+                        first.title.compareTo(
+                            second.title,
+                            ignoreCase = true
+                        ) == 1
+                    })
+                val updatedAttachments = viewState.attachments.toMutableList()
+                updatedAttachments.add(index, attachment)
+                updateState {
+                    copy(
+                        attachments = updatedAttachments,
+                        backgroundProcessedItems = backgroundProcessedItems + attachment.key
+                    )
+                }
+            }
+
+            if (!failedCopyNames.isEmpty()) {
+                updateState {
+                    copy(
+                        error = ItemDetailError.cantAddAttachments(
+                            ItemDetailError.AttachmentAddError.couldNotMoveFromSource(
+                                failedCopyNames
+                            )
+                        )
+                    )
+                }
+            }
+
+            val type = this.schemaController.localizedItemType(itemType = ItemTypes.attachment)
+                ?: ItemTypes.attachment
+            val request = CreateAttachmentsDbRequest(
+                attachments = attachments,
+                parentKey = viewState.key,
+                localizedType = type,
+                collections = emptySet(),
+                fileStore = fileStore
+            )
+
+            viewModelScope.launch {
+                val result =
+                    perform(dbWrapper, invalidateRealm = true, request = request)
+                for (attachment in attachments) {
+                    updateState {
+                        copy(backgroundProcessedItems = backgroundProcessedItems - attachment.key)
+                    }
+                }
+
+                if (result is Result.Failure) {
+                    Timber.e(
+                        result.exception,
+                        "ItemDetailActionHandler: could not create attachments"
+                    )
+
+                    val updatedAttachments = viewState.attachments.toMutableList()
+                    updatedAttachments.removeAll { stateAttachment ->
+                        attachments.map { it.key }.contains(stateAttachment.key)
+                    }
+
+                    updateState {
+                        copy(
+                            attachments = updatedAttachments,
+                            error = ItemDetailError.cantAddAttachments(ItemDetailError.AttachmentAddError.allFailedCreation)
+                        )
+                    }
+                } else if (result is Result.Success) {
+                    val failed = result.value
+                    if (failed.isEmpty()) {
+                        return@launch
+                    }
+                    val updatedAttachments = viewState.attachments.toMutableList()
+                    updatedAttachments.removeAll { stateAttachment ->
+                        failed.map { it.first }.contains(stateAttachment.key)
+                    }
+
+                    updateState {
+                        copy(
+                            attachments = updatedAttachments,
+                            error = ItemDetailError.cantAddAttachments(
+                                ItemDetailError.AttachmentAddError.someFailedCreation(
+                                    failed.map { it.second })
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+    }
+
+    private suspend fun createAttachments(urls: List<Uri>, libraryId: LibraryIdentifier, completion:  (List<Attachment>, List<String>) -> Unit) {
+        val attachments = mutableListOf<Attachment>()
+        val failedNames = mutableListOf<String>()
+        for (url in urls) {
+            val key = KeyGenerator.newKey()
+
+            val selectionResult = selectMedia.execute(
+                uri = url.toString(),
+                isValidMimeType = { true }
+            )
+
+            val isSuccess = selectionResult is MediaSelectionResult.AttachMediaSuccess
+            if (!isSuccess) {
+                //TODO parse errors
+                continue
+            }
+            selectionResult as MediaSelectionResult.AttachMediaSuccess
+
+            val original = selectionResult.file.file
+            val nameWithExtension = original.nameWithoutExtension + "." + original.extension
+            val mimeType =
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)
+                    ?: "application/octet-stream"
+            val file = fileStore.attachmentFile(
+                libraryId = libraryId,
+                key = key,
+                filename = nameWithExtension,
+                contentType = mimeType
+            )
+            if (!original.renameTo(file)) {
+                Timber.e("ItemDetailActionHandler: can't move attachment from source url $url")
+                failedNames.add(nameWithExtension)
+            } else {
+                attachments.add(
+                    Attachment(
+                        type = Attachment.Kind.file(
+                            filename = nameWithExtension,
+                            contentType = mimeType,
+                            location = Attachment.FileLocation.local,
+                            linkType = Attachment.FileLinkType.importedFile
+                        ),
+                        title = nameWithExtension,
+                        key = key,
+                        libraryId = libraryId
+                    )
+                )
+            }
+        }
+        completion(attachments, failedNames)
+    }
 }
 
 data class ItemDetailsViewState(
@@ -1403,6 +1612,7 @@ data class ItemDetailsViewState(
 
 sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowCreatorEditEffect : ItemDetailsViewEffect()
+    object ShowTagPickerEffect : ItemDetailsViewEffect()
     object ShowItemTypePickerEffect : ItemDetailsViewEffect()
     object ScreenRefresh : ItemDetailsViewEffect()
     object OnBack : ItemDetailsViewEffect()
@@ -1411,6 +1621,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
+    object AddAttachment : ItemDetailsViewEffect()
 }
 
 sealed class ItemDetailAction {

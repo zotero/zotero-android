@@ -16,18 +16,12 @@ import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
-import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
-import org.zotero.android.screens.itemdetails.data.DetailType
-import org.zotero.android.screens.allitems.data.InitialLoadData
-import org.zotero.android.screens.allitems.data.ItemAccessory
-import org.zotero.android.screens.allitems.data.ItemsError
-import org.zotero.android.screens.addnote.data.SaveNoteAction
-import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
@@ -45,6 +39,13 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.UriExtractor
+import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
+import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.allitems.data.InitialLoadData
+import org.zotero.android.screens.allitems.data.ItemAccessory
+import org.zotero.android.screens.allitems.data.ItemsError
+import org.zotero.android.screens.itemdetails.data.DetailType
+import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.KeyGenerator
@@ -376,7 +377,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.FileWasSelected) {
-        if (event.uri != null) {
+        if (event.uri != null && event.callPoint == AllItems) {
             viewModelScope.launch {
                 addAttachments(listOf(event.uri))
             }

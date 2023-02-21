@@ -22,12 +22,14 @@ import androidx.navigation.compose.dialog
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.itemdetails.ItemDetailsScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
+import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -35,7 +37,7 @@ import java.io.File
 @ExperimentalAnimationApi
 @Composable
 internal fun DashboardNavigation(
-    onPickFile: () -> Unit,
+    onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
 ) {
@@ -52,13 +54,15 @@ internal fun DashboardNavigation(
     ) {
         allItemsScreen(
             onBack = navigation::onBack,
-            onPickFile = onPickFile,
+            onPickFile = { onPickFile(CallPoint.AllItems) },
             navigateToItemDetails = navigation::toItemDetails,
             navigateToAddOrEditNote = navigation::toAddOrEditNote
         )
         itemDetailsScreen(
             navigateToCreatorEditScreen = navigation::toCreatorEditScreen,
             navigateToCreatorEditDialog = navigation::toCreatorEditDialog,
+            navigateToTagPickerScreen = navigation::toTagPickerScreen,
+            navigateToTagPickerDialog = navigation::toTagPickerDialog,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
             navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
@@ -67,6 +71,7 @@ internal fun DashboardNavigation(
             onBack = navigation::onBack,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
+            onPickFile = { onPickFile(CallPoint.ItemDetails) },
         )
         addNoteScreen(
             onBack = navigation::onBack
@@ -77,6 +82,8 @@ internal fun DashboardNavigation(
         singlePickerDialog(onBack = navigation::onBack)
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)
+        toTagPickerScreen(onBack = navigation::onBack)
+        toTagPickerDialog(onBack = navigation::onBack)
     }
 }
 
@@ -100,6 +107,8 @@ private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
     navigateToCreatorEditScreen: () -> Unit,
     navigateToCreatorEditDialog: () -> Unit,
+    navigateToTagPickerScreen: () -> Unit,
+    navigateToTagPickerDialog: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
@@ -107,6 +116,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     navigateToImageViewerScreen: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    onPickFile: () -> Unit,
 ) {
     composable(
         route = "${Destinations.ITEM_DETAILS}",
@@ -119,10 +129,13 @@ private fun NavGraphBuilder.itemDetailsScreen(
             navigateToCreatorEditDialog = navigateToCreatorEditDialog,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
             navigateToSinglePickerDialog = navigateToSinglePickerDialog,
+            navigateToTagPickerScreen = navigateToTagPickerScreen,
+            navigateToTagPickerDialog = navigateToTagPickerDialog,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
+            onPickFile = onPickFile,
         )
     }
 }
@@ -137,16 +150,6 @@ private fun NavGraphBuilder.addNoteScreen(
         AddNoteScreen(
             onBack = onBack,
         )
-    }
-}
-
-private fun NavGraphBuilder.creatorEditScreen(
-) {
-    composable(
-        route = "${Destinations.CREATOR_EDIT_SCREEN}",
-        arguments = listOf(),
-    ) {
-        CreatorEditNavigation()
     }
 }
 
@@ -171,6 +174,16 @@ private fun NavGraphBuilder.imageViewerScreen(
     }
 }
 
+private fun NavGraphBuilder.creatorEditScreen(
+) {
+    composable(
+        route = "${Destinations.CREATOR_EDIT_SCREEN}",
+        arguments = listOf(),
+    ) {
+        CreatorEditNavigation()
+    }
+}
+
 private fun NavGraphBuilder.creatorEditDialog(
 ) {
     dialog(
@@ -189,37 +202,70 @@ private fun NavGraphBuilder.creatorEditDialog(
     }
 }
 
-    private fun NavGraphBuilder.singlePickerScreen(
-        onBack: () -> Unit,
+private fun NavGraphBuilder.singlePickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = "${Destinations.SINGLE_PICKER_SCREEN}",
+        arguments = listOf(),
     ) {
-        composable(
-            route = "${Destinations.SINGLE_PICKER_SCREEN}",
-            arguments = listOf(),
+        SinglePickerScreen(onCloseClicked = onBack)
+    }
+}
+
+private fun NavGraphBuilder.singlePickerDialog(
+    onBack: () -> Unit,
+) {
+    dialog(
+        route = "${Destinations.SINGLE_PICKER_DIALOG}",
+        dialogProperties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
         ) {
-            SinglePickerScreen(onCloseClicked = onBack)
+            SinglePickerScreen(
+                onCloseClicked = onBack,
+                scaffoldModifier = Modifier.fillMaxHeight(0.8f)
+            )
         }
     }
+}
 
-    private fun NavGraphBuilder.singlePickerDialog(
-        onBack: () -> Unit,
+private fun NavGraphBuilder.toTagPickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = Destinations.TAG_PICKER_SCREEN,
+        arguments = listOf(),
     ) {
-        dialog(
-            route = "${Destinations.SINGLE_PICKER_DIALOG}",
-            dialogProperties = DialogProperties(
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
-            )
+        TagPickerScreen(onBack = onBack)
+    }
+}
+
+private fun NavGraphBuilder.toTagPickerDialog(
+    onBack: () -> Unit,
+) {
+    dialog(
+        route = Destinations.TAG_PICKER_DIALOG,
+        dialogProperties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-            ) {
-                SinglePickerScreen(
-                    onCloseClicked = onBack,
-                    scaffoldModifier = Modifier.fillMaxHeight(0.8f)
-                )
-            }
+            TagPickerScreen(
+                scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp),
+                onBack = onBack
+            )
         }
+    }
 }
 
 private object Destinations {
@@ -232,6 +278,8 @@ private object Destinations {
     const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
     const val SINGLE_PICKER_DIALOG = "singlePickerDialog"
+    const val TAG_PICKER_SCREEN = "tagPickerScreen"
+    const val TAG_PICKER_DIALOG = "tagPickerDialog"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -242,30 +290,42 @@ private class Navigation(
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
 
     fun toItemDetails() {
-        navController.navigate("${Destinations.ITEM_DETAILS}")
+        navController.navigate(Destinations.ITEM_DETAILS)
     }
 
     fun toAddOrEditNote() {
-        navController.navigate("${Destinations.ADD_NOTE}")
+        navController.navigate(Destinations.ADD_NOTE)
     }
+
     fun toCreatorEditScreen() {
-        navController.navigate("${Destinations.CREATOR_EDIT_SCREEN}")
+        navController.navigate(Destinations.CREATOR_EDIT_SCREEN)
     }
+
     fun toCreatorEditDialog() {
-        navController.navigate("${Destinations.CREATOR_EDIT_DIALOG}")
+        navController.navigate(Destinations.CREATOR_EDIT_DIALOG)
+    }
+
+    fun toTagPickerScreen() {
+        navController.navigate(Destinations.TAG_PICKER_SCREEN)
+    }
+
+    fun toTagPickerDialog() {
+        navController.navigate(Destinations.TAG_PICKER_DIALOG)
     }
 
     fun toSinglePickerScreen() {
-        navController.navigate("${Destinations.SINGLE_PICKER_SCREEN}")
+        navController.navigate(Destinations.SINGLE_PICKER_SCREEN)
     }
 
     fun toSinglePickerDialog() {
-        navController.navigate("${Destinations.SINGLE_PICKER_DIALOG}")
+        navController.navigate(Destinations.SINGLE_PICKER_DIALOG)
     }
+
     fun toVideoPlayerScreen() {
-        navController.navigate("${Destinations.VIDEO_PLAYER_SCREEN}")
+        navController.navigate(Destinations.VIDEO_PLAYER_SCREEN)
     }
+
     fun toImageViewerScreen() {
-        navController.navigate("${Destinations.IMAGE_VIEWER_SCREEN}")
+        navController.navigate(Destinations.IMAGE_VIEWER_SCREEN)
     }
 }

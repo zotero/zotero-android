@@ -39,6 +39,8 @@ internal fun ItemDetailsScreen(
     viewModel: ItemDetailsViewModel = hiltViewModel(),
     navigateToCreatorEditScreen: () -> Unit,
     navigateToCreatorEditDialog: () -> Unit,
+    navigateToTagPickerScreen: () -> Unit,
+    navigateToTagPickerDialog: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
@@ -47,8 +49,8 @@ internal fun ItemDetailsScreen(
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
-
-    ) {
+    onPickFile: () -> Unit,
+) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
@@ -102,7 +104,19 @@ internal fun ItemDetailsScreen(
             is ItemDetailsViewEffect.ShowImageViewer -> {
                 navigateToImageViewerScreen()
             }
-
+            is ItemDetailsViewEffect.AddAttachment -> {
+                onPickFile()
+            }
+            ItemDetailsViewEffect.ShowTagPickerEffect ->{
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToTagPickerScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToTagPickerDialog()
+                    }
+                }
+            }
         }
     }
     CustomScaffold(

@@ -171,6 +171,9 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.4.0-alpha04")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.activity:activity-compose:1.7.0-alpha03")
+//    implementation ("androidx.compose.material:material-icons-extended:1.4.0-alpha04")
+    implementation("androidx.compose.material3:material3:1.0.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.0.1")
 
     //Accompanist
     implementation("com.google.accompanist:accompanist-insets:0.23.1")
@@ -215,7 +218,6 @@ dependencies {
     implementation("com.google.guava:guava:25.0-android")
     implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
     implementation("org.greenrobot:eventbus:3.2.0")
-    implementation("com.airbnb.android:lottie:5.0.3")
 
     implementation("commons-io:commons-io:2.4")
     implementation ("commons-codec:commons-codec:1.13")

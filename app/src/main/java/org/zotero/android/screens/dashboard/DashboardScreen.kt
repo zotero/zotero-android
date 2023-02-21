@@ -10,6 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import com.google.accompanist.pager.ExperimentalPagerApi
+import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import java.io.File
@@ -19,7 +21,7 @@ import java.io.File
 @Suppress("UNUSED_PARAMETER")
 internal fun DashboardScreen(
     onBack: () -> Unit,
-    onPickFile: () -> Unit,
+    onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
