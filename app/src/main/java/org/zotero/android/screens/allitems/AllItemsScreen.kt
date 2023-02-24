@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalPagerApi::class)
 
 package org.zotero.android.screens.allitems
 
@@ -37,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.uicomponents.CustomScaffold
@@ -63,6 +61,8 @@ internal fun AllItemsScreen(
     onBack: () -> Unit,
     viewModel: AllItemsViewModel = hiltViewModel(),
     onPickFile: () -> Unit,
+    navigateToSinglePickerScreen: () -> Unit,
+    navigateToSinglePickerDialog: () -> Unit,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
@@ -73,9 +73,19 @@ internal fun AllItemsScreen(
 
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
+            null -> Unit
             is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
             is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
-            null -> Unit
+            AllItemsViewEffect.ShowItemTypePickerEffect -> {
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToSinglePickerScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToSinglePickerDialog()
+                    }
+                }
+            }
         }
     }
 
@@ -140,6 +150,7 @@ internal fun AllItemsScreen(
         AddBottomSheet(
             onAddFile = onPickFile,
             onAddNote = viewModel::onAddNote,
+            onAddManually = viewModel::onAddManually,
             onClose = viewModel::onAddBottomSheetCollapse,
             showBottomSheet = viewState.shouldShowAddBottomSheet
         )
@@ -217,6 +228,7 @@ private fun TopBar(
 internal fun AddBottomSheet(
     onAddFile:() -> Unit,
     onAddNote:() -> Unit,
+    onAddManually:() -> Unit,
     onClose: () -> Unit,
     showBottomSheet: Boolean,
 ) {
@@ -238,6 +250,10 @@ internal fun AddBottomSheet(
                 }, onAddNote = {
                     onClose()
                     onAddNote()
+                },
+                onAddManually = {
+                    onClose()
+                    onAddManually()
                 })
             },
             onCollapse = {
@@ -251,13 +267,19 @@ internal fun AddBottomSheet(
 
 @Composable
 private fun AddBottomSheetContent(
-    onAddFile:() -> Unit,
-    onAddNote:() -> Unit
+    onAddFile: () -> Unit,
+    onAddNote: () -> Unit,
+    onAddManually: () -> Unit,
 ) {
     Box {
         Column(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
+            RowItemWithArrow(
+                title = stringResource(id = Strings.add_item_bottom_sheet_manual),
+                onClick = { onAddManually() }
+            )
+            CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
                 title = stringResource(id = Strings.add_item_bottom_sheet_note),
                 onClick = { onAddNote() }

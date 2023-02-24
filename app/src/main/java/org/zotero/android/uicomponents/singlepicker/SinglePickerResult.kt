@@ -1,3 +1,7 @@
 package org.zotero.android.uicomponents.singlepicker
 
-data class SinglePickerResult(val id: String)
+data class SinglePickerResult(val id: String, val callPoint: CallPoint) {
+    enum class CallPoint{
+        AllItems, ItemDetails, CreatorEdit
+    }
+}

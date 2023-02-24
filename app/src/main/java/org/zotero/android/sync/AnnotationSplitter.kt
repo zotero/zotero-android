@@ -55,7 +55,7 @@ object AnnotationSplitter {
 
     fun splitPathsIfNeeded(paths: List<List<SplittablePathPoint>>): List<List<List<SplittablePathPoint>>>? {
         if (paths.isEmpty()) {
-            return emptyList()
+            return null
         }
 
         var count = 2

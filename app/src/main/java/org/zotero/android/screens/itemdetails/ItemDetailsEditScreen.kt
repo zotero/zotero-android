@@ -92,10 +92,6 @@ internal fun ItemDetailsEditScreen(
             layoutType = layoutType,
             onNoteClicked = { viewModel.openNoteEditor(it) },
             onAddNote = { viewModel.onAddNote() },
-            onAttachmentClicked = { viewModel.openAttachment(it) },
-            onAddAttachment = { viewModel.onAddAttachment() },
-            onTagClicked = { viewModel.openTag(it) },
-            onAddTag = { viewModel.onAddTag() }
         )
     }
 }

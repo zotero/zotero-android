@@ -3,14 +3,12 @@ package org.zotero.android.screens.root
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
-import androidx.compose.animation.ExperimentalAnimationApi
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.Screen
 import org.zotero.android.screens.dashboard.DashboardActivity
 import org.zotero.android.screens.onboarding.OnboardingActivity
 
-@ExperimentalAnimationApi
 @AndroidEntryPoint
 class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
     private val viewModel: RootViewModel by viewModels()

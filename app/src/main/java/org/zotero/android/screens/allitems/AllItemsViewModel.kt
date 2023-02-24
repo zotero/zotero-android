@@ -8,6 +8,7 @@ import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -41,6 +42,7 @@ import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.UriExtractor
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowItemTypePickerEffect
 import org.zotero.android.screens.allitems.data.InitialLoadData
 import org.zotero.android.screens.allitems.data.ItemAccessory
 import org.zotero.android.screens.allitems.data.ItemsError
@@ -56,6 +58,9 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncUseCase
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
+import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
+import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
+import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uidata.Collection
 import timber.log.Timber
@@ -80,6 +85,37 @@ internal class AllItemsViewModel @Inject constructor(
                 saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(singlePickerResult: SinglePickerResult) {
+        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItems) {
+            val collectionKey: String?
+            val identifier = viewState.collection.identifier
+            when (identifier) {
+                is CollectionIdentifier.collection ->
+                    collectionKey = identifier.key
+                is CollectionIdentifier.search, is CollectionIdentifier.custom ->
+                    collectionKey = null
+            }
+
+            val type = singlePickerResult.id
+            viewModelScope.launch {
+                delay(800)
+                showItemDetail(
+                    DetailType.creation(
+                        type = type,
+                        child = null,
+                        collectionKey = collectionKey
+                    ), library = viewState.library
+                )
+            }
+        }
+    }
+
+    private fun showItemDetail(type: DetailType, library: Library) {
+        ScreenArguments.showItemDetailsArgs = ShowItemDetailsArgs(type, library = library, childKey = null)
+        triggerEffect(AllItemsViewEffect.ShowItemDetailEffect)
     }
 
     fun init() = initOnce {
@@ -465,6 +501,19 @@ internal class AllItemsViewModel @Inject constructor(
         showNoteCreation(title = null, libraryId = viewState.library.identifier)
     }
 
+    fun onAddManually() {
+        ScreenArguments.singlePickerArgs = SinglePickerArgs(
+            singlePickerState = SinglePickerStateCreator.create(
+                selected = "",
+                schemaController
+            ),
+            showSaveButton = false,
+            callPoint = SinglePickerResult.CallPoint.AllItems
+        )
+        triggerEffect(ShowItemTypePickerEffect)
+
+    }
+
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
         ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
             text = "",
@@ -563,6 +612,7 @@ internal data class AllItemsViewState(
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowItemDetailEffect: AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
+    object ShowItemTypePickerEffect : AllItemsViewEffect()
 }
 
 sealed class ItemsAction {

@@ -10,12 +10,12 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.zotero.android.api.ForWebSocket
+import org.zotero.android.api.mappers.ChangeWsResponseMapper
+import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.ReadVersionDbRequest
-import org.zotero.android.api.mappers.ChangeWsResponseMapper
-import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.websocket.ChangeWsResponse
 import org.zotero.android.websocket.Command
 import org.zotero.android.websocket.SubscribeWsMessage
@@ -187,7 +187,9 @@ class WebSocketController @Inject constructor(
 
     private fun processConnectionResponse(error: Error?, apiKey: String) {
         if (error != null){
-            Timber.e(error, "WebSocketController: connection error)")
+            if (error !is Error.timedOut) {
+                Timber.e(error, "WebSocketController: connection error)")
+            }
             retryConnection(apiKey = apiKey)
             return
         }

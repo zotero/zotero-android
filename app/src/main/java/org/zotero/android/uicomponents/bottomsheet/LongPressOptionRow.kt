@@ -15,7 +15,7 @@ fun LongPressOptionRow(
     optionItem: LongPressOptionItem,
     onOptionClick: (LongPressOptionItem) -> Unit
 ) {
-    val color = optionItem.textAndIconColor ?: CustomTheme.colors.dynamicTheme.primaryColor
+    val color = optionItem.textAndIconColor ?: CustomTheme.colors.primaryContent
     BaseRowItemWithIcon(
         title = stringResource(id = optionItem.titleId),
         textColor = color,

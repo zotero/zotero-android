@@ -11,30 +11,26 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
+import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerState
-import org.zotero.android.database.DbWrapper
-import org.zotero.android.files.FileStore
-import org.zotero.android.sync.SchemaController
-import org.zotero.android.sync.UrlDetector
 import javax.inject.Inject
 
 @HiltViewModel
 internal class CreatorEditViewModel @Inject constructor(
     private val defaults: Defaults,
-    private val dbWrapper: DbWrapper,
-    private val fileStore: FileStore,
-    private val urlDetector: UrlDetector,
     private val schemaController: SchemaController
 ) : BaseViewModel2<CreatorEditViewState, CreatorEditViewEffect>(CreatorEditViewState()) {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
-        viewModelScope.launch {
-            onCreatorTypeSelected(singlePickerResult.id)
+        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.CreatorEdit) {
+            viewModelScope.launch {
+                onCreatorTypeSelected(singlePickerResult.id)
+            }
         }
     }
 
@@ -99,7 +95,8 @@ internal class CreatorEditViewModel @Inject constructor(
         ScreenArguments.singlePickerArgs =
             SinglePickerArgs(
                 singlePickerState = pickerState,
-                title = viewState.creator!!.localizedType
+                title = viewState.creator!!.localizedType,
+                callPoint = SinglePickerResult.CallPoint.CreatorEdit,
             )
         triggerEffect(CreatorEditViewEffect.NavigateToSinglePickerScreen)
     }

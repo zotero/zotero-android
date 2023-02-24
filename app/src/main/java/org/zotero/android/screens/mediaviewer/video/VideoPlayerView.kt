@@ -19,7 +19,6 @@ import androidx.media3.ui.PlayerView
 import org.zotero.android.architecture.ScreenArguments
 
 @Composable
-@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 internal fun VideoPlayerView() {
     val uri = ScreenArguments.videoPlayerArgs.uri
     val context = LocalContext.current

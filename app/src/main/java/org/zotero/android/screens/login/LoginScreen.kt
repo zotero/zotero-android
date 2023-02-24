@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalPagerApi::class)
-
-package org.zotero.android.login.ui
+package org.zotero.android.screens.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,12 +26,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.login.LoginViewEffect.NavigateBack
 import org.zotero.android.screens.login.LoginViewEffect.NavigateToDashboard
-import org.zotero.android.screens.login.LoginViewModel
-import org.zotero.android.screens.login.LoginViewState
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.PrimaryButton

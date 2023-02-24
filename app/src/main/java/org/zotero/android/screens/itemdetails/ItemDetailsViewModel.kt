@@ -33,6 +33,7 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
+import org.zotero.android.database.requests.CreateItemFromDetailDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
 import org.zotero.android.database.requests.DeleteTagFromItemDbRequest
 import org.zotero.android.database.requests.EditItemFromDetailDbRequest
@@ -41,6 +42,7 @@ import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.database.requests.RemoveItemFromParentDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
@@ -75,6 +77,7 @@ import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileDeletedNotification
+import org.zotero.android.sync.ItemDetailCreateDataResult
 import org.zotero.android.sync.ItemDetailDataCreator
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
@@ -85,10 +88,9 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
+import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
-import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
-import org.zotero.android.uicomponents.singlepicker.SinglePickerState
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -132,8 +134,10 @@ class ItemDetailsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
-        viewModelScope.launch {
-            changeType(singlePickerResult.id)
+        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.ItemDetails) {
+            viewModelScope.launch {
+                changeType(singlePickerResult.id)
+            }
         }
     }
 
@@ -165,7 +169,7 @@ class ItemDetailsViewModel @Inject constructor(
         val args = ScreenArguments.showItemDetailsArgs
 
         initViewState(args)
-        process(ItemDetailAction.reloadData)
+        loadInitialData()
     }
 
     private fun setupFileObservers() {
@@ -270,20 +274,29 @@ class ItemDetailsViewModel @Inject constructor(
 
     }
 
-    private fun process(action: ItemDetailAction) {
-        when (action) {
-            ItemDetailAction.loadInitialData -> loadInitialData()
-            ItemDetailAction.reloadData -> reloadData(viewState.isEditing)
-        }
-    }
-
     private fun loadInitialData() {
         val key = viewState.key
         val libraryId = viewState.library!!.identifier
-        var collectionKey: String?
+        var collectionKey: String? = null
+        var data: ItemDetailCreateDataResult? = null
 
         try {
-            when (viewState.type) {
+            val type = viewState.type
+            when (type) {
+                is DetailType.creation -> {
+                    val itemType = type.type
+                    val child = type.child
+                    collectionKey = type.collectionKey
+                    data = ItemDetailDataCreator.createData(
+                        ItemDetailDataCreator.Kind.new(
+                            itemType = itemType,
+                            child = child
+                        ),
+                        schemaController = this.schemaController,
+                        fileStorage = this.fileStore,
+                        urlDetector = this.urlDetector,
+                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
+                }
                 is DetailType.preview -> {
                     reloadData(isEditing = viewState.isEditing)
                     return
@@ -296,6 +309,30 @@ class ItemDetailsViewModel @Inject constructor(
             }
             return
         }
+        data!!
+        val request = CreateItemFromDetailDbRequest(
+            key = key,
+            libraryId = libraryId,
+            collectionKey = collectionKey,
+            data = data.itemData,
+            attachments = data.attachments,
+            notes = data.notes,
+            tags = data.tags,
+            schemaController = this.schemaController,
+            fileStore = fileStore
+        )
+        viewModelScope.launch {
+            val result = perform(dbWrapper, request = request, invalidateRealm = true)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't create initial item")
+                updateState {
+                    copy(error = ItemDetailError.cantCreateData)
+                }
+            } else {
+                reloadData(isEditing = true)
+            }
+        }
+
     }
 
     private fun reloadData(isEditing: Boolean) = viewModelScope.launch {
@@ -408,7 +445,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun itemChanged(state: ItemDetailsViewState) {
         if (!state.isEditing) {
-            process(ItemDetailAction.reloadData)
+            reloadData(viewState.isEditing)
             return
         }
         updateState {
@@ -849,10 +886,6 @@ class ItemDetailsViewModel @Inject constructor(
         finishSave(null)
     }
 
-    fun openTag(tag: Tag) {
-
-    }
-
     fun openAttachment(attachment: Attachment) {
         val key = attachment.key
         val (progress, _) = this.fileDownloader.data(
@@ -886,19 +919,14 @@ class ItemDetailsViewModel @Inject constructor(
             return
         }
         val selected = viewState.data.type
-        val types = schemaController.itemTypes.mapNotNull { type ->
-            if (ItemTypes.excludedFromTypePicker.contains(type)) {
-                return@mapNotNull null
-            }
-            val name = schemaController.localizedItemType(type)
-            if (name == null) {
-                return@mapNotNull null
-            }
-
-            SinglePickerItem(id = type, name = name)
-        }.sortedBy { it.name }
-        val state = SinglePickerState(objects = types, selectedRow = selected)
-        ScreenArguments.singlePickerArgs = SinglePickerArgs(singlePickerState = state, showSaveButton = false)
+        ScreenArguments.singlePickerArgs = SinglePickerArgs(
+            singlePickerState = SinglePickerStateCreator.create(
+                selected = selected,
+                schemaController
+            ),
+            showSaveButton = false,
+            callPoint = SinglePickerResult.CallPoint.ItemDetails
+        )
         triggerEffect(ShowItemTypePickerEffect)
     }
 
@@ -1035,7 +1063,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     fun acceptItemWasChangedRemotely() {
-        process(ItemDetailAction.reloadData)
+        reloadData(viewState.isEditing)
     }
 
     fun cancelPrompt() {
@@ -1069,6 +1097,9 @@ class ItemDetailsViewModel @Inject constructor(
                 }
                 is LongPressOptionItem.DeleteAttachmentFile -> {
                     deleteFile(longPressOptionItem.attachment)
+                }
+                is LongPressOptionItem.MoveToStandaloneAttachment -> {
+                    moveToStandalone(longPressOptionItem.attachment)
                 }
             }
         }
@@ -1114,6 +1145,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
 
         if (!viewState.data.isAttachment) {
+            actions.add(LongPressOptionItem.MoveToStandaloneAttachment(attachment))
             actions.add(LongPressOptionItem.MoveToTrashAttachment(attachment))
         }
         if (actions.isNotEmpty()) {
@@ -1587,6 +1619,39 @@ class ItemDetailsViewModel @Inject constructor(
         }
         completion(attachments, failedNames)
     }
+
+    private suspend fun moveToStandalone(attachment: Attachment) {
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems + attachment.key)
+        }
+
+        val result = perform(
+            dbWrapper,
+            request = RemoveItemFromParentDbRequest(
+                key = attachment.key,
+                libraryId = attachment.libraryId
+            )
+        )
+
+        updateState {
+            copy(backgroundProcessedItems = backgroundProcessedItems - attachment.key)
+        }
+        if (result is Result.Failure) {
+            Timber.e(
+                result.exception,
+                "ItemDetailActionHandler: can't move attachment to standalone"
+            )
+            updateState {
+                copy(error = ItemDetailError.cantRemoveParent)
+            }
+        } else {
+            updateState {
+                copy(attachments = attachments - attachment)
+            }
+
+        }
+    }
+
 }
 
 data class ItemDetailsViewState(
@@ -1622,9 +1687,4 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
-}
-
-sealed class ItemDetailAction {
-    object loadInitialData : ItemDetailAction()
-    object reloadData : ItemDetailAction()
 }

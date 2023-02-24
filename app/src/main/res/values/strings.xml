@@ -52,6 +52,7 @@
     <string name="untitled">Untitled</string>
     <string name="add_item_bottom_sheet_file">Add File</string>
     <string name="add_item_bottom_sheet_note">New Standalone Note</string>
+    <string name="add_item_bottom_sheet_manual">Add Manually</string>
 
     <string name="last_name">Last Name</string>
     <string name="first_name">First Name</string>
@@ -86,4 +87,7 @@
     <string name="moveToTrash">Move to Trash</string>
     <string name="removeDownload">Remove Download</string>
     <string name="num_of_selected">%d selected</string>
+    <string name="moveToStandaloneAttachment">Move to Standalone Attachment</string>
+    <string name="tag_name">Tag name</string>
+    <string name="create_tag">Create Tag \"%s\"</string>
 </resources>

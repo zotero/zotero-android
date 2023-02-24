@@ -73,10 +73,10 @@ internal class TagPickerViewModel @Inject constructor(
 
         updateState {
             copy(
+                searchTerm = "",
                 tags = updatedTags,
                 selectedTags = updatedSelectedTags,
                 snapshot = null,
-                searchTerm = "",
                 addedTagName = name,
                 showAddTagButton = false
             )
@@ -84,7 +84,7 @@ internal class TagPickerViewModel @Inject constructor(
     }
 
 
-    private fun search(term: String) {
+    fun search(term: String) {
         if (!term.isEmpty()) {
             if (viewState.snapshot == null) {
                 updateState {
@@ -103,9 +103,9 @@ internal class TagPickerViewModel @Inject constructor(
             val snapshot = viewState.snapshot ?: return
             updateState {
                 copy(
+                    searchTerm = "",
                     tags = snapshot,
                     snapshot = null,
-                    searchTerm = "",
                     showAddTagButton = false
                 )
             }
@@ -149,16 +149,22 @@ internal class TagPickerViewModel @Inject constructor(
         triggerEffect(TagPickerViewEffect.OnBack)
     }
 
+    fun addTagIfNeeded() {
+        val text = viewState.searchTerm.trim()
+        if (text.isEmpty()) return
+        add(text)
+    }
+
 }
 
 internal data class TagPickerViewState(
     val libraryId: LibraryIdentifier? = null,
     val tags: List<Tag> = emptyList(),
     val snapshot: List<Tag>? = null,
-    var selectedTags: Set<String> = emptySet(),
-    var searchTerm: String = "",
-    var showAddTagButton: Boolean = false,
-    var addedTagName: String? = null
+    val selectedTags: Set<String> = emptySet(),
+    val searchTerm: String = "",
+    val showAddTagButton: Boolean = false,
+    val addedTagName: String? = null
 ) : ViewState
 
 internal sealed class TagPickerViewEffect : ViewEffect {

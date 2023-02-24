@@ -1,10 +1,8 @@
-@file:OptIn(ExperimentalFoundationApi::class)
 
 package org.zotero.android.screens.itemdetails
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -38,12 +36,12 @@ import org.zotero.android.database.objects.Attachment
 import org.zotero.android.helpers.formatter.dateFormatItemDetails
 import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
 import org.zotero.android.sync.Note
-import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
 import org.zotero.android.uicomponents.attachmentprogress.State
 import org.zotero.android.uicomponents.attachmentprogress.Style
+import org.zotero.android.uicomponents.checkbox.CircleCheckBox
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -177,12 +175,6 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
     onNoteClicked: (Note) -> Unit,
     onNoteLongClicked: (Note) -> Unit = {},
     onAddNote: () -> Unit,
-    onTagClicked: (Tag) -> Unit,
-    onTagLongClicked: (Tag) -> Unit = {},
-    onAddTag: () -> Unit,
-    onAttachmentClicked: (Attachment) -> Unit = {},
-    onAttachmentLongClicked: (Attachment) -> Unit = {},
-    onAddAttachment: () -> Unit = {},
 ) {
     if (!viewState.data.isAttachment) {
         listOfItems(
@@ -201,29 +193,16 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
         )
     }
 
-    listOfItems(
-        sectionTitle = Strings.tags,
-        itemIcon = Drawables.ic_tag,
-        itemTitles = viewState.tags.map { it.name },
+    listOfTags(
         layoutType = layoutType,
-        onItemClicked = {
-            onTagClicked(viewState.tags[it])
-        },
-        onItemLongClicked = {
-            onTagLongClicked(viewState.tags[it])
-        },
-        onAddItemClick = onAddTag,
-        addTitleRes = Strings.add_tag
+        viewModel = viewModel,
+        viewState = viewState,
     )
 
     listOfAttachments(
         viewState = viewState,
         viewModel = viewModel,
         layoutType = layoutType,
-        onItemClicked = onAttachmentClicked,
-        onItemLongClicked = onAttachmentLongClicked,
-        onAddItemClick = if (viewState.data.isAttachment) null else onAddAttachment,
-        addTitleRes = Strings.add_attachment
     )
 }
 
@@ -315,11 +294,64 @@ private fun LazyListScope.itemDetailHeaderSection(
     }
 }
 
+private fun LazyListScope.listOfTags(
+    layoutType: CustomLayoutSize.LayoutType,
+    viewState: ItemDetailsViewState,
+    viewModel: ItemDetailsViewModel,
+) {
+    itemDetailHeaderSection(Strings.tags, layoutType)
+    items(
+        viewState.tags
+    ) { item ->
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = {},
+                        onLongClick = { viewModel.onTagLongClick(item) }
+                    )
+                    .padding(all = 8.dp)
+                    .padding(start = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircleCheckBox(
+                    isChecked = false,
+                    layoutType = layoutType
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp, top = 8.dp)
+                ) {
+                    Text(
+                        text = HtmlCompat.fromHtml(
+                            item.name,
+                            HtmlCompat.FROM_HTML_MODE_LEGACY
+                        ).toString(),
+                        fontSize = layoutType.calculateTextSize(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    CustomDivider(modifier = Modifier.padding(top = 8.dp))
+                }
+            }
+        }
+
+    }
+    item {
+        AddItemRow(
+            layoutType = layoutType,
+            titleRes = Strings.add_tag,
+            onClick = viewModel::onAddTag
+        )
+    }
+}
+
+
 private fun LazyListScope.listOfAttachments(
-    onItemClicked: (Attachment) -> Unit,
-    onItemLongClicked: (Attachment) -> Unit,
-    @StringRes addTitleRes: Int,
-    onAddItemClick: (() -> Unit)? = null,
     layoutType: CustomLayoutSize.LayoutType,
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
@@ -335,8 +367,8 @@ private fun LazyListScope.listOfAttachments(
                     .combinedClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(),
-                        onClick = { onItemClicked(item) },
-                        onLongClick = { onItemLongClicked(item) }
+                        onClick = { viewModel.openAttachment(item) },
+                        onLongClick = { viewModel.onAttachmentLongClick(item) },
                     )
                     .padding(all = 8.dp)
                     .padding(start = 4.dp),
@@ -397,12 +429,12 @@ private fun LazyListScope.listOfAttachments(
         }
 
     }
-    if (onAddItemClick != null) {
+    if (!viewState.data.isAttachment) {
         item {
             AddItemRow(
                 layoutType = layoutType,
-                titleRes = addTitleRes,
-                onClick = onAddItemClick
+                titleRes = Strings.add_attachment,
+                onClick = viewModel::onAddAttachment
             )
         }
     }

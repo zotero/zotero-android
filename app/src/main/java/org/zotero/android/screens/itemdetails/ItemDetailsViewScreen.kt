@@ -1,8 +1,5 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package org.zotero.android.screens.itemdetails
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -83,13 +80,7 @@ internal fun ItemDetailsViewScreen(
             layoutType = layoutType,
             onNoteClicked = { viewModel.openNoteEditor(it) },
             onAddNote = { viewModel.onAddNote() },
-            onAttachmentClicked = { viewModel.openAttachment(it) },
-            onAddAttachment = { viewModel.onAddAttachment() },
-            onTagClicked = { viewModel.openTag(it) },
-            onAddTag = { viewModel.onAddTag() },
             onNoteLongClicked = viewModel::onNoteLongClick,
-            onAttachmentLongClicked = viewModel::onAttachmentLongClick,
-            onTagLongClicked = viewModel::onTagLongClick,
         )
     }
 }

@@ -12,7 +12,6 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.core.content.FileProvider
 import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
@@ -24,7 +23,6 @@ import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoi
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
-@ExperimentalAnimationApi
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
 

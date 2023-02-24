@@ -6,6 +6,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
+import org.zotero.android.api.mappers.CollectionResponseMapper
+import org.zotero.android.api.mappers.ItemResponseMapper
+import org.zotero.android.api.mappers.SearchResponseMapper
+import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
@@ -26,10 +30,6 @@ import org.zotero.android.database.requests.MarkSearchAsSyncedAndUpdateDbRequest
 import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
-import org.zotero.android.api.mappers.CollectionResponseMapper
-import org.zotero.android.api.mappers.ItemResponseMapper
-import org.zotero.android.api.mappers.SearchResponseMapper
-import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.PreconditionErrorType
@@ -219,7 +219,7 @@ class SubmitUpdateSyncAction(
                     return PreconditionErrorType.objectConflict
                 }
                 400 -> {
-                    if (response.message == this.splitMessage && response.key != null) {
+                    if (response.message.contains(this.splitMessage) && response.key != null) {
                         splitKeys.add(response.key)
                     }
                 }

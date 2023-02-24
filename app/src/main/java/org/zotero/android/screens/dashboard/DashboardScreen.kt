@@ -1,22 +1,16 @@
-@file:OptIn(ExperimentalPagerApi::class)
-
 package org.zotero.android.screens.dashboard
 
 import android.net.Uri
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
-import com.google.accompanist.pager.ExperimentalPagerApi
-import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import java.io.File
 
-@ExperimentalAnimationApi
 @Composable
 @Suppress("UNUSED_PARAMETER")
 internal fun DashboardScreen(

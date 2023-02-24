@@ -1,3 +1,5 @@
+rootProject.buildFileName = "build.gradle.kts"
+
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -6,4 +8,4 @@ pluginManagement {
     }
 }
 rootProject.name = "Zotero Android"
-include ':app'
+include("app")

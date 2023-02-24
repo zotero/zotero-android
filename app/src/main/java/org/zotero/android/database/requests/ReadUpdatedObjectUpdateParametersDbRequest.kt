@@ -37,8 +37,9 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
 
                 for (objectS in changed) {
                     val _parameters = objectS.updateParameters ?: continue
+                    val newKey = _parameters.keys.firstOrNull() ?: continue
                     parameters.add(_parameters)
-                    uuids[objectS.key] = objectS.changes.map { it.identifier }
+                    uuids[newKey] = objectS.changes.map { it.identifier }
                 }
 
                 return ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)

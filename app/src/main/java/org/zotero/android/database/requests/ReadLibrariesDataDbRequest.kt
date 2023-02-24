@@ -247,9 +247,8 @@ class ReadLibrariesDataDbRequest(
                     searchParams, libraryId = libraryId, version = version,
                     SyncObject.search
                 ) +
-                writeBatches(
-                    settings, libraryId = libraryId, version = version,
-                    SyncObject.settings
+                settingsWriteBatches(
+                    settings, libraryId = libraryId, version = version
                 )
         return batches to hasUpload
     }
@@ -279,6 +278,34 @@ class ReadLibrariesDataDbRequest(
                 WriteBatch(
                     libraryId = libraryId,
                     objectS = objectS,
+                    version = version,
+                    parameters = chunk,
+                    changeUuids = uuids
+                )
+            )
+        }
+
+        return batches
+    }
+
+    private fun settingsWriteBatches(response: ReadUpdatedParametersResponse, libraryId: LibraryIdentifier, version: Int): List<WriteBatch> {
+        val chunks = response.parameters.chunked(WriteBatch.maxCount)
+        val batches = mutableListOf<WriteBatch>()
+        for (chunk in chunks) {
+            val uuids = mutableMapOf<String, List<String>>()
+            for (params in chunk) {
+                val key = params.keys.firstOrNull()
+                if (key != null) {
+                    val _uuids = response.changeUuids[key]
+                    if (_uuids != null) {
+                        uuids[key] = _uuids
+                    }
+                }
+            }
+            batches.add(
+                WriteBatch(
+                    libraryId = libraryId,
+                    objectS = SyncObject.settings,
                     version = version,
                     parameters = chunk,
                     changeUuids = uuids

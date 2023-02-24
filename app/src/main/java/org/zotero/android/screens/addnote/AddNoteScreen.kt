@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalPagerApi::class)
 
 package org.zotero.android.screens.addnote
 
@@ -20,10 +19,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField

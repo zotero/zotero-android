@@ -1,6 +1,5 @@
 package org.zotero.android.uicomponents.bottomsheet
 
-import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
@@ -15,7 +14,7 @@ import org.zotero.android.uicomponents.theme.CustomPalette
 sealed class LongPressOptionItem(
     @StringRes val titleId: Int,
     @DrawableRes val resIcon: Int,
-    @ColorRes val textAndIconColor: Color? = null,
+    val textAndIconColor: Color? = null,
 ) {
     data class TrashNote(val note: Note): LongPressOptionItem(
         titleId = Strings.moveToTrash,
@@ -43,5 +42,10 @@ sealed class LongPressOptionItem(
         titleId = Strings.moveToTrash,
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.ic_delete_20dp
+    )
+
+    data class MoveToStandaloneAttachment(val attachment: Attachment): LongPressOptionItem(
+        titleId = Strings.moveToStandaloneAttachment,
+        resIcon = Drawables.baseline_arrow_upward_24
     )
 }

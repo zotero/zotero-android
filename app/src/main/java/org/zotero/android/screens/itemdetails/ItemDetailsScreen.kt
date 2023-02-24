@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalPagerApi::class)
-
 package org.zotero.android.screens.itemdetails
 
 import android.net.Uri
@@ -20,7 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.accompanist.pager.ExperimentalPagerApi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
@@ -229,7 +226,7 @@ private fun ShowError(
                 onDismiss = onBack
             )
         }
-        ItemDetailError.cantRemoveDuplicatedItem -> {
+        ItemDetailError.cantRemoveDuplicatedItem, ItemDetailError.cantRemoveParent -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(

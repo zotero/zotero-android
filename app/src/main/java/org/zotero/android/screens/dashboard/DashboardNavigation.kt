@@ -1,11 +1,9 @@
-@file:OptIn(ExperimentalAnimationApi::class)
 
 package org.zotero.android.screens.dashboard
 
 import android.net.Uri
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredHeightIn
@@ -34,7 +32,6 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
 
-@ExperimentalAnimationApi
 @Composable
 internal fun DashboardNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
@@ -56,7 +53,9 @@ internal fun DashboardNavigation(
             onBack = navigation::onBack,
             onPickFile = { onPickFile(CallPoint.AllItems) },
             navigateToItemDetails = navigation::toItemDetails,
-            navigateToAddOrEditNote = navigation::toAddOrEditNote
+            navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
+            navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
         )
         itemDetailsScreen(
             navigateToCreatorEditScreen = navigation::toCreatorEditScreen,
@@ -92,6 +91,8 @@ private fun NavGraphBuilder.allItemsScreen(
     navigateToItemDetails: () -> Unit,
     onPickFile: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
+    navigateToSinglePickerScreen: () -> Unit,
+    navigateToSinglePickerDialog: () -> Unit,
 ) {
     composable(route = Destinations.ALL_ITEMS) {
         AllItemsScreen(
@@ -99,6 +100,8 @@ private fun NavGraphBuilder.allItemsScreen(
             onPickFile = onPickFile,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
+            navigateToSinglePickerScreen = navigateToSinglePickerScreen,
+            navigateToSinglePickerDialog = navigateToSinglePickerDialog,
         )
     }
 }

@@ -4,13 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.animation.ExperimentalAnimationApi
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.screens.login.LoginActivity
 import org.zotero.android.uicomponents.theme.CustomTheme
 
-@ExperimentalAnimationApi
 @AndroidEntryPoint
 internal class OnboardingActivity : BaseActivity() {
 
