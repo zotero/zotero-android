@@ -220,10 +220,14 @@ dependencies {
     implementation("org.greenrobot:eventbus:3.2.0")
 
     implementation("commons-io:commons-io:2.4")
-    implementation ("commons-codec:commons-codec:1.13")
+    implementation("commons-codec:commons-codec:1.13")
+    implementation("commons-validator:commons-validator:1.7")
 
 
     implementation("androidx.work:work-runtime-ktx:2.7.1")
+
+    //PSPDFKIT
+    implementation("com.pspdfkit:pspdfkit:8.5.0")
 
     //Retrofit 2
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")

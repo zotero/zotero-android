@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.files.DataMarshaller
+import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
@@ -27,6 +28,7 @@ open class Defaults @Inject constructor(
     private val selectedLibrary = "selectedLibrary"
     private val selectedCollectionId = "selectedCollectionId"
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
+    private val itemsSortType = "ItemsSortType"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -99,8 +101,6 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(selectedLibrary, json) }
     }
 
-
-
     fun getSelectedCollectionId(): CollectionIdentifier {
         val json: String = sharedPreferences.getString(
             selectedCollectionId,
@@ -117,17 +117,6 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(selectedCollectionId, json) }
     }
 
-    fun reset() {
-        setUsername("")
-        setDisplayName("")
-        setUserId(0L)
-        setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
-        setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
-        setShowSubcollectionItems(false)
-        setApiToken(null)
-        setWebDavPassword(null)
-    }
-
     fun setCreatorNamePresentation(namePresentation: ItemDetailCreator.NamePresentation) {
         val json = dataMarshaller.marshal(namePresentation)
         sharedPreferences.edit { putString(lastUsedCreatorNamePresentation, json) }
@@ -140,6 +129,31 @@ open class Defaults @Inject constructor(
         )
             ?: return ItemDetailCreator.NamePresentation.separate
         return dataMarshaller.unmarshal(json)
+    }
+
+    fun setItemsSortType(sortType: ItemsSortType) {
+        val json = dataMarshaller.marshal(sortType)
+        sharedPreferences.edit { putString(itemsSortType, json) }
+    }
+
+    fun getItemsSortType(): ItemsSortType {
+        val json: String = sharedPreferences.getString(
+            itemsSortType,
+            null
+        )
+            ?: return ItemsSortType.default
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun reset() {
+        setUsername("")
+        setDisplayName("")
+        setUserId(0L)
+        setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
+        setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
+        setShowSubcollectionItems(false)
+        setApiToken(null)
+        setWebDavPassword(null)
     }
 
 }

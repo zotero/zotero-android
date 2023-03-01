@@ -13,6 +13,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
+import com.pspdfkit.configuration.activity.PdfActivityConfiguration
+import com.pspdfkit.ui.PdfActivity
 import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
@@ -62,6 +64,11 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
+        val onShowPdf: (file: File) -> Unit = { file ->
+            val uri = Uri.fromFile(file)
+            val config = PdfActivityConfiguration.Builder(this).build()
+            PdfActivity.showDocument(this, uri, config)
+        }
 
         setContent {
             CustomTheme {
@@ -70,6 +77,7 @@ internal class DashboardActivity : BaseActivity() {
                     onPickFile = onPickFile,
                     viewModel = viewModel,
                     onOpenFile = onOpenFile,
+                    onShowPdf = onShowPdf,
                     onOpenWebpage = onOpenWebpage,
                 )
             }

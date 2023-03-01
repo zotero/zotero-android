@@ -13,7 +13,7 @@ class DbWrapper constructor() {
     var isInitialized = false
 
     fun initWithMainConfiguration(context: Context, dbFile: File) {
-        config = org.zotero.android.database.Database.mainConfiguration(dbFile = dbFile, context = context)
+        config = Database.mainConfiguration(dbFile = dbFile, context = context)
         realmDbStorage = RealmDbStorage(config = config)
         isInitialized = true
     }

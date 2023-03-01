@@ -7,14 +7,14 @@ import java.io.File
 
 class Database {
     companion object {
-        private val schemaVersion: Long = 35
+        private const val schemaVersion = 36L
 
         fun mainConfiguration(dbFile: File, context: Context): RealmConfiguration {
             Realm.init(context)
             val builder = RealmConfiguration.Builder()
                 .directory(dbFile.parentFile!!)
                 .name(dbFile.name)
-                .schemaVersion(org.zotero.android.database.Database.Companion.schemaVersion)
+                .schemaVersion(schemaVersion)
                 .deleteRealmIfMigrationNeeded()
 
             return builder.build()

@@ -8,7 +8,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.4.1")
+        classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
         classpath("org.jetbrains.kotlin:kotlin-serialization:1.6.21")
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.2")
@@ -29,6 +29,9 @@ allprojects {
         google()
         mavenCentral()
         maven { setUrl("https://jitpack.io") }
+        maven {
+            url = uri("https://customers.pspdfkit.com/maven")
+        }
     }
 
     tasks.withType<KotlinCompile>().all {

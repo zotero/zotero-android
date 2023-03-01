@@ -63,6 +63,7 @@ import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowAddOrEdi
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowCreatorEditEffect
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowImageViewer
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowItemTypePickerEffect
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowPdf
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowVideoPlayer
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
@@ -70,7 +71,7 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
-import org.zotero.android.screens.itemdetails.data.ShowItemDetailsArgs
+import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -88,9 +89,9 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
-import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
+import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -166,7 +167,7 @@ class ItemDetailsViewModel @Inject constructor(
         EventBus.getDefault().register(this)
         setupFileObservers()
 
-        val args = ScreenArguments.showItemDetailsArgs
+        val args = ScreenArguments.itemDetailsArgs
 
         initViewState(args)
         loadInitialData()
@@ -213,7 +214,7 @@ class ItemDetailsViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun initViewState(args: ShowItemDetailsArgs) {
+    private fun initViewState(args: ItemDetailsArgs) {
         val type = args.type
         val library = args.library
         val preScrolledChildKey = args.childKey
@@ -1318,7 +1319,7 @@ class ItemDetailsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(file = file, key = attachment.key, library = library)
+                        showPdf(file = file)
                     }
                     "text/html", "text/plain" -> {
                         openFile(file = file, mime = contentType)
@@ -1345,8 +1346,8 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun showPdf(file: File, key: String, library: Library) {
-        openFile(file, "application/pdf")
+    private fun showPdf(file: File) {
+        triggerEffect(ShowPdf(file))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1685,6 +1686,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
+    data class ShowPdf(val file: File) : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
 }

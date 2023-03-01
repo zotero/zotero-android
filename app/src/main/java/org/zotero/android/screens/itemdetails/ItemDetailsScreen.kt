@@ -45,6 +45,7 @@ internal fun ItemDetailsScreen(
     navigateToImageViewerScreen: () -> Unit,
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
+    onShowPdf: (file: File) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
 ) {
@@ -90,6 +91,9 @@ internal fun ItemDetailsScreen(
             }
             is ItemDetailsViewEffect.OpenFile -> {
                 onOpenFile(consumedEffect.file, consumedEffect.mimeType)
+            }
+            is ItemDetailsViewEffect.ShowPdf -> {
+                onShowPdf(consumedEffect.file)
             }
             is ItemDetailsViewEffect.OpenWebpage -> {
                 onOpenWebpage(consumedEffect.uri)

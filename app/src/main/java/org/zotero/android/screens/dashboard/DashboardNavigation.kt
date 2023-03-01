@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +28,7 @@ import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.itemdetails.ItemDetailsScreen
+import org.zotero.android.screens.loading.LoadingScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.screens.tagpicker.TagPickerScreen
@@ -34,8 +38,10 @@ import java.io.File
 
 @Composable
 internal fun DashboardNavigation(
+    viewModel: DashboardViewModel,
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
+    onShowPdf: (file: File) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
 ) {
     val navController = rememberAnimatedNavController()
@@ -44,18 +50,33 @@ internal fun DashboardNavigation(
         Navigation(navController, dispatcher)
     }
 
+    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+    val viewEffect by viewModel.viewEffects.observeAsState()
+
+    LaunchedEffect(key1 = viewEffect) {
+        when (val consumedEffect = viewEffect?.consume()) {
+            null -> Unit
+        }
+    }
+
     ZoteroNavHost(
         navController = navController,
         startDestination = Destinations.ALL_ITEMS,
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
+        loadingScreen()
         allItemsScreen(
             onBack = navigation::onBack,
             onPickFile = { onPickFile(CallPoint.AllItems) },
+            onOpenFile = onOpenFile,
+            onOpenWebpage = onOpenWebpage,
             navigateToItemDetails = navigation::toItemDetails,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
             navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
+            navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
+            navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
             navigateToCreatorEditScreen = navigation::toCreatorEditScreen,
@@ -71,6 +92,7 @@ internal fun DashboardNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(CallPoint.ItemDetails) },
+            onShowPdf = onShowPdf
         )
         addNoteScreen(
             onBack = navigation::onBack
@@ -89,19 +111,29 @@ internal fun DashboardNavigation(
 private fun NavGraphBuilder.allItemsScreen(
     onBack: () -> Unit,
     navigateToItemDetails: () -> Unit,
-    onPickFile: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
-) {
+    navigateToVideoPlayerScreen: () -> Unit,
+    navigateToImageViewerScreen: () -> Unit,
+    onOpenFile: (file: File, mimeType: String) -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
+    onPickFile: () -> Unit,
+    onShowPdf: (file: File) -> Unit,
+    ) {
     composable(route = Destinations.ALL_ITEMS) {
         AllItemsScreen(
             onBack = onBack,
             onPickFile = onPickFile,
+            onOpenFile = onOpenFile,
+            onOpenWebpage = onOpenWebpage,
+            onShowPdf = onShowPdf,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
             navigateToSinglePickerDialog = navigateToSinglePickerDialog,
+            navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
+            navigateToImageViewerScreen = navigateToImageViewerScreen,
         )
     }
 }
@@ -120,6 +152,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
+    onShowPdf: (file: File) -> Unit,
 ) {
     composable(
         route = "${Destinations.ITEM_DETAILS}",
@@ -139,6 +172,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = onPickFile,
+            onShowPdf = onShowPdf
         )
     }
 }
@@ -147,7 +181,7 @@ private fun NavGraphBuilder.addNoteScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${Destinations.ADD_NOTE}",
+        route = Destinations.ADD_NOTE,
         arguments = listOf(),
     ) {
         AddNoteScreen(
@@ -156,10 +190,20 @@ private fun NavGraphBuilder.addNoteScreen(
     }
 }
 
+private fun NavGraphBuilder.loadingScreen(
+) {
+    composable(
+        route = Destinations.LOADING,
+        arguments = listOf(),
+    ) {
+        LoadingScreen()
+    }
+}
+
 private fun NavGraphBuilder.videoPlayerScreen(
 ) {
     composable(
-        route = "${Destinations.VIDEO_PLAYER_SCREEN}",
+        route = Destinations.VIDEO_PLAYER_SCREEN,
         arguments = listOf(),
     ) {
         VideoPlayerView()
@@ -170,7 +214,7 @@ private fun NavGraphBuilder.imageViewerScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${Destinations.IMAGE_VIEWER_SCREEN}",
+        route = Destinations.IMAGE_VIEWER_SCREEN,
         arguments = listOf(),
     ) {
         ImageViewerScreen(onBack = onBack)
@@ -180,7 +224,7 @@ private fun NavGraphBuilder.imageViewerScreen(
 private fun NavGraphBuilder.creatorEditScreen(
 ) {
     composable(
-        route = "${Destinations.CREATOR_EDIT_SCREEN}",
+        route = Destinations.CREATOR_EDIT_SCREEN,
         arguments = listOf(),
     ) {
         CreatorEditNavigation()
@@ -190,7 +234,7 @@ private fun NavGraphBuilder.creatorEditScreen(
 private fun NavGraphBuilder.creatorEditDialog(
 ) {
     dialog(
-        route = "${Destinations.CREATOR_EDIT_DIALOG}",
+        route = Destinations.CREATOR_EDIT_DIALOG,
         dialogProperties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true,
@@ -209,7 +253,7 @@ private fun NavGraphBuilder.singlePickerScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${Destinations.SINGLE_PICKER_SCREEN}",
+        route = Destinations.SINGLE_PICKER_SCREEN,
         arguments = listOf(),
     ) {
         SinglePickerScreen(onCloseClicked = onBack)
@@ -220,7 +264,7 @@ private fun NavGraphBuilder.singlePickerDialog(
     onBack: () -> Unit,
 ) {
     dialog(
-        route = "${Destinations.SINGLE_PICKER_DIALOG}",
+        route = Destinations.SINGLE_PICKER_DIALOG,
         dialogProperties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true,
@@ -272,6 +316,7 @@ private fun NavGraphBuilder.toTagPickerDialog(
 }
 
 private object Destinations {
+    const val LOADING = "loading"
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
     const val ADD_NOTE = "addNote"
@@ -291,6 +336,12 @@ private class Navigation(
     private val onBackPressedDispatcher: OnBackPressedDispatcher?,
 ) {
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
+
+    fun toAllItems() {
+        navController.navigate(Destinations.ALL_ITEMS)  {
+            popUpTo(0)
+        }
+    }
 
     fun toItemDetails() {
         navController.navigate(Destinations.ITEM_DETAILS)

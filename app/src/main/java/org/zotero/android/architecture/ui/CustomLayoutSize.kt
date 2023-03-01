@@ -61,6 +61,46 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateMainLoaderIconSize(): Dp {
+            return when (this) {
+                big, medium -> 100.dp
+                small -> 60.dp
+            }
+        }
+
+        fun calculateItemsRowInfoIconSize(): Dp {
+            return when (this) {
+                big, medium -> 50.dp
+                small -> 36.dp
+            }
+        }
+
+        fun calculateItemsRowNoteIconSize(): Dp {
+            return when (this) {
+                big, medium -> 14.dp
+                small -> 10.dp
+            }
+        }
+
+        fun calculateItemsRowAccessoryIconSize(): Dp {
+            return when (this) {
+                big, medium -> 22.dp
+                small -> 18.dp
+            }
+        }
+
+        fun calculateItemsRowMainIconSize(): Dp {
+            return when (this) {
+                big, medium -> 26.dp
+                small -> 22.dp
+            }
+        }
+        fun calculateItemsRowTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 20.sp
+                small -> 14.sp
+            }
+        }
 
     }
 

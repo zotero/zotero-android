@@ -1,8 +1,7 @@
-package org.zotero.android.uidata
+package org.zotero.android.sync
 
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RSearch
-import org.zotero.android.sync.CollectionIdentifier
 
 data class Collection(
     val identifier: CollectionIdentifier,
@@ -26,7 +25,7 @@ data class Collection(
                 itemCount = 0,
             )
         }
-        fun initWithCustomType(type: CollectionIdentifier.CustomType, itemCount: Int = 0): org.zotero.android.uidata.Collection {
+        fun initWithCustomType(type: CollectionIdentifier.CustomType, itemCount: Int = 0): Collection {
             val name = when(type) {
                 CollectionIdentifier.CustomType.all -> "All Items"
                 CollectionIdentifier.CustomType.trash -> "Trash"
