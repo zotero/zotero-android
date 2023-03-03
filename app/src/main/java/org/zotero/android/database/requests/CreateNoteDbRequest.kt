@@ -80,10 +80,9 @@ class CreateNoteDbRequest(
         noteField.value = this.note.text
         noteField.changed = true
 
-        val allTags = database.where<RTag>().library(this.libraryId)
         for (tag in this.note.tags) {
             val rTag: RTag
-            val existing = allTags.name(tag.name).findFirst()
+            val existing = database.where<RTag>().library(this.libraryId).name(tag.name).findFirst()
             if (existing != null) {
                 rTag = existing
             } else {

@@ -33,6 +33,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.NotePreviewGenerator
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
+import timber.log.Timber
 import java.util.Date
 
 class StoreItemsDbResponseRequest(
@@ -510,8 +511,6 @@ class StoreItemDbRequest(
                 return
             }
 
-            val allTags = database.where<RTag>()
-
             for (tag in tags) {
                 val existingA = item.tags
                     .where()
@@ -525,7 +524,7 @@ class StoreItemDbRequest(
                 }
 
                 val rTag: RTag
-                val existing = allTags
+                val existing = database.where<RTag>()
                     .name(tag.tag, libraryId)
                     .findFirst()
 
@@ -552,17 +551,36 @@ class StoreItemDbRequest(
         ) {
             item.creators.deleteAllFromRealm()
 
-            for (objectS in creators.withIndex()) {
-                val firstName = objectS.value.firstName ?: ""
-                val lastName = objectS.value.lastName ?: ""
-                val name = objectS.value.name ?: ""
+            val validCreators = schemaController.creators(item.rawType)
+            if (validCreators == null || validCreators.isEmpty()) {
+                Timber.w("StoreItemsDbResponseRequest: can't find valid creators for item type ${item.rawType}. Skipping creators.")
+                return
+            }
+
+            for ((idx, objectS) in creators.withIndex()) {
+                val firstName = objectS.firstName ?: ""
+                val lastName = objectS.lastName ?: ""
+                val name = objectS.name ?: ""
 
                 val creator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
-                creator.rawType = objectS.value.creatorType
+
+                if (validCreators.any { it.creatorType == objectS.creatorType }) {
+                    creator.rawType = objectS.creatorType
+                } else {
+                    val primaryCreator = validCreators.firstOrNull { it.primary }
+                    if (primaryCreator != null) {
+                        Timber.e("StoreItemsDbResponseRequest: creator type '${objectS.creatorType}' isn't valid for ${item.rawType} - changing to primary creator")
+                        creator.rawType = primaryCreator.creatorType
+                    } else {
+                        Timber.e("StoreItemsDbResponseRequest: creator type '${objectS.creatorType}' isn't valid for ${item.rawType} and primary creator doesn't exist - changing to first valid creator")
+                        creator.rawType = validCreators[0].creatorType
+                    }
+                }
+
                 creator.firstName = firstName
                 creator.lastName = lastName
                 creator.name = name
-                creator.orderId = objectS.index
+                creator.orderId = idx
                 creator.primary =
                     schemaController.creatorIsPrimary(
                         creatorType = creator.rawType,

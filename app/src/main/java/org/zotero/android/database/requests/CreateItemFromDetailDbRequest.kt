@@ -141,9 +141,8 @@ class CreateItemFromDetailDbRequest(
             }
         }
 
-        val allTags = database.where<RTag>()
         for (tag in this.tags) {
-            val rTag = allTags.name(tag.name, this.libraryId).findFirst() ?: continue
+            val rTag = database.where<RTag>().name(tag.name, this.libraryId).findFirst() ?: continue
 
             val rTypedTag = database.createObject<RTypedTag>()
             rTypedTag.type = RTypedTag.Kind.manual.name

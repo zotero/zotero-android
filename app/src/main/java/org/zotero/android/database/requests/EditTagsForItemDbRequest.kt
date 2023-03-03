@@ -38,8 +38,6 @@ class EditTagsForItemDbRequest(
             database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
         }
 
-        val allTags = database.where<RTag>()
-
         for (tag in this.tags) {
             if (item.tags.where().tagName(tag.name).findFirst() != null) {
                 continue
@@ -47,7 +45,7 @@ class EditTagsForItemDbRequest(
 
             val rTag: RTag
 
-            val existing = allTags.name(tag.name, this.libraryId).findFirst()
+            val existing = database.where<RTag>().name(tag.name, this.libraryId).findFirst()
             if (existing != null) {
                 rTag = existing
             } else {

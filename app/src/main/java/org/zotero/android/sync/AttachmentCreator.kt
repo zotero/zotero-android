@@ -385,7 +385,7 @@ class AttachmentCreator {
             }
 
             if( lData.second != rData.second) {
-                return lData.second.compareTo(!rData.second)
+                return (lData.second as Boolean).compareTo(!(rData.second as Boolean))
             }
 
             return lData.third.compareTo(rData.third)

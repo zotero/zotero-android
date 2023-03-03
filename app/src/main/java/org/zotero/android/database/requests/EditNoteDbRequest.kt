@@ -57,15 +57,13 @@ class EditNoteDbRequest(
 
         tagsToRemove.deleteAllFromRealm()
 
-        val allTags = database.where<RTag>().library(this.libraryId)
-
         for (tag in tags) {
             if (item.tags.where().tagName(tag.name).findFirst() != null) {
                 continue
             }
 
             val rTag: RTag
-            val existing = allTags.name(tag.name).findFirst()
+            val existing = database.where<RTag>().library(this.libraryId).name(tag.name).findFirst()
             if (existing != null) {
                 rTag = existing
             } else {

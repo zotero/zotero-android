@@ -215,7 +215,7 @@ private fun ItemView(
             modifier = Modifier
                 .size(layoutType.calculateItemsRowMainIconSize())
                 .align(CenterVertically),
-            painter = painterResource(id = Drawables.attachment_list_pdf),
+            painter = painterResource(id = item.typeIconName),
             contentDescription = null,
         )
         Column(modifier = Modifier.padding(start = 16.dp)) {

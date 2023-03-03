@@ -15,8 +15,8 @@ android {
         applicationId = "org.zotero.android"
         minSdk = 23
         targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.03"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")

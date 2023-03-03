@@ -185,6 +185,17 @@ private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
             val contentType = attachmentType.contentType
             val linkType = attachmentType.linkType
             return when {
+                linkType == Attachment.FileLinkType.embeddedImage -> {
+                    return when (style) {
+                        Style.detail, Style.shareExtension, Style.lookup -> {
+                            Drawables.attachment_detail_image
+                        }
+                        Style.list -> {
+                            Drawables.attachment_list_image
+                        }
+                    }
+                }
+
                 linkType == Attachment.FileLinkType.linkedFile -> {
                     return when (style) {
                         Style.detail, Style.shareExtension, Style.lookup -> {
@@ -209,7 +220,7 @@ private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
                     }
                 }
                 linkType == Attachment.FileLinkType.importedFile ||
-                        linkType == Attachment.FileLinkType.embeddedImage -> {
+                        linkType == Attachment.FileLinkType.importedUrl -> {
                     when (contentType) {
                         "image/png", "image/jpeg", "image/gif" -> {
                             when (style) {
