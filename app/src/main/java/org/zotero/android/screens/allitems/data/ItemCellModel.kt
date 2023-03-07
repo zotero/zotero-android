@@ -17,9 +17,10 @@ data class ItemCellModel(
     val title: String,
     val subtitle: String,
     val hasNote: Boolean,
-    val accessory: Accessory?,
+    var accessory: Accessory?,
     val tagColors: List<Color>,
 ) {
+
     sealed class Accessory {
         data class attachment(val state: State) : Accessory()
         object doi : Accessory()
@@ -74,5 +75,9 @@ data class ItemCellModel(
             }
             return result
         }
+
+    }
+    fun updateAccessory(cellAccessory: Accessory?) {
+        this.accessory = cellAccessory
     }
 }

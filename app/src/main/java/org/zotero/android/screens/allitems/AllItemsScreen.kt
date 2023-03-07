@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,6 +51,8 @@ import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
+import org.zotero.android.uicomponents.loading.IconLoadingPlaceholder
+import org.zotero.android.uicomponents.loading.TextLoadingPlaceholder
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.modal.CustomModalBottomSheet
 import org.zotero.android.uicomponents.row.RowItemWithArrow
@@ -153,15 +156,18 @@ internal fun AllItemsScreen(
                         contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
                         itemsIndexed(
-                            viewState.snapshot!!
+                            items = viewState.snapshot!!
                         ) { index, item ->
-                            ItemView(
-                                rItem = item,
-                                layoutType = layoutType,
-                                viewState = viewState,
-                                viewModel = viewModel,
-                                showTopDivider = index == 0
-                            )
+                            Box(modifier = Modifier.animateItemPlacement()) {
+                                ItemView(
+                                    rItem = item,
+                                    layoutType = layoutType,
+                                    viewState = viewState,
+                                    viewModel = viewModel,
+                                    showTopDivider = index == 0
+                                )
+
+                            }
                         }
                     }
 
@@ -190,17 +196,11 @@ private fun ItemView(
     layoutType: CustomLayoutSize.LayoutType,
     showTopDivider: Boolean = false
 ) {
-    viewModel.cacheItemAccessory(item = rItem)
-
-    val accessory = viewState.itemAccessories[rItem.key]
-    val typeName =
-        viewModel.schemaController.localizedItemType(itemType = rItem.rawType) ?: rItem.rawType
-
-    val item = ItemCellModel.init(
-        item = rItem,
-        accessory = viewModel.cellAccessory(accessory),
-        typeName = typeName
-    )
+    val model = viewState.itemKeyToItemCellModelMap[rItem.key]
+    if (model == null) {
+        AllItemsPlaceholderRow(layoutType = layoutType, showTopDivider = showTopDivider)
+        return
+    }
     Row(
         modifier = Modifier.safeClickable(
             interactionSource = remember { MutableInteractionSource() },
@@ -215,7 +215,7 @@ private fun ItemView(
             modifier = Modifier
                 .size(layoutType.calculateItemsRowMainIconSize())
                 .align(CenterVertically),
-            painter = painterResource(id = item.typeIconName),
+            painter = painterResource(id = model.typeIconName),
             contentDescription = null,
         )
         Column(modifier = Modifier.padding(start = 16.dp)) {
@@ -229,16 +229,16 @@ private fun ItemView(
                         .weight(1f)
                 ) {
                     Text(
-                        text = if (item.title.isEmpty()) " " else item.title,
+                        text = if (model.title.isEmpty()) " " else model.title,
                         fontSize = layoutType.calculateItemsRowTextSize(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row {
-                        var subtitleText = if (item.subtitle.isEmpty()) " " else item.subtitle
+                        var subtitleText = if (model.subtitle.isEmpty()) " " else model.subtitle
                         val shouldHideSubtitle =
-                            item.subtitle.isEmpty() && (item.hasNote || !item.tagColors.isEmpty())
+                            model.subtitle.isEmpty() && (model.hasNote || !model.tagColors.isEmpty())
                         if (shouldHideSubtitle) {
                             subtitleText = ""
                         }
@@ -249,7 +249,7 @@ private fun ItemView(
                             overflow = TextOverflow.Ellipsis,
                             color = CustomPalette.LightCharcoal,
                         )
-                        if (item.hasNote) {
+                        if (model.hasNote) {
                             Spacer(modifier = Modifier.width(4.dp))
                             Image(
                                 modifier = Modifier
@@ -262,7 +262,7 @@ private fun ItemView(
 
                     }
                 }
-                setAccessory(accessory = item.accessory, layoutType = layoutType)
+                setAccessory(accessory = model.accessory, layoutType = layoutType)
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     modifier = Modifier
@@ -404,6 +404,55 @@ private fun AddBottomSheetContent(
                 title = stringResource(id = Strings.add_item_bottom_sheet_file),
                 onClick = { onAddFile() }
             )
+        }
+    }
+}
+
+@Composable
+private fun AllItemsPlaceholderRow(
+    layoutType: CustomLayoutSize.LayoutType,
+    showTopDivider: Boolean = false
+) {
+    Row {
+        Spacer(modifier = Modifier.width(16.dp))
+        IconLoadingPlaceholder(
+            modifier = Modifier
+                .size(layoutType.calculateItemsRowMainIconSize())
+                .align(CenterVertically),
+        )
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+            if (showTopDivider) {
+                CustomDivider()
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    TextLoadingPlaceholder(
+                        modifier = Modifier
+                            .height(layoutType.calculateItemsRowPlaceholderSize())
+                            .fillMaxWidth(0.8f),
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row {
+                        TextLoadingPlaceholder(
+                            modifier = Modifier
+                                .height(layoutType.calculateItemsRowPlaceholderSize())
+                                .fillMaxWidth(0.4f),
+                        )
+                    }
+                }
+                IconLoadingPlaceholder(
+                    modifier = Modifier
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .align(CenterVertically)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            CustomDivider()
         }
     }
 }

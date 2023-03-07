@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
@@ -25,14 +24,15 @@ import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
+import org.zotero.android.database.Database
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
-import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
@@ -78,14 +78,18 @@ import javax.inject.Inject
 internal class AllItemsViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
-    private val dispatcher: CoroutineDispatcher,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
     private val fileDownloader: AttachmentDownloader,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-    val schemaController: SchemaController,
+    private val schemaController: SchemaController,
+    private val dispatchers: Dispatchers,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
+
+    val itemAccessories = mutableMapOf<String, ItemAccessory> ()
+    val keys = mutableListOf<String>()
+    var results: RealmResults<RItem>? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.FileWasSelected) {
@@ -142,14 +146,9 @@ internal class AllItemsViewModel @Inject constructor(
         initViewState(args)
 
         loadInitialState()
-        setupFileObservers()
-        val results = viewState.results
-        if (results != null) {
-            startObserving(results)
-        }
     }
 
-    private var coroutineScope = CoroutineScope(dispatcher)
+    private var coroutineScope = CoroutineScope(dispatchers.default)
     private fun setupFileObservers() {
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
@@ -181,7 +180,7 @@ internal class AllItemsViewModel @Inject constructor(
         batchData: ItemsState.DownloadBatchData?
     ) {
         val updateKey = update.parentKey ?: update.key
-        val accessory = viewState.itemAccessories[updateKey] ?: return
+        val accessory = itemAccessories[updateKey] ?: return
         val attachment = accessory.attachmentGet ?: return
         viewModelScope.launch {
             when (update.kind) {
@@ -190,12 +189,10 @@ internal class AllItemsViewModel @Inject constructor(
                         attachment.changed(location = Attachment.FileLocation.local)
                             ?: return@launch
 
-                    val updatedItemAccessories = viewState.itemAccessories.toMutableMap()
-                    updatedItemAccessories[updateKey] = ItemAccessory.attachment(updatedAttachment)
+                    itemAccessories[updateKey] = ItemAccessory.attachment(updatedAttachment)
 
                     updateState {
                         copy(
-                            itemAccessories = updatedItemAccessories,
                             updateItemKey = updateKey
                         )
                     }
@@ -217,13 +214,14 @@ internal class AllItemsViewModel @Inject constructor(
 
                 }
             }
+            val cellModel = viewState.itemKeyToItemCellModelMap[updateKey]!!
+            cellModel.updateAccessory(cellAccessory(itemAccessories[updateKey]))
             triggerEffect(AllItemsViewEffect.ScreenRefresh)
-
         }
     }
 
     fun attachment(key: String, parentKey: String?, libraryId: LibraryIdentifier): Pair<Attachment, Library>? {
-        val accessory = viewState.itemAccessories[parentKey ?: key] ?: return null
+        val accessory = itemAccessories[parentKey ?: key] ?: return null
         val attachment = accessory.attachmentGet ?: return null
         return attachment to viewState.library
     }
@@ -321,50 +319,35 @@ internal class AllItemsViewModel @Inject constructor(
         modifications: IntArray
     ) {
         if (viewState.isEditing) {
+            val mutableSelectedItems = viewState.selectedItems.toMutableSet()
             deletions.sorted().reversed().forEach { idx ->
-               val mutableKeys = viewState.keys.toMutableList()
-                val key = mutableKeys.removeAt(idx)
-                updateState {
-                    copy(keys = mutableKeys)
-                }
-
-
-                val mutableSelectedItems = viewState.selectedItems.toMutableSet()
+                val key = this.keys.removeAt(idx)
                 mutableSelectedItems.remove(key)
-                updateState {
-                    copy(selectedItems = mutableSelectedItems)
-                }
+            }
+            updateState {
+                copy(selectedItems = mutableSelectedItems)
             }
         }
-        modifications.forEach { idx ->
-            val item = items[idx]
-            val mutableItemAccessories = viewState.itemAccessories.toMutableMap()
-            val itemAccessory = accessory(item!!)
-            if (itemAccessory != null) {
-                mutableItemAccessories.put(item.key, itemAccessory)
-                updateState {
-                    copy(itemAccessories = mutableItemAccessories)
+        coroutineScope.launch {
+            modifications.forEach { idx ->
+                val item = items[idx]
+                val itemAccessory = accessory(item!!)
+                if (itemAccessory != null) {
+                    this@AllItemsViewModel.itemAccessories.put(item.key, itemAccessory)
                 }
+                generateCellModelForRItem(item)
             }
-
-        }
-        insertions.forEach { idx ->
-            val item = items[idx]
-            if (viewState.isEditing) {
-                val mutableKeys = viewState.keys.toMutableList()
-                mutableKeys.add(element = item!!.key, index = idx)
-                updateState {
-                    copy(keys = mutableKeys)
+            insertions.forEach { idx ->
+                val item = items[idx]
+                if (viewState.isEditing) {
+                    this@AllItemsViewModel.keys.add(element = item!!.key, index = idx)
                 }
-            }
 
-            val mutableItemAccessories = viewState.itemAccessories.toMutableMap()
-            val itemAccessory = accessory(item!!)
-            if (itemAccessory != null) {
-                mutableItemAccessories.put(item.key, itemAccessory)
-                updateState {
-                    copy(itemAccessories = mutableItemAccessories)
+                val itemAccessory = accessory(item!!)
+                if (itemAccessory != null) {
+                    this@AllItemsViewModel.itemAccessories.put(item.key, itemAccessory)
                 }
+                generateCellModelForRItem(item)
             }
         }
 
@@ -389,16 +372,58 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun loadInitialState() {
         val sortType = defaults.getItemsSortType()
-        val request = ReadItemsDbRequest(collectionId = viewState.collection.identifier, libraryId = viewState.library.identifier, defaults = defaults)
-        val results = dbWrapper.realmDbStorage.perform(request = request)//TODO sort by descriptors
-
+        val request = ReadItemsDbRequest(
+            collectionId = viewState.collection.identifier,
+            libraryId = viewState.library.identifier,
+            defaults = defaults
+        )
+        val results =
+            dbWrapper.realmDbStorage.perform(request = request)//TODO sort by descriptors
+        val resultsFrozen = results.freeze()
+        this@AllItemsViewModel.results = results
         updateState {
             copy(
                 sortType = sortType,
-                results = results,
                 error = if (results == null) ItemsError.dataLoading else null,
-                snapshot = results.freeze(), lce = LCE2.Content,
+                snapshot = resultsFrozen,
+                lce = if (results.isEmpty()) LCE2.Loading else LCE2.Content,
             )
+        }
+        processRealmResults(resultsFrozen)
+
+        setupFileObservers()
+        startObserving(results)
+    }
+
+    private fun processRealmResults(realmResults: RealmResults<RItem>?) {
+        if (realmResults == null) {
+            return
+        }
+        realmResults.map { rItem ->
+            generateCellModelForRItem(rItem)
+        }
+    }
+
+    private fun generateCellModelForRItem(rItem: RItem) {
+        coroutineScope.launch {
+            cacheItemAccessory(item = rItem)
+
+            val accessory = itemAccessories[rItem.key]
+            val typeName =
+                schemaController.localizedItemType(itemType = rItem.rawType) ?: rItem.rawType
+
+            val cellModel = ItemCellModel.init(
+                item = rItem,
+                accessory = cellAccessory(accessory),
+                typeName = typeName
+            )
+            viewModelScope.launch {
+                val m = viewState.itemKeyToItemCellModelMap.toMutableMap()
+                m[rItem.key] = cellModel
+                updateState {
+                    copy(itemKeyToItemCellModelMap = m)
+                }
+            }
         }
     }
 
@@ -407,21 +432,23 @@ internal class AllItemsViewModel @Inject constructor(
             val state = changeSet.state
             when (state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
-                  updateState {
-                      copy(snapshot = items.freeze(), lce = LCE2.Content,)
-                  }
+                    val itemsFrozen = items.freeze()
+                    updateState {
+                        copy(lce = LCE2.Content, snapshot = itemsFrozen)
+                    }
+                    processRealmResults(itemsFrozen)
+
                 }
                 OrderedCollectionChangeSet.State.UPDATE ->  {
                     val deletions = changeSet.deletions
                     val modifications = changeSet.changes
                     val insertions = changeSet.insertions
-                    val correctedModifications = org.zotero.android.database.Database.correctedModifications(modifications = modifications, insertions = insertions, deletions = deletions)
-
-                    processUpdate(items = items, deletions = deletions, insertions = insertions, modifications = correctedModifications)
+                    val correctedModifications = Database.correctedModifications(modifications = modifications, insertions = insertions, deletions = deletions)
+                    val itemsFrozen = items.freeze()
                     updateState {
-                        copy(snapshot = items.freeze(), lce = LCE2.Content,)
+                        copy(lce = LCE2.Content, snapshot = itemsFrozen)
                     }
-
+                    processUpdate(items = itemsFrozen, deletions = deletions, insertions = insertions, modifications = correctedModifications)
                 }
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "ItemsViewController: could not load results")
@@ -435,11 +462,6 @@ internal class AllItemsViewModel @Inject constructor(
             }
         })
 
-    }
-
-    fun showDefaultLibrary() {
-        val libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
-        val collectionId = storeIfNeeded(libraryId)
     }
 
     private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
@@ -621,7 +643,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) = withContext(dispatcher) {
+    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) = withContext(dispatchers.io) {
         val note = Note(key = key, text = text, tags = tags)
         val libraryId = viewState.library.identifier
         var collectionKey: String? = null
@@ -659,20 +681,16 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    fun cacheItemAccessory(item: RItem) {
-        if (viewState.itemAccessories[item.key] != null) {
+    private fun cacheItemAccessory(item: RItem) {
+        if (itemAccessories[item.key] != null) {
             return
         }
         val accessory = accessory(item) ?: return
 
-        val mutableItemAccessories = viewState.itemAccessories.toMutableMap()
-        mutableItemAccessories.put(item.key, accessory)
-        updateState {
-            copy(itemAccessories = mutableItemAccessories)
-        }
+        itemAccessories.put(item.key, accessory)
     }
 
-    fun cellAccessory(accessory: ItemAccessory?): ItemCellModel.Accessory? {
+    private fun cellAccessory(accessory: ItemAccessory?): ItemCellModel.Accessory? {
         when (accessory) {
             is ItemAccessory.attachment -> {
                 val attachment = accessory.attachment
@@ -714,7 +732,7 @@ internal class AllItemsViewModel @Inject constructor(
             return
         }
 
-        val accessory = viewState.itemAccessories[item.key]
+        val accessory = itemAccessories[item.key]
         if (accessory == null) {
             showMetadata(item)
             return
@@ -774,6 +792,7 @@ internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Loading,
     val snackbarMessage: SnackbarMessage? = null,
     val snapshot: RealmResults<RItem>? = null,
+    val itemKeyToItemCellModelMap: Map<String, ItemCellModel> = emptyMap(),
     val collection: Collection = Collection(
         identifier = CollectionIdentifier.collection(""),
         name = "",
@@ -785,12 +804,9 @@ internal data class AllItemsViewState(
         metadataEditable = false,
         filesEditable = false
     ),
-    val itemAccessories: Map<String, ItemAccessory> = emptyMap(),
-    val keys: List<String> = emptyList(),
     val selectedItems: Set<String> = emptySet(),
     val isEditing: Boolean = false,
     val error: ItemsError? = null,
-    val results: RealmResults<RItem>? = null,
     val shouldShowAddBottomSheet: Boolean = false,
     val searchTerm: String? = null,
     val sortType: ItemsSortType = ItemsSortType.default,
@@ -812,15 +828,4 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowImageViewer : AllItemsViewEffect()
     data class ShowPdf(val file: File) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
-}
-
-enum class Changes {
-    results,
-    editing,
-    selection,
-    selectAll,
-    attachmentsRemoved,
-    filters,
-    webViewCleanup,
-    batchData,
 }

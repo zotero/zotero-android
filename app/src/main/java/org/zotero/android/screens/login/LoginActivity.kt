@@ -19,7 +19,9 @@ internal class LoginActivity : BaseActivity() {
             CustomTheme {
                 LoginScreen(
                     onBack = { finish() },
-                    navigateToDashboard = { startActivity(DashboardActivity.getIntentClearTask(this)) }
+                    navigateToDashboard = {
+                        startActivity(DashboardActivity.getIntentClearTask(this))
+                    }
                 )
             }
         }

@@ -102,6 +102,13 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateItemsRowPlaceholderSize(): Dp {
+            return when (this) {
+                big, medium -> 20.dp
+                small -> 14.dp
+            }
+        }
+
     }
 
     @Composable
