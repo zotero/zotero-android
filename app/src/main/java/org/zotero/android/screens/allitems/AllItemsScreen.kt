@@ -3,12 +3,9 @@ package org.zotero.android.screens.allitems
 
 import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -32,7 +29,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,6 +71,8 @@ internal fun AllItemsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
+    navigateToAllItemsSortScreen: () -> Unit,
+    navigateToAllItemsSortDialog: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
@@ -97,6 +98,16 @@ internal fun AllItemsScreen(
                     }
                     CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
                         navigateToSinglePickerDialog()
+                    }
+                }
+            }
+            AllItemsViewEffect.ShowSortPickerEffect -> {
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToAllItemsSortScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToAllItemsSortDialog()
                     }
                 }
             }
@@ -142,38 +153,50 @@ internal fun AllItemsScreen(
                 CircularLoading()
             },
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = CustomTheme.colors.surface),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
+                    .fillMaxWidth()
+                    .height(layoutType.calculateAllItemsBottomPanelHeight())
+                    .align(Alignment.BottomStart)
             ) {
-                Column {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = rememberLazyListState(),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        itemsIndexed(
-                            items = viewState.snapshot!!
-                        ) { index, item ->
-                            Box(modifier = Modifier.animateItemPlacement()) {
-                                ItemView(
-                                    rItem = item,
-                                    layoutType = layoutType,
-                                    viewState = viewState,
-                                    viewModel = viewModel,
-                                    showTopDivider = index == 0
-                                )
-
+                CustomDivider(modifier = Modifier.align(TopStart))
+                Icon(
+                    modifier = Modifier
+                        .padding(end = 30.dp)
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .align(CenterEnd)
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.showSortPicker()
                             }
-                        }
-                    }
-
-                }
+                        ),
+                    painter = painterResource(id = Drawables.baseline_swap_vert_24),
+                    contentDescription = null,
+                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                )
             }
 
+            LazyColumn(
+                modifier = Modifier.padding(bottom = layoutType.calculateAllItemsBottomPanelHeight()),
+                state = rememberLazyListState(),
+            ) {
+                itemsIndexed(
+                    items = viewState.snapshot!!
+                ) { index, item ->
+                    Box(modifier = Modifier.animateItemPlacement()) {
+                        ItemView(
+                            rItem = item,
+                            layoutType = layoutType,
+                            viewState = viewState,
+                            viewModel = viewModel,
+                            showTopDivider = index == 0
+                        )
+
+                    }
+                }
+            }
         }
 
         AddBottomSheet(

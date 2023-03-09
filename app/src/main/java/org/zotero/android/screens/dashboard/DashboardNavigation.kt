@@ -31,6 +31,7 @@ import org.zotero.android.screens.itemdetails.ItemDetailsScreen
 import org.zotero.android.screens.loading.LoadingScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
+import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
@@ -74,6 +75,8 @@ internal fun DashboardNavigation(
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
             navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
+            navigateToAllItemsSortScreen = navigation::toAllItemsSortScreen,
+            navigateToAllItemsSortDialog = navigation::toAllItemsSortDialog,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
             onShowPdf = onShowPdf,
@@ -97,6 +100,8 @@ internal fun DashboardNavigation(
         addNoteScreen(
             onBack = navigation::onBack
         )
+        allItemsSortScreen()
+        allItemsSortDialog()
         creatorEditScreen()
         creatorEditDialog()
         singlePickerScreen(onBack = navigation::onBack)
@@ -114,6 +119,8 @@ private fun NavGraphBuilder.allItemsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     navigateToSinglePickerDialog: () -> Unit,
+    navigateToAllItemsSortScreen: () -> Unit,
+    navigateToAllItemsSortDialog: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
@@ -132,6 +139,8 @@ private fun NavGraphBuilder.allItemsScreen(
             navigateToItemDetails = navigateToItemDetails,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
             navigateToSinglePickerDialog = navigateToSinglePickerDialog,
+            navigateToAllItemsSortScreen = navigateToAllItemsSortScreen,
+            navigateToAllItemsSortDialog = navigateToAllItemsSortDialog,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
         )
@@ -218,6 +227,34 @@ private fun NavGraphBuilder.imageViewerScreen(
         arguments = listOf(),
     ) {
         ImageViewerScreen(onBack = onBack)
+    }
+}
+
+private fun NavGraphBuilder.allItemsSortScreen(
+) {
+    composable(
+        route = Destinations.ALL_ITEMS_SORT_SCREEN,
+        arguments = listOf(),
+    ) {
+        SortPickerNavigation()
+    }
+}
+
+private fun NavGraphBuilder.allItemsSortDialog(
+) {
+    dialog(
+        route = Destinations.ALL_ITEMS_SORT_DIALOG,
+        dialogProperties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+        ) {
+            SortPickerNavigation(scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp))
+        }
     }
 }
 
@@ -322,6 +359,8 @@ private object Destinations {
     const val ADD_NOTE = "addNote"
     const val VIDEO_PLAYER_SCREEN = "videoPlayerScreen"
     const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
+    const val ALL_ITEMS_SORT_SCREEN = "allItemsSortScreen"
+    const val ALL_ITEMS_SORT_DIALOG = "allItemsSortDialog"
     const val CREATOR_EDIT_SCREEN = "creatorEditScreen"
     const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
@@ -349,6 +388,14 @@ private class Navigation(
 
     fun toAddOrEditNote() {
         navController.navigate(Destinations.ADD_NOTE)
+    }
+
+    fun toAllItemsSortScreen() {
+        navController.navigate(Destinations.ALL_ITEMS_SORT_SCREEN)
+    }
+
+    fun toAllItemsSortDialog() {
+        navController.navigate(Destinations.ALL_ITEMS_SORT_DIALOG)
     }
 
     fun toCreatorEditScreen() {

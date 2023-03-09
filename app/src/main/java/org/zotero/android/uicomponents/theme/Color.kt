@@ -76,6 +76,9 @@ data class CustomSemanticColors(
     val popupBackgroundTop: Color,
     val popupBackgroundContent: Color,
     val popupSelectedRow: Color,
+    val sortPickerBackground: Color,
+    val sortPickerSelected: Color,
+    val sortPickerUnSelected: Color
 ) {
 
     data class DynamicTheme(
@@ -113,6 +116,9 @@ fun lightCustomColors(
     popupBackgroundTop = Color(0xFFF8F8F8),
     popupBackgroundContent = Color(0xFFFFFFFF),
     popupSelectedRow = Color(0xFFD1D1D6),
+    sortPickerBackground = Color(0xFFFFFFFF),
+    sortPickerSelected = Color(0xFFFFFFFF),
+    sortPickerUnSelected = Color(0xFFEEEEEF),
 )
 
 fun darkCustomColors(
@@ -139,6 +145,9 @@ fun darkCustomColors(
     popupBackgroundTop = Color(0xFF282828),
     popupBackgroundContent = Color(0xFF1C1C1E),
     popupSelectedRow = Color(0xFF3A3A3D),
+    sortPickerBackground = Color(0xFF1C1C1E),
+    sortPickerSelected = Color(0xFF69696F),
+    sortPickerUnSelected = Color(0xFF313136),
 )
 
 internal fun createSemanticColors(

@@ -109,6 +109,20 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateAllItemsBottomPanelHeight(): Dp {
+            return when (this) {
+                big, medium -> 60.dp
+                small -> 50.dp
+            }
+        }
+
+        fun calculateSelectorHeight(): Dp {
+            return when (this) {
+                big, medium -> 50.dp
+                small -> 36.dp
+            }
+        }
+
     }
 
     @Composable

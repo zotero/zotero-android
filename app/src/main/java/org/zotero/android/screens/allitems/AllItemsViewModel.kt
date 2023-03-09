@@ -55,6 +55,8 @@ import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.sortpicker.data.SortDirectionResult
+import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
@@ -110,8 +112,13 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(sortDirectionResult: SortDirectionResult) {
+        setSortOrder(sortDirectionResult.isAscending)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
-        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItems) {
+        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItemsShowItem) {
             val collectionKey: String?
             val identifier = viewState.collection.identifier
             when (identifier) {
@@ -132,7 +139,18 @@ internal class AllItemsViewModel @Inject constructor(
                     ), library = viewState.library
                 )
             }
+        } else if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItemsSortPicker) {
+            onSortFieldChanged(singlePickerResult.id)
         }
+    }
+
+    private fun onSortFieldChanged(id: String) {
+        val field = ItemsSortType.Field.values().first { it.titleStr == id }
+        val sortType = viewState.sortType.copy(
+            field = field,
+            ascending = field.defaultOrderAscending
+        )
+        changeSortType(sortType)
     }
 
     private fun showItemDetail(type: DetailType, library: Library) {
@@ -377,8 +395,9 @@ internal class AllItemsViewModel @Inject constructor(
             libraryId = viewState.library.identifier,
             defaults = defaults
         )
+        val sortDescriptors = sortType.descriptors
         val results =
-            dbWrapper.realmDbStorage.perform(request = request)//TODO sort by descriptors
+            dbWrapper.realmDbStorage.perform(request = request).sort(sortDescriptors.first, sortDescriptors.second)
         val resultsFrozen = results.freeze()
         this@AllItemsViewModel.results = results
         updateState {
@@ -393,6 +412,15 @@ internal class AllItemsViewModel @Inject constructor(
 
         setupFileObservers()
         startObserving(results)
+    }
+
+    private fun updateResults(results: RealmResults<RItem>) {
+        this.results?.removeAllChangeListeners()
+        this.results = results
+        startObserving(results)
+        updateState {
+            copy(snapshot = results.freeze())
+        }
     }
 
     private fun processRealmResults(realmResults: RealmResults<RItem>?) {
@@ -593,7 +621,7 @@ internal class AllItemsViewModel @Inject constructor(
                 schemaController
             ),
             showSaveButton = false,
-            callPoint = SinglePickerResult.CallPoint.AllItems
+            callPoint = SinglePickerResult.CallPoint.AllItemsShowItem
         )
         triggerEffect(ShowItemTypePickerEffect)
 
@@ -786,6 +814,51 @@ internal class AllItemsViewModel @Inject constructor(
             this.fileDownloader.downloadIfNeeded(attachment = attachment, parentKey = parentKey)
         }
     }
+
+    fun showSortPicker() {
+        ScreenArguments.sortPickerArgs = SortPickerArgs(
+            sortType = viewState.sortType
+        )
+        triggerEffect(AllItemsViewEffect.ShowSortPickerEffect)
+    }
+
+    private fun setSortOrder(ascending: Boolean) {
+        val sortType = viewState.sortType.copy(ascending = ascending)
+        changeSortType(sortType)
+    }
+
+    private fun changeSortType(sortType: ItemsSortType) {
+        val results = results(
+            searchText = viewState.searchTerm,
+            filters = viewState.filters,
+            collectionId = viewState.collection.identifier,
+            sortType = sortType,
+            libraryId = viewState.library.identifier
+        ) ?: return
+        updateState {
+            copy(sortType = sortType)
+        }
+        updateResults(results)
+        defaults.setItemsSortType(sortType)
+    }
+
+    private fun results(
+        searchText: String?,
+        filters: List<ItemsState.Filter>,
+        collectionId: CollectionIdentifier,
+        sortType: ItemsSortType,
+        libraryId: LibraryIdentifier
+    ): RealmResults<RItem>? {
+        val request = ReadItemsDbRequest(
+            collectionId = collectionId,
+            libraryId = libraryId,
+            defaults = defaults
+        )
+        val results = dbWrapper.realmDbStorage.perform(request = request)
+        //TODO implement filtering
+        val sort = sortType.descriptors
+        return results.sort(sort.first, sort.second)
+    }
 }
 
 internal data class AllItemsViewState(
@@ -815,13 +888,15 @@ internal data class AllItemsViewState(
     val processingBibliography: Boolean = false,
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
-    val downloadBatchData: ItemsState.DownloadBatchData? = null
+    val downloadBatchData: ItemsState.DownloadBatchData? = null,
+    var filters: List<ItemsState.Filter> = emptyList()
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowItemDetailEffect: AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
+    object ShowSortPickerEffect : AllItemsViewEffect()
     data class OpenWebpage(val uri: Uri) : AllItemsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()

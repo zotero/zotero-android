@@ -16,9 +16,10 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 fun CancelSaveTitleTopBar(
-    title: String?,
+    title: String? = null,
     onCancel: (() -> Unit)? = null,
     onSave: (() -> Unit)? = null,
+    onDone: (() -> Unit)? = null,
     backgroundColor: Color = CustomTheme.colors.surface,
 ) {
     CenterAlignedTopAppBar(
@@ -47,6 +48,13 @@ fun CancelSaveTitleTopBar(
                 HeadingTextButton(
                     onClick = onSave,
                     text = stringResource(Strings.save),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            if (onDone != null) {
+                HeadingTextButton(
+                    onClick = onDone,
+                    text = stringResource(Strings.done),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
