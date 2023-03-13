@@ -30,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterEnd
+import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +57,7 @@ import org.zotero.android.uicomponents.loading.TextLoadingPlaceholder
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.modal.CustomModalBottomSheet
 import org.zotero.android.uicomponents.row.RowItemWithArrow
+import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CloseIconTopBar
@@ -77,6 +80,8 @@ internal fun AllItemsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToFilterScreen: () -> Unit,
+    navigateToFilterDialog: () -> Unit,
     onShowPdf: (file: File) -> Unit,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -91,6 +96,16 @@ internal fun AllItemsScreen(
             null -> Unit
             is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
             is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
+            AllItemsViewEffect.ShowFilterEffect -> {
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToFilterScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToFilterDialog()
+                    }
+                }
+            }
             AllItemsViewEffect.ShowItemTypePickerEffect -> {
                 when (layoutType.showScreenOrDialog()) {
                     CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
@@ -176,27 +191,70 @@ internal fun AllItemsScreen(
                     contentDescription = null,
                     tint = CustomTheme.colors.zoteroBlueWithDarkMode
                 )
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 30.dp)
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .align(CenterStart)
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.showFilters()
+                            }
+                        ),
+                    painter = painterResource(id = Drawables.baseline_filter_list_24),
+                    contentDescription = null,
+                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                )
             }
 
-            LazyColumn(
-                modifier = Modifier.padding(bottom = layoutType.calculateAllItemsBottomPanelHeight()),
-                state = rememberLazyListState(),
-            ) {
-                itemsIndexed(
-                    items = viewState.snapshot!!
-                ) { index, item ->
-                    Box(modifier = Modifier.animateItemPlacement()) {
-                        ItemView(
-                            rItem = item,
-                            layoutType = layoutType,
-                            viewState = viewState,
-                            viewModel = viewModel,
-                            showTopDivider = index == 0
+            Column(modifier = Modifier.padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())) {
+                val searchValue = viewState.searchTerm
+                var searchBarTextFieldState by remember {
+                    mutableStateOf(
+                        TextFieldValue(
+                            searchValue ?: ""
                         )
+                    )
+                }
+                val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
+                    searchBarTextFieldState = it
+                    viewModel.onSearch(it.text)
+                }
+                val onSearchAction = {
+                    searchBarOnInnerValueChanged.invoke(TextFieldValue())
+                }
 
+                SearchBar(
+                    hint = stringResource(id = Strings.search_items),
+                    modifier = Modifier.padding(12.dp),
+                    onSearchImeClicked = onSearchAction,
+                    onInnerValueChanged = searchBarOnInnerValueChanged,
+                    textFieldState = searchBarTextFieldState,
+                )
+                CustomDivider()
+                LazyColumn(
+                    state = rememberLazyListState(),
+                ) {
+                    itemsIndexed(
+                        items = viewState.snapshot!!
+                    ) { index, item ->
+                        Box(modifier = Modifier.animateItemPlacement()) {
+                            ItemView(
+                                rItem = item,
+                                layoutType = layoutType,
+                                viewState = viewState,
+                                viewModel = viewModel,
+                                showBottomDivider = index != viewState.snapshot!!.size - 1
+                            )
+
+                        }
                     }
                 }
+
             }
+
         }
 
         AddBottomSheet(
@@ -217,11 +275,11 @@ private fun ItemView(
     viewState: AllItemsViewState,
     rItem: RItem,
     layoutType: CustomLayoutSize.LayoutType,
-    showTopDivider: Boolean = false
+    showBottomDivider: Boolean = false
 ) {
     val model = viewState.itemKeyToItemCellModelMap[rItem.key]
     if (model == null) {
-        AllItemsPlaceholderRow(layoutType = layoutType, showTopDivider = showTopDivider)
+        AllItemsPlaceholderRow(layoutType = layoutType)
         return
     }
     Row(
@@ -242,9 +300,6 @@ private fun ItemView(
             contentDescription = null,
         )
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            if (showTopDivider) {
-                CustomDivider()
-            }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
                 Column(
@@ -305,7 +360,9 @@ private fun ItemView(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Spacer(modifier = Modifier.height(8.dp))
-            CustomDivider()
+            if (showBottomDivider) {
+                CustomDivider()
+            }
         }
     }
 }
@@ -434,7 +491,7 @@ private fun AddBottomSheetContent(
 @Composable
 private fun AllItemsPlaceholderRow(
     layoutType: CustomLayoutSize.LayoutType,
-    showTopDivider: Boolean = false
+    showBottomDivider: Boolean = false
 ) {
     Row {
         Spacer(modifier = Modifier.width(16.dp))
@@ -444,9 +501,6 @@ private fun AllItemsPlaceholderRow(
                 .align(CenterVertically),
         )
         Column(modifier = Modifier.padding(start = 16.dp)) {
-            if (showTopDivider) {
-                CustomDivider()
-            }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
                 Column(
@@ -475,7 +529,9 @@ private fun AllItemsPlaceholderRow(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             Spacer(modifier = Modifier.height(8.dp))
-            CustomDivider()
+            if (showBottomDivider) {
+                CustomDivider()
+            }
         }
     }
 }

@@ -27,6 +27,7 @@ import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoi
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
+import org.zotero.android.screens.filter.FilterScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsScreen
 import org.zotero.android.screens.loading.LoadingScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
@@ -79,6 +80,8 @@ internal fun DashboardNavigation(
             navigateToAllItemsSortDialog = navigation::toAllItemsSortDialog,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            navigateToFilterScreen = navigation::toFilterScreen,
+            navigateToFilterDialog = navigation::toFilterDialog,
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
@@ -110,6 +113,8 @@ internal fun DashboardNavigation(
         imageViewerScreen(onBack = navigation::onBack)
         toTagPickerScreen(onBack = navigation::onBack)
         toTagPickerDialog(onBack = navigation::onBack)
+        toFilterScreen(onBack = navigation::onBack)
+        toFilterDialog(onBack = navigation::onBack)
     }
 }
 
@@ -123,6 +128,8 @@ private fun NavGraphBuilder.allItemsScreen(
     navigateToAllItemsSortDialog: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToFilterScreen: () -> Unit,
+    navigateToFilterDialog: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -143,6 +150,8 @@ private fun NavGraphBuilder.allItemsScreen(
             navigateToAllItemsSortDialog = navigateToAllItemsSortDialog,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
+            navigateToFilterScreen = navigateToFilterScreen,
+            navigateToFilterDialog = navigateToFilterDialog,
         )
     }
 }
@@ -352,6 +361,39 @@ private fun NavGraphBuilder.toTagPickerDialog(
     }
 }
 
+private fun NavGraphBuilder.toFilterScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = Destinations.FILTER_SCREEN,
+        arguments = listOf(),
+    ) {
+        FilterScreen(onBack = onBack)
+    }
+}
+
+private fun NavGraphBuilder.toFilterDialog(
+    onBack: () -> Unit,
+) {
+    dialog(
+        route = Destinations.FILTER_DIALOG,
+        dialogProperties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+        ) {
+            FilterScreen(
+                scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp),
+                onBack = onBack
+            )
+        }
+    }
+}
+
 private object Destinations {
     const val LOADING = "loading"
     const val ALL_ITEMS = "allItems"
@@ -367,6 +409,8 @@ private object Destinations {
     const val SINGLE_PICKER_DIALOG = "singlePickerDialog"
     const val TAG_PICKER_SCREEN = "tagPickerScreen"
     const val TAG_PICKER_DIALOG = "tagPickerDialog"
+    const val FILTER_SCREEN = "tagFilterScreen"
+    const val FILTER_DIALOG = "tagFilterDialog"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -428,5 +472,13 @@ private class Navigation(
 
     fun toImageViewerScreen() {
         navController.navigate(Destinations.IMAGE_VIEWER_SCREEN)
+    }
+
+    fun toFilterScreen() {
+        navController.navigate(Destinations.FILTER_SCREEN)
+    }
+
+    fun toFilterDialog() {
+        navController.navigate(Destinations.FILTER_DIALOG)
     }
 }

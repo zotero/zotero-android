@@ -10,7 +10,10 @@ import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,6 +41,7 @@ import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
+import org.zotero.android.database.requests.itemSearch
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
@@ -51,6 +55,8 @@ import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.allitems.data.ItemsState
+import org.zotero.android.screens.filter.data.FilterArgs
+import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
@@ -92,6 +98,9 @@ internal class AllItemsViewModel @Inject constructor(
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
     val keys = mutableListOf<String>()
     var results: RealmResults<RItem>? = null
+    var filters: MutableList<ItemsState.Filter> = mutableListOf()
+
+    private val onSearchStateFlow = MutableStateFlow("")
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.FileWasSelected) {
@@ -114,6 +123,18 @@ internal class AllItemsViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(sortDirectionResult: SortDirectionResult) {
         setSortOrder(sortDirectionResult.isAscending)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(filterResult: FilterResult) {
+        when (filterResult) {
+            is FilterResult.enableFilter -> {
+                enable(filterResult.filter)
+            }
+            is FilterResult.disableFilter -> {
+                disable(filterResult.filter)
+            }
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -389,6 +410,13 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun loadInitialState() {
+        onSearchStateFlow
+            .debounce(150)
+            .map { text ->
+                search(if (text.isEmpty()) null else text, ignoreOriginal = false)
+            }
+            .launchIn(viewModelScope)
+
         val sortType = defaults.getItemsSortType()
         val request = ReadItemsDbRequest(
             collectionId = viewState.collection.identifier,
@@ -411,7 +439,39 @@ internal class AllItemsViewModel @Inject constructor(
         processRealmResults(resultsFrozen)
 
         setupFileObservers()
+
+        val term = viewState.searchTerm
+        if (term != null && !term.isEmpty()) {
+            initialSearch(term)
+        }
+
         startObserving(results)
+    }
+
+    private fun initialSearch(text: String) {
+        search(if(text.isEmpty()) null else text, ignoreOriginal = true)
+    }
+
+    fun onSearch(text: String) {
+        updateState {
+            copy(searchTerm = text)
+        }
+        onSearchStateFlow.tryEmit(text)
+    }
+
+    private fun search(text: String?, ignoreOriginal: Boolean) {
+        val results = results(
+            searchText = text,
+            filters = this.filters,
+            collectionId = viewState.collection.identifier,
+            sortType = viewState.sortType,
+            libraryId = viewState.library.identifier
+        ) ?: return
+
+        updateState {
+            copy(searchTerm = text)
+        }
+        updateResults(results)
     }
 
     private fun updateResults(results: RealmResults<RItem>) {
@@ -830,7 +890,7 @@ internal class AllItemsViewModel @Inject constructor(
     private fun changeSortType(sortType: ItemsSortType) {
         val results = results(
             searchText = viewState.searchTerm,
-            filters = viewState.filters,
+            filters = this.filters,
             collectionId = viewState.collection.identifier,
             sortType = sortType,
             libraryId = viewState.library.identifier
@@ -854,11 +914,66 @@ internal class AllItemsViewModel @Inject constructor(
             libraryId = libraryId,
             defaults = defaults
         )
-        val results = dbWrapper.realmDbStorage.perform(request = request)
-        //TODO implement filtering
+        var results = dbWrapper.realmDbStorage.perform(request = request)
+        val text = searchText
+        if (text != null && (!text.isEmpty())) {
+            results = results.where().itemSearch(listOf(text)).findAll()
+        }
+
+        if (!filters.isEmpty()) {
+            for (filter in filters) {
+                when (filter) {
+                    ItemsState.Filter.downloadedFiles -> {
+                        results = results
+                            .where()
+                            .equalTo("fileDownloaded", true)
+                            .or()
+                            .equalTo("children.fileDownloaded", true)
+                            .findAll()
+                    }
+                }
+            }
+        }
         val sort = sortType.descriptors
         return results.sort(sort.first, sort.second)
     }
+
+    private fun enable(filter: ItemsState.Filter) {
+        if (this.filters.contains(filter)) {
+            return
+        }
+        filters.add(filter)
+        filter()
+    }
+
+    private fun disable(filter: ItemsState.Filter) {
+        val index = this.filters.indexOf(filter)
+        if (index == -1) {
+            return
+        }
+        this.filters.removeAt(index)
+        filter()
+    }
+
+    private fun filter() {
+        val results = results(
+            viewState.searchTerm,
+            filters = this.filters,
+            collectionId = viewState.collection.identifier,
+            sortType = viewState.sortType,
+            libraryId = viewState.library.identifier
+        ) ?: return
+
+        updateResults(results)
+    }
+
+    fun showFilters() {
+        ScreenArguments.filterArgs = FilterArgs(
+            filters = this.filters
+        )
+        triggerEffect(AllItemsViewEffect.ShowFilterEffect)
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -889,7 +1004,6 @@ internal data class AllItemsViewState(
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
-    var filters: List<ItemsState.Filter> = emptyList()
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
@@ -897,6 +1011,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
     object ShowSortPickerEffect : AllItemsViewEffect()
+    object ShowFilterEffect : AllItemsViewEffect()
     data class OpenWebpage(val uri: Uri) : AllItemsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()

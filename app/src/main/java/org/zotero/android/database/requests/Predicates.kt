@@ -1,5 +1,6 @@
 package org.zotero.android.database.requests
 
+import io.realm.Case
 import io.realm.RealmQuery
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.ObjectSyncState
@@ -288,4 +289,43 @@ fun <T> RealmQuery<T>.file(
     return equalTo("fileDownloaded", downloaded)
 }
 
+fun <T> RealmQuery<T>.itemSearch(components: List<String>): RealmQuery<T> {
+    var result = this
+    for ((index, component) in components.withIndex()) {
+        result = result.beginGroup()
+        result = itemSearchSubpredicates(query = result, component)
+        result = result.endGroup()
+        if (index != components.size -1) {
+            result = result.and()
+        }
+    }
+    return result
+}
 
+private fun <T> itemSearchSubpredicates(query: RealmQuery<T>, text: String) : RealmQuery<T>  {
+    var result = query
+        .equalTo("key", text)
+        .or()
+        .equalTo("children.key", text)
+        .or()
+        .contains("displayTitle", text, Case.INSENSITIVE)
+        .or()
+        .contains("tags.tag.name", text, Case.INSENSITIVE)
+        .or()
+        .contains("children.tags.tag.name", text, Case.INSENSITIVE)
+        .or()
+        .contains("children.children.tags.tag.name", text, Case.INSENSITIVE)
+        .or()
+        .contains("creators.name", text, Case.INSENSITIVE)
+        .or()
+        .contains("creators.firstName", text, Case.INSENSITIVE)
+        .or()
+        .contains("creators.lastName", text, Case.INSENSITIVE)
+
+    val int = text.toIntOrNull()
+    if (int != null) {
+        result = result.or().equalTo("parsedYear", int)
+    }
+
+    return result
+}

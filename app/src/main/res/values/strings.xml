@@ -72,6 +72,9 @@
     <string name="sort_by">Sort By: %s</string>
     <string name="ascending">Ascending</string>
     <string name="descending">Descending</string>
+    <string name="search_items">Search Items</string>
+    <string name="filters">Filters</string>
+    <string name="downloaded_files">Downloaded Files</string>
 
     <string name="error">Error</string>
     <string name="warning">Warning</string>
