@@ -40,6 +40,8 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
+import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
+import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.itemSearch
 import org.zotero.android.files.FileStore
@@ -64,6 +66,7 @@ import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
 import org.zotero.android.screens.sortpicker.data.SortDirectionResult
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.sync.AttachmentCreator
+import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.KeyGenerator
@@ -74,6 +77,8 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.attachmentprogress.State
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
@@ -93,6 +98,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val schemaController: SchemaController,
     private val dispatchers: Dispatchers,
+    private val fileCleanupController: AttachmentFileCleanupController,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
@@ -974,6 +980,169 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowFilterEffect)
     }
 
+    fun dismissBottomSheet() {
+        updateState {
+            copy(longPressOptionsHolder = null)
+        }
+    }
+
+    fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+        viewModelScope.launch {
+            when (longPressOptionItem) {
+                is LongPressOptionItem.MoveToTrashItem -> {
+                    trashItems(setOf(longPressOptionItem.item.key))
+                }
+                is LongPressOptionItem.Download -> {
+                    downloadAttachments(setOf(longPressOptionItem.item.key))
+                }
+                is LongPressOptionItem.RemoveDownload -> {
+                    removeDownloads(setOf(longPressOptionItem.item.key))
+                }
+                is LongPressOptionItem.Duplicate -> {
+                    loadItemForDuplication(longPressOptionItem.item.key)
+                }
+                is LongPressOptionItem.CreateParentItem -> {
+                    createParent(longPressOptionItem.item)
+                }
+            }
+        }
+    }
+
+    private fun createParent(item: RItem) {
+        val key = item.key
+        val accessory = this.itemAccessories[key] ?: return
+        val attachment = (accessory as? ItemAccessory.attachment)?.attachment ?:return
+        var collectionKey: String? = null
+        when(viewState.collection.identifier) {
+            is CollectionIdentifier.collection ->
+            collectionKey = viewState.collection.identifier.keyGet
+            else -> {
+                //no-op
+            }
+        }
+        showItemDetail(
+            DetailType.creation(
+                type = ItemTypes.document,
+                child = attachment,
+                collectionKey = collectionKey
+            ), library = viewState.library
+        )
+    }
+
+    fun onItemLongTapped(item: RItem) {
+        val actions = mutableListOf<LongPressOptionItem>()
+
+        if (item.rawType == ItemTypes.attachment && item.parent == null) {
+            actions.add(LongPressOptionItem.CreateParentItem(item))
+        }
+
+        val accessory = this.itemAccessories[item.key]
+        if (accessory != null) {
+            val location = accessory.attachmentGet?.location
+            if (location != null) {
+                when(location) {
+                    Attachment.FileLocation.local -> {
+                        actions.add(LongPressOptionItem.RemoveDownload(item))
+                    }
+                    Attachment.FileLocation.remote -> {
+                        actions.add(LongPressOptionItem.Download(item))
+                    }
+                    Attachment.FileLocation.localAndChangedRemotely -> {
+                        actions.add(LongPressOptionItem.Download(item))
+                        actions.add(LongPressOptionItem.RemoveDownload(item))
+                    }
+                    Attachment.FileLocation.remoteMissing -> {
+                        //no-op
+                    }
+                }
+            }
+        }
+
+        if (item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment) {
+            actions.add(LongPressOptionItem.Duplicate(item))
+        }
+
+        actions.add(LongPressOptionItem.MoveToTrashItem(item))
+
+        updateState {
+            copy(
+                longPressOptionsHolder = LongPressOptionsHolder(
+                    title = item.displayTitle,
+                    longPressOptionItems = actions
+                )
+            )
+        }
+    }
+
+    suspend fun trashItems(keys: Set<String>) {
+        set(trashed = true, keys = keys)
+    }
+
+    private suspend fun set(trashed: Boolean, keys: Set<String>) {
+        val request = MarkItemsAsTrashedDbRequest(
+            keys = keys.toList(),
+            libraryId = viewState.library.identifier,
+            trashed = trashed
+        )
+        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+            Timber.e(error, "ItemsStore: can't trash items")
+            updateState {
+                copy(
+                    error = ItemsError.deletion,
+                )
+            }
+            return
+        }
+    }
+
+    private fun downloadAttachments(keys: Set<String>) {
+        for (key in keys) {
+            val progress =
+                this.fileDownloader.data(key, libraryId = viewState.library.identifier).first
+            if (progress != null) {
+                return
+            }
+            val attachment = itemAccessories[key]?.attachmentGet ?: return
+            this.fileDownloader.downloadIfNeeded(
+                attachment = attachment,
+                parentKey = if (attachment.key == key) null else key
+            )
+        }
+    }
+    private fun removeDownloads(ids: Set<String>) {
+        this.fileCleanupController.delete(
+            AttachmentFileCleanupController.DeletionType.allForItems(
+                keys = ids,
+                libraryId = viewState.library.identifier
+            ), completed = null
+        )
+    }
+
+    private fun loadItemForDuplication(key: String) {
+        val request = ReadItemDbRequest(libraryId = viewState.library.identifier, key = key)
+
+        try {
+            val item = dbWrapper.realmDbStorage.perform(request = request)
+            stopEditing()
+            showItemDetail(DetailType.duplication(itemKey = item.key, collectionKey = viewState.collection.identifier.keyGet), library = viewState.library)
+        } catch (error: Exception) {
+            Timber.e(error, "ItemsActionHandler: could not read item")
+            updateState {
+                copy(error = ItemsError.duplicationLoading)
+            }
+        }
+    }
+
+    private fun stopEditing() {
+        this.keys.clear()
+        updateState {
+            copy(
+                isEditing = false,
+                selectedItems = emptySet()
+            )
+        }
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1004,6 +1173,7 @@ internal data class AllItemsViewState(
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
+    val longPressOptionsHolder: LongPressOptionsHolder? = null,
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {

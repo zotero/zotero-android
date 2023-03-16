@@ -3,6 +3,7 @@ package org.zotero.android.screens.allitems
 
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
 import org.zotero.android.uicomponents.attachmentprogress.Style
+import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.loading.BaseLceBox
@@ -265,6 +267,13 @@ internal fun AllItemsScreen(
             showBottomSheet = viewState.shouldShowAddBottomSheet
         )
 
+        LongPressBottomSheet(
+            layoutType = layoutType,
+            longPressOptionsHolder = viewState.longPressOptionsHolder,
+            onCollapse = viewModel::dismissBottomSheet,
+            onOptionClick = viewModel::onLongPressOptionsItemSelected
+        )
+
     }
 
 }
@@ -283,13 +292,13 @@ private fun ItemView(
         return
     }
     Row(
-        modifier = Modifier.safeClickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(),
-            onClick = {
-                viewModel.onItemTapped(rItem)
-            }
-        ),
+        modifier = Modifier
+            .combinedClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = { viewModel.onItemTapped(rItem) },
+                onLongClick = { viewModel.onItemLongTapped(rItem) }
+            )
     ) {
         Spacer(modifier = Modifier.width(16.dp))
         Image(

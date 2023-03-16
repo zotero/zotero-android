@@ -39,4 +39,12 @@ sealed class CollectionIdentifier {
                 else -> false
             }
         }
+
+    val keyGet: String? get() {
+        when (this) {
+            is collection -> return this.key
+            is search -> return this.key
+            is custom -> return null
+        }
+    }
 }

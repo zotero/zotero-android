@@ -7,7 +7,7 @@ import java.io.File
 
 class Database {
     companion object {
-        private const val schemaVersion = 38L
+        private const val schemaVersion = 39L
 
         fun mainConfiguration(dbFile: File, context: Context): RealmConfiguration {
             Realm.init(context)
@@ -29,18 +29,18 @@ class Database {
             deletions.forEach { deletion ->
                 val deletionIdx = modifications.indexOfFirst { it > deletion }
                 if (deletionIdx != -1) {
-                    for (idx in deletionIdx..modifications.size) {
+                    for (idx in deletionIdx until modifications.size) {
                         correctedModifications[idx] -= 1
                     }
                 }
             }
 
-            val modifications = correctedModifications
+            val modifications = correctedModifications.toMutableList()
 
             insertions.forEach { insertion ->
                 val insertionIdx = modifications.indexOfFirst { it >= insertion }
                 if (insertionIdx != -1) {
-                    for (idx in insertionIdx..modifications.size) {
+                    for (idx in insertionIdx until modifications.size) {
                         correctedModifications[idx] += 1
                     }
                 }

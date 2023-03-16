@@ -210,6 +210,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        currentItem?.removeAllChangeListeners()
         EventBus.getDefault().unregister(this)
         super.onCleared()
     }
@@ -302,6 +303,25 @@ class ItemDetailsViewModel @Inject constructor(
                     reloadData(isEditing = viewState.isEditing)
                     return
                 }
+                is DetailType.duplication -> {
+                    val itemKey = type.itemKey
+                    val _collectionKey = type.collectionKey
+                    collectionKey = _collectionKey
+                    val item = dbWrapper.realmDbStorage.perform(
+                        request = ReadItemDbRequest(
+                            libraryId = viewState.library!!.identifier,
+                            key = itemKey
+                        )
+                    )
+                    data = ItemDetailDataCreator.createData(ItemDetailDataCreator.Kind.existing(
+                        item = item,
+                        ignoreChildren = true
+                    ),
+                        schemaController = this.schemaController,
+                        fileStorage = this.fileStore,
+                        urlDetector = this.urlDetector,
+                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
+                }
             }
         } catch (e: Exception) {
             Timber.e(e, "can't load initial data ")
@@ -346,16 +366,18 @@ class ItemDetailsViewModel @Inject constructor(
                 ), refreshRealm = true
             )
             currentItem = item
+            if (viewState.type is DetailType.preview) {
+                item.addChangeListener(RealmObjectChangeListener<RItem> { items, changeSet ->
+                    if (changeSet?.changedFields?.any {
+                            RItem.observableKeypathsForItemDetail.contains(
+                                it
+                            )
+                        } == true) {
+                        itemChanged(items, changeSet)
+                    }
+                })
+            }
 
-            item.addChangeListener(RealmObjectChangeListener<RItem> { items, changeSet ->
-                if (changeSet?.changedFields?.any {
-                        RItem.observableKeypathsForItemDetail.contains(
-                            it
-                        )
-                    } == true) {
-                    itemChanged(items, changeSet)
-                }
-            })
 
             val (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
                 ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
@@ -757,8 +779,8 @@ class ItemDetailsViewModel @Inject constructor(
                     }
                     return@launch
                 }
+                triggerEffect(OnBack)
                 return@launch
-
             }
         }
 

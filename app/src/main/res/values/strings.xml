@@ -75,6 +75,8 @@
     <string name="search_items">Search Items</string>
     <string name="filters">Filters</string>
     <string name="downloaded_files">Downloaded Files</string>
+    <string name="download">Download</string>
+    <string name="duplicate">Duplicate</string>
 
     <string name="error">Error</string>
     <string name="warning">Warning</string>
@@ -96,4 +98,5 @@
     <string name="moveToStandaloneAttachment">Move to Standalone Attachment</string>
     <string name="tag_name">Tag name</string>
     <string name="create_tag">Create Tag \"%s\"</string>
+    <string name="createParentItem">Create Parent Item</string>
 </resources>
