@@ -33,7 +33,7 @@ fun HeadingTextButton(
             Text(
                 text = text,
                 color = if (isEnabled) contentColor else CustomTheme.colors.disabledContent,
-                style = CustomTheme.typography.h3
+                style = CustomTheme.typography.default
             )
         }
     }

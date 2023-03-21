@@ -99,4 +99,7 @@
     <string name="tag_name">Tag name</string>
     <string name="create_tag">Create Tag \"%s\"</string>
     <string name="createParentItem">Create Parent Item</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="select">Select</string>
 </resources>

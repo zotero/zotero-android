@@ -102,7 +102,7 @@ internal class AllItemsViewModel @Inject constructor(
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
-    val keys = mutableListOf<String>()
+    var keys = mutableListOf<String>()
     var results: RealmResults<RItem>? = null
     var filters: MutableList<ItemsState.Filter> = mutableListOf()
 
@@ -812,7 +812,11 @@ internal class AllItemsViewModel @Inject constructor(
         updateState {
             copy(selectedItems = selectedItems + key)
         }
-
+    }
+    private fun deselectItem(key: String) {
+        updateState {
+            copy(selectedItems = selectedItems - key)
+        }
     }
 
     private fun showMetadata(item: RItem) {
@@ -822,7 +826,11 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onItemTapped(item: RItem) {
         if (viewState.isEditing) {
-            selectItem(item.key)
+            if (viewState.selectedItems.contains(item.key)) {
+                deselectItem(item.key)
+            } else{
+                selectItem(item.key)
+            }
             return
         }
 
@@ -1074,7 +1082,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    suspend fun trashItems(keys: Set<String>) {
+    private suspend fun trashItems(keys: Set<String>) {
         set(trashed = true, keys = keys)
     }
 
@@ -1133,6 +1141,20 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
+    private fun startEditing() {
+        var keys = emptyList<String>()
+        val results = this.results
+        if (results != null) {
+            keys = results.map { it.key }
+        }
+        this.keys = keys.toMutableList()
+        updateState {
+            copy(
+                isEditing = true,
+            )
+        }
+    }
+
     private fun stopEditing() {
         this.keys.clear()
         updateState {
@@ -1143,6 +1165,38 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
+    fun onSelect() {
+        startEditing()
+    }
+
+    fun onDone() {
+        stopEditing()
+    }
+
+    fun toggleSelectionState() {
+        if (viewState.selectedItems.size != this.results?.size) {
+            updateState {
+                copy(selectedItems = (this@AllItemsViewModel.results?.map { it.key }
+                    ?: emptyList()).toSet())
+            }
+        } else{
+            updateState {
+                copy(selectedItems = emptySet())
+            }
+        }
+    }
+
+    fun onDuplicate() {
+        val key = viewState.selectedItems.first()
+        loadItemForDuplication(key)
+
+    }
+
+    fun onTrash() {
+        viewModelScope.launch {
+            trashItems(viewState.selectedItems)
+        }
+    }
 }
 
 internal data class AllItemsViewState(
