@@ -207,6 +207,14 @@ fun <T> RealmQuery<T>.baseItemPredicates(
 
 }
 
+fun <T> RealmQuery<T>.notSyncState(
+    syncState: ObjectSyncState,
+    libraryId: LibraryIdentifier
+): RealmQuery<T> {
+    return notSyncState(syncState)
+        .and()
+        .library(libraryId)
+}
 
 fun <T> RealmQuery<T>.notSyncState(syncState: ObjectSyncState): RealmQuery<T> {
     return notEqualTo("syncState", syncState.name)
@@ -328,4 +336,9 @@ private fun <T> itemSearchSubpredicates(query: RealmQuery<T>, text: String) : Re
     }
 
     return result
+}
+
+fun <T> RealmQuery<T>.parentKeyNil(
+): RealmQuery<T> {
+    return isNull("parentKey")
 }

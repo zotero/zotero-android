@@ -47,4 +47,11 @@ sealed class CollectionIdentifier {
             is custom -> return null
         }
     }
+
+    val isCollection: Boolean get() {
+        when (this) {
+            is collection -> return true
+            else -> return false
+        }
+    }
 }

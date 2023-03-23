@@ -29,6 +29,7 @@ open class Defaults @Inject constructor(
     private val selectedCollectionId = "selectedCollectionId"
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
+    private val showCollectionItemCounts = "showCollectionItemCounts"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -143,6 +144,14 @@ open class Defaults @Inject constructor(
         )
             ?: return ItemsSortType.default
         return dataMarshaller.unmarshal(json)
+    }
+
+    fun showCollectionItemCounts(): Boolean {
+        return sharedPreferences.getBoolean(showCollectionItemCounts, true)
+    }
+
+    fun setShowCollectionItemCounts(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(showCollectionItemCounts, newValue) }
     }
 
     fun reset() {
