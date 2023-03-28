@@ -1,12 +1,19 @@
 package org.zotero.android.sync
 
-sealed class CollectionIdentifier {
-    enum class CustomType {
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed class CollectionIdentifier: java.io.Serializable {
+    @Serializable
+    enum class CustomType: java.io.Serializable {
         all, trash, publications, unfiled
     }
 
+    @Serializable
     data class collection(val key: String) : CollectionIdentifier()
+    @Serializable
     data class search(val key: String) : CollectionIdentifier()
+    @Serializable
     data class custom(val type: CustomType) : CollectionIdentifier()
 
     val id: String

@@ -155,8 +155,8 @@ object ApiModule {
     @Singleton
     fun provideGsonInstance(): Gson {
         val gsonBuilder = GsonBuilder()
-        gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-        gsonBuilder.setLenient()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+            .setLenient()
         return gsonBuilder.create()
     }
 

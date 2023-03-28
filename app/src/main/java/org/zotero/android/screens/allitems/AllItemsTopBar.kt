@@ -1,12 +1,14 @@
 package org.zotero.android.screens.allitems
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -24,7 +26,7 @@ internal fun AllItemsTopBar(
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel
 ) {
-    TopAppBar(
+    CenterAlignedTopAppBar(
         title = {
             Text(
                 text = viewState.collection.name,
@@ -33,7 +35,15 @@ internal fun AllItemsTopBar(
             )
         },
         navigationIcon = {
-            //TODO add back shevron when collections are supported
+            Row {
+                Spacer(modifier = Modifier.width(8.dp))
+                HeadingTextButton(
+                    isEnabled = true,
+                    onClick = viewModel::navigateToCollections,
+                    text = stringResource(id = Strings.collections)
+                )
+            }
+
         },
         actions = {
             Icon(
@@ -54,7 +64,7 @@ internal fun AllItemsTopBar(
                     text = stringResource(Strings.select),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                return@TopAppBar
+                return@CenterAlignedTopAppBar
             }
             val allSelected = viewState.selectedItems.size == (viewModel.results?.size ?: 0)
             if (allSelected) {
@@ -76,6 +86,6 @@ internal fun AllItemsTopBar(
             )
             Spacer(modifier = Modifier.width(8.dp))
         },
-        backgroundColor = CustomTheme.colors.surface,
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )
 }

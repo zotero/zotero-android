@@ -13,8 +13,6 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.attachmentdownloader.AttachmentDownloader
-import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -23,35 +21,34 @@ import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.GetMimeTypeUseCase
-import org.zotero.android.helpers.SelectMediaUseCase
+import org.zotero.android.screens.allitems.data.AllItemsArgs
+import org.zotero.android.screens.allitems.data.ItemsSortType
+import org.zotero.android.screens.collections.CollectionsViewEffect.NavigateToAllItemsScreen
+import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
-import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @HiltViewModel
 internal class CollectionsViewModel @Inject constructor(
-    private val defaults: Defaults,
+    val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
-    private val selectMedia: SelectMediaUseCase,
-    private val fileDownloader: AttachmentDownloader,
-    private val getMimeTypeUseCase: GetMimeTypeUseCase,
-    private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-    private val schemaController: SchemaController,
     private val dispatchers: Dispatchers,
-    private val fileCleanupController: AttachmentFileCleanupController,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
 
+    var allItems: RealmResults<RItem>? = null
+    var unfiledItems: RealmResults<RItem>? = null
+    var trashItems: RealmResults<RItem>? = null
+    var collections: RealmResults<RCollection>? = null
 
     fun init() = initOnce {
         viewModelScope.launch {
@@ -75,8 +72,8 @@ internal class CollectionsViewModel @Inject constructor(
                 selectedCollectionId = args.selectedCollectionId,
                 collectionTree = CollectionTree(
                     nodes = mutableListOf(),
-                    collections = mutableMapOf(),
-                    collapsed = mutableMapOf()
+                    collections = ConcurrentHashMap(),
+                    collapsed = ConcurrentHashMap()
                 )
             )
         }
@@ -91,7 +88,7 @@ internal class CollectionsViewModel @Inject constructor(
             dbWrapper.realmDbStorage.perform { coordinator ->
                 val library =
                     coordinator.perform(request = ReadLibraryDbRequest(libraryId = libraryId))
-                val collections =
+                collections =
                     coordinator.perform(request = ReadCollectionsDbRequest(libraryId = libraryId))
 
                 var allItemCount = 0
@@ -99,7 +96,7 @@ internal class CollectionsViewModel @Inject constructor(
                 var trashItemCount = 0
 
                 if (includeItemCounts) {
-                    val allItems = coordinator.perform(
+                    allItems = coordinator.perform(
                         request = ReadItemsDbRequest(
                             collectionId = CollectionIdentifier.custom(
                                 CollectionIdentifier.CustomType.all
@@ -108,9 +105,9 @@ internal class CollectionsViewModel @Inject constructor(
                             defaults = defaults
                         )
                     )
-                    allItemCount = allItems.size
+                    allItemCount = allItems!!.size
 
-                    val unfiledItems = coordinator.perform(
+                    unfiledItems = coordinator.perform(
                         request = ReadItemsDbRequest(
                             collectionId = CollectionIdentifier.custom(
                                 CollectionIdentifier.CustomType.unfiled
@@ -119,9 +116,9 @@ internal class CollectionsViewModel @Inject constructor(
                             defaults = defaults
                         )
                     )
-                    unfiledItemCount = unfiledItems.size
+                    unfiledItemCount = unfiledItems!!.size
 
-                    val trashItems = coordinator.perform(
+                    trashItems = coordinator.perform(
                         request = ReadItemsDbRequest(
                             collectionId = CollectionIdentifier.custom(
                                 CollectionIdentifier.CustomType.trash
@@ -130,47 +127,46 @@ internal class CollectionsViewModel @Inject constructor(
                             defaults = defaults
                         )
                     )
-                    trashItemCount = trashItems.size
+                    trashItemCount = trashItems!!.size
                     observeItemCount(
-                        results = allItems,
+                        results = allItems!!,
                         customType = CollectionIdentifier.CustomType.all
                     )
                     observeItemCount(
-                        results = unfiledItems,
+                        results = unfiledItems!!,
                         customType = CollectionIdentifier.CustomType.unfiled
                     )
                     observeItemCount(
-                        results = trashItems,
+                        results = trashItems!!,
                         customType = CollectionIdentifier.CustomType.trash
                     )
                 }
 
                 val collectionTree = CollectionTreeBuilder.collections(
-                    collections,
+                    rCollections = collections!!,
                     libraryId = libraryId,
                     includeItemCounts = includeItemCounts
                 )
                 collectionTree.insert(
                     collection = Collection.initWithCustomType(
-                        CollectionIdentifier.CustomType.all,
+                        type = CollectionIdentifier.CustomType.all,
                         itemCount = allItemCount
                     ), index = 0
                 )
                 collectionTree.append(
                     collection = Collection.initWithCustomType(
-                        CollectionIdentifier.CustomType.unfiled,
+                        type = CollectionIdentifier.CustomType.unfiled,
                         itemCount = unfiledItemCount
                     )
                 )
                 collectionTree.append(
                     collection = Collection.initWithCustomType(
-                        CollectionIdentifier.CustomType.trash,
+                        type = CollectionIdentifier.CustomType.trash,
                         itemCount = trashItemCount
                     )
                 )
 
-                collections.removeAllChangeListeners()
-                collections.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
+                collections?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
                     val state = changeSet.state
                     when (state) {
                         OrderedCollectionChangeSet.State.INITIAL -> {
@@ -189,10 +185,11 @@ internal class CollectionsViewModel @Inject constructor(
                 })
                 updateState {
                     copy(
-                        collectionTree = collectionTree,
-                        library = library
+                        library = library,
+                        lce = LCE2.Content
                     )
                 }
+                updateCollectionTree(collectionTree)
             }
         } catch (error: Exception) {
             Timber.e(error, "CollectionsActionHandlers: can't load data")
@@ -202,12 +199,22 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
+    private fun updateCollectionTree(collectionTree: CollectionTree) {
+        updateState {
+            copy(
+                collectionTree = collectionTree,
+                collectionItemsToDisplay = collectionTree.createSnapshot()
+            )
+        }
+        triggerEffect(CollectionsViewEffect.ScreenRefresh)
+    }
+
     private fun observeItemCount(results: RealmResults<RItem>, customType: CollectionIdentifier.CustomType) {
-        results.removeAllChangeListeners()
         results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
             val state = changeSet.state
             when (state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
+                    println()
                     //no-op
                 }
                 OrderedCollectionChangeSet.State.UPDATE ->  {
@@ -228,21 +235,60 @@ internal class CollectionsViewModel @Inject constructor(
                 itemCount = itemsCount
             )
         )
-        updateState {
-            copy(collectionTree = collectionTree)
-        }
+        updateCollectionTree(collectionTree)
     }
 
     private fun update(collections: RealmResults<RCollection>, includeItemCounts: Boolean) {
         val tree = CollectionTreeBuilder.collections(collections, libraryId = viewState.libraryId, includeItemCounts = includeItemCounts)
         val collectionTree = viewState.collectionTree
         collectionTree.replace(matching = { it.isCollection }, tree = tree)
+        updateCollectionTree(collectionTree)
 
         if (viewState.collectionTree.collection(viewState.selectedCollectionId) == null) {
             updateState {
                 copy(selectedCollectionId = CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
             }
         }
+        triggerEffect(CollectionsViewEffect.ScreenRefresh)
+    }
+
+    fun onItemTapped(collection: Collection) {
+        updateState {
+            copy(selectedCollectionId = collection.identifier)
+        }
+        fileStore.setSelectedCollectionId(collection.identifier)
+        ScreenArguments.allItemsArgs = AllItemsArgs(
+            collection = collection,
+            library = viewState.library,
+            sortType = ItemsSortType.default,
+            searchTerm = null,
+            error = null
+        )
+
+        triggerEffect(NavigateToAllItemsScreen)
+    }
+
+    fun onItemChevronTapped(collection: Collection) {
+        val tree = viewState.collectionTree
+        tree.set(
+            collapsed = !viewState.collectionTree.collapsed[collection.identifier]!!, collection.identifier
+        )
+        updateState {
+            copy(collectionTree = tree)
+        }
+        triggerEffect(CollectionsViewEffect.ScreenRefresh)
+    }
+
+    fun onItemLongTapped(collection: Collection) {
+
+    }
+
+    override fun onCleared() {
+        allItems?.removeAllChangeListeners()
+        unfiledItems?.removeAllChangeListeners()
+        trashItems?.removeAllChangeListeners()
+        collections?.removeAllChangeListeners()
+        super.onCleared()
     }
 
 }
@@ -257,15 +303,24 @@ internal data class  CollectionsViewState(
     ),
     val collectionTree: CollectionTree = CollectionTree(
         mutableListOf(),
-        mutableMapOf(),
-        mutableMapOf()
+        ConcurrentHashMap(),
+        ConcurrentHashMap()
     ),
-    val selectedCollectionId: CollectionIdentifier = CollectionIdentifier.custom(CollectionIdentifier.CustomType.all),
+    val collectionItemsToDisplay: List<CollectionItemWithChildren> = emptyList(),
+    val selectedCollectionId: CollectionIdentifier = CollectionIdentifier.custom(
+        CollectionIdentifier.CustomType.all
+    ),
     val editingData: Triple<String?, String, Collection?>? = null,
     val error: CollectionsError? = null,
     val lce: LCE2 = LCE2.Loading,
-) : ViewState
+) : ViewState {
+    fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {
+        return collectionTree.collapsed[snapshot.collection.identifier]!!
+    }
+}
 
 internal sealed class  CollectionsViewEffect : ViewEffect {
     object NavigateBack : CollectionsViewEffect()
+    object NavigateToAllItemsScreen : CollectionsViewEffect()
+    object ScreenRefresh : CollectionsViewEffect()
 }

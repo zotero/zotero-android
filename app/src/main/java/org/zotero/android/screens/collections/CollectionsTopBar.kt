@@ -1,7 +1,8 @@
 package org.zotero.android.screens.collections
 
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -10,7 +11,7 @@ internal fun CollectionsTopBar(
     viewState: CollectionsViewState,
     viewModel: CollectionsViewModel
 ) {
-    TopAppBar(
+    CenterAlignedTopAppBar(
         title = {
             Text(
                 text = viewState.library.name,
@@ -19,11 +20,9 @@ internal fun CollectionsTopBar(
             )
         },
         navigationIcon = {
-            //TODO add back shevron when collections are supported
         },
         actions = {
-
         },
-        backgroundColor = CustomTheme.colors.surface,
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )
 }

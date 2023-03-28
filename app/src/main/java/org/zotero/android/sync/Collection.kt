@@ -2,6 +2,7 @@ package org.zotero.android.sync
 
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RSearch
+import org.zotero.android.uicomponents.Drawables
 
 data class Collection(
     val identifier: CollectionIdentifier,
@@ -37,6 +38,30 @@ data class Collection(
                 itemCount = itemCount,
                 name = name,
             )
+        }
+    }
+
+    val iconName: Int
+        get() {
+            return when (this.identifier) {
+                is CollectionIdentifier.collection -> Drawables.cell_collection
+                is CollectionIdentifier.custom -> {
+                    return when (this.identifier.type) {
+                        CollectionIdentifier.CustomType.all,
+                        CollectionIdentifier.CustomType.publications -> Drawables.cell_document
+                        CollectionIdentifier.CustomType.trash -> Drawables.cell_trash
+                        CollectionIdentifier.CustomType.unfiled -> Drawables.cell_unfiled
+                    }
+                }
+                is CollectionIdentifier.search -> Drawables.cell_document
+            }
+        }
+    val isCollection: Boolean get() {
+        return when (this.identifier) {
+            is CollectionIdentifier.collection ->
+                return true
+            is CollectionIdentifier.custom, is CollectionIdentifier.search ->
+            return false
         }
     }
 }

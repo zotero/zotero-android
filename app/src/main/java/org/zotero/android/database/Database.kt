@@ -7,7 +7,7 @@ import java.io.File
 
 class Database {
     companion object {
-        private const val schemaVersion = 39L
+        private const val schemaVersion = 40L
 
         fun mainConfiguration(dbFile: File, context: Context): RealmConfiguration {
             Realm.init(context)

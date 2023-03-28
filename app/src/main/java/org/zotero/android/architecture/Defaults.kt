@@ -7,7 +7,6 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.files.DataMarshaller
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
-import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,7 +25,6 @@ open class Defaults @Inject constructor(
     private val webDavPassword = "webDavPassword"
     private val showSubcollectionItems = "showSubcollectionItems"
     private val selectedLibrary = "selectedLibrary"
-    private val selectedCollectionId = "selectedCollectionId"
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
     private val showCollectionItemCounts = "showCollectionItemCounts"
@@ -102,22 +100,6 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(selectedLibrary, json) }
     }
 
-    fun getSelectedCollectionId(): CollectionIdentifier {
-        val json: String = sharedPreferences.getString(
-            selectedCollectionId,
-            null
-        )
-            ?: return CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
-        return dataMarshaller.unmarshal(json)
-    }
-
-    fun setSelectedCollectionId(
-        collectionIdentifier: CollectionIdentifier,
-    ) {
-        val json = dataMarshaller.marshal(collectionIdentifier)
-        sharedPreferences.edit { putString(selectedCollectionId, json) }
-    }
-
     fun setCreatorNamePresentation(namePresentation: ItemDetailCreator.NamePresentation) {
         val json = dataMarshaller.marshal(namePresentation)
         sharedPreferences.edit { putString(lastUsedCreatorNamePresentation, json) }
@@ -159,7 +141,6 @@ open class Defaults @Inject constructor(
         setDisplayName("")
         setUserId(0L)
         setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
-        setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
         setShowSubcollectionItems(false)
         setApiToken(null)
         setWebDavPassword(null)

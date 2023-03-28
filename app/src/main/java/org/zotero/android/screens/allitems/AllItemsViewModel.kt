@@ -57,6 +57,7 @@ import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.allitems.data.ItemsState
+import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.itemdetails.data.DetailType
@@ -561,15 +562,15 @@ internal class AllItemsViewModel @Inject constructor(
     private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
         if (defaults.getSelectedLibrary() == libraryId) {
             if (collectionId != null) {
-                defaults.setSelectedCollectionId(collectionId)
+                fileStore.setSelectedCollectionId(collectionId)
                 return collectionId
             }
-            return defaults.getSelectedCollectionId()
+            return fileStore.getSelectedCollectionId()
         }
 
         val collectionId = collectionId ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
         defaults.setSelectedLibrary(libraryId)
-        defaults.setSelectedCollectionId(collectionId)
+        fileStore.setSelectedCollectionId(collectionId)
         return collectionId
 
     }
@@ -1197,6 +1198,11 @@ internal class AllItemsViewModel @Inject constructor(
             trashItems(viewState.selectedItems)
         }
     }
+
+    fun navigateToCollections() {
+        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect)
+    }
 }
 
 internal data class AllItemsViewState(
@@ -1231,6 +1237,7 @@ internal data class AllItemsViewState(
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
+    object ShowCollectionsEffect: AllItemsViewEffect()
     object ShowItemDetailEffect: AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()

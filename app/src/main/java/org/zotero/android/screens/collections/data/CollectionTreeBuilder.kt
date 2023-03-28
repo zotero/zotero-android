@@ -9,6 +9,7 @@ import org.zotero.android.database.requests.parentKeyNil
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
+import java.util.concurrent.ConcurrentHashMap
 
 class CollectionTreeBuilder {
     data class Result(
@@ -28,8 +29,8 @@ class CollectionTreeBuilder {
             libraryId: LibraryIdentifier,
             includeItemCounts: Boolean
         ): CollectionTree {
-            val collections = mutableMapOf<CollectionIdentifier, Collection>()
-            val collapsed = mutableMapOf<CollectionIdentifier, Boolean>()
+            val collections = ConcurrentHashMap<CollectionIdentifier, Collection>()
+            val collapsed = ConcurrentHashMap<CollectionIdentifier, Boolean>()
             val nodes: List<CollectionTree.Node> = collections(
                 null,
                 rCollections,
@@ -76,9 +77,10 @@ class CollectionTreeBuilder {
                     parent = parent,
                     children = children
                 )
-                val insertionIndex =
-                    insertionIndex(node = node, nodes, collections = allCollections)
-                nodes.add(index = insertionIndex, node)
+//                val insertionIndex =
+//                    insertionIndex(node = node, nodes, collections = allCollections)
+//                nodes.add(index = insertionIndex, node)
+                nodes.add(node)
             }
             return nodes
         }

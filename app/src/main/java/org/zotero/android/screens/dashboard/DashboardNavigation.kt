@@ -26,6 +26,7 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
+import org.zotero.android.screens.collections.CollectionsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.filter.FilterScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsScreen
@@ -67,11 +68,16 @@ internal fun DashboardNavigation(
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         loadingScreen()
+        collectionsScreen(
+            onBack = navigation::onBack,
+            navigateToAllItems = navigation::toAllItems,
+        )
         allItemsScreen(
             onBack = navigation::onBack,
             onPickFile = { onPickFile(CallPoint.AllItems) },
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
+            navigateToCollectionsScreen = navigation::toCollectionsScreen,
             navigateToItemDetails = navigation::toItemDetails,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
@@ -120,6 +126,7 @@ internal fun DashboardNavigation(
 
 private fun NavGraphBuilder.allItemsScreen(
     onBack: () -> Unit,
+    navigateToCollectionsScreen: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
@@ -142,6 +149,7 @@ private fun NavGraphBuilder.allItemsScreen(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onShowPdf = onShowPdf,
+            navigateToCollectionsScreen = navigateToCollectionsScreen,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
@@ -155,6 +163,19 @@ private fun NavGraphBuilder.allItemsScreen(
         )
     }
 }
+
+private fun NavGraphBuilder.collectionsScreen(
+    onBack: () -> Unit,
+    navigateToAllItems: () -> Unit,
+) {
+    composable(route = Destinations.COLLECTIONS_SCREEN) {
+        CollectionsScreen(
+            onBack = onBack,
+            navigateToAllItems = navigateToAllItems,
+        )
+    }
+}
+
 
 private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
@@ -396,6 +417,7 @@ private fun NavGraphBuilder.toFilterDialog(
 
 private object Destinations {
     const val LOADING = "loading"
+    const val COLLECTIONS_SCREEN = "collectionsScreen"
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
     const val ADD_NOTE = "addNote"
@@ -424,6 +446,10 @@ private class Navigation(
         navController.navigate(Destinations.ALL_ITEMS)  {
             popUpTo(0)
         }
+    }
+
+    fun toCollectionsScreen() {
+        navController.navigate(Destinations.COLLECTIONS_SCREEN)
     }
 
     fun toItemDetails() {

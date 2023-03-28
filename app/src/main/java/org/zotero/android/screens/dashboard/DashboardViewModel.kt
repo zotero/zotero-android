@@ -10,6 +10,7 @@ import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.ReadSearchDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
 import org.zotero.android.screens.allitems.data.ItemsSortType
@@ -25,11 +26,12 @@ import javax.inject.Inject
 internal class DashboardViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val defaults: Defaults,
+    private val fileStore: FileStore
     ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
 
     fun init() = initOnce {
         val data = loadInitialDetailData(
-            collectionId = defaults.getSelectedCollectionId(),
+            collectionId = fileStore.getSelectedCollectionId(),
             libraryId = defaults.getSelectedLibrary()
         )
         if (data != null) {

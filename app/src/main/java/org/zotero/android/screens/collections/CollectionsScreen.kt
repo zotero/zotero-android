@@ -22,6 +22,7 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 @Composable
 internal fun CollectionsScreen(
     onBack: () -> Unit,
+    navigateToAllItems: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -33,8 +34,9 @@ internal fun CollectionsScreen(
 
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
-            NavigateBack -> onBack()
             null -> Unit
+            NavigateBack -> onBack()
+            CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
         }
     }
 
@@ -61,7 +63,11 @@ internal fun CollectionsScreen(
         ) {
             Column {
                 CustomDivider()
-//                AllItemsTable(viewState, layoutType, viewModel)
+                CollectionsTable(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    layoutType = layoutType
+                )
             }
         }
     }

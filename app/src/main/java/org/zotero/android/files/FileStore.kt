@@ -14,14 +14,18 @@ import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.helpers.MimeType
+import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,6 +48,8 @@ class FileStore @Inject constructor (
         private const val ACTIVE_KEY_FILE = "uploads"
         private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
+
+        private const val selectedCollectionId = "selectedCollectionId.bin"
     }
 
     fun init() {
@@ -336,6 +342,43 @@ class FileStore @Inject constructor (
     fun downloads(libraryId: LibraryIdentifier) : File {
         val folder = File(getRootDirectory(), "downloads")
         return File(folder, libraryId.folderName)
+    }
+
+    fun getSelectedCollectionId(): CollectionIdentifier {
+        return deserializeFromFile(selectedCollectionId)
+            ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
+    }
+
+    fun setSelectedCollectionId(
+        collectionIdentifier: CollectionIdentifier,
+    ) {
+        serializeToFile(selectedCollectionId, collectionIdentifier)
+    }
+
+    private fun serializeToFile(fileName: String, objectToSave: Any) {
+        val fileToSave = File(pathForFilename(fileName))
+        val file = FileOutputStream(fileToSave)
+        val outStream = ObjectOutputStream(file)
+        outStream.writeObject(objectToSave)
+        outStream.close()
+        file.close()
+    }
+
+    private fun <T> deserializeFromFile(fileName: String) : T? {
+        val fileToLoad = File(pathForFilename(fileName))
+        if (!fileToLoad.exists()) {
+            return null
+        }
+        val file = FileInputStream(fileToLoad)
+        val inStream = ObjectInputStream(file)
+        val item = inStream.readObject() as T
+        inStream.close()
+        file.close()
+        return item
+    }
+
+    fun reset() {
+        setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
     }
 
 }

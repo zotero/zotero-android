@@ -2,12 +2,13 @@ package org.zotero.android.screens.collections.data
 
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import java.util.concurrent.ConcurrentHashMap
 
 data class CollectionTree(
     var nodes: MutableList<Node>,
-    var collections: MutableMap<CollectionIdentifier, Collection>,
-    var collapsed: MutableMap<CollectionIdentifier, Boolean>,
-    var filtered: MutableMap<CollectionIdentifier, SearchableCollection> = mutableMapOf(),
+    var collections: ConcurrentHashMap<CollectionIdentifier, Collection>,
+    var collapsed: ConcurrentHashMap<CollectionIdentifier, Boolean>,
+    var filtered: ConcurrentHashMap<CollectionIdentifier, SearchableCollection> = ConcurrentHashMap(),
 ) {
     data class Node(
         val identifier: CollectionIdentifier,
@@ -19,6 +20,10 @@ data class CollectionTree(
         expandedAll,
         collapsedAll,
         basedOnDb,
+    }
+
+    fun set(collapsed: Boolean, identifier: CollectionIdentifier) {
+        this.collapsed[identifier] = collapsed
     }
 
     fun append(collection: Collection, collapsed: Boolean = true) {
@@ -100,5 +105,23 @@ data class CollectionTree(
     }
     fun collection(identifier: CollectionIdentifier): Collection? {
         return this.collections[identifier]
+    }
+
+    fun createSnapshot(): List<CollectionItemWithChildren> {
+        return this.nodes.map { node ->
+            add(node, this.collections)
+        }
+    }
+
+    private fun add(
+        currentNode: Node,
+        allCollections: Map<CollectionIdentifier, Collection>
+    ): CollectionItemWithChildren {
+        val currentCollection = allCollections[currentNode.identifier]!!
+        val children: MutableList<CollectionItemWithChildren> = mutableListOf()
+        for (n in currentNode.children) {
+            children.add(add(currentNode = n, allCollections = allCollections))
+        }
+        return CollectionItemWithChildren(collection = currentCollection, children = children)
     }
 }

@@ -18,7 +18,13 @@ class CollectionResponseDataMapper @Inject constructor(
         }
 
         val name = response["name"].asString
-        val parentCollection = response["parentCollection"]?.asString
+        val parentCollectionAsString = response["parentCollection"]?.asString
+        val parentCollection = if( parentCollectionAsString == "false") {
+            null
+        } else {
+            parentCollectionAsString
+        }
+
         val isTrash = response["deleted"].convertFromBooleanOrIntToBoolean()
 
         return CollectionResponse.Data(
