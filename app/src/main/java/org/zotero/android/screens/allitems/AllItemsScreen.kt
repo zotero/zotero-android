@@ -118,6 +118,7 @@ internal fun AllItemsScreen(
             AllItemsTopBar(
                 viewState = viewState,
                 viewModel = viewModel,
+                layoutType = layoutType,
             )
         },
     ) {
@@ -145,6 +146,17 @@ internal fun AllItemsScreen(
                 AllItemsTable(viewState, layoutType, viewModel)
             }
         }
+
+        val itemsError = viewState.error
+        if (itemsError != null) {
+            ShowErrorOrDialog(
+                itemsError = itemsError,
+                onDismissDialog = viewModel::onDismissDialog,
+                onDeleteItems = { viewModel.delete(it) },
+                onEmptyTrash = { viewModel.emptyTrash() }
+            )
+        }
+
         AllItemsAddBottomSheet(
             onAddFile = onPickFile,
             onAddNote = viewModel::onAddNote,

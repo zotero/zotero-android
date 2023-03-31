@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -24,7 +25,8 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Composable
 internal fun AllItemsTopBar(
     viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel
+    viewModel: AllItemsViewModel,
+    layoutType: CustomLayoutSize.LayoutType
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -35,27 +37,37 @@ internal fun AllItemsTopBar(
             )
         },
         navigationIcon = {
-            Row {
-                Spacer(modifier = Modifier.width(8.dp))
-                HeadingTextButton(
-                    isEnabled = true,
-                    onClick = viewModel::navigateToCollections,
-                    text = stringResource(id = Strings.collections)
-                )
+            if (!layoutType.isTablet()) {
+                Row {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    HeadingTextButton(
+                        isEnabled = true,
+                        onClick = viewModel::navigateToCollections,
+                        text = stringResource(id = Strings.collections)
+                    )
+                }
             }
 
         },
         actions = {
-            Icon(
-                modifier = Modifier.safeClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(bounded = false),
-                    onClick = viewModel::onAdd
-                ),
-                painter = painterResource(id = Drawables.baseline_add_24),
-                contentDescription = null,
-                tint = CustomTheme.colors.dynamicTheme.primaryColor,
-            )
+            if (viewState.collection.identifier.isTrash) {
+                HeadingTextButton(
+                    onClick = viewModel::onEmptyTrash,
+                    text = stringResource(Strings.empty_trash),
+                )
+            } else {
+                Icon(
+                    modifier = Modifier.safeClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(bounded = false),
+                        onClick = viewModel::onAdd
+                    ),
+                    painter = painterResource(id = Drawables.baseline_add_24),
+                    contentDescription = null,
+                    tint = CustomTheme.colors.dynamicTheme.primaryColor,
+                )
+            }
+
             Spacer(modifier = Modifier.width(8.dp))
 
             if (!viewState.isEditing) {

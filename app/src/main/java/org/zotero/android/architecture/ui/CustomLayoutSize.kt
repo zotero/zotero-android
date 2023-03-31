@@ -122,8 +122,15 @@ object CustomLayoutSize {
                 small -> 36.dp
             }
         }
-
+        fun isTablet(): Boolean {
+            return when (this) {
+                big, medium -> true
+                small -> false
+            }
+        }
     }
+
+
 
     @Composable
     fun calculateLayoutType(): LayoutType {

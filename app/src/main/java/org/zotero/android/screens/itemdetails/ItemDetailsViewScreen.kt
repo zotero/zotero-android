@@ -26,14 +26,12 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 
-
 @Composable
 internal fun ItemDetailsViewScreen(
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
     layoutType: CustomLayoutSize.LayoutType
 ) {
-
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -43,7 +41,6 @@ internal fun ItemDetailsViewScreen(
             Title(viewState, layoutType)
             CustomDivider()
         }
-
         item {
             Column(modifier = Modifier.padding(start = 12.dp)) {
                 ItemType(viewState, layoutType)

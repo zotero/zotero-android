@@ -82,9 +82,7 @@ internal fun ItemDetailsEditScreen(
                         layoutType = layoutType, onValueChange = viewModel::onAbstractEdit
                     )
                 }
-
             }
-
         }
         notesTagsAndAttachmentsBlock(
             viewState = viewState,

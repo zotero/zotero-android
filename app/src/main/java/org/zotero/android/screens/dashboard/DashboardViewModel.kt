@@ -14,6 +14,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
 import org.zotero.android.screens.allitems.data.ItemsSortType
+import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -30,6 +31,7 @@ internal class DashboardViewModel @Inject constructor(
     ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
 
     fun init() = initOnce {
+        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
         val data = loadInitialDetailData(
             collectionId = fileStore.getSelectedCollectionId(),
             libraryId = defaults.getSelectedLibrary()

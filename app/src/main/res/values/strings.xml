@@ -93,6 +93,7 @@
     <string name="dataReloaded">This item has been changed remotely. It will now reload.</string>
     <string name="delete">Delete</string>
     <string name="moveToTrash">Move to Trash</string>
+    <string name="restore">Restore</string>
     <string name="removeDownload">Remove Download</string>
     <string name="num_of_selected">%d selected</string>
     <string name="moveToStandaloneAttachment">Move to Standalone Attachment</string>
@@ -103,4 +104,9 @@
     <string name="deselect_all">Deselect All</string>
     <string name="select">Select</string>
     <string name="collections">Collections</string>
+    <string name="delete_one_item">Are you sure you want to delete the selected item?</string>
+    <string name="delete_multiple_items">Are you sure you want to delete selected items?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="empty_trash">Empty</string>
 </resources>

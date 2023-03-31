@@ -14,4 +14,7 @@ sealed class ItemsError  {
     object noteSaving: ItemsError()
     data class attachmentAdding(val q: AttachmentLoading): ItemsError()
     object duplicationLoading: ItemsError()
+
+    data class deleteConfirmationForItems(val itemsKeys: Set<String>): ItemsError()
+    object deleteConfirmationForEmptyTrash: ItemsError()
 }

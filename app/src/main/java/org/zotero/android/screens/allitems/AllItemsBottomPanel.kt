@@ -67,48 +67,91 @@ private fun EditingBottomPanel(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            var isDuplicateEnabled = false
-            if (viewState.selectedItems.size == 1) {
-                val key = viewState.selectedItems.firstOrNull()
-                if (key != null) {
-                    val rItem = viewModel.results?.where()?.key(key)?.findFirst()
-                    if (rItem != null && rItem.rawType != ItemTypes.attachment && rItem.rawType != ItemTypes.note) {
-                        isDuplicateEnabled = true
+            if (viewState.collection.identifier.isTrash) {
+                val isRestoreAndDeleteEnabled = !viewState.selectedItems.isEmpty()
+                Icon(
+                    modifier = Modifier
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.onRestore()
+                            },
+                            enabled = isRestoreAndDeleteEnabled
+                        ),
+                    painter = painterResource(id = Drawables.restore_trash),
+                    contentDescription = null,
+                    tint = if (isRestoreAndDeleteEnabled) {
+                        CustomTheme.colors.zoteroBlueWithDarkMode
+                    } else {
+                        CustomTheme.colors.disabledContent
+                    }
+                )
+                Icon(
+                    modifier = Modifier
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.onDelete()
+                            },
+                            enabled = isRestoreAndDeleteEnabled
+                        ),
+                    painter = painterResource(id = Drawables.empty_trash),
+                    contentDescription = null,
+                    tint = if (isRestoreAndDeleteEnabled) {
+                        CustomTheme.colors.zoteroBlueWithDarkMode
+                    } else {
+                        CustomTheme.colors.disabledContent
+                    }
+                )
+            } else {
+                var isDuplicateEnabled = false
+                if (viewState.selectedItems.size == 1) {
+                    val key = viewState.selectedItems.firstOrNull()
+                    if (key != null) {
+                        val rItem = viewModel.results?.where()?.key(key)?.findFirst()
+                        if (rItem != null && rItem.rawType != ItemTypes.attachment && rItem.rawType != ItemTypes.note) {
+                            isDuplicateEnabled = true
+                        }
                     }
                 }
+
+                Icon(
+                    modifier = Modifier
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.onDuplicate()
+                            },
+                            enabled = isDuplicateEnabled
+                        ),
+                    painter = painterResource(id = Drawables.baseline_content_copy_24),
+                    contentDescription = null,
+                    tint = if (isDuplicateEnabled) CustomTheme.colors.zoteroBlueWithDarkMode else CustomTheme.colors.disabledContent
+                )
+                val isDeleteEnabled = !viewState.selectedItems.isEmpty()
+                Icon(
+                    modifier = Modifier
+                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = rememberRipple(),
+                            onClick = {
+                                viewModel.onTrash()
+                            },
+                            enabled = isDeleteEnabled
+                        ),
+                    painter = painterResource(id = Drawables.ic_delete_20dp),
+                    contentDescription = null,
+                    tint = if (isDeleteEnabled) CustomTheme.colors.zoteroBlueWithDarkMode else CustomTheme.colors.disabledContent
+                )
             }
 
-            Icon(
-                modifier = Modifier
-                    .size(layoutType.calculateItemsRowInfoIconSize())
-                    .safeClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = {
-                            viewModel.onDuplicate()
-                        },
-                        enabled = isDuplicateEnabled
-                    ),
-                painter = painterResource(id = Drawables.baseline_content_copy_24),
-                contentDescription = null,
-                tint = if (isDuplicateEnabled) CustomTheme.colors.zoteroBlueWithDarkMode else CustomTheme.colors.disabledContent
-            )
-            val isDeleteEnabled = !viewState.selectedItems.isEmpty()
-            Icon(
-                modifier = Modifier
-                    .size(layoutType.calculateItemsRowInfoIconSize())
-                    .safeClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = {
-                            viewModel.onTrash()
-                        },
-                        enabled = isDeleteEnabled
-                    ),
-                painter = painterResource(id = Drawables.ic_delete_20dp),
-                contentDescription = null,
-                tint = if (isDeleteEnabled) CustomTheme.colors.zoteroBlueWithDarkMode else CustomTheme.colors.disabledContent
-            )
         }
     }
 }

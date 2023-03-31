@@ -3,16 +3,13 @@ package org.zotero.android.screens.dashboard
 
 import android.net.Uri
 import androidx.activity.OnBackPressedDispatcher
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -22,7 +19,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.dialog
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
@@ -39,28 +35,20 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
 
+/**
+ * If it's a phone, then this navigation screen takes full screen,
+ * if it's a tablet, then it only occupies the right portion of the screen.
+ */
 @Composable
-internal fun DashboardNavigation(
-    viewModel: DashboardViewModel,
+internal fun FullScreenOrRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (file: File) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    navController: NavHostController,
+    navigation: Navigation,
 ) {
-    val navController = rememberAnimatedNavController()
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val navigation = remember(navController) {
-        Navigation(navController, dispatcher)
-    }
 
-    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
-        }
-    }
 
     ZoteroNavHost(
         navController = navController,
@@ -142,7 +130,7 @@ private fun NavGraphBuilder.allItemsScreen(
     onPickFile: () -> Unit,
     onShowPdf: (file: File) -> Unit,
     ) {
-    composable(route = Destinations.ALL_ITEMS) {
+    composable(route = Destinations.ALL_ITEMS, enterTransition = {EnterTransition.None}, popEnterTransition =  { slideInHorizontally(initialOffsetX = { -it }) }) {
         AllItemsScreen(
             onBack = onBack,
             onPickFile = onPickFile,
@@ -436,7 +424,7 @@ private object Destinations {
 }
 
 @SuppressWarnings("UseDataClass")
-private class Navigation(
+class Navigation(
     private val navController: NavHostController,
     private val onBackPressedDispatcher: OnBackPressedDispatcher?,
 ) {
@@ -445,6 +433,7 @@ private class Navigation(
     fun toAllItems() {
         navController.navigate(Destinations.ALL_ITEMS)  {
             popUpTo(0)
+
         }
     }
 

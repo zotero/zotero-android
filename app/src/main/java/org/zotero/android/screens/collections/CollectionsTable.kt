@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collections
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.uicomponents.Drawables
@@ -88,11 +90,10 @@ private fun CollectionItem(
     layoutType: CustomLayoutSize.LayoutType,
     levelPadding: Dp
 ) {
-
     var rowModifier: Modifier = Modifier
-//    if (viewState.selectedItems.contains(rItem.key)) {
-//        rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
-//    }
+    if (layoutType.isTablet() && viewState.selectedCollectionId == item.collection.identifier) {
+        rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
+    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = rowModifier
@@ -145,12 +146,12 @@ private fun CollectionItem(
                 ) {
                     Text(
                         text = item.collection.name,
-                        fontSize = layoutType.calculateItemsRowTextSize(),
+                        fontSize = 14.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                if (!item.collection.isCollection || viewModel.defaults.showCollectionItemCounts()) {
+                if ((!item.collection.isCollection || viewModel.defaults.showCollectionItemCounts()) && item.collection.itemCount != 0) {
                     Row {
                         RoundBadgeIcon(count = item.collection.itemCount)
                         Spacer(modifier = Modifier.width(12.dp))

@@ -29,7 +29,7 @@ internal fun CollectionsScreen(
     val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
+        viewModel.init(isTablet = layoutType.isTablet())
     }
 
     LaunchedEffect(key1 = viewEffect) {

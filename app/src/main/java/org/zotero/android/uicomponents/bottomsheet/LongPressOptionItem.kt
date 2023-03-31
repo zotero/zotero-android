@@ -75,4 +75,15 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.baseline_add_24
     )
 
+    data class TrashRestore(val item: RItem): LongPressOptionItem(
+        titleId = Strings.restore,
+        resIcon = Drawables.restore_trash
+    )
+
+    data class TrashDelete(val item: RItem): LongPressOptionItem(
+        titleId = Strings.delete,
+        textAndIconColor = CustomPalette.ErrorRed,
+        resIcon = Drawables.empty_trash
+    )
+
 }

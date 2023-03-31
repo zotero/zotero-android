@@ -350,7 +350,6 @@ private fun LazyListScope.listOfTags(
     }
 }
 
-
 private fun LazyListScope.listOfAttachments(
     layoutType: CustomLayoutSize.LayoutType,
     viewState: ItemDetailsViewState,

@@ -40,7 +40,9 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
+import org.zotero.android.database.requests.EmptyTrashDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
+import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.itemSearch
@@ -440,7 +442,7 @@ internal class AllItemsViewModel @Inject constructor(
                 sortType = sortType,
                 error = if (results == null) ItemsError.dataLoading else null,
                 snapshot = resultsFrozen,
-                lce = if (results.isEmpty()) LCE2.Loading else LCE2.Content,
+                lce = LCE2.Content,
             )
         }
         processRealmResults(resultsFrozen)
@@ -1013,6 +1015,14 @@ internal class AllItemsViewModel @Inject constructor(
                 is LongPressOptionItem.CreateParentItem -> {
                     createParent(longPressOptionItem.item)
                 }
+                is LongPressOptionItem.TrashDelete -> {
+                    showDeleteItemsConfirmation(
+                        setOf(longPressOptionItem.item.key)
+                    )
+                }
+                is LongPressOptionItem.TrashRestore -> {
+                    set(trashed = false, setOf(longPressOptionItem.item.key))
+                }
             }
         }
     }
@@ -1039,6 +1049,21 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(item: RItem) {
+        if (viewState.collection.identifier.isTrash) {
+            updateState {
+                copy(
+                    longPressOptionsHolder = LongPressOptionsHolder(
+                        title = item.displayTitle,
+                        longPressOptionItems = listOf(
+                            LongPressOptionItem.TrashRestore(item),
+                            LongPressOptionItem.TrashDelete(item)
+                        )
+                    )
+                )
+            }
+            return
+        }
+
         val actions = mutableListOf<LongPressOptionItem>()
 
         if (item.rawType == ItemTypes.attachment && item.parent == null) {
@@ -1081,6 +1106,26 @@ internal class AllItemsViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    fun delete(keys: Set<String>) {
+        viewModelScope.launch {
+            val result = perform(
+                dbWrapper = dbWrapper,
+                request = MarkObjectsAsDeletedDbRequest(
+                    clazz = RItem::class,
+                    keys = keys.toList(),
+                    libraryId = viewState.library.identifier
+                )
+            ).ifFailure {
+                Timber.e(it, "AllItemsViewModel: can't delete items")
+                updateState {
+                    copy(error = ItemsError.deletion)
+                }
+                return@launch
+            }
+        }
+
     }
 
     private suspend fun trashItems(keys: Set<String>) {
@@ -1199,9 +1244,55 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
+    fun onRestore() {
+        viewModelScope.launch {
+            set(trashed = false, keys = viewState.selectedItems)
+        }
+    }
+
+    fun onDelete() {
+        showDeleteItemsConfirmation(viewState.selectedItems)
+    }
+
+    fun onEmptyTrash() {
+        updateState {
+            copy(
+                error = ItemsError.deleteConfirmationForEmptyTrash,
+            )
+        }
+    }
+
+    private fun showDeleteItemsConfirmation(itemsKeys: Set<String>) {
+        updateState {
+            copy(
+                error = ItemsError.deleteConfirmationForItems(itemsKeys),
+            )
+        }
+    }
+
     fun navigateToCollections() {
         ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
         triggerEffect(AllItemsViewEffect.ShowCollectionsEffect)
+    }
+
+    fun onDismissDialog() {
+        updateState {
+            copy(
+                error = null,
+            )
+        }
+    }
+
+    fun emptyTrash() {
+        viewModelScope.launch {
+            val result = perform(
+                dbWrapper = dbWrapper,
+                request = EmptyTrashDbRequest(libraryId = viewState.library.identifier)
+            ).ifFailure {
+                Timber.e(it, "AllItemsViewModel: can't empty trash")
+                return@launch
+            }
+        }
     }
 }
 

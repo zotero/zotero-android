@@ -23,7 +23,6 @@ import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.ItemsSortType
-import org.zotero.android.screens.collections.CollectionsViewEffect.NavigateToAllItemsScreen
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
@@ -50,7 +49,10 @@ internal class CollectionsViewModel @Inject constructor(
     var trashItems: RealmResults<RItem>? = null
     var collections: RealmResults<RCollection>? = null
 
-    fun init() = initOnce {
+    var isTablet: Boolean = false
+
+    fun init(isTablet: Boolean) = initOnce {
+        this.isTablet = isTablet
         viewModelScope.launch {
             val args = ScreenArguments.collectionsArgs
             initViewState(args)
@@ -206,7 +208,40 @@ internal class CollectionsViewModel @Inject constructor(
                 collectionItemsToDisplay = collectionTree.createSnapshot()
             )
         }
+        expandCollectionsIfNeeded()
         triggerEffect(CollectionsViewEffect.ScreenRefresh)
+    }
+
+    private fun expandCollectionsIfNeeded() {
+        if (!isTablet) {
+            return
+        }
+        val listOfParentsToExpand = traverseCollectionTreeForSelectedCollection(
+            items = viewState.collectionItemsToDisplay,
+            listOfParents = listOf()
+        )
+        for (parent in listOfParentsToExpand.second) {
+            viewState.collectionTree.set(false, parent)
+        }
+    }
+
+    private fun traverseCollectionTreeForSelectedCollection(
+        items: List<CollectionItemWithChildren>,
+        listOfParents: List<CollectionIdentifier>
+    ): Pair<Boolean, List<CollectionIdentifier>> {
+        for(item in items) {
+            if (item.collection.identifier == viewState.selectedCollectionId) {
+                return true to listOfParents
+            }
+            val traverseResult = traverseCollectionTreeForSelectedCollection(
+                items = item.children,
+                listOfParents = listOfParents + item.collection.identifier
+            )
+            if (traverseResult.first) {
+                return traverseResult
+            }
+        }
+        return false to emptyList()
     }
 
     private fun observeItemCount(results: RealmResults<RItem>, customType: CollectionIdentifier.CustomType) {
@@ -214,7 +249,6 @@ internal class CollectionsViewModel @Inject constructor(
             val state = changeSet.state
             when (state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
-                    println()
                     //no-op
                 }
                 OrderedCollectionChangeSet.State.UPDATE ->  {
@@ -264,8 +298,7 @@ internal class CollectionsViewModel @Inject constructor(
             searchTerm = null,
             error = null
         )
-
-        triggerEffect(NavigateToAllItemsScreen)
+        triggerEffect(CollectionsViewEffect.NavigateToAllItemsScreen)
     }
 
     fun onItemChevronTapped(collection: Collection) {
