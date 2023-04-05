@@ -150,6 +150,7 @@ internal fun ItemDetailsScreen(
                 acceptPrompt = viewModel::acceptPrompt,
                 cancelPrompt = viewModel::cancelPrompt,
                 acceptItemWasChangedRemotely = viewModel::acceptItemWasChangedRemotely,
+                deleteOrRestoreItem = viewModel::deleteOrRestoreItem
             )
         }
         LongPressBottomSheet(

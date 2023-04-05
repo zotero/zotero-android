@@ -142,7 +142,7 @@ object CustomLayoutSize {
         val size = min(screenWidth, screenHeight).dp
         if (size >= 834.dp) {
             return LayoutType.big
-        } else if (size >= 768.dp) {
+        } else if (size >= 680.dp) {
             return LayoutType.medium
         }
         return LayoutType.small

@@ -87,6 +87,8 @@ import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
+import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreItem
+import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
@@ -112,12 +114,20 @@ class ItemDetailsViewModel @Inject constructor(
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
     private val fileCleanupController: AttachmentFileCleanupController,
+    private val conflictResolutionUseCase: ConflictResolutionUseCase
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
 
     //required to keep item change listener alive
     private var currentItem: RItem? = null
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(askUserToDeleteOrRestoreItem: AskUserToDeleteOrRestoreItem) {
+        updateState {
+            copy(error = ItemDetailError.askUserToDeleteOrRestoreItem)
+        }
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(itemDetailCreator: ItemDetailCreator) {
@@ -212,6 +222,8 @@ class ItemDetailsViewModel @Inject constructor(
     override fun onCleared() {
         currentItem?.removeAllChangeListeners()
         EventBus.getDefault().unregister(this)
+        conflictResolutionUseCase.currentlyDisplayedItemLibraryIdentifier = null
+        conflictResolutionUseCase.currentlyDisplayedItemKey = null
         super.onCleared()
     }
 
@@ -250,6 +262,8 @@ class ItemDetailsViewModel @Inject constructor(
                 preScrolledChildKey = preScrolledChildKey
             )
         }
+        conflictResolutionUseCase.currentlyDisplayedItemLibraryIdentifier = viewState.library?.identifier
+        conflictResolutionUseCase.currentlyDisplayedItemKey = viewState.key
 
     }
 
@@ -1087,6 +1101,10 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun acceptItemWasChangedRemotely() {
         reloadData(viewState.isEditing)
+    }
+
+    fun deleteOrRestoreItem(isDelete: Boolean) {
+        conflictResolutionUseCase.deleteOrRestoreItem(isDelete = isDelete, key = viewState.key)
     }
 
     fun cancelPrompt() {

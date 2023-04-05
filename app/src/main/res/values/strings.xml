@@ -109,4 +109,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="empty_trash">Empty</string>
+    <string name="deletedTitle">Deleted</string>
+    <string name="deletedMessage">This item has been deleted. Do you want to restore it?</string>
 </resources>

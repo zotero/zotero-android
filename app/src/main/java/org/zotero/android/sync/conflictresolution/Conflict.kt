@@ -1,4 +1,4 @@
-package org.zotero.android.database.objects
+package org.zotero.android.sync.conflictresolution
 
 import org.zotero.android.sync.LibraryIdentifier
 

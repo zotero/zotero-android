@@ -69,6 +69,8 @@ sealed class Action {
 
     data class markGroupAsLocalOnly(val groupId: Int) : Action()
 
+    data class revertLibraryToOriginal(val libraryIdentifier: LibraryIdentifier): Action()
+
     data class deleteGroup(val groupId: Int) : Action()
 
     data class performDeletions(
@@ -78,6 +80,12 @@ sealed class Action {
         val searches: List<String>,
         val tags: List<String>,
         val conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
+    ) : Action()
+
+    data class restoreDeletions(
+        val libraryIdentifier: LibraryIdentifier,
+        val collections: List<String>,
+        val items: List<String>
     ) : Action()
 
     open val libraryId: LibraryIdentifier?
@@ -92,8 +100,8 @@ sealed class Action {
                 is performWebDavDeletions -> action.libraryId
                 is resolveGroupMetadataWritePermission -> return LibraryIdentifier.group(action.groupId)
                 is storeDeletionVersion -> action.libraryId
-                is submitDeleteBatch -> action.libraryId
-                is submitWriteBatch -> action.libraryId
+                is submitDeleteBatch -> action.batch.libraryId
+                is submitWriteBatch -> action.batch.libraryId
                 is syncDeletions -> action.libraryId
                 is syncSettings -> action.libraryId
                 is syncVersions -> action.libraryId
@@ -104,6 +112,8 @@ sealed class Action {
                 is markGroupAsLocalOnly -> LibraryIdentifier.group(action.groupId)
                 is deleteGroup -> LibraryIdentifier.group(action.groupId)
                 is uploadAttachment -> action.upload.libraryId
+                is restoreDeletions -> action.libraryIdentifier
+                is revertLibraryToOriginal -> action.libraryIdentifier
             }
         }
 
@@ -130,6 +140,8 @@ sealed class Action {
                 is markGroupAsLocalOnly -> false
                 is deleteGroup -> false
                 is uploadAttachment -> false
+                is restoreDeletions -> false
+                is revertLibraryToOriginal -> false
             }
         }
 }

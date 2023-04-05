@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.theme.CustomPalette
 
 @Composable
 internal fun ItemDetailsErrorDialogs(
@@ -14,6 +15,7 @@ internal fun ItemDetailsErrorDialogs(
     acceptPrompt: () -> Unit,
     cancelPrompt: () -> Unit,
     acceptItemWasChangedRemotely: () -> Unit,
+    deleteOrRestoreItem: (isDelete: Boolean) -> Unit,
 ) {
     when (itemDetailError) {
         is ItemDetailError.cantAddAttachments -> {
@@ -165,6 +167,24 @@ internal fun ItemDetailsErrorDialogs(
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = acceptItemWasChangedRemotely
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+        is ItemDetailError.askUserToDeleteOrRestoreItem -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.deletedTitle),
+                description = stringResource(
+                    id = Strings.deletedMessage,
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.yes),
+                    onClick = { deleteOrRestoreItem(false) }
+                ),
+                secondaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.delete),
+                    textColor = CustomPalette.ErrorRed,
+                    onClick = { deleteOrRestoreItem(true) }
                 ),
                 onDismiss = onDismissErrorDialog
             )

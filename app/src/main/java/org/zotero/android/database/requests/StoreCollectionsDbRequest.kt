@@ -5,7 +5,7 @@ import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.database.DbError
-import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.UpdatableChangeType
@@ -14,7 +14,7 @@ import java.util.Date
 
 class StoreCollectionsDbRequest(
     val response: List<CollectionResponse>,
-) : DbResponseRequest<Unit> {
+) : DbRequest {
 
     override val needsWrite: Boolean
         get() = true

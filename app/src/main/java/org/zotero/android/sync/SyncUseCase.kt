@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import com.google.gson.Gson
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -16,12 +17,13 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUploaderContext
 import org.zotero.android.database.DbWrapper
-import org.zotero.android.database.objects.Conflict
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.PerformDeletionsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.SyncError.NonFatal
+import org.zotero.android.sync.conflictresolution.Conflict
+import org.zotero.android.sync.conflictresolution.ConflictResolution
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
@@ -29,6 +31,8 @@ import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
 import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
+import org.zotero.android.sync.syncactions.RestoreDeletionsSyncAction
+import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
@@ -64,7 +68,8 @@ class SyncUseCase @Inject constructor(
     private val schemaController: SchemaController,
     private val updatesResponseMapper: UpdatesResponseMapper,
     private val observable: SyncObservableEventStream,
-    private val actionsCreator: ActionsCreator
+    private val actionsCreator: ActionsCreator,
+    private val gson: Gson
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -135,8 +140,6 @@ class SyncUseCase @Inject constructor(
         }
 
         processingAction = action
-
-        //TODO requiresConflictReceiver
 
         runningSyncJob = coroutineScope.launch {
             process(action = action)
@@ -214,11 +217,45 @@ class SyncUseCase @Inject constructor(
             is Action.submitWriteBatch -> {
                 processSubmitUpdate(action.batch)
             }
+            is Action.revertLibraryToOriginal -> {
+                revertGroupData(action.libraryIdentifier)
+            }
+            is Action.restoreDeletions -> {
+                restoreDeletions(libraryId = action.libraryIdentifier, collections = action.collections, items = action.items)
+            }
             else -> {
                 processNextAction()
             }
         }
+    }
 
+    private suspend fun restoreDeletions(libraryId: LibraryIdentifier, collections: List<String>, items: List<String>) {
+        val result = RestoreDeletionsSyncAction(libraryId = libraryId, collections = collections, items = items, dbWrapper = this.dbWrapper).result()
+        if (result is CustomResult.GeneralError.CodeError) {
+            Timber.e(result.throwable)
+            finishCompletableAction(errorData = Pair(result.throwable, SyncError.ErrorData(itemKeys = items, libraryId = libraryId)))
+            return
+        }
+        finishCompletableAction(errorData = null)
+    }
+
+    private suspend fun revertGroupData(libraryId: LibraryIdentifier) {
+        val result = RevertLibraryUpdatesSyncAction(
+            libraryId = libraryId,
+            dbWrapper = this.dbWrapper,
+            fileStorage = this.fileStore,
+            schemaController = this.schemaController,
+            gson = gson,
+            collectionResponseMapper = collectionResponseMapper,
+            searchResponseMapper = searchResponseMapper,
+            itemResponseMapper = itemResponseMapper
+        ).result()
+        if (result is CustomResult.GeneralError.CodeError) {
+            Timber.e(result.throwable)
+            finishCompletableAction(errorData = null)
+            return
+        }
+        finishCompletableAction(errorData = null)
     }
 
     private suspend fun processSubmitUpdate(batch: WriteBatch) {
@@ -596,7 +633,7 @@ class SyncUseCase @Inject constructor(
 
             is NonFatal.unchanged -> {
                 if (version != null) {
-                    //TODO handleUnchangedFailure
+                    //TODO handleUnchangedFailure and also all places where syncDeletions are called
                 } else {
                     if (additionalAction != null) {
                         additionalAction()
@@ -1114,6 +1151,89 @@ class SyncUseCase @Inject constructor(
             //TODO report progress finish
             this.previousType = null
             this.observable.emitAsync(null)
+        }
+    }
+
+    fun enqueueResolution(resolution: ConflictResolution.remoteDeletionOfActiveObject) {
+        enqueue(actions = actions(resolution), index = 0)
+    }
+
+    private fun actions(resolution: ConflictResolution): List<Action> {
+        when (resolution) {
+            is ConflictResolution.deleteGroup -> {
+                return listOf(Action.deleteGroup(resolution.id))
+            }
+            is ConflictResolution.keepGroupChanges -> {
+                return listOf(
+                    Action.markChangesAsResolved(
+                        resolution.id
+                    )
+                )
+            }
+            is ConflictResolution.markGroupAsLocalOnly -> {
+                return listOf(
+                    Action.markGroupAsLocalOnly(
+                        resolution.id
+                    )
+                )
+            }
+            is ConflictResolution.revertGroupChanges -> {
+                return listOf(
+                    Action.revertLibraryToOriginal(
+                        resolution.id
+                    )
+                )
+            }
+            is ConflictResolution.remoteDeletionOfActiveObject -> {
+                val actions = mutableListOf<Action>()
+                if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty()) {
+                    actions.add(
+                        Action.performDeletions(
+                            libraryId = resolution.libraryId,
+                            collections = resolution.toDeleteCollections,
+                            items = resolution.toDeleteItems,
+                            searches = resolution.searches,
+                            tags = resolution.tags,
+                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.resolveConflicts
+                        )
+                    )
+                }
+                if (!resolution.toRestoreCollections.isEmpty() || !resolution.toRestoreItems.isEmpty()) {
+                    actions.add(
+                        Action.restoreDeletions(
+                            libraryIdentifier = resolution.libraryId,
+                            collections = resolution.toRestoreCollections,
+                            items = resolution.toRestoreItems
+                        )
+                    )
+                }
+                return actions
+            }
+            is ConflictResolution.remoteDeletionOfChangedItem -> {
+                val actions = mutableListOf<Action>()
+                if (!resolution.toDelete.isEmpty()) {
+                    actions.add(
+                        Action.performDeletions(
+                            libraryId = resolution.libraryId,
+                            collections = emptyList(),
+                            items = resolution.toDelete,
+                            searches = emptyList(),
+                            tags = emptyList(),
+                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.deleteConflicts
+                        )
+                    )
+                }
+                if (!resolution.toRestore.isEmpty()) {
+                    actions.add(
+                        Action.restoreDeletions(
+                            libraryIdentifier = resolution.libraryId,
+                            collections = emptyList(),
+                            items = resolution.toRestore
+                        )
+                    )
+                }
+                return actions
+            }
         }
     }
 

@@ -18,4 +18,5 @@ sealed class ItemDetailError: Exception() {
     object cantRemoveDuplicatedItem : ItemDetailError()
     object cantRemoveParent : ItemDetailError()
     object itemWasChangedRemotely : ItemDetailError()
+    object askUserToDeleteOrRestoreItem : ItemDetailError()
 }

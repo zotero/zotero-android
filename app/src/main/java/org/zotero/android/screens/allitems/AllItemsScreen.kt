@@ -136,8 +136,11 @@ internal fun AllItemsScreen(
             },
         ) {
             AllItemsBottomPanel(layoutType, viewState, viewModel)
-            Column(modifier = Modifier
-                .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())) {
+            Column(
+                modifier = Modifier
+                    .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
+            ) {
+                CustomDivider()
                 AllItemsSearchBar(
                     viewState = viewState,
                     viewModel = viewModel

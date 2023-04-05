@@ -6,7 +6,7 @@ import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.ConditionResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.database.DbError
-import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCondition
 import org.zotero.android.database.objects.RSearch
@@ -16,7 +16,7 @@ import java.util.Date
 
 class StoreSearchesDbRequest(
     val response: List<SearchResponse>,
-) : DbResponseRequest<Unit> {
+) : DbRequest {
 
     override val needsWrite: Boolean
         get() = true

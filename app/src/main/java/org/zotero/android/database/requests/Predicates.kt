@@ -8,6 +8,16 @@ import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 
+fun <T> RealmQuery<T>.changesOrDeletions(libraryId: LibraryIdentifier): RealmQuery<T> {
+    return beginGroup()
+        .changed()
+        .or()
+        .deleted(true)
+        .endGroup()
+        .and()
+        .library(libraryId)
+}
+
 fun <T> RealmQuery<T>.deleted(deleted: Boolean): RealmQuery<T> {
     return equalTo("deleted", deleted)
 }
