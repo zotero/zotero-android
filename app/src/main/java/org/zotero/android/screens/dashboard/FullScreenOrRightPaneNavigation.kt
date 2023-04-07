@@ -49,7 +49,6 @@ internal fun FullScreenOrRightPaneNavigation(
     navigation: Navigation,
 ) {
 
-
     ZoteroNavHost(
         navController = navController,
         startDestination = Destinations.ALL_ITEMS,
@@ -58,7 +57,7 @@ internal fun FullScreenOrRightPaneNavigation(
         loadingScreen()
         collectionsScreen(
             onBack = navigation::onBack,
-            navigateToAllItems = navigation::toAllItems,
+            navigateToAllItems = { navigation.toAllItems(false) },
         )
         allItemsScreen(
             onBack = navigation::onBack,
@@ -430,15 +429,22 @@ class Navigation(
 ) {
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
 
-    fun toAllItems() {
-        navController.navigate(Destinations.ALL_ITEMS)  {
-            popUpTo(0)
-
+    fun toAllItems(isTablet: Boolean) {
+        if (isTablet) {
+            navController.navigate(Destinations.ALL_ITEMS) {
+                popUpTo(0)
+            }
+        } else {
+            navController.popBackStack(navController.graph.id, inclusive = true)
+            navController.navigate(Destinations.COLLECTIONS_SCREEN)
+            navController.navigate(Destinations.ALL_ITEMS)
         }
     }
 
     fun toCollectionsScreen() {
-        navController.navigate(Destinations.COLLECTIONS_SCREEN)
+        navController.navigate(Destinations.COLLECTIONS_SCREEN) {
+            launchSingleTop = true
+        }
     }
 
     fun toItemDetails() {

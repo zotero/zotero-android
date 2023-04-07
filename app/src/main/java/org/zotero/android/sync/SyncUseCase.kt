@@ -23,8 +23,10 @@ import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.SyncError.NonFatal
 import org.zotero.android.sync.conflictresolution.Conflict
+import org.zotero.android.sync.conflictresolution.ConflictEventStream
 import org.zotero.android.sync.conflictresolution.ConflictResolution
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
+import org.zotero.android.sync.syncactions.LoadDeletionsSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
 import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
@@ -69,7 +71,8 @@ class SyncUseCase @Inject constructor(
     private val updatesResponseMapper: UpdatesResponseMapper,
     private val observable: SyncObservableEventStream,
     private val actionsCreator: ActionsCreator,
-    private val gson: Gson
+    private val gson: Gson,
+    private val conflictEventStream: ConflictEventStream
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -184,7 +187,27 @@ class SyncUseCase @Inject constructor(
                 )
             }
 
-            //TODO implement other actions
+            is Action.resolveDeletedGroup -> {
+                resolve(
+                    Conflict.groupRemoved(
+                        groupId = action.groupId,
+                        groupName = action.name
+                    )
+                )
+            }
+            is Action.resolveGroupMetadataWritePermission -> {
+                resolve(
+                    Conflict.groupWriteDenied(
+                        groupId = action.groupId,
+                        groupName = action.libraryDataName
+                    )
+                )
+            }
+
+            is Action.syncDeletions -> {
+                //TODO Report progress
+                loadRemoteDeletions(libraryId = action.libraryId, sinceVersion = action.version)
+            }
 
             is Action.syncBatchesToDb -> {
                 processBatchesSync(action.batches)
@@ -629,11 +652,9 @@ class SyncUseCase @Inject constructor(
                 removeAllActions(libraryId = libraryId)
                 appendAndContinue()
             }
-
-
             is NonFatal.unchanged -> {
                 if (version != null) {
-                    //TODO handleUnchangedFailure and also all places where syncDeletions are called
+                    handleUnchangedFailure(lastVersion = version, libraryId = libraryId, additionalAction = additionalAction)
                 } else {
                     if (additionalAction != null) {
                         additionalAction()
@@ -649,6 +670,53 @@ class SyncUseCase @Inject constructor(
                 appendAndContinue()
             }
         }
+    }
+
+    private fun handleUnchangedFailure(
+        lastVersion: Int,
+        libraryId: LibraryIdentifier,
+        additionalAction: (() -> Unit)?
+    ) {
+        Timber.i("Sync: received unchanged error, store version: $lastVersion")
+        this.lastReturnedVersion = lastVersion
+
+        if(this.type == SyncType.full) {
+            processNextAction()
+            return
+        }
+
+        val toDelete = mutableListOf<Int>()
+        for ((index, action) in this.queue.withIndex()) {
+            if (action.libraryId != libraryId) { break }
+            when (action) {
+                is Action.syncVersions -> {
+                    this.queue[index] = Action.syncVersions(
+                        libraryId = action.libraryId,
+                        objectS = action.objectS,
+                        version = action.version,
+                        checkRemote = action.version < lastVersion
+                    )
+                }
+                is Action.syncSettings -> {
+                    if (lastVersion == action.version) {
+                        toDelete.add(index)
+                    }
+                }
+                is Action.syncDeletions -> {
+                    if (lastVersion == action.version) {
+                        toDelete.add(index)
+                    }
+                }
+                is Action.storeDeletionVersion -> {
+                    if (lastVersion == action.version) {
+                        toDelete.add(index)
+                    }
+                }
+            }
+        }
+
+        toDelete.reversed().forEach { this.queue.removeAt(it) }
+        processNextAction()
     }
 
     private fun removeAllActions(libraryId: LibraryIdentifier) {
@@ -841,23 +909,28 @@ class SyncUseCase @Inject constructor(
                                          items: List<String>, searches: List<String>, tags: List<String>,
                                          conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode) {
         try {
-            val conflicts = PerformDeletionsSyncAction(libraryId = libraryId, collections = collections,
+            val conflicts = PerformDeletionsSyncAction(
+                libraryId = libraryId, collections = collections,
                 items = items, searches = searches, tags = tags,
-                conflictMode = conflictMode, dbWrapper = dbWrapper).result()
-            finishDeletionsSync(result = conflicts, libraryId = libraryId)
-        }catch(e: Throwable) {
-            finishDeletionsSync(e = e, libraryId = libraryId)
+                conflictMode = conflictMode, dbWrapper = dbWrapper
+            ).result()
+            finishDeletionsSync(result = CustomResult.GeneralSuccess(conflicts), libraryId = libraryId)
+        } catch (e: Throwable) {
+            finishDeletionsSync(
+                result = CustomResult.GeneralError.CodeError(e),
+                libraryId = libraryId
+            )
         }
     }
 
     private fun finishDeletionsSync(
-        e: Throwable? = null,
-        result: List<Pair<String, String>>? = null,
-        libraryId: LibraryIdentifier, version: Int? = null
+        result: CustomResult<List<Pair<String, String>>>,
+        libraryId: LibraryIdentifier,
+        version: Int? = null
     ) {
-        if (e != null) {
+        if (result is CustomResult.GeneralError) {
             val syncError = syncError(
-                CustomResult.GeneralError.CodeError(e),
+                customResultError = result,
                 data = SyncError.ErrorData.from(libraryId = libraryId)
             )
             when (syncError) {
@@ -868,8 +941,8 @@ class SyncUseCase @Inject constructor(
             }
             return
         }
-
-        val conflicts = result!!
+        result as CustomResult.GeneralSuccess
+        val conflicts = result.value!!
         if (!conflicts.isEmpty()) {
             resolve(conflict = Conflict.removedItemsHaveLocalChanges(keys = conflicts, libraryId = libraryId))
         } else {
@@ -878,8 +951,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private fun resolve(conflict: Conflict) {
-        //TODO implement conflict resolution
-        processNextAction()
+        conflictEventStream.emitAsync(conflict)
     }
 
     private suspend fun markChangesAsResolved(libraryId: LibraryIdentifier) {
@@ -1154,7 +1226,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    fun enqueueResolution(resolution: ConflictResolution.remoteDeletionOfActiveObject) {
+    fun enqueueResolution(resolution: ConflictResolution) {
         enqueue(actions = actions(resolution), index = 0)
     }
 
@@ -1237,5 +1309,77 @@ class SyncUseCase @Inject constructor(
         }
     }
 
+    private suspend fun loadRemoteDeletions(libraryId: LibraryIdentifier, sinceVersion: Int) {
+        val result = LoadDeletionsSyncAction(
+            currentVersion = this.lastReturnedVersion,
+            sinceVersion = sinceVersion,
+            libraryId = libraryId,
+            userId = this.userId,
+            syncApi = syncApi
+        ).result()
+        if (result is CustomResult.GeneralError) {
+            finishDeletionsSync(result, libraryId = libraryId, version = sinceVersion)
+            return
+        }
+        result as CustomResult.GeneralSuccess
+        val value = result.value!!
+        loadedRemoteDeletions(
+            collections = value.collections,
+            items = value.items,
+            searches = value.searches,
+            tags = value.tags,
+            version = value.version,
+            libraryId = libraryId
+        )
+    }
+
+    private suspend fun loadedRemoteDeletions(
+        collections: List<String>,
+        items: List<String>,
+        searches: List<String>,
+        tags: List<String>,
+        version: Int,
+        libraryId: LibraryIdentifier
+    ) {
+        updateDeletionVersion(libraryId, version)
+
+        when (this.type) {
+            SyncType.full ->
+                performDeletions(
+                    libraryId = libraryId,
+                    collections = collections,
+                    items = items,
+                    searches = searches,
+                    tags = tags,
+                    conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
+                )
+            SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal, SyncType.keysOnly ->
+                resolve(
+                    conflict = Conflict.objectsRemovedRemotely(
+                        libraryId = libraryId,
+                        collections = collections,
+                        items = items,
+                        searches = searches,
+                        tags = tags
+                    )
+                )
+        }
+    }
+
+    private fun updateDeletionVersion(libraryId: LibraryIdentifier, version: Int) {
+        for ((idx, action) in this.queue.withIndex()) {
+            when(action) {
+                is Action.storeDeletionVersion -> {
+                    if (action.libraryId != libraryId) {
+                        continue
+                    }
+                    this.queue[idx] =
+                        Action.storeDeletionVersion(libraryId = libraryId, version = version)
+                    return
+                }
+                else -> continue
+            }
+        }
+    }
 
 }

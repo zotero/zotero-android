@@ -72,7 +72,7 @@ class WebSocketController @Inject constructor(
         object notConnected: Error()
     }
     private val completionTimeout = 1500L // miliseconds
-    private val messageTimeout: Int = 30
+    private val messageTimeout: Int = 300
     private val disconnectionTimeout: Int = 5
     private val retryIntervals: List<Int> = listOf(
         2, 5, 10, 15, 30,

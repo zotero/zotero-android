@@ -1,6 +1,9 @@
 package org.zotero.android.screens.dashboard
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -19,6 +22,10 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.conflictresolution.AskUserToResolveChangedDeletedItem
+import org.zotero.android.sync.conflictresolution.Conflict
+import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
+import org.zotero.android.sync.conflictresolution.ShowSimpleConflictResolutionDialog
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,10 +34,45 @@ import javax.inject.Inject
 internal class DashboardViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val defaults: Defaults,
-    private val fileStore: FileStore
-    ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
+    private val fileStore: FileStore,
+    private val conflictResolutionUseCase: ConflictResolutionUseCase,
+) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: AskUserToResolveChangedDeletedItem) {
+        updateState {
+            copy(changedItemsDeletedAlertQueue = event.conflictDataList)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: ShowSimpleConflictResolutionDialog) {
+        updateState {
+            val conflict = event.conflict
+            copy(
+                conflictDialog = when (conflict) {
+                    is Conflict.groupRemoved -> {
+                        ConflictDialogData.groupRemoved(
+                            conflict.groupId,
+                            conflict.groupName
+                        )
+                    }
+                    is Conflict.groupWriteDenied -> {
+                        ConflictDialogData.groupWriteDenied(
+                            conflict.groupId,
+                            conflict.groupName
+                        )
+                    }
+                    else -> {
+                        null
+                    }
+                }
+            )
+        }
+    }
 
     fun init() = initOnce {
+        EventBus.getDefault().register(this)
         ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
         val data = loadInitialDetailData(
             collectionId = fileStore.getSelectedCollectionId(),
@@ -97,11 +139,64 @@ internal class DashboardViewModel @Inject constructor(
             error = null
         )
     }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
+    }
+
+    fun deleteRemovedItemsWithLocalChanges(key: String) {
+        conflictResolutionUseCase.deleteRemovedItemsWithLocalChanges(key)
+        maybeCompleteRemovedItemsWithLocalChanges(key)
+    }
+
+    fun restoreRemovedItemsWithLocalChanges(key: String) {
+        conflictResolutionUseCase.restoreRemovedItemsWithLocalChanges(key)
+        maybeCompleteRemovedItemsWithLocalChanges(key)
+    }
+
+    private fun maybeCompleteRemovedItemsWithLocalChanges(key: String) {
+        updateState {
+            copy(changedItemsDeletedAlertQueue = viewState.changedItemsDeletedAlertQueue.filter { it.key != key })
+        }
+        if (viewState.changedItemsDeletedAlertQueue.isEmpty()) {
+            conflictResolutionUseCase.completeRemovedItemsWithLocalChanges()
+        }
+    }
+
+    fun deleteGroup(key: Int) {
+        conflictResolutionUseCase.deleteGroup(key)
+    }
+    fun markGroupAsLocalOnly(key: Int) {
+        conflictResolutionUseCase.markGroupAsLocalOnly(key)
+    }
+    fun revertGroupChanges(key: Int) {
+        conflictResolutionUseCase.revertGroupChanges(key)
+    }
+    fun keepGroupChanges(key: Int) {
+        conflictResolutionUseCase.keepGroupChanges(key)
+    }
+
+    fun onDismissConflictDialog() {
+        updateState {
+            copy(
+                conflictDialog = null,
+            )
+        }
+    }
 }
 
 internal data class DashboardViewState(
     val snackbarMessage: SnackbarMessage? = null,
+    val conflictDialog: ConflictDialogData? = null,
+    val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList()
 ) : ViewState
 
 internal sealed class DashboardViewEffect : ViewEffect {
+}
+
+sealed class ConflictDialogData  {
+    data class groupRemoved(val groupId: Int, val groupName: String): ConflictDialogData()
+    data class groupWriteDenied(val groupId: Int, val groupName: String): ConflictDialogData()
+    data class changedItemsDeletedAlert(val title: String, val key: String): ConflictDialogData()
 }

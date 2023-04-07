@@ -22,6 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.modal.CustomAlertDialog.ButtonsStyle.COMPACT
 import org.zotero.android.uicomponents.modal.CustomAlertDialog.ButtonsStyle.FULL
@@ -34,9 +35,16 @@ fun CustomAlertDialog(
     primaryAction: CustomAlertDialog.ActionConfig,
     secondaryAction: CustomAlertDialog.ActionConfig? = null,
     onDismiss: () -> Unit,
+    dismissOnClickOutside: Boolean = true,
     buttonsStyle: CustomAlertDialog.ButtonsStyle = COMPACT
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnClickOutside = dismissOnClickOutside,
+            dismissOnBackPress = dismissOnClickOutside
+        )
+    ) {
         DialogContent(
             title = title,
             description = description,

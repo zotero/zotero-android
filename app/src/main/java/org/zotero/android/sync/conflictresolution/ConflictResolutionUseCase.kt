@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.greenrobot.eventbus.EventBus
+import org.zotero.android.screens.dashboard.ConflictDialogData
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncUseCase
 import javax.inject.Inject
@@ -27,10 +28,15 @@ class ConflictResolutionUseCase @Inject constructor(
 
     private fun resolve(conflict: Conflict) {
         when (conflict) {
-            is Conflict.groupRemoved -> TODO()
-            is Conflict.groupWriteDenied -> TODO()
-            is Conflict.objectsRemovedRemotely -> resolveObjectsRemovedRemotely(conflict)
-            is Conflict.removedItemsHaveLocalChanges -> TODO()
+            is Conflict.groupRemoved, is Conflict.groupWriteDenied -> {
+                EventBus.getDefault().post(ShowSimpleConflictResolutionDialog(conflict))
+            }
+            is Conflict.objectsRemovedRemotely -> {
+                resolveObjectsRemovedRemotely(conflict)
+            }
+            is Conflict.removedItemsHaveLocalChanges -> {
+                resolveRemovedItemsHaveLocalChanges(conflict)
+            }
         }
     }
 
@@ -79,7 +85,7 @@ class ConflictResolutionUseCase @Inject constructor(
     }
 
     private fun completeResolveObjectsRemovedRemotely() {
-        var resolution = ConflictResolution.remoteDeletionOfActiveObject(
+        val resolution = ConflictResolution.remoteDeletionOfActiveObject(
             libraryId = libraryId,
             toDeleteCollections = toDeleteCollections,
             toDeleteItems = toDeleteItems,
@@ -89,5 +95,63 @@ class ConflictResolutionUseCase @Inject constructor(
             tags = tags,
         )
         syncUseCase.enqueueResolution(resolution)
+    }
+
+    private lateinit var toDelete: MutableList<String>
+    private lateinit var toRestore: MutableList<String>
+
+    private fun resolveRemovedItemsHaveLocalChanges(conflict: Conflict.removedItemsHaveLocalChanges) {
+        this.libraryId = conflict.libraryId
+        toDelete = mutableListOf()
+        toRestore = mutableListOf()
+        val conflictDataList = conflict.keys.map {
+            ConflictDialogData.changedItemsDeletedAlert(
+                key = it.first,
+                title = it.second
+            )
+        }
+        EventBus.getDefault().post(AskUserToResolveChangedDeletedItem(conflictDataList))
+    }
+
+    fun restoreRemovedItemsWithLocalChanges(key: String) {
+        toRestore.add(key)
+    }
+
+    fun deleteRemovedItemsWithLocalChanges(key: String) {
+        toDelete.add(key)
+    }
+
+    fun completeRemovedItemsWithLocalChanges() {
+        syncUseCase.enqueueResolution(
+            ConflictResolution.remoteDeletionOfChangedItem(
+                libraryId = libraryId,
+                toDelete = this.toDelete,
+                toRestore = this.toRestore
+            )
+        )
+    }
+
+    fun deleteGroup(key: Int) {
+        syncUseCase.enqueueResolution(ConflictResolution.deleteGroup(key))
+    }
+
+    fun markGroupAsLocalOnly(key: Int) {
+        syncUseCase.enqueueResolution(ConflictResolution.markGroupAsLocalOnly(key))
+    }
+
+    fun revertGroupChanges(key: Int) {
+        syncUseCase.enqueueResolution(ConflictResolution.revertGroupChanges(
+            LibraryIdentifier.group(
+                key
+            )
+        ))
+    }
+
+    fun keepGroupChanges(key: Int) {
+        syncUseCase.enqueueResolution(ConflictResolution.keepGroupChanges(
+            LibraryIdentifier.group(
+                key
+            )
+        ))
     }
 }

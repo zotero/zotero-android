@@ -11,8 +11,8 @@ sealed class Action {
     ) : Action()
 
     data class resolveDeletedGroup(
-        val a: Int,
-        val b: String
+        val groupId: Int,
+        val name: String
     ) : Action()
 
     data class syncGroupToDb(val a: Int) : Action()
@@ -44,7 +44,7 @@ sealed class Action {
 
     data class syncDeletions(
         override val libraryId: LibraryIdentifier,
-        val int: Int
+        val version: Int
     ) : Action()
 
     data class storeDeletionVersion(
@@ -56,7 +56,7 @@ sealed class Action {
 
     data class syncSettings(
         override val libraryId: LibraryIdentifier,
-        val int: Int
+        val version: Int
     ) : Action()
 
     data class storeVersion(
@@ -94,7 +94,7 @@ sealed class Action {
             return when (action) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return null
-                is resolveDeletedGroup -> return LibraryIdentifier.group(action.a)
+                is resolveDeletedGroup -> return LibraryIdentifier.group(action.groupId)
                 is syncGroupToDb -> return LibraryIdentifier.group(action.a)
                 is createUploadActions -> action.libraryId
                 is performWebDavDeletions -> action.libraryId

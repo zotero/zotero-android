@@ -111,4 +111,12 @@
     <string name="empty_trash">Empty</string>
     <string name="deletedTitle">Deleted</string>
     <string name="deletedMessage">This item has been deleted. Do you want to restore it?</string>
+    <string name="changed_item_deleted">The item “%s” has been removed. Do you want to keep your changes?</string>
+    <string name="group_removed_message">Group \'%s\' is no longer accessible. What would you like to do?</string>
+    <string name="remove">Remove</string>
+    <string name="keep">Keep</string>
+    <string name="group_write_denied_message">You can\'t write to group \'%s\' anymore. What would you like to do?</string>
+    <string name="revert_to_original">Revert to original</string>
+    <string name="keep_changes">Keep changes</string>
+
 </resources>

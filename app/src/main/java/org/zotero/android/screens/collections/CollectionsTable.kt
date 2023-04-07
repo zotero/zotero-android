@@ -132,7 +132,7 @@ private fun CollectionItem(
             }
         }
         Icon(
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
             painter = painterResource(id = item.collection.iconName),
             contentDescription = null,
             tint = CustomTheme.colors.zoteroBlueWithDarkMode

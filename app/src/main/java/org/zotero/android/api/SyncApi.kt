@@ -3,6 +3,7 @@ package org.zotero.android.api
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
+import org.zotero.android.api.pojo.sync.DeletionsResponse
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -70,4 +71,10 @@ interface SyncApi {
     @Streaming
     suspend fun downloadFile(@Url url: String): retrofit2.Response<ResponseBody>
 
+    @GET
+    suspend fun deletionRequest(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>,
+        @Query("since") since: Int
+    ): retrofit2.Response<DeletionsResponse>
 }

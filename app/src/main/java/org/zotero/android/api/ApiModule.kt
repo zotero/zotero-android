@@ -70,6 +70,7 @@ object ApiModule {
                 }
                     .apply { level = HttpLoggingInterceptor.Level.BODY }
             ).setNetworkTimeout(configuration.networkTimeout)
+            .pingInterval(5, TimeUnit.SECONDS)
             .build()
     }
 

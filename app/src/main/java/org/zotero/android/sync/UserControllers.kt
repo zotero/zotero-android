@@ -14,6 +14,7 @@ import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.CleanupUnusedTags
 import org.zotero.android.files.FileStore
+import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.websocket.ChangeWsResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +33,7 @@ class UserControllers @Inject constructor(
     private val webSocketController: WebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
+    private val conflictResolutionUseCase: ConflictResolutionUseCase
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver

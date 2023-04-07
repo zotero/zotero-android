@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ internal fun DashboardScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
+    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
     LaunchedEffect(key1 = viewModel) {
         viewModel.init()
     }
@@ -40,38 +43,61 @@ internal fun DashboardScreen(
     val rightPaneNavigation = remember(rightPaneNavController) {
         Navigation(rightPaneNavController, rightPaneDispatcher)
     }
-
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    if (layoutType.isTablet()) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(0.3f)) {
-                LeftPaneNavigation(navigateToAllItems = rightPaneNavigation::toAllItems)
-            }
-            CustomDivider(modifier = Modifier
-                .width(1.dp)
-                .fillMaxHeight())
-            Box(modifier = Modifier.weight(0.7f)) {
-                FullScreenOrRightPaneNavigation(
-                    onPickFile = onPickFile,
-                    onOpenFile = onOpenFile,
-                    onShowPdf = onShowPdf,
-                    onOpenWebpage = onOpenWebpage,
-                    navController = rightPaneNavController,
-                    navigation = rightPaneNavigation
+    Box {
+        if (layoutType.isTablet()) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.weight(0.3f)) {
+                    LeftPaneNavigation(navigateToAllItems = { rightPaneNavigation.toAllItems(true) })
+                }
+                CustomDivider(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
                 )
-            }
+                Box(modifier = Modifier.weight(0.7f)) {
+                    FullScreenOrRightPaneNavigation(
+                        onPickFile = onPickFile,
+                        onOpenFile = onOpenFile,
+                        onShowPdf = onShowPdf,
+                        onOpenWebpage = onOpenWebpage,
+                        navController = rightPaneNavController,
+                        navigation = rightPaneNavigation
+                    )
+                }
 
+            }
+        } else {
+            FullScreenOrRightPaneNavigation(
+                navController = rightPaneNavController,
+                navigation = rightPaneNavigation,
+                onPickFile = onPickFile,
+                onOpenWebpage = onOpenWebpage,
+                onOpenFile = onOpenFile,
+                onShowPdf = onShowPdf
+            )
         }
-    } else {
-        FullScreenOrRightPaneNavigation(
-            navController = rightPaneNavController,
-            navigation = rightPaneNavigation,
-            onPickFile = onPickFile,
-            onOpenWebpage = onOpenWebpage,
-            onOpenFile = onOpenFile,
-            onShowPdf = onShowPdf
-        )
+        val changedItemsDeletedAlert = viewState.changedItemsDeletedAlertQueue.firstOrNull()
+        if (changedItemsDeletedAlert != null) {
+            ChangedItemsDeletedAlert(
+                conflictDialogData = changedItemsDeletedAlert,
+                deleteRemovedItemsWithLocalChanges = viewModel::deleteRemovedItemsWithLocalChanges,
+                restoreRemovedItemsWithLocalChanges = viewModel::restoreRemovedItemsWithLocalChanges
+            )
+        }
+        val conflictDialogData = viewState.conflictDialog
+        if (conflictDialogData != null) {
+            ConflictResolutionDialogs(
+                conflictDialogData = conflictDialogData,
+                onDismissDialog = viewModel::onDismissConflictDialog,
+                deleteGroup = viewModel::deleteGroup,
+                markGroupAsLocalOnly = viewModel::markGroupAsLocalOnly,
+                revertGroupChanges = viewModel::revertGroupChanges,
+                keepGroupChanges = viewModel::keepGroupChanges,
+            )
+        }
     }
+
 }
 
 
