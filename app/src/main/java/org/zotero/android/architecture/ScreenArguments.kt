@@ -2,6 +2,7 @@ package org.zotero.android.architecture
 
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
+import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
 import org.zotero.android.screens.filter.data.FilterArgs
@@ -14,6 +15,7 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 
 object ScreenArguments {
     lateinit var collectionsArgs: CollectionsArgs
+    lateinit var collectionEditArgs: CollectionEditArgs
     lateinit var allItemsArgs: AllItemsArgs
     lateinit var itemDetailsArgs: ItemDetailsArgs
     lateinit var addOrEditNoteArgs: AddOrEditNoteArgs

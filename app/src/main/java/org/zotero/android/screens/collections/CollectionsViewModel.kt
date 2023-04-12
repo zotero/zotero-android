@@ -23,6 +23,7 @@ import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.ItemsSortType
+import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
@@ -324,6 +325,16 @@ internal class CollectionsViewModel @Inject constructor(
         super.onCleared()
     }
 
+    fun onAdd() {
+        ScreenArguments.collectionEditArgs = CollectionEditArgs(
+            library = viewState.library,
+            key = null,
+            name = "",
+            parent = null,
+        )
+        triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
+    }
+
 }
 
 internal data class  CollectionsViewState(
@@ -355,5 +366,6 @@ internal data class  CollectionsViewState(
 internal sealed class  CollectionsViewEffect : ViewEffect {
     object NavigateBack : CollectionsViewEffect()
     object NavigateToAllItemsScreen : CollectionsViewEffect()
+    object ShowCollectionEditEffect: CollectionsViewEffect()
     object ScreenRefresh : CollectionsViewEffect()
 }

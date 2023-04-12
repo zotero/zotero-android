@@ -48,7 +48,7 @@ internal fun DashboardScreen(
         if (layoutType.isTablet()) {
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(0.3f)) {
-                    LeftPaneNavigation(navigateToAllItems = { rightPaneNavigation.toAllItems(true) })
+                    CollectionsAtRootNavigation()
                 }
                 CustomDivider(
                     modifier = Modifier

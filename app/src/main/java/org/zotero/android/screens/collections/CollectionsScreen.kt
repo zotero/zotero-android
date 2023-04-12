@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.collections.CollectionsViewEffect.NavigateBack
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
@@ -23,6 +22,8 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 internal fun CollectionsScreen(
     onBack: () -> Unit,
     navigateToAllItems: () -> Unit,
+    navigateToCollectionEditScreen: () -> Unit,
+    navigateToCollectionEditDialog: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -35,8 +36,18 @@ internal fun CollectionsScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
-            NavigateBack -> onBack()
+            CollectionsViewEffect.NavigateBack -> onBack()
             CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
+            CollectionsViewEffect.ShowCollectionEditEffect -> {
+                when (layoutType.showScreenOrDialog()) {
+                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
+                        navigateToCollectionEditScreen()
+                    }
+                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
+                        navigateToCollectionEditDialog()
+                    }
+                }
+            }
         }
     }
 

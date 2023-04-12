@@ -118,5 +118,7 @@
     <string name="group_write_denied_message">You can\'t write to group \'%s\' anymore. What would you like to do?</string>
     <string name="revert_to_original">Revert to original</string>
     <string name="keep_changes">Keep changes</string>
+    <string name="create_collection">Create Collection</string>
+    <string name="edit_collection">Edit Collection</string>
 
 </resources>
