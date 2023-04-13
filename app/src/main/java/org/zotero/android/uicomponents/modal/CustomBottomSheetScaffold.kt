@@ -62,9 +62,11 @@ fun CustomBottomSheetScaffold(
     BottomSheetScaffold(
         sheetContent = {
             Column(
-                modifier = Modifier.onGloballyPositioned {
-                    bottomSheetHeight = it.size.height
-                }
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .onGloballyPositioned {
+                        bottomSheetHeight = it.size.height
+                    }
             ) {
                 DraggableIndicator()
                 Box(

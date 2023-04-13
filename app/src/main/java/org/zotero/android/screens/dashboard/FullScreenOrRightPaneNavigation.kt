@@ -55,9 +55,9 @@ internal fun FullScreenOrRightPaneNavigation(
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         collectionAsRootGraph(
+            navController = navController,
             onBack = navigation::onBack,
             isTablet = isTablet,
-            navController = navController,
         )
         loadingScreen()
         allItemsScreen(

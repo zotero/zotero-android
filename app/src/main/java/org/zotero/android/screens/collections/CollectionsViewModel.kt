@@ -4,8 +4,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
+import io.realm.RealmModel
 import io.realm.RealmResults
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.LCE2
@@ -13,10 +17,12 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.ifFailure
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
@@ -29,13 +35,16 @@ import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
+import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 @HiltViewModel
 internal class CollectionsViewModel @Inject constructor(
@@ -52,15 +61,22 @@ internal class CollectionsViewModel @Inject constructor(
 
     var isTablet: Boolean = false
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: LongPressOptionItem) {
+        onLongPressOptionsItemSelected(event)
+    }
+
     fun init(isTablet: Boolean) = initOnce {
+        EventBus.getDefault().register(this)
         this.isTablet = isTablet
         viewModelScope.launch {
             val args = ScreenArguments.collectionsArgs
             initViewState(args)
             loadData()
         }
-
     }
+
+
 
     private fun initViewState(args: CollectionsArgs) {
         updateState {
@@ -280,11 +296,10 @@ internal class CollectionsViewModel @Inject constructor(
         updateCollectionTree(collectionTree)
 
         if (viewState.collectionTree.collection(viewState.selectedCollectionId) == null) {
-            updateState {
-                copy(selectedCollectionId = CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
-            }
+            val collection = collectionTree.collections[CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)]!!
+            onItemTapped(collection)
         }
-        triggerEffect(CollectionsViewEffect.ScreenRefresh)
+//        triggerEffect(CollectionsViewEffect.ScreenRefresh)
     }
 
     fun onItemTapped(collection: Collection) {
@@ -313,11 +328,8 @@ internal class CollectionsViewModel @Inject constructor(
         triggerEffect(CollectionsViewEffect.ScreenRefresh)
     }
 
-    fun onItemLongTapped(collection: Collection) {
-
-    }
-
     override fun onCleared() {
+        EventBus.getDefault().unregister(this)
         allItems?.removeAllChangeListeners()
         unfiledItems?.removeAllChangeListeners()
         trashItems?.removeAllChangeListeners()
@@ -331,6 +343,87 @@ internal class CollectionsViewModel @Inject constructor(
             key = null,
             name = "",
             parent = null,
+        )
+        triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
+    }
+
+    fun onItemLongTapped(collection: org.zotero.android.sync.Collection) {
+        if (!viewState.library.metadataEditable) {
+            return
+        }
+        val actions = mutableListOf<LongPressOptionItem>()
+
+        when (collection.identifier) {
+            is CollectionIdentifier.collection -> {
+                actions.add(LongPressOptionItem.CollectionEdit(collection))
+                actions.add(LongPressOptionItem.CollectionNewSubCollection(collection))
+                actions.add(LongPressOptionItem.CollectionDelete(collection))
+            }
+            is CollectionIdentifier.custom -> {
+              //TODO
+                return
+            }
+            is CollectionIdentifier.search -> {
+                return
+            }
+        }
+            EventBus.getDefault().post(ShowDashboardLongPressBottomSheet(title = collection.name, longPressOptionItems = actions))
+
+    }
+
+    private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+        viewModelScope.launch {
+            when (longPressOptionItem) {
+                is LongPressOptionItem.CollectionEdit -> {
+                    onEdit(longPressOptionItem.collection)
+                }
+                is LongPressOptionItem.CollectionNewSubCollection -> {
+                    onAddSubcollection(longPressOptionItem.collection)
+                }
+                is LongPressOptionItem.CollectionDelete -> {
+                    deleteCollection(
+                        clazz = RCollection::class,
+                        listOf(longPressOptionItem.collection.identifier.keyGet!!)
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun deleteCollection(clazz: KClass<out RealmModel>, keys: List<String>) {
+        val request = MarkObjectsAsDeletedDbRequest(
+            clazz = clazz,
+            keys = keys,
+            libraryId = viewState.library.identifier
+        )
+        perform(
+            dbWrapper = dbWrapper,
+            request = request
+        ).ifFailure {
+            Timber.e(it, "CollectionsActionHandler: can't delete object")
+            updateState {
+                copy(error = CollectionsError.deletion)
+            }
+            return
+        }
+    }
+
+    private fun onEdit(collection: Collection) {
+        ScreenArguments.collectionEditArgs = CollectionEditArgs(
+            library = viewState.library,
+            key = collection.identifier.keyGet,
+            name = collection.name,
+            parent = null,
+        )
+        triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
+    }
+
+    private fun onAddSubcollection(collection: Collection) {
+        ScreenArguments.collectionEditArgs = CollectionEditArgs(
+            library = viewState.library,
+            key = null,
+            name = "",
+            parent = collection,
         )
         triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
     }

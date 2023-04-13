@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -99,7 +100,7 @@ private fun CollectionItem(
         modifier = rowModifier
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
+                indication = rememberRipple(),
                 onClick = { viewModel.onItemTapped(item.collection) },
                 onLongClick = { viewModel.onItemLongTapped(item.collection) }
             )

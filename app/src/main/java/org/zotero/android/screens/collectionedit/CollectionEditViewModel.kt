@@ -165,7 +165,7 @@ internal data class CollectionEditViewState(
 ) : ViewState {
     val isValid: Boolean
         get() {
-            return name.isEmpty()
+            return !name.isEmpty()
         }
 }
 

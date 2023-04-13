@@ -21,7 +21,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
@@ -166,13 +165,6 @@ internal fun AllItemsScreen(
             onAddManually = viewModel::onAddManually,
             onClose = viewModel::onAddBottomSheetCollapse,
             showBottomSheet = viewState.shouldShowAddBottomSheet
-        )
-
-        LongPressBottomSheet(
-            layoutType = layoutType,
-            longPressOptionsHolder = viewState.longPressOptionsHolder,
-            onCollapse = viewModel::dismissBottomSheet,
-            onOptionClick = viewModel::onLongPressOptionsItemSelected
         )
     }
 }

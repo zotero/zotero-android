@@ -60,6 +60,7 @@ import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.allitems.data.ItemsState
 import org.zotero.android.screens.collections.data.CollectionsArgs
+import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.itemdetails.data.DetailType
@@ -81,7 +82,6 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.attachmentprogress.State
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
-import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
@@ -144,6 +144,11 @@ internal class AllItemsViewModel @Inject constructor(
                 disable(filterResult.filter)
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: LongPressOptionItem) {
+        onLongPressOptionsItemSelected(event)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -991,13 +996,7 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowFilterEffect)
     }
 
-    fun dismissBottomSheet() {
-        updateState {
-            copy(longPressOptionsHolder = null)
-        }
-    }
-
-    fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+    private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
         viewModelScope.launch {
             when (longPressOptionItem) {
                 is LongPressOptionItem.MoveToTrashItem -> {
@@ -1050,17 +1049,15 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onItemLongTapped(item: RItem) {
         if (viewState.collection.identifier.isTrash) {
-            updateState {
-                copy(
-                    longPressOptionsHolder = LongPressOptionsHolder(
-                        title = item.displayTitle,
-                        longPressOptionItems = listOf(
-                            LongPressOptionItem.TrashRestore(item),
-                            LongPressOptionItem.TrashDelete(item)
-                        )
+            EventBus.getDefault().post(
+                ShowDashboardLongPressBottomSheet(
+                    title = item.displayTitle,
+                    longPressOptionItems = listOf(
+                        LongPressOptionItem.TrashRestore(item),
+                        LongPressOptionItem.TrashDelete(item)
                     )
                 )
-            }
+            )
             return
         }
 
@@ -1098,14 +1095,12 @@ internal class AllItemsViewModel @Inject constructor(
 
         actions.add(LongPressOptionItem.MoveToTrashItem(item))
 
-        updateState {
-            copy(
-                longPressOptionsHolder = LongPressOptionsHolder(
-                    title = item.displayTitle,
-                    longPressOptionItems = actions
-                )
+        EventBus.getDefault().post(
+            ShowDashboardLongPressBottomSheet(
+                title = item.displayTitle,
+                longPressOptionItems = actions
             )
-        }
+        )
     }
 
     fun delete(keys: Set<String>) {
@@ -1324,7 +1319,6 @@ internal data class AllItemsViewState(
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
-    val longPressOptionsHolder: LongPressOptionsHolder? = null,
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {

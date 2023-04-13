@@ -18,6 +18,7 @@ import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.collections.data.CollectionsArgs
+import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -26,6 +27,8 @@ import org.zotero.android.sync.conflictresolution.AskUserToResolveChangedDeleted
 import org.zotero.android.sync.conflictresolution.Conflict
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.sync.conflictresolution.ShowSimpleConflictResolutionDialog
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import timber.log.Timber
 import javax.inject.Inject
@@ -42,6 +45,18 @@ internal class DashboardViewModel @Inject constructor(
     fun onEvent(event: AskUserToResolveChangedDeletedItem) {
         updateState {
             copy(changedItemsDeletedAlertQueue = event.conflictDataList)
+        }
+    }
+
+    @Subscribe
+    fun onEvent(event: ShowDashboardLongPressBottomSheet) {
+        updateState {
+            copy(
+                longPressOptionsHolder = LongPressOptionsHolder(
+                    title = event.title,
+                    longPressOptionItems = event.longPressOptionItems
+                )
+            )
         }
     }
 
@@ -184,13 +199,23 @@ internal class DashboardViewModel @Inject constructor(
             )
         }
     }
+    fun dismissBottomSheet() {
+        updateState {
+            copy(longPressOptionsHolder = null)
+        }
+    }
+
+    fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+        EventBus.getDefault().post(longPressOptionItem)
+    }
 }
 
 internal data class DashboardViewState(
     val snackbarMessage: SnackbarMessage? = null,
     val conflictDialog: ConflictDialogData? = null,
-    val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList()
-) : ViewState
+    val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
+    val longPressOptionsHolder: LongPressOptionsHolder? = null,
+    ) : ViewState
 
 internal sealed class DashboardViewEffect : ViewEffect {
 }

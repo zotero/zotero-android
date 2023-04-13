@@ -86,4 +86,22 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.empty_trash
     )
 
+    data class CollectionDelete(val collection: org.zotero.android.sync.Collection) :
+        LongPressOptionItem(
+            titleId = Strings.delete,
+            textAndIconColor = CustomPalette.ErrorRed,
+            resIcon = Drawables.empty_trash
+        )
+
+    data class CollectionEdit(val collection: org.zotero.android.sync.Collection) :
+        LongPressOptionItem(
+            titleId = Strings.edit,
+            resIcon = Drawables.baseline_edit_24
+        )
+
+    data class CollectionNewSubCollection(val collection: org.zotero.android.sync.Collection) :
+        LongPressOptionItem(
+            titleId = Strings.new_sub_collection,
+            resIcon = Drawables.baseline_create_new_folder_24
+        )
 }

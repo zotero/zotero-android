@@ -121,4 +121,8 @@
     <string name="create_collection">Create Collection</string>
     <string name="edit_collection">Edit Collection</string>
 
+    <string name="delete_collection">Delete Collection</string>
+    <string name="delete_collection_and_items">Delete Collection and Items</string>
+    <string name="new_sub_collection">New Subcollection</string>
+
 </resources>

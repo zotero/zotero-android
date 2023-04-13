@@ -20,6 +20,7 @@ fun CancelSaveTitleTopBar(
     onCancel: (() -> Unit)? = null,
     onSave: (() -> Unit)? = null,
     onDone: (() -> Unit)? = null,
+    isSaveButtonEnabled: Boolean = true,
     backgroundColor: Color = CustomTheme.colors.surface,
 ) {
     CenterAlignedTopAppBar(
@@ -47,6 +48,7 @@ fun CancelSaveTitleTopBar(
             if (onSave != null) {
                 HeadingTextButton(
                     onClick = onSave,
+                    isEnabled = isSaveButtonEnabled,
                     text = stringResource(Strings.save),
                 )
                 Spacer(modifier = Modifier.width(8.dp))

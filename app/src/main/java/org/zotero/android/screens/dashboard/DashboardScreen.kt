@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import java.io.File
@@ -48,7 +49,7 @@ internal fun DashboardScreen(
         if (layoutType.isTablet()) {
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(0.3f)) {
-                    CollectionsAtRootNavigation()
+                    CollectionsAtRootNavigation(rightPaneNavController)
                 }
                 CustomDivider(
                     modifier = Modifier
@@ -96,6 +97,12 @@ internal fun DashboardScreen(
                 keepGroupChanges = viewModel::keepGroupChanges,
             )
         }
+        LongPressBottomSheet(
+            layoutType = layoutType,
+            longPressOptionsHolder = viewState.longPressOptionsHolder,
+            onCollapse = viewModel::dismissBottomSheet,
+            onOptionClick = viewModel::onLongPressOptionsItemSelected
+        )
     }
 
 }

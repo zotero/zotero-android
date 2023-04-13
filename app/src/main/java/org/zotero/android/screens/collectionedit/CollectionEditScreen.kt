@@ -87,6 +87,7 @@ internal fun CollectionEditScreen(
                 viewModel = viewModel,
             )
         }
+
     }
 }
 
@@ -96,7 +97,7 @@ private fun LazyListScope.displayFields(
     layoutType: LayoutType
 ) {
     item {
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(30.dp))
         FieldEditableRow(
             detailValue = viewState.name,
             onValueChange = viewModel::onNameChanged,
@@ -104,13 +105,26 @@ private fun LazyListScope.displayFields(
         )
     }
     item {
-        Spacer(modifier = Modifier.height(20.dp))
-        FieldTappableRow(
+        Spacer(modifier = Modifier.height(30.dp))
+        LibrarySelectorRow(
             viewState = viewState,
             layoutType = layoutType,
             onClick = viewModel::onParentClicked
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        if (viewState.key != null) {
+            Spacer(modifier = Modifier.height(30.dp))
+            FieldTappableRow(
+                title = stringResource(id = Strings.delete_collection),
+                layoutType = layoutType,
+                onClick = viewModel::delete
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            FieldTappableRow(
+                title = stringResource(id = Strings.delete_collection_and_items),
+                layoutType = layoutType,
+                onClick = viewModel::deleteWithItems
+            )
+        }
     }
 
 }
@@ -135,6 +149,7 @@ private fun FieldEditableRow(
                 .padding(start = 8.dp),
             value = detailValue,
             maxLines = 1,
+            singleLine = true,
             hint = stringResource(id = Strings.name),
             textColor = textColor,
             onValueChange = onValueChange,
@@ -145,7 +160,7 @@ private fun FieldEditableRow(
 }
 
 @Composable
-private fun FieldTappableRow(
+private fun LibrarySelectorRow(
     viewState: CollectionEditViewState,
     layoutType: LayoutType,
     onClick: () ->Unit,
@@ -202,6 +217,48 @@ private fun FieldTappableRow(
 
 
 @Composable
+private fun FieldTappableRow(
+    title: String,
+    layoutType: LayoutType,
+    onClick: () ->Unit,
+) {
+    Column(
+        modifier = Modifier
+            .background(
+                color = CustomTheme.colors.zoteroEditFieldBackground,
+                shape = RoundedCornerShape(size = 10.dp)
+            )
+            .safeClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(),
+                onClick = onClick
+            )
+    ) {
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+                text = title,
+                fontSize = layoutType.calculateTextSize(),
+                color = CustomTheme.colors.error,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+    }
+
+}
+
+
+@Composable
 private fun TopBar(
     onCancel: () -> Unit,
     onSave: () -> Unit,
@@ -211,6 +268,7 @@ private fun TopBar(
         title = stringResource(id = if(viewState.key != null) Strings.edit_collection else Strings.create_collection),
         onCancel = onCancel,
         onSave = onSave,
+        isSaveButtonEnabled = viewState.isValid
     )
 
 }

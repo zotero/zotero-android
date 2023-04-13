@@ -28,8 +28,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
  * if it's a tablet, then it only occupies the left portion of the screen.
  */
 @Composable
-internal fun CollectionsAtRootNavigation(
-) {
+internal fun CollectionsAtRootNavigation(rightPaneNavController: NavHostController) {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -42,6 +41,7 @@ internal fun CollectionsAtRootNavigation(
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         collectionAsRootGraph(
+            rightPaneNavController = rightPaneNavController,
             isTablet = isTablet,
             navController = navController,
             onBack = navigation::onBack,
@@ -53,10 +53,17 @@ fun NavGraphBuilder.collectionAsRootGraph(
     navController: NavHostController,
     onBack: () -> Unit,
     isTablet: Boolean,
+    rightPaneNavController: NavHostController? = null,
 ) {
     collectionsScreen(
         onBack = onBack,
-        navigateToAllItems = { toAllItems(navController, isTablet) },
+        navigateToAllItems = {
+            toAllItems(
+                navController = navController,
+                rightPaneNavController = rightPaneNavController,
+                isTablet = isTablet
+            )
+        },
         navigateToCollectionEditScreen = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_SCREEN) },
         navigateToCollectionEditDialog = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_DIALOG) }
     )
@@ -64,9 +71,13 @@ fun NavGraphBuilder.collectionAsRootGraph(
     collectionEditDialog()
 }
 
-private fun toAllItems(navController: NavHostController,isTablet: Boolean) {
+private fun toAllItems(
+    navController: NavHostController,
+    rightPaneNavController: NavHostController?,
+    isTablet: Boolean
+) {
     if (isTablet) {
-        navController.navigate(FullScreenDestinations.ALL_ITEMS) {
+        rightPaneNavController?.navigate(FullScreenDestinations.ALL_ITEMS) {
             popUpTo(0)
         }
     } else {

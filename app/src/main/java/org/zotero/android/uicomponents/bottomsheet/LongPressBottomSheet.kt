@@ -1,6 +1,8 @@
 package org.zotero.android.uicomponents.bottomsheet
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -42,14 +44,17 @@ internal fun LongPressBottomSheet(
 }
 
 @Composable
-private fun LongPressBottomSheetContent(
+private fun BoxScope.LongPressBottomSheetContent(
     layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder,
     onOptionClick: (LongPressOptionItem) -> Unit,
 ) {
-        Column(
-        ) {
-            Text(
+    Column(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth(if (layoutType.isTablet()) 0.5f else 1f),
+    ) {
+        Text(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(
