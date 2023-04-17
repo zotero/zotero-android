@@ -71,7 +71,7 @@ private fun EditingBottomPanel(
                 val isRestoreAndDeleteEnabled = !viewState.selectedItems.isEmpty()
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .size(layoutType.calculateItemsBottomSheetIconSize())
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -90,7 +90,7 @@ private fun EditingBottomPanel(
                 )
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .size(layoutType.calculateItemsBottomSheetIconSize())
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -121,7 +121,7 @@ private fun EditingBottomPanel(
 
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .size(layoutType.calculateItemsBottomSheetIconSize())
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -137,7 +137,7 @@ private fun EditingBottomPanel(
                 val isDeleteEnabled = !viewState.selectedItems.isEmpty()
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
+                        .size(layoutType.calculateItemsBottomSheetIconSize())
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -169,7 +169,7 @@ private fun BottomPanel(
         Icon(
             modifier = Modifier
                 .padding(end = 30.dp)
-                .size(layoutType.calculateItemsRowInfoIconSize())
+                .size(layoutType.calculateItemsBottomSheetIconSize())
                 .align(Alignment.CenterEnd)
                 .safeClickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -185,7 +185,7 @@ private fun BottomPanel(
         Icon(
             modifier = Modifier
                 .padding(start = 30.dp)
-                .size(layoutType.calculateItemsRowInfoIconSize())
+                .size(layoutType.calculateItemsBottomSheetIconSize())
                 .align(Alignment.CenterStart)
                 .safeClickable(
                     interactionSource = remember { MutableInteractionSource() },

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -21,8 +23,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -48,18 +54,26 @@ internal fun CreatorEditScreen(
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    val lastNameFocusRequester = remember { FocusRequester() }
+    val fullNameFocusRequester = remember { FocusRequester() }
     LaunchedEffect(key1 = viewModel) {
         viewModel.init()
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (val effect = viewEffect?.consume()) {
             null -> Unit
             is CreatorEditViewEffect.OnBack -> {
                 onBack()
             }
             is CreatorEditViewEffect.NavigateToSinglePickerScreen -> {
                 navigateToSinglePickerScreen()
+            }
+            is CreatorEditViewEffect.RequestFocus -> {
+                when (effect.field) {
+                    FocusField.FullName -> fullNameFocusRequester.requestFocus()
+                    FocusField.LastName -> lastNameFocusRequester.requestFocus()
+                }
             }
         }
     }
@@ -82,6 +96,8 @@ internal fun CreatorEditScreen(
                 viewState = viewState,
                 layoutType = layoutType,
                 viewModel = viewModel,
+                lastNameFocusRequester = lastNameFocusRequester,
+                fullNameFocusRequester = fullNameFocusRequester
             )
             item {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -111,7 +127,9 @@ internal fun CreatorEditScreen(
 private fun LazyListScope.displayFields(
     viewState: CreatorEditViewState,
     viewModel: CreatorEditViewModel,
-    layoutType: LayoutType
+    layoutType: LayoutType,
+    lastNameFocusRequester: FocusRequester,
+    fullNameFocusRequester: FocusRequester,
 ) {
     item {
         Spacer(modifier = Modifier.height(20.dp))
@@ -129,27 +147,35 @@ private fun LazyListScope.displayFields(
     if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.separate) {
         item {
             FieldEditableRow(
+                viewModel = viewModel,
                 detailTitle = stringResource(id = Strings.last_name),
                 detailValue = viewState.creator?.lastName ?: "",
                 onValueChange = viewModel::onLastNameChange,
-                layoutType = layoutType
+                layoutType = layoutType,
+                isLastField = false,
+                focusRequester = lastNameFocusRequester,
             )
         }
         item {
             FieldEditableRow(
+                viewModel = viewModel,
                 detailTitle = stringResource(id = Strings.first_name),
                 detailValue = viewState.creator?.firstName ?: "",
                 onValueChange = viewModel::onFirstNameChange,
-                layoutType = layoutType
+                layoutType = layoutType,
+                isLastField = true,
             )
         }
     } else {
         item {
             FieldEditableRow(
+                viewModel = viewModel,
                 detailTitle = stringResource(id = Strings.name),
                 detailValue = viewState.creator?.fullName ?: "",
                 onValueChange = viewModel::onFullNameChange,
-                layoutType = layoutType
+                layoutType = layoutType,
+                isLastField = true,
+                focusRequester = fullNameFocusRequester,
             )
         }
     }
@@ -159,9 +185,12 @@ private fun LazyListScope.displayFields(
 private fun FieldEditableRow(
     detailTitle: String,
     detailValue: String,
+    viewModel: CreatorEditViewModel,
     layoutType: LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     onValueChange: (String) -> Unit,
+    isLastField: Boolean,
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     Column {
         Spacer(modifier = Modifier.height(8.dp))
@@ -181,15 +210,48 @@ private fun FieldEditableRow(
             }
 
             Column(modifier = Modifier.padding(start = 12.dp)) {
-                CustomTextField(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    value = detailValue,
-                    hint = "",
-                    textColor = textColor,
-                    onValueChange = onValueChange,
-                    textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                )
+                if (isLastField) {
+                    CustomTextField(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        value = detailValue,
+                        hint = "",
+                        textColor = textColor,
+                        onValueChange = onValueChange,
+                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { viewModel.onSave() }
+                        ),
+                        onEnterOrTab = { viewModel.onSave() },
+                        focusRequester = focusRequester,
+                    )
+                } else {
+                    val focusManager = LocalFocusManager.current
+                    val moveFocusDownAction = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
+                    CustomTextField(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        value = detailValue,
+                        hint = "",
+                        textColor = textColor,
+                        onValueChange = onValueChange,
+                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        focusRequester = focusRequester,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { moveFocusDownAction() }
+                        ),
+                        onEnterOrTab = { moveFocusDownAction() },
+                    )
+                }
+
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

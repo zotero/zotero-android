@@ -2,6 +2,7 @@ package org.zotero.android.screens.creatoredit
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -40,6 +41,19 @@ internal class CreatorEditViewModel @Inject constructor(
         updateState {
             copy(itemType = args.itemType, creator = args.creator)
         }
+        focusFirstField()
+    }
+
+    private fun focusFirstField() {
+        viewModelScope.launch {
+            // delay is needed, otherwise the keyboard doesn't show
+            delay(200)
+            if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.separate) {
+                triggerEffect(CreatorEditViewEffect.RequestFocus(FocusField.LastName))
+            } else {
+                triggerEffect(CreatorEditViewEffect.RequestFocus(FocusField.FullName))
+            }
+        }
     }
 
     fun onSave() {
@@ -76,6 +90,7 @@ internal class CreatorEditViewModel @Inject constructor(
         updateState {
             copy(creator = updatedCreator)
         }
+        focusFirstField()
     }
 
     fun onCreatorTypeSelected(selectedCreatorType: String) {
@@ -142,4 +157,10 @@ internal data class CreatorEditViewState(
 internal sealed class CreatorEditViewEffect : ViewEffect {
     object OnBack: CreatorEditViewEffect()
     object NavigateToSinglePickerScreen: CreatorEditViewEffect()
+    data class RequestFocus(val field: FocusField) : CreatorEditViewEffect()
+}
+
+sealed class FocusField : ViewEffect {
+    object LastName : FocusField()
+    object FullName : FocusField()
 }

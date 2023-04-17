@@ -1,6 +1,7 @@
 package org.zotero.android.uicomponents.textinput
 
 import android.content.res.Configuration
+import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -28,12 +29,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
@@ -144,6 +147,7 @@ fun CustomTextField(
     value: String,
     hint: String,
     onValueChange: (String) -> Unit,
+    onEnterOrTab: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     errorText: String? = null,
@@ -154,6 +158,7 @@ fun CustomTextField(
     maxCharacters: Int = Int.MAX_VALUE,
     maxLines: Int = Int.MAX_VALUE,
     singleLine: Boolean = false,
+    ignoreTabsAndCaretReturns: Boolean = true,
     textColor: Color = CustomTheme.colors.primaryContent,
     textStyle: TextStyle = CustomTheme.typography.default,
     visualTransformation: VisualTransformation = VisualTransformation.None
@@ -161,6 +166,11 @@ fun CustomTextField(
     val innerModifier by remember {
         derivedStateOf { modifier.copyFillModifiers() }
     }
+
+    var textFieldValueState by remember {
+        mutableStateOf(TextFieldValue(text = value, selection = TextRange(value.length)))
+    }
+    val textFieldValue = textFieldValueState.copy(text = value)
 
     Column(
         modifier = modifier
@@ -175,15 +185,29 @@ fun CustomTextField(
     ) {
         val showHint = value.isEmpty()
         BasicTextField(
-            value = value,
+            value = textFieldValue,
             visualTransformation = visualTransformation,
             onValueChange = {
-                val boundedText = it.take(maxCharacters)
-                onValueChange(boundedText)
+                if (ignoreTabsAndCaretReturns && (it.text.contains("\n") || it.text.contains("\t"))) {
+                    return@BasicTextField
+                }
+                val boundedText = it.text.take(maxCharacters)
+                val newValue = it.copy(text = boundedText)
+                textFieldValueState = newValue
+                onValueChange(newValue.text)
             },
             modifier = Modifier
                 .focusRequester(focusRequester)
-                .then(innerModifier)
+                .then(innerModifier.onKeyEvent {
+                    if (onEnterOrTab != null
+                        && (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
+                                || it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_TAB)
+                    ) {
+                        onEnterOrTab()
+                        true
+                    }
+                    false
+                })
                 .placeCenterOfFirstAndLastLine(
                     maxLines = if (singleLine) 1 else maxLines,
                 ),

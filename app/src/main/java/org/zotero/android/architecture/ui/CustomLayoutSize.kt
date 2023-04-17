@@ -71,6 +71,13 @@ object CustomLayoutSize {
         fun calculateItemsRowInfoIconSize(): Dp {
             return when (this) {
                 big, medium -> 50.dp
+                small -> 24.dp
+            }
+        }
+
+        fun calculateItemsBottomSheetIconSize(): Dp {
+            return when (this) {
+                big, medium -> 50.dp
                 small -> 36.dp
             }
         }
@@ -86,6 +93,12 @@ object CustomLayoutSize {
             return when (this) {
                 big, medium -> 22.dp
                 small -> 18.dp
+            }
+        }
+        fun calculateItemsRowAccessoryInfoIconSize(): Dp {
+            return when (this) {
+                big, medium -> 28.dp
+                small -> 24.dp
             }
         }
 

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,8 +21,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -78,7 +83,6 @@ internal fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
-
             Column(
                 modifier = Modifier
                     .widthIn(max = 430.dp)
@@ -86,18 +90,45 @@ internal fun LoginScreen(
                     .padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
+                val focusManager = LocalFocusManager.current
+                val focusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
+                val moveFocusDownAction = {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }
                 CustomTextField(
                     value = viewState.username,
                     hint = stringResource(id = Strings.login_username),
-                    onValueChange = viewModel::onUsernameChanged
+                    onValueChange = viewModel::onUsernameChanged,
+                    maxLines = 1,
+                    singleLine = true,
+                    focusRequester = focusRequester,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { moveFocusDownAction() }
+                    ),
+                    onEnterOrTab = { moveFocusDownAction() }
                 )
                 CustomDivider(modifier = Modifier.padding(vertical = 16.dp))
                 CustomTextField(
                     value = viewState.password,
                     hint = stringResource(id = Strings.login_password),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    onValueChange = viewModel::onPasswordChanged
+                    onValueChange = viewModel::onPasswordChanged,
+                    maxLines = 1,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { viewModel.onSignInClicked() }
+                    ),
+                    onEnterOrTab = { viewModel.onSignInClicked() }
                 )
                 CustomDivider(modifier = Modifier.padding(vertical = 16.dp))
                 Spacer(modifier = Modifier.height(12.dp))

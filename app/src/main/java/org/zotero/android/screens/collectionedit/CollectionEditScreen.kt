@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -23,9 +25,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -100,7 +104,7 @@ private fun LazyListScope.displayFields(
         Spacer(modifier = Modifier.height(30.dp))
         FieldEditableRow(
             detailValue = viewState.name,
-            onValueChange = viewModel::onNameChanged,
+            viewModel  = viewModel,
             layoutType = layoutType
         )
     }
@@ -134,7 +138,7 @@ private fun FieldEditableRow(
     detailValue: String,
     layoutType: LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
-    onValueChange: (String) -> Unit,
+    viewModel: CollectionEditViewModel,
 ) {
     Column(
         modifier = Modifier.background(
@@ -143,6 +147,10 @@ private fun FieldEditableRow(
         )
     ) {
         Spacer(modifier = Modifier.height(10.dp))
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }
         CustomTextField(
             modifier = Modifier
                 .fillMaxSize()
@@ -151,9 +159,17 @@ private fun FieldEditableRow(
             maxLines = 1,
             singleLine = true,
             hint = stringResource(id = Strings.name),
+            focusRequester = focusRequester,
             textColor = textColor,
-            onValueChange = onValueChange,
+            onValueChange = viewModel::onNameChanged,
             textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { viewModel.onSave() }
+            ),
+            onEnterOrTab = { viewModel.onSave() }
         )
         Spacer(modifier = Modifier.height(10.dp))
     }

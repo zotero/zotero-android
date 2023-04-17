@@ -217,13 +217,15 @@ private fun RowScope.ItemRowRightPart(
         layoutType = layoutType
     )
     Spacer(modifier = Modifier.width(12.dp))
-    AnimatedContent(targetState = viewState.isEditing) { isEditing ->
+    AnimatedContent(
+        modifier = Modifier.align(Alignment.CenterVertically),
+        targetState = viewState.isEditing
+    ) { isEditing ->
         if (!isEditing) {
             Row {
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
-                        .align(Alignment.CenterVertically)
+                        .size(layoutType.calculateItemsRowAccessoryInfoIconSize())
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -231,7 +233,7 @@ private fun RowScope.ItemRowRightPart(
                                 viewModel.onAccessoryTapped(rItem)
                             }
                         ),
-                    painter = painterResource(id = Drawables.ic_exclamation_24dp),
+                    painter = painterResource(id = Drawables.accessory_icon),
                     contentDescription = null,
                     tint = CustomTheme.colors.zoteroBlueWithDarkMode
                 )
