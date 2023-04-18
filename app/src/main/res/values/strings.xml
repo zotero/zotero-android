@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Zotero Android</string>
     <string name="close">Close</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>

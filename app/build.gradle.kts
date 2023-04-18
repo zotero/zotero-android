@@ -20,94 +20,68 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")
-        buildConfigField ("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
-//        manifestPlaceholders([enableCrashReporting: "false"])
-        buildConfigField ("String", "BASE_API_URL", "\"https://api.zotero.org\"")
-                manifestPlaceholders["enableCrashReporting"] =  false
+        buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
+        buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
+        manifestPlaceholders["enableCrashReporting"] = false
     }
     signingConfigs {
         create("release") {
-//            storeFile = rootProject.file("release.keystore")
+            storeFile = rootProject.file("zotero.release.keystore")
 
-            //To be replaced before public release
-            storeFile = file("zotero.temp.keystore")
-            keyAlias = "zotero.temp.keystore"
-            storePassword =  "0uilyM8v9iPi"
-            keyPassword = "0uilyM8v9iPi"
+            if (rootProject.file("keystore-secrets.txt").exists()) {
+                val secrets: List<String> = rootProject
+                    .file("keystore-secrets.txt")
+                    .readLines()
+                keyAlias = secrets[0]
+                storePassword = secrets[1]
+                keyPassword = secrets[2]
+            }
         }
     }
     androidResources {
         noCompress ("ttf", "mov", "avi", "json", "html", "csv", "obb")
     }
     buildTypes {
-//        getByName("internalQAForDevug") {
-//            isDebuggable = true
-//            isMinifyEnabled = false
-//            resValue ("string", "application_name", "Zotero Dev")
-//            applicationIdSuffix = ".internaldev"
-//            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-//            signingConfigs
-//                .findByName("debug")
-//                ?.storeFile = rootProject.file("debug.keystore")
-//        manifestPlaceholders["enableCrashReporting"] =  false
-//        }
-//
-//        getByName("internalQA") {
-//            isDebuggable = false
-//            isMinifyEnabled = true
-//            resValue ("string", "application_name", "Zotero QA")
-//            applicationIdSuffix = ".internalqa"
-//            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-//            signingConfigs
-//                .findByName("debug")
-//                ?.storeFile = rootProject.file("debug.keystore")
-//            buildConfigField ("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-        //        manifestPlaceholders["enableCrashReporting"] =  true
-//
-//        }
-//
-//        getByName("earlyAccess") {
-//            isDebuggable = false
-//            isMinifyEnabled = true
-//            resValue ("string", "application_name", "Zotero Preview")
-//            applicationIdSuffix = ".internalqa"
-//            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-//            signingConfigs
-//                .findByName("debug")
-//                ?.storeFile = rootProject.file("debug.keystore")
-//            buildConfigField ("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-//            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
-        //        manifestPlaceholders["enableCrashReporting"] =  true
-//
-//        }
-//
-//        getByName("release") {
-//            isDebuggable = false
-//            isMinifyEnabled = true
-//            resValue("string", "application_name", "Zotero")
-//
-//            applicationIdSuffix = ".internalqa"
-//            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-//            signingConfigs
-//                .findByName("debug")
-//                ?.storeFile = rootProject.file("debug.keystore")
-//            buildConfigField ("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-//
-//            buildConfigField ("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-////            manifestPlaceholders = [enableCrashReporting: "true"]
-//
-//            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
-        //        manifestPlaceholders["enableCrashReporting"] =  true
-//
-//        }
+        getByName("debug") {
+            resValue("string", "app_name", "Zotero Debug")
+            isDebuggable = true
+            isMinifyEnabled = false
+            applicationIdSuffix = ".debug"
+            signingConfigs
+                .findByName("debug")
+                ?.storeFile = rootProject.file("debug.keystore")
+
+            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
+            manifestPlaceholders["enableCrashReporting"] = false
+        }
+        create("eBeta") {//prefix 'e' added for ordering in Android Studio Build Variant's menu
+            resValue("string", "app_name", "Zotero Beta")
+            isDebuggable = true
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getAt("release")
+
+            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
+            manifestPlaceholders["enableCrashReporting"] = true
+            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
+        }
+        getByName("release") {
+            resValue("string", "app_name", "Zotero")
+            isDebuggable = true
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getAt("release")
+
+            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
+            manifestPlaceholders["enableCrashReporting"] = true
+            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
+        }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = javaVersion.toString()
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.2.0-beta02"
@@ -116,27 +90,6 @@ android {
         viewBinding = true
         compose = true
     }
-//    packagingOptions {
-//        exclude('META-INF/rxkotlin.properties')
-//        exclude('META-INF/rxkotlin_main.kotlin_module')
-//    }
-//    packagingOptions {
-//        exclude('META-INF/DEPENDENCIES')
-//        exclude('META-INF/LICENSE')
-//        exclude('META-INF/LICENSE.txt')
-//        exclude( 'META-INF/license.txt')
-//        exclude( 'META-INF/NOTICE')
-//        exclude('META-INF/NOTICE.txt')
-//        exclude('META-INF/notice.txt')
-//        exclude('META-INF/ASL2.0')
-//        exclude("META-INF/*.kotlin_module")
-//        exclude( 'META-INF/io.netty.versions.properties')
-//        exclude('META-INF/INDEX.LIST')
-//        exclude( 'META-INF/rxjava.properties')
-//        exclude( 'META-INF/native-image/io.netty/transport/reflection-config.json')
-//        pickFirst = 'META-INF/native-image/io.netty/**/native-image.properties'
-//    }
-    
 }
 
 dependencies {

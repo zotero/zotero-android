@@ -7,5 +7,5 @@ pluginManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Zotero Android"
+rootProject.name = "Zotero"
 include("app")
