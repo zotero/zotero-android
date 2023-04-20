@@ -25,6 +25,11 @@ data class CollectionTree(
     fun set(collapsed: Boolean, identifier: CollectionIdentifier) {
         this.collapsed[identifier] = collapsed
     }
+    fun expandAllCollections() {
+        for (identifier in this.collections.keys()) {
+            set(false, identifier)
+        }
+    }
 
     fun append(collection: Collection, collapsed: Boolean = true) {
         this.collections[collection.identifier] = collection
@@ -124,4 +129,24 @@ data class CollectionTree(
         }
         return CollectionItemWithChildren(collection = currentCollection, children = children)
     }
+    fun parent(identifier: CollectionIdentifier): CollectionIdentifier? {
+        return firstNode(matching ={ node -> node.children.any{it.identifier == identifier } }, array = this.nodes)?.identifier
+    }
+
+    private fun firstNode(matching: (Node) -> Boolean, array: List<Node>): Node? {
+        val queue = array.toMutableList()
+        while (!queue.isEmpty()) {
+            val node = queue.removeFirst()
+
+            if (matching(node)) {
+                return node
+            }
+
+            if (!node.children.isEmpty()) {
+                queue.addAll(node.children)
+            }
+        }
+        return null
+    }
+
 }

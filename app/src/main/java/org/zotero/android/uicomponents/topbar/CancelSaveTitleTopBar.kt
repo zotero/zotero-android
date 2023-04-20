@@ -19,6 +19,7 @@ fun CancelSaveTitleTopBar(
     title: String? = null,
     onCancel: (() -> Unit)? = null,
     onSave: (() -> Unit)? = null,
+    onAdd: (() -> Unit)? = null,
     onDone: (() -> Unit)? = null,
     isSaveButtonEnabled: Boolean = true,
     backgroundColor: Color = CustomTheme.colors.surface,
@@ -45,6 +46,14 @@ fun CancelSaveTitleTopBar(
             }
         },
         actions = {
+            if (onAdd != null) {
+                HeadingTextButton(
+                    onClick = onAdd,
+                    isEnabled = isSaveButtonEnabled,
+                    text = stringResource(Strings.add),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
             if (onSave != null) {
                 HeadingTextButton(
                     onClick = onSave,

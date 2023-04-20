@@ -23,6 +23,7 @@ import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
+import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
@@ -409,11 +410,19 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     private fun onEdit(collection: Collection) {
+        val parentKey = viewState.collectionTree.parent(collection.identifier)?.keyGet
+        var parent: Collection? = null
+        if (parentKey != null) {
+            val request =
+                ReadCollectionDbRequest(libraryId = viewState.library.identifier, key = parentKey)
+            val rCollection = dbWrapper.realmDbStorage.perform(request = request)
+            parent = Collection.initWithCollection(objectS = rCollection, itemCount = 0)
+        }
         ScreenArguments.collectionEditArgs = CollectionEditArgs(
             library = viewState.library,
             key = collection.identifier.keyGet,
             name = collection.name,
-            parent = null,
+            parent = parent,
         )
         triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
     }

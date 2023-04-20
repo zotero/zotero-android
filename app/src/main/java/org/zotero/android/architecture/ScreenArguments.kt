@@ -3,6 +3,7 @@ package org.zotero.android.architecture
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
 import org.zotero.android.screens.filter.data.FilterArgs
@@ -26,4 +27,5 @@ object ScreenArguments {
     lateinit var singlePickerArgs: SinglePickerArgs
     lateinit var videoPlayerArgs: VideoPlayerArgs
     lateinit var imageViewerArgs: ImageViewerArgs
+    lateinit var collectionPickerArgs: CollectionPickerArgs
 }

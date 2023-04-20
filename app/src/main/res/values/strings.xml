@@ -123,5 +123,9 @@
     <string name="delete_collection">Delete Collection</string>
     <string name="delete_collection_and_items">Delete Collection and Items</string>
     <string name="new_sub_collection">New Subcollection</string>
-
+    <string name="zeroCollectionsSelected">Select a Collection</string>
+    <string name="oneCollectionsSelected">1 Collection Selected</string>
+    <string name="manyCollectionsSelected">%d Collections Selected</string>
+    <string name="collections_picker_title">Choose Parent</string>
+    <string name="collection_was_deleted">This collection has been deleted. Do you want to revert it?</string>
 </resources>

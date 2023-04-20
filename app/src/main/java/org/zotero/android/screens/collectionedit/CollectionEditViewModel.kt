@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collectionedit
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -7,7 +8,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -20,30 +20,36 @@ import org.zotero.android.database.requests.EditCollectionDbRequest
 import org.zotero.android.database.requests.MarkCollectionAndItemsAsDeletedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.screens.collectionedit.data.CollectionEditError
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerSingleResult
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
-import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
-import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
-import org.zotero.android.uicomponents.singlepicker.SinglePickerState
+import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreCollection
+import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
+import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 internal class CollectionEditViewModel @Inject constructor(
-    private val defaults: Defaults,
-    private val schemaController: SchemaController,
     private val dbWrapper: DbWrapper,
+    private val context: Context,
+    private val conflictResolutionUseCase: ConflictResolutionUseCase
 ) : BaseViewModel2<CollectionEditViewState, CollectionEditViewEffect>(CollectionEditViewState()) {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(singlePickerResult: SinglePickerResult) {
-        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.CreatorEdit) {
-            viewModelScope.launch {
-//                onCreatorTypeSelected(singlePickerResult.id)
-            }
+    fun onEvent(result: CollectionPickerSingleResult) {
+        updateState {
+            copy(parent = result.collection)
+        }
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: AskUserToDeleteOrRestoreCollection) {
+        updateState {
+            copy(error = CollectionEditError.askUserToDeleteOrRestoreCollection)
         }
     }
 
@@ -58,6 +64,8 @@ internal class CollectionEditViewModel @Inject constructor(
                 parent = args.parent
             )
         }
+        conflictResolutionUseCase.currentlyDisplayedCollectionLibraryIdentifier = viewState.library.identifier
+        conflictResolutionUseCase.currentlyDisplayedCollectionKey = viewState.key
     }
 
     fun onSave() {
@@ -90,25 +98,12 @@ internal class CollectionEditViewModel @Inject constructor(
         }
     }
 
-    fun createSinglePickerState(
-        itemType: String,
-        selected: String,
-    ): SinglePickerState {
-        val creators = schemaController.creators(itemType) ?: emptyList()
-        val items = creators.mapNotNull { creator ->
-            val name = schemaController.localizedCreator(creator.creatorType)
-            if (name == null) {
-                return@mapNotNull null
-            }
-            SinglePickerItem(id = creator.creatorType, name = name)
-        }
-        val state = SinglePickerState(objects = items, selectedRow = selected)
-        return state
-    }
-
     override fun onCleared() {
-        super.onCleared()
         EventBus.getDefault().unregister(this)
+        conflictResolutionUseCase.currentlyDisplayedCollectionLibraryIdentifier = null
+        conflictResolutionUseCase.currentlyDisplayedCollectionKey = null
+        super.onCleared()
+
     }
 
     private fun perform(request: DbRequest) {
@@ -147,7 +142,30 @@ internal class CollectionEditViewModel @Inject constructor(
     }
 
     fun onParentClicked() {
+        val selected = viewState.parent?.identifier?.keyGet ?: viewState.library.name
+        val excludedKeys = if (viewState.key == null) emptySet() else setOf(viewState.key!!)
 
+        ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
+            mode = CollectionPickerMode.single(title = context.getString(Strings.collections_picker_title)),
+            library = viewState.library,
+            excludedKeys = excludedKeys,
+            selected = setOf(selected)
+        )
+        triggerEffect(CollectionEditViewEffect.NavigateToCollectionPickerScreen)
+    }
+
+    fun onDismissErrorDialog() {
+        updateState {
+            copy(
+                error = null,
+            )
+        }
+    }
+    fun deleteOrRestoreCollection(isDelete: Boolean) {
+        conflictResolutionUseCase.deleteOrRestoreCollection(isDelete = isDelete)
+        if (isDelete) {
+            triggerEffect(CollectionEditViewEffect.OnBack)
+        }
     }
 }
 
@@ -171,5 +189,5 @@ internal data class CollectionEditViewState(
 
 internal sealed class CollectionEditViewEffect : ViewEffect {
     object OnBack : CollectionEditViewEffect()
-    object NavigateToLibraryPickerScreen : CollectionEditViewEffect()
+    object NavigateToCollectionPickerScreen : CollectionEditViewEffect()
 }

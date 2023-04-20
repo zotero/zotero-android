@@ -11,7 +11,9 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
+import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @Composable
 internal fun CollectionEditNavigation(scaffoldModifier: Modifier = Modifier) {
@@ -28,16 +30,16 @@ internal fun CollectionEditNavigation(scaffoldModifier: Modifier = Modifier) {
     ) {
         collectionEditScreen(
             onBack = navigation::onBack,
-            navigateToLibraryPickerScreen = navigation::toLibraryPickerScreen,
+            navigateToCollectionPickerScreen = navigation::toCollectionPickerScreen,
             scaffoldModifier = scaffoldModifier,
         )
-//        singlePickerScreen(onBack = navigation::onBack)
+        collectionPickerScreen(onBack = navigation::onBack)
     }
 }
 
 private fun NavGraphBuilder.collectionEditScreen(
     scaffoldModifier: Modifier,
-    navigateToLibraryPickerScreen: () -> Unit,
+    navigateToCollectionPickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -46,26 +48,26 @@ private fun NavGraphBuilder.collectionEditScreen(
     ) {
         CollectionEditScreen(
             onBack = onBack,
-            navigateToLibraryPickerScreen = navigateToLibraryPickerScreen,
+            navigateToCollectionPickerScreen = navigateToCollectionPickerScreen,
             scaffoldModifier = scaffoldModifier,
         )
     }
 }
 
-//private fun NavGraphBuilder.singlePickerScreen(
-//    onBack: () -> Unit,
-//) {
-//    composable(
-//        route = "${SINGLE_PICKER_SCREEN}",
-//        arguments = listOf(),
-//    ) {
-//        SinglePickerScreen(onCloseClicked = onBack)
-//    }
-//}
+private fun NavGraphBuilder.collectionPickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = CollectionEditDestinations.COLLECTION_PICKER_SCREEN,
+        arguments = listOf(),
+    ) {
+        CollectionPickerScreen(onBack = onBack)
+    }
+}
 
 private object CollectionEditDestinations {
     const val COLLECTION_EDIT = "collectionEdit"
-    const val LIBRARY_PICKER_SCREEN = "libraryPickerScreen"
+    const val COLLECTION_PICKER_SCREEN = "collectionPickerScreen"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -75,11 +77,7 @@ private class CreatorEditNavigation(
 ) {
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
 
-    fun toCreatorEdit() {
-        navController.navigate(CollectionEditDestinations.COLLECTION_EDIT)
-    }
-
-    fun toLibraryPickerScreen() {
-        navController.navigate(CollectionEditDestinations.LIBRARY_PICKER_SCREEN)
+    fun toCollectionPickerScreen() {
+        navController.navigate(CollectionEditDestinations.COLLECTION_PICKER_SCREEN)
     }
 }

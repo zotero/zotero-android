@@ -61,8 +61,12 @@ class ConflictResolutionUseCase @Inject constructor(
         searches = conflict.searches
         tags = conflict.tags
 
-        val key = showsItem(libraryId = libraryId)
-        if (key != null && toDeleteItems.contains(key)) {
+        val keyForShowingCollection = showsCollection(libraryId = libraryId)
+        val keyForShowingItem = showsItem(libraryId = libraryId)
+
+        if (keyForShowingCollection != null && toDeleteCollections.contains(keyForShowingCollection)) {
+            EventBus.getDefault().post(AskUserToDeleteOrRestoreCollection)
+        } else if (keyForShowingItem != null && toDeleteItems.contains(keyForShowingItem)) {
             EventBus.getDefault().post(AskUserToDeleteOrRestoreItem)
         } else {
             completeResolveObjectsRemovedRemotely()
@@ -95,6 +99,24 @@ class ConflictResolutionUseCase @Inject constructor(
             tags = tags,
         )
         syncUseCase.enqueueResolution(resolution)
+    }
+
+    var currentlyDisplayedCollectionLibraryIdentifier: LibraryIdentifier? = null
+    var currentlyDisplayedCollectionKey: String? = null
+
+    private fun showsCollection(libraryId: LibraryIdentifier): String? {
+        if (libraryId == currentlyDisplayedCollectionLibraryIdentifier) {
+            return currentlyDisplayedCollectionKey
+        }
+        return null
+    }
+    fun deleteOrRestoreCollection(isDelete: Boolean) {
+        if (!isDelete) {
+            val key = currentlyDisplayedCollectionKey!!
+            toRestoreCollections.add(key)
+            toDeleteCollections.remove(key)
+        }
+        completeResolveObjectsRemovedRemotely()
     }
 
     private lateinit var toDelete: MutableList<String>

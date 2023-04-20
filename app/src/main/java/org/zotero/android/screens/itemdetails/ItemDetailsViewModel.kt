@@ -1105,6 +1105,9 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun deleteOrRestoreItem(isDelete: Boolean) {
         conflictResolutionUseCase.deleteOrRestoreItem(isDelete = isDelete, key = viewState.key)
+        if (isDelete) {
+            triggerEffect(OnBack)
+        }
     }
 
     fun cancelPrompt() {

@@ -35,11 +35,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.CustomLayoutSize.LayoutType
+import org.zotero.android.screens.collectionedit.data.CollectionEditError
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.textinput.CustomTextField
+import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
@@ -47,7 +50,7 @@ import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 @Suppress("UNUSED_PARAMETER")
 internal fun CollectionEditScreen(
     onBack: () -> Unit,
-    navigateToLibraryPickerScreen: () -> Unit,
+    navigateToCollectionPickerScreen: () -> Unit,
     scaffoldModifier: Modifier,
     viewModel: CollectionEditViewModel = hiltViewModel(),
 ) {
@@ -64,8 +67,8 @@ internal fun CollectionEditScreen(
             is CollectionEditViewEffect.OnBack -> {
                 onBack()
             }
-            is CollectionEditViewEffect.NavigateToLibraryPickerScreen -> {
-                navigateToLibraryPickerScreen()
+            is CollectionEditViewEffect.NavigateToCollectionPickerScreen -> {
+                navigateToCollectionPickerScreen()
             }
         }
     }
@@ -91,7 +94,14 @@ internal fun CollectionEditScreen(
                 viewModel = viewModel,
             )
         }
-
+        val error = viewState.error
+        if (error != null) {
+            CollectionEditErrorDialogs(
+                error = error,
+                onDismissErrorDialog = viewModel::onDismissErrorDialog,
+                deleteOrRestoreItem = viewModel::deleteOrRestoreCollection
+            )
+        }
     }
 }
 
@@ -286,5 +296,33 @@ private fun TopBar(
         onSave = onSave,
         isSaveButtonEnabled = viewState.isValid
     )
-
 }
+
+@Composable
+internal fun CollectionEditErrorDialogs(
+    error: CollectionEditError,
+    onDismissErrorDialog: () -> Unit,
+    deleteOrRestoreItem: (isDelete: Boolean) -> Unit,
+) {
+    when (error) {
+        is CollectionEditError.askUserToDeleteOrRestoreCollection -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.deletedTitle),
+                description = stringResource(
+                    id = Strings.collection_was_deleted,
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.yes),
+                    onClick = { deleteOrRestoreItem(false) }
+                ),
+                secondaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.delete),
+                    textColor = CustomPalette.ErrorRed,
+                    onClick = { deleteOrRestoreItem(true) }
+                ),
+                onDismiss = onDismissErrorDialog
+            )
+        }
+    }
+}
+
