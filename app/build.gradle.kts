@@ -16,7 +16,7 @@ android {
         minSdk = 23
         targetSdk = 33
         versionCode = 6
-        versionName = "1.06"
+        versionName = "1.07"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")
