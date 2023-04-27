@@ -22,8 +22,7 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 internal fun CollectionsScreen(
     onBack: () -> Unit,
     navigateToAllItems: () -> Unit,
-    navigateToCollectionEditScreen: () -> Unit,
-    navigateToCollectionEditDialog: () -> Unit,
+    navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -39,14 +38,7 @@ internal fun CollectionsScreen(
             CollectionsViewEffect.NavigateBack -> onBack()
             CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
             CollectionsViewEffect.ShowCollectionEditEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToCollectionEditScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToCollectionEditDialog()
-                    }
-                }
+                navigateToCollectionEdit()
             }
         }
     }

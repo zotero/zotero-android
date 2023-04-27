@@ -29,13 +29,11 @@ import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 @Composable
 fun SinglePickerScreen(
     onCloseClicked: () -> Unit,
-    scaffoldModifier: Modifier = Modifier,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val pickerArgs = ScreenArguments.singlePickerArgs
     val singlePickerState = pickerArgs.singlePickerState
     CustomScaffold(
-        modifier = scaffoldModifier,
         topBar = {
             TopBar(
                 title = pickerArgs.title,

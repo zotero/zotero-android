@@ -19,6 +19,7 @@ import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
 import org.zotero.android.database.requests.StoreSearchesDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
@@ -33,6 +34,7 @@ class RevertLibraryUpdatesSyncAction(
     private val dbWrapper: DbWrapper,
     private val fileStorage: FileStore,
     private val schemaController: SchemaController,
+    private val dateParser: DateParser,
     private val gson: Gson,
     private val collectionResponseMapper: CollectionResponseMapper,
     private val searchResponseMapper: SearchResponseMapper,
@@ -76,6 +78,7 @@ class RevertLibraryUpdatesSyncAction(
                 val storeItemsRequest = StoreItemsDbResponseRequest(
                     responses = items.first,
                     schemaController = this.schemaController,
+                    dateParser = this.dateParser,
                     preferResponseData = true
                 )
                 changes =

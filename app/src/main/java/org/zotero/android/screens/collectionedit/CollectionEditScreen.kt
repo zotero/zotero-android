@@ -51,7 +51,6 @@ import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 internal fun CollectionEditScreen(
     onBack: () -> Unit,
     navigateToCollectionPickerScreen: () -> Unit,
-    scaffoldModifier: Modifier,
     viewModel: CollectionEditViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -73,7 +72,6 @@ internal fun CollectionEditScreen(
         }
     }
     CustomScaffold(
-        modifier = scaffoldModifier,
         topBar = {
             TopBar(
                 onCancel = onBack,

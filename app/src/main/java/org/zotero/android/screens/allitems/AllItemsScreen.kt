@@ -18,6 +18,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
@@ -26,6 +29,7 @@ import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.textinput.SearchBar
+import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
 @Composable
@@ -37,16 +41,13 @@ internal fun AllItemsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateToCollectionsScreen: () -> Unit,
-    navigateToSinglePickerScreen: () -> Unit,
-    navigateToSinglePickerDialog: () -> Unit,
-    navigateToAllItemsSortScreen: () -> Unit,
-    navigateToAllItemsSortDialog: () -> Unit,
+    navigateToSinglePicker: () -> Unit,
+    navigateToAllItemsSort: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
-    navigateToFilterScreen: () -> Unit,
-    navigateToFilterDialog: () -> Unit,
+    navigateToTagFilter: () -> Unit,
     onShowPdf: (file: File) -> Unit,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -63,34 +64,13 @@ internal fun AllItemsScreen(
             is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
             is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
             AllItemsViewEffect.ShowFilterEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToFilterScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToFilterDialog()
-                    }
-                }
+                navigateToTagFilter()
             }
             AllItemsViewEffect.ShowItemTypePickerEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToSinglePickerScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToSinglePickerDialog()
-                    }
-                }
+                navigateToSinglePicker()
             }
             AllItemsViewEffect.ShowSortPickerEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToAllItemsSortScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToAllItemsSortDialog()
-                    }
-                }
+                navigateToAllItemsSort()
             }
             AllItemsViewEffect.ScreenRefresh -> {
                 //no-op
@@ -121,51 +101,65 @@ internal fun AllItemsScreen(
             )
         },
     ) {
-        BaseLceBox(
-            modifier = Modifier.fillMaxSize(),
-            lce = viewState.lce,
-            error = { lceError ->
-                FullScreenError(
-                    modifier = Modifier.align(Alignment.Center),
-                    errorTitle = stringResource(id = Strings.all_items_load_error),
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(viewState.isRefreshing),
+            onRefresh = viewModel::startSync,
+            indicator = { state, trigger ->
+                SwipeRefreshIndicator(
+                    state = state,
+                    refreshTriggerDistance = trigger,
+                    scale = true,
+                    contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
                 )
-            },
-            loading = {
-                CircularLoading()
-            },
-        ) {
-            AllItemsBottomPanel(layoutType, viewState, viewModel)
-            Column(
-                modifier = Modifier
-                    .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-            ) {
-                CustomDivider()
-                AllItemsSearchBar(
-                    viewState = viewState,
-                    viewModel = viewModel
-                )
-                CustomDivider()
-                AllItemsTable(viewState, layoutType, viewModel)
             }
-        }
+        ) {
+            BaseLceBox(
+                modifier = Modifier.fillMaxSize(),
+                lce = viewState.lce,
+                error = { lceError ->
+                    FullScreenError(
+                        modifier = Modifier.align(Alignment.Center),
+                        errorTitle = stringResource(id = Strings.all_items_load_error),
+                    )
+                },
+                loading = {
+                    CircularLoading()
+                },
+            ) {
+                AllItemsBottomPanel(layoutType, viewState, viewModel)
+                Column(
+                    modifier = Modifier
+                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
+                ) {
+                    CustomDivider()
+                    AllItemsSearchBar(
+                        viewState = viewState,
+                        viewModel = viewModel
+                    )
+                    CustomDivider()
+                    AllItemsTable(viewState, layoutType, viewModel)
+                }
+            }
 
-        val itemsError = viewState.error
-        if (itemsError != null) {
-            ShowErrorOrDialog(
-                itemsError = itemsError,
-                onDismissDialog = viewModel::onDismissDialog,
-                onDeleteItems = { viewModel.delete(it) },
-                onEmptyTrash = { viewModel.emptyTrash() }
+            val itemsError = viewState.error
+            if (itemsError != null) {
+                ShowErrorOrDialog(
+                    itemsError = itemsError,
+                    onDismissDialog = viewModel::onDismissDialog,
+                    onDeleteItems = { viewModel.delete(it) },
+                    onEmptyTrash = { viewModel.emptyTrash() }
+                )
+            }
+
+            AllItemsAddBottomSheet(
+                onAddFile = onPickFile,
+                onAddNote = viewModel::onAddNote,
+                onAddManually = viewModel::onAddManually,
+                onClose = viewModel::onAddBottomSheetCollapse,
+                showBottomSheet = viewState.shouldShowAddBottomSheet
             )
         }
 
-        AllItemsAddBottomSheet(
-            onAddFile = onPickFile,
-            onAddNote = viewModel::onAddNote,
-            onAddManually = viewModel::onAddManually,
-            onClose = viewModel::onAddBottomSheetCollapse,
-            showBottomSheet = viewState.shouldShowAddBottomSheet
-        )
     }
 }
 

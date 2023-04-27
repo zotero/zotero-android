@@ -78,6 +78,7 @@ import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileDeletedNotification
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.ItemDetailCreateDataResult
 import org.zotero.android.sync.ItemDetailDataCreator
 import org.zotero.android.sync.KeyGenerator
@@ -114,7 +115,8 @@ class ItemDetailsViewModel @Inject constructor(
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
     private val fileCleanupController: AttachmentFileCleanupController,
-    private val conflictResolutionUseCase: ConflictResolutionUseCase
+    private val conflictResolutionUseCase: ConflictResolutionUseCase,
+    private val dateParser: DateParser,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -311,6 +313,7 @@ class ItemDetailsViewModel @Inject constructor(
                         schemaController = this.schemaController,
                         fileStorage = this.fileStore,
                         urlDetector = this.urlDetector,
+                        dateParser = this.dateParser,
                         doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
                 }
                 is DetailType.preview -> {
@@ -334,6 +337,7 @@ class ItemDetailsViewModel @Inject constructor(
                         schemaController = this.schemaController,
                         fileStorage = this.fileStore,
                         urlDetector = this.urlDetector,
+                        dateParser = this.dateParser,
                         doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
                 }
             }
@@ -353,6 +357,7 @@ class ItemDetailsViewModel @Inject constructor(
             attachments = data.attachments,
             notes = data.notes,
             tags = data.tags,
+            dateParser = this.dateParser,
             schemaController = this.schemaController,
             fileStore = fileStore
         )
@@ -396,6 +401,7 @@ class ItemDetailsViewModel @Inject constructor(
             val (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
                 ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
                 schemaController = this@ItemDetailsViewModel.schemaController,
+                dateParser = this@ItemDetailsViewModel.dateParser,
                 fileStorage = this@ItemDetailsViewModel.fileStore,
                 urlDetector = this@ItemDetailsViewModel.urlDetector,
                 doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
@@ -571,7 +577,14 @@ class ItemDetailsViewModel @Inject constructor(
         )
 
         if (field.key == FieldKeys.Item.date || field.baseField == FieldKeys.Item.date) {
-            //TODO parse order
+            val order = this.dateParser.parse(value)?.orderWithSpaces
+            if (order != null) {
+                val info = (field.additionalInfo ?: emptyMap()).toMutableMap()
+                info[ItemDetailField.AdditionalInfoKey.dateOrder] = order
+                field.additionalInfo = info
+            } else if (field.additionalInfo != null) {
+                field.additionalInfo = null
+            }
         } else if (field.additionalInfo != null) {
             field.additionalInfo = null
         }
@@ -617,7 +630,12 @@ class ItemDetailsViewModel @Inject constructor(
             val date = parseDateSpecialValue(field.value)
             if (date != null) {
                 field.value = fullDateWithDashes.format(date)
-                //TODO parse date order
+                val order = this.dateParser.parse(field.value)?.orderWithSpaces
+                if (order != null) {
+                    val mutableAdditionalInfo = (field.additionalInfo ?: emptyMap()).toMutableMap()
+                    mutableAdditionalInfo[ItemDetailField.AdditionalInfoKey.dateOrder] = order
+                    field.additionalInfo = mutableAdditionalInfo
+                }
 
                 val updatedFieldsMap = viewState.data.fields.toMutableMap()
                 updatedFieldsMap[field.key] = field
@@ -663,7 +681,8 @@ class ItemDetailsViewModel @Inject constructor(
                 itemKey = viewState.key,
                 data = viewState.data,
                 snapshot = snapshot,
-                schemaController = this.schemaController
+                schemaController = this.schemaController,
+                dateParser = this.dateParser,
             )
             dbWrapper.realmDbStorage.perform(request = request)
         }
@@ -1043,7 +1062,8 @@ class ItemDetailsViewModel @Inject constructor(
             throw ItemDetailError.typeNotSupported(type)
         }
 
-        val (fieldIds, fields, hasAbstract) = ItemDetailDataCreator.fieldData(type,
+        val (fieldIds, fields, hasAbstract) = ItemDetailDataCreator.fieldData(
+            type,
             schemaController = this.schemaController,
             urlDetector = this.urlDetector,
             doiDetector = { FieldKeys.Item.isDoi(it) },
@@ -1062,7 +1082,9 @@ class ItemDetailsViewModel @Inject constructor(
                     return@fieldData null to field.value
                 }
                 return@fieldData null to null
-            })
+            },
+            dateParser = this.dateParser
+        )
 
         var data = originalData
             .deepCopy(

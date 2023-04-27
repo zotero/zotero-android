@@ -25,7 +25,6 @@ import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 @Suppress("UNUSED_PARAMETER")
 internal fun FilterScreen(
     onBack: () -> Unit,
-    scaffoldModifier: Modifier = Modifier,
     viewModel: FilterViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -44,7 +43,6 @@ internal fun FilterScreen(
         }
     }
     CustomScaffold(
-        modifier = scaffoldModifier,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
         topBar = {
             TopBar(

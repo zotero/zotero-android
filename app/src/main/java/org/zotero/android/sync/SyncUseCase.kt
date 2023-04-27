@@ -68,6 +68,7 @@ class SyncUseCase @Inject constructor(
     private val collectionResponseMapper: CollectionResponseMapper,
     private val searchResponseMapper: SearchResponseMapper,
     private val schemaController: SchemaController,
+    private val dateParser: DateParser,
     private val updatesResponseMapper: UpdatesResponseMapper,
     private val observable: SyncObservableEventStream,
     private val actionsCreator: ActionsCreator,
@@ -268,6 +269,7 @@ class SyncUseCase @Inject constructor(
             dbWrapper = this.dbWrapper,
             fileStorage = this.fileStore,
             schemaController = this.schemaController,
+            dateParser = this.dateParser,
             gson = gson,
             collectionResponseMapper = collectionResponseMapper,
             searchResponseMapper = searchResponseMapper,
@@ -294,10 +296,13 @@ class SyncUseCase @Inject constructor(
             dbStorage = this.dbWrapper,
             fileStorage = this.fileStore,
             schemaController = this.schemaController,
+            dateParser = this.dateParser,
             collectionResponseMapper = collectionResponseMapper,
             itemResponseMapper = itemResponseMapper,
-        searchResponseMapper = searchResponseMapper,
-        updatesResponseMapper = updatesResponseMapper, dispatcher = dispatcher).result()
+            searchResponseMapper = searchResponseMapper,
+            updatesResponseMapper = updatesResponseMapper,
+            dispatcher = dispatcher
+        ).result()
 
         if (actionResult !is CustomResult.GeneralSuccess) {
             //TODO report uploaded progress
@@ -361,6 +366,7 @@ class SyncUseCase @Inject constructor(
                 collectionResponseMapper = collectionResponseMapper,
                 searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
+                dateParser = this.dateParser,
                 dispatcher = dispatcher,
                 completion = { result ->
                     this.batchProcessor = null

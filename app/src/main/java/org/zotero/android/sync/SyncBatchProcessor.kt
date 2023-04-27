@@ -35,6 +35,7 @@ class SyncBatchProcessor(
     val collectionResponseMapper: CollectionResponseMapper,
     val searchResponseMapper: SearchResponseMapper,
     val schemaController: SchemaController,
+    val dateParser: DateParser,
     private val dispatcher: CoroutineDispatcher,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
@@ -212,7 +213,12 @@ class SyncBatchProcessor(
 
                 storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
 
-                val request = StoreItemsDbResponseRequest(responses = items, schemaController = this. schemaController, preferResponseData = true)
+                val request = StoreItemsDbResponseRequest(
+                    responses = items,
+                    schemaController = this.schemaController,
+                    dateParser = this.dateParser,
+                    preferResponseData = true
+                )
                 val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })

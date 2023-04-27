@@ -11,6 +11,10 @@ class ComponentDate(
     val year: Int,
     val order: String
 ) {
+    val orderWithSpaces: String get() {
+        return this.order.toCharArray().joinToString(separator = " ")
+    }
+
     val date: Date?
         get() {
             if (this.year > 0) {

@@ -15,7 +15,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @Composable
-internal fun SortPickerNavigation(scaffoldModifier: Modifier = Modifier) {
+internal fun SortPickerNavigation() {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -30,25 +30,22 @@ internal fun SortPickerNavigation(scaffoldModifier: Modifier = Modifier) {
         sortPickerScreen(
             onBack = navigation::onBack,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
         singlePickerScreen(onBack = navigation::onBack)
     }
 }
 
 private fun NavGraphBuilder.sortPickerScreen(
-    scaffoldModifier: Modifier,
     navigateToSinglePickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${SortPickerDestinations.SORT_PICKER}",
+        route = SortPickerDestinations.SORT_PICKER,
         arguments = listOf(),
     ) {
         SortPickerScreen(
             onBack = onBack,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
     }
 }
@@ -57,7 +54,7 @@ private fun NavGraphBuilder.singlePickerScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${SortPickerDestinations.SINGLE_PICKER_SCREEN}",
+        route = SortPickerDestinations.SINGLE_PICKER_SCREEN,
         arguments = listOf(),
     ) {
         SinglePickerScreen(onCloseClicked = onBack)
@@ -77,10 +74,10 @@ private class SortPickerNavigation(
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
 
     fun toSortPicker() {
-        navController.navigate("${SortPickerDestinations.SORT_PICKER}")
+        navController.navigate(SortPickerDestinations.SORT_PICKER)
     }
 
     fun toSinglePickerScreen() {
-        navController.navigate("${SortPickerDestinations.SINGLE_PICKER_SCREEN}")
+        navController.navigate(SortPickerDestinations.SINGLE_PICKER_SCREEN)
     }
 }

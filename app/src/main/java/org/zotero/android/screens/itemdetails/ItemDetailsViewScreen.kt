@@ -143,7 +143,8 @@ fun ListOfFieldRows(
             detailValue = value,
             layoutType = layoutType,
             textColor = textColor,
-            showDivider = false
+            showDivider = false,
+            additionalInfoString = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.dateOrder)
         )
     }
 }

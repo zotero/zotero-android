@@ -14,7 +14,7 @@ val shortDateFormat: SimpleDateFormat
 val dateFormatItemDetails: SimpleDateFormat
     @SuppressLint("SimpleDateFormat")
     get() = SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").apply {
-        timeZone = TimeZone.getTimeZone("UTC")
+//        timeZone = TimeZone.getTimeZone("UTC")
     }
 
 val iso8601DateFormat: SimpleDateFormat

@@ -13,10 +13,9 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
-import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @Composable
-internal fun CollectionEditNavigation(scaffoldModifier: Modifier = Modifier) {
+internal fun CollectionEditNavigation() {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -31,14 +30,12 @@ internal fun CollectionEditNavigation(scaffoldModifier: Modifier = Modifier) {
         collectionEditScreen(
             onBack = navigation::onBack,
             navigateToCollectionPickerScreen = navigation::toCollectionPickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
         collectionPickerScreen(onBack = navigation::onBack)
     }
 }
 
 private fun NavGraphBuilder.collectionEditScreen(
-    scaffoldModifier: Modifier,
     navigateToCollectionPickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -49,7 +46,6 @@ private fun NavGraphBuilder.collectionEditScreen(
         CollectionEditScreen(
             onBack = onBack,
             navigateToCollectionPickerScreen = navigateToCollectionPickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
     }
 }

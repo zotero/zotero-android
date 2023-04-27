@@ -25,20 +25,47 @@ object ItemDetailDataCreator {
         data class existing(val item: RItem, val ignoreChildren: Boolean): Kind()
     }
 
-    fun createData(type: Kind, schemaController: SchemaController, fileStorage: FileStore, urlDetector: UrlDetector, doiDetector: (String) -> Boolean): ItemDetailCreateDataResult{
+    fun createData(
+        type: Kind,
+        schemaController: SchemaController,
+        dateParser: DateParser,
+        fileStorage: FileStore,
+        urlDetector: UrlDetector,
+        doiDetector: (String) -> Boolean
+    ): ItemDetailCreateDataResult{
         when (type) {
             is Kind.new ->
-            return creationData(itemType = type.itemType, child = type.child, schemaController = schemaController,
-                urlDetector = urlDetector, doiDetector = doiDetector)
+            return creationData(
+                itemType = type.itemType,
+                child = type.child,
+                schemaController = schemaController,
+                dateParser = dateParser,
+                urlDetector = urlDetector,
+                doiDetector = doiDetector
+            )
             is Kind.existing ->
-            return itemData(item = type.item, ignoreChildren = type.ignoreChildren, schemaController = schemaController,
-                fileStorage = fileStorage, urlDetector = urlDetector, doiDetector = doiDetector)
+            return itemData(
+                item = type.item,
+                ignoreChildren = type.ignoreChildren,
+                schemaController = schemaController,
+                fileStorage = fileStorage,
+                urlDetector = urlDetector,
+                doiDetector = doiDetector,
+                dateParser = dateParser
+            )
         }
     }
 
-    private fun itemData(item: RItem, ignoreChildren: Boolean,schemaController: SchemaController,
-                         fileStorage: FileStore, urlDetector: UrlDetector, doiDetector: (String) -> Boolean)
-    : ItemDetailCreateDataResult {
+    private fun itemData(
+        item: RItem,
+        ignoreChildren: Boolean,
+        schemaController: SchemaController,
+        dateParser: DateParser,
+        fileStorage: FileStore,
+        urlDetector: UrlDetector,
+        doiDetector: (String) -> Boolean
+    )
+            : ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(item.rawType)
         if (localizedType == null) {
             throw ItemDetailError.typeNotSupported(item.rawType)
@@ -57,10 +84,16 @@ object ItemDetailDataCreator {
             }
         }
 
-        val (fieldIds, fields, _) = fieldData(item.rawType, schemaController = schemaController,
-            urlDetector = urlDetector, doiDetector = doiDetector, getExistingData = { key, _ ->
+        val (fieldIds, fields, _) = fieldData(
+            itemType = item.rawType,
+            schemaController = schemaController,
+            dateParser = dateParser,
+            urlDetector = urlDetector,
+            doiDetector = doiDetector,
+            getExistingData = { key, _ ->
                 return@fieldData null to values[key]
-        })
+            }
+        )
 
         var creatorIds = mutableListOf<UUID>()
         var creators = mutableMapOf<UUID, ItemDetailCreator>()
@@ -121,15 +154,27 @@ object ItemDetailDataCreator {
         return ItemDetailCreateDataResult(data, attachments, notes, tags)
     }
 
-    private fun creationData(itemType: String, child: Attachment?, schemaController: SchemaController, urlDetector: UrlDetector,
-    doiDetector: (String) -> Boolean): ItemDetailCreateDataResult {
+    private fun creationData(
+        itemType: String,
+        child: Attachment?,
+        schemaController: SchemaController,
+        dateParser: DateParser,
+        urlDetector: UrlDetector,
+        doiDetector: (String) -> Boolean
+    ): ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(itemType)
         if (localizedType == null) {
             Timber.e("ItemDetailDataCreator: schema not initialized - can't create localized type")
             throw ItemDetailError.cantCreateData
         }
 
-        val (fieldIds, fields, hasAbstract) = fieldData(itemType, schemaController = schemaController, urlDetector = urlDetector, doiDetector = doiDetector)
+        val (fieldIds, fields, hasAbstract) = fieldData(
+            itemType = itemType,
+            schemaController = schemaController,
+            dateParser = dateParser,
+            urlDetector = urlDetector,
+            doiDetector = doiDetector
+        )
             val date = Date()
             val attachments: List<Attachment> = child?.let { listOf(it)} ?: emptyList()
             val data = ItemDetailData(title = "",
@@ -147,8 +192,14 @@ object ItemDetailDataCreator {
             return ItemDetailCreateDataResult(data, attachments, emptyList(), emptyList())
         }
 
-    fun fieldData(itemType: String, schemaController: SchemaController, urlDetector: UrlDetector, doiDetector: (String) -> Boolean,
-        getExistingData: ((String, String?) -> Pair<String?, String?>)? = null): Triple<List<String>, Map<String, ItemDetailField>, Boolean> {
+    fun fieldData(
+        itemType: String,
+        schemaController: SchemaController,
+        dateParser: DateParser,
+        urlDetector: UrlDetector,
+        doiDetector: (String) -> Boolean,
+        getExistingData: ((String, String?) -> Pair<String?, String?>)? = null
+    ): Triple<List<String>, Map<String, ItemDetailField>, Boolean> {
         val fieldSchemas = schemaController.fields(itemType)?.toMutableList()
         if (fieldSchemas == null) {
             throw ItemDetailError.typeNotSupported(itemType)
@@ -181,7 +232,12 @@ object ItemDetailDataCreator {
             val isTappable = ItemDetailDataCreator.isTappable(key = key, value = value, urlDetector = urlDetector, doiDetector = doiDetector)
             var additionalInfo: Map<ItemDetailField.AdditionalInfoKey, String>? = null
 
-            //TODO Parse dateOrder
+            if (key == FieldKeys.Item.date || baseField == FieldKeys.Item.date) {
+                val order = dateParser.parse(value)?.orderWithSpaces
+                if (order != null) {
+                    additionalInfo = mapOf(ItemDetailField.AdditionalInfoKey.dateOrder to order)
+                }
+            }
 
             if (key == FieldKeys.Item.accessDate) {
                 if (value.isNotEmpty()) {

@@ -31,6 +31,7 @@ import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.PreconditionErrorType
 import org.zotero.android.sync.SchemaController
@@ -41,17 +42,18 @@ import timber.log.Timber
 import java.io.FileWriter
 
 class SubmitUpdateSyncAction(
-    val parameters:List<Map<String, Any>>,
-    val changeUuids:Map<String, List<String>>,
-    val sinceVersion:Int?,
-    val objectS:SyncObject,
-    val libraryId:LibraryIdentifier,
-    val userId:Long,
-    val updateLibraryVersion:Boolean,
-    val syncApi:SyncApi,
-    val dbStorage:DbWrapper,
-    val fileStorage:FileStore,
-    val schemaController:SchemaController,
+    val parameters: List<Map<String, Any>>,
+    val changeUuids: Map<String, List<String>>,
+    val sinceVersion: Int?,
+    val objectS: SyncObject,
+    val libraryId: LibraryIdentifier,
+    val userId: Long,
+    val updateLibraryVersion: Boolean,
+    val syncApi: SyncApi,
+    val dbStorage: DbWrapper,
+    val fileStorage: FileStore,
+    val schemaController: SchemaController,
+    val dateParser: DateParser,
     val updatesResponseMapper: UpdatesResponseMapper,
     val collectionResponseMapper: CollectionResponseMapper,
     val itemResponseMapper: ItemResponseMapper,
@@ -183,8 +185,13 @@ class SubmitUpdateSyncAction(
             for (response in changedItems) {
                 val changeUuids = this.changeUuids[response.key] ?: emptyList()
                 requests.add(
-                    MarkItemAsSyncedAndUpdateDbRequest(libraryId = this.libraryId, response = response,
-                    changeUuids = changeUuids, schemaController = this.schemaController)
+                    MarkItemAsSyncedAndUpdateDbRequest(
+                        libraryId = this.libraryId,
+                        response = response,
+                        changeUuids = changeUuids,
+                        schemaController = this.schemaController,
+                        dateParser = this.dateParser
+                    )
                 )
             }
         }

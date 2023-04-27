@@ -21,6 +21,7 @@ import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LinkMode
 import java.util.Date
 
@@ -537,6 +538,14 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         creatorSummary = CreatorSummaryFormatter.summary(this.creators)
         sortCreatorSummary = this.creatorSummary?.lowercase()
         hasCreatorSummary = this.creatorSummary != null
+    }
+
+    fun setDateFieldMetadata(date: String?, parser: DateParser) {
+        val components = date?.let { parser.parse(it)}
+        this.parsedYear = components?.year ?: 0
+        this.hasParsedYear = this.parsedYear != 0
+        this.parsedDate = components?.date
+        this.hasParsedDate = this.parsedDate != null
     }
 
 }

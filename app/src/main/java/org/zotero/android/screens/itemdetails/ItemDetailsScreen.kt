@@ -21,12 +21,9 @@ import java.io.File
 @Suppress("UNUSED_PARAMETER")
 internal fun ItemDetailsScreen(
     viewModel: ItemDetailsViewModel = hiltViewModel(),
-    navigateToCreatorEditScreen: () -> Unit,
-    navigateToCreatorEditDialog: () -> Unit,
-    navigateToTagPickerScreen: () -> Unit,
-    navigateToTagPickerDialog: () -> Unit,
-    navigateToSinglePickerScreen: () -> Unit,
-    navigateToSinglePickerDialog: () -> Unit,
+    navigateToCreatorEdit: () -> Unit,
+    navigateToTagPicker: () -> Unit,
+    navigateToSinglePicker: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
@@ -48,24 +45,10 @@ internal fun ItemDetailsScreen(
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
             ItemDetailsViewEffect.ShowCreatorEditEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToCreatorEditScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToCreatorEditDialog()
-                    }
-                }
+                navigateToCreatorEdit()
             }
             ItemDetailsViewEffect.ShowItemTypePickerEffect -> {
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToSinglePickerScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToSinglePickerDialog()
-                    }
-                }
+                navigateToSinglePicker()
             }
             ItemDetailsViewEffect.ScreenRefresh -> {
                 //no-op
@@ -92,19 +75,14 @@ internal fun ItemDetailsScreen(
             is ItemDetailsViewEffect.ShowImageViewer -> {
                 navigateToImageViewerScreen()
             }
+
             is ItemDetailsViewEffect.AddAttachment -> {
                 onPickFile()
             }
-            ItemDetailsViewEffect.ShowTagPickerEffect ->{
-                when (layoutType.showScreenOrDialog()) {
-                    CustomLayoutSize.ScreenOrDialogToShow.SCREEN -> {
-                        navigateToTagPickerScreen()
-                    }
-                    CustomLayoutSize.ScreenOrDialogToShow.DIALOG -> {
-                        navigateToTagPickerDialog()
-                    }
-                }
+            ItemDetailsViewEffect.ShowTagPickerEffect -> {
+                navigateToTagPicker()
             }
+
         }
     }
     CustomScaffold(

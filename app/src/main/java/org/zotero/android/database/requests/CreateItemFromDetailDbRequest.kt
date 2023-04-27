@@ -19,6 +19,7 @@ import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
@@ -35,6 +36,7 @@ class CreateItemFromDetailDbRequest(
     private val tags: List<Tag>,
     private val fileStore: FileStore,
     private val schemaController: SchemaController,
+    private val dateParser: DateParser,
 ): DbResponseRequest<RItem> {
     sealed class Error : Exception() {
         object alreadyExists : Error()
@@ -97,7 +99,7 @@ class CreateItemFromDetailDbRequest(
             if (field.key == FieldKeys.Item.title || field.baseField == FieldKeys.Item.title) {
                 item.baseTitle = field.value
             } else if (field.key == FieldKeys.Item.date) {
-                //TODO setDateFieldMetadata
+                item.setDateFieldMetadata(field.value, parser = this.dateParser)
             } else if (field.key == FieldKeys.Item.publisher || field.baseField == FieldKeys.Item.publisher) {
                 item.setP(publisher = field.value)
             } else if (field.key == FieldKeys.Item.publicationTitle || field.baseField == FieldKeys.Item.publicationTitle) {

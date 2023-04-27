@@ -55,6 +55,7 @@ internal fun FieldRow(
     layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     showDivider: Boolean,
+    additionalInfoString: String? = null,
     onDelete: (() -> Unit)? = null
 ) {
     Column {
@@ -96,6 +97,16 @@ internal fun FieldRow(
                     style = CustomTheme.typography.default,
                     fontSize = layoutType.calculateTextSize(),
                 )
+            }
+            if (additionalInfoString != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = additionalInfoString,
+                    color = CustomTheme.colors.secondaryContent,
+                    style = CustomTheme.typography.default,
+                    fontSize = layoutType.calculateTextSize(),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

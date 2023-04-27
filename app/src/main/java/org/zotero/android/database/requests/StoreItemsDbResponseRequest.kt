@@ -29,6 +29,7 @@ import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.RUser
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.NotePreviewGenerator
 import org.zotero.android.sync.SchemaController
@@ -39,7 +40,8 @@ import java.util.Date
 class StoreItemsDbResponseRequest(
     val responses: List<ItemResponse>,
     val schemaController: SchemaController,
-    val preferResponseData: Boolean
+    val dateParser: DateParser,
+    val preferResponseData: Boolean,
 ) : DbResponseRequest<StoreItemsResponse> {
     override val needsWrite: Boolean
         get() = true
@@ -53,6 +55,7 @@ class StoreItemsDbResponseRequest(
                 val (_, change) = StoreItemDbRequest(
                     response = response,
                     schemaController = this.schemaController,
+                    dateParser = this.dateParser,
                     preferRemoteData = this.preferResponseData
                 ).process(database)
                 if (change != null) {
@@ -76,6 +79,7 @@ class StoreItemDbRequest(
     val response: ItemResponse,
     val schemaController: SchemaController,
     val preferRemoteData: Boolean,
+    val dateParser: DateParser,
 ) : DbResponseRequest<
         Pair<RItem, StoreItemsResponse.FilenameChange?>> {
     override val needsWrite: Boolean
@@ -114,6 +118,7 @@ class StoreItemDbRequest(
             libraryId = libraryId,
             this.response,
             schemaController = this.schemaController,
+            dateParser = dateParser,
             database = database
         )
     }
@@ -125,6 +130,7 @@ class StoreItemDbRequest(
             libraryId: LibraryIdentifier,
             response: ItemResponse,
             schemaController: SchemaController,
+            dateParser: DateParser,
             database: Realm
         ): Pair<RItem, StoreItemsResponse.FilenameChange?> {
             var filenameChange: StoreItemsResponse.FilenameChange? = null
@@ -147,7 +153,8 @@ class StoreItemDbRequest(
                     data = response,
                     item = item,
                     database = database,
-                    schemaController = schemaController
+                    schemaController = schemaController,
+                    dateParser = dateParser,
                 )
                 syncParent(
                     key = response.parentKey,
@@ -207,7 +214,8 @@ class StoreItemDbRequest(
             data: ItemResponse,
             item: RItem,
             database: Realm,
-            schemaController: SchemaController
+            schemaController: SchemaController,
+            dateParser: DateParser,
         ): StoreItemsResponse.FilenameChange? {
             var oldName: String? = null
             var newName: String? = null
@@ -309,7 +317,7 @@ class StoreItemDbRequest(
                 }
             }
 
-//            item.setDateFieldMetadata //TODO
+            item.setDateFieldMetadata(date, parser = dateParser)
             item.setP(publisher = publisher)
             item.setPT(publicationTitle = publicationTitle)
             item.annotationSortIndex = sortIndex ?: ""

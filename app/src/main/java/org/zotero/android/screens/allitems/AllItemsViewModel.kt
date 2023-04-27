@@ -76,8 +76,11 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.LibrarySyncType
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SyncScheduler
+import org.zotero.android.sync.SyncType
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.attachmentprogress.State
@@ -102,6 +105,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val dispatchers: Dispatchers,
     private val fileCleanupController: AttachmentFileCleanupController,
+    private val syncScheduler: SyncScheduler
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
@@ -1289,6 +1293,27 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
     }
+
+    fun startSync() {
+        if (viewState.isRefreshing) {
+            return
+        }
+        updateState {
+            copy(isRefreshing = true)
+        }
+        this.syncScheduler.request(
+            type = SyncType.ignoreIndividualDelays, libraries = LibrarySyncType.specific(
+                listOf(viewState.library.identifier)
+            )
+        )
+        viewModelScope.launch {
+            //TODO monitor sync progress and don't sync when sync is in progress
+            delay(3000)
+            updateState {
+                copy(isRefreshing = false)
+            }
+        }
+    }
 }
 
 internal data class AllItemsViewState(
@@ -1319,6 +1344,7 @@ internal data class AllItemsViewState(
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
+    val isRefreshing: Boolean = false
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {

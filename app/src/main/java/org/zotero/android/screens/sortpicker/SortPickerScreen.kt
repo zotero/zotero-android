@@ -34,7 +34,6 @@ import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 internal fun SortPickerScreen(
     onBack: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
-    scaffoldModifier: Modifier,
     viewModel: SortPickerViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -56,7 +55,6 @@ internal fun SortPickerScreen(
         }
     }
     CustomScaffold(
-        modifier = scaffoldModifier,
         topBar = {
             TopBar(
                 onDone = viewModel::onDone,

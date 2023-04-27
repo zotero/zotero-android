@@ -12,6 +12,7 @@ import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
@@ -21,6 +22,7 @@ class EditItemFromDetailDbRequest(
     val data: ItemDetailData,
     val snapshot: ItemDetailData,
     private val schemaController: SchemaController,
+    private val dateParser: DateParser,
 ): DbRequest {
     override val needsWrite: Boolean
         get() = true
@@ -101,7 +103,7 @@ class EditItemFromDetailDbRequest(
 
             toRemove.forEach { field ->
                 if (field.key == FieldKeys.Item.date) {
-                    //TODO setDateFieldMetadata
+                    item.setDateFieldMetadata(null, parser = this.dateParser)
                 } else if (field.key == FieldKeys.Item.publisher || field.baseKey == FieldKeys.Item.publisher) {
                     item.setP(null)
                 } else if (field.key == FieldKeys.Item.publicationTitle || field.baseKey == FieldKeys.Item.publicationTitle) {
@@ -137,7 +139,7 @@ class EditItemFromDetailDbRequest(
                 if (field.isTitle) {
                     item.baseTitle = field.value
                 } else if (field.key == FieldKeys.Item.date) {
-                    //TODO setDateFieldMetadata
+                    item.setDateFieldMetadata(field.value, parser = this.dateParser)
                 } else if (field.key == FieldKeys.Item.publisher || field.baseField == FieldKeys.Item.publisher) {
                     item.setP(field.value)
                 } else if (field.key == FieldKeys.Item.publicationTitle || field.baseField == FieldKeys.Item.publicationTitle) {

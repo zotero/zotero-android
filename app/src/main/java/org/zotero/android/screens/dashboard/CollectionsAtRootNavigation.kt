@@ -3,22 +3,16 @@ package org.zotero.android.screens.dashboard
 
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.requiredHeightIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.dialog
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.architecture.ui.screenOrDialogFixedHeight
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
 import org.zotero.android.screens.collections.CollectionsScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -34,25 +28,25 @@ internal fun CollectionsAtRootNavigation(rightPaneNavController: NavHostControll
     val navigation = remember(navController) {
         CollectionsAtRootNavigation(navController, dispatcher)
     }
-    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+    val calculateLayoutType = CustomLayoutSize.calculateLayoutType()
     ZoteroNavHost(
         navController = navController,
         startDestination = CollectionsAtRootDestinations.COLLECTIONS_SCREEN,
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
-        collectionAsRootGraph(
+        collectionAtRootGraph(
             rightPaneNavController = rightPaneNavController,
-            isTablet = isTablet,
+            layoutType = calculateLayoutType,
             navController = navController,
             onBack = navigation::onBack,
         )
     }
 }
 
-fun NavGraphBuilder.collectionAsRootGraph(
+fun NavGraphBuilder.collectionAtRootGraph(
     navController: NavHostController,
     onBack: () -> Unit,
-    isTablet: Boolean,
+    layoutType: CustomLayoutSize.LayoutType,
     rightPaneNavController: NavHostController? = null,
 ) {
     collectionsScreen(
@@ -61,14 +55,17 @@ fun NavGraphBuilder.collectionAsRootGraph(
             toAllItems(
                 navController = navController,
                 rightPaneNavController = rightPaneNavController,
-                isTablet = isTablet
+                isTablet = layoutType.isTablet()
             )
         },
-        navigateToCollectionEditScreen = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_SCREEN) },
-        navigateToCollectionEditDialog = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_DIALOG) }
+        navigateToCollectionEdit = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT) },
     )
-    collectionEditScreen()
-    collectionEditDialog()
+    screenOrDialogFixedHeight(
+        route = CollectionsAtRootDestinations.COLLECTION_EDIT,
+        layoutType = layoutType,
+    ) {
+        CollectionEditNavigation()
+    }
 }
 
 private fun toAllItems(
@@ -90,51 +87,20 @@ private fun toAllItems(
 private fun NavGraphBuilder.collectionsScreen(
     onBack: () -> Unit,
     navigateToAllItems: () -> Unit,
-    navigateToCollectionEditScreen: () -> Unit,
-    navigateToCollectionEditDialog: () -> Unit,
+    navigateToCollectionEdit: () -> Unit,
 ) {
     composable(route = CollectionsAtRootDestinations.COLLECTIONS_SCREEN) {
         CollectionsScreen(
             onBack = onBack,
             navigateToAllItems = navigateToAllItems,
-            navigateToCollectionEditScreen = navigateToCollectionEditScreen,
-            navigateToCollectionEditDialog = navigateToCollectionEditDialog,
+            navigateToCollectionEdit = navigateToCollectionEdit,
         )
-    }
-}
-
-private fun NavGraphBuilder.collectionEditScreen(
-) {
-    composable(
-        route = CollectionsAtRootDestinations.COLLECTION_EDIT_SCREEN,
-        arguments = listOf(),
-    ) {
-        CollectionEditNavigation()
-    }
-}
-
-private fun NavGraphBuilder.collectionEditDialog(
-) {
-    dialog(
-        route = CollectionsAtRootDestinations.COLLECTION_EDIT_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            CollectionEditNavigation(scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp))
-        }
     }
 }
 
 private object CollectionsAtRootDestinations {
     const val COLLECTIONS_SCREEN = "collectionsScreen"
-    const val COLLECTION_EDIT_SCREEN = "collectionEditScreen"
-    const val COLLECTION_EDIT_DIALOG = "collectionDialog"
+    const val COLLECTION_EDIT = "collectionEdit"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -148,11 +114,7 @@ private class CollectionsAtRootNavigation(
         navController.navigate(CollectionsAtRootDestinations.COLLECTIONS_SCREEN)
     }
 
-    fun toCollectionEditScreen() {
-        navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_SCREEN)
-    }
-
-    fun toCollectionEditDialog() {
-        navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT_DIALOG)
+    fun toCollectionEdit() {
+        navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT)
     }
 }

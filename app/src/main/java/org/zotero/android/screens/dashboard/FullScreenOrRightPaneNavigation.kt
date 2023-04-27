@@ -5,22 +5,16 @@ import android.net.Uri
 import androidx.activity.OnBackPressedDispatcher
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.requiredHeightIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.dialog
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.architecture.ui.screenOrDialogDynamicHeight
+import org.zotero.android.architecture.ui.screenOrDialogFixedHeight
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
@@ -48,16 +42,16 @@ internal fun FullScreenOrRightPaneNavigation(
     navController: NavHostController,
     navigation: Navigation,
 ) {
-    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+    val layoutType = CustomLayoutSize.calculateLayoutType()
     ZoteroNavHost(
         navController = navController,
         startDestination = FullScreenDestinations.ALL_ITEMS,
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
-        collectionAsRootGraph(
+        collectionAtRootGraph(
             navController = navController,
             onBack = navigation::onBack,
-            isTablet = isTablet,
+            layoutType = layoutType,
         )
         loadingScreen()
         allItemsScreen(
@@ -68,23 +62,17 @@ internal fun FullScreenOrRightPaneNavigation(
             navigateToCollectionsScreen = navigation::toCollectionsScreen,
             navigateToItemDetails = navigation::toItemDetails,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
-            navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
-            navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
-            navigateToAllItemsSortScreen = navigation::toAllItemsSortScreen,
-            navigateToAllItemsSortDialog = navigation::toAllItemsSortDialog,
+            navigateToSinglePicker = navigation::toSinglePicker,
+            navigateToAllItemsSort = navigation::toAllItemsSort,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
-            navigateToFilterScreen = navigation::toFilterScreen,
-            navigateToFilterDialog = navigation::toFilterDialog,
+            navigateToTagFilter = navigation::toTagFilter,
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
-            navigateToCreatorEditScreen = navigation::toCreatorEditScreen,
-            navigateToCreatorEditDialog = navigation::toCreatorEditDialog,
-            navigateToTagPickerScreen = navigation::toTagPickerScreen,
-            navigateToTagPickerDialog = navigation::toTagPickerDialog,
-            navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
-            navigateToSinglePickerDialog = navigation::toSinglePickerDialog,
+            navigateToCreatorEdit = navigation::toCreatorEdit,
+            navigateToTagPicker = navigation::toTagPicker,
+            navigateToSinglePicker = navigation::toSinglePicker,
             navigateToAddOrEditNote = navigation::toAddOrEditNote,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
@@ -92,23 +80,46 @@ internal fun FullScreenOrRightPaneNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(CallPoint.ItemDetails) },
-            onShowPdf = onShowPdf
+            onShowPdf = onShowPdf,
         )
         addNoteScreen(
             onBack = navigation::onBack
         )
-        allItemsSortScreen()
-        allItemsSortDialog()
-        creatorEditScreen()
-        creatorEditDialog()
-        singlePickerScreen(onBack = navigation::onBack)
-        singlePickerDialog(onBack = navigation::onBack)
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)
-        toTagPickerScreen(onBack = navigation::onBack)
-        toTagPickerDialog(onBack = navigation::onBack)
-        toFilterScreen(onBack = navigation::onBack)
-        toFilterDialog(onBack = navigation::onBack)
+        screenOrDialogDynamicHeight(
+            route = FullScreenDestinations.TAG_PICKER,
+            layoutType = layoutType,
+        ) {
+            TagPickerScreen(onBack = navigation::onBack)
+        }
+
+        screenOrDialogFixedHeight(
+            route = FullScreenDestinations.TAG_FILTER,
+            layoutType = layoutType,
+        ) {
+            FilterScreen(onBack = navigation::onBack)
+        }
+        screenOrDialogFixedHeight(
+            route = FullScreenDestinations.ALL_ITEMS_SORT,
+            layoutType = layoutType,
+        ) {
+            SortPickerNavigation()
+        }
+        screenOrDialogFixedHeight(
+            route = FullScreenDestinations.CREATOR_EDIT,
+            layoutType = layoutType,
+        ) {
+            CreatorEditNavigation()
+        }
+        screenOrDialogDynamicHeight(
+            route = FullScreenDestinations.SINGLE_PICKER,
+            layoutType = layoutType,
+        ) {
+            SinglePickerScreen(
+                onCloseClicked = navigation::onBack,
+            )
+        }
     }
 }
 
@@ -117,14 +128,11 @@ private fun NavGraphBuilder.allItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
-    navigateToSinglePickerScreen: () -> Unit,
-    navigateToSinglePickerDialog: () -> Unit,
-    navigateToAllItemsSortScreen: () -> Unit,
-    navigateToAllItemsSortDialog: () -> Unit,
+    navigateToSinglePicker: () -> Unit,
+    navigateToAllItemsSort: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
-    navigateToFilterScreen: () -> Unit,
-    navigateToFilterDialog: () -> Unit,
+    navigateToTagFilter: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -143,26 +151,20 @@ private fun NavGraphBuilder.allItemsScreen(
             navigateToCollectionsScreen = navigateToCollectionsScreen,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
-            navigateToSinglePickerScreen = navigateToSinglePickerScreen,
-            navigateToSinglePickerDialog = navigateToSinglePickerDialog,
-            navigateToAllItemsSortScreen = navigateToAllItemsSortScreen,
-            navigateToAllItemsSortDialog = navigateToAllItemsSortDialog,
+            navigateToSinglePicker = navigateToSinglePicker,
+            navigateToAllItemsSort = navigateToAllItemsSort,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
-            navigateToFilterScreen = navigateToFilterScreen,
-            navigateToFilterDialog = navigateToFilterDialog,
+            navigateToTagFilter = navigateToTagFilter,
         )
     }
 }
 
 private fun NavGraphBuilder.itemDetailsScreen(
     onBack: () -> Unit,
-    navigateToCreatorEditScreen: () -> Unit,
-    navigateToCreatorEditDialog: () -> Unit,
-    navigateToTagPickerScreen: () -> Unit,
-    navigateToTagPickerDialog: () -> Unit,
-    navigateToSinglePickerScreen: () -> Unit,
-    navigateToSinglePickerDialog: () -> Unit,
+    navigateToCreatorEdit: () -> Unit,
+    navigateToTagPicker: () -> Unit,
+    navigateToSinglePicker: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
@@ -178,12 +180,9 @@ private fun NavGraphBuilder.itemDetailsScreen(
         ItemDetailsScreen(
             onBack = onBack,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
-            navigateToCreatorEditScreen = navigateToCreatorEditScreen,
-            navigateToCreatorEditDialog = navigateToCreatorEditDialog,
-            navigateToSinglePickerScreen = navigateToSinglePickerScreen,
-            navigateToSinglePickerDialog = navigateToSinglePickerDialog,
-            navigateToTagPickerScreen = navigateToTagPickerScreen,
-            navigateToTagPickerDialog = navigateToTagPickerDialog,
+            navigateToCreatorEdit = navigateToCreatorEdit,
+            navigateToSinglePicker = navigateToSinglePicker,
+            navigateToTagPicker = navigateToTagPicker,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             onOpenFile = onOpenFile,
@@ -238,161 +237,6 @@ private fun NavGraphBuilder.imageViewerScreen(
     }
 }
 
-private fun NavGraphBuilder.allItemsSortScreen(
-) {
-    composable(
-        route = FullScreenDestinations.ALL_ITEMS_SORT_SCREEN,
-        arguments = listOf(),
-    ) {
-        SortPickerNavigation()
-    }
-}
-
-private fun NavGraphBuilder.allItemsSortDialog(
-) {
-    dialog(
-        route = FullScreenDestinations.ALL_ITEMS_SORT_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            SortPickerNavigation(scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp))
-        }
-    }
-}
-
-private fun NavGraphBuilder.creatorEditScreen(
-) {
-    composable(
-        route = FullScreenDestinations.CREATOR_EDIT_SCREEN,
-        arguments = listOf(),
-    ) {
-        CreatorEditNavigation()
-    }
-}
-
-private fun NavGraphBuilder.creatorEditDialog(
-) {
-    dialog(
-        route = FullScreenDestinations.CREATOR_EDIT_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            CreatorEditNavigation(scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp))
-        }
-    }
-}
-
-private fun NavGraphBuilder.singlePickerScreen(
-    onBack: () -> Unit,
-) {
-    composable(
-        route = FullScreenDestinations.SINGLE_PICKER_SCREEN,
-        arguments = listOf(),
-    ) {
-        SinglePickerScreen(onCloseClicked = onBack)
-    }
-}
-
-private fun NavGraphBuilder.singlePickerDialog(
-    onBack: () -> Unit,
-) {
-    dialog(
-        route = FullScreenDestinations.SINGLE_PICKER_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            SinglePickerScreen(
-                onCloseClicked = onBack,
-                scaffoldModifier = Modifier.fillMaxHeight(0.8f)
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.toTagPickerScreen(
-    onBack: () -> Unit,
-) {
-    composable(
-        route = FullScreenDestinations.TAG_PICKER_SCREEN,
-        arguments = listOf(),
-    ) {
-        TagPickerScreen(onBack = onBack)
-    }
-}
-
-private fun NavGraphBuilder.toTagPickerDialog(
-    onBack: () -> Unit,
-) {
-    dialog(
-        route = FullScreenDestinations.TAG_PICKER_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            TagPickerScreen(
-                scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp),
-                onBack = onBack
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.toFilterScreen(
-    onBack: () -> Unit,
-) {
-    composable(
-        route = FullScreenDestinations.FILTER_SCREEN,
-        arguments = listOf(),
-    ) {
-        FilterScreen(onBack = onBack)
-    }
-}
-
-private fun NavGraphBuilder.toFilterDialog(
-    onBack: () -> Unit,
-) {
-    dialog(
-        route = FullScreenDestinations.FILTER_DIALOG,
-        dialogProperties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            FilterScreen(
-                scaffoldModifier = Modifier.requiredHeightIn(max = 400.dp),
-                onBack = onBack
-            )
-        }
-    }
-}
-
 object FullScreenDestinations {
     const val LOADING = "loading"
     const val COLLECTIONS_SCREEN = "collectionsScreen"
@@ -401,16 +245,11 @@ object FullScreenDestinations {
     const val ADD_NOTE = "addNote"
     const val VIDEO_PLAYER_SCREEN = "videoPlayerScreen"
     const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
-    const val ALL_ITEMS_SORT_SCREEN = "allItemsSortScreen"
-    const val ALL_ITEMS_SORT_DIALOG = "allItemsSortDialog"
-    const val CREATOR_EDIT_SCREEN = "creatorEditScreen"
-    const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
-    const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
-    const val SINGLE_PICKER_DIALOG = "singlePickerDialog"
-    const val TAG_PICKER_SCREEN = "tagPickerScreen"
-    const val TAG_PICKER_DIALOG = "tagPickerDialog"
-    const val FILTER_SCREEN = "tagFilterScreen"
-    const val FILTER_DIALOG = "tagFilterDialog"
+    const val ALL_ITEMS_SORT = "allItemsSort"
+    const val CREATOR_EDIT = "creatorEdit"
+    const val SINGLE_PICKER = "singlePicker"
+    const val TAG_PICKER = "tagPicker"
+    const val TAG_FILTER = "tagFilter"
 }
 
 @SuppressWarnings("UseDataClass")
@@ -436,36 +275,20 @@ class Navigation(
         navController.navigate(FullScreenDestinations.ADD_NOTE)
     }
 
-    fun toAllItemsSortScreen() {
-        navController.navigate(FullScreenDestinations.ALL_ITEMS_SORT_SCREEN)
+    fun toAllItemsSort() {
+        navController.navigate(FullScreenDestinations.ALL_ITEMS_SORT)
     }
 
-    fun toAllItemsSortDialog() {
-        navController.navigate(FullScreenDestinations.ALL_ITEMS_SORT_DIALOG)
+    fun toCreatorEdit() {
+        navController.navigate(FullScreenDestinations.CREATOR_EDIT)
     }
 
-    fun toCreatorEditScreen() {
-        navController.navigate(FullScreenDestinations.CREATOR_EDIT_SCREEN)
+    fun toTagPicker() {
+        navController.navigate(FullScreenDestinations.TAG_PICKER)
     }
 
-    fun toCreatorEditDialog() {
-        navController.navigate(FullScreenDestinations.CREATOR_EDIT_DIALOG)
-    }
-
-    fun toTagPickerScreen() {
-        navController.navigate(FullScreenDestinations.TAG_PICKER_SCREEN)
-    }
-
-    fun toTagPickerDialog() {
-        navController.navigate(FullScreenDestinations.TAG_PICKER_DIALOG)
-    }
-
-    fun toSinglePickerScreen() {
-        navController.navigate(FullScreenDestinations.SINGLE_PICKER_SCREEN)
-    }
-
-    fun toSinglePickerDialog() {
-        navController.navigate(FullScreenDestinations.SINGLE_PICKER_DIALOG)
+    fun toSinglePicker() {
+        navController.navigate(FullScreenDestinations.SINGLE_PICKER)
     }
 
     fun toVideoPlayerScreen() {
@@ -476,11 +299,7 @@ class Navigation(
         navController.navigate(FullScreenDestinations.IMAGE_VIEWER_SCREEN)
     }
 
-    fun toFilterScreen() {
-        navController.navigate(FullScreenDestinations.FILTER_SCREEN)
-    }
-
-    fun toFilterDialog() {
-        navController.navigate(FullScreenDestinations.FILTER_DIALOG)
+    fun toTagFilter() {
+        navController.navigate(FullScreenDestinations.TAG_FILTER)
     }
 }

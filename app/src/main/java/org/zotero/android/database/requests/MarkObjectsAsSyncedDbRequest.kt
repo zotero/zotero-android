@@ -16,6 +16,7 @@ import org.zotero.android.database.objects.RSearchChanges
 import org.zotero.android.database.objects.Syncable
 import org.zotero.android.database.objects.Updatable
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
@@ -95,6 +96,7 @@ class MarkItemAsSyncedAndUpdateDbRequest (
     val response: ItemResponse,
     val changeUuids: List<String>,
     val schemaController: SchemaController,
+    val dateParser: DateParser,
 ): DbRequest {
 
     override val needsWrite: Boolean
@@ -119,8 +121,14 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         val localChanges = item.changedFields
 
         if (localChanges.isEmpty()) {
-            StoreItemDbRequest.update(item = item, libraryId = this.libraryId, response,
-                schemaController = this.schemaController, database = database)
+            StoreItemDbRequest.update(
+                item = item,
+                libraryId = this.libraryId,
+                response = response,
+                schemaController = this.schemaController,
+                dateParser = this.dateParser,
+                database = database
+            )
             item.changeType = UpdatableChangeType.syncResponse.name
             return
         }
@@ -145,7 +153,13 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         }
 
         if (!localChanges.contains(RItemChanges.fields)) {
-            StoreItemDbRequest.syncFields(data = response, item = item, database = database, schemaController = this.schemaController)
+            StoreItemDbRequest.syncFields(
+                data = response,
+                item = item,
+                database = database,
+                schemaController = this.schemaController,
+                dateParser = this.dateParser
+            )
         }
 
         if (!localChanges.contains(RItemChanges.collections)) {

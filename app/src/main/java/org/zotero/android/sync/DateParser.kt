@@ -7,6 +7,7 @@ import org.zotero.android.database.requests.ComponentDate
 import timber.log.Timber
 import java.util.Collections
 import java.util.Locale
+import java.util.regex.MatchResult
 import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,20 +36,20 @@ class DateParser @Inject constructor() {
 
     private val partsExpression: Pattern?
         get() {
-            try {
-                return Pattern.compile(partsPattern)
+            return try {
+                Pattern.compile(partsPattern)
             } catch (e: Exception) {
                 Timber.e(e, "DateParser: can't create parts expression")
-                return null
+                null
             }
         }
     private val yearExpression: Pattern?
         get() {
-            try {
-                return Pattern.compile(yearPattern, Pattern.CASE_INSENSITIVE)
+            return try {
+                Pattern.compile(yearPattern, Pattern.CASE_INSENSITIVE)
             } catch (e: Exception) {
                 Timber.e(e, "DateParser: can't create year expression")
-                return null
+                null
             }
         }
 
@@ -92,15 +93,14 @@ class DateParser @Inject constructor() {
             return
         }
         val toMatchResult = matcher.toMatchResult()
-        val match = toMatchResult.group()
 
-        val preDatePart = substringOrNull(string, 1)
-        val datePart1 = substringOrNull(string, 2)
-        val separator1 = substringOrNull(string, 3)
-        val datePart2 = substringOrNull(string, 4)
-        val separator2 = substringOrNull(string, 5)
-        val datePart3 = substringOrNull(string, 6)
-        val postDatePart = substringOrNull(string, 7)
+        val preDatePart: String? = toMatchResult.substringOrNull(1)
+        val datePart1 = toMatchResult.substringOrNull(2)
+        val separator1 = toMatchResult.substringOrNull(3)
+        val datePart2 = toMatchResult.substringOrNull(4)
+        val separator2 = toMatchResult.substringOrNull(5)
+        val datePart3 = toMatchResult.substringOrNull(6)
+        val postDatePart = toMatchResult.substringOrNull(7)
 
         val shouldCheck =
             ((separator1.isJsNegative || separator2.isJsNegative)
@@ -125,13 +125,33 @@ class DateParser @Inject constructor() {
             parseData.year = year(datePart1)
 
             parseData.order =
-                if (parseData.year > 0) "y" else "" + if (parseData.month > 0) "m" else "" + if (parseData.day > 0) "d" else ""
-        } else if (datePart1?.isEmpty() == false && datePart2.isJsNegative && datePart3?.isEmpty() == false) {
+                (if (parseData.year > 0) {
+                    "y"
+                } else {
+                    ""
+                }) + (if (parseData.month > 0) {
+                    "m"
+                } else {
+                    ""
+                }) + (if (parseData.day > 0) {
+                    "d"
+                } else {
+                    ""
+                })
+        } else if (
+            datePart1?.isEmpty() == false
+            && datePart2.isJsNegative
+            && datePart3?.isEmpty() == false
+        ) {
             parseData.month = datePart1.asInt
             parseData.year = year(datePart3)
             parseData.order =
-                if (parseData.month > 0) "m" else "" + if (parseData.year > 0) "y" else ""
-        } else if (datePart1?.isEmpty() == false && datePart2.isJsNegative && datePart3.isJsNegative) {
+                (if (parseData.month > 0) "m" else "") + (if (parseData.year > 0) "y" else "")
+        } else if (
+            datePart1?.isEmpty() == false
+            && datePart2.isJsNegative
+            && datePart3.isJsNegative
+        ) {
             val value = datePart1.asInt
             if (value <= 12) {
                 parseData.month = value
@@ -154,18 +174,32 @@ class DateParser @Inject constructor() {
                     parseData.day = datePart2.asInt
                     parseData.month = datePart1.asInt
                     parseData.order =
-                        if (parseData.month > 0) "m" else "" + if (parseData.day > 0) "d" else ""
+                        (if (parseData.month > 0) {
+                            "m"
+                        } else {
+                            ""
+                        }) + (if (parseData.day > 0) {
+                            "d"
+                        } else {
+                            ""
+                        })
                 }
 
                 else -> {
                     parseData.day = datePart1.asInt
                     parseData.month = datePart2.asInt
                     parseData.order =
-                        if (parseData.day > 0) "d" else "" + if (parseData.month > 0) "m" else ""
+                        (if (parseData.day > 0) {
+                            "d"
+                        } else {
+                            ""
+                        }) + (if (parseData.month > 0) {
+                            "m"
+                        } else {
+                            ""
+                        })
                 }
-
             }
-
             parseData.year = year(datePart3)
             if (parseData.year > 0) {
                 parseData.order += "y"
@@ -192,7 +226,6 @@ class DateParser @Inject constructor() {
         }
 
         if (parseData.day <= 31 && parseData.month <= 12) {
-
             if (preDatePart != null) {
                 parseData.parts.add(Part(value = preDatePart, position = Part.Position.beginning))
             }
@@ -201,7 +234,11 @@ class DateParser @Inject constructor() {
             }
         } else {
             // Parsed values were invalid, reset and try parsing individual values below.
-            Timber.i("DateParser: partsExpression failed sanity check ('$string' -> ${parseData.day} | ${parseData.month} | ${parseData.year} | '${parseData.order}')")
+            Timber.i("DateParser: partsExpression failed sanity check " +
+                    "('$string' -> ${parseData.day} " +
+                    "| ${parseData.month} " +
+                    "| ${parseData.year} " +
+                    "| '${parseData.order}')")
             parseData.day = 0
             parseData.month = 0
             parseData.year = 0
@@ -216,11 +253,11 @@ class DateParser @Inject constructor() {
             .replace(
                 "months", months.joinToString(separator = "|")
             )
-        try {
-            return Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
+        return try {
+            Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
         } catch (e: Exception) {
             Timber.e(e, "DateParser: can't create month expression")
-            return null
+            null
         }
     }
 
@@ -291,10 +328,10 @@ class DateParser @Inject constructor() {
         val twoDigitYear = currentYear % 100
         val century = currentYear - twoDigitYear
 
-        if (year <= twoDigitYear) {
-            return century + year
+        return if (year <= twoDigitYear) {
+            century + year
         } else {
-            return century - 100 + year
+            century - 100 + year
         }
     }
 
@@ -332,23 +369,20 @@ class DateParser @Inject constructor() {
                 continue
             }
             val toMatchResult = matcher.toMatchResult()
-            val match = toMatchResult.group()
-            parseData.year = substringOrNull(part.value, 2).asInt
+            parseData.year = toMatchResult.substringOrNull(2).asInt
             if (parseData.year == 0) {
                 continue
             }
             parseData.order = update(parseData.order, part, "y")
-
-
             parseData.parts.removeAt(index)
             parseData.parts.addAll(
                 index = index, listOf(
                     Part(
-                        value = (substringOrNull(part.value, 1) ?: "").trim(),
+                        value = (toMatchResult.substringOrNull(1) ?: "").trim(),
                         position = Part.Position.beginning
                     ),
                     Part(
-                        value = (substringOrNull(part.value, 3) ?: "").trim(),
+                        value = (toMatchResult.substringOrNull(3) ?: "").trim(),
                         position = Part.Position.ending
                     )
                 )
@@ -370,9 +404,8 @@ class DateParser @Inject constructor() {
                 continue
             }
             val toMatchResult = matcher.toMatchResult()
-            val match = toMatchResult.group()
-            parseData.day = substringOrNull(match, 1)
-                ?.trim { "0123456789".reversed().contains(it) }?.toIntOrNull() ?: 0
+            parseData.day = toMatchResult.substringOrNull(1)
+                ?.trim { !"0123456789".reversed().contains(it) }?.toIntOrNull() ?: 0
 
             if (parseData.day == 0 || parseData.day > 31) {
                 continue
@@ -381,7 +414,7 @@ class DateParser @Inject constructor() {
             parseData.order = update(parseData.order, part, "d")
             val location = toMatchResult.start()
             var newPart: String = ""
-            val postPart = substringOrNull(match, 2)
+            val postPart = toMatchResult.substringOrNull(2)
             if (postPart != null) {
                 newPart = postPart
             }
@@ -405,9 +438,8 @@ class DateParser @Inject constructor() {
                 continue
             }
             val toMatchResult = matcher.toMatchResult()
-            val match = toMatchResult.group()
-            val monthString = substringOrNull(match, 2) ?: continue
-            val monthIndex = this.months.indexOf(monthString)
+            val monthString = toMatchResult.substringOrNull(2) ?: continue
+            val monthIndex = this.months.indexOf(monthString.lowercase())
             if (monthIndex == -1) {
                 break
             }
@@ -418,24 +450,17 @@ class DateParser @Inject constructor() {
             parseData.parts.addAll(
                 index = index, listOf(
                     Part(
-                        value = (substringOrNull(part.value, 1) ?: "").trim(),
+                        value = (toMatchResult.substringOrNull(1) ?: "").trim(),
                         position = Part.Position.before("m")
                     ),
                     Part(
-                        value = (substringOrNull(part.value, 3) ?: "").trim(),
+                        value = (toMatchResult.substringOrNull(3) ?: "").trim(),
                         position = Part.Position.after("m")
                     )
                 )
             )
             break
         }
-    }
-
-    private fun substringOrNull(str: String, pos: Int): String? {
-        if (pos < str.length) {
-            return null
-        }
-        return str.substring(2)
     }
 }
 
@@ -468,3 +493,7 @@ private val String?.asInt: Int
     get() {
         return this?.toIntOrNull() ?: 0
     }
+
+fun MatchResult.substringOrNull(pos: Int): String? {
+    return group(pos)
+}
