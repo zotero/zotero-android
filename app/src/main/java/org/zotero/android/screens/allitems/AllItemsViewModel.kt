@@ -311,7 +311,7 @@ internal class AllItemsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(file = file)
+                        showPdf(file = file, key = attachment.key, library = library)
                     }
                     "text/html", "text/plain" -> {
                         openFile(file = file, mime = contentType)
@@ -338,8 +338,8 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
 
-    private fun showPdf(file: File) {
-        triggerEffect(AllItemsViewEffect.ShowPdf(file))
+    private fun showPdf(file: File, key: String, library: Library) {
+        triggerEffect(AllItemsViewEffect.ShowPdf(file = file, key = key, library = library))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1358,6 +1358,6 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    data class ShowPdf(val file: File) : AllItemsViewEffect()
+    data class ShowPdf(val file: File, val key: String, val library: Library) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
 }

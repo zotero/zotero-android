@@ -48,6 +48,10 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(username, str) }
     }
 
+    fun getUsername(): String {
+        return sharedPreferences.getString(username, "" )!!
+    }
+
     fun setDisplayName(str: String) {
         sharedPreferences.edit { putString(displayName, str) }
     }

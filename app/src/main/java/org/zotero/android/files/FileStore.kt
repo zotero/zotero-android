@@ -14,6 +14,7 @@ import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.helpers.MimeType
+import org.zotero.android.pdf.PDFSettings
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
@@ -50,6 +51,7 @@ class FileStore @Inject constructor (
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
 
         private const val selectedCollectionId = "selectedCollectionId.bin"
+        private const val pdfSetting = "pdfSettings.bin"
     }
 
     fun init() {
@@ -353,6 +355,17 @@ class FileStore @Inject constructor (
         collectionIdentifier: CollectionIdentifier,
     ) {
         serializeToFile(selectedCollectionId, collectionIdentifier)
+    }
+
+    fun getPDFSettings(): PDFSettings {
+        return deserializeFromFile(pdfSetting)
+            ?: PDFSettings.default()
+    }
+
+    fun setPDFSettings(
+        pdfSettings: PDFSettings,
+    ) {
+        serializeToFile(pdfSetting, pdfSettings)
     }
 
     private fun serializeToFile(fileName: String, objectToSave: Any) {

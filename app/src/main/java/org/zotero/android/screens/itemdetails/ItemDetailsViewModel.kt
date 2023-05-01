@@ -1384,7 +1384,7 @@ class ItemDetailsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(file = file)
+                        showPdf(file = file, attachment = attachment)
                     }
                     "text/html", "text/plain" -> {
                         openFile(file = file, mime = contentType)
@@ -1411,8 +1411,12 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun showPdf(file: File) {
-        triggerEffect(ShowPdf(file))
+    private fun showPdf(file: File, attachment: Attachment) {
+        triggerEffect(ShowPdf(
+            file = file,
+            key = attachment.key,
+            library = viewState.library!!
+        ))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1751,7 +1755,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
-    data class ShowPdf(val file: File) : ItemDetailsViewEffect()
+    data class ShowPdf(val file: File, val key: String, val library: Library) : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
 }

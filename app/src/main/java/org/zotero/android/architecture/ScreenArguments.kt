@@ -1,5 +1,6 @@
 package org.zotero.android.architecture
 
+import org.zotero.android.pdf.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
@@ -28,4 +29,5 @@ object ScreenArguments {
     lateinit var videoPlayerArgs: VideoPlayerArgs
     lateinit var imageViewerArgs: ImageViewerArgs
     lateinit var collectionPickerArgs: CollectionPickerArgs
+    lateinit var pdfReaderArgs: PdfReaderArgs
 }

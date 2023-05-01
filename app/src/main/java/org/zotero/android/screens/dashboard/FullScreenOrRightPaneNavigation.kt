@@ -25,6 +25,7 @@ import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
+import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -37,7 +38,7 @@ import java.io.File
 internal fun FullScreenOrRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (file: File) -> Unit,
+    onShowPdf: (file: File, key: String, library: Library) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navController: NavHostController,
     navigation: Navigation,
@@ -136,7 +137,7 @@ private fun NavGraphBuilder.allItemsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (file: File) -> Unit,
+    onShowPdf: (file: File, key: String, library: Library) -> Unit,
 ) {
     composable(
         route = FullScreenDestinations.ALL_ITEMS,
@@ -171,7 +172,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (file: File) -> Unit,
+    onShowPdf: (file: File, key: String, library: Library) -> Unit,
 ) {
     composable(
         route = FullScreenDestinations.ITEM_DETAILS,

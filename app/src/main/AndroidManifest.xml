@@ -17,6 +17,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:icon,android:theme, android:label, android:allowBackup, android:supportsRtl"
+        android:largeHeap="true"
         tools:targetApi="n">
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
@@ -66,6 +67,10 @@
 
         <activity
             android:name="com.pspdfkit.ui.PdfActivity"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name=".pdf.PdfReaderActivity"
             android:windowSoftInputMode="adjustNothing" />
 
         <provider

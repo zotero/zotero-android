@@ -22,6 +22,7 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
@@ -48,7 +49,7 @@ internal fun AllItemsScreen(
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToTagFilter: () -> Unit,
-    onShowPdf: (file: File) -> Unit,
+    onShowPdf: (file: File, key: String, library: Library) -> Unit,
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
@@ -81,7 +82,7 @@ internal fun AllItemsScreen(
             )
             is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.uri)
             is AllItemsViewEffect.ShowPdf -> {
-                onShowPdf(consumedEffect.file)
+                onShowPdf(consumedEffect.file, consumedEffect.key, consumedEffect.library)
             }
             is AllItemsViewEffect.ShowVideoPlayer -> {
                 navigateToVideoPlayerScreen()

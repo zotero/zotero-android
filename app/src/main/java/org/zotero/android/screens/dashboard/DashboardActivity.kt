@@ -13,8 +13,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
-import com.pspdfkit.configuration.activity.PdfActivityConfiguration
-import com.pspdfkit.ui.PdfActivity
 import dagger.hilt.android.AndroidEntryPoint
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
@@ -22,6 +20,10 @@ import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
+import org.zotero.android.architecture.ScreenArguments
+import org.zotero.android.pdf.PdfReaderActivity
+import org.zotero.android.pdf.PdfReaderArgs
+import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -64,10 +66,16 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
-        val onShowPdf: (file: File) -> Unit = { file ->
+        val onShowPdf: (file: File, key: String, library: Library) -> Unit = { file, key, library ->
             val uri = Uri.fromFile(file)
-            val config = PdfActivityConfiguration.Builder(this).build()
-            PdfActivity.showDocument(this, uri, config)
+            ScreenArguments.pdfReaderArgs = PdfReaderArgs(
+                key = key,
+                library = library,
+                page = null,
+                preselectedAnnotationKey = null,
+                uri = uri,
+            )
+            startActivity(PdfReaderActivity.getIntent(this@DashboardActivity))
         }
 
         setContent {
