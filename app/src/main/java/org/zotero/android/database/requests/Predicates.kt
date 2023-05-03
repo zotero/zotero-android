@@ -110,6 +110,21 @@ fun <T> RealmQuery<T>.baseKey(baseKey: String): RealmQuery<T> {
     return equalTo("baseKey", baseKey)
 }
 
+fun <T> RealmQuery<T>.parentLibrary(identifier: LibraryIdentifier): RealmQuery<T> {
+    return when (identifier) {
+        is LibraryIdentifier.custom -> equalTo("parent.customLibraryKey", identifier.type.name)
+        is LibraryIdentifier.group -> equalTo("parent.groupKey", identifier.groupId)
+    }
+}
+
+fun <T> RealmQuery<T>.parent(parentKey: String, libraryId: LibraryIdentifier): RealmQuery<T> {
+    return beginGroup()
+        .parentLibrary(libraryId)
+        .and()
+        .equalTo("parent.key", parentKey)
+        .endGroup()
+}
+
 fun <T> RealmQuery<T>.parentKey(parentKey: String): RealmQuery<T> {
     return equalTo("parentKey", parentKey)
 }
@@ -267,15 +282,16 @@ fun <T> RealmQuery<T>.items(
     notSyncState: ObjectSyncState,
     trash: Boolean? = null
 ): RealmQuery<T> {
-    var predicates = item(type = type)
-        .and()
-        .notSyncState(notSyncState)
+    var predicates =
+        beginGroup().item(type = type)
+            .and()
+            .notSyncState(notSyncState)
     if (trash != null) {
         predicates = predicates
             .and()
             .isTrash(trash)
     }
-    return predicates
+    return predicates.endGroup()
 }
 
 fun <T> RealmQuery<T>.changedByUser(

@@ -56,6 +56,10 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(displayName, str) }
     }
 
+    fun getDisplayName(): String {
+        return sharedPreferences.getString(displayName, "" )!!
+    }
+
     fun setApiToken(str: String?) {
         sharedPreferences.edit { putString(apiToken, str) }
     }
