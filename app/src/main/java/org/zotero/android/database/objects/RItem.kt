@@ -23,6 +23,7 @@ import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LinkMode
+import timber.log.Timber
 import java.util.Date
 
 enum class RItemChanges {
@@ -546,6 +547,14 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         this.hasParsedYear = this.parsedYear != 0
         this.parsedDate = components?.date
         this.hasParsedDate = this.parsedDate != null
+    }
+
+    fun fieldValue(key: String): String? {
+        val value = this.fields.where().key(key).findFirst()?.value
+        if (value == null) {
+            Timber.e("DatabaseAnnotation: missing value for `$key`")
+        }
+        return value
     }
 
 }

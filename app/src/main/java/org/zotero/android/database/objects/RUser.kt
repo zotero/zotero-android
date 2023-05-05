@@ -7,7 +7,7 @@ import io.realm.annotations.PrimaryKey
 
 open class RUser : RealmObject() {
     @PrimaryKey
-    var identifier: Int = 0
+    var identifier: Long = 0
     var name: String = ""
     var username: String = ""
 

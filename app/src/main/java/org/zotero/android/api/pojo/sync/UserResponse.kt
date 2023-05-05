@@ -1,7 +1,7 @@
 package org.zotero.android.api.pojo.sync
 
 data class UserResponse(
-    val id: Int,
+    val id: Long,
     val name: String,
     val username: String,
 

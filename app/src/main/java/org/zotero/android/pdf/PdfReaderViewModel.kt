@@ -39,6 +39,7 @@ internal class PdfReaderViewModel @Inject constructor(
 
     fun init(document: PdfDocument) = initOnce {
         initState(document)
+//        loadDocumentData()
     }
 
     private fun initState(document: PdfDocument) {
@@ -100,7 +101,7 @@ internal class PdfReaderViewModel @Inject constructor(
         library: Library,
         username: String,
         displayName: String
-    ): Any {
+    ): Map<String, DocumentAnnotation> {
         val annotations = mutableMapOf<String, DocumentAnnotation>()
         val pdfAnnotations = document.annotationProvider
             .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
@@ -131,7 +132,7 @@ internal class PdfReaderViewModel @Inject constructor(
     private fun loadDocumentData() {
         val key = viewState.key
         val library = viewState.library
-        val dbResult = loadAnnotationsAndPage(key =key, library = library)
+        val dbResult = loadAnnotationsAndPage(key = key, library = library)
 
         when (dbResult) {
             is CustomResult.GeneralSuccess -> {
@@ -140,9 +141,23 @@ internal class PdfReaderViewModel @Inject constructor(
                 this.liveAnnotations?.removeAllChangeListeners()
                 observe(liveAnnotations)
                 val databaseAnnotations = liveAnnotations.freeze()
-                val documentAnnotations = loadAnnotations(viewState.document!!, library = library, username = viewState.username, displayName = viewState.displayName)
-
+                val documentAnnotations = loadAnnotations(
+                    viewState.document!!,
+                    library = library,
+                    username = viewState.username,
+                    displayName = viewState.displayName
+                )
+                val dbToPdfAnnotations = AnnotationConverter.annotations(
+                    databaseAnnotations,
+                    isDarkMode = false,
+                    currentUserId = viewState.userId,
+                    library = library,
+                    displayName = viewState.displayName,
+                    username = viewState.username,
+                    boundingBoxConverter = annotationBoundingBoxConverter
+                )
             }
+
             is CustomResult.GeneralError.CodeError -> {
 
             }

@@ -75,8 +75,7 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
 
     override fun onDocumentLoaded(document: PdfDocument) {
         viewModel.init(document)
-        createStamp()
-
+//        createStamp()
     }
 
     private fun createStamp() {
@@ -95,12 +94,12 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
 
     private fun addAnnotationToDocument(annotation: Annotation) {
         fragment.addAnnotationToPage(annotation, false)
-//        fragment.document
-//            ?.annotationProvider
-//            ?.addAnnotationToPageAsync(annotation)
-//            ?.subscribe {
-//                 fragment.notifyAnnotationHasChanged(annotation)
-//             }
+        fragment.document
+            ?.annotationProvider
+            ?.addAnnotationToPageAsync(annotation)
+            ?.subscribe {
+                 fragment.notifyAnnotationHasChanged(annotation)
+             }
     }
 
     private fun updatePdfConfiguration() {

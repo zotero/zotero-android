@@ -13,4 +13,5 @@ object AnnotationsConfig {
     )
     val keyKey = "Zotero:Key"
     val noteAnnotationSize = Pair(22F, 22F)
+    val imageAnnotationLineWidth = 2F
 }
