@@ -13,9 +13,12 @@ data class DocumentAnnotation(
     val rects: List<RectF>,
     val paths: List<List<PointF>>,
     val lineWidth: Float?,
+    val author : String,
+    val isAuthor : Boolean,
     val color: String,
     val comment: String,
     val text: String?,
+    val sortIndex: String,
     val dateModified: Date,
 ) {
     val readerKey: AnnotationKey

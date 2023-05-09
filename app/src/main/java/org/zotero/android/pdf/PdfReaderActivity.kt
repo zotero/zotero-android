@@ -2,12 +2,8 @@ package org.zotero.android.pdf
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.RectF
 import android.os.Bundle
 import androidx.activity.viewModels
-import com.pspdfkit.annotations.Annotation
-import com.pspdfkit.annotations.StampAnnotation
 import com.pspdfkit.configuration.PdfConfiguration
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.listeners.DocumentListener
@@ -75,31 +71,6 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
 
     override fun onDocumentLoaded(document: PdfDocument) {
         viewModel.init(document)
-//        createStamp()
-    }
-
-    private fun createStamp() {
-        val document: PdfDocument = fragment.document ?: return
-        val pageIndex: Int = fragment.getPageIndex()
-        val pageSize = document.getPageSize(pageIndex)
-        val halfWidth = pageSize.width / 2
-        val halfHeight = pageSize.height / 2
-        val rect = RectF(halfWidth - 100, halfHeight + 100, halfWidth + 100, halfHeight - 100)
-        val stamp = StampAnnotation(pageIndex, rect, "STAMP_SUBJECT")
-        val color = Color.rgb(255, 0, 0)
-        stamp.color = color
-        stamp.fillColor = Color.rgb(255, 255, 255)
-        addAnnotationToDocument(stamp)
-    }
-
-    private fun addAnnotationToDocument(annotation: Annotation) {
-        fragment.addAnnotationToPage(annotation, false)
-        fragment.document
-            ?.annotationProvider
-            ?.addAnnotationToPageAsync(annotation)
-            ?.subscribe {
-                 fragment.notifyAnnotationHasChanged(annotation)
-             }
     }
 
     private fun updatePdfConfiguration() {

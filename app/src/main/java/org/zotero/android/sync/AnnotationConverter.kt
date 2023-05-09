@@ -22,6 +22,7 @@ import org.zotero.android.pdf.DatabaseAnnotation
 import org.zotero.android.pdf.DocumentAnnotation
 import java.util.Date
 import java.util.EnumSet
+import kotlin.math.roundToInt
 
 class AnnotationConverter {
     enum class Kind {
@@ -252,8 +253,17 @@ class AnnotationConverter {
             val page = annotation.pageIndex
             val pageLabel =
                 document.getPageLabel(annotation.pageIndex, false) ?: "${annotation.pageIndex + 1}"
+            val isAuthor = annotation.creator == displayName || annotation.creator == username
             val comment = annotation.contents?.let { it.trim().trim { it == '\n' } } ?: ""
+            val sortIndex = sortIndex(annotation, boundingBoxConverter = boundingBoxConverter)
             val date = Date()
+
+            val author: String
+            if (isAuthor) {
+                author = createName(displayName, username = username)
+            } else {
+                author = annotation.creator ?: "Unknown"
+            }
 
             val type: AnnotationType
             val rects: List<RectF>
@@ -305,7 +315,10 @@ class AnnotationConverter {
                 color = color,
                 comment = comment,
                 text = text,
-                dateModified = date
+                dateModified = date,
+                sortIndex = sortIndex,
+                author = author,
+                isAuthor = isAuthor,
             )
         }
 
@@ -332,6 +345,32 @@ class AnnotationConverter {
 
         private fun paths(annotation: InkAnnotation): List<List<PointF>> {
             return annotation.lines ?: emptyList()
+        }
+        fun sortIndex(annotation: Annotation, boundingBoxConverter: AnnotationBoundingBoxConverter?):  String {
+            val rect: RectF
+            if (annotation is HighlightAnnotation) {
+                rect = annotation.rects.firstOrNull() ?: annotation.boundingBox
+            } else {
+                rect = annotation.boundingBox
+            }
+
+            val textOffset = boundingBoxConverter?.textOffset(rect = rect, page = annotation.pageIndex) ?: 0
+            val minY = boundingBoxConverter?.sortIndexMinY(rect = rect, page = annotation.pageIndex)?.roundToInt() ?: 0
+            return sortIndex(pageIndex = annotation.pageIndex, textOffset = textOffset, minY = minY)
+        }
+
+        fun sortIndex(pageIndex: Int, textOffset: Int, minY: Int): String {
+            return String.format("%05d|%06d|%05d", pageIndex, textOffset, minY)
+        }
+
+        private fun createName(displayName: String, username: String): String {
+            if (!displayName.isEmpty()) {
+                return displayName
+            }
+            if (!username.isEmpty()) {
+                return username
+            }
+            return "Unknown"
         }
 
     }

@@ -7,6 +7,7 @@ import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.key
+import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
@@ -134,11 +135,38 @@ data class DatabaseAnnotation(
         }
 
     override fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter): List<List<PointF>> {
-        TODO("Not yet implemented")
+        val page = this._page ?: return emptyList()
+        val pageIndex = page
+        val paths = mutableListOf<List<PointF>>()
+        for (path in this.item.paths.sort("sortIndex")) {
+            if (path.coordinates.size % 2 != 0) {
+                continue
+            }
+            val sortedCoordinates = path.coordinates.sort("sortIndex")
+            val lines = (0 until (path.coordinates.size / 2)).mapNotNull { idx ->
+                val point = PointF(
+                    sortedCoordinates[idx * 2]!!.value.toFloat(),
+                    sortedCoordinates[(idx * 2) + 1]!!.value.toFloat()
+                )
+                boundingBoxConverter.convertFromDb(point, pageIndex)?.rounded(3)
+            }
+            paths.add(lines)
+        }
+        return paths
     }
 
     override fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter): List<RectF> {
-        TODO("Not yet implemented")
+        val page = this._page ?: return emptyList()
+        return this.item.rects.map {
+            RectF(
+                /* left = */ it.minX.toFloat(),
+                /* top = */ it.maxY.toFloat(),
+                /* right = */ it.maxX.toFloat(),
+                /* bottom = */ it.minY.toFloat(),
+            )
+        }.mapNotNull {
+            boundingBoxConverter.convertFromDb(it, page)?.rounded(3)
+        }
     }
 
 }
