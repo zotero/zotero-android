@@ -3,9 +3,13 @@ package org.zotero.android.pdf
 import android.graphics.RectF
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.AnnotationFlags
+import com.pspdfkit.annotations.AnnotationProvider
 import com.pspdfkit.annotations.AnnotationType
+import com.pspdfkit.annotations.HighlightAnnotation
+import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
 import com.pspdfkit.document.PdfDocument
+import com.pspdfkit.ui.PdfFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
@@ -19,12 +23,18 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
+import org.zotero.android.ktx.key
+import org.zotero.android.ktx.rounded
+import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
@@ -43,15 +53,19 @@ internal class PdfReaderViewModel @Inject constructor(
     private var liveAnnotations: RealmResults<RItem>? = null
     private var databaseAnnotations: RealmResults<RItem>? = null
     private lateinit var annotationBoundingBoxConverter: AnnotationBoundingBoxConverter
+    private lateinit var fragment: PdfFragment
+    private var onAnnotationUpdatedListener: AnnotationProvider.OnAnnotationUpdatedListener? = null
+    private lateinit var document: PdfDocument
 
-
-    fun init(document: PdfDocument) = initOnce {
+    fun init(document: PdfDocument, fragment: PdfFragment) = initOnce {
+        this.fragment = fragment
+        this.document = document
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
-        initState(document)
+        initState()
         loadDocumentData()
     }
 
-    private fun initState(document: PdfDocument) {
+    private fun initState() {
         val params = ScreenArguments.pdfReaderArgs
         val username = defaults.getUsername()
         val userId = sessionDataEventStream.currentValue()!!.userId
@@ -61,7 +75,6 @@ internal class PdfReaderViewModel @Inject constructor(
             copy(
                 key = params.key,
                 library = params.library,
-                document = document,
                 userId = userId,
                 username = username,
                 displayName = displayName,
@@ -145,19 +158,19 @@ internal class PdfReaderViewModel @Inject constructor(
 
         when (dbResult) {
             is CustomResult.GeneralSuccess -> {
-                val liveAnnotations = dbResult.value!!.first
-                val storedPage = dbResult.value!!.second
                 this.liveAnnotations?.removeAllChangeListeners()
-                observe(liveAnnotations)
-                databaseAnnotations = liveAnnotations.freeze()
+                this.liveAnnotations = dbResult.value!!.first
+                val storedPage = dbResult.value!!.second
+                observe(liveAnnotations!!)
+                this.databaseAnnotations = liveAnnotations!!.freeze()
                 val documentAnnotations = loadAnnotations(
-                    viewState.document!!,
+                    this.document,
                     library = library,
                     username = viewState.username,
                     displayName = viewState.displayName
                 )
                 val dbToPdfAnnotations = AnnotationConverter.annotations(
-                    databaseAnnotations!!,
+                    this.databaseAnnotations!!,
                     isDarkMode = false,
                     currentUserId = viewState.userId,
                     library = library,
@@ -171,7 +184,7 @@ internal class PdfReaderViewModel @Inject constructor(
                 )
 
                 update(
-                    document = viewState.document!!,
+                    document = this.document,
                     zoteroAnnotations = dbToPdfAnnotations,
                     key = key,
                     libraryId = library.identifier,
@@ -203,10 +216,56 @@ internal class PdfReaderViewModel @Inject constructor(
             }
 
             is CustomResult.GeneralError.CodeError -> {
-
+                Timber.e(dbResult.throwable)
             }
         }
+        observeDocument()
     }
+
+    private fun observeDocument() {
+        onAnnotationUpdatedListener = object:
+            AnnotationProvider.OnAnnotationUpdatedListener {
+            override fun onAnnotationCreated(annotation: Annotation) {
+            }
+
+            override fun onAnnotationUpdated(annotation: Annotation) {
+                processAnnotationObservingUpdated(annotation, emptyList())
+            }
+
+            override fun onAnnotationRemoved(annotation: Annotation) {
+            }
+
+            override fun onAnnotationZOrderChanged(
+                p0: Int,
+                p1: MutableList<Annotation>,
+                p2: MutableList<Annotation>
+            ) {
+                //no-op
+            }
+        }
+        fragment.addOnAnnotationUpdatedListener(onAnnotationUpdatedListener!!)
+    }
+
+    private fun change(annotation: Annotation, changes: List<String>) {
+        //TODO
+    }
+
+    private fun processAnnotationObservingUpdated(annotation: Annotation, changes: List<String>) {
+        if (!changes.isEmpty()) {
+            change(annotation = annotation, changes = changes)
+        }
+
+        updatePdfChanged(annotation, changes)
+    }
+
+    private fun updatePdfChanged(annotation: Annotation, changes: List<String>) {
+        if (changes.isEmpty()) {
+            return
+        }
+        //TODO Android's PSDFKit library doesn't seem to have that functionality
+
+    }
+
 
     private fun preselectedData(
         databaseAnnotations: RealmResults<RItem>,
@@ -225,7 +284,7 @@ internal class PdfReaderViewModel @Inject constructor(
         }
 
         val initialPage = viewState.initialPage
-        if (initialPage != null && initialPage >= 0 && initialPage < viewState.document!!.pageCount ) {
+        if (initialPage != null && initialPage >= 0 && initialPage < this.document.pageCount ) {
             return initialPage to null
         }
 
@@ -271,7 +330,7 @@ internal class PdfReaderViewModel @Inject constructor(
 
 
     private fun observe(results: RealmResults<RItem>) {
-        results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
+        results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { objects, changeSet ->
             val state = changeSet.state
             when (state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
@@ -282,7 +341,7 @@ internal class PdfReaderViewModel @Inject constructor(
                     val deletions = changeSet.deletions
                     val modifications = changeSet.changes
                     val insertions = changeSet.insertions
-                    //TODO implement update
+                    update(objects = objects, deletions = deletions, insertions = insertions, modifications = modifications)
                 }
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "PdfReaderViewModel: could not load results")
@@ -290,6 +349,350 @@ internal class PdfReaderViewModel @Inject constructor(
             }
         })
     }
+    private fun update(
+        objects: RealmResults<RItem>,
+        deletions: IntArray,
+        insertions: IntArray,
+        modifications: IntArray
+    ) {
+        Timber.i("PdfReaderViewModel: database annotation changed")
+
+        val keys = (viewState.snapshotKeys
+            ?: viewState.sortedKeys).filter { it.type == AnnotationKey.Kind.database }
+            .toMutableList()
+
+        var selectKey: AnnotationKey? = null
+        var selectionDeleted = false
+
+        var updatedKeys = mutableListOf<AnnotationKey>()
+        var updatedPdfAnnotations = mutableMapOf<Annotation, DatabaseAnnotation>()
+        var deletedPdfAnnotations = mutableListOf<Annotation>()
+        var insertedPdfAnnotations = mutableListOf<Annotation>()
+
+        for (index in modifications) {
+            val key = keys[index]
+            val item = objects.where().key(key.key).findFirst() ?: continue
+
+            if (canUpdate(key = key, item = item, index = index)) {
+                updatedKeys.add(key)
+            }
+
+            if (item.changeType != UpdatableChangeType.sync.name) {
+                continue
+            }
+
+            val annotation = DatabaseAnnotation(item = item)
+            val pdfAnnotation = this.document.annotationProvider.getAnnotations(annotation.page)
+                .firstOrNull { it.key == key.key } ?: continue
+            updatedPdfAnnotations[pdfAnnotation] = annotation
+        }
+
+        for (index in deletions.reversed()) {
+            val key = keys.removeAt(index)
+
+            if (viewState.selectedAnnotationKey == key) {
+                selectionDeleted = true
+            }
+
+            val oldAnnotation = DatabaseAnnotation(item = this.databaseAnnotations!![index]!!)
+            val pdfAnnotation =
+                this.document.annotationProvider.getAnnotations(oldAnnotation.page)
+                    .firstOrNull { it.key == oldAnnotation.key } ?: continue
+            deletedPdfAnnotations.add(pdfAnnotation)
+        }
+
+        for (index in insertions) {
+            val item = objects[index]!!
+            keys.add(
+                element = AnnotationKey(key = item.key, type = AnnotationKey.Kind.database),
+                index = index
+            )
+
+            val annotation = DatabaseAnnotation(item = item)
+
+            when (item.changeType) {
+                UpdatableChangeType.user.name -> {
+                    //TODO check if sidebar is visible
+                    val sidebarVisible = false
+                    val isNote =
+                        annotation.type == org.zotero.android.database.objects.AnnotationType.note
+                    if (!viewState.sidebarEditingEnabled && (sidebarVisible || isNote)) {
+                        selectKey =
+                            AnnotationKey(key = item.key, type = AnnotationKey.Kind.database)
+                    }
+
+                }
+
+                UpdatableChangeType.sync.name, UpdatableChangeType.syncResponse.name -> {
+                    val pdfAnnotation = AnnotationConverter.annotation(
+                        zoteroAnnotation = annotation,
+                        type = AnnotationConverter.Kind.zotero,
+                        isDarkMode = viewState.isDark,
+                        currentUserId = viewState.userId,
+                        library = viewState.library,
+                        displayName = viewState.displayName,
+                        username = viewState.username,
+                        boundingBoxConverter = annotationBoundingBoxConverter
+                    )
+                    insertedPdfAnnotations.add(pdfAnnotation)
+                }
+            }
+        }
+
+        val getSortIndex: (AnnotationKey) -> String? = { key ->
+            when (key.type) {
+                AnnotationKey.Kind.document -> {
+                    viewState.documentAnnotations[key.key]?.sortIndex
+                }
+
+                AnnotationKey.Kind.database -> {
+                    objects.where().key(key.key).findFirst()?.annotationSortIndex
+                }
+            }
+        }
+        for (annotation in viewState.documentAnnotations.values) {
+            val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
+            val index = keys.index(key, sortedBy = { lKey, rKey ->
+                val lSortIndex = getSortIndex(lKey) ?: ""
+                val rSortIndex = getSortIndex(rKey) ?: ""
+                lSortIndex < rSortIndex
+            })
+            keys.add(element = key, index = index)
+        }
+        fragment.removeOnAnnotationUpdatedListener(onAnnotationUpdatedListener!!)
+
+        for ((pdfAnnotation, annotation) in updatedPdfAnnotations) {
+            update(
+                pdfAnnotation = pdfAnnotation,
+                annotation = annotation,
+                parentKey = viewState.key,
+                libraryId = viewState.library.identifier,
+                isDarkMode = viewState.isDark
+            )
+        }
+        if (!deletedPdfAnnotations.isEmpty()) {
+            for (annotation in deletedPdfAnnotations) {
+                if (annotation.flags.contains(AnnotationFlags.READONLY)) {
+                    annotation.flags.remove(AnnotationFlags.READONLY)
+                }
+                //TODO remove cached entry
+            }
+            deletedPdfAnnotations.forEach {
+                this.document.annotationProvider.removeAnnotationFromPage(it)
+            }
+        }
+
+        if (!insertedPdfAnnotations.isEmpty()) {
+            insertedPdfAnnotations.forEach {
+                this.document.annotationProvider.addAnnotationToPage(it)
+            }
+
+            //TODO store preview
+        }
+        observeDocument()
+        this.databaseAnnotations = objects.freeze()
+        if (viewState.snapshotKeys != null) {
+            updateState {
+                copy(
+                    snapshotKeys = keys,
+                    sortedKeys = keys //TODO filter keys
+                )
+            }
+        } else {
+            updateState {
+                copy(
+                    sortedKeys = keys
+                )
+            }
+        }
+        updateState {
+            copy(updatedAnnotationKeys = updatedKeys.filter { viewState.sortedKeys.contains(it) })
+        }
+        val key = selectKey
+        if (key != null) {
+            _select(key = key, didSelectInDocument = true)
+        } else if (selectionDeleted) {
+            _select(key = null, didSelectInDocument = true)
+        }
+
+        if ((viewState.snapshotKeys ?: viewState.sortedKeys).isEmpty()) {
+            updateState {
+                copy(sidebarEditingEnabled = false)
+            }
+        }
+
+    }
+
+    private fun _select(key: AnnotationKey?, didSelectInDocument: Boolean) {
+        if (key == viewState.selectedAnnotationKey) {
+            return
+        }
+        val existing = viewState.selectedAnnotationKey
+        if (existing != null) {
+            if (viewState.sortedKeys.contains(existing)) {
+                val updatedAnnotationKeys =
+                    (viewState.updatedAnnotationKeys ?: emptyList()).toMutableList()
+                updatedAnnotationKeys.add(existing)
+                updateState {
+                    copy(updatedAnnotationKeys = updatedAnnotationKeys)
+                }
+            }
+
+            if (viewState.selectedAnnotationCommentActive) {
+                updateState {
+                    copy(selectedAnnotationCommentActive = false)
+                }
+            }
+        }
+
+        if (key == null) {
+            updateState {
+                copy(selectedAnnotationKey = null)
+            }
+            return
+        }
+
+        updateState {
+            copy(selectedAnnotationKey = key)
+        }
+
+        if (!didSelectInDocument) {
+            val annotation = annotation(key)
+            if (annotation != null) {
+                updateState {
+                    copy(focusDocumentLocation = (annotation.page to annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)))
+                }
+            }
+        } else {
+            updateState {
+                copy(focusSidebarKey = key)
+            }
+        }
+
+        if (viewState.sortedKeys.contains(key)) {
+            val updatedAnnotationKeys = (viewState.updatedAnnotationKeys ?: emptyList()).toMutableList()
+            updatedAnnotationKeys.add(key)
+            updateState {
+                copy(updatedAnnotationKeys = updatedAnnotationKeys)
+            }
+        }
+    }
+
+    fun annotation(key: AnnotationKey): org.zotero.android.pdf.Annotation? {
+        when(key.type) {
+            AnnotationKey.Kind.database -> {
+                return this.databaseAnnotations!!.where().key(key.key).findFirst()?.let { DatabaseAnnotation(item = it) }
+            }
+            AnnotationKey.Kind.document -> {
+                return viewState.documentAnnotations[key.key]
+            }
+        }
+    }
+
+
+    private fun update(pdfAnnotation: Annotation, annotation: DatabaseAnnotation, parentKey: String, libraryId: LibraryIdentifier, isDarkMode: Boolean) {
+        val changes = mutableListOf<PdfAnnotationChanges>()
+
+        if (pdfAnnotation.baseColor != annotation.color) {
+            val hexColor = annotation.color
+            val (color, alpha, blendMode) = AnnotationColorGenerator.color(
+                colorHex = hexColor,
+                isHighlight = (annotation.type == org.zotero.android.database.objects.AnnotationType.highlight),
+                isDarkMode = isDarkMode
+            )
+            pdfAnnotation.color = color
+            pdfAnnotation.alpha = alpha
+            if (blendMode!= null) {
+                pdfAnnotation.blendMode = blendMode
+            }
+
+            changes.add(PdfAnnotationChanges.color)
+        }
+
+        when(annotation.type) {
+            org.zotero.android.database.objects.AnnotationType.highlight -> {
+                val newBoundingBox =
+                    annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
+                if (newBoundingBox != pdfAnnotation.boundingBox.rounded(3)) {
+                    pdfAnnotation.boundingBox = newBoundingBox
+                    changes.add(PdfAnnotationChanges.boundingBox)
+
+                    (pdfAnnotation as HighlightAnnotation).rects =
+                        annotation.rects(boundingBoxConverter = annotationBoundingBoxConverter)
+                    changes.add(PdfAnnotationChanges.rects)
+                } else {
+                    val newRects = annotation.rects(boundingBoxConverter = annotationBoundingBoxConverter)
+                    val oldRects = ((pdfAnnotation as HighlightAnnotation).rects ?: emptyList()).map{ it.rounded(3) }
+                    if (newRects != oldRects) {
+                        pdfAnnotation.rects = newRects
+                        changes.add(PdfAnnotationChanges.rects)
+                    }
+                }
+            }
+            org.zotero.android.database.objects.AnnotationType.ink -> {
+                val inkAnnotation = pdfAnnotation as? InkAnnotation
+                if (inkAnnotation != null) {
+                    val newPaths =
+                        annotation.paths(boundingBoxConverter = annotationBoundingBoxConverter)
+                    val oldPaths = (inkAnnotation.lines ?: emptyList()).map { points ->
+                        points.map { it.rounded(3) }
+                    }
+
+                    if (newPaths != oldPaths) {
+                        changes.add(PdfAnnotationChanges.paths)
+                        inkAnnotation.lines = newPaths
+                    }
+
+                    val lineWidth = annotation.lineWidth
+                    if (lineWidth != null && lineWidth != inkAnnotation.lineWidth) {
+                        inkAnnotation.lineWidth = lineWidth
+                        changes.add(PdfAnnotationChanges.lineWidth)
+                    }
+                }
+            }
+            org.zotero.android.database.objects.AnnotationType.image -> {
+                val newBoundingBox =
+                    annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
+                if (pdfAnnotation.boundingBox.rounded(3) != newBoundingBox) {
+                    changes.add(PdfAnnotationChanges.boundingBox)
+                    pdfAnnotation.boundingBox = newBoundingBox
+                }
+            }
+            org.zotero.android.database.objects.AnnotationType.note -> {
+                val newBoundingBox = annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
+                val bb = pdfAnnotation.boundingBox
+                if (bb.left.rounded(3) != newBoundingBox.left || bb.bottom.rounded(3) != newBoundingBox.bottom) {
+                    changes.add(PdfAnnotationChanges.boundingBox)
+                    pdfAnnotation.boundingBox = newBoundingBox
+                }
+            }
+        }
+//
+        if (changes.isEmpty()) {
+            return
+        }
+
+        //TODO store annotation previews
+        processAnnotationObservingUpdated(pdfAnnotation, PdfAnnotationChanges.stringValues(changes))
+    }
+
+    private fun canUpdate(key: AnnotationKey, item: RItem, index: Int):Boolean {
+        when (item.changeType) {
+            UpdatableChangeType.sync.name ->
+            return true
+            UpdatableChangeType.syncResponse.name ->
+            return false
+        }
+
+        if (!viewState.selectedAnnotationCommentActive || viewState.selectedAnnotationKey != key) { return true }
+
+        val newComment =
+            item.fields.where().key(FieldKeys.Item.Annotation.comment).findFirst()?.value
+        val oldComment = this.databaseAnnotations!![index]!!.fields.where()
+            .key(FieldKeys.Item.Annotation.comment).findFirst()?.value
+        return oldComment == newComment
+    }
+
 }
 
 internal data class PdfReaderViewState(
@@ -304,15 +707,17 @@ internal data class PdfReaderViewState(
     val username: String = "",
     val displayName: String = "",
     val selectedAnnotationKey: AnnotationKey? = null,
-    val document: PdfDocument? = null,
     val isDark: Boolean = false,
     val initialPage: Int? = null,
     val visiblePage: Int = 0,
     val focusSidebarKey: AnnotationKey? = null,
     val focusDocumentLocation: Pair<Int, RectF>? = null,
     val documentAnnotations: Map<String, DocumentAnnotation> = emptyMap(),
-    val sortedKeys: List<AnnotationKey> = emptyList()
-
+    val sortedKeys: List<AnnotationKey> = emptyList(),
+    val snapshotKeys: List<AnnotationKey>? = null,
+    var selectedAnnotationCommentActive: Boolean = false,
+    val sidebarEditingEnabled: Boolean = false,
+    val updatedAnnotationKeys: List<AnnotationKey>? = null,
 ) : ViewState
 
 internal sealed class PdfReaderViewEffect : ViewEffect {

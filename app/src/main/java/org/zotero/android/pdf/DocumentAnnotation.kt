@@ -7,24 +7,32 @@ import java.util.Date
 
 data class DocumentAnnotation(
     val key: String,
-    val type: AnnotationType,
-    val page: Int,
+    override val type: AnnotationType,
+    override val page: Int,
     val pageLabel: String,
     val rects: List<RectF>,
     val paths: List<List<PointF>>,
-    val lineWidth: Float?,
+    override val lineWidth: Float?,
     val author : String,
     val isAuthor : Boolean,
     val color: String,
-    val comment: String,
+    override val comment: String,
     val text: String?,
     val sortIndex: String,
     val dateModified: Date,
-) {
+): Annotation {
     val readerKey: AnnotationKey
         get() {
             return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
         }
+
+    override fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter): List<List<PointF>> {
+        return this.paths
+    }
+
+    override fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter): List<RectF> {
+        return this.rects
+    }
 
 //    fun isAuthor(currentUserId: Int): Boolean {
 //        return this.isAuthor

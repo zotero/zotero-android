@@ -24,3 +24,7 @@ val Annotation.isZoteroAnnotation: Boolean
     get() {
         return this.key != null || (this.name ?: "").contains("Zotero")
     }
+
+val Annotation.baseColor: String get() {
+    return this.color.let { AnnotationsConfig.colorVariationMap[it] } ?: AnnotationsConfig.defaultActiveColor
+}

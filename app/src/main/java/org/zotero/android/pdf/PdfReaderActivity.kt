@@ -70,7 +70,7 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
     }
 
     override fun onDocumentLoaded(document: PdfDocument) {
-        viewModel.init(document)
+        viewModel.init(document, fragment)
     }
 
     private fun updatePdfConfiguration() {
