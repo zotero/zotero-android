@@ -10,6 +10,8 @@ import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.ui.PdfFragment
+import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
+import com.pspdfkit.ui.special_mode.manager.AnnotationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
@@ -29,6 +31,7 @@ import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
@@ -44,7 +47,7 @@ import java.util.EnumSet
 import javax.inject.Inject
 
 @HiltViewModel
-internal class PdfReaderViewModel @Inject constructor(
+class PdfReaderViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val sessionDataEventStream: SessionDataEventStream,
@@ -63,6 +66,30 @@ internal class PdfReaderViewModel @Inject constructor(
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
         initState()
         loadDocumentData()
+        setupInteractionListeners()
+    }
+
+    private fun setupInteractionListeners() {
+        fragment.addOnAnnotationSelectedListener(object: AnnotationManager.OnAnnotationSelectedListener {
+            override fun onPrepareAnnotationSelection(
+                p0: AnnotationSelectionController,
+                p1: Annotation,
+                p2: Boolean
+            ): Boolean {
+                //no-op
+                return true
+            }
+
+            override fun onAnnotationSelected(annotation: Annotation, p1: Boolean) {
+                val key = annotation.key ?: annotation.uuid
+                val type: AnnotationKey.Kind = if(annotation.isZoteroAnnotation) AnnotationKey.Kind.database else AnnotationKey.Kind.document
+                selectAnnotationFromDocument(AnnotationKey(key = key, type = type))
+            }
+
+        })
+        fragment.addOnAnnotationDeselectedListener { annotation, p1 ->
+            deselectSelectedAnnotation()
+        }
     }
 
     private fun initState() {
@@ -220,6 +247,7 @@ internal class PdfReaderViewModel @Inject constructor(
             }
         }
         observeDocument()
+        updateAnnotationsList()
     }
 
     private fun observeDocument() {
@@ -491,6 +519,7 @@ internal class PdfReaderViewModel @Inject constructor(
         }
         observeDocument()
         this.databaseAnnotations = objects.freeze()
+        updateAnnotationsList()
         if (viewState.snapshotKeys != null) {
             updateState {
                 copy(
@@ -549,6 +578,8 @@ internal class PdfReaderViewModel @Inject constructor(
             updateState {
                 copy(selectedAnnotationKey = null)
             }
+            selectAndFocusAnnotationInDocument()
+            updateAnnotationsList()
             return
         }
 
@@ -574,6 +605,77 @@ internal class PdfReaderViewModel @Inject constructor(
             updatedAnnotationKeys.add(key)
             updateState {
                 copy(updatedAnnotationKeys = updatedAnnotationKeys)
+            }
+        }
+        selectAndFocusAnnotationInDocument()
+        updateAnnotationsList()
+    }
+
+    private fun updateAnnotationsList() {
+        val index = viewState.sortedKeys.indexOf(viewState.selectedAnnotationKey)
+        triggerEffect(PdfReaderViewEffect.UpdateAnnotationsList(index))
+    }
+
+    private fun selectAndFocusAnnotationInDocument() {
+        val annotation = this.selectedAnnotation
+        if (annotation != null) {
+            val location = viewState.focusDocumentLocation
+            if (location != null) {
+                focus(annotation = annotation, location = location, document = this.document)
+            } else if (annotation.type != org.zotero.android.database.objects.AnnotationType.ink || fragment.activeAnnotationTool?.toAnnotationType() != AnnotationType.INK) {
+                select(annotation = annotation, pageIndex = fragment.pageIndex, document = this.document)
+            }
+        } else {
+            select(annotation = null, pageIndex = fragment.pageIndex, document = this.document)
+        }
+    }
+
+    private fun focus(
+        annotation: org.zotero.android.pdf.Annotation,
+        location: Pair<Int, RectF>,
+        document: PdfDocument
+    ) {
+        val pageIndex = location.first
+        scrollIfNeeded(pageIndex, true) {
+            select(annotation = annotation, pageIndex = pageIndex, document = document)
+        }
+    }
+
+    private fun scrollIfNeeded(pageIndex: Int, animated: Boolean, completion: () -> Unit) {
+        if (fragment.pageIndex == pageIndex) {
+            completion()
+            return
+        }
+
+        if (!animated) {
+            fragment.setPageIndex(pageIndex, false)
+            completion()
+            return
+        }
+        fragment.setPageIndex(pageIndex, false)
+        completion()
+    }
+
+
+    private fun select(annotation: org.zotero.android.pdf.Annotation?, pageIndex: Int, document: PdfDocument) {
+
+        //TODO updateSelection
+
+        if (annotation != null) {
+            val pdfAnnotation = document.annotation(pageIndex, annotation.key)
+            if (pdfAnnotation != null) {
+                if (!fragment.selectedAnnotations.contains(pdfAnnotation)) {
+                    fragment.setSelectedAnnotation(pdfAnnotation)
+                    fragment.scrollTo(pdfAnnotation.boundingBox, pageIndex, 100, false)
+                }
+            } else {
+                if (!fragment.selectedAnnotations.isEmpty()) {
+                    fragment.clearSelectedAnnotations()
+                }
+            }
+        } else {
+            if (!fragment.selectedAnnotations.isEmpty()) {
+                fragment.clearSelectedAnnotations()
             }
         }
     }
@@ -693,9 +795,31 @@ internal class PdfReaderViewModel @Inject constructor(
         return oldComment == newComment
     }
 
+    fun selectAnnotation(key: AnnotationKey) {
+        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
+            _select(key = key, didSelectInDocument = false)
+        }
+    }
+
+
+    fun selectAnnotationFromDocument(key: AnnotationKey) {
+        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
+            _select(key = key, didSelectInDocument = true)
+        }
+    }
+
+    fun deselectSelectedAnnotation() {
+        _select(key = null, didSelectInDocument = false)
+    }
+
+    val selectedAnnotation: org.zotero.android.pdf.Annotation?
+        get() {
+            return viewState.selectedAnnotationKey?.let { annotation(it) }
+        }
+
 }
 
-internal data class PdfReaderViewState(
+data class PdfReaderViewState(
     val key: String = "",
     val library: Library = Library(
         identifier = LibraryIdentifier.group(0),
@@ -720,8 +844,9 @@ internal data class PdfReaderViewState(
     val updatedAnnotationKeys: List<AnnotationKey>? = null,
 ) : ViewState
 
-internal sealed class PdfReaderViewEffect : ViewEffect {
+sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
+    data class UpdateAnnotationsList(val scrollToIndex: Int): PdfReaderViewEffect()
 }
 
 data class AnnotationKey(

@@ -15,8 +15,8 @@
     <color name="feather_grey">#DEDFEB</color>
     <color name="rain_grey">#abacb7</color>
     <color name="onyx">#32333C</color>
-
     <color name="red">#FF001F</color>
+    <color name="zoteroBlueWithDarkMode">#FF4071E6</color>
 
     <color name="checkbox_light">@color/cool_grey</color>
     <color name="checkbox_dark">@color/white</color>
@@ -54,4 +54,10 @@
     <color name="toolbarColor">@color/white</color>
     <color name="toolbarActionColor">@color/charcoal</color>
     <color name="toolbarDivider">@color/fog_grey</color>
+
+    <color name="pdf_annotations_form_background">#F2F2F7</color>
+    <color name="pdf_annotations_item_background">#FFFFFF</color>
+    <color name="pdf_annotations_divider_background">#E4E4E7</color>
+    <color name="pdf_annotations_body_text">#77767B</color>
+    <color name="pdf_annotations_topbar_background">#FAFAFD</color>
 </resources>

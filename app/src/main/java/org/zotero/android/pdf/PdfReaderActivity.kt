@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.pspdfkit.configuration.PdfConfiguration
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.listeners.DocumentListener
@@ -29,6 +31,8 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
     @Inject
     lateinit var fileStore: FileStore
 
+    private lateinit var adapter: PdfAnnotationsListRecyclerAdapter
+
     private val viewModel: PdfReaderViewModel by viewModels()
 
     private lateinit var fragment: PdfFragment
@@ -38,6 +42,8 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setupViews()
+        setupRecyclerView()
+        setupToolbar()
         viewModel.observeViewChanges(this)
         updatePdfConfiguration()
         val params = ScreenArguments.pdfReaderArgs
@@ -56,12 +62,35 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
         }
     }
 
+    private fun setupToolbar() {
+        window.statusBarColor =
+            ContextCompat.getColor(this, R.color.pdf_annotations_topbar_background)
+        binding.showSideMenuButton.setOnClickListener {
+            val isStart = binding.mainContainer.progress == 0.0f
+            if (isStart) {
+                binding.mainContainer.transitionToEnd()
+            } else {
+                binding.mainContainer.transitionToStart()
+            }
+        }
+
+    }
+
     private fun setupViews() = with(binding) {
         setContentView(root)
     }
 
     override fun trigger(effect: PdfReaderViewEffect) = when (effect) {
+        PdfReaderViewEffect.NavigateBack -> {
 
+        }
+        is PdfReaderViewEffect.UpdateAnnotationsList -> {
+            adapter.update()
+            if (effect.scrollToIndex != -1) {
+                binding.recyclerView.smoothScrollToPosition(effect.scrollToIndex)
+            } else {
+            }
+        }
         else -> {}
     }
 
@@ -82,7 +111,18 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
             .fitMode(pdfSettings.pageFitting)
             .layoutMode(pdfSettings.pageMode)
             .themeMode(pdfSettings.appearanceMode)
+            .disableFormEditing()
+            .disableAnnotationRotation()
+            .setSelectedAnnotationResizeEnabled(false)
             .build()
+    }
+
+    private fun setupRecyclerView() {
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        adapter = PdfAnnotationsListRecyclerAdapter(this,viewModel) { selectedAnnotation ->
+            viewModel.selectAnnotation(selectedAnnotation)
+        }
+        binding.recyclerView.adapter = adapter
     }
 
     companion object {

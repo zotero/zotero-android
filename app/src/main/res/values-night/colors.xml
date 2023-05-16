@@ -20,4 +20,11 @@
     <color name="toolbarColor">#121212</color>
     <color name="toolbarActionColor">@color/cool_grey</color>
     <color name="toolbarDivider">@color/charcoal</color>
+
+    <color name="pdf_annotations_form_background">#1C1C1E</color>
+    <color name="pdf_annotations_item_background">#000000</color>
+    <color name="pdf_annotations_divider_background">#1B1B1C</color>
+    <color name="pdf_annotations_body_text">#5B5B5E</color>
+    <color name="pdf_annotations_topbar_background">#282828</color>
+    <color name="zoteroBlueWithDarkMode">#FF335BB8</color>
 </resources>

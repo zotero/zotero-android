@@ -10,13 +10,14 @@ import org.zotero.android.database.requests.key
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.Tag
 import timber.log.Timber
 
 data class DatabaseAnnotation(
     private val item: RItem
 ): Annotation {
 
-    val key: String get() {
+    override val key: String get() {
         return this.item.key
     }
 
@@ -30,9 +31,17 @@ data class DatabaseAnnotation(
         return color
     }
 
-    val color: String get(){
+    override val color: String get(){
         return this._color ?: "#000000"
     }
+    override val text: String?
+        get() {
+            return this.item.fields.where().key(FieldKeys.Item.Annotation.text).findFirst()?.value
+        }
+    override val tags: List<Tag>
+        get() {
+            return this.item.tags!!.map { Tag(it) }
+        }
 
     fun isAuthor(currentUserId: Long): Boolean {
         return if (this.item.libraryId == LibraryIdentifier.custom(RCustomLibraryType.myLibrary)) {
@@ -129,6 +138,20 @@ data class DatabaseAnnotation(
         get() {
             return this._page ?: 0
         }
+    override val pageLabel: String
+        get() {
+            return this._pageLabel ?: ""
+        }
+
+    val _pageLabel: String? get() {
+        val label = this.item.fieldValue(FieldKeys.Item.Annotation.pageLabel)
+        if (label == null) {
+            Timber.e("DatabaseAnnotation: ${this.key} missing page label!")
+            return null
+        }
+        return label
+    }
+
     override val comment: String
         get() {
             return this.item.fieldValue(FieldKeys.Item.Annotation.comment) ?: ""

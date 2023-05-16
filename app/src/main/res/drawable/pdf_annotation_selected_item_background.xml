@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="10dp"
+    android:shape="rectangle">
+    <stroke
+        android:width="3dp"
+        android:color="#3C59B2" />
+    <solid android:color="@color/pdf_annotations_item_background" />
+    <corners android:radius="10dp" />
+</shape>

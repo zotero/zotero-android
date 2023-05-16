@@ -3,21 +3,22 @@ package org.zotero.android.pdf
 import android.graphics.PointF
 import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.sync.Tag
 import java.util.Date
 
 data class DocumentAnnotation(
-    val key: String,
+    override val key: String,
     override val type: AnnotationType,
     override val page: Int,
-    val pageLabel: String,
+    override val pageLabel: String,
     val rects: List<RectF>,
     val paths: List<List<PointF>>,
     override val lineWidth: Float?,
     val author : String,
     val isAuthor : Boolean,
-    val color: String,
+    override val color: String,
     override val comment: String,
-    val text: String?,
+    override val text: String?,
     val sortIndex: String,
     val dateModified: Date,
 ): Annotation {
@@ -25,6 +26,8 @@ data class DocumentAnnotation(
         get() {
             return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
         }
+    override val tags: List<Tag>
+        get() = emptyList()
 
     override fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter): List<List<PointF>> {
         return this.paths

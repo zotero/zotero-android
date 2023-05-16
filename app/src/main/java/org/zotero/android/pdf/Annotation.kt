@@ -5,13 +5,18 @@ import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
+import org.zotero.android.sync.Tag
 
 interface Annotation {
-
+    val key: String
     val type: AnnotationType
     val lineWidth: Float?
     val page: Int
+    val pageLabel: String
     val comment: String
+    val color: String
+    val text: String?
+    val tags: List<Tag>
 
 
     fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<List<PointF>>

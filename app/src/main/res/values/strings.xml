@@ -128,4 +128,5 @@
     <string name="manyCollectionsSelected">%d Collections Selected</string>
     <string name="collections_picker_title">Choose Parent</string>
     <string name="collection_was_deleted">This collection has been deleted. Do you want to revert it?</string>
+    <string name="page_number">Page %s</string>
 </resources>
