@@ -718,6 +718,7 @@ class SyncUseCase @Inject constructor(
                         toDelete.add(index)
                     }
                 }
+                else -> {}
             }
         }
 
@@ -1045,6 +1046,7 @@ class SyncUseCase @Inject constructor(
                     nextAction()
                     return
                 }
+                else -> {}
             }
         }
 
@@ -1088,6 +1090,7 @@ class SyncUseCase @Inject constructor(
                 val updatedBatch = action.batch.copy(version=version)
                 this.queue[0]=Action.submitDeleteBatch(updatedBatch)
             }
+            else -> {}
         }
     }
 

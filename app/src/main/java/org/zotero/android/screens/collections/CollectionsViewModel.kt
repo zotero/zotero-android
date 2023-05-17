@@ -387,6 +387,7 @@ internal class CollectionsViewModel @Inject constructor(
                         listOf(longPressOptionItem.collection.identifier.keyGet!!)
                     )
                 }
+                else -> {}
             }
         }
     }

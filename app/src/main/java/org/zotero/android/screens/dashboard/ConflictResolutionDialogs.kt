@@ -55,6 +55,7 @@ internal fun ConflictResolutionDialogs(
                 onDismiss = onDismissDialog
             )
         }
+        else -> {}
     }
 }
 

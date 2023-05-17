@@ -71,6 +71,7 @@ fun CustomSnackbarHost(
                     infoMessage = message,
                     contentColor = contentColor
                 )
+                else -> {}
             }
         }
     )

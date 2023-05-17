@@ -138,11 +138,11 @@ private fun Scrim(
     bottomSheetState: BottomSheetState,
 ) {
     // Don't draw the scrim if bottom sheet isn't shown
-    if (bottomSheetState.offset.value >= scaffoldHeight) return
+    if (bottomSheetState.requireOffset() >= scaffoldHeight) return
 
     val scrimAlpha by remember {
         derivedStateOf {
-            val offsetFromBottom = scaffoldHeight - bottomSheetState.offset.value
+            val offsetFromBottom = scaffoldHeight - bottomSheetState.requireOffset()
             if (bottomSheetHeight != 0) {
                 // Multiplier added to delay the animation while scrolling down
                 (offsetFromBottom * SCRIM_OFFSET_MULTIPLIER / bottomSheetHeight).coerceIn(0f..1f)

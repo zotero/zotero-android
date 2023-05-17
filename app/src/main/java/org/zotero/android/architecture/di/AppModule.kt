@@ -33,7 +33,6 @@ internal class AppModule {
     @Provides
     fun provideDispatchers(): Dispatchers = QDispatchers()
 
-    @Deprecated("Use Dispatchers instead", ReplaceWith("Dispatchers.io"))
     @Provides
     fun provideIoCoroutineDispatcher(dispatchers: Dispatchers): CoroutineDispatcher = dispatchers.io
 

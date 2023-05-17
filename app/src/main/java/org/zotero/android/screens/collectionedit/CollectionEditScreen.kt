@@ -321,6 +321,7 @@ internal fun CollectionEditErrorDialogs(
                 onDismiss = onDismissErrorDialog
             )
         }
+        else -> {}
     }
 }
 

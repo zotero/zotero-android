@@ -56,5 +56,6 @@ internal fun ShowErrorOrDialog(
             )
         }
 
+        else -> {}
     }
 }

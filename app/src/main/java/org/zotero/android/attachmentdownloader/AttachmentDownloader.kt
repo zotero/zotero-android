@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.architecture.exhaustive
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
@@ -343,6 +344,8 @@ class AttachmentDownloader @Inject constructor(
                 this.errors.remove(download)
                 attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.ready))
             }
+
+            else -> {}
         }
     }
 

@@ -204,6 +204,7 @@ class ItemDetailsViewModel @Inject constructor(
                     is AttachmentDownloader.Update.Kind.failed -> {
                         //TODO implement when unzipping is supported
                     }
+                    else -> {}
                 }
             }
             .launchIn(coroutineScope)
@@ -340,6 +341,7 @@ class ItemDetailsViewModel @Inject constructor(
                         dateParser = this.dateParser,
                         doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
                 }
+                else -> {}
             }
         } catch (e: Exception) {
             Timber.e(e, "can't load initial data ")
@@ -1167,6 +1169,7 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToStandaloneAttachment -> {
                     moveToStandalone(longPressOptionItem.attachment)
                 }
+                else -> {}
             }
         }
     }

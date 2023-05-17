@@ -245,6 +245,8 @@ class PdfReaderViewModel @Inject constructor(
             is CustomResult.GeneralError.CodeError -> {
                 Timber.e(dbResult.throwable)
             }
+
+            else -> {}
         }
         observeDocument()
         updateAnnotationsList()
@@ -842,7 +844,8 @@ data class PdfReaderViewState(
     var selectedAnnotationCommentActive: Boolean = false,
     val sidebarEditingEnabled: Boolean = false,
     val updatedAnnotationKeys: List<AnnotationKey>? = null,
-) : ViewState
+) : ViewState {
+}
 
 sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()

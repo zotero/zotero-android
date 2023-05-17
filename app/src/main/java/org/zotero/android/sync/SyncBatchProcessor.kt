@@ -89,6 +89,7 @@ class SyncBatchProcessor(
             is CustomResult.GeneralError -> {
                 cancel(result)
             }
+            else -> {}
         }
     }
 

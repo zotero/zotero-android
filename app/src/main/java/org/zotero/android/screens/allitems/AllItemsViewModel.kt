@@ -227,6 +227,7 @@ internal class AllItemsViewModel @Inject constructor(
                     is AttachmentDownloader.Update.Kind.failed -> {
                         //TODO implement when unzipping is supported
                     }
+                    else -> {}
                 }
             }
             .launchIn(coroutineScope)
@@ -957,6 +958,7 @@ internal class AllItemsViewModel @Inject constructor(
                             .equalTo("children.fileDownloaded", true)
                             .findAll()
                     }
+                    else -> {}
                 }
             }
         }
@@ -1026,6 +1028,7 @@ internal class AllItemsViewModel @Inject constructor(
                 is LongPressOptionItem.TrashRestore -> {
                     set(trashed = false, setOf(longPressOptionItem.item.key))
                 }
+                else -> {}
             }
         }
     }

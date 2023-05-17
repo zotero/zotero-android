@@ -57,6 +57,7 @@ internal fun CollectionPickerScreen(
             is CollectionPickerViewEffect.OnBack -> {
                 onBack()
             }
+            else -> {}
         }
     }
     CustomScaffold(

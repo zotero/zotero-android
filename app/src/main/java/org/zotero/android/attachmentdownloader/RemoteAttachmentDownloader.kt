@@ -188,6 +188,7 @@ class RemoteAttachmentDownloader @Inject constructor(
                 )
                 this.errors.remove(download)
             }
+            else -> {}
         }
     }
 

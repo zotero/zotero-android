@@ -40,6 +40,7 @@ internal fun CollectionsScreen(
             CollectionsViewEffect.ShowCollectionEditEffect -> {
                 navigateToCollectionEdit()
             }
+            else -> {}
         }
     }
 
