@@ -1,17 +1,18 @@
 package org.zotero.android.database.requests
 
 import io.realm.Realm
+import io.realm.RealmResults
 import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.Tag
 
-class ReadTagsDbRequest(val libraryId: LibraryIdentifier) : DbResponseRequest<List<Tag>> {
+class ReadTagPickerTagsDbRequest(val libraryId: LibraryIdentifier) :
+    DbResponseRequest<RealmResults<RTag>> {
     override val needsWrite: Boolean
         get() = false
 
-    override fun process(database: Realm): List<Tag> {
+    override fun process(database: Realm): RealmResults<RTag> {
         return database
             .where<RTag>()
             .library(this.libraryId)
@@ -21,7 +22,6 @@ class ReadTagsDbRequest(val libraryId: LibraryIdentifier) : DbResponseRequest<Li
             .or()
             .notEqualTo("color", "")
             .endGroup()
-            .sort("name")
-            .findAll().map { Tag(it) }
+            .findAll()
     }
 }

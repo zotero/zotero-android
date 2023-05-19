@@ -20,8 +20,10 @@ import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.AnnotationEditability
 import org.zotero.android.pdf.DatabaseAnnotation
 import org.zotero.android.pdf.DocumentAnnotation
+import timber.log.Timber
 import java.util.Date
 import java.util.EnumSet
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 class AnnotationConverter {
@@ -356,11 +358,14 @@ class AnnotationConverter {
 
             val textOffset = boundingBoxConverter?.textOffset(rect = rect, page = annotation.pageIndex) ?: 0
             val minY = boundingBoxConverter?.sortIndexMinY(rect = rect, page = annotation.pageIndex)?.roundToInt() ?: 0
+            if (minY < 0) {
+                Timber.w("AnnotationConverter: annotation ${annotation.key} has negative y position ${minY}")
+            }
             return sortIndex(pageIndex = annotation.pageIndex, textOffset = textOffset, minY = minY)
         }
 
         fun sortIndex(pageIndex: Int, textOffset: Int, minY: Int): String {
-            return String.format("%05d|%06d|%05d", pageIndex, textOffset, minY)
+            return String.format("%05d|%06d|%05d", pageIndex, textOffset, max(0, minY))
         }
 
         private fun createName(displayName: String, username: String): String {

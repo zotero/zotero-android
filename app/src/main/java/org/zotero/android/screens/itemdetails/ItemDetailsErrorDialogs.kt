@@ -64,7 +64,7 @@ internal fun ItemDetailsErrorDialogs(
                 onDismiss = onBack
             )
         }
-        ItemDetailError.cantRemoveDuplicatedItem, ItemDetailError.cantRemoveParent -> {
+        ItemDetailError.cantRemoveItem, ItemDetailError.cantRemoveParent -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(

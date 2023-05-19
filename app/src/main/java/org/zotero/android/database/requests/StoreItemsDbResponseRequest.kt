@@ -541,6 +541,7 @@ class StoreItemDbRequest(
                 } else {
                     rTag = database.createObject<RTag>()
                     rTag.name = tag.tag
+                    rTag.updateSortName()
                     rTag.libraryId = libraryId
                 }
 

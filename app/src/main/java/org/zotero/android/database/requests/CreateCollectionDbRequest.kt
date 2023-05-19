@@ -2,6 +2,7 @@ package org.zotero.android.database.requests
 
 import io.realm.Realm
 import io.realm.kotlin.createObject
+import io.realm.kotlin.where
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCollection
@@ -31,6 +32,11 @@ class CreateCollectionDbRequest(
         if (key != null) {
             collection.parentKey = key
             changes.add(RCollectionChanges.parent)
+
+            val parent = database.where<RCollection>().key(key, this.libraryId).findFirst()
+            if (parent != null) {
+                parent.collapsed = false
+            }
         }
 
         val change = RObjectChange.create(changes = changes)

@@ -69,6 +69,7 @@ class EditNoteDbRequest(
             } else {
                 rTag = database.createObject<RTag>()
                 rTag.name = tag.name
+                rTag.updateSortName()
                 rTag.color = tag.color
                 rTag.libraryId = this.libraryId
             }

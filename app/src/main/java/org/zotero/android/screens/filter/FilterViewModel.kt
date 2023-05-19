@@ -6,7 +6,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.screens.allitems.data.ItemsState
+import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.filter.data.FilterResult
 import javax.inject.Inject
 
@@ -16,7 +16,7 @@ internal class FilterViewModel @Inject constructor(
 
     private val downloadsFilterEnabled: Boolean get() {
         val filters = ScreenArguments.filterArgs.filters
-        return filters.any { it is ItemsState.Filter.downloadedFiles }
+        return filters.any { it is ItemsFilter.downloadedFiles }
     }
 
     fun init() = initOnce {
@@ -34,9 +34,9 @@ internal class FilterViewModel @Inject constructor(
             copy(isDownloadsChecked = !viewState.isDownloadsChecked)
         }
         if (viewState.isDownloadsChecked) {
-            EventBus.getDefault().post(FilterResult.enableFilter(ItemsState.Filter.downloadedFiles))
+            EventBus.getDefault().post(FilterResult.enableFilter(ItemsFilter.downloadedFiles))
         } else {
-            EventBus.getDefault().post(FilterResult.disableFilter(ItemsState.Filter.downloadedFiles))
+            EventBus.getDefault().post(FilterResult.disableFilter(ItemsFilter.downloadedFiles))
         }
     }
 

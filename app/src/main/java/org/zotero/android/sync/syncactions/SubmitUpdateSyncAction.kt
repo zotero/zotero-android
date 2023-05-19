@@ -241,7 +241,7 @@ class SubmitUpdateSyncAction(
 
             try {
                 dbStorage.realmDbStorage.perform(request = SplitAnnotationsDbRequest(keys = splitKeys, libraryId = libraryId))
-                    return SyncActionError.annotationNeededSplitting(messageS = this.splitMessage, libraryId = libraryId)
+                    return SyncActionError.annotationNeededSplitting(messageS = this.splitMessage, keys = splitKeys, libraryId = libraryId)
                 } catch (e:Exception) {
                     Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
                 }

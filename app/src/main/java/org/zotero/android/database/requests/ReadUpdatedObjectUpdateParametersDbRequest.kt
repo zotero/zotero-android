@@ -8,6 +8,7 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
+import timber.log.Timber
 
 data class ReadUpdatedParametersResponse(
     val parameters: List<Map<String, Any>>,
@@ -143,17 +144,24 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
     }
 
     private fun level(item: RItem, levelCache: Map<String, Int>): Int {
+        val keys: MutableSet<String> = mutableSetOf(item.key)
         var level = 0
         var parent: RItem? = item.parent
 
         while (parent != null) {
-            val currentLevel = levelCache[parent.key]
+            val current = parent
+            val currentLevel = levelCache[current.key]
             if (currentLevel != null) {
-                level += currentLevel + 1
-                break
+                return currentLevel + 1
             }
-            parent = parent.parent
+            if (keys.contains(current.key)) {
+                Timber.i("RItem: parent infinite loop; key=${current.key}; keys=${keys}")
+                return level
+            }
+
+            parent = current.parent
             level += 1
+            keys.add(current.key)
         }
 
         return level

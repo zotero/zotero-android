@@ -1,5 +1,5 @@
 package org.zotero.android.screens.filter.data
 
-import org.zotero.android.screens.allitems.data.ItemsState
+import org.zotero.android.screens.allitems.data.ItemsFilter
 
-data class FilterArgs(val filters: List<ItemsState.Filter>)
+data class FilterArgs(val filters: List<ItemsFilter>)

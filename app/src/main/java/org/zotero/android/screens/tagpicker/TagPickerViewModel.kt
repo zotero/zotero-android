@@ -7,7 +7,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.DbWrapper
-import org.zotero.android.database.requests.ReadTagsDbRequest
+import org.zotero.android.database.requests.ReadTagPickerTagsDbRequest
 import org.zotero.android.ktx.index
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.LibraryIdentifier
@@ -114,30 +114,17 @@ internal class TagPickerViewModel @Inject constructor(
 
     private fun load() {
         try {
-            val request = ReadTagsDbRequest(libraryId = viewState.libraryId!!)
-            val tags = dbWrapper.realmDbStorage.perform(request = request).toMutableList()
-            sortByColors(tags = tags)
+            val request = ReadTagPickerTagsDbRequest(libraryId = viewState.libraryId!!)
+            val results = dbWrapper.realmDbStorage.perform(request = request)
+            val colored = results.where().notEqualTo("color", "\"\"").sort("name").findAll()
+            val others = results.where().equalTo("color", "\"\"").sort("name").findAll()
+            val tags = colored.map { Tag(it) } + others.map { Tag(it) }
             updateState {
                 copy(tags = tags)
             }
         } catch (e: Exception) {
-            Timber.e(e, "TagPickerStore: can't load tag")
+            Timber.e(e, "TagPicker: can't load tag")
         }
-    }
-
-    private fun sortByColors(tags: MutableList<Tag>) {
-        val coloredIndices = mutableListOf<Int>()
-        for ((index, tag) in tags.withIndex()) {
-            if (!tag.color.isEmpty()) {
-                coloredIndices.add(index)
-            }
-        }
-
-        val coloredTags = mutableListOf<Tag>()
-        for (idx in coloredIndices.reversed()) {
-            coloredTags.add(tags.removeAt(idx))
-        }
-        tags.addAll(0, coloredTags)
     }
 
     fun onSave() {

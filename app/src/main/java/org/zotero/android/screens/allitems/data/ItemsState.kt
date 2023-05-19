@@ -1,7 +1,5 @@
 package org.zotero.android.screens.allitems.data
 
-import org.zotero.android.sync.Tag
-
 class ItemsState {
     data class DownloadBatchData(
         val fraction: Int,
@@ -22,8 +20,5 @@ class ItemsState {
         }
     }
 
-    sealed class Filter {
-        object downloadedFiles : Filter()
-        data class tags(val tags: List<Tag>) : Filter()
-    }
+
 }

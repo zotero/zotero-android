@@ -7,6 +7,7 @@ import io.realm.annotations.Index
 import io.realm.kotlin.where
 import org.zotero.android.database.requests.key
 import org.zotero.android.database.requests.parentKey
+import timber.log.Timber
 import java.util.Date
 
 enum class RCollectionChanges {
@@ -67,12 +68,21 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
             return 0
         }
 
+        val keys: MutableSet<String> = mutableSetOf(this.key)
         var level = 0
         var objectS: RCollection? = this
+
         while (objectS?.parentKey != null) {
-            objectS = database.where<RCollection>().key(objectS.parentKey!!).findFirst()
+            val parentKey = objectS.parentKey!!
+            if (keys.contains(parentKey)) {
+                Timber.i("RCollection: parent infinite loop; key=${parentKey}; keys=${keys}")
+                return level
+            }
+            objectS = database.where<RCollection>().key(parentKey).findFirst()
             level += 1
+            keys.add(parentKey)
         }
+
         return level
     }
 

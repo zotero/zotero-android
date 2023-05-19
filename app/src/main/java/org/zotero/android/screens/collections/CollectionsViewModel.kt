@@ -77,8 +77,6 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
-
-
     private fun initViewState(args: CollectionsArgs) {
         updateState {
             copy(
@@ -387,7 +385,9 @@ internal class CollectionsViewModel @Inject constructor(
                         listOf(longPressOptionItem.collection.identifier.keyGet!!)
                     )
                 }
-                else -> {}
+                else -> {
+                    //no-op
+                }
             }
         }
     }
@@ -418,6 +418,8 @@ internal class CollectionsViewModel @Inject constructor(
                 ReadCollectionDbRequest(libraryId = viewState.library.identifier, key = parentKey)
             val rCollection = dbWrapper.realmDbStorage.perform(request = request)
             parent = Collection.initWithCollection(objectS = rCollection, itemCount = 0)
+        } else {
+            parent = null
         }
         ScreenArguments.collectionEditArgs = CollectionEditArgs(
             library = viewState.library,

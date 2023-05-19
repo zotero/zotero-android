@@ -51,12 +51,12 @@ sealed class SyncError {
         object dbError : Fatal()
         object groupSyncFailed : Fatal()
         object allLibrariesFetchFailed : Fatal()
-        object uploadObjectConflict : Fatal()
+        data class uploadObjectConflict(val data: ErrorData) : Fatal()
         object permissionLoadingFailed : Fatal()
         object missingGroupPermissions : Fatal()
         object cancelled : Fatal()
-        object preconditionErrorCantBeResolved : Fatal()
-        object cantResolveConflict : Fatal()
+        data class preconditionErrorCantBeResolved(val data: ErrorData) : Fatal()
+        data class cantResolveConflict(val data: ErrorData) : Fatal()
         object serviceUnavailable : Fatal()
         object forbidden : Fatal()
 
@@ -85,10 +85,10 @@ sealed class SyncError {
 
     sealed class NonFatal : Exception() {
         data class versionMismatch(val libraryId: LibraryIdentifier) : NonFatal()
-        data class apiError(val response: String, val data: SyncError.ErrorData) : NonFatal()
-        data class unknown(val str: String) : NonFatal()
-        data class schema(val error: SchemaError) : NonFatal()
-        data class parsing(val parsingError: Parsing.Error) : NonFatal()
+        data class apiError(val response: String, val data: ErrorData) : NonFatal()
+        data class unknown(val str: String, val data: ErrorData) : NonFatal()
+        data class schema(val error: SchemaError, val data: ErrorData) : NonFatal()
+        data class parsing(val error: Parsing.Error, val data: ErrorData) : NonFatal()
         data class quotaLimit(val libraryId: LibraryIdentifier) : NonFatal()
         object unchanged : NonFatal()
         data class attachmentMissing(
@@ -97,7 +97,7 @@ sealed class SyncError {
             val title: String
         ) : NonFatal()
 
-        data class annotationDidSplit(val messageS: String, val libraryId: LibraryIdentifier) :
+        data class annotationDidSplit(val messageS: String, val keys: Set<String>,val libraryId: LibraryIdentifier) :
             NonFatal()
 
         object insufficientSpace : NonFatal()
@@ -139,7 +139,11 @@ sealed class SyncActionError : Exception() {
     ) : SyncActionError()
 
     data class submitUpdateFailures(val messages: String) : SyncActionError()
-    data class annotationNeededSplitting(val messageS: String, val libraryId: LibraryIdentifier) :
+    data class annotationNeededSplitting(
+        val messageS: String,
+        val keys: Set<String>,
+        val libraryId: LibraryIdentifier
+    ) :
         SyncActionError()
 }
 

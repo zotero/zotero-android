@@ -59,6 +59,7 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var fragment: PdfFragment
     private var onAnnotationUpdatedListener: AnnotationProvider.OnAnnotationUpdatedListener? = null
     private lateinit var document: PdfDocument
+    private var comments = mutableMapOf<String, String>()
 
     fun init(document: PdfDocument, fragment: PdfFragment) = initOnce {
         this.fragment = fragment
@@ -390,7 +391,7 @@ class PdfReaderViewModel @Inject constructor(
         val keys = (viewState.snapshotKeys
             ?: viewState.sortedKeys).filter { it.type == AnnotationKey.Kind.database }
             .toMutableList()
-
+        var comments = this.comments
         var selectKey: AnnotationKey? = null
         var selectionDeleted = false
 
@@ -400,27 +401,48 @@ class PdfReaderViewModel @Inject constructor(
         var insertedPdfAnnotations = mutableListOf<Annotation>()
 
         for (index in modifications) {
+            if (index >= keys.size) {
+                Timber.w("Tried modifying index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications")
+                continue
+            }
             val key = keys[index]
             val item = objects.where().key(key.key).findFirst() ?: continue
+            val annotation = DatabaseAnnotation(item = item)
 
             if (canUpdate(key = key, item = item, index = index)) {
+                Timber.i("update key $key")
                 updatedKeys.add(key)
+
+                if (item.changeType == UpdatableChangeType.sync.name) {
+                    Timber.i("update comment")
+                    comments[key.key] = annotation.comment
+                }
             }
 
             if (item.changeType != UpdatableChangeType.sync.name) {
                 continue
             }
 
-            val annotation = DatabaseAnnotation(item = item)
             val pdfAnnotation = this.document.annotationProvider.getAnnotations(annotation.page)
                 .firstOrNull { it.key == key.key } ?: continue
+            Timber.i("update PDF annotation")
             updatedPdfAnnotations[pdfAnnotation] = annotation
         }
 
+        var shouldCancelUpdate = false
+
         for (index in deletions.reversed()) {
+            if (index >= keys.size) {
+                Timber.w("tried removing index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications")
+                shouldCancelUpdate = true
+                break
+            }
+
             val key = keys.removeAt(index)
+            Timber.i("delete key $key")
 
             if (viewState.selectedAnnotationKey == key) {
+                Timber.i("deleted selected annotation")
                 selectionDeleted = true
             }
 
@@ -428,15 +450,26 @@ class PdfReaderViewModel @Inject constructor(
             val pdfAnnotation =
                 this.document.annotationProvider.getAnnotations(oldAnnotation.page)
                     .firstOrNull { it.key == oldAnnotation.key } ?: continue
+            Timber.i("delete PDF annotation")
             deletedPdfAnnotations.add(pdfAnnotation)
         }
 
+        if (shouldCancelUpdate) {
+            return
+        }
+
         for (index in insertions) {
+            if (index > keys.size) {
+                Timber.w("tried inserting index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications")
+                shouldCancelUpdate = true
+                break
+            }
             val item = objects[index]!!
             keys.add(
                 element = AnnotationKey(key = item.key, type = AnnotationKey.Kind.database),
                 index = index
             )
+            Timber.i("PDFReaderActionHandler: insert key ${item.key}")
 
             val annotation = DatabaseAnnotation(item = item)
 
@@ -449,6 +482,7 @@ class PdfReaderViewModel @Inject constructor(
                     if (!viewState.sidebarEditingEnabled && (sidebarVisible || isNote)) {
                         selectKey =
                             AnnotationKey(key = item.key, type = AnnotationKey.Kind.database)
+                        Timber.i("select new annotation")
                     }
 
                 }
@@ -465,8 +499,13 @@ class PdfReaderViewModel @Inject constructor(
                         boundingBoxConverter = annotationBoundingBoxConverter
                     )
                     insertedPdfAnnotations.add(pdfAnnotation)
+                    Timber.i("insert PDF annotation")
                 }
             }
+        }
+
+        if (shouldCancelUpdate) {
+            return
         }
 
         val getSortIndex: (AnnotationKey) -> String? = { key ->
@@ -520,6 +559,7 @@ class PdfReaderViewModel @Inject constructor(
             //TODO store preview
         }
         observeDocument()
+        this.comments = comments
         this.databaseAnnotations = objects.freeze()
         updateAnnotationsList()
         if (viewState.snapshotKeys != null) {

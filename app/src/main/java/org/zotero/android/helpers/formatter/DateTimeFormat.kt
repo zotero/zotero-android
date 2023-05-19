@@ -33,7 +33,9 @@ val deadlineTimeFormat: SimpleDateFormat
     get() = SimpleDateFormat("EEEE MMM d, h:mm a", Locale.getDefault())
 
 val sqlFormat: SimpleDateFormat
-    get() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    get() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale("en", "US", "POSIX")).apply {
+        timeZone = TimeZone.getTimeZone("GMT")
+    }
 
 val fullDateWithDashes: SimpleDateFormat
     get() = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

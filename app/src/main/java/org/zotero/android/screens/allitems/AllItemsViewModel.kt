@@ -45,7 +45,6 @@ import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
-import org.zotero.android.database.requests.itemSearch
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
@@ -57,6 +56,7 @@ import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.ItemAccessory
 import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.screens.allitems.data.ItemsError
+import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.allitems.data.ItemsState
 import org.zotero.android.screens.collections.data.CollectionsArgs
@@ -111,7 +111,7 @@ internal class AllItemsViewModel @Inject constructor(
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
     var keys = mutableListOf<String>()
     var results: RealmResults<RItem>? = null
-    var filters: MutableList<ItemsState.Filter> = mutableListOf()
+    var filters: MutableList<ItemsFilter> = mutableListOf()
 
     private val onSearchStateFlow = MutableStateFlow("")
 
@@ -437,14 +437,14 @@ internal class AllItemsViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         val sortType = defaults.getItemsSortType()
-        val request = ReadItemsDbRequest(
+        val results = results(
+            viewState.searchTerm,
+            filters = this.filters,
             collectionId = viewState.collection.identifier,
-            libraryId = viewState.library.identifier,
-            defaults = defaults
-        )
-        val sortDescriptors = sortType.descriptors
-        val results =
-            dbWrapper.realmDbStorage.perform(request = request).sort(sortDescriptors.first, sortDescriptors.second)
+            sortType = sortType,
+            libraryId = viewState.library.identifier
+        )!!
+
         val resultsFrozen = results.freeze()
         this@AllItemsViewModel.results = results
         updateState {
@@ -459,16 +459,7 @@ internal class AllItemsViewModel @Inject constructor(
 
         setupFileObservers()
 
-        val term = viewState.searchTerm
-        if (term != null && !term.isEmpty()) {
-            initialSearch(term)
-        }
-
         startObserving(results)
-    }
-
-    private fun initialSearch(text: String) {
-        search(if(text.isEmpty()) null else text, ignoreOriginal = true)
     }
 
     fun onSearch(text: String) {
@@ -931,42 +922,28 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun results(
         searchText: String?,
-        filters: List<ItemsState.Filter>,
+        filters: List<ItemsFilter>,
         collectionId: CollectionIdentifier,
         sortType: ItemsSortType,
         libraryId: LibraryIdentifier
     ): RealmResults<RItem>? {
+        var searchComponents = listOf<String>()
+        val text = searchText
+        if (text != null && !text.isEmpty()) {
+            searchComponents = listOf(text)
+        }
         val request = ReadItemsDbRequest(
             collectionId = collectionId,
             libraryId = libraryId,
-            defaults = defaults
+            filters = filters,
+            sortType = sortType,
+            searchTextComponents = searchComponents,
+            defaults = this.defaults
         )
-        var results = dbWrapper.realmDbStorage.perform(request = request)
-        val text = searchText
-        if (text != null && (!text.isEmpty())) {
-            results = results.where().itemSearch(listOf(text)).findAll()
-        }
-
-        if (!filters.isEmpty()) {
-            for (filter in filters) {
-                when (filter) {
-                    ItemsState.Filter.downloadedFiles -> {
-                        results = results
-                            .where()
-                            .equalTo("fileDownloaded", true)
-                            .or()
-                            .equalTo("children.fileDownloaded", true)
-                            .findAll()
-                    }
-                    else -> {}
-                }
-            }
-        }
-        val sort = sortType.descriptors
-        return results.sort(sort.first, sort.second)
+        return dbWrapper.realmDbStorage.perform(request = request)
     }
 
-    private fun enable(filter: ItemsState.Filter) {
+    private fun enable(filter: ItemsFilter) {
         if (this.filters.contains(filter)) {
             return
         }
@@ -974,7 +951,7 @@ internal class AllItemsViewModel @Inject constructor(
         filter()
     }
 
-    private fun disable(filter: ItemsState.Filter) {
+    private fun disable(filter: ItemsFilter) {
         val index = this.filters.indexOf(filter)
         if (index == -1) {
             return

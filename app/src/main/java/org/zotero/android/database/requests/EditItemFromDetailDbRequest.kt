@@ -52,10 +52,10 @@ class EditItemFromDetailDbRequest(
     }
 
     private fun updateCreators(data: ItemDetailData, snapshot: ItemDetailData, item: RItem, changes: MutableList<RItemChanges>, database: Realm) {
-        if (data.creatorIds == snapshot.creatorIds && data.creators == snapshot.creators) { return }
-
+        if (data.creators == snapshot.creators) {
+            return
+        }
         item.creators.deleteAllFromRealm()
-
         for ((offset, creatorId) in data.creatorIds.withIndex()) {
             val creator = data.creators[creatorId]
             if (creator == null) {

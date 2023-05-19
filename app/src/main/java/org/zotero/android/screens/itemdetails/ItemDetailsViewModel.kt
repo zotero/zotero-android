@@ -799,36 +799,42 @@ class ItemDetailsViewModel @Inject constructor(
     private fun cancelChanges() {
         viewModelScope.launch {
             val type = viewState.type
-            if (type is DetailType.duplication) {
-                val result = perform(
-                    dbWrapper = dbWrapper,
-                    request = MarkObjectsAsDeletedDbRequest(
-                        clazz = RItem::class,
-                        keys = listOf(viewState.key),
-                        libraryId = viewState.library!!.identifier
-                    )
-                ).ifFailure {
-                    Timber.e(it, "ItemDetailActionHandler: can't remove duplicated item")
-                    updateState {
-                        copy(error = ItemDetailError.cantRemoveDuplicatedItem)
+            when (type) {
+                is DetailType.duplication, is DetailType.creation -> {
+                    perform(
+                        dbWrapper = dbWrapper,
+                        request = MarkObjectsAsDeletedDbRequest(
+                            clazz = RItem::class,
+                            keys = listOf(viewState.key),
+                            libraryId = viewState.library!!.identifier
+                        )
+                    ).ifFailure {
+                        Timber.e(it, "ItemDetailActionHandler: can't remove duplicated/cancelled item")
+                        updateState {
+                            copy(error = ItemDetailError.cantRemoveItem)
+                        }
+                        return@launch
                     }
-                    return@launch
+                    triggerEffect(OnBack)
                 }
-                triggerEffect(OnBack)
-                return@launch
-            }
-        }
 
-        val snapshot = viewState.snapshot?.deepCopy()
-        if (snapshot == null) {
-            return
-        }
-        updateState {
-            copy(
-                data = snapshot,
-                snapshot = null,
-                isEditing = false
-            )
+                is DetailType.preview -> {
+                    val snapshot = viewState.snapshot?.deepCopy()
+                    if (snapshot == null) {
+                        return@launch
+                    }
+                    updateState {
+                        copy(
+                            data = snapshot,
+                            snapshot = null,
+                            isEditing = false
+                        )
+                    }
+                }
+                null -> {
+                    //no-op
+                }
+            }
         }
     }
 

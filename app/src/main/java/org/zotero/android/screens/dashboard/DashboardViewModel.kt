@@ -10,6 +10,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.ReadSearchDbRequest
@@ -141,7 +142,16 @@ internal class DashboardViewModel @Inject constructor(
         if (collection != null && library != null) {
             return InitialLoadData(collection = collection!!, library = library!!)
         }
-        return null
+        Timber.w("returning default library and collection")
+        return InitialLoadData(
+            collection = Collection.initWithCustomType(type = CollectionIdentifier.CustomType.all),
+            library = Library(
+                identifier = LibraryIdentifier.custom(type = RCustomLibraryType.myLibrary),
+                name = "My Library",
+                metadataEditable = true,
+                filesEditable = true
+            )
+        )
     }
 
     private fun showItems(collection: Collection, library: Library, searchItemKeys: List<String>?) {

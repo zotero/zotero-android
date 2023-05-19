@@ -26,12 +26,27 @@ open class RTypedTag : RealmObject() {
 open class RTag : RealmObject() {
     @Index
     var name: String = ""
+    var sortName: String =""
     var color: String = ""
+    var order: Int = -1
     var customLibraryKey: String? = null // RCustomLibraryType
     var groupKey: Int? = null
 
     @LinkingObjects("tag")
     val tags: RealmResults<RTypedTag>? = null
+
+    fun updateSortName() {
+        val newName = RTag.sortName(this.name)
+        if (newName != this.sortName) {
+            this.sortName = newName
+        }
+    }
+
+    companion object {
+        fun sortName(name: String): String {
+            return name.trim { "[]'\"".contains(it)}.lowercase()
+        }
+    }
 
     var libraryId: LibraryIdentifier?
         get() {

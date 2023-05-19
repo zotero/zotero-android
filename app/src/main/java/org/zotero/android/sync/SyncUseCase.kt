@@ -384,10 +384,24 @@ class SyncUseCase @Inject constructor(
         when (result) {
             is CustomResult.GeneralSuccess -> {
                 val (failedKeys, parseErrors) = result.value!!
-                this.nonFatalErrors.addAll(parseErrors.map({
-                    syncError(customResultError = CustomResult.GeneralError.CodeError(it),
-                        data = SyncError.ErrorData.from(libraryId = libraryId)).nonFatal2S
-                        ?: NonFatal.unknown(it.localizedMessage ?:"") }))
+                this.nonFatalErrors.addAll(parseErrors.map {
+                    syncError(
+                        customResultError = CustomResult.GeneralError.CodeError(it),
+                        data = SyncError.ErrorData.from(
+                            libraryId = libraryId,
+                            syncObject = objectS,
+                            keys = failedKeys
+                        )
+                    ).nonFatal2S
+                        ?: NonFatal.unknown(
+                            str = it.localizedMessage ?: "",
+                            data = SyncError.ErrorData.from(
+                                syncObject = objectS,
+                                keys = failedKeys,
+                                libraryId = libraryId
+                            )
+                        )
+                })
 
 
                 if (failedKeys.isEmpty()) {
@@ -491,7 +505,7 @@ class SyncUseCase @Inject constructor(
         version: Int
     ) {
         val syncError =
-            syncError(customResultError = customResultError, data = SyncError.ErrorData.Companion.from(libraryId))
+            syncError(customResultError = customResultError, data = SyncError.ErrorData.from(libraryId))
         when (syncError) {
             is SyncError.fatal2 -> {
                 abort(error = syncError.error)
@@ -543,7 +557,7 @@ class SyncUseCase @Inject constructor(
         var libraryNames: Map<LibraryIdentifier, String>? = null
         val (data, options) = pair!!
         if (options == CreateLibraryActionsOptions.automatic || this.type == SyncType.full) {
-            var nameDictionary = mutableMapOf<LibraryIdentifier, String>()
+            val nameDictionary = mutableMapOf<LibraryIdentifier, String>()
             for (libraryData in data) {
                 nameDictionary[libraryData.identifier] = libraryData.name
             }
@@ -778,7 +792,7 @@ class SyncUseCase @Inject constructor(
                         is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
                             return SyncError.nonFatal2(
                                 NonFatal.unknown(
-                                    syncActionError.localizedMessage ?: ""
+                                    str = syncActionError.localizedMessage ?: "", data = data,
                                 )
                             )
                         is SyncActionError.attachmentMissing ->
@@ -793,11 +807,12 @@ class SyncUseCase @Inject constructor(
                             return SyncError.nonFatal2(
                                 NonFatal.annotationDidSplit(
                                     messageS = syncActionError.messageS,
-                                    libraryId = syncActionError.libraryId
+                                    libraryId = syncActionError.libraryId,
+                                    keys = syncActionError.keys
                                 )
                             )
                         is SyncActionError.submitUpdateFailures ->
-                            return SyncError.nonFatal2(NonFatal.unknown(syncActionError.messages))
+                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.messages, data = data))
                     }
                 }
 
@@ -808,16 +823,16 @@ class SyncUseCase @Inject constructor(
                 }
                 val schemaError = error as? SchemaError
                 if (schemaError != null) {
-                    return SyncError.nonFatal2(NonFatal.schema(error))
+                    return SyncError.nonFatal2(NonFatal.schema(error = error, data = data))
                 }
                 val parsingError = error as? Parsing.Error
                 if (parsingError != null) {
-                    return SyncError.nonFatal2(NonFatal.parsing(error))
+                    return SyncError.nonFatal2(NonFatal.parsing(error = error, data = data))
                 }
                 Timber.e("received unknown error - $error")
                 return SyncError.nonFatal2(
                     NonFatal.unknown(
-                        error?.localizedMessage ?: ""
+                        str = error.localizedMessage ?: "", data = data
                     )
                 )
 
@@ -921,10 +936,11 @@ class SyncUseCase @Inject constructor(
                 items = items, searches = searches, tags = tags,
                 conflictMode = conflictMode, dbWrapper = dbWrapper
             ).result()
-            finishDeletionsSync(result = CustomResult.GeneralSuccess(conflicts), libraryId = libraryId)
+            finishDeletionsSync(result = CustomResult.GeneralSuccess(conflicts), items = items, libraryId = libraryId)
         } catch (e: Throwable) {
             finishDeletionsSync(
                 result = CustomResult.GeneralError.CodeError(e),
+                items = items,
                 libraryId = libraryId
             )
         }
@@ -933,12 +949,20 @@ class SyncUseCase @Inject constructor(
     private fun finishDeletionsSync(
         result: CustomResult<List<Pair<String, String>>>,
         libraryId: LibraryIdentifier,
+        items: List<String>? = null,
         version: Int? = null
     ) {
         if (result is CustomResult.GeneralError) {
+            val data = items?.let {
+                SyncError.ErrorData.from(
+                    syncObject = if (!it.isEmpty()) SyncObject.item else SyncObject.collection,
+                    keys = it,
+                    libraryId = libraryId
+                )
+            } ?: SyncError.ErrorData.from(libraryId = libraryId)
             val syncError = syncError(
                 customResultError = result,
-                data = SyncError.ErrorData.from(libraryId = libraryId)
+                data = data
             )
             when (syncError) {
                 is SyncError.fatal2 ->
@@ -1050,7 +1074,7 @@ class SyncUseCase @Inject constructor(
             }
         }
 
-        if (handleUpdatePreconditionFailureIfNeeded(error, libraryId = libraryId)) {
+        if (handleUpdatePreconditionFailureIfNeeded(error, keys = keys,libraryId = libraryId, objectS = objectS)) {
             return
         }
 
@@ -1094,21 +1118,26 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun handleUpdatePreconditionFailureIfNeeded(error: CustomResult.GeneralError, libraryId: LibraryIdentifier): Boolean {
+    private fun handleUpdatePreconditionFailureIfNeeded(
+        error: CustomResult.GeneralError,
+        keys: List<String>,
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject
+    ): Boolean {
         val preconditionError = error.preconditionError
         if (preconditionError == null) {
             return false
         }
 
         if (this.createActionOptions == CreateLibraryActionsOptions.onlyWrites) {
-            this.abort(error= SyncError.Fatal.preconditionErrorCantBeResolved)
+            this.abort(error= SyncError.Fatal.preconditionErrorCantBeResolved(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
             return true
         }
 
         when(preconditionError) {
             is PreconditionErrorType.objectConflict -> {
                 if (this.conflictRetries >= this.conflictDelays.size) {
-                    abort(SyncError.Fatal.uploadObjectConflict)
+                    abort(SyncError.Fatal.uploadObjectConflict(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
                     return true
                 }
 
@@ -1127,7 +1156,7 @@ class SyncUseCase @Inject constructor(
 
             is PreconditionErrorType.libraryConflict -> {
                 if (this.conflictRetries >= this.conflictDelays.size) {
-                    abort(SyncError.Fatal.cantResolveConflict)
+                    abort(SyncError.Fatal.cantResolveConflict(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
                     return true
                 }
 
@@ -1184,7 +1213,7 @@ class SyncUseCase @Inject constructor(
         this.previousType = null
 
         when (fatalError) {
-            SyncError.Fatal.uploadObjectConflict ->
+            is SyncError.Fatal.uploadObjectConflict ->
                 this.observable.emitAsync(SchedulerAction(SyncType.full, LibrarySyncType.all))
             else ->
                 this.observable.emitAsync(null)
@@ -1194,8 +1223,8 @@ class SyncUseCase @Inject constructor(
 
     private fun reportFinish(errors: List<NonFatal>) {
         // Find libraries which reported version mismatch.
-        var retryLibraries = mutableListOf<LibraryIdentifier>()
-        var reportErrors = mutableListOf<NonFatal>()
+        val retryLibraries = mutableListOf<LibraryIdentifier>()
+        val reportErrors = mutableListOf<NonFatal>()
 
         for (error in errors) {
             when (error) {
@@ -1327,7 +1356,7 @@ class SyncUseCase @Inject constructor(
             syncApi = syncApi
         ).result()
         if (result is CustomResult.GeneralError) {
-            finishDeletionsSync(result, libraryId = libraryId, version = sinceVersion)
+            finishDeletionsSync(result, libraryId = libraryId, items = null, version = sinceVersion)
             return
         }
         result as CustomResult.GeneralSuccess
