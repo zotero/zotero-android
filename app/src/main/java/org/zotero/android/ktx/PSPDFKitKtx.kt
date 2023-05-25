@@ -1,6 +1,8 @@
 package org.zotero.android.ktx
 
 import com.pspdfkit.annotations.Annotation
+import com.pspdfkit.annotations.InkAnnotation
+import com.pspdfkit.annotations.SquareAnnotation
 import org.json.JSONObject
 import org.zotero.android.database.objects.AnnotationsConfig
 
@@ -27,4 +29,12 @@ val Annotation.isZoteroAnnotation: Boolean
 
 val Annotation.baseColor: String get() {
     return this.color.let { AnnotationsConfig.colorVariationMap[it] } ?: AnnotationsConfig.defaultActiveColor
+}
+
+val Annotation.shouldRenderPreview: Boolean get() {
+    return (this is SquareAnnotation) || (this is InkAnnotation)
+}
+
+val Annotation.previewId: String get() {
+    return this.key ?: this.uuid
 }

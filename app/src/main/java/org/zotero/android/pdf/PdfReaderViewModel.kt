@@ -1,5 +1,6 @@
 package org.zotero.android.pdf
 
+import android.content.Context
 import android.graphics.RectF
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.AnnotationFlags
@@ -9,6 +10,7 @@ import com.pspdfkit.annotations.HighlightAnnotation
 import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
 import com.pspdfkit.document.PdfDocument
+import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.manager.AnnotationManager
@@ -37,6 +39,7 @@ import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library
@@ -51,6 +54,9 @@ class PdfReaderViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val sessionDataEventStream: SessionDataEventStream,
+    private val annotationPreviewManager: AnnotationPreviewManager,
+    private val fileCache: AnnotationPreviewFileCache,
+    private val context: Context
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -59,15 +65,25 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var fragment: PdfFragment
     private var onAnnotationUpdatedListener: AnnotationProvider.OnAnnotationUpdatedListener? = null
     private lateinit var document: PdfDocument
+    private lateinit var rawDocument: PdfDocument
     private var comments = mutableMapOf<String, String>()
 
-    fun init(document: PdfDocument, fragment: PdfFragment) = initOnce {
+    var annotationMaxSideSize = 0
+
+    fun init(document: PdfDocument, fragment: PdfFragment, annotationMaxSideSize: Int) = initOnce {
+        this.annotationMaxSideSize = annotationMaxSideSize
         this.fragment = fragment
         this.document = document
+        loadRawDocument()
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
         initState()
         loadDocumentData()
         setupInteractionListeners()
+    }
+
+    private fun loadRawDocument() {
+        this.rawDocument =
+            PdfDocumentLoader.openDocument(context, this.document.documentSource.fileUri)
     }
 
     private fun setupInteractionListeners() {
@@ -218,9 +234,22 @@ class PdfReaderViewModel @Inject constructor(
                     libraryId = library.identifier,
                     isDark = viewState.isDark
                 )
-                //TODO store previewes
+                for (annotation in dbToPdfAnnotations) {
+                    annotationPreviewManager.store(
+                        rawDocument = this.rawDocument,
+                        annotation = annotation,
+                        parentKey = key,
+                        libraryId = library.identifier,
+                        isDark = viewState.isDark,
+                        annotationMaxSideSize = annotationMaxSideSize
+                    )
+                }
 
-                val (page, selectedData) = preselectedData(databaseAnnotations = databaseAnnotations!!, storedPage = storedPage, boundingBoxConverter = annotationBoundingBoxConverter)
+                val (page, selectedData) = preselectedData(
+                    databaseAnnotations = databaseAnnotations!!,
+                    storedPage = storedPage,
+                    boundingBoxConverter = annotationBoundingBoxConverter
+                )
 
                 updateState {
                     copy(
@@ -322,14 +351,29 @@ class PdfReaderViewModel @Inject constructor(
         return storedPage to null
     }
 
-    private fun update(document: PdfDocument, zoteroAnnotations: List<Annotation>, key: String, libraryId: LibraryIdentifier, isDark:Boolean) {
+    private fun update(
+        document: PdfDocument,
+        zoteroAnnotations: List<Annotation>,
+        key: String,
+        libraryId: LibraryIdentifier,
+        isDark: Boolean
+    ) {
         val allAnnotations = document.annotationProvider.getAllAnnotationsOfType(
             EnumSet.allOf(
-                AnnotationType::class.java))
+                AnnotationType::class.java
+            )
+        )
         for (annotation in allAnnotations) {
             annotation.flags =
                 EnumSet.copyOf(annotation.flags + AnnotationFlags.LOCKED)
-                //TODO store annotations
+            annotationPreviewManager.store(
+                rawDocument = this.rawDocument,
+                annotation = annotation,
+                parentKey = key,
+                libraryId = libraryId,
+                isDark = isDark,
+                annotationMaxSideSize = annotationMaxSideSize
+            )
         }
         zoteroAnnotations.forEach {
             document.annotationProvider.addAnnotationToPage(it)
@@ -349,13 +393,14 @@ class PdfReaderViewModel @Inject constructor(
                 ) to item.annotationSortIndex
             )
         }
-        for (annotation in documentAnnotations.values) {
-            val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
-            val index = keys.index(key to annotation.sortIndex, sortedBy = { lData, rData ->
-                lData.second.compareTo(rData.second) == 1
-            })
-            keys.add(element = key to annotation.sortIndex, index = index)
-        }
+        //TODO uncomment this to start adding annotations from document
+//        for (annotation in documentAnnotations.values) {
+//            val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
+//            val index = keys.index(key to annotation.sortIndex, sortedBy = { lData, rData ->
+//                lData.second.compareTo(rData.second) == 1
+//            })
+//            keys.add(element = key to annotation.sortIndex, index = index)
+//        }
         return keys.map { it.first }
     }
 
@@ -544,7 +589,11 @@ class PdfReaderViewModel @Inject constructor(
                 if (annotation.flags.contains(AnnotationFlags.READONLY)) {
                     annotation.flags.remove(AnnotationFlags.READONLY)
                 }
-                //TODO remove cached entry
+                annotationPreviewManager.delete(
+                    annotation = annotation,
+                    parentKey = viewState.key,
+                    libraryId = viewState.library.identifier
+                )
             }
             deletedPdfAnnotations.forEach {
                 this.document.annotationProvider.removeAnnotationFromPage(it)
@@ -554,9 +603,15 @@ class PdfReaderViewModel @Inject constructor(
         if (!insertedPdfAnnotations.isEmpty()) {
             insertedPdfAnnotations.forEach {
                 this.document.annotationProvider.addAnnotationToPage(it)
+                annotationPreviewManager.store(
+                    rawDocument = this.rawDocument,
+                    annotation = it,
+                    parentKey = viewState.key,
+                    libraryId = viewState.library.identifier,
+                    isDark = viewState.isDark,
+                    annotationMaxSideSize = annotationMaxSideSize
+                )
             }
-
-            //TODO store preview
         }
         observeDocument()
         this.comments = comments
@@ -816,7 +871,14 @@ class PdfReaderViewModel @Inject constructor(
             return
         }
 
-        //TODO store annotation previews
+        annotationPreviewManager.store(
+            annotation = pdfAnnotation,
+            rawDocument = this.rawDocument,
+            parentKey = parentKey,
+            libraryId = libraryId,
+            isDark = viewState.isDark,
+            annotationMaxSideSize = annotationMaxSideSize
+        )
         processAnnotationObservingUpdated(pdfAnnotation, PdfAnnotationChanges.stringValues(changes))
     }
 
@@ -858,6 +920,17 @@ class PdfReaderViewModel @Inject constructor(
         get() {
             return viewState.selectedAnnotationKey?.let { annotation(it) }
         }
+
+    override fun onCleared() {
+        liveAnnotations?.removeAllChangeListeners()
+        annotationPreviewManager.deleteAll(
+            parentKey = viewState.key,
+            libraryId = viewState.library.identifier
+        )
+        annotationPreviewManager.cancelProcessing()
+        fileCache.cancelProcessing()
+        super.onCleared()
+    }
 
 }
 

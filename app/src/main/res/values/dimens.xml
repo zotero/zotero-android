@@ -15,4 +15,5 @@
     <dimen name="toolbar_elevation">4dp</dimen>
     <dimen name="unselected_theme_inset">8dp</dimen>
     <dimen name="selected_theme_check_inset">12dp</dimen>
+    <item name="pdf_sidebar_width_percent" format="float" type="dimen">1.0</item>
 </resources>

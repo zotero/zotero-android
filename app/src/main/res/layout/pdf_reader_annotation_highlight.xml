@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_layout"
     android:layout_width="match_parent"
-    android:background="@drawable/pdf_annotation_item_background"
     android:layout_height="wrap_content"
     android:layout_marginTop="10dp"
+    android:background="@drawable/pdf_annotation_item_background"
     android:orientation="vertical">
 
     <LinearLayout
@@ -41,6 +41,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
         android:layout_marginBottom="8dp"
         android:background="@color/pdf_annotations_divider_background" />
 
@@ -51,8 +53,8 @@
         <LinearLayout
             android:id="@+id/body_highlight"
             android:layout_width="3dp"
-            android:layout_marginLeft="8dp"
             android:layout_height="0dp"
+            android:layout_marginLeft="8dp"
             android:background="@color/black"
             app:layout_constraintBottom_toBottomOf="@id/body"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -74,11 +76,11 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            app:layout_constraintLeft_toLeftOf="parent"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@id/body">
 
@@ -95,7 +97,9 @@
                 android:id="@+id/tagsCommentDivider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginLeft="4dp"
                 android:layout_marginTop="4dp"
+                android:layout_marginRight="4dp"
                 android:layout_marginBottom="4dp"
                 android:background="@color/pdf_annotations_divider_background" />
 
@@ -107,9 +111,6 @@
                 android:textColor="@color/primary_text_color"
                 android:textSize="16dp"
                 tools:text="Tag1, Tag2, Tag3" />
-
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </LinearLayout>

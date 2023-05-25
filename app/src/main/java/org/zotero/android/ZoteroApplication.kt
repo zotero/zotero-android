@@ -7,7 +7,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.Job
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.Controllers
@@ -16,8 +15,6 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 open class ZoteroApplication : Configuration.Provider, Application(), DefaultLifecycleObserver {
-
-    private lateinit var job: Job
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory

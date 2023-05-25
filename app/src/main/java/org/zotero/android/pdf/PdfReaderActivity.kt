@@ -2,7 +2,9 @@ package org.zotero.android.pdf
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
+import android.util.TypedValue
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,6 +19,9 @@ import org.zotero.android.architecture.Screen
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.databinding.PdfReaderActivityBinding
 import org.zotero.android.files.FileStore
+import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
+import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
+import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -31,7 +36,16 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
     @Inject
     lateinit var fileStore: FileStore
 
-    private lateinit var adapter: PdfAnnotationsListRecyclerAdapter
+    @Inject
+    lateinit var annotationPreviewMemoryCache: AnnotationPreviewMemoryCache
+
+    @Inject
+    lateinit var annotationPreviewFileCache: AnnotationPreviewFileCache
+
+    @Inject
+    lateinit var annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream
+
+    private lateinit var adapter: PdfAnnotationListRecyclerAdapter
 
     private val viewModel: PdfReaderViewModel by viewModels()
 
@@ -99,7 +113,11 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
     }
 
     override fun onDocumentLoaded(document: PdfDocument) {
-        viewModel.init(document, fragment)
+        viewModel.init(
+            document = document,
+            fragment = fragment,
+            annotationMaxSideSize = annotationMaxSideSize()
+        )
     }
 
     private fun updatePdfConfiguration() {
@@ -119,10 +137,24 @@ internal class PdfReaderActivity : BaseActivity(), DocumentListener, Screen<
 
     private fun setupRecyclerView() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = PdfAnnotationsListRecyclerAdapter(this,viewModel) { selectedAnnotation ->
+        adapter = PdfAnnotationListRecyclerAdapter(
+            activity = this,
+            viewModel = viewModel,
+            annotationPreviewMemoryCache = this.annotationPreviewMemoryCache,
+            annotationPreviewFileCache = this.annotationPreviewFileCache,
+            annotationPreviewCacheUpdatedEventStream = this.annotationPreviewCacheUpdatedEventStream
+        ) { selectedAnnotation ->
             viewModel.selectAnnotation(selectedAnnotation)
         }
         binding.recyclerView.adapter = adapter
+    }
+
+    private fun annotationMaxSideSize(): Int {
+        val outValue = TypedValue()
+        resources.getValue(R.dimen.pdf_sidebar_width_percent, outValue, true)
+        val sidebarWidthPercentage = outValue.float
+        val annotationSize = Resources.getSystem().displayMetrics.widthPixels * sidebarWidthPercentage
+        return annotationSize.toInt()
     }
 
     companion object {

@@ -166,6 +166,10 @@ class FileStore @Inject constructor (
         return result
     }
 
+    fun generateTempFile(): File {
+        return File(getRootDirectory(), System.currentTimeMillis().toString())
+    }
+
     fun annotationPreviews(pdfKey: String, libraryId: LibraryIdentifier): File {
         val folderPath = File(getRootDirectory(), "annotations/${libraryId.folderName}/$pdfKey")
         folderPath.mkdirs()

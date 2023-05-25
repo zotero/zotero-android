@@ -14,6 +14,7 @@ open class EventStream<T>(private val applicationScope: ApplicationScope) {
         sharedFlow.tryEmit(update)
     }
 
+    //This is a preferred way performance-wise.
     fun emitAsync(update: T) {
         applicationScope.launch {
             sharedFlow.emit(update)
