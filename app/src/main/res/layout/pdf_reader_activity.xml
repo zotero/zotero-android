@@ -50,19 +50,36 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/top_bar">
 
+        <SearchView
+            android:id="@+id/search_view"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="@id/recycler_view"
+            app:layout_constraintRight_toRightOf="@id/recycler_view"
+            android:layout_width="0dp"
+            android:elevation="10dp"
+            android:queryHint="Search"
+            android:queryBackground="@drawable/pdf_annotation_search_view"
+            android:submitBackground="@drawable/pdf_annotation_search_view"
+            android:background="@drawable/pdf_annotation_search_view"
+            app:theme="@style/SearchAutoCompleteTextView"
+            android:layout_height="wrap_content"
+            >
+
+        </SearchView>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="10dp"
             android:overScrollMode="never"
             android:scrollbars="none"
+            android:background="@color/pdf_annotations_form_background"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.01"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_percent="0.0"
+            app:layout_constraintTop_toBottomOf="@id/search_view"
             tools:listitem="@layout/pdf_reader_annotation_highlight" />
 
         <FrameLayout

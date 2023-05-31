@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.core.content.ContextCompat
 import timber.log.Timber
 import kotlin.math.roundToInt
@@ -94,3 +96,6 @@ fun Context.getFileSize(uri: Uri): Long? {
         return null
     }
 }
+
+@Composable
+fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }

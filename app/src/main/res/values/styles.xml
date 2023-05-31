@@ -203,4 +203,11 @@
     <declare-styleable name="TintedSwitchStyle">
         <attr name="ts_shouldUseHomeTheme" format="boolean" />
     </declare-styleable>
+
+    <style name="SearchAutoCompleteTextView" parent="ThemeOverlay.Material3.AutoCompleteTextView">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorHint">#9D9CA2</item>
+        <item name="colorControlNormal">#9D9CA2</item>
+    </style>
+
 </resources>

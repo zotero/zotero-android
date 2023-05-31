@@ -148,6 +148,19 @@ object CustomLayoutSize {
                 small -> false
             }
         }
+
+        fun calculatePdfSidebarHeaderIconSize(): Dp {
+            return when (this) {
+                big, medium -> 24.dp
+                small -> 22.dp
+            }
+        }
+        fun calculatePdfSidebarTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 16.sp
+                small -> 16.sp
+            }
+        }
     }
 
 

@@ -2,6 +2,7 @@ package org.zotero.android.pdf
 
 import android.content.Context
 import android.graphics.RectF
+import androidx.lifecycle.viewModelScope
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.AnnotationFlags
 import com.pspdfkit.annotations.AnnotationProvider
@@ -9,6 +10,7 @@ import com.pspdfkit.annotations.AnnotationType
 import com.pspdfkit.annotations.HighlightAnnotation
 import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
+import com.pspdfkit.configuration.PdfConfiguration
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.ui.PdfFragment
@@ -18,6 +20,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import okhttp3.internal.toHexString
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.BaseViewModel2
@@ -33,13 +37,16 @@ import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
+import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library
@@ -56,7 +63,10 @@ class PdfReaderViewModel @Inject constructor(
     private val sessionDataEventStream: SessionDataEventStream,
     private val annotationPreviewManager: AnnotationPreviewManager,
     private val fileCache: AnnotationPreviewFileCache,
-    private val context: Context
+    private val context: Context,
+    private val fileStore: FileStore,
+    private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
+    val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -74,11 +84,21 @@ class PdfReaderViewModel @Inject constructor(
         this.annotationMaxSideSize = annotationMaxSideSize
         this.fragment = fragment
         this.document = document
+        setupAnnotationCacheUpdateStream()
         loadRawDocument()
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
         initState()
         loadDocumentData()
         setupInteractionListeners()
+    }
+
+    private fun setupAnnotationCacheUpdateStream() {
+        annotationPreviewCacheUpdatedEventStream.flow()
+            .onEach { key ->
+//                notifyItemChanged(viewModel.viewState.sortedKeys.indexOfFirst { it.key == key })
+                triggerEffect(PdfReaderViewEffect.UpdateAnnotationsList(-1))
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun loadRawDocument() {
@@ -105,7 +125,7 @@ class PdfReaderViewModel @Inject constructor(
 
         })
         fragment.addOnAnnotationDeselectedListener { annotation, p1 ->
-            deselectSelectedAnnotation()
+            deselectSelectedAnnotation(annotation)
         }
     }
 
@@ -393,14 +413,13 @@ class PdfReaderViewModel @Inject constructor(
                 ) to item.annotationSortIndex
             )
         }
-        //TODO uncomment this to start adding annotations from document
-//        for (annotation in documentAnnotations.values) {
-//            val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
-//            val index = keys.index(key to annotation.sortIndex, sortedBy = { lData, rData ->
-//                lData.second.compareTo(rData.second) == 1
-//            })
-//            keys.add(element = key to annotation.sortIndex, index = index)
-//        }
+        for (annotation in documentAnnotations.values) {
+            val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
+            val index = keys.index(key to annotation.sortIndex, sortedBy = { lData, rData ->
+                lData.second.compareTo(rData.second) == 1
+            })
+            keys.add(element = key to annotation.sortIndex, index = index)
+        }
         return keys.map { it.first }
     }
 
@@ -720,7 +739,8 @@ class PdfReaderViewModel @Inject constructor(
             if (location != null) {
                 focus(annotation = annotation, location = location, document = this.document)
             } else if (annotation.type != org.zotero.android.database.objects.AnnotationType.ink || fragment.activeAnnotationTool?.toAnnotationType() != AnnotationType.INK) {
-                select(annotation = annotation, pageIndex = fragment.pageIndex, document = this.document)
+                val pageIndex = fragment.pageIndex
+                select(annotation = annotation, pageIndex = pageIndex, document = this.document)
             }
         } else {
             select(annotation = null, pageIndex = fragment.pageIndex, document = this.document)
@@ -732,7 +752,7 @@ class PdfReaderViewModel @Inject constructor(
         location: Pair<Int, RectF>,
         document: PdfDocument
     ) {
-        val pageIndex = location.first
+        val pageIndex = annotation.page
         scrollIfNeeded(pageIndex, true) {
             select(annotation = annotation, pageIndex = pageIndex, document = document)
         }
@@ -749,7 +769,7 @@ class PdfReaderViewModel @Inject constructor(
             completion()
             return
         }
-        fragment.setPageIndex(pageIndex, false)
+        fragment.setPageIndex(pageIndex, true)
         completion()
     }
 
@@ -912,8 +932,10 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun deselectSelectedAnnotation() {
-        _select(key = null, didSelectInDocument = false)
+    private fun deselectSelectedAnnotation(annotation: Annotation) {
+//        if (viewState.selectedAnnotationKey?.key == annotation.key ) {
+//            _select(key = null, didSelectInDocument = false)
+//        }
     }
 
     val selectedAnnotation: org.zotero.android.pdf.Annotation?
@@ -929,7 +951,44 @@ class PdfReaderViewModel @Inject constructor(
         )
         annotationPreviewManager.cancelProcessing()
         fileCache.cancelProcessing()
+
+        document.annotationProvider
+            .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
+            .toList()
+            .blockingGet()
+            .forEach {
+                this.document.annotationProvider.removeAnnotationFromPage(it)
+            }
         super.onCleared()
+    }
+
+    fun generatePdfConfiguration(): PdfConfiguration {
+        val pdfSettings = fileStore.getPDFSettings()
+        return PdfConfiguration.Builder()
+            .scrollDirection(pdfSettings.direction)
+            .scrollMode(pdfSettings.transition)
+            .fitMode(pdfSettings.pageFitting)
+            .layoutMode(pdfSettings.pageMode)
+            .themeMode(pdfSettings.appearanceMode)
+            .disableFormEditing()
+            .disableAnnotationRotation()
+            .setSelectedAnnotationResizeEnabled(false)
+            .autosaveEnabled(false)
+            .build()
+    }
+
+    fun loadPreviews(keys: List<String>) {
+        if (keys.isEmpty()) else { return }
+
+        val isDark = viewState.isDark
+        val libraryId = viewState.library.identifier
+
+        for (key in keys) {
+            if (annotationPreviewMemoryCache.getBitmap(key) != null) {
+                continue
+            }
+            fileCache.preview(key = key, parentKey = viewState.key, libraryId = libraryId, isDark = isDark)
+        }
     }
 
 }

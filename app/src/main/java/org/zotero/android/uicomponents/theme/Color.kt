@@ -30,6 +30,7 @@ object CustomPalette {
     val ErrorRedLightShadeFour = Color(0xFFF8E6EA)
     val PendingYellow = Color(0xFFF2C94C)
     val zoteroItemDetailSectionTitle = Color(0xFF6C6C73)
+    val pdfAnnotationSidebarSelectedItem = Color(0xFF3C59B2)
 }
 
 /**
@@ -79,7 +80,11 @@ data class CustomSemanticColors(
     val popupSelectedRow: Color,
     val sortPickerBackground: Color,
     val sortPickerSelected: Color,
-    val sortPickerUnSelected: Color
+    val sortPickerUnSelected: Color,
+    val pdfAnnotationsItemBackground: Color,
+    val pdfAnnotationsTopbarBackground: Color,
+    val pdfAnnotationsFormBackground: Color,
+    val pdfAnnotationsDividerBackground: Color,
 ) {
 
     data class DynamicTheme(
@@ -121,6 +126,10 @@ fun lightCustomColors(
     sortPickerBackground = Color(0xFFFFFFFF),
     sortPickerSelected = Color(0xFFFFFFFF),
     sortPickerUnSelected = Color(0xFFEEEEEF),
+    pdfAnnotationsItemBackground = Color(0xFFFFFFFF),
+    pdfAnnotationsTopbarBackground = Color(0xFFFAFAFD),
+    pdfAnnotationsFormBackground = Color(0xFFF2F2F7),
+    pdfAnnotationsDividerBackground = Color(0xFFE4E4E7)
 )
 
 fun darkCustomColors(
@@ -151,6 +160,10 @@ fun darkCustomColors(
     sortPickerBackground = Color(0xFF1C1C1E),
     sortPickerSelected = Color(0xFF69696F),
     sortPickerUnSelected = Color(0xFF313136),
+    pdfAnnotationsItemBackground = Color(0xFF000000),
+    pdfAnnotationsTopbarBackground = Color(0xFF282828),
+    pdfAnnotationsFormBackground = Color(0xFF1C1C1E),
+    pdfAnnotationsDividerBackground = Color(0xFF1B1B1C)
 )
 
 internal fun createSemanticColors(

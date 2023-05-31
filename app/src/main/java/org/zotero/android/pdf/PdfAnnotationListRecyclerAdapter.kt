@@ -153,6 +153,35 @@ class PdfAnnotationListRecyclerAdapter(
         }
     }
 
+    inner class ImageHolder(private val itemBinding: PdfReaderAnnotationImageBinding) :
+        RecyclerView.ViewHolder(itemBinding.root) {
+        fun bind(index: Int, loadPreview: () -> Bitmap?) {
+            val key = viewModel.viewState.sortedKeys[index]
+            val annotation = viewModel.annotation(key)!!
+            val annotationColor = Color.parseColor(annotation.displayColor)
+            itemBinding.highlighterIcon.setColorFilter(annotationColor)
+            itemBinding.headerTitle.text =
+                activity.getString(R.string.page_number, annotation.pageLabel)
+
+            itemBinding.tagsCommentDivider.isVisible =
+                !annotation.tags.isEmpty() && !annotation.comment.isEmpty()
+            itemBinding.tags.isVisible = !annotation.tags.isEmpty()
+            itemBinding.comment.isVisible = !annotation.comment.isEmpty()
+
+            itemBinding.comment.text = annotation.comment
+            itemBinding.tags.text = annotation.tags.joinToString(separator = ", ") { it.name }
+
+            val bitmap = loadPreview()
+            if (bitmap == null) {
+                itemBinding.annotationImage.setImageResource(0)
+            } else {
+                itemBinding.annotationImage.setImageBitmap(bitmap)
+                itemBinding.annotationImage.maxHeight = viewModel.annotationMaxSideSize
+            }
+        }
+    }
+
+
     inner class HighlightHolder(private val itemBinding: PdfReaderAnnotationHighlightBinding) :
         RecyclerView.ViewHolder(itemBinding.root) {
         fun bind(index: Int) {
@@ -198,34 +227,6 @@ class PdfAnnotationListRecyclerAdapter(
 
             itemBinding.comment.text = annotation.comment
             itemBinding.tags.text = annotation.tags.joinToString(separator = ", ") { it.name }
-        }
-    }
-
-    inner class ImageHolder(private val itemBinding: PdfReaderAnnotationImageBinding) :
-        RecyclerView.ViewHolder(itemBinding.root) {
-        fun bind(index: Int, loadPreview: () -> Bitmap?) {
-            val key = viewModel.viewState.sortedKeys[index]
-            val annotation = viewModel.annotation(key)!!
-            val annotationColor = Color.parseColor(annotation.displayColor)
-            itemBinding.highlighterIcon.setColorFilter(annotationColor)
-            itemBinding.headerTitle.text =
-                activity.getString(R.string.page_number, annotation.pageLabel)
-
-            itemBinding.tagsCommentDivider.isVisible =
-                !annotation.tags.isEmpty() && !annotation.comment.isEmpty()
-            itemBinding.tags.isVisible = !annotation.tags.isEmpty()
-            itemBinding.comment.isVisible = !annotation.comment.isEmpty()
-
-            itemBinding.comment.text = annotation.comment
-            itemBinding.tags.text = annotation.tags.joinToString(separator = ", ") { it.name }
-
-            val bitmap = loadPreview()
-            if (bitmap == null) {
-                itemBinding.annotationImage.setImageResource(0)
-            } else {
-                itemBinding.annotationImage.setImageBitmap(bitmap)
-                itemBinding.annotationImage.maxHeight = viewModel.annotationMaxSideSize
-            }
         }
     }
 
