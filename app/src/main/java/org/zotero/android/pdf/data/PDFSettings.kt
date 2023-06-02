@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import com.pspdfkit.configuration.page.PageFitMode
 import com.pspdfkit.configuration.page.PageLayoutMode

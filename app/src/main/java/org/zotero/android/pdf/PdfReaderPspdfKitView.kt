@@ -15,7 +15,6 @@ import com.pspdfkit.ui.PdfFragment
 import org.zotero.android.R
 import org.zotero.android.databinding.PdfScreenReaderHolderBinding
 
-
 @Composable
 fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     val activity = LocalContext.current as? AppCompatActivity ?: return

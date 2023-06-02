@@ -85,6 +85,7 @@ data class CustomSemanticColors(
     val pdfAnnotationsTopbarBackground: Color,
     val pdfAnnotationsFormBackground: Color,
     val pdfAnnotationsDividerBackground: Color,
+    val pdfAnnotationsSearchBarBackground: Color,
 ) {
 
     data class DynamicTheme(
@@ -129,7 +130,8 @@ fun lightCustomColors(
     pdfAnnotationsItemBackground = Color(0xFFFFFFFF),
     pdfAnnotationsTopbarBackground = Color(0xFFFAFAFD),
     pdfAnnotationsFormBackground = Color(0xFFF2F2F7),
-    pdfAnnotationsDividerBackground = Color(0xFFE4E4E7)
+    pdfAnnotationsDividerBackground = Color(0xFFE4E4E7),
+    pdfAnnotationsSearchBarBackground = Color(0xFFE4E3EA),
 )
 
 fun darkCustomColors(
@@ -163,7 +165,8 @@ fun darkCustomColors(
     pdfAnnotationsItemBackground = Color(0xFF000000),
     pdfAnnotationsTopbarBackground = Color(0xFF282828),
     pdfAnnotationsFormBackground = Color(0xFF1C1C1E),
-    pdfAnnotationsDividerBackground = Color(0xFF1B1B1C)
+    pdfAnnotationsDividerBackground = Color(0xFF1B1B1C),
+    pdfAnnotationsSearchBarBackground = CustomPalette.Charcoal,
 )
 
 internal fun createSemanticColors(

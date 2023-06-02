@@ -39,6 +39,7 @@ import org.zotero.android.R
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.data.Annotation
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -58,6 +59,7 @@ internal fun PdfReaderSidebar(
             .padding(horizontal = 8.dp)
     ) {
         Spacer(modifier = Modifier.height(10.dp))
+        PdfSidebarSearchBar(viewState = viewState, viewModel = viewModel)
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             state = lazyListState,

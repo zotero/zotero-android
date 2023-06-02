@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import android.graphics.PointF
 import android.graphics.RectF
@@ -8,6 +8,7 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
@@ -66,7 +67,7 @@ data class DatabaseAnnotation(
         }
     }
 
-    fun author(displayName: String, username: String): String {
+    override fun author(displayName: String, username: String): String {
         val authorName =
             item.fields.where().key(FieldKeys.Item.Annotation.authorName).findFirst()?.value
         if (authorName != null) {

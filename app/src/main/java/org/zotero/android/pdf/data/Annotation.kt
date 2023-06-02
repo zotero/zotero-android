@@ -1,9 +1,10 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import android.graphics.PointF
 import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.Tag
 
@@ -42,6 +43,8 @@ interface Annotation {
             }
         }
     }
+
+    fun author(displayName: String, username: String): String
 
     val displayColor: String get(){
         if (!color.startsWith("#")) {

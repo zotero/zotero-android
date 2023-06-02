@@ -22,7 +22,7 @@ import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoi
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.pdf.PdfReaderActivity
-import org.zotero.android.pdf.PdfReaderArgs
+import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File

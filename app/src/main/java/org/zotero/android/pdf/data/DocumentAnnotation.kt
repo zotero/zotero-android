@@ -1,8 +1,10 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import android.graphics.PointF
 import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.AnnotationBoundingBoxConverter
+import org.zotero.android.pdf.AnnotationKey
 import org.zotero.android.sync.Tag
 import java.util.Date
 
@@ -35,6 +37,10 @@ data class DocumentAnnotation(
 
     override fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter): List<RectF> {
         return this.rects
+    }
+
+    override fun author(displayName: String, username: String): String {
+        return this.author
     }
 
 //    fun isAuthor(currentUserId: Int): Boolean {

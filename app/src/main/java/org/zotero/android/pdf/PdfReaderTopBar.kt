@@ -25,7 +25,7 @@ internal fun PdfReaderTopBar(
 ) {
     TopAppBar(
         title = {
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(0.dp))
             Icon(
                 modifier = Modifier
                     .size(28.dp)

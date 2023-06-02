@@ -72,6 +72,7 @@
     <string name="ascending">Ascending</string>
     <string name="descending">Descending</string>
     <string name="search_items">Search Items</string>
+    <string name="search">Search</string>
     <string name="filters">Filters</string>
     <string name="downloaded_files">Downloaded Files</string>
     <string name="download">Download</string>

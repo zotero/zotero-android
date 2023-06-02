@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 enum class PdfAnnotationChanges {
     color,

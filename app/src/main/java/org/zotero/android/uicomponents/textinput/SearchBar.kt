@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -39,11 +40,12 @@ fun SearchBar(
     onInnerValueChanged: (TextFieldValue) -> Unit,
     textStyle: TextStyle = CustomTheme.typography.default,
     textFieldState: TextFieldValue,
+    backgroundColor: Color = CustomTheme.colors.inputBar,
 ) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(CustomTheme.colors.inputBar),
+            .background(backgroundColor),
         verticalAlignment = CenterVertically
     ) {
         Icon(

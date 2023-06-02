@@ -20,7 +20,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import okhttp3.internal.toHexString
 import org.zotero.android.api.network.CustomResult
@@ -47,6 +50,10 @@ import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
+import org.zotero.android.pdf.data.AnnotationsFilter
+import org.zotero.android.pdf.data.DatabaseAnnotation
+import org.zotero.android.pdf.data.DocumentAnnotation
+import org.zotero.android.pdf.data.PdfAnnotationChanges
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library
@@ -77,6 +84,7 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var document: PdfDocument
     private lateinit var rawDocument: PdfDocument
     private var comments = mutableMapOf<String, String>()
+    private val onSearchStateFlow = MutableStateFlow("")
 
     var annotationMaxSideSize = 0
 
@@ -85,11 +93,21 @@ class PdfReaderViewModel @Inject constructor(
         this.fragment = fragment
         this.document = document
         setupAnnotationCacheUpdateStream()
+        setupSearchStateFlow()
         loadRawDocument()
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
         initState()
         loadDocumentData()
         setupInteractionListeners()
+    }
+
+    private fun setupSearchStateFlow() {
+        onSearchStateFlow
+            .debounce(150)
+            .map { text ->
+                search(text)
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun setupAnnotationCacheUpdateStream() {
@@ -327,6 +345,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun change(annotation: Annotation, changes: List<String>) {
+        fragment.notifyAnnotationHasChanged(annotation)
         //TODO
     }
 
@@ -606,7 +625,8 @@ class PdfReaderViewModel @Inject constructor(
         if (!deletedPdfAnnotations.isEmpty()) {
             for (annotation in deletedPdfAnnotations) {
                 if (annotation.flags.contains(AnnotationFlags.READONLY)) {
-                    annotation.flags.remove(AnnotationFlags.READONLY)
+                    annotation.flags =
+                        EnumSet.copyOf(annotation.flags - AnnotationFlags.READONLY)
                 }
                 annotationPreviewManager.delete(
                     annotation = annotation,
@@ -748,7 +768,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun focus(
-        annotation: org.zotero.android.pdf.Annotation,
+        annotation: org.zotero.android.pdf.data.Annotation,
         location: Pair<Int, RectF>,
         document: PdfDocument
     ) {
@@ -774,7 +794,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
 
-    private fun select(annotation: org.zotero.android.pdf.Annotation?, pageIndex: Int, document: PdfDocument) {
+    private fun select(annotation: org.zotero.android.pdf.data.Annotation?, pageIndex: Int, document: PdfDocument) {
 
         //TODO updateSelection
 
@@ -797,7 +817,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun annotation(key: AnnotationKey): org.zotero.android.pdf.Annotation? {
+    fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.Annotation? {
         when(key.type) {
             AnnotationKey.Kind.database -> {
                 return this.databaseAnnotations!!.where().key(key.key).findFirst()?.let { DatabaseAnnotation(item = it) }
@@ -938,7 +958,7 @@ class PdfReaderViewModel @Inject constructor(
 //        }
     }
 
-    val selectedAnnotation: org.zotero.android.pdf.Annotation?
+    val selectedAnnotation: org.zotero.android.pdf.data.Annotation?
         get() {
             return viewState.selectedAnnotationKey?.let { annotation(it) }
         }
@@ -991,6 +1011,120 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    fun onSearch(text: String) {
+        updateState {
+            copy(searchTerm = text)
+        }
+        onSearchStateFlow.tryEmit(text)
+    }
+
+    private fun search(term: String) {
+        val trimmedTerm = term.trim().trim { it == '\n' }
+        filterAnnotations(term = trimmedTerm, filter = viewState.filter)
+    }
+
+    private fun filterAnnotations(term: String, filter: AnnotationsFilter?) {
+        if (term.isEmpty() && filter == null) {
+            val snapshot = viewState.snapshotKeys ?: return
+
+            this.document.annotationProvider.getAllAnnotationsOfType(
+                EnumSet.allOf(
+                    AnnotationType::class.java
+                )
+            ).forEach { annotation ->
+                if (annotation.flags.contains(AnnotationFlags.HIDDEN)) {
+                    annotation.flags =
+                        EnumSet.copyOf(annotation.flags - AnnotationFlags.HIDDEN)
+                    processAnnotationObservingUpdated(annotation, listOf("flags"))
+                }
+            }
+
+            updateState {
+                copy(snapshotKeys = null, sortedKeys = snapshot, searchTerm = null, filter = null)
+            }
+            return
+        }
+
+        val snapshot = viewState.snapshotKeys ?: viewState.sortedKeys
+        val filteredKeys = filteredKeys(snapshot = snapshot, term = term, filter = filter)
+
+        this.document.annotationProvider.getAllAnnotationsOfType(
+            EnumSet.allOf(
+                AnnotationType::class.java
+            )
+        ).forEach { annotation ->
+            val isHidden =
+                filteredKeys.firstOrNull { it.key == (annotation.key ?: annotation.uuid) } == null
+            if (isHidden && !annotation.flags.contains(AnnotationFlags.HIDDEN)) {
+                annotation.flags =
+                    EnumSet.copyOf(annotation.flags + AnnotationFlags.HIDDEN)
+                processAnnotationObservingUpdated(annotation, listOf("flags"))
+            } else if(!isHidden && annotation.flags.contains(AnnotationFlags.HIDDEN)) {
+                annotation.flags =
+                    EnumSet.copyOf(annotation.flags - AnnotationFlags.HIDDEN)
+                processAnnotationObservingUpdated(annotation, listOf("flags"))
+            }
+        }
+
+        if (viewState.snapshotKeys == null) {
+            updateState {
+                copy(snapshotKeys = viewState.sortedKeys)
+            }
+        }
+        updateState {
+            copy(sortedKeys = filteredKeys, searchTerm = term, filter = filter)
+        }
+    }
+
+    private fun filteredKeys(snapshot: List<AnnotationKey>, term: String?, filter: AnnotationsFilter?): List<AnnotationKey> {
+        if (term == null && filter == null) {
+            return snapshot
+        }
+        return snapshot.filter { key ->
+            val annotation = annotation(key) ?: return@filter false
+            filter(
+                annotation = annotation,
+                term = term,
+                displayName = viewState.displayName,
+                username = viewState.username
+            ) && filter(annotation = annotation, filter = filter)
+        }
+    }
+
+    private fun filter(
+        annotation: org.zotero.android.pdf.data.Annotation,
+        term: String?,
+        displayName: String,
+        username: String
+    ): Boolean {
+        if (term == null) {
+            return true
+        }
+        return annotation.key.lowercase() == term.lowercase() ||
+                annotation.author(displayName = displayName, username = username)
+                    .contains(term, ignoreCase = true) ||
+                annotation.comment.contains(term, ignoreCase = true) ||
+                (annotation.text ?: "").contains(term, ignoreCase = true) ||
+                annotation.tags.any { it.name.contains(term, ignoreCase = true) }
+    }
+
+    private fun filter(
+        annotation: org.zotero.android.pdf.data.Annotation,
+        filter: AnnotationsFilter?
+    ): Boolean {
+        if (filter == null) {
+            return true
+        }
+        val hasTag =
+            if (filter.tags.isEmpty()) true else annotation.tags.firstOrNull {
+                filter.tags.contains(
+                    it.name
+                )
+            } != null
+        val hasColor =
+            if (filter.colors.isEmpty()) true else filter.colors.contains(annotation.color)
+        return hasTag && hasColor
+    }
 }
 
 data class PdfReaderViewState(
@@ -1016,6 +1150,8 @@ data class PdfReaderViewState(
     var selectedAnnotationCommentActive: Boolean = false,
     val sidebarEditingEnabled: Boolean = false,
     val updatedAnnotationKeys: List<AnnotationKey>? = null,
+    val searchTerm: String? = null,
+    val filter: AnnotationsFilter? = null,
 ) : ViewState {
 }
 

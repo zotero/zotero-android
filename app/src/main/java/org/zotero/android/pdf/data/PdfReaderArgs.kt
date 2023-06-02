@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import android.net.Uri
 import org.zotero.android.sync.Library

@@ -17,9 +17,9 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.AnnotationBoundingBoxConverter
-import org.zotero.android.pdf.AnnotationEditability
-import org.zotero.android.pdf.DatabaseAnnotation
-import org.zotero.android.pdf.DocumentAnnotation
+import org.zotero.android.pdf.data.AnnotationEditability
+import org.zotero.android.pdf.data.DatabaseAnnotation
+import org.zotero.android.pdf.data.DocumentAnnotation
 import timber.log.Timber
 import java.util.Date
 import java.util.EnumSet
@@ -135,7 +135,7 @@ class AnnotationConverter {
         }
 
         private fun areaAnnotation(
-            annotation: org.zotero.android.pdf.Annotation,
+            annotation: org.zotero.android.pdf.data.Annotation,
             type: Kind,
             color: Int,
             boundingBoxConverter: AnnotationBoundingBoxConverter
@@ -166,7 +166,7 @@ class AnnotationConverter {
         }
 
         private fun highlightAnnotation(
-            annotation: org.zotero.android.pdf.Annotation,
+            annotation: org.zotero.android.pdf.data.Annotation,
             type: Kind,
             color: Int,
             alpha: Float,
@@ -197,7 +197,7 @@ class AnnotationConverter {
         }
 
         private fun noteAnnotation(
-            annotation: org.zotero.android.pdf.Annotation,
+            annotation: org.zotero.android.pdf.data.Annotation,
             type: Kind,
             color: Int,
             boundingBoxConverter: AnnotationBoundingBoxConverter
@@ -229,7 +229,7 @@ class AnnotationConverter {
         }
 
         private fun inkAnnotation(
-            annotation: org.zotero.android.pdf.Annotation,
+            annotation: org.zotero.android.pdf.data.Annotation,
             type: Kind, color: Int, boundingBoxConverter: AnnotationBoundingBoxConverter): InkAnnotation {
             val lines = annotation.paths(boundingBoxConverter = boundingBoxConverter)
             val ink = InkAnnotation(annotation.page)

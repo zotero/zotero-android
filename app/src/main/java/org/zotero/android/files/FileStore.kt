@@ -14,7 +14,7 @@ import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.helpers.MimeType
-import org.zotero.android.pdf.PDFSettings
+import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
