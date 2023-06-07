@@ -49,6 +49,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
+import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowItemTypePickerEffect
@@ -340,7 +341,15 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, key: String, library: Library) {
-        triggerEffect(AllItemsViewEffect.ShowPdf(file = file, key = key, library = library))
+        val uri = Uri.fromFile(file)
+        ScreenArguments.pdfReaderArgs = PdfReaderArgs(
+            key = key,
+            library = library,
+            page = null,
+            preselectedAnnotationKey = null,
+            uri = uri,
+        )
+        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen)
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1338,6 +1347,6 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    data class ShowPdf(val file: File, val key: String, val library: Library) : AllItemsViewEffect()
+    object NavigateToPdfScreen : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
 }

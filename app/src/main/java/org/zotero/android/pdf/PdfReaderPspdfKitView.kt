@@ -3,44 +3,49 @@ package org.zotero.android.pdf
 import android.content.res.Resources
 import android.net.Uri
 import android.util.TypedValue
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.fragment.app.commit
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.listeners.DocumentListener
 import com.pspdfkit.ui.PdfFragment
 import org.zotero.android.R
-import org.zotero.android.databinding.PdfScreenReaderHolderBinding
 
 @Composable
 fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     val activity = LocalContext.current as? AppCompatActivity ?: return
     val configuration = viewModel.generatePdfConfiguration()
     val annotationMaxSideSize = annotationMaxSideSize()
-    AndroidViewBinding(
+    val fragmentManager = activity.supportFragmentManager
+    AndroidView(
         modifier = Modifier.fillMaxSize(),
-        factory = { inflater, _, _ ->
-            val binding = PdfScreenReaderHolderBinding.inflate(inflater)
-            val newFragment = PdfFragment.newInstance(uri, configuration)
-            newFragment.addDocumentListener(object : DocumentListener {
-                override fun onDocumentLoaded(document: PdfDocument) {
-                    viewModel.init(
-                        document = document,
-                        fragment = newFragment,
-                        annotationMaxSideSize = annotationMaxSideSize
-                    )
+        factory = { context ->
+            FrameLayout(context).apply {
+                id = ViewCompat.generateViewId()
+                fragmentManager.commit {
+                    val newFragment = PdfFragment.newInstance(uri, configuration)
+                    newFragment.addDocumentListener(object : DocumentListener {
+                        override fun onDocumentLoaded(document: PdfDocument) {
+                            viewModel.init(
+                                document = document,
+                                fragment = newFragment,
+                                annotationMaxSideSize = annotationMaxSideSize
+                            )
+                        }
+                    })
+                    add(id, newFragment, "pspdfView")
                 }
-            })
-            activity.supportFragmentManager
-                .beginTransaction()
-                .replace(binding.fragmentContainer.id, newFragment)
-                .commit()
-            binding
-        }, update = {
-        })
+            }
+        },
+        update = {
+        }
+    )
 }
 
 @Composable

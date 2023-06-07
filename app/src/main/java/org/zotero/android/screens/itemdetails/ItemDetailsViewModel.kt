@@ -52,9 +52,11 @@ import org.zotero.android.helpers.formatter.fullDateWithDashes
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.index
+import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
+import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.NavigateToPdfScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OnBack
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenFile
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenWebpage
@@ -63,7 +65,6 @@ import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowAddOrEdi
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowCreatorEditEffect
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowImageViewer
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowItemTypePickerEffect
-import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowPdf
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowVideoPlayer
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
@@ -1421,11 +1422,16 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, attachment: Attachment) {
-        triggerEffect(ShowPdf(
-            file = file,
+        val uri = Uri.fromFile(file)
+        ScreenArguments.pdfReaderArgs = PdfReaderArgs(
             key = attachment.key,
-            library = viewState.library!!
-        ))
+            library = viewState.library!!,
+            page = null,
+            preselectedAnnotationKey = null,
+            uri = uri,
+        )
+
+        triggerEffect(NavigateToPdfScreen)
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1764,7 +1770,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
-    data class ShowPdf(val file: File, val key: String, val library: Library) : ItemDetailsViewEffect()
+    object NavigateToPdfScreen : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
 }

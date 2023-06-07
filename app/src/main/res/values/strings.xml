@@ -3,6 +3,7 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="ok">OK</string>
+    <string name="clear">Clear</string>
 
 
     <string name="onboarding_access"><annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
@@ -130,4 +131,6 @@
     <string name="collections_picker_title">Choose Parent</string>
     <string name="collection_was_deleted">This collection has been deleted. Do you want to revert it?</string>
     <string name="page_number">Page %s</string>
+    <string name="filter_annotations">Filter Annotations</string>
+    <string name="select_tags">Select Tags…</string>
 </resources>

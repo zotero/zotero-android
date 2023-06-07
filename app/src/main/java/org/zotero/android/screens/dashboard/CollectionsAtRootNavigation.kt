@@ -12,7 +12,7 @@ import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.architecture.ui.screenOrDialogFixedHeight
+import org.zotero.android.architecture.ui.screenOrDialogFixedMaxHeight
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
 import org.zotero.android.screens.collections.CollectionsScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -60,7 +60,7 @@ fun NavGraphBuilder.collectionAtRootGraph(
         },
         navigateToCollectionEdit = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT) },
     )
-    screenOrDialogFixedHeight(
+    screenOrDialogFixedMaxHeight(
         route = CollectionsAtRootDestinations.COLLECTION_EDIT,
         layoutType = layoutType,
     ) {

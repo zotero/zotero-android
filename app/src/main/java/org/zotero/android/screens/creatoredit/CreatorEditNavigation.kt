@@ -16,7 +16,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @Composable
-internal fun CreatorEditNavigation(scaffoldModifier: Modifier = Modifier) {
+internal fun CreatorEditNavigation() {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -31,25 +31,22 @@ internal fun CreatorEditNavigation(scaffoldModifier: Modifier = Modifier) {
         creatorEditScreen(
             onBack = navigation::onBack,
             navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
         singlePickerScreen(onBack = navigation::onBack)
     }
 }
 
 private fun NavGraphBuilder.creatorEditScreen(
-    scaffoldModifier: Modifier,
     navigateToSinglePickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${CreatorEditDestinations.CREATOR_EDIT}",
+        route = CreatorEditDestinations.CREATOR_EDIT,
         arguments = listOf(),
     ) {
         CreatorEditScreen(
             onBack = onBack,
             navigateToSinglePickerScreen = navigateToSinglePickerScreen,
-            scaffoldModifier = scaffoldModifier,
         )
     }
 }
@@ -58,7 +55,7 @@ private fun NavGraphBuilder.singlePickerScreen(
     onBack: () -> Unit,
 ) {
     composable(
-        route = "${SINGLE_PICKER_SCREEN}",
+        route = SINGLE_PICKER_SCREEN,
         arguments = listOf(),
     ) {
         SinglePickerScreen(onCloseClicked = onBack)

@@ -25,7 +25,11 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import okhttp3.internal.toHexString
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
@@ -54,11 +58,14 @@ import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.DatabaseAnnotation
 import org.zotero.android.pdf.data.DocumentAnnotation
 import org.zotero.android.pdf.data.PdfAnnotationChanges
+import org.zotero.android.pdffilter.PdfFilterArgs
+import org.zotero.android.pdffilter.PdfFilterResult
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SessionDataEventStream
+import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.EnumSet
 import javax.inject.Inject
@@ -88,10 +95,18 @@ class PdfReaderViewModel @Inject constructor(
 
     var annotationMaxSideSize = 0
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfFilterResult) {
+        viewModelScope.launch {
+            set(result.annotationsFilter)
+        }
+    }
+
     fun init(document: PdfDocument, fragment: PdfFragment, annotationMaxSideSize: Int) = initOnce {
         this.annotationMaxSideSize = annotationMaxSideSize
         this.fragment = fragment
         this.document = document
+        EventBus.getDefault().register(this)
         setupAnnotationCacheUpdateStream()
         setupSearchStateFlow()
         loadRawDocument()
@@ -964,6 +979,7 @@ class PdfReaderViewModel @Inject constructor(
         }
 
     override fun onCleared() {
+        EventBus.getDefault().unregister(this)
         liveAnnotations?.removeAllChangeListeners()
         annotationPreviewManager.deleteAll(
             parentKey = viewState.key,
@@ -1040,7 +1056,7 @@ class PdfReaderViewModel @Inject constructor(
             }
 
             updateState {
-                copy(snapshotKeys = null, sortedKeys = snapshot, searchTerm = null, filter = null)
+                copy(snapshotKeys = null, sortedKeys = snapshot, searchTerm = "", filter = null)
             }
             return
         }
@@ -1076,8 +1092,8 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    private fun filteredKeys(snapshot: List<AnnotationKey>, term: String?, filter: AnnotationsFilter?): List<AnnotationKey> {
-        if (term == null && filter == null) {
+    private fun filteredKeys(snapshot: List<AnnotationKey>, term: String, filter: AnnotationsFilter?): List<AnnotationKey> {
+        if (term.isEmpty() && filter == null) {
             return snapshot
         }
         return snapshot.filter { key ->
@@ -1093,11 +1109,11 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun filter(
         annotation: org.zotero.android.pdf.data.Annotation,
-        term: String?,
+        term: String,
         displayName: String,
         username: String
     ): Boolean {
-        if (term == null) {
+        if (term.isEmpty()) {
             return true
         }
         return annotation.key.lowercase() == term.lowercase() ||
@@ -1125,6 +1141,62 @@ class PdfReaderViewModel @Inject constructor(
             if (filter.colors.isEmpty()) true else filter.colors.contains(annotation.color)
         return hasTag && hasColor
     }
+
+    fun showFilterPopup() {
+        val colors = mutableSetOf<String>()
+        val tags = mutableSetOf<Tag>()
+
+        val processAnnotation: (org.zotero.android.pdf.data.Annotation) -> Unit = { annotation ->
+            colors.add(annotation.color)
+            for (tag in annotation.tags) {
+                tags.add(tag)
+            }
+        }
+
+        for (annotation in this.databaseAnnotations!!) {
+            processAnnotation(DatabaseAnnotation(item = annotation))
+        }
+        for (annotation in this.viewState.documentAnnotations.values) {
+            processAnnotation(annotation)
+        }
+
+        val sortedTags = tags.sortedWith { lTag, rTag ->
+            if (lTag.color.isEmpty() == rTag.color.isEmpty()) {
+                return@sortedWith lTag.name.compareTo(other = rTag.name, ignoreCase = true)
+            }
+            if (!lTag.color.isEmpty() && rTag.color.isEmpty()) {
+                return@sortedWith 1
+            }
+            -1
+        }
+
+        val sortedColors = mutableListOf<String>()
+        AnnotationsConfig.allColors.forEach { color ->
+            if (colors.contains(color)) {
+                sortedColors.add(color)
+            }
+        }
+        ScreenArguments.pdfFilterArgs = PdfFilterArgs(
+            filter = viewState.filter,
+            availableColors = sortedColors,
+            availableTags = sortedTags
+        )
+        triggerEffect(PdfReaderViewEffect.ShowPdfFilters)
+    }
+
+    fun toggleSideBar() {
+        updateState {
+            copy(showSideBar = !showSideBar)
+        }
+    }
+
+    private fun set(filter: AnnotationsFilter?) {
+        if (filter == viewState.filter) {
+            return
+        }
+        filterAnnotations(term = viewState.searchTerm, filter = filter,)
+        this.fragment.notifyLayoutChanged()
+    }
 }
 
 data class PdfReaderViewState(
@@ -1150,13 +1222,15 @@ data class PdfReaderViewState(
     var selectedAnnotationCommentActive: Boolean = false,
     val sidebarEditingEnabled: Boolean = false,
     val updatedAnnotationKeys: List<AnnotationKey>? = null,
-    val searchTerm: String? = null,
+    val searchTerm: String = "",
     val filter: AnnotationsFilter? = null,
+    val showSideBar: Boolean = false
 ) : ViewState {
 }
 
 sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
+    object ShowPdfFilters : PdfReaderViewEffect()
     data class UpdateAnnotationsList(val scrollToIndex: Int): PdfReaderViewEffect()
 }
 

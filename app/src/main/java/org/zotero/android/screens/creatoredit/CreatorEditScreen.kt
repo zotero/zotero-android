@@ -48,7 +48,6 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 internal fun CreatorEditScreen(
     onBack: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
-    scaffoldModifier: Modifier,
     viewModel: CreatorEditViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -78,7 +77,6 @@ internal fun CreatorEditScreen(
         }
     }
     CustomScaffold(
-        modifier = scaffoldModifier,
         topBar = {
             TopBar(
                 onCloseClicked = onBack,

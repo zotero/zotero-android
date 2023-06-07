@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,12 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
@@ -34,9 +33,11 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun PdfReaderScreen(
     onBack: () -> Unit,
-    uri: Uri,
+    navigateToPdfFilter: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
+    val params = ScreenArguments.pdfReaderArgs
+    val uri = params.uri
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
 
@@ -47,7 +48,9 @@ internal fun PdfReaderScreen(
             PdfReaderViewEffect.NavigateBack -> {
                 onBack()
             }
-
+            PdfReaderViewEffect.ShowPdfFilters -> {
+                navigateToPdfFilter()
+            }
             is PdfReaderViewEffect.UpdateAnnotationsList -> {
                 if (consumedEffect.scrollToIndex != -1) {
                     lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
@@ -62,21 +65,21 @@ internal fun PdfReaderScreen(
     SolidStatusBar()
 
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    var showSideBar by remember { mutableStateOf(false) }
+//    var showSideBar by remember { mutableStateOf(false) }
 
     CustomScaffold(
         backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
         topBar = {
             PdfReaderTopBar(
                 onShowHideSideBar = {
-                    showSideBar = !showSideBar
+                    viewModel.toggleSideBar()
                 },
             )
         },
     ) {
         if (layoutType.isTablet()) {
             PdfReaderTabletMode(
-                showSideBar = showSideBar,
+                showSideBar = viewState.showSideBar,
                 viewState = viewState,
                 viewModel = viewModel,
                 lazyListState = lazyListState,
@@ -85,7 +88,7 @@ internal fun PdfReaderScreen(
             )
         } else {
             PdfReaderPhoneMode(
-                showSideBar = showSideBar,
+                showSideBar = viewState.showSideBar,
                 viewState = viewState,
                 viewModel = viewModel,
                 lazyListState = lazyListState,
@@ -162,9 +165,7 @@ private fun PdfReaderPhoneMode(
             PdfReaderPspdfKitView(uri = uri, viewModel = viewModel)
         }
         AnimatedContent(targetState = showSideBar, transitionSpec = {
-            slideInHorizontally(animationSpec = tween(100),
-                initialOffsetX = { -it }) with
-                    fadeOut()
+            slideInHorizontally() with slideOutHorizontally()
         }) { showSideBar ->
             if (showSideBar) {
                 Column(

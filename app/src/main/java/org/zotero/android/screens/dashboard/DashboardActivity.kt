@@ -20,10 +20,6 @@ import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
-import org.zotero.android.architecture.ScreenArguments
-import org.zotero.android.pdf.PdfReaderActivity
-import org.zotero.android.pdf.data.PdfReaderArgs
-import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -66,26 +62,13 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
-        val onShowPdf: (file: File, key: String, library: Library) -> Unit = { file, key, library ->
-            val uri = Uri.fromFile(file)
-            ScreenArguments.pdfReaderArgs = PdfReaderArgs(
-                key = key,
-                library = library,
-                page = null,
-                preselectedAnnotationKey = null,
-                uri = uri,
-            )
-            startActivity(PdfReaderActivity.getIntent(this@DashboardActivity))
-        }
 
         setContent {
             CustomTheme {
-                DashboardScreen(
-                    onBack = { finish() },
+                DashboardRootNavigation(
                     onPickFile = onPickFile,
                     viewModel = viewModel,
                     onOpenFile = onOpenFile,
-                    onShowPdf = onShowPdf,
                     onOpenWebpage = onOpenWebpage,
                 )
             }

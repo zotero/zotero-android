@@ -20,7 +20,7 @@ internal fun PdfSidebarSearchBar(
     var searchBarTextFieldState by remember {
         mutableStateOf(
             TextFieldValue(
-                searchValue ?: ""
+                searchValue
             )
         )
     }

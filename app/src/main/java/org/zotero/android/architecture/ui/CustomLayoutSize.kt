@@ -161,6 +161,13 @@ object CustomLayoutSize {
                 small -> 16.sp
             }
         }
+
+        fun calculatePdfSidebarBottomPanelIconSize(): Dp {
+            return when (this) {
+                big, medium -> 30.dp
+                small -> 30.dp
+            }
+        }
     }
 
 

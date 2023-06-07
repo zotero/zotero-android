@@ -3,7 +3,7 @@ package org.zotero.android.sync
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 
-class Tag(
+data class Tag(
     val name: String,
     val color: String,
     val type: RTypedTag.Kind

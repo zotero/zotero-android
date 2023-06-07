@@ -12,7 +12,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -30,7 +29,7 @@ internal fun ItemDetailsScreen(
     navigateToImageViewerScreen: () -> Unit,
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (file: File, key: String, library: Library) -> Unit,
+    onShowPdf: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
 ) {
@@ -63,8 +62,8 @@ internal fun ItemDetailsScreen(
             is ItemDetailsViewEffect.OpenFile -> {
                 onOpenFile(consumedEffect.file, consumedEffect.mimeType)
             }
-            is ItemDetailsViewEffect.ShowPdf -> {
-                onShowPdf(consumedEffect.file, consumedEffect.key, consumedEffect.library)
+            is ItemDetailsViewEffect.NavigateToPdfScreen -> {
+                onShowPdf()
             }
             is ItemDetailsViewEffect.OpenWebpage -> {
                 onOpenWebpage(consumedEffect.uri)

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -52,98 +53,109 @@ internal fun PdfReaderSidebar(
     viewModel: PdfReaderViewModel,
     lazyListState: LazyListState
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .background(CustomTheme.colors.pdfAnnotationsFormBackground)
-            .padding(horizontal = 8.dp)
+            .padding(horizontal = 8.dp),
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
-        PdfSidebarSearchBar(viewState = viewState, viewModel = viewModel)
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            state = lazyListState,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
+
+
         ) {
-            itemsIndexed(
-                items = viewModel.viewState.sortedKeys
-            ) { index, key ->
-                val annotation = viewModel.annotation(key) ?: return@itemsIndexed
-                var rowModifier: Modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(shape = RoundedCornerShape(10.dp))
-                    .background(CustomTheme.colors.pdfAnnotationsItemBackground)
+            Spacer(modifier = Modifier.height(10.dp))
+            PdfSidebarSearchBar(viewState = viewState, viewModel = viewModel)
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                state = lazyListState,
+            ) {
+                itemsIndexed(
+                    items = viewModel.viewState.sortedKeys
+                ) { index, key ->
+                    val annotation = viewModel.annotation(key) ?: return@itemsIndexed
+                    var rowModifier: Modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(shape = RoundedCornerShape(10.dp))
+                        .background(CustomTheme.colors.pdfAnnotationsItemBackground)
 
-                val selected = annotation.key == viewModel.viewState.selectedAnnotationKey?.key
-                if (selected) {
-                    rowModifier = rowModifier.border(
-                        width = 3.dp,
-                        color = CustomPalette.pdfAnnotationSidebarSelectedItem,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Box(
-                    modifier = rowModifier
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { viewModel.selectAnnotation(key) },
+                    val selected = annotation.key == viewModel.viewState.selectedAnnotationKey?.key
+                    if (selected) {
+                        rowModifier = rowModifier.border(
+                            width = 3.dp,
+                            color = CustomPalette.pdfAnnotationSidebarSelectedItem,
+                            shape = RoundedCornerShape(10.dp)
                         )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
+                        modifier = rowModifier
+                            .safeClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { viewModel.selectAnnotation(key) },
+                            )
                     ) {
-                        val annotationColor =
-                            Color(android.graphics.Color.parseColor(annotation.displayColor))
-                        val loadPreview = {
-                            val preview = viewModel.annotationPreviewMemoryCache.getBitmap(annotation.key)
-                            if (preview == null) {
-                                viewModel.loadPreviews(listOf(annotation.key))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            val annotationColor =
+                                Color(android.graphics.Color.parseColor(annotation.displayColor))
+                            val loadPreview = {
+                                val preview =
+                                    viewModel.annotationPreviewMemoryCache.getBitmap(annotation.key)
+                                if (preview == null) {
+                                    viewModel.loadPreviews(listOf(annotation.key))
+                                }
+                                preview
                             }
-                            preview
-                        }
 
-                        HeaderRow(
-                            annotation = annotation,
-                            annotationColor = annotationColor,
-                            layoutType = layoutType
-                        )
-                        if (!annotation.tags.isEmpty() || !annotation.comment.isEmpty()) {
-                            SidebarDivider(modifier = Modifier.fillMaxWidth())
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-
-                        when (annotation.type) {
-                            AnnotationType.note -> NoteRow(
+                            HeaderRow(
                                 annotation = annotation,
+                                annotationColor = annotationColor,
                                 layoutType = layoutType
                             )
+                            if (!annotation.tags.isEmpty() || !annotation.comment.isEmpty()) {
+                                SidebarDivider(modifier = Modifier.fillMaxWidth())
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
 
-                            AnnotationType.highlight -> HighlightRow(
-                                annotation = annotation,
-                                layoutType = layoutType,
-                                annotationColor = annotationColor,
-                            )
-                            AnnotationType.ink -> InkRow(
-                                viewModel = viewModel,
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                                layoutType = layoutType,
-                            )
-                            AnnotationType.image -> ImageRow(
-                                viewModel = viewModel,
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                                layoutType = layoutType,
-                            )
+                            when (annotation.type) {
+                                AnnotationType.note -> NoteRow(
+                                    annotation = annotation,
+                                    layoutType = layoutType
+                                )
+
+                                AnnotationType.highlight -> HighlightRow(
+                                    annotation = annotation,
+                                    layoutType = layoutType,
+                                    annotationColor = annotationColor,
+                                )
+
+                                AnnotationType.ink -> InkRow(
+                                    viewModel = viewModel,
+                                    annotation = annotation,
+                                    loadPreview = loadPreview,
+                                    layoutType = layoutType,
+                                )
+
+                                AnnotationType.image -> ImageRow(
+                                    viewModel = viewModel,
+                                    annotation = annotation,
+                                    loadPreview = loadPreview,
+                                    layoutType = layoutType,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+        PdfReaderBottomPanel(layoutType = layoutType, viewModel = viewModel)
     }
-
 }
 
 @Composable
@@ -218,10 +230,12 @@ fun HighlightRow(
     layoutType: CustomLayoutSize.LayoutType,
     annotationColor: Color
 ) {
-    Box(modifier = Modifier
-        .padding(bottom = 8.dp)
-        .fillMaxWidth()
-        .height(IntrinsicSize.Max)) {
+    Box(
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max)
+    ) {
         Box(
             modifier = Modifier
                 .padding(start = 8.dp)

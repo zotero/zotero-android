@@ -25,7 +25,6 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.systemui.SolidStatusBar
@@ -38,7 +37,7 @@ internal fun DashboardScreen(
     onBack: () -> Unit,
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (file: File, key: String, library: Library) -> Unit,
+    onShowPdf: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
@@ -117,6 +116,7 @@ internal fun DashboardScreen(
             onOptionClick = viewModel::onLongPressOptionsItemSelected
         )
     }
+
 
 }
 

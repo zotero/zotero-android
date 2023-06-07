@@ -14,7 +14,7 @@ import com.google.accompanist.navigation.animation.composable
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.screenOrDialogDynamicHeight
-import org.zotero.android.architecture.ui.screenOrDialogFixedHeight
+import org.zotero.android.architecture.ui.screenOrDialogFixedMaxHeight
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
@@ -25,7 +25,6 @@ import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
-import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -38,7 +37,7 @@ import java.io.File
 internal fun FullScreenOrRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (file: File, key: String, library: Library) -> Unit,
+    onShowPdf: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navController: NavHostController,
     navigation: Navigation,
@@ -95,19 +94,19 @@ internal fun FullScreenOrRightPaneNavigation(
             TagPickerScreen(onBack = navigation::onBack)
         }
 
-        screenOrDialogFixedHeight(
+        screenOrDialogFixedMaxHeight(
             route = FullScreenDestinations.TAG_FILTER,
             layoutType = layoutType,
         ) {
             FilterScreen(onBack = navigation::onBack)
         }
-        screenOrDialogFixedHeight(
+        screenOrDialogFixedMaxHeight(
             route = FullScreenDestinations.ALL_ITEMS_SORT,
             layoutType = layoutType,
         ) {
             SortPickerNavigation()
         }
-        screenOrDialogFixedHeight(
+        screenOrDialogFixedMaxHeight(
             route = FullScreenDestinations.CREATOR_EDIT,
             layoutType = layoutType,
         ) {
@@ -137,7 +136,7 @@ private fun NavGraphBuilder.allItemsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (file: File, key: String, library: Library) -> Unit,
+    onShowPdf: () -> Unit,
 ) {
     composable(
         route = FullScreenDestinations.ALL_ITEMS,
@@ -172,7 +171,7 @@ private fun NavGraphBuilder.itemDetailsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: (file: File, key: String, library: Library) -> Unit,
+    onShowPdf: () -> Unit,
 ) {
     composable(
         route = FullScreenDestinations.ITEM_DETAILS,
