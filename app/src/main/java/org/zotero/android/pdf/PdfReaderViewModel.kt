@@ -2,6 +2,9 @@ package org.zotero.android.pdf
 
 import android.content.Context
 import android.graphics.RectF
+import android.widget.FrameLayout
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
 import androidx.lifecycle.viewModelScope
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.AnnotationFlags
@@ -92,6 +95,8 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var rawDocument: PdfDocument
     private var comments = mutableMapOf<String, String>()
     private val onSearchStateFlow = MutableStateFlow("")
+    var pspdfLayoutWrapper: FrameLayout? = null
+    private lateinit var fragmentManager: FragmentManager
 
     var annotationMaxSideSize = 0
 
@@ -102,7 +107,16 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun init(document: PdfDocument, fragment: PdfFragment, annotationMaxSideSize: Int) = initOnce {
+
+    fun init(
+        document: PdfDocument,
+        fragment: PdfFragment,
+        annotationMaxSideSize: Int,
+        pspdfLayoutWrapper: FrameLayout,
+        fragmentManager: FragmentManager,
+    ) = initOnce {
+        this.fragmentManager = fragmentManager
+        this.pspdfLayoutWrapper = pspdfLayoutWrapper
         this.annotationMaxSideSize = annotationMaxSideSize
         this.fragment = fragment
         this.document = document
@@ -979,6 +993,10 @@ class PdfReaderViewModel @Inject constructor(
         }
 
     override fun onCleared() {
+        fragmentManager.commit(allowStateLoss = true) {
+            remove(this@PdfReaderViewModel.fragment)
+        }
+
         EventBus.getDefault().unregister(this)
         liveAnnotations?.removeAllChangeListeners()
         annotationPreviewManager.deleteAll(
@@ -1195,7 +1213,15 @@ class PdfReaderViewModel @Inject constructor(
             return
         }
         filterAnnotations(term = viewState.searchTerm, filter = filter,)
-        this.fragment.notifyLayoutChanged()
+    }
+
+    fun updateVisibilityOfAnnotations() {
+        pspdfLayoutWrapper?.postDelayed({
+            val pageIndex = if (fragment.pageIndex == -1) 0 else fragment.pageIndex
+            this.document.annotationProvider.getAnnotations(pageIndex).forEach {
+                this.fragment.notifyAnnotationHasChanged(it)
+            }
+        }, 200)
     }
 }
 
