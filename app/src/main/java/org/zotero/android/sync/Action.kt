@@ -15,7 +15,7 @@ sealed class Action {
         val name: String
     ) : Action()
 
-    data class syncGroupToDb(val a: Int) : Action()
+    data class syncGroupToDb(val groupId: Int) : Action()
 
     data class resolveGroupMetadataWritePermission(
         val groupId: Int,
@@ -95,7 +95,7 @@ sealed class Action {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
                     return null
                 is resolveDeletedGroup -> return LibraryIdentifier.group(action.groupId)
-                is syncGroupToDb -> return LibraryIdentifier.group(action.a)
+                is syncGroupToDb -> return LibraryIdentifier.group(action.groupId)
                 is createUploadActions -> action.libraryId
                 is performWebDavDeletions -> action.libraryId
                 is resolveGroupMetadataWritePermission -> return LibraryIdentifier.group(action.groupId)

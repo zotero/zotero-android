@@ -6,16 +6,21 @@ import io.realm.annotations.PrimaryKey
 enum class GroupType(val str: String) {
     privateOpt("Private"),
     publicOpen("PublicOpen"),
-    publicClosed("PublicClosed"),
+    publicClosed("PublicClosed");
+    companion object {
+        private val map = GroupType.values().associateBy(GroupType::str)
+
+        fun from(str: String) = map[str]
+    }
 }
 
 open class RGroup : RealmObject() {
     @PrimaryKey
     var identifier: Int = 0
-    var owner: Int = 0
+    var owner: Long = 0
     var name: String = ""
     var desc: String = ""
-    var type: String = GroupType.privateOpt.str
+    var type: String = GroupType.privateOpt.name
     var canEditMetadata: Boolean = false
     var canEditFiles: Boolean = false
     var orderId: Int = 0

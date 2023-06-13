@@ -13,6 +13,7 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.helpers.MimeType
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.sync.CollectionIdentifier
@@ -50,7 +51,8 @@ class FileStore @Inject constructor (
         private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
 
-        private const val selectedCollectionId = "selectedCollectionId.bin"
+        private const val selectedLibraryId = "selectedLibraryId.bin"
+        private const val selectedCollectionId = "selectedCollectionId2.bin"
         private const val pdfSetting = "pdfSettings.bin"
     }
 
@@ -350,6 +352,17 @@ class FileStore @Inject constructor (
         return File(folder, libraryId.folderName)
     }
 
+    fun getSelectedLibrary(): LibraryIdentifier {
+        return deserializeFromFile(selectedLibraryId)
+            ?: LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
+    }
+
+    fun setSelectedLibrary(
+        libraryIdentifier: LibraryIdentifier,
+    ) {
+        serializeToFile(selectedLibraryId, libraryIdentifier)
+    }
+
     fun getSelectedCollectionId(): CollectionIdentifier {
         return deserializeFromFile(selectedCollectionId)
             ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
@@ -396,6 +409,8 @@ class FileStore @Inject constructor (
 
     fun reset() {
         setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
+        setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
+
     }
 
 }

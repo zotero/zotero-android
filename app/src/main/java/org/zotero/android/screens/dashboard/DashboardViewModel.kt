@@ -89,10 +89,10 @@ internal class DashboardViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
         val data = loadInitialDetailData(
             collectionId = fileStore.getSelectedCollectionId(),
-            libraryId = defaults.getSelectedLibrary()
+            libraryId = fileStore.getSelectedLibrary()
         )
         if (data != null) {
             showItems(data.collection, data.library, searchItemKeys = null)

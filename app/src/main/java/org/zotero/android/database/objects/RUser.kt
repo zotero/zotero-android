@@ -12,8 +12,8 @@ open class RUser : RealmObject() {
     var username: String = ""
 
     @LinkingObjects("createdBy")
-    val createdBy: RealmResults<RItem> = TODO()
+    val createdBy: RealmResults<RItem>? = null
 
     @LinkingObjects("lastModifiedBy")
-    val modifiedBy: RealmResults<RItem> = TODO()
+    val modifiedBy: RealmResults<RItem>? = null
 }

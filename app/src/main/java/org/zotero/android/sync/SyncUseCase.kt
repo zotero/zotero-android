@@ -26,12 +26,14 @@ import org.zotero.android.sync.conflictresolution.Conflict
 import org.zotero.android.sync.conflictresolution.ConflictEventStream
 import org.zotero.android.sync.conflictresolution.ConflictResolution
 import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
+import org.zotero.android.sync.syncactions.FetchAndStoreGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadDeletionsSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
 import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
 import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
 import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
+import org.zotero.android.sync.syncactions.MarkGroupForResyncSyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.RestoreDeletionsSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
@@ -196,6 +198,10 @@ class SyncUseCase @Inject constructor(
                     )
                 )
             }
+            is Action.syncGroupToDb -> {
+                processGroupSync(action.groupId)
+            }
+
             is Action.resolveGroupMetadataWritePermission -> {
                 resolve(
                     Conflict.groupWriteDenied(
@@ -1420,4 +1426,61 @@ class SyncUseCase @Inject constructor(
         }
     }
 
+    private suspend fun markGroupForResync(identifier: Int) {
+        try {
+            val result = MarkGroupForResyncSyncAction(
+                identifier = identifier,
+                dbStorage = dbWrapper
+            ).result()
+            finishCompletableAction(errorData = null)
+        } catch (e: Exception) {
+            Timber.e(e)
+            finishCompletableAction(
+                errorData = e to SyncError.ErrorData.from(
+                    libraryId = LibraryIdentifier.group(
+                        identifier
+                    )
+                )
+            )
+        }
+    }
+    private suspend fun processGroupSync(groupId: Int) {
+        val action = FetchAndStoreGroupSyncAction(identifier = groupId, userId = this.userId, dbStorage = this.dbWrapper, syncApi = this.syncApi)
+        val result = action.result()
+        if (result !is CustomResult.GeneralSuccess) {
+           val error = result as CustomResult.GeneralError.CodeError
+            finishGroupSyncAction(groupId, error.throwable)
+            return
+        }
+        finishGroupSyncAction(groupId, null)
+    }
+
+    private suspend fun finishGroupSyncAction(identifier: Int, error: Throwable?) {
+        if (error == null) {
+            //TODO report progress
+            processNextAction()
+            return
+        }
+
+        Timber.e(error, "Sync: group failed")
+        val e = syncError(
+            customResultError = CustomResult.GeneralError.CodeError(error),
+            data = SyncError.ErrorData.from(
+                libraryId = LibraryIdentifier.group(
+                    identifier
+                )
+            )
+        )
+        when(e) {
+            is SyncError.fatal2 ->  {
+                abort(e.error)
+            }
+
+            is SyncError.nonFatal2 -> {
+                this.nonFatalErrors.add(e.error)
+                //TODO report progress
+                markGroupForResync(identifier = identifier)
+            }
+        }
+    }
 }

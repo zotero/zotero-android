@@ -131,7 +131,6 @@ internal fun AllItemsScreen(
                     modifier = Modifier
                         .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                 ) {
-                    CustomDivider()
                     AllItemsSearchBar(
                         viewState = viewState,
                         viewModel = viewModel
@@ -186,7 +185,7 @@ private fun AllItemsSearchBar(
 
     SearchBar(
         hint = stringResource(id = Strings.search_items),
-        modifier = Modifier.padding(12.dp),
+        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

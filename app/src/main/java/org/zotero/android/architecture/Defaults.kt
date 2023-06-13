@@ -3,11 +3,9 @@ package org.zotero.android.architecture
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.files.DataMarshaller
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
-import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,7 +22,6 @@ open class Defaults @Inject constructor(
     private val apiToken = "apiToken"
     private val webDavPassword = "webDavPassword"
     private val showSubcollectionItems = "showSubcollectionItems"
-    private val selectedLibrary = "selectedLibrary"
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
     private val showCollectionItemCounts = "showCollectionItemCounts"
@@ -92,22 +89,6 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putBoolean(showSubcollectionItems, newValue) }
     }
 
-    fun getSelectedLibrary(): LibraryIdentifier {
-        val json: String = sharedPreferences.getString(
-            selectedLibrary,
-            null
-        )
-            ?: return LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
-        return dataMarshaller.unmarshal(json)
-    }
-
-    fun setSelectedLibrary(
-        libraryIdentifier: LibraryIdentifier,
-    ) {
-        val json = dataMarshaller.marshal(libraryIdentifier)
-        sharedPreferences.edit { putString(selectedLibrary, json) }
-    }
-
     fun setCreatorNamePresentation(namePresentation: ItemDetailCreator.NamePresentation) {
         val json = dataMarshaller.marshal(namePresentation)
         sharedPreferences.edit { putString(lastUsedCreatorNamePresentation, json) }
@@ -148,7 +129,6 @@ open class Defaults @Inject constructor(
         setUsername("")
         setDisplayName("")
         setUserId(0L)
-        setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
         setShowSubcollectionItems(false)
         setApiToken(null)
         setWebDavPassword(null)

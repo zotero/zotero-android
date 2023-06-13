@@ -2,9 +2,18 @@ package org.zotero.android.database.objects
 
 import io.realm.RealmObject
 import io.realm.annotations.PrimaryKey
+import kotlinx.serialization.Serializable
 
-enum class RCustomLibraryType(val libraryName: String) {
-    myLibrary("My Library");
+@Serializable
+enum class RCustomLibraryType : java.io.Serializable {
+    myLibrary;
+
+    val libraryName: String get() {
+        when (this) {
+            myLibrary ->
+            return "My Library"
+        }
+    }
 }
 
 open class RCustomLibrary : RealmObject() {

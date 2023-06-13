@@ -405,23 +405,23 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             lastModifiedByUser != null &&
             lastModifiedByUser.isValid &&
             createdByUser.identifier == lastModifiedByUser.identifier &&
-            createdByUser.createdBy.count() == 1 &&
-            createdByUser.modifiedBy.count() == 1
+            createdByUser.createdBy!!.count() == 1 &&
+            createdByUser.modifiedBy!!.count() == 1
         ) {
             createdByUser.deleteFromRealm()
         } else {
             val userCreatedBy = this.createdBy
             if (userCreatedBy != null &&
                 userCreatedBy.isValid &&
-                userCreatedBy.createdBy.count() == 1 &&
-                (!userCreatedBy.modifiedBy.isValid || userCreatedBy.modifiedBy.isEmpty())
+                userCreatedBy.createdBy!!.count() == 1 &&
+                (!userCreatedBy.modifiedBy!!.isValid || userCreatedBy.modifiedBy.isEmpty())
             ) {
                 userCreatedBy.deleteFromRealm()
             }
             val user = this.lastModifiedBy
             if (user != null && user.isValid &&
-                (!user.createdBy.isValid || user.createdBy.isEmpty()) &&
-                user.modifiedBy.count() == 1
+                (!user.createdBy!!.isValid || user.createdBy.isEmpty()) &&
+                user.modifiedBy!!.count() == 1
             ) {
                 user.deleteFromRealm()
             }

@@ -4,6 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
 import org.zotero.android.api.pojo.sync.DeletionsResponse
+import org.zotero.android.api.pojo.sync.GroupResponse
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -77,4 +78,11 @@ interface SyncApi {
         @HeaderMap headers: Map<String, String>,
         @Query("since") since: Int
     ): retrofit2.Response<DeletionsResponse>
+
+
+    @GET("groups/{identifier}")
+    suspend fun groupRequest(
+        @Path("identifier") identifier: Int,
+    ): retrofit2.Response<GroupResponse>
+
 }

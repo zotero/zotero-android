@@ -571,22 +571,6 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
-    private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
-        if (defaults.getSelectedLibrary() == libraryId) {
-            if (collectionId != null) {
-                fileStore.setSelectedCollectionId(collectionId)
-                return collectionId
-            }
-            return fileStore.getSelectedCollectionId()
-        }
-
-        val collectionId = collectionId ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
-        defaults.setSelectedLibrary(libraryId)
-        fileStore.setSelectedCollectionId(collectionId)
-        return collectionId
-
-    }
-
     fun onAdd() {
         updateState {
             copy(
@@ -1259,7 +1243,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun navigateToCollections() {
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = defaults.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
         triggerEffect(AllItemsViewEffect.ShowCollectionsEffect)
     }
 

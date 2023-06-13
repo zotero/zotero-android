@@ -699,7 +699,7 @@ class StoreItemDbRequest(
                     item.createdBy
                 }
                 item.createdBy = createdBy?.let { createUser(it, database) }
-                if (user != null && user.createdBy.isEmpty() && user.modifiedBy.isEmpty()) {
+                if (user != null && user.createdBy!!.isEmpty() && user.modifiedBy!!.isEmpty()) {
                     user.deleteFromRealm()
                 }
             }
@@ -711,7 +711,7 @@ class StoreItemDbRequest(
                     item.lastModifiedBy
                 }
                 item.lastModifiedBy = lastModifiedBy?.let { createUser(it, database) }
-                if (user != null && user.createdBy.isEmpty() && user.modifiedBy.isEmpty()) {
+                if (user != null && user.createdBy!!.isEmpty() && user.modifiedBy!!.isEmpty()) {
                     user.deleteFromRealm()
                 }
             }
@@ -732,8 +732,7 @@ class StoreItemDbRequest(
                 return dbUser
             }
 
-            val user = database.createObject<RUser>()
-            user.identifier = response.id
+            val user = database.createObject<RUser>(response.id)
             user.name = response.name
             user.username = response.username
             return user
