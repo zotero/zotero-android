@@ -59,7 +59,7 @@ internal fun DashboardScreen(
             BuildInfo(layoutType)
             if (layoutType.isTablet()) {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    Box(modifier = Modifier.weight(0.3f)) {
+                    Box(modifier = Modifier.weight(0.35f)) {
                         CollectionsAtRootNavigation(rightPaneNavController)
                     }
                     CustomDivider(
@@ -67,7 +67,7 @@ internal fun DashboardScreen(
                             .width(1.dp)
                             .fillMaxHeight()
                     )
-                    Box(modifier = Modifier.weight(0.7f)) {
+                    Box(modifier = Modifier.weight(0.65f)) {
                         FullScreenOrRightPaneNavigation(
                             onPickFile = onPickFile,
                             onOpenFile = onOpenFile,

@@ -74,6 +74,13 @@ internal class CollectionsViewModel @Inject constructor(
             val args = ScreenArguments.collectionsArgs
             initViewState(args)
             loadData()
+            maybeRecreateItemsScreen(args.shouldRecreateItemsScreen)
+        }
+    }
+
+    private fun maybeRecreateItemsScreen(shouldRecreateItemsScreen: Boolean) {
+        if (shouldRecreateItemsScreen) {
+            onItemTapped(viewState.collectionTree.collections[viewState.selectedCollectionId]!!)
         }
     }
 
@@ -440,6 +447,11 @@ internal class CollectionsViewModel @Inject constructor(
         triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
     }
 
+    fun navigateToLibraries() {
+        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen)
+    }
+
 }
 
 internal data class  CollectionsViewState(
@@ -471,6 +483,7 @@ internal data class  CollectionsViewState(
 internal sealed class  CollectionsViewEffect : ViewEffect {
     object NavigateBack : CollectionsViewEffect()
     object NavigateToAllItemsScreen : CollectionsViewEffect()
+    object NavigateToLibrariesScreen : CollectionsViewEffect()
     object ShowCollectionEditEffect: CollectionsViewEffect()
     object ScreenRefresh : CollectionsViewEffect()
 }

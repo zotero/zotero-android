@@ -6,4 +6,5 @@ import org.zotero.android.sync.LibraryIdentifier
 data class CollectionsArgs(
     val libraryId: LibraryIdentifier,
     val selectedCollectionId: CollectionIdentifier,
+    val shouldRecreateItemsScreen: Boolean = false,
     )

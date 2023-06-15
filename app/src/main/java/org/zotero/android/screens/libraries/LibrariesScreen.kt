@@ -1,4 +1,4 @@
-package org.zotero.android.screens.collections
+package org.zotero.android.screens.libraries
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,17 +17,15 @@ import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-internal fun CollectionsScreen(
-    onBack: () -> Unit,
-    navigateToAllItems: () -> Unit,
-    navigateToLibraries: () -> Unit,
-    navigateToCollectionEdit: () -> Unit,
-    viewModel: CollectionsViewModel = hiltViewModel(),
+internal fun LibrariesScreen(
+    navigateToCollectionsScreen: () -> Unit,
+    viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
+    val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(key1 = viewModel) {
         viewModel.init(isTablet = layoutType.isTablet())
@@ -36,22 +34,15 @@ internal fun CollectionsScreen(
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             null -> Unit
-            CollectionsViewEffect.NavigateBack -> onBack()
-            CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
-            CollectionsViewEffect.ShowCollectionEditEffect -> {
-                navigateToCollectionEdit()
-            }
-            CollectionsViewEffect.NavigateToLibrariesScreen -> {
-                navigateToLibraries()
-            }
+            LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen()
             else -> {}
         }
     }
 
     CustomScaffold(
+        backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground,
         topBar = {
-            CollectionsTopBar(
-                viewState = viewState,
+            LibrariesTopBar(
                 viewModel = viewModel,
             )
         },
@@ -71,7 +62,7 @@ internal fun CollectionsScreen(
         ) {
             Column {
                 CustomDivider()
-                CollectionsTable(
+                LibrariesTable(
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType

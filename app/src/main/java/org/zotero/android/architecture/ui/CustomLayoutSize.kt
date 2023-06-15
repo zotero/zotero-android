@@ -115,6 +115,13 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateLibraryRowTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 14.sp
+                small -> 14.sp
+            }
+        }
+
         fun calculateBuildInfoTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 14.sp

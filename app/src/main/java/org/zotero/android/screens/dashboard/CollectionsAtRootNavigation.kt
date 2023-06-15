@@ -15,6 +15,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.screenOrDialogFixedMaxHeight
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
 import org.zotero.android.screens.collections.CollectionsScreen
+import org.zotero.android.screens.libraries.LibrariesScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 /**
@@ -58,7 +59,17 @@ fun NavGraphBuilder.collectionAtRootGraph(
                 isTablet = layoutType.isTablet()
             )
         },
+        navigateToLibraries = {
+            navController.navigate(CollectionsAtRootDestinations.LIBRARIES_SCREEN)
+        },
         navigateToCollectionEdit = { navController.navigate(CollectionsAtRootDestinations.COLLECTION_EDIT) },
+    )
+    librariesScreen(
+        navigateToCollectionsScreen = {
+            navController.popBackStack(navController.graph.id, inclusive = true)
+            navController.navigate(CollectionsAtRootDestinations.LIBRARIES_SCREEN)
+            navController.navigate(CollectionsAtRootDestinations.COLLECTIONS_SCREEN)
+        }
     )
     screenOrDialogFixedMaxHeight(
         route = CollectionsAtRootDestinations.COLLECTION_EDIT,
@@ -88,18 +99,31 @@ private fun NavGraphBuilder.collectionsScreen(
     onBack: () -> Unit,
     navigateToAllItems: () -> Unit,
     navigateToCollectionEdit: () -> Unit,
+    navigateToLibraries: () -> Unit,
 ) {
     composable(route = CollectionsAtRootDestinations.COLLECTIONS_SCREEN) {
         CollectionsScreen(
             onBack = onBack,
             navigateToAllItems = navigateToAllItems,
+            navigateToLibraries = navigateToLibraries,
             navigateToCollectionEdit = navigateToCollectionEdit,
+        )
+    }
+}
+
+private fun NavGraphBuilder.librariesScreen(
+    navigateToCollectionsScreen: () -> Unit,
+) {
+    composable(route = CollectionsAtRootDestinations.LIBRARIES_SCREEN) {
+        LibrariesScreen(
+            navigateToCollectionsScreen = navigateToCollectionsScreen,
         )
     }
 }
 
 private object CollectionsAtRootDestinations {
     const val COLLECTIONS_SCREEN = "collectionsScreen"
+    const val LIBRARIES_SCREEN = "librariesScreen"
     const val COLLECTION_EDIT = "collectionEdit"
 }
 
