@@ -342,7 +342,7 @@ fun HeaderRow(
 }
 
 @Composable
-internal fun SidebarDivider(modifier: Modifier = Modifier) {
+fun SidebarDivider(modifier: Modifier = Modifier) {
     Divider(
         modifier = modifier,
         color = CustomTheme.colors.pdfAnnotationsDividerBackground,

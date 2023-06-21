@@ -60,7 +60,10 @@ internal fun DashboardScreen(
             if (layoutType.isTablet()) {
                 Row(modifier = Modifier.fillMaxSize()) {
                     Box(modifier = Modifier.weight(0.35f)) {
-                        CollectionsAtRootNavigation(rightPaneNavController)
+                        CollectionsAtRootNavigation(
+                            rightPaneNavController = rightPaneNavController,
+                            onOpenWebpage = onOpenWebpage
+                        )
                     }
                     CustomDivider(
                         modifier = Modifier

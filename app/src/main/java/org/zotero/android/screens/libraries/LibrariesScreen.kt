@@ -22,6 +22,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun LibrariesScreen(
     navigateToCollectionsScreen: () -> Unit,
+    onSettingsTapped: () -> Unit,
     viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -43,7 +44,7 @@ internal fun LibrariesScreen(
         backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground,
         topBar = {
             LibrariesTopBar(
-                viewModel = viewModel,
+                onSettingsTapped = onSettingsTapped,
             )
         },
     ) {

@@ -1,6 +1,7 @@
 
 package org.zotero.android.screens.dashboard
 
+import android.net.Uri
 import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import org.zotero.android.architecture.ui.screenOrDialogFixedMaxHeight
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
 import org.zotero.android.screens.collections.CollectionsScreen
 import org.zotero.android.screens.libraries.LibrariesScreen
+import org.zotero.android.screens.settings.SettingsNavigation
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 /**
@@ -23,7 +25,10 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
  * if it's a tablet, then it only occupies the left portion of the screen.
  */
 @Composable
-internal fun CollectionsAtRootNavigation(rightPaneNavController: NavHostController) {
+internal fun CollectionsAtRootNavigation(
+    rightPaneNavController: NavHostController,
+    onOpenWebpage: (uri: Uri) -> Unit,
+) {
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -39,6 +44,7 @@ internal fun CollectionsAtRootNavigation(rightPaneNavController: NavHostControll
             rightPaneNavController = rightPaneNavController,
             layoutType = calculateLayoutType,
             navController = navController,
+            onOpenWebpage = onOpenWebpage,
             onBack = navigation::onBack,
         )
     }
@@ -47,6 +53,7 @@ internal fun CollectionsAtRootNavigation(rightPaneNavController: NavHostControll
 fun NavGraphBuilder.collectionAtRootGraph(
     navController: NavHostController,
     onBack: () -> Unit,
+    onOpenWebpage: (uri: Uri) -> Unit,
     layoutType: CustomLayoutSize.LayoutType,
     rightPaneNavController: NavHostController? = null,
 ) {
@@ -69,7 +76,8 @@ fun NavGraphBuilder.collectionAtRootGraph(
             navController.popBackStack(navController.graph.id, inclusive = true)
             navController.navigate(CollectionsAtRootDestinations.LIBRARIES_SCREEN)
             navController.navigate(CollectionsAtRootDestinations.COLLECTIONS_SCREEN)
-        }
+        },
+        onSettingsTapped = { navController.navigate(CollectionsAtRootDestinations.SETTINGS) }
     )
     screenOrDialogFixedMaxHeight(
         route = CollectionsAtRootDestinations.COLLECTION_EDIT,
@@ -77,6 +85,14 @@ fun NavGraphBuilder.collectionAtRootGraph(
     ) {
         CollectionEditNavigation()
     }
+
+    screenOrDialogFixedMaxHeight(
+        route = CollectionsAtRootDestinations.SETTINGS,
+        layoutType = layoutType,
+    ) {
+        SettingsNavigation(onOpenWebpage = onOpenWebpage)
+    }
+
 }
 
 private fun toAllItems(
@@ -113,9 +129,11 @@ private fun NavGraphBuilder.collectionsScreen(
 
 private fun NavGraphBuilder.librariesScreen(
     navigateToCollectionsScreen: () -> Unit,
+    onSettingsTapped: () -> Unit,
 ) {
     composable(route = CollectionsAtRootDestinations.LIBRARIES_SCREEN) {
         LibrariesScreen(
+            onSettingsTapped = onSettingsTapped,
             navigateToCollectionsScreen = navigateToCollectionsScreen,
         )
     }
@@ -125,6 +143,7 @@ private object CollectionsAtRootDestinations {
     const val COLLECTIONS_SCREEN = "collectionsScreen"
     const val LIBRARIES_SCREEN = "librariesScreen"
     const val COLLECTION_EDIT = "collectionEdit"
+    const val SETTINGS = "settings"
 }
 
 @SuppressWarnings("UseDataClass")

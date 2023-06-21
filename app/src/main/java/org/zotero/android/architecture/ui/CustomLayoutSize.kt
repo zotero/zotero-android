@@ -175,6 +175,13 @@ object CustomLayoutSize {
                 small -> 30.dp
             }
         }
+
+        fun calculateSettingsSectionTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 14.sp
+                small -> 14.sp
+            }
+        }
     }
 
 

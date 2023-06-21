@@ -136,4 +136,16 @@
     <string name="libs">Libs</string>
     <string name="group_libraries">GROUP LIBRARIES</string>
     <string name="libraries">Libraries</string>
+    <string name="settings">Settings</string>
+
+    <string name="settings_support_and_feedback">"Support and Feedback"</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_sign_out">Sign Out</string>
+    <string name="settings_manage_account">Manage Account</string>
+    <string name="settings_delete_account">Delete Account</string>
+    <string name="settings_data_sync">DATA SYNC</string>
+    <string name="settings_account_caps">ACCOUNT</string>
+
+
 </resources>

@@ -1,5 +1,6 @@
 package org.zotero.android.screens.root
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -45,5 +46,15 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
         val intent: Intent = DashboardActivity.getIntent(this)
         startActivity(intent)
         finish()
+    }
+
+    companion object {
+        fun getIntentClearTask(
+            context: Context,
+        ): Intent {
+            return Intent(context, RootActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            }
+        }
     }
 }

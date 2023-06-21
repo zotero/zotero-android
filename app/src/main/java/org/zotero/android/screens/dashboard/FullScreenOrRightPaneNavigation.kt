@@ -52,6 +52,7 @@ internal fun FullScreenOrRightPaneNavigation(
             navController = navController,
             onBack = navigation::onBack,
             layoutType = layoutType,
+            onOpenWebpage = onOpenWebpage,
         )
         loadingScreen()
         allItemsScreen(
@@ -258,8 +259,6 @@ class Navigation(
     private val onBackPressedDispatcher: OnBackPressedDispatcher?,
 ) {
     fun onBack() = onBackPressedDispatcher?.onBackPressed()
-
-
 
     fun toCollectionsScreen() {
         navController.navigate(FullScreenDestinations.COLLECTIONS_SCREEN) {
