@@ -1,8 +1,9 @@
 package org.zotero.android.screens.addnote
 
+import android.webkit.WebMessage
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
@@ -11,15 +12,13 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
-import org.zotero.android.database.DbWrapper
-import org.zotero.android.sync.SchemaController
+import org.zotero.android.screens.addnote.data.WebViewInitMessage
+import org.zotero.android.screens.addnote.data.WebViewUpdateResponse
 import javax.inject.Inject
 
 @HiltViewModel
 internal class AddNoteViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
-    private val schemaController: SchemaController,
-    private val dispatcher: CoroutineDispatcher,
+    private val gson: Gson,
 ) : BaseViewModel2<AddNoteViewState, AddNoteViewEffect>(AddNoteViewState()) {
 
     fun init() = initOnce {
@@ -44,10 +43,32 @@ internal class AddNoteViewModel @Inject constructor(
         triggerEffect(AddNoteViewEffect.NavigateBack)
     }
 
-    fun onBodyTextChange(text: String) {
+    fun generateInitWebMessage(): WebMessage? {
+        val gson = gson.toJson(
+            WebViewInitMessage(
+                instanceId = 1,
+                message = WebViewInitMessage.WebViewInitPayload(
+                    action = "init",
+                    value = viewState.text,
+                    readOnly = false,
+                )
+            )
+        )
+        return WebMessage(gson)
+    }
+
+    fun processWebViewResponse(message: WebMessage) {
+        val data = message.data
+        if (data.contains("update")) {
+            val parsedMessage = gson.fromJson(data, WebViewUpdateResponse::class.java)
+            updateNoteText(parsedMessage.message.value)
+        }
+    }
+
+    private fun updateNoteText(noteText: String) {
         updateState {
             copy(
-                text = text
+                text = noteText
             )
         }
     }

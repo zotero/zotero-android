@@ -1,36 +1,27 @@
-
 package org.zotero.android.screens.addnote
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import android.annotation.SuppressLint
+import android.net.Uri
+import android.view.ViewGroup
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
+import android.webkit.WebMessage
+import android.webkit.WebMessagePort
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.database.objects.ItemTypes
-import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.textinput.CustomTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.CustomIconTopBar
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
+import timber.log.Timber
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun AddNoteScreen(
     onBack: () -> Unit,
     viewModel: AddNoteViewModel = hiltViewModel(),
@@ -42,80 +33,66 @@ internal fun AddNoteScreen(
         viewModel.init()
     }
 
-    val bodyFocusRequester = remember { FocusRequester() }
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
             is AddNoteViewEffect.NavigateBack -> onBack()
             null -> Unit
         }
     }
-
     CustomScaffold(
         topBar = {
             AddNoteTopBar(titleData = viewState.title, onDoneClicked = viewModel::onDoneClicked)
         },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.surface),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Top
-        ) {
-
-            Body(
-                layoutType = layoutType,
-                text = viewState.text,
-                focusRequester = bodyFocusRequester,
-                onValueChange = viewModel::onBodyTextChange
-            )
-
+        Column() {
+            WebView(viewModel)
         }
-
     }
 
 }
 
 @Composable
-private fun Body(
-    layoutType: CustomLayoutSize.LayoutType,
-    text: String,
-    focusRequester: FocusRequester,
-    onValueChange: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .padding(horizontal = 8.dp)
-            .fillMaxSize()
-    ) {
-        CustomTextField(
-            modifier = Modifier
-                .fillMaxSize(),
-            value = text,
-            hint = "",
-            focusRequester = focusRequester,
-            onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-        )
-    }
-}
-
-@Composable
-private fun AddNoteTopBar(
-    titleData: AddOrEditNoteArgs.TitleData?,
-    onDoneClicked: () -> Unit,
-) {
-    CustomIconTopBar(
-        title = titleData?.title,
-        iconInt = titleData?.type?.let { ItemTypes.iconName(it, null) },
-        actions = {
-            HeadingTextButton(
-                isEnabled = true,
-                onClick = onDoneClicked,
-                text = stringResource(Strings.done)
+private fun WebView(viewModel: AddNoteViewModel) {
+    AndroidView(
+        factory = { context ->
+            val webView = WebView(context)
+            webView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            webView.settings.javaScriptEnabled = true
+            webView.webChromeClient = object : WebChromeClient() {
+                override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                    Timber.d(
+                        consoleMessage.message() + " -- From line "
+                                + consoleMessage.lineNumber() + " of "
+                                + consoleMessage.sourceId()
+                    )
+                    return super.onConsoleMessage(consoleMessage)
+                }
+            }
+            webView.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView, url: String) {
+                    val channel: Array<WebMessagePort> = webView.createWebMessageChannel()
+                    val port = channel[0]
+                    port.setWebMessageCallback(object :
+                        WebMessagePort.WebMessageCallback() {
+                        override fun onMessage(port: WebMessagePort, message: WebMessage) {
+                            viewModel.processWebViewResponse(message)
+                        }
+                    })
+
+                    webView.postWebMessage(
+                        WebMessage("", arrayOf(channel[1])),
+                        Uri.EMPTY
+                    )
+                    port.postMessage(viewModel.generateInitWebMessage())
+                }
+            }
+            webView.loadUrl("file:///android_asset/editor.html")
+            webView
+        },
+        update = {
         }
     )
-
 }
