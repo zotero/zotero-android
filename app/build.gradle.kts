@@ -198,6 +198,7 @@ dependencies {
     implementation("commons-io:commons-io:2.4")
     implementation("commons-codec:commons-codec:1.13")
     implementation("commons-validator:commons-validator:1.7")
+    implementation("net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3")
 
     //Unit Tests
     testImplementation("junit:junit:4.13.2")

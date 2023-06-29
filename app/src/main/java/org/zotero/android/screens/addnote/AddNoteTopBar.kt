@@ -55,7 +55,7 @@ internal fun AddNoteTopBar(
             )
             Spacer(modifier = Modifier.width(8.dp))
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.addNoteBottomBar)
     )
 
 }

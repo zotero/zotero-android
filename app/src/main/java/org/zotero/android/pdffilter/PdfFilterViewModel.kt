@@ -24,8 +24,10 @@ internal class PdfFilterViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
-        viewModelScope.launch {
-            setTags(tagPickerResult.tags)
+        if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfFilter) {
+            viewModelScope.launch {
+                setTags(tagPickerResult.tags)
+            }
         }
     }
 
@@ -90,7 +92,8 @@ internal class PdfFilterViewModel @Inject constructor(
         ScreenArguments.tagPickerArgs = TagPickerArgs(
             libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary),
             selectedTags = viewState.tags,
-            tags = viewState.availableTags
+            tags = viewState.availableTags,
+            callPoint = TagPickerResult.CallPoint.PdfFilter,
         )
 
         triggerEffect(PdfFilterViewEffect.NavigateToTagPickerScreen)

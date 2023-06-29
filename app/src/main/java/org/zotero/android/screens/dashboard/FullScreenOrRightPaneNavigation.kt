@@ -15,7 +15,6 @@ import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoi
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.screenOrDialogDynamicHeight
 import org.zotero.android.architecture.ui.screenOrDialogFixedMaxHeight
-import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.filter.FilterScreen
@@ -38,6 +37,7 @@ internal fun FullScreenOrRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
+    toAddOrEditNote: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navController: NavHostController,
     navigation: Navigation,
@@ -62,7 +62,7 @@ internal fun FullScreenOrRightPaneNavigation(
             onOpenWebpage = onOpenWebpage,
             navigateToCollectionsScreen = navigation::toCollectionsScreen,
             navigateToItemDetails = navigation::toItemDetails,
-            navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToAddOrEditNote = toAddOrEditNote,
             navigateToSinglePicker = navigation::toSinglePicker,
             navigateToAllItemsSort = navigation::toAllItemsSort,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
@@ -74,7 +74,7 @@ internal fun FullScreenOrRightPaneNavigation(
             navigateToCreatorEdit = navigation::toCreatorEdit,
             navigateToTagPicker = navigation::toTagPicker,
             navigateToSinglePicker = navigation::toSinglePicker,
-            navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToAddOrEditNote = toAddOrEditNote,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
             onBack = navigation::onBack,
@@ -82,9 +82,6 @@ internal fun FullScreenOrRightPaneNavigation(
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(CallPoint.ItemDetails) },
             onShowPdf = onShowPdf,
-        )
-        addNoteScreen(
-            onBack = navigation::onBack
         )
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)
@@ -194,19 +191,6 @@ private fun NavGraphBuilder.itemDetailsScreen(
     }
 }
 
-private fun NavGraphBuilder.addNoteScreen(
-    onBack: () -> Unit,
-) {
-    composable(
-        route = FullScreenDestinations.ADD_NOTE,
-        arguments = listOf(),
-    ) {
-        AddNoteScreen(
-            onBack = onBack,
-        )
-    }
-}
-
 private fun NavGraphBuilder.loadingScreen(
 ) {
     composable(
@@ -243,7 +227,6 @@ object FullScreenDestinations {
     const val COLLECTIONS_SCREEN = "collectionsScreen"
     const val ALL_ITEMS = "allItems"
     const val ITEM_DETAILS = "itemDetails"
-    const val ADD_NOTE = "addNote"
     const val VIDEO_PLAYER_SCREEN = "videoPlayerScreen"
     const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
     const val ALL_ITEMS_SORT = "allItemsSort"
@@ -268,10 +251,6 @@ class Navigation(
 
     fun toItemDetails() {
         navController.navigate(FullScreenDestinations.ITEM_DETAILS)
-    }
-
-    fun toAddOrEditNote() {
-        navController.navigate(FullScreenDestinations.ADD_NOTE)
     }
 
     fun toAllItemsSort() {

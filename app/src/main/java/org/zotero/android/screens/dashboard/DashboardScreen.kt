@@ -38,6 +38,7 @@ internal fun DashboardScreen(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
+    toAddOrEditNote: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
@@ -76,6 +77,7 @@ internal fun DashboardScreen(
                             onOpenFile = onOpenFile,
                             onShowPdf = onShowPdf,
                             onOpenWebpage = onOpenWebpage,
+                            toAddOrEditNote = toAddOrEditNote,
                             navController = rightPaneNavController,
                             navigation = rightPaneNavigation
                         )
@@ -89,7 +91,8 @@ internal fun DashboardScreen(
                     onPickFile = onPickFile,
                     onOpenWebpage = onOpenWebpage,
                     onOpenFile = onOpenFile,
-                    onShowPdf = onShowPdf
+                    onShowPdf = onShowPdf,
+                    toAddOrEditNote = toAddOrEditNote,
                 )
             }
         }

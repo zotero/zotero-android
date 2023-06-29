@@ -16,6 +16,8 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.PdfReaderNavigation
+import org.zotero.android.screens.addnote.AddNoteScreen
+import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import java.io.File
 
@@ -43,10 +45,16 @@ internal fun DashboardRootNavigation(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onShowPdf = navigation::toPdfScreen,
+            toAddOrEditNote = navigation::toAddOrEditNote,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel
         )
         pdfNavigation()
+        addNoteScreen(
+            onBack = navigation::onBack,
+            navigateToTagPicker = navigation::toTagPicker
+        )
+        tagPickerScreen(onBack = navigation::onBack)
     }
 }
 
@@ -55,6 +63,7 @@ private fun NavGraphBuilder.dashboardScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
+    toAddOrEditNote: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
@@ -67,6 +76,7 @@ private fun NavGraphBuilder.dashboardScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,
+            toAddOrEditNote = toAddOrEditNote,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel
         )
@@ -84,9 +94,38 @@ private fun NavGraphBuilder.pdfNavigation(
     }
 }
 
+private fun NavGraphBuilder.addNoteScreen(
+    onBack: () -> Unit,
+    navigateToTagPicker: () -> Unit,
+) {
+    composable(
+        route = DashboardRootDestinations.ADD_NOTE,
+        arguments = listOf(),
+    ) {
+        AddNoteScreen(
+            onBack = onBack,
+            navigateToTagPicker = navigateToTagPicker,
+        )
+    }
+}
+
+private fun NavGraphBuilder.tagPickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = DashboardRootDestinations.TAG_PICKER_SCREEN,
+        arguments = listOf(),
+    ) {
+        TagPickerScreen(onBack = onBack)
+    }
+}
+
 private object DashboardRootDestinations {
     const val DASHBOARD_SCREEN = "dashboardScreen"
     const val PDF_SCREEN = "pdfScreen"
+    const val ADD_NOTE = "addNote"
+    const val TAG_PICKER_SCREEN = "tagPickerScreen"
+
 }
 
 @SuppressWarnings("UseDataClass")
@@ -98,5 +137,12 @@ private class DashboardRootNavigation(
 
     fun toPdfScreen() {
         navController.navigate(DashboardRootDestinations.PDF_SCREEN)
+    }
+    fun toAddOrEditNote() {
+        navController.navigate(DashboardRootDestinations.ADD_NOTE)
+    }
+
+    fun toTagPicker() {
+        navController.navigate(DashboardRootDestinations.TAG_PICKER_SCREEN)
     }
 }

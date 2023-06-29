@@ -35,7 +35,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun TagPickerScreen(
     onBack: () -> Unit,
     scaffoldModifier: Modifier = Modifier,

@@ -132,7 +132,10 @@ internal class TagPickerViewModel @Inject constructor(
         val tags = viewState.selectedTags.mapNotNull { id ->
             allTags.firstOrNull { it.id == id }
         }.sortedBy { it.name }
-        EventBus.getDefault().post(TagPickerResult(tags))
+        EventBus.getDefault().post(TagPickerResult(
+            tags = tags,
+            callPoint = ScreenArguments.tagPickerArgs.callPoint
+        ))
         triggerEffect(TagPickerViewEffect.OnBack)
     }
 

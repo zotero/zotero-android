@@ -146,6 +146,8 @@
     <string name="settings_delete_account">Delete Account</string>
     <string name="settings_data_sync">DATA SYNC</string>
     <string name="settings_account_caps">ACCOUNT</string>
+    <string name="tags_label">Tags:</string>
+
 
 
 </resources>

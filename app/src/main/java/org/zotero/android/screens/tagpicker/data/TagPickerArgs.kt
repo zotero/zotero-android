@@ -6,6 +6,7 @@ import org.zotero.android.sync.Tag
 data class TagPickerArgs(
     val libraryId: LibraryIdentifier,
     val selectedTags: Set<String>,
-    val tags: List<Tag> = emptyList()
+    val tags: List<Tag> = emptyList(),
+    val callPoint: TagPickerResult.CallPoint
 )
 

@@ -157,8 +157,10 @@ class ItemDetailsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
-        viewModelScope.launch {
-            setTags(tagPickerResult.tags)
+        if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ItemDetails) {
+            viewModelScope.launch {
+                setTags(tagPickerResult.tags)
+            }
         }
     }
 
@@ -511,7 +513,7 @@ class ItemDetailsViewModel @Inject constructor(
         val libraryId = viewState.library!!.identifier
         val selected = viewState.tags.map { it.id }.toSet()
         ScreenArguments.tagPickerArgs =
-            TagPickerArgs(libraryId = libraryId, selectedTags = selected)
+            TagPickerArgs(libraryId = libraryId, selectedTags = selected, callPoint = TagPickerResult.CallPoint.ItemDetails)
         triggerEffect(ItemDetailsViewEffect.ShowTagPickerEffect)
     }
 

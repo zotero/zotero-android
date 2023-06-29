@@ -42,7 +42,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun PdfFilterScreen(
     onBack: () -> Unit,
     navigateToTagPicker: () -> Unit,
