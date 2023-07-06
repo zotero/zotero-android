@@ -12,15 +12,15 @@ import org.zotero.android.database.requests.SyncVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncError
+import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.SyncType
 import java.io.IOException
 
 class SyncVersionsSyncAction(
     val objectS: SyncObject,
     val sinceVersion: Int?,
     val currentVersion: Int?,
-    val syncType: SyncType,
+    val syncType: SyncKind,
     val libraryId: LibraryIdentifier,
     val userId: Long,
     val syncDelayIntervals: List<Double>,
@@ -84,9 +84,9 @@ class SyncVersionsSyncAction(
     private suspend fun synchronizeVersions(
         libraryId: LibraryIdentifier, userId: Long,
         objectS: SyncObject, sinceVersion: Int?,
-        currentVersion: Int?, syncType: SyncType
+        currentVersion: Int?, syncType: SyncKind
     ): Pair<Int, List<String>> {
-        if (!this.checkRemote && this.syncType != SyncType.full) {
+        if (!this.checkRemote && this.syncType != SyncKind.full) {
             return loadChangedObjects(
                 objectS = objectS,
                 response = mapOf(),
@@ -128,7 +128,7 @@ class SyncVersionsSyncAction(
         libraryId: LibraryIdentifier,
         userId: Long,
         sinceVersion: Int?,
-        syncType: SyncType
+        syncType: SyncKind
     )
             : CustomResult<Map<String, Int>> {
         val url =
@@ -146,14 +146,14 @@ class SyncVersionsSyncAction(
         objectS: SyncObject,
         response: Map<String, Int>,
         libraryId: LibraryIdentifier,
-        syncType: SyncType,
+        syncType: SyncKind,
         newVersion: Int,
         delayIntervals: List<Double>
     ): Pair<Int, List<String>> {
         var identifiers = mutableListOf<String>()
         dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
             when (syncType) {
-                SyncType.full -> {
+                SyncKind.full -> {
                     coordinator.perform(
                         request = MarkOtherObjectsAsChangedByUser(
                             syncObject = objectS,
@@ -163,7 +163,7 @@ class SyncVersionsSyncAction(
                     )
                 }
 
-                SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal,SyncType.keysOnly -> {
+                SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal,SyncKind.keysOnly, SyncKind.prioritizeDownloads -> {
                     //no-op
                 }
             }

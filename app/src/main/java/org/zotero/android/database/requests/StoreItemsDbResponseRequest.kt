@@ -112,6 +112,7 @@ class StoreItemDbRequest(
         } else {
             item.deleted = false
             item.deleteAllChanges(database = database)
+            item.attachmentNeedsSync = false
         }
         return update(
             item = item,

@@ -5,9 +5,11 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
@@ -33,7 +35,8 @@ class UserControllers @Inject constructor(
     private val webSocketController: WebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
-    private val conflictResolutionUseCase: ConflictResolutionUseCase
+    private val conflictResolutionUseCase: ConflictResolutionUseCase,
+    private val defaults: Defaults,
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -49,7 +52,7 @@ class UserControllers @Inject constructor(
         syncController.init(
             userId = userId,
             syncDelayIntervals = DelayIntervals.sync,
-            conflictDelays = DelayIntervals.conflict
+            maxRetryCount = DelayIntervals.retry.size,
         )
         fileDownloader.init(userId = userId)
         var isFirstLaunch = false
@@ -62,6 +65,7 @@ class UserControllers @Inject constructor(
 
 
         this.isFirstLaunch = isFirstLaunch
+        syncScheduler.init(DelayIntervals.retry)
         this.changeObserver = ObjectUserChangeObserver(
             dbWrapper = dbWrapper, observable = objectUserChangeEventStream,
             applicationScope = applicationScope,
@@ -74,15 +78,18 @@ class UserControllers @Inject constructor(
     }
 
     fun enableSync(apiKey: String) {
-        objectUserChangeEventStream.flow().onEach { changedLibraries ->
+        objectUserChangeEventStream.flow()
+            .debounce(3000)
+            .onEach { changedLibraries ->
             syncScheduler.request(
-                type = SyncType.normal,
-                libraries = LibrarySyncType.specific(changedLibraries),
-                applyDelay = true
+                type = SyncKind.normal,
+                libraries = Libraries.specific(changedLibraries),
             )
         }.launchIn(applicationScope)
 
-        changeWsResponseKindEventStream.flow().onEach { change ->
+        changeWsResponseKindEventStream.flow()
+            .debounce(3000)
+            .onEach { change ->
             when (change) {
                 is ChangeWsResponse.Kind.translators -> {
                     // TODO update translations
@@ -94,7 +101,9 @@ class UserControllers @Inject constructor(
         }.launchIn(applicationScope)
 
         this.webSocketController.connect(apiKey = apiKey, completed = {
-            this.syncScheduler.request(type = SyncType.normal, libraries = LibrarySyncType.all)
+            //TODO backgroundUploadObserver.updateSessions()
+            val type: SyncKind = if(defaults.didPerformFullSyncFix()) SyncKind.normal else SyncKind.full
+            this.syncScheduler.request(type = type, libraries = Libraries.all)
         })
 
     }

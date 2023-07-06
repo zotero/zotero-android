@@ -4,9 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import org.zotero.android.api.NoAuthenticationApi
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
@@ -18,13 +16,11 @@ import javax.inject.Singleton
 
 @Singleton
 class RemoteAttachmentDownloader @Inject constructor(
-    private val syncApi: SyncApi,
     private val fileStorage: FileStore,
-    private val dbWrapper: DbWrapper,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
-    private val dispatcher: CoroutineDispatcher,
     private val noAuthenticationApi: NoAuthenticationApi,
     private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    val dispatcher: CoroutineDispatcher,
 ) {
     data class Download(
         val key: String,

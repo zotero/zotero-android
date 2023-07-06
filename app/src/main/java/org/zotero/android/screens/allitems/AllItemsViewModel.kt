@@ -75,13 +75,13 @@ import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.LibrarySyncType
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncScheduler
-import org.zotero.android.sync.SyncType
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.uicomponents.attachmentprogress.State
@@ -1275,7 +1275,7 @@ internal class AllItemsViewModel @Inject constructor(
             copy(isRefreshing = true)
         }
         this.syncScheduler.request(
-            type = SyncType.ignoreIndividualDelays, libraries = LibrarySyncType.specific(
+            type = SyncKind.ignoreIndividualDelays, libraries = Libraries.specific(
                 listOf(viewState.library.identifier)
             )
         )

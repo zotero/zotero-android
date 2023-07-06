@@ -147,7 +147,9 @@
     <string name="settings_data_sync">DATA SYNC</string>
     <string name="settings_account_caps">ACCOUNT</string>
     <string name="tags_label">Tags:</string>
-
+    <string name="reset_group_files">Reset Group Files and Sync</string>
+    <string name="skip_group">Skip Group</string>
+    <string name="file_write_denied">You no longer have file-editing access for the group %s, and files you\'ve changed locally cannot be uploaded. If you continue, all group files will be reset to their state on %s.\n\nIf you would like a chance to copy modified files elsewhere or to request file-editing access from a group administrator, you can skip syncing of the group now.</string>
 
 
 </resources>

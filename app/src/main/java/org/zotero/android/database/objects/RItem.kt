@@ -322,7 +322,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         }
 
     override fun markAsChanged(database: Realm) {
-        this.changes.add(RObjectChange.create(changes = this.currentChanges))
+        this.changes.add(RObjectChange.create(changes = this.allChanges))
         this.changeType = UpdatableChangeType.user.name
         this.deleted = false
         this.version = 0
@@ -346,9 +346,26 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         }
     }
 
-    private val currentChanges: List<RItemChanges>
+    private val allChanges: List<RItemChanges>
         get() {
-            var changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
+            if (this.rawType == ItemTypes.annotation) {
+                val changes = mutableListOf(
+                    RItemChanges.parent,
+                    RItemChanges.fields,
+                    RItemChanges.type,
+                    RItemChanges.tags
+                )
+                if (!this.rects.isEmpty()) {
+                    changes.add(RItemChanges.rects)
+                }
+                if (!this.paths.isEmpty()) {
+                    changes.add(RItemChanges.paths)
+                }
+                return changes
+            }
+
+
+            val changes = mutableListOf(RItemChanges.type, RItemChanges.fields, RItemChanges.tags)
             if (!this.creators.isEmpty()) {
                 changes.add(RItemChanges.creators)
             }
@@ -358,20 +375,11 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (this.parent != null) {
                 changes.add(RItemChanges.parent)
             }
-            if (!this.tags!!.isEmpty()) {
-                changes.add(RItemChanges.tags)
-            }
             if (this.trash) {
                 changes.add(RItemChanges.trash)
             }
             if (!this.relations.isEmpty()) {
                 changes.add(RItemChanges.relations)
-            }
-            if (!this.rects.isEmpty()) {
-                changes.add(RItemChanges.rects)
-            }
-            if (!this.paths.isEmpty()) {
-                changes.add(RItemChanges.paths)
             }
             return changes
         }

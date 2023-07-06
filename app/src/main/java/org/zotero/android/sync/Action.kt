@@ -6,7 +6,7 @@ sealed class Action {
     object loadKeyPermissions : Action()
     object syncGroupVersions : Action()
     data class createLibraryActions(
-        val librarySyncType: LibrarySyncType,
+        val librarySyncType: Libraries,
         val createLibraryActionsOptions: CreateLibraryActionsOptions
     ) : Action()
 
@@ -19,16 +19,25 @@ sealed class Action {
 
     data class resolveGroupMetadataWritePermission(
         val groupId: Int,
-        val libraryDataName: String
+        val name: String
+    ) : Action()
+    data class resolveGroupFileWritePermission(
+        val groupId: Int,
+        val name: String
     ) : Action()
 
     data class performWebDavDeletions(override val libraryId: LibraryIdentifier) : Action()
+
+    data class fixUpload(val key: String, override val libraryId: LibraryIdentifier) : Action()
+
+    data class removeActions(override val libraryId: LibraryIdentifier): Action()
 
     data class submitDeleteBatch(val batch: DeleteBatch) : Action()
 
     data class createUploadActions(
         override val libraryId: LibraryIdentifier,
-        val hadOtherWriteActions: Boolean
+        val hadOtherWriteActions: Boolean,
+        val canEditFiles: Boolean
     ) : Action()
 
     data class syncVersions(
@@ -69,7 +78,9 @@ sealed class Action {
 
     data class markGroupAsLocalOnly(val groupId: Int) : Action()
 
-    data class revertLibraryToOriginal(val libraryIdentifier: LibraryIdentifier): Action()
+    data class revertLibraryToOriginal(override val libraryId: LibraryIdentifier): Action()
+
+    data class revertLibraryFilesToOriginal(override val libraryId: LibraryIdentifier): Action()
 
     data class deleteGroup(val groupId: Int) : Action()
 
@@ -83,7 +94,7 @@ sealed class Action {
     ) : Action()
 
     data class restoreDeletions(
-        val libraryIdentifier: LibraryIdentifier,
+        override val libraryId: LibraryIdentifier,
         val collections: List<String>,
         val items: List<String>
     ) : Action()
@@ -112,8 +123,12 @@ sealed class Action {
                 is markGroupAsLocalOnly -> LibraryIdentifier.group(action.groupId)
                 is deleteGroup -> LibraryIdentifier.group(action.groupId)
                 is uploadAttachment -> action.upload.libraryId
-                is restoreDeletions -> action.libraryIdentifier
-                is revertLibraryToOriginal -> action.libraryIdentifier
+                is restoreDeletions -> action.libraryId
+                is revertLibraryToOriginal -> action.libraryId
+                is fixUpload -> action.libraryId
+                is removeActions -> action.libraryId
+                is resolveGroupFileWritePermission -> return LibraryIdentifier.group(action.groupId)
+                is revertLibraryFilesToOriginal -> action.libraryId
             }
         }
 
@@ -142,6 +157,10 @@ sealed class Action {
                 is uploadAttachment -> false
                 is restoreDeletions -> false
                 is revertLibraryToOriginal -> false
+                is fixUpload -> false
+                is removeActions -> false
+                is resolveGroupFileWritePermission -> true
+                is revertLibraryFilesToOriginal -> false
             }
         }
 }

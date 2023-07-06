@@ -14,6 +14,8 @@ internal fun ConflictResolutionDialogs(
     markGroupAsLocalOnly: (key: Int) -> Unit,
     revertGroupChanges: (key: Int) -> Unit,
     keepGroupChanges: (key: Int) -> Unit,
+    revertGroupFiles: (groupId: Int) -> Unit,
+    skipGroup: (groupId: Int) -> Unit,
 ) {
     when (conflictDialogData) {
         is ConflictDialogData.groupRemoved -> {
@@ -36,7 +38,7 @@ internal fun ConflictResolutionDialogs(
                 onDismiss = onDismissDialog
             )
         }
-        is ConflictDialogData.groupWriteDenied -> {
+        is ConflictDialogData.groupMetadataWriteDenied -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
@@ -50,6 +52,26 @@ internal fun ConflictResolutionDialogs(
                 secondaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.keep_changes),
                     onClick = { keepGroupChanges(conflictDialogData.groupId) }
+                ),
+                dismissOnClickOutside = false,
+                onDismiss = onDismissDialog
+            )
+        }
+        is ConflictDialogData.groupFileWriteDenied -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.warning),
+                description = stringResource(
+                    id = Strings.file_write_denied,
+                    conflictDialogData.groupName,
+                    conflictDialogData.domainName
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.reset_group_files),
+                    onClick = { revertGroupFiles(conflictDialogData.groupId) }
+                ),
+                secondaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.skip_group),
+                    onClick = { skipGroup(conflictDialogData.groupId) }
                 ),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog

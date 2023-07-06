@@ -36,6 +36,7 @@ class SyncBatchProcessor(
     val searchResponseMapper: SearchResponseMapper,
     val schemaController: SchemaController,
     val dateParser: DateParser,
+    val gson: Gson,
     private val dispatcher: CoroutineDispatcher,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
@@ -260,7 +261,7 @@ class SyncBatchProcessor(
             try {
                 val file = fileStore.jsonCacheFile(type, libraryId = libraryId, key = key)
                 val fileWriter = FileWriter(file)
-                Gson().toJson(objectS, fileWriter)
+                gson.toJson(objectS, fileWriter)
                 fileWriter.flush()
                 fileWriter.close()
                 println("")

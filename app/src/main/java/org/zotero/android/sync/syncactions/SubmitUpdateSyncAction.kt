@@ -33,7 +33,6 @@ import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.PreconditionErrorType
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncActionWithError
@@ -223,7 +222,7 @@ class SubmitUpdateSyncAction(
                 412 -> {
                     Timber.e("SubmitUpdateSyncAction: failed ${response.key ?: "unknown key"} " +
                             "- ${response.message}. Library ${libraryId}")
-                    return PreconditionErrorType.objectConflict
+                    return SyncActionError.objectPreconditionError
                 }
                 400 -> {
                     if (response.message.contains(this.splitMessage) && response.key != null) {

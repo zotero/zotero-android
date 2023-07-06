@@ -1,9 +1,10 @@
 package org.zotero.android.sync;
 
-enum class SyncType {
+enum class SyncKind {
     normal,
     ignoreIndividualDelays,
     full,
     collectionsOnly,
-    keysOnly
+    keysOnly,
+    prioritizeDownloads
 }

@@ -6,6 +6,7 @@ import okhttp3.ResponseBody
 import org.zotero.android.api.pojo.sync.DeletionsResponse
 import org.zotero.android.api.pojo.sync.GroupResponse
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -85,4 +86,11 @@ interface SyncApi {
         @Path("identifier") identifier: Int,
     ): retrofit2.Response<GroupResponse>
 
+
+    @DELETE
+    suspend fun submitDeletionsRequest(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>,
+        @QueryMap queryMap: Map<String, String>,
+    ): retrofit2.Response<DeletionsResponse>
 }

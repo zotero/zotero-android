@@ -41,6 +41,45 @@ class RevertLibraryUpdatesSyncAction(
     private val itemResponseMapper: ItemResponseMapper
 ) : SyncAction<CustomResult<Map<SyncObject, List<String>>>> {
 
+    companion object {
+        fun <T : RealmObject, K> loadCachedJsonForObject(
+            clazz: KClass<T>,
+            objectType: SyncObject,
+            libraryId: LibraryIdentifier,
+            coordinator: RealmDbCoordinator,
+            fileStorage: FileStore,
+            gson: Gson,
+            createResponse: (JsonObject) -> K
+        ): Pair<List<K>, List<String>> {
+            val request = ReadAnyChangedObjectsInLibraryDbRequest(libraryId = libraryId, clazz = clazz)
+            val objects = coordinator.perform(request = request)
+
+            val responses = mutableListOf<K>()
+            val failed = mutableListOf<String>()
+
+            for (objectS in objects) {
+                objectS as Syncable
+                try {
+                    val file = fileStorage.jsonCacheFile(
+                        objectS = objectType,
+                        libraryId = libraryId,
+                        key = objectS.key
+                    )
+                    val jsonData: JsonObject = gson.fromJson(
+                        JsonReader( FileReader(file)), JsonObject::class.java)
+                    val response = createResponse(jsonData)
+                    responses.add(response)
+                } catch (error: Throwable) {
+                    Timber.e(error, "RevertLibraryUpdatesSyncAction: can't load cached file")
+                    failed.add(objectS.key)
+                }
+            }
+
+            return responses to failed
+        }
+
+    }
+
     override suspend fun result(): CustomResult<Map<SyncObject, List<String>>> {
         try {
             var changes = mutableListOf<StoreItemsResponse.FilenameChange>()
@@ -54,16 +93,22 @@ class RevertLibraryUpdatesSyncAction(
                     objectType = SyncObject.collection,
                     this.libraryId,
                     coordinator = coordinator,
+                    gson = gson,
+                    fileStorage = fileStorage,
                     createResponse = { collectionResponseMapper.fromJson(it) })
                 val searches = loadCachedJsonForObject(clazz = RSearch::class,
                     objectType = SyncObject.search,
                     this.libraryId,
                     coordinator = coordinator,
+                    fileStorage = fileStorage,
+                    gson = gson,
                     createResponse = { searchResponseMapper.fromJson(it) })
                 val items = loadCachedJsonForObject(clazz = RItem::class,
                     objectType = SyncObject.item,
                     this.libraryId,
                     coordinator = coordinator,
+                    fileStorage = fileStorage,
+                    gson = gson,
                     createResponse = { itemResponseMapper.fromJson(it, schemaController) })
 
                 val storeCollectionsRequest =
@@ -103,39 +148,6 @@ class RevertLibraryUpdatesSyncAction(
         }
     }
 
-    private fun <T : RealmObject, K> loadCachedJsonForObject(
-        clazz: KClass<T>,
-        objectType: SyncObject,
-        libraryId: LibraryIdentifier,
-        coordinator: RealmDbCoordinator,
-        createResponse: (JsonObject) -> K
-    ): Pair<List<K>, List<String>> {
-        val request = ReadAnyChangedObjectsInLibraryDbRequest(libraryId = libraryId, clazz = clazz)
-        val objects = coordinator.perform(request = request)
-
-        val responses = mutableListOf<K>()
-        val failed = mutableListOf<String>()
-
-        for (objectS in objects) {
-            objectS as Syncable
-            try {
-                val file = fileStorage.jsonCacheFile(
-                    objectS = objectType,
-                    libraryId = libraryId,
-                    key = objectS.key
-                )
-                val jsonData: JsonObject = gson.fromJson(
-                    JsonReader( FileReader(file)), JsonObject::class.java)
-                val response = createResponse(jsonData)
-                responses.add(response)
-            } catch (error: Throwable) {
-                Timber.e(error, "RevertLibraryUpdatesSyncAction: can't load cached file")
-                failed.add(objectS.key)
-            }
-        }
-
-        return responses to failed
-    }
 
     private fun renameExistingFiles(
         changes: List<StoreItemsResponse.FilenameChange>,

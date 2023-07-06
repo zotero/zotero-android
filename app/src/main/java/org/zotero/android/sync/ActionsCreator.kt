@@ -6,43 +6,43 @@ import javax.inject.Singleton
 @Singleton
 class ActionsCreator @Inject constructor() {
 
-    fun createInitialActions(libraries: LibrarySyncType, syncType: SyncType): List<Action> {
-        if (SyncType.keysOnly == syncType) {
+    fun createInitialActions(libraries: Libraries, syncType: SyncKind): List<Action> {
+        if (SyncKind.keysOnly == syncType) {
             return listOf(Action.loadKeyPermissions)
         }
 
         when (libraries) {
-            is LibrarySyncType.all ->
+            is Libraries.all ->
                 return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
-            is LibrarySyncType.specific -> {
-                for (identifier in libraries.identifiers) {
-                    if (identifier is LibraryIdentifier.group) {
-                        return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
-                    }
+
+            is Libraries.specific -> {
+                if (libraries.identifiers.any { it.isGroupLibrary }) {
+                    return listOf(Action.loadKeyPermissions, Action.syncGroupVersions)
                 }
                 val options = libraryActionsOptions(syncType)
                 return listOf(
                     Action.loadKeyPermissions,
-                    Action.createLibraryActions(libraries, options)
-                )
-
+                ) + options.map { Action.createLibraryActions(libraries, it) }
             }
         }
     }
 
-    fun libraryActionsOptions(syncType: SyncType): CreateLibraryActionsOptions {
+    private fun libraryActionsOptions(syncType: SyncKind): List<CreateLibraryActionsOptions> {
         return when (syncType) {
-            SyncType.full, SyncType.collectionsOnly ->
-                CreateLibraryActionsOptions.onlyDownloads
-            SyncType.ignoreIndividualDelays, SyncType.normal, SyncType.keysOnly ->
-                CreateLibraryActionsOptions.automatic
+            SyncKind.full, SyncKind.collectionsOnly ->
+                listOf(CreateLibraryActionsOptions.onlyDownloads)
+            SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.keysOnly ->
+                listOf(CreateLibraryActionsOptions.automatic)
+            SyncKind.prioritizeDownloads -> {
+                listOf(CreateLibraryActionsOptions.onlyDownloads, CreateLibraryActionsOptions.onlyWrites)
+            }
         }
     }
 
     fun createLibraryActions(
         data: List<LibraryData>,
         creationOptions: CreateLibraryActionsOptions,
-        type: SyncType
+        type: SyncKind
     ): Triple<List<Action>, Int?, Int> {
         var writeCount = 0
         var actions = mutableListOf<Action>()
@@ -66,7 +66,7 @@ class ActionsCreator @Inject constructor() {
     private fun createLibraryActions(
         libraryData: LibraryData,
         creationOptions: CreateLibraryActionsOptions,
-        type: SyncType
+        type: SyncKind
     ): Pair<List<Action>, Int> {
         when (creationOptions) {
             CreateLibraryActionsOptions.onlyDownloads -> {
@@ -126,7 +126,7 @@ class ActionsCreator @Inject constructor() {
                 val actions = createUpdateActions(
                     updates = libraryData.updates,
                     deletions = libraryData.deletions,
-                    libraryId = libraryData.identifier
+                    libraryData = libraryData,
                 )
                 return actions to actions.size - 1
             }
@@ -143,7 +143,7 @@ class ActionsCreator @Inject constructor() {
                 val actions = createUpdateActions(
                     updates = libraryData.updates,
                     deletions = libraryData.deletions,
-                    libraryId = libraryData.identifier
+                    libraryData = libraryData,
                 )
                 return actions to actions.size - 1
             }
@@ -153,11 +153,11 @@ class ActionsCreator @Inject constructor() {
     private fun createDownloadActions(
         libraryId: LibraryIdentifier,
         versions: Versions,
-        type: SyncType
+        type: SyncKind
     ): List<Action> {
         when (type) {
-            SyncType.keysOnly -> return listOf()
-            SyncType.collectionsOnly ->
+            SyncKind.keysOnly -> return listOf()
+            SyncKind.collectionsOnly ->
                 return listOf(
                     Action.syncVersions(
                         libraryId = libraryId,
@@ -166,7 +166,7 @@ class ActionsCreator @Inject constructor() {
                     )
                 )
 
-            SyncType.full ->
+            SyncKind.full ->
                 return listOf(
                     Action.syncSettings(libraryId, versions.settings),
                     Action.syncDeletions(libraryId, versions.deletions),
@@ -198,7 +198,7 @@ class ActionsCreator @Inject constructor() {
                     )
                 )
 
-            SyncType.ignoreIndividualDelays, SyncType.normal ->
+            SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.prioritizeDownloads ->
                 return listOf(
                     Action.syncSettings(libraryId, versions.settings),
                     Action.syncVersions(
@@ -232,7 +232,7 @@ class ActionsCreator @Inject constructor() {
     private fun createUpdateActions(
         updates: List<WriteBatch>,
         deletions: List<DeleteBatch>,
-        libraryId: LibraryIdentifier
+        libraryData: LibraryData,
     ): List<Action> {
         var actions = mutableListOf<Action>()
         if (!updates.isEmpty()) {
@@ -247,8 +247,9 @@ class ActionsCreator @Inject constructor() {
         }
         actions.add(
             Action.createUploadActions(
-                libraryId = libraryId,
-                hadOtherWriteActions = (!updates.isEmpty() || !deletions.isEmpty())
+                libraryId = libraryData.identifier,
+                hadOtherWriteActions = (!updates.isEmpty() || !deletions.isEmpty()),
+                canEditFiles = libraryData.canEditFiles,
             )
         )
         return actions
@@ -293,7 +294,7 @@ class ActionsCreator @Inject constructor() {
         keys: List<String>,
         version: Int,
         shouldStoreVersion: Boolean,
-        syncType: SyncType
+        syncType: SyncKind
     ): List<Action> {
         val batches = createBatchObjects(
             keys = keys,
@@ -321,15 +322,15 @@ class ActionsCreator @Inject constructor() {
     fun createGroupActions(
         updateIds: List<Int>,
         deleteGroups: List<Pair<Int, String>>,
-        syncType: SyncType,
-        libraryType: LibrarySyncType
+        syncType: SyncKind,
+        libraryType: Libraries
     ): List<Action> {
         var idsToSync: MutableList<Int>
         when (val libraryTypeL = libraryType) {
-            is LibrarySyncType.all -> {
+            is Libraries.all -> {
                 idsToSync = updateIds.toMutableList()
             }
-            is LibrarySyncType.specific -> {
+            is Libraries.specific -> {
                 idsToSync = mutableListOf()
                 val libraryIds = libraryTypeL.identifiers
                 libraryIds.forEach { libraryId ->
@@ -350,8 +351,8 @@ class ActionsCreator @Inject constructor() {
         val actions = deleteGroups.map { Action.resolveDeletedGroup(it.first, it.second) }
             .toMutableList<Action>()
         actions.addAll(idsToSync.map { Action.syncGroupToDb(it) })
-        val options: CreateLibraryActionsOptions = libraryActionsOptions(syncType)
-        actions.add(Action.createLibraryActions(libraryType, options))
+        val options: List<CreateLibraryActionsOptions> = libraryActionsOptions(syncType)
+        actions.addAll(options.map { Action.createLibraryActions(libraryType, it) })
         return actions
     }
 

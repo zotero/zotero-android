@@ -3,7 +3,6 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
-import org.zotero.android.sync.CGRect
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.FieldKeys
@@ -18,6 +17,7 @@ import org.zotero.android.database.objects.RRect
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.AnnotationSplitter
+import org.zotero.android.sync.CGRect
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SplittablePathPoint
@@ -62,13 +62,13 @@ class SplitAnnotationsDbRequest(
                 for (split in splitRects) {
                     createCopyWithoutPathsAndRects(item, database = database, additionalChange = { new ->
                             for (rect in split) {
-                                val rRect = database.createEmbeddedObject(RRect::class.java, item, "rects")
+                                val rRect = database.createEmbeddedObject(RRect::class.java, new, "rects")
                                 rRect.minX = rect.minX
                                 rRect.minY = rect.minY
                                 rRect.maxX = rect.maxX
                                 rRect.maxY = rect.maxY
                             }
-                        item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.rects)))
+                        new.changes.add(RObjectChange.create(changes = listOf(RItemChanges.rects)))
                     })
                 }
             }
@@ -98,7 +98,7 @@ class SplitAnnotationsDbRequest(
                                 rYCoordinate.sortIndex = (idy * 2) + 1
                             }
                         }
-                        item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.paths)))
+                        new.changes.add(RObjectChange.create(changes = listOf(RItemChanges.paths)))
                     }
                 }
             }

@@ -113,6 +113,8 @@ internal fun DashboardScreen(
                 markGroupAsLocalOnly = viewModel::markGroupAsLocalOnly,
                 revertGroupChanges = viewModel::revertGroupChanges,
                 keepGroupChanges = viewModel::keepGroupChanges,
+                revertGroupFiles = viewModel::revertGroupFiles,
+                skipGroup = viewModel::skipGroup,
             )
         }
         LongPressBottomSheet(

@@ -28,7 +28,7 @@ class ConflictResolutionUseCase @Inject constructor(
 
     private fun resolve(conflict: Conflict) {
         when (conflict) {
-            is Conflict.groupRemoved, is Conflict.groupWriteDenied -> {
+            is Conflict.groupRemoved, is Conflict.groupMetadataWriteDenied, is Conflict.groupFileWriteDenied -> {
                 EventBus.getDefault().post(ShowSimpleConflictResolutionDialog(conflict))
             }
             is Conflict.objectsRemovedRemotely -> {
@@ -175,5 +175,12 @@ class ConflictResolutionUseCase @Inject constructor(
                 key
             )
         ))
+    }
+
+    fun revertGroupFiles(id: LibraryIdentifier) {
+        syncUseCase.enqueueResolution(ConflictResolution.revertGroupFiles(id))
+    }
+    fun skipGroup(id: LibraryIdentifier) {
+        syncUseCase.enqueueResolution(ConflictResolution.skipGroup(id))
     }
 }

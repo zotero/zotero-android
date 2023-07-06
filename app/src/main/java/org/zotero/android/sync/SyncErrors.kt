@@ -52,11 +52,10 @@ sealed class SyncError {
         object groupSyncFailed : Fatal()
         object allLibrariesFetchFailed : Fatal()
         data class uploadObjectConflict(val data: ErrorData) : Fatal()
+        data class cantSubmitAttachmentItem(val data: ErrorData): Fatal()
         object permissionLoadingFailed : Fatal()
         object missingGroupPermissions : Fatal()
         object cancelled : Fatal()
-        data class preconditionErrorCantBeResolved(val data: ErrorData) : Fatal()
-        data class cantResolveConflict(val data: ErrorData) : Fatal()
         object serviceUnavailable : Fatal()
         object forbidden : Fatal()
 
@@ -103,6 +102,7 @@ sealed class SyncError {
         object insufficientSpace : NonFatal()
         data class webDavDeletion(val count: Int, val library: String) : NonFatal()
         data class webDavDeletionFailed(val error: String, val library: String) : NonFatal()
+        data class preconditionFailed(val libraryId: LibraryIdentifier): NonFatal()
 
         val isVersionMismatch: Boolean
             get() {
@@ -130,25 +130,12 @@ sealed class SyncError {
 }
 
 sealed class SyncActionError : Exception() {
-    object attachmentItemNotSubmitted : SyncActionError()
-    object attachmentAlreadyUploaded : SyncActionError()
-    data class attachmentMissing(
-        val key: String,
-        val libraryId: LibraryIdentifier,
-        val title: String
-    ) : SyncActionError()
-
-    data class submitUpdateFailures(val messages: String) : SyncActionError()
-    data class annotationNeededSplitting(
-        val messageS: String,
-        val keys: Set<String>,
-        val libraryId: LibraryIdentifier
-    ) :
-        SyncActionError()
-}
-
-sealed class PreconditionErrorType : Exception() {
-    object objectConflict : PreconditionErrorType()
-    object libraryConflict : PreconditionErrorType()
+    data class annotationNeededSplitting(val messageS: String, val keys: Set<String>, val libraryId: LibraryIdentifier): SyncActionError()
+    object attachmentAlreadyUploaded: SyncActionError()
+    object attachmentItemNotSubmitted: SyncActionError()
+    data class attachmentMissing(val key: String, val libraryId: LibraryIdentifier, val title: String): SyncActionError()
+    data class authorizationFailed(val statusCode: Int, val response: String, val hadIfMatchHeader: Boolean): SyncActionError()
+    object objectPreconditionError: SyncActionError()
+    data class submitUpdateFailures(val messageS: String): SyncActionError()
 }
 

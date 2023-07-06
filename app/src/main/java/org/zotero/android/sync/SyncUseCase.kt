@@ -5,7 +5,6 @@ import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
@@ -15,10 +14,14 @@ import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.attachmentdownloader.AttachmentDownloader
+import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
 import org.zotero.android.backgrounduploader.BackgroundUploaderContext
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
 import org.zotero.android.database.requests.PerformDeletionsDbRequest
+import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.SyncError.NonFatal
@@ -36,14 +39,16 @@ import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.MarkGroupForResyncSyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
 import org.zotero.android.sync.syncactions.RestoreDeletionsSyncAction
+import org.zotero.android.sync.syncactions.RevertLibraryFilesSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
+import org.zotero.android.sync.syncactions.SubmitDeletionSyncAction
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
+import org.zotero.android.sync.syncactions.UploadFixSyncAction
 import org.zotero.android.sync.syncactions.data.AccessPermissions
 import timber.log.Timber
-import java.lang.Integer.min
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -75,25 +80,26 @@ class SyncUseCase @Inject constructor(
     private val observable: SyncObservableEventStream,
     private val actionsCreator: ActionsCreator,
     private val gson: Gson,
-    private val conflictEventStream: ConflictEventStream
+    private val conflictEventStream: ConflictEventStream,
+    private val attachmentDownloader: AttachmentDownloader,
+    private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
     private var runningSyncJob: Job? = null
 
     private var userId: Long = 0L
-    private var libraryType: LibrarySyncType = LibrarySyncType.all
-    private var type: SyncType = SyncType.normal
+    private var libraryType: Libraries = Libraries.all
+    private var type: SyncKind = SyncKind.normal
     private var lastReturnedVersion: Int? = null
-    private var conflictRetries: Int = 0
-    private var conflictDelays: MutableList<Int> = mutableListOf()
+    private var retryAttempt: Int = 0
+    private var maxRetryCount: Int = 0
     private var accessPermissions: AccessPermissions? = null
 
     private var queue = mutableListOf<Action>()
     private var processingAction: Action? = null
-    private var previousType: SyncType? = null
-    private var createActionOptions: CreateLibraryActionsOptions =
-        CreateLibraryActionsOptions.automatic
+//    private var createActionOptions: CreateLibraryActionsOptions =
+//        CreateLibraryActionsOptions.automatic
     private var didEnqueueWriteActionsToZoteroBackend: Boolean = false
     private var enqueuedUploads: Int = 0
     private var uploadsFailedBeforeReachingZoteroBackend: Int = 0
@@ -109,13 +115,13 @@ class SyncUseCase @Inject constructor(
 
     private var batchProcessor: SyncBatchProcessor? = null
 
-    fun init(userId: Long, conflictDelays: List<Int>, syncDelayIntervals: List<Double>) {
-        this.conflictDelays = conflictDelays.toMutableList()
+    fun init(userId: Long, syncDelayIntervals: List<Double>, maxRetryCount: Int) {
         this.syncDelayIntervals = syncDelayIntervals
         this.userId = userId
+        this.maxRetryCount = maxRetryCount
     }
 
-    fun start(type: SyncType, libraries: LibrarySyncType) {
+    fun start(type: SyncKind, libraries: Libraries, retryAttempt: Int) {
         runningSyncJob = coroutineScope.launch {
             with(this@SyncUseCase) {
                 if (this.isSyncing) {
@@ -123,6 +129,7 @@ class SyncUseCase @Inject constructor(
                 }
                 this.type = type
                 this.libraryType = libraries
+                this.retryAttempt = retryAttempt
                 queue.addAll(actionsCreator.createInitialActions(libraries = libraries, syncType = type))
 
                 processNextAction()
@@ -177,6 +184,9 @@ class SyncUseCase @Inject constructor(
                     options = action.createLibraryActionsOptions
                 )
             }
+            is Action.submitDeleteBatch -> {
+                processSubmitDeletion(action.batch)
+            }
 
             is Action.syncGroupVersions -> {
                 processSyncGroupVersions()
@@ -194,7 +204,7 @@ class SyncUseCase @Inject constructor(
                 resolve(
                     Conflict.groupRemoved(
                         groupId = action.groupId,
-                        groupName = action.name
+                        name = action.name
                     )
                 )
             }
@@ -204,11 +214,24 @@ class SyncUseCase @Inject constructor(
 
             is Action.resolveGroupMetadataWritePermission -> {
                 resolve(
-                    Conflict.groupWriteDenied(
+                    Conflict.groupMetadataWriteDenied(
                         groupId = action.groupId,
-                        groupName = action.libraryDataName
+                        name = action.name
                     )
                 )
+            }
+            is Action.resolveGroupFileWritePermission -> {
+                resolve(conflict = Conflict.groupFileWriteDenied(groupId = action.groupId, name = action.name))
+            }
+
+            is Action.fixUpload -> {
+                processUploadFix(key = action.key, libraryId = action.libraryId)
+            }
+            is Action.removeActions -> {
+                removeAllActions(action.libraryId)
+            }
+            is Action.revertLibraryFilesToOriginal -> {
+                revertGroupFiles(action.libraryId)
             }
 
             is Action.syncDeletions -> {
@@ -239,7 +262,7 @@ class SyncUseCase @Inject constructor(
                 deleteGroup(action.groupId)
             }
             is Action.createUploadActions -> {
-                processCreateUploadActions(action.libraryId, hadOtherWriteActions = action.hadOtherWriteActions)
+                processCreateUploadActions(action.libraryId, hadOtherWriteActions = action.hadOtherWriteActions, canWriteFiles = action.canEditFiles)
             }
             is Action.uploadAttachment -> {
                 processUploadAttachment(action.upload)
@@ -248,10 +271,10 @@ class SyncUseCase @Inject constructor(
                 processSubmitUpdate(action.batch)
             }
             is Action.revertLibraryToOriginal -> {
-                revertGroupData(action.libraryIdentifier)
+                revertGroupData(action.libraryId)
             }
             is Action.restoreDeletions -> {
-                restoreDeletions(libraryId = action.libraryIdentifier, collections = action.collections, items = action.items)
+                restoreDeletions(libraryId = action.libraryId, collections = action.collections, items = action.items)
             }
             else -> {
                 processNextAction()
@@ -283,7 +306,7 @@ class SyncUseCase @Inject constructor(
         ).result()
         if (result is CustomResult.GeneralError.CodeError) {
             Timber.e(result.throwable)
-            finishCompletableAction(errorData = null)
+            finishCompletableAction(errorData = Pair(result.throwable, SyncError.ErrorData.from(libraryId = libraryId)))
             return
         }
         finishCompletableAction(errorData = null)
@@ -366,14 +389,19 @@ class SyncUseCase @Inject constructor(
         val objectS = batch.objectS
 
         this.batchProcessor =
-            SyncBatchProcessor(batches = batches, userId = defaults.getUserId(), syncApi = syncApi,
-                dbWrapper = this.dbWrapper, fileStore = this.fileStore,
+            SyncBatchProcessor(
+                batches = batches,
+                userId = defaults.getUserId(),
+                syncApi = syncApi,
+                dbWrapper = this.dbWrapper,
+                fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
                 collectionResponseMapper = collectionResponseMapper,
                 searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
                 dateParser = this.dateParser,
-                dispatcher = dispatcher,
+                dispatcher = this.dispatcher,
+                gson = this.gson,
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
@@ -390,7 +418,8 @@ class SyncUseCase @Inject constructor(
         when (result) {
             is CustomResult.GeneralSuccess -> {
                 val (failedKeys, parseErrors) = result.value!!
-                this.nonFatalErrors.addAll(parseErrors.map {
+
+                val nonFatalErrors = parseErrors.map {
                     syncError(
                         customResultError = CustomResult.GeneralError.CodeError(it),
                         data = SyncError.ErrorData.from(
@@ -407,8 +436,8 @@ class SyncUseCase @Inject constructor(
                                 libraryId = libraryId
                             )
                         )
-                })
-
+                }
+                this.nonFatalErrors.addAll(nonFatalErrors)
 
                 if (failedKeys.isEmpty()) {
                     processNextAction()
@@ -523,7 +552,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processCreateLibraryActions(
-        libraries: LibrarySyncType,
+        libraries: Libraries,
         options: CreateLibraryActionsOptions
     ) {
         try {
@@ -531,7 +560,7 @@ class SyncUseCase @Inject constructor(
             val result = LoadLibraryDataSyncAction(
                 type = libraries,
                 fetchUpdates = (options != CreateLibraryActionsOptions.onlyDownloads),
-                loadVersions = (this.type != SyncType.full),
+                loadVersions = (this.type != SyncKind.full),
                 webDavEnabled = false,
                 dbStorage = dbWrapper.realmDbStorage,
                 defaults = defaults
@@ -562,7 +591,7 @@ class SyncUseCase @Inject constructor(
 
         var libraryNames: Map<LibraryIdentifier, String>? = null
         val (data, options) = pair!!
-        if (options == CreateLibraryActionsOptions.automatic || this.type == SyncType.full) {
+        if (options == CreateLibraryActionsOptions.automatic || this.type == SyncKind.full) {
             val nameDictionary = mutableMapOf<LibraryIdentifier, String>()
             for (libraryData in data) {
                 nameDictionary[libraryData.identifier] = libraryData.name
@@ -577,7 +606,6 @@ class SyncUseCase @Inject constructor(
         this.didEnqueueWriteActionsToZoteroBackend =
             options != CreateLibraryActionsOptions.automatic || writeCount > 0
 
-        this.createActionOptions = options
         val names = libraryNames
         if (names != null) {
             //TODO update progress
@@ -617,7 +645,6 @@ class SyncUseCase @Inject constructor(
     private fun enqueue(
         actions: List<Action>,
         index: Int? = null,
-        delayInSeconds: Int? = null
     ) {
         if (actions.isNotEmpty()) {
             if (index != null) {
@@ -626,15 +653,7 @@ class SyncUseCase @Inject constructor(
                 queue.addAll(actions)
             }
         }
-
-        if (delayInSeconds != null && delayInSeconds > 0) {
-            runningSyncJob = coroutineScope.launch {
-                delay(delayInSeconds * 1000L)
-                processNextAction()
-            }
-        } else {
-            processNextAction()
-        }
+        processNextAction()
     }
 
 
@@ -674,7 +693,7 @@ class SyncUseCase @Inject constructor(
         }
 
         when (error) {
-            is NonFatal.versionMismatch -> {
+            is NonFatal.versionMismatch, is NonFatal.preconditionFailed -> {
                 removeAllActions(libraryId = libraryId)
                 appendAndContinue()
             }
@@ -706,7 +725,7 @@ class SyncUseCase @Inject constructor(
         Timber.i("Sync: received unchanged error, store version: $lastVersion")
         this.lastReturnedVersion = lastVersion
 
-        if(this.type == SyncType.full) {
+        if(this.type == SyncKind.full) {
             processNextAction()
             return
         }
@@ -761,16 +780,15 @@ class SyncUseCase @Inject constructor(
         runningSyncJob?.cancel()
         processingAction = null
         queue = mutableListOf()
-        type = SyncType.normal
+        type = SyncKind.normal
         lastReturnedVersion = null
-        conflictRetries = 0
         accessPermissions = null
         //TODO batch processor reset
-        libraryType = LibrarySyncType.all
-        createActionOptions = CreateLibraryActionsOptions.automatic
+        libraryType = Libraries.all
         didEnqueueWriteActionsToZoteroBackend = false
         enqueuedUploads = 0
         uploadsFailedBeforeReachingZoteroBackend = 0
+        retryAttempt = 0
     }
 
     private fun syncError(
@@ -795,13 +813,7 @@ class SyncUseCase @Inject constructor(
 
                 if (syncActionError != null) {
                     when (syncActionError) {
-                        is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted ->
-                            return SyncError.nonFatal2(
-                                NonFatal.unknown(
-                                    str = syncActionError.localizedMessage ?: "", data = data,
-                                )
-                            )
-                        is SyncActionError.attachmentMissing ->
+                          is SyncActionError.attachmentMissing ->
                             return SyncError.nonFatal2(
                                 NonFatal.attachmentMissing(
                                     key = syncActionError.key,
@@ -818,7 +830,16 @@ class SyncUseCase @Inject constructor(
                                 )
                             )
                         is SyncActionError.submitUpdateFailures ->
-                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.messages, data = data))
+                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.messageS, data = data))
+                        is SyncActionError.authorizationFailed -> {
+                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.response, data = data))
+                        }
+                        is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted -> {
+                            return SyncError.nonFatal2(NonFatal.unknown(str = error.localizedMessage, data = data))
+                        }
+                        is SyncActionError.objectPreconditionError -> {
+                            return SyncError.fatal2(SyncError.Fatal.uploadObjectConflict(data))
+                        }
                     }
                 }
 
@@ -852,7 +873,7 @@ class SyncUseCase @Inject constructor(
                 }
 
 
-                return networkErrorRequiresAbort(
+                return convertNetworkToSyncError(
                     customResultError,
                     response = customResultError.stringResponse ?: "No Response",
                     data = data
@@ -861,7 +882,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun networkErrorRequiresAbort(
+    private fun convertNetworkToSyncError(
         error: CustomResult.GeneralError.NetworkError,
         response: String,
         data: SyncError.ErrorData
@@ -886,6 +907,8 @@ class SyncUseCase @Inject constructor(
                 return SyncError.fatal2(SyncError.Fatal.serviceUnavailable)
             403 ->
                 return SyncError.fatal2(SyncError.Fatal.forbidden)
+            412 ->
+                return SyncError.nonFatal2(NonFatal.preconditionFailed(data.libraryId))
             else -> {
                 if (code >= 400 && code <= 499) {
                     return SyncError.fatal2(
@@ -1022,11 +1045,17 @@ class SyncUseCase @Inject constructor(
 
     }
 
-    private suspend fun processCreateUploadActions(libraryId: LibraryIdentifier, hadOtherWriteActions: Boolean) {
+    private suspend fun processCreateUploadActions(libraryId: LibraryIdentifier, hadOtherWriteActions: Boolean, canWriteFiles: Boolean) {
         try {
             val uploads = LoadUploadDataSyncAction(libraryId = libraryId, backgroundUploaderContext = backgroundUploaderContext, dbWrapper = dbWrapper,
-                fileStore = fileStore).result()
-            process(uploads = uploads, hadOtherWriteActions = hadOtherWriteActions, libraryId = libraryId)
+                fileStore = fileStore
+            ).result()
+            process(
+                uploads = uploads,
+                hadOtherWriteActions = hadOtherWriteActions,
+                libraryId = libraryId,
+                canWriteFiles = canWriteFiles
+            )
         } catch (e: Exception) {
             enqueuedUploads = 0
             uploadsFailedBeforeReachingZoteroBackend = 0
@@ -1036,15 +1065,44 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun process(uploads: List<AttachmentUpload>, hadOtherWriteActions: Boolean, libraryId: LibraryIdentifier) {
+    private fun process(
+        uploads: List<AttachmentUpload>,
+        hadOtherWriteActions: Boolean,
+        libraryId: LibraryIdentifier,
+        canWriteFiles: Boolean
+    ) {
         if (uploads.isEmpty()) {
             if (hadOtherWriteActions) {
                 processNextAction()
                 return
             }
 
-            this.queue.add(index = 0, Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)), CreateLibraryActionsOptions.onlyDownloads))
+            this.queue.add(index = 0, Action.createLibraryActions(Libraries.specific(listOf(libraryId)), CreateLibraryActionsOptions.onlyDownloads))
             processNextAction()
+            return
+        }
+
+        if (!canWriteFiles) {
+            when (libraryId) {
+                is LibraryIdentifier.group -> {
+                    val name =
+                        dbWrapper.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = libraryId.groupId))?.name
+                            ?: ""
+                    enqueue(
+                        actions = listOf(
+                            Action.resolveGroupFileWritePermission(
+                                groupId = libraryId.groupId,
+                                name = name
+                            )
+                        ), index = 0
+                    )
+
+                }
+
+                else -> {
+                    //no-op
+                }
+            }
             return
         }
 
@@ -1054,8 +1112,15 @@ class SyncUseCase @Inject constructor(
         enqueue(actions = uploads.map { Action.uploadAttachment(it) }, index = 0)
     }
 
-    private fun finishSubmission(error: CustomResult.GeneralError?, newVersion: Int?, keys: List<String>, libraryId: LibraryIdentifier,
-                                         objectS: SyncObject, failedBeforeReachingApi: Boolean = false, ignoreWebDav: Boolean = false) {
+    private fun finishSubmission(
+        error: CustomResult.GeneralError?,
+        newVersion: Int?,
+        keys: List<String>,
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        failedBeforeReachingApi: Boolean = false,
+        ignoreWebDav: Boolean = false
+    ) {
         val nextAction = {
             if (newVersion != null) {
                 updateVersionInNextWriteBatch(newVersion)
@@ -1068,6 +1133,8 @@ class SyncUseCase @Inject constructor(
             return
         }
 
+        //TODO handle WebDav
+
         val syncActionError = (error as? CustomResult.GeneralError.CodeError)?.throwable
                 as? SyncActionError
         if (syncActionError != null) {
@@ -1076,15 +1143,38 @@ class SyncUseCase @Inject constructor(
                     nextAction()
                     return
                 }
+
+                is SyncActionError.authorizationFailed -> {
+                    val statusCode = syncActionError.statusCode
+                    val response = syncActionError.response
+                    val hadIfMatchHeader = syncActionError.hadIfMatchHeader
+                    handleUploadAuthorizationFailure(
+                        statusCode = statusCode,
+                        response = response,
+                        hadIfMatchHeader = hadIfMatchHeader,
+                        key = (keys.firstOrNull() ?: ""),
+                        libraryId = libraryId,
+                        objectS = objectS,
+                        newVersion = newVersion,
+                        failedBeforeReachingApi = failedBeforeReachingApi
+                    )
+                    return
+                }
+                SyncActionError.attachmentItemNotSubmitted -> {
+                    val key = keys.firstOrNull()
+                    if (key != null) {
+                        markItemForUploadAndRestartSync(key = key, libraryId = libraryId)
+                        return
+                    }
+                }
+                SyncActionError.objectPreconditionError -> {
+                    Timber.e("SyncController: object conflict - trying full sync")
+                    abort(error = SyncError.Fatal.uploadObjectConflict(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
+                    return
+                }
                 else -> {}
             }
         }
-
-        if (handleUpdatePreconditionFailureIfNeeded(error, keys = keys,libraryId = libraryId, objectS = objectS)) {
-            return
-        }
-
-       //TODO handle webdav error
 
         val er = syncError(
             customResultError = error, data = SyncError.ErrorData.from(
@@ -1124,69 +1214,6 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun handleUpdatePreconditionFailureIfNeeded(
-        error: CustomResult.GeneralError,
-        keys: List<String>,
-        libraryId: LibraryIdentifier,
-        objectS: SyncObject
-    ): Boolean {
-        val preconditionError = error.preconditionError
-        if (preconditionError == null) {
-            return false
-        }
-
-        if (this.createActionOptions == CreateLibraryActionsOptions.onlyWrites) {
-            this.abort(error= SyncError.Fatal.preconditionErrorCantBeResolved(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
-            return true
-        }
-
-        when(preconditionError) {
-            is PreconditionErrorType.objectConflict -> {
-                if (this.conflictRetries >= this.conflictDelays.size) {
-                    abort(SyncError.Fatal.uploadObjectConflict(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
-                    return true
-                }
-
-                Timber.e("SyncController: object conflict - trying full sync")
-
-                val delay = this.conflictDelays[min(this.conflictRetries, (this.conflictDelays.size - 1))]
-                val actions = actionsCreator.createInitialActions(this.libraryType, syncType = SyncType.full)
-
-                this.type = SyncType.full
-                this.conflictRetries = this.conflictDelays.size
-
-                this.queue.clear()
-                enqueue(actions = actions, index = 0, delayInSeconds = delay)
-            }
-
-
-            is PreconditionErrorType.libraryConflict -> {
-                if (this.conflictRetries >= this.conflictDelays.size) {
-                    abort(SyncError.Fatal.cantResolveConflict(data = SyncError.ErrorData.from(syncObject = objectS, keys = keys, libraryId = libraryId)))
-                    return true
-                }
-
-                Timber.e("SyncController: library conflict - re-downloading library objects and trying writes again")
-
-                val delay = this.conflictDelays[min(this.conflictRetries, (this.conflictDelays.size - 1))]
-                val actions = listOf(Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
-                    CreateLibraryActionsOptions.onlyDownloads
-                ),
-                Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
-                CreateLibraryActionsOptions.onlyWrites
-                ))
-
-                this.conflictRetries += 1
-
-                removeAllActions(libraryId)
-                enqueue(actions = actions, index =  0, delayInSeconds = delay)
-            }
-
-        }
-
-        return true
-    }
-
     private fun handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId: LibraryIdentifier) {
         if (didEnqueueWriteActionsToZoteroBackend || !(this.enqueuedUploads > 0)) {
             return
@@ -1200,7 +1227,7 @@ class SyncUseCase @Inject constructor(
         this.didEnqueueWriteActionsToZoteroBackend = false
         this.enqueuedUploads = 0
         this.uploadsFailedBeforeReachingZoteroBackend = 0
-        this.queue.add(element=Action.createLibraryActions(LibrarySyncType.specific(listOf(libraryId)),
+        this.queue.add(element=Action.createLibraryActions(Libraries.specific(listOf(libraryId)),
             CreateLibraryActionsOptions.onlyDownloads
         ), index = 0)
     }
@@ -1215,22 +1242,61 @@ class SyncUseCase @Inject constructor(
     }
 
     private fun report(fatalError: SyncError.Fatal) {
-        //TODO report abort progress
-        this.previousType = null
-
-        when (fatalError) {
-            is SyncError.Fatal.uploadObjectConflict ->
-                this.observable.emitAsync(SchedulerAction(SyncType.full, LibrarySyncType.all))
-            else ->
-                this.observable.emitAsync(null)
+        val sync = requiresRetry(fatalError)
+        if (sync != null && this.retryAttempt < this.maxRetryCount) {
+            this.observable.emitAsync(sync)
+            return
         }
 
+        // Fatal error not retried, report and confirm finished sync.
+        //TODO report progress abort
+        this.observable.emitAsync(null)
     }
 
-    private fun reportFinish(errors: List<NonFatal>) {
+    private fun requiresRetry(fatalError: SyncError.Fatal): SyncScheduler.Sync? {
+        when (fatalError) {
+            is SyncError.Fatal.uploadObjectConflict ->
+                return SyncScheduler.Sync(
+                    type = SyncKind.full,
+                    libraries = Libraries.all,
+                    retryAttempt = (this.retryAttempt + 1),
+                    retryOnce = true
+                )
+
+            is SyncError.Fatal.cantSubmitAttachmentItem ->
+                return SyncScheduler.Sync(
+                    type = this.type,
+                    libraries = this.libraryType,
+                    retryAttempt = (this.retryAttempt + 1),
+                    retryOnce = false
+                )
+
+            else ->
+                return null
+        }
+    }
+
+    private fun reportFinish(errors: List<SyncError.NonFatal>) {
+        val q = requireRetry(errors = errors)
+
+        if (q == null || this.retryAttempt >= this.maxRetryCount ) {
+            //TODO report finish progress
+            this.observable.emitAsync(null)
+            return
+        }
+        val sync = q.first
+        val remainingErrors = q.second
+
+        //TODO report finish progress
+        this.observable.emitAsync(sync)
+    }
+
+    private fun requireRetry(errors: List<NonFatal>): Pair<SyncScheduler.Sync, List<SyncError.NonFatal>>? {
         // Find libraries which reported version mismatch.
         val retryLibraries = mutableListOf<LibraryIdentifier>()
         val reportErrors = mutableListOf<NonFatal>()
+        var retryOnce = false
+        var type = this.type
 
         for (error in errors) {
             when (error) {
@@ -1238,6 +1304,15 @@ class SyncUseCase @Inject constructor(
                     if (!retryLibraries.contains(error.libraryId)) {
                         retryLibraries.add(error.libraryId)
                     }
+                    retryOnce = true
+                    type = SyncKind.prioritizeDownloads
+                }
+                is NonFatal.preconditionFailed -> {
+                    if (!retryLibraries.contains(error.libraryId)) {
+                        retryLibraries.add(error.libraryId)
+                    }
+                    retryOnce = true
+                    type = SyncKind.prioritizeDownloads
                 }
                 is NonFatal.annotationDidSplit -> {
                     if (!retryLibraries.contains(error.libraryId)) {
@@ -1253,21 +1328,14 @@ class SyncUseCase @Inject constructor(
         }
 
         if (retryLibraries.isEmpty()) {
-            //TODO report progress finish
-            this.previousType = null
-            this.observable.emitAsync(null)
-            return
+            return null
         }
-
-        if (this.previousType == null) {
-            //TODO report progress finish
-            this.previousType = this.type
-            this.observable.emitAsync(SchedulerAction(this.type, LibrarySyncType.specific(retryLibraries)))
-        } else {
-            //TODO report progress finish
-            this.previousType = null
-            this.observable.emitAsync(null)
-        }
+        return SyncScheduler.Sync(
+            type = type,
+            libraries = Libraries.specific(retryLibraries),
+            retryAttempt = (this.retryAttempt + 1),
+            retryOnce = retryOnce
+        ) to reportErrors
     }
 
     fun enqueueResolution(resolution: ConflictResolution) {
@@ -1300,6 +1368,21 @@ class SyncUseCase @Inject constructor(
                     )
                 )
             }
+            is ConflictResolution.skipGroup -> {
+                return listOf(
+                    Action.removeActions(
+                        resolution.id
+                    )
+                )
+            }
+            is ConflictResolution.revertGroupFiles -> {
+                return listOf(
+                    Action.revertLibraryFilesToOriginal(
+                        resolution.id
+                    )
+                )
+            }
+
             is ConflictResolution.remoteDeletionOfActiveObject -> {
                 val actions = mutableListOf<Action>()
                 if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty()) {
@@ -1317,7 +1400,7 @@ class SyncUseCase @Inject constructor(
                 if (!resolution.toRestoreCollections.isEmpty() || !resolution.toRestoreItems.isEmpty()) {
                     actions.add(
                         Action.restoreDeletions(
-                            libraryIdentifier = resolution.libraryId,
+                            libraryId = resolution.libraryId,
                             collections = resolution.toRestoreCollections,
                             items = resolution.toRestoreItems
                         )
@@ -1342,7 +1425,7 @@ class SyncUseCase @Inject constructor(
                 if (!resolution.toRestore.isEmpty()) {
                     actions.add(
                         Action.restoreDeletions(
-                            libraryIdentifier = resolution.libraryId,
+                            libraryId = resolution.libraryId,
                             collections = emptyList(),
                             items = resolution.toRestore
                         )
@@ -1388,7 +1471,7 @@ class SyncUseCase @Inject constructor(
         updateDeletionVersion(libraryId, version)
 
         when (this.type) {
-            SyncType.full ->
+            SyncKind.full ->
                 performDeletions(
                     libraryId = libraryId,
                     collections = collections,
@@ -1397,7 +1480,8 @@ class SyncUseCase @Inject constructor(
                     tags = tags,
                     conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
                 )
-            SyncType.collectionsOnly, SyncType.ignoreIndividualDelays, SyncType.normal, SyncType.keysOnly ->
+
+            SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.keysOnly, SyncKind.prioritizeDownloads ->
                 resolve(
                     conflict = Conflict.objectsRemovedRemotely(
                         libraryId = libraryId,
@@ -1483,4 +1567,223 @@ class SyncUseCase @Inject constructor(
             }
         }
     }
+
+    private suspend fun processUploadFix(key: String, libraryId: LibraryIdentifier) {
+        val action = UploadFixSyncAction(
+            key = key,
+            libraryId = libraryId,
+            userId = this.userId,
+            coroutineScope = coroutineScope,
+            attachmentDownloader = this.attachmentDownloader,
+            fileStorage = this.fileStore,
+            dbWrapper = this.dbWrapper,
+            attachmentDownloaderEventStream = this.attachmentDownloaderEventStream,
+        )
+        try {
+            action.result()
+            processNextAction()
+        } catch (e: Exception) {
+            Timber.e(e)
+            abort(
+                error = SyncError.Fatal.uploadObjectConflict(
+                    data = SyncError.ErrorData(
+                        itemKeys = listOf(
+                            key
+                        ), libraryId = libraryId
+                    )
+                )
+            )
+        }
+    }
+
+    private suspend fun revertGroupFiles(libraryId: LibraryIdentifier) {
+        try {
+            RevertLibraryFilesSyncAction(
+                libraryId = libraryId,
+                dbStorage = this.dbWrapper,
+                fileStorage = this.fileStore,
+                schemaController = this.schemaController,
+                dateParser = this.dateParser,
+                gson = this.gson,
+                itemResponseMapper = this.itemResponseMapper,
+            )
+                .result()
+            finishCompletableAction(errorData= null)
+        }catch (e: Exception) {
+            finishCompletableAction(errorData = Pair(e, SyncError.ErrorData.from(libraryId)))
+        }
+    }
+
+    private suspend fun processSubmitDeletion(batch: DeleteBatch) {
+        val actionResult = SubmitDeletionSyncAction(
+                keys = batch.keys,
+        objectS = batch.objectS,
+        version = batch.version,
+        libraryId = batch.libraryId,
+        userId = this.userId,
+        webDavEnabled = false,//TODO WebDav pass variable
+        syncApi = this.syncApi,
+        dbWrapper = this.dbWrapper,
+        ).result()
+
+        if (actionResult !is CustomResult.GeneralSuccess) {
+            //TODO report reportWriteBatchSynced
+            finishSubmission(
+                error = actionResult as CustomResult.GeneralError,
+                newVersion = batch.version,
+                keys = batch.keys,
+                libraryId = batch.libraryId,
+                objectS = batch.objectS
+            )
+        } else {
+            //TODO report reportWriteBatchSynced
+
+            val version = actionResult.value!!.first
+            val didCreateDeletions = actionResult.value!!.second
+
+            if (didCreateDeletions) {
+                addWebDavDeletionsActionIfNeeded(libraryId = batch.libraryId)
+            }
+            finishSubmission(
+                error = null,
+                newVersion = version,
+                keys = batch.keys,
+                libraryId = batch.libraryId,
+                objectS = batch.objectS
+            )
+        }
+    }
+
+    private fun addWebDavDeletionsActionIfNeeded(libraryId: LibraryIdentifier) {
+        var libraryIndex = 0
+        for (action in this.queue) {
+            if (action.libraryId != libraryId) {
+                break
+            }
+
+            when (action) {
+                is Action.performWebDavDeletions -> {
+                    // If WebDAV deletions action for this library is already available, don't do anything
+                    return
+                }
+
+                else -> {
+                    libraryIndex += 1
+
+                }
+            }
+        }
+        // Insert deletions action to queue at the end of this library actions
+        this.queue.add(element = Action.performWebDavDeletions(libraryId), index = libraryIndex)
+    }
+
+    private fun handleUploadAuthorizationFailure(
+        statusCode: Int,
+        response: String,
+        hadIfMatchHeader: Boolean,
+        key: String,
+        libraryId: LibraryIdentifier,
+        objectS: SyncObject,
+        newVersion: Int?,
+        failedBeforeReachingApi: Boolean
+    ) {
+        val nonFatalError: SyncError.NonFatal
+        when (statusCode) {
+            403 -> {
+                when (libraryId) {
+                    is LibraryIdentifier.group -> {
+                        val groupId = libraryId.groupId
+                        val name =
+                            dbWrapper.realmDbStorage.perform(
+                                request = ReadGroupDbRequest
+                                    (identifier = groupId)
+                            )?.name ?: ""
+                        enqueue(
+                            actions = listOf(
+                                Action.resolveGroupFileWritePermission(
+                                    groupId = groupId,
+                                    name = name
+                                )
+                            ), index = 0
+                        )
+                        return
+                    }
+                    is LibraryIdentifier.custom -> {
+                        nonFatalError =
+                            SyncError.NonFatal.apiError(
+                                response = response,
+                                data = SyncError.ErrorData.from(
+                                    syncObject = objectS,
+                                    keys = listOf(key),
+                                    libraryId = libraryId
+                                )
+                            )
+                    }
+                }
+            }
+            413 -> {
+                nonFatalError = SyncError.NonFatal.quotaLimit(libraryId)
+            }
+            404 -> {
+                markItemForUploadAndRestartSync(key = key, libraryId = libraryId)
+                return
+            }
+            412 -> {
+                Timber.e("SyncController: download remote attachment file and mark attachment as uploaded")
+                enqueue(actions = listOf(Action.fixUpload(key = key, libraryId = libraryId)), index = 0)
+                return
+            }
+            else -> {
+                nonFatalError = NonFatal.apiError(response = response, data = SyncError.ErrorData.from(syncObject = objectS, keys = listOf(key), libraryId = libraryId))
+            }
+        }
+
+        handleNonFatal(
+            error = nonFatalError,
+            libraryId = libraryId,
+            version = newVersion,
+            additionalAction = {
+                if (newVersion != null) {
+                    updateVersionInNextWriteBatch(newVersion)
+                }
+                if (failedBeforeReachingApi) {
+                    handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId)
+                }
+            })
+    }
+
+    private fun markItemForUploadAndRestartSync(key: String, libraryId: LibraryIdentifier) {
+        try {
+            markItemForUpload(key = key, libraryId = libraryId)
+            abort(
+                error = SyncError.Fatal.cantSubmitAttachmentItem(
+                    data =
+                    SyncError.ErrorData.from(
+                        syncObject = SyncObject.item,
+                        keys = listOf(key),
+                        libraryId = libraryId
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            abort(error = SyncError.Fatal.dbError)
+        }
+    }
+
+    private fun markItemForUpload(key: String, libraryId: LibraryIdentifier) {
+        val request = MarkObjectsAsChangedByUser(
+            libraryId = libraryId,
+            collections = emptyList(),
+            items = listOf(key)
+        )
+
+        try {
+            dbWrapper.realmDbStorage.perform(request = request)
+        } catch (error: Exception) {
+            Timber.e(error, "SyncController: can't mark item for upload")
+            throw error
+        }
+    }
+
+
 }

@@ -3,8 +3,9 @@ package org.zotero.android.sync.conflictresolution
 import org.zotero.android.sync.LibraryIdentifier
 
 sealed class Conflict {
-    data class groupRemoved(val groupId: Int, val groupName: String) : Conflict()
-    data class groupWriteDenied(val groupId: Int, val groupName: String) : Conflict()
+    data class groupRemoved(val groupId: Int, val name: String) : Conflict()
+    data class groupMetadataWriteDenied(val groupId: Int, val name: String) : Conflict()
+    data class groupFileWriteDenied(val groupId: Int, val name: String) : Conflict()
     data class objectsRemovedRemotely(
         val libraryId: LibraryIdentifier,
         val collections: List<String>,

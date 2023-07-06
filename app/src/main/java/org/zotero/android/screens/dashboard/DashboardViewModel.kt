@@ -70,16 +70,28 @@ internal class DashboardViewModel @Inject constructor(
                     is Conflict.groupRemoved -> {
                         ConflictDialogData.groupRemoved(
                             conflict.groupId,
-                            conflict.groupName
+                            conflict.name
                         )
                     }
-                    is Conflict.groupWriteDenied -> {
-                        ConflictDialogData.groupWriteDenied(
+                    is Conflict.groupMetadataWriteDenied -> {
+                        ConflictDialogData.groupMetadataWriteDenied(
                             conflict.groupId,
-                            conflict.groupName
+                            conflict.name
                         )
                     }
-                    else -> {
+
+                    is Conflict.groupFileWriteDenied -> {
+                        //TODO check for WebDav variable
+                        val domainName = "zotero.org"
+
+                        ConflictDialogData.groupFileWriteDenied(
+                            groupId = conflict.groupId,
+                            groupName = conflict.name,
+                            domainName = domainName
+                        )
+                    }
+                    is Conflict.objectsRemovedRemotely, is Conflict.removedItemsHaveLocalChanges -> {
+                        //no-op
                         null
                     }
                 }
@@ -202,6 +214,13 @@ internal class DashboardViewModel @Inject constructor(
         conflictResolutionUseCase.keepGroupChanges(key)
     }
 
+    fun revertGroupFiles(groupId: Int) {
+        conflictResolutionUseCase.revertGroupFiles(LibraryIdentifier.group(groupId))
+    }
+    fun skipGroup(groupId: Int) {
+        conflictResolutionUseCase.skipGroup(LibraryIdentifier.group(groupId))
+    }
+
     fun onDismissConflictDialog() {
         updateState {
             copy(
@@ -218,6 +237,7 @@ internal class DashboardViewModel @Inject constructor(
     fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
         EventBus.getDefault().post(longPressOptionItem)
     }
+
 }
 
 internal data class DashboardViewState(
@@ -232,6 +252,8 @@ internal sealed class DashboardViewEffect : ViewEffect {
 
 sealed class ConflictDialogData  {
     data class groupRemoved(val groupId: Int, val groupName: String): ConflictDialogData()
-    data class groupWriteDenied(val groupId: Int, val groupName: String): ConflictDialogData()
+    data class groupMetadataWriteDenied(val groupId: Int, val groupName: String): ConflictDialogData()
     data class changedItemsDeletedAlert(val title: String, val key: String): ConflictDialogData()
+    data class groupFileWriteDenied(val groupId: Int, val groupName: String, val domainName: String) : ConflictDialogData()
+
 }

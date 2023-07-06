@@ -25,6 +25,7 @@ open class Defaults @Inject constructor(
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
     private val showCollectionItemCounts = "showCollectionItemCounts"
+    private val didPerformFullSyncFix = "didPerformFullSyncFix"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -123,6 +124,14 @@ open class Defaults @Inject constructor(
 
     fun setShowCollectionItemCounts(newValue: Boolean) {
         sharedPreferences.edit { putBoolean(showCollectionItemCounts, newValue) }
+    }
+
+    fun didPerformFullSyncFix(): Boolean {
+        return sharedPreferences.getBoolean(didPerformFullSyncFix, false)
+    }
+
+    fun setDidPerformFullSyncFix(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(didPerformFullSyncFix, newValue) }
     }
 
     fun reset() {

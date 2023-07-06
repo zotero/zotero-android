@@ -11,8 +11,8 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.Syncable
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.SyncType
 import java.lang.Integer.min
 import java.util.Date
 
@@ -22,7 +22,7 @@ class SyncVersionsDbRequest(
     private val versions: Map<String, Int>,
     private val libraryId: LibraryIdentifier,
     private val syncObject: SyncObject,
-    val syncType: SyncType,
+    val syncType: SyncKind,
     val delayIntervals: List<Double>
 ) :
     DbResponseRequest<ResultSyncVersionsString> {
@@ -92,16 +92,17 @@ class SyncVersionsDbRequest(
             }
 
             when (this.syncType) {
-                SyncType.ignoreIndividualDelays,
-                SyncType.full -> {
+                SyncKind.ignoreIndividualDelays,
+                SyncKind.full -> {
                     if (toUpdate.contains(objectS.key)) {
                         continue
                     }
                     toUpdate.add(objectS.key)
                 }
-                SyncType.collectionsOnly,
-                SyncType.normal,
-                SyncType.keysOnly -> {
+                SyncKind.collectionsOnly,
+                SyncKind.normal,
+                SyncKind.keysOnly,
+                SyncKind.prioritizeDownloads -> {
                     val delayIdx = min(objectS.syncRetries, (this.delayIntervals.size - 1))
                     val delay = this.delayIntervals[delayIdx]
                     if (objectS.lastSyncDate != null && date.time - objectS.lastSyncDate!!.time >= delay) {
