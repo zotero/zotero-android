@@ -204,7 +204,7 @@ fun CustomTextField(
                                 || it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_TAB)
                     ) {
                         onEnterOrTab()
-                        true
+                        return@onKeyEvent true
                     }
                     false
                 })

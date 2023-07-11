@@ -87,7 +87,7 @@ class Controllers @Inject constructor(
 
     private fun set(data: SessionData, isLogin: Boolean) {
         try {
-            userControllers.init(userId = data.userId, controllers = this)
+            userControllers.init(userId = data.userId)
             if (isLogin) {
                 userControllers.enableSync(apiKey = data.apiToken)
             }

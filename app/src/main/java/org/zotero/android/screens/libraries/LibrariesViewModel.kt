@@ -3,7 +3,6 @@ package org.zotero.android.screens.libraries
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
-import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
@@ -49,9 +48,8 @@ internal class LibrariesViewModel @Inject constructor(
             val libraries = coordinator.perform(request = ReadAllCustomLibrariesDbRequest())
             val groups = coordinator.perform(request = ReadAllGroupsDbRequest())
 
-            groups.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RGroup>> { items, changeSet ->
-                val state = changeSet.state
-                when (state) {
+            groups.addChangeListener { _, changeSet ->
+                when (changeSet.state) {
                     OrderedCollectionChangeSet.State.INITIAL -> {
                         //no-op
                     }
@@ -59,7 +57,7 @@ internal class LibrariesViewModel @Inject constructor(
                     OrderedCollectionChangeSet.State.UPDATE -> {
                         val deletions = changeSet.deletions
                         if (!deletions.isEmpty()) {
-                           //TODO process group deletion
+                            //TODO process group deletion
                         }
                         generateLibraryRows()
                     }
@@ -67,8 +65,11 @@ internal class LibrariesViewModel @Inject constructor(
                     OrderedCollectionChangeSet.State.ERROR -> {
                         Timber.e(changeSet.error, "LibrariesViewModel: could not load results")
                     }
+                    else -> {
+                        //no-op
+                    }
                 }
-            })
+            }
             this.groupLibraries = groups
             this.customLibraries = libraries
             generateLibraryRows()

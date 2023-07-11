@@ -155,7 +155,7 @@ class WebSocketController @Inject constructor(
                 }
 
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
-                    Timber.e(t, "onFailure, response:$response")
+                    Timber.i(t, "onFailure, response:$response")
                     reconnect()
                 }
 

@@ -24,7 +24,6 @@ import java.io.FileWriter
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
-//TODO handle conflicts
 class SyncBatchProcessor(
     val batches: List<DownloadBatch>,
     val userId: Long,
@@ -37,7 +36,7 @@ class SyncBatchProcessor(
     val schemaController: SchemaController,
     val dateParser: DateParser,
     val gson: Gson,
-    private val dispatcher: CoroutineDispatcher,
+    dispatcher: CoroutineDispatcher,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
 
@@ -108,7 +107,6 @@ class SyncBatchProcessor(
                 dataArray = data,
                 libraryId = batch.libraryId,
                 objectS = batch.objectS,
-                userId = this.userId,
                 expectedKeys = batch.keys
             )
             //TODO report progress
@@ -148,7 +146,6 @@ class SyncBatchProcessor(
         dataArray: JsonArray,
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
-        userId: Long,
         expectedKeys: List<String>
     ): SyncBatchResponse {
         return when (objectS) {
@@ -241,12 +238,12 @@ class SyncBatchProcessor(
 
     private fun renameExistingFiles(changes: List<StoreItemsResponse.FilenameChange>, libraryId: LibraryIdentifier) {
         for (change in changes) {
-            val oldFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.oldName, contentType = change.contentType)
+            val oldFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.oldName)
             if (!oldFile.exists()) {
                 continue
             }
 
-            val newFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.newName, contentType =  change.contentType)
+            val newFile = fileStore.attachmentFile(libraryId, key = change.key, filename = change.newName)
             if (!oldFile.renameTo(newFile)) {
                 Timber.e("SyncBatchProcessor: can't rename file")
                 oldFile.deleteRecursively()

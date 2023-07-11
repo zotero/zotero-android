@@ -40,9 +40,8 @@ internal class AppModule {
     fun provideSdkInt(): SdkInt = SdkInt(Build.VERSION.SDK_INT)
 
     @Provides
-    fun provideAppConfig(application: Application): AppConfig {
-        val packageInfo = application.packageManager.getPackageInfo(application.packageName, 0)
-        return AppConfig(packageInfo.versionName)
+    fun provideAppConfig(): AppConfig {
+        return AppConfig(BuildConfig.VERSION_NAME)
     }
 
     @Provides

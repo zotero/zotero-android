@@ -96,7 +96,6 @@ class CreateAttachmentDbRequest(
                                 this.attachment.libraryId,
                                 key = this.attachment.key,
                                 filename = this.attachment.type.filename,
-                                contentType = this.attachment.type.contentType
                             )
                             val md5Value = fileStore.md5(file)
                             if (md5Value == "<null>") {
@@ -151,7 +150,6 @@ class CreateAttachmentDbRequest(
                                 this.attachment.libraryId,
                                 key = this.attachment.key,
                                 filename = this.attachment.type.filename,
-                                contentType = this.attachment.type.contentType
                             )
                             value = file.absolutePath
                         }

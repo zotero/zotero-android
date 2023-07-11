@@ -223,7 +223,7 @@ internal class AllItemsViewModel @Inject constructor(
                 attachmentOpened(update.key)
                 when (update.kind) {
                     AttachmentDownloader.Update.Kind.ready -> {
-                        showAttachment(key = update.key, parentKey = update.parentKey, libraryId = update.libraryId)
+                        showAttachment(key = update.key, parentKey = update.parentKey)
                     }
                     is AttachmentDownloader.Update.Kind.failed -> {
                         //TODO implement when unzipping is supported
@@ -279,14 +279,14 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    fun attachment(key: String, parentKey: String?, libraryId: LibraryIdentifier): Pair<Attachment, Library>? {
+    fun attachment(key: String, parentKey: String?): Pair<Attachment, Library>? {
         val accessory = itemAccessories[parentKey ?: key] ?: return null
         val attachment = accessory.attachmentGet ?: return null
         return attachment to viewState.library
     }
 
-    private suspend fun showAttachment(key: String, parentKey: String?, libraryId: LibraryIdentifier) {
-        val attachmentResult = attachment(key = key, parentKey = parentKey, libraryId = libraryId)
+    private suspend fun showAttachment(key: String, parentKey: String?) {
+        val attachmentResult = attachment(key = key, parentKey = parentKey)
         if (attachmentResult == null) {
             return
         }
@@ -309,7 +309,6 @@ internal class AllItemsViewModel @Inject constructor(
                     libraryId = library.identifier,
                     key = attachment.key,
                     filename = filename,
-                    contentType = contentType
                 )
                 when (contentType) {
                     "application/pdf" -> {
@@ -441,7 +440,7 @@ internal class AllItemsViewModel @Inject constructor(
         onSearchStateFlow
             .debounce(150)
             .map { text ->
-                search(if (text.isEmpty()) null else text, ignoreOriginal = false)
+                search(if (text.isEmpty()) null else text)
             }
             .launchIn(viewModelScope)
 
@@ -478,7 +477,7 @@ internal class AllItemsViewModel @Inject constructor(
         onSearchStateFlow.tryEmit(text)
     }
 
-    private fun search(text: String?, ignoreOriginal: Boolean) {
+    private fun search(text: String?) {
         val results = results(
             searchText = text,
             filters = this.filters,
@@ -536,8 +535,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun startObserving(results: RealmResults<RItem>) {
         results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> {items, changeSet ->
-            val state = changeSet.state
-            when (state) {
+            when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     val itemsFrozen = items.freeze()
                     updateState {
@@ -565,6 +563,9 @@ internal class AllItemsViewModel @Inject constructor(
                     updateState {
                         copy(lce = LCE2.LoadError {})
                     }
+                }
+                else -> {
+                    //no-op
                 }
             }
         })
@@ -618,7 +619,7 @@ internal class AllItemsViewModel @Inject constructor(
             val filename = original.nameWithoutExtension + "." + original.extension
             val contentType =
                 MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)!!
-            val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename, contentType = contentType)
+            val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename)
             if (!original.renameTo(file)) {
                 Timber.e("can't move file")
                 continue
@@ -1082,7 +1083,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun delete(keys: Set<String>) {
         viewModelScope.launch {
-            val result = perform(
+            perform(
                 dbWrapper = dbWrapper,
                 request = MarkObjectsAsDeletedDbRequest(
                     clazz = RItem::class,
@@ -1257,7 +1258,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun emptyTrash() {
         viewModelScope.launch {
-            val result = perform(
+            perform(
                 dbWrapper = dbWrapper,
                 request = EmptyTrashDbRequest(libraryId = viewState.library.identifier)
             ).ifFailure {

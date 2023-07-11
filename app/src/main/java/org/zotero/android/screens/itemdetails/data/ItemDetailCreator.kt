@@ -28,27 +28,25 @@ data class ItemDetailCreator(
     val name: String get() {
         when (this.namePresentation) {
             NamePresentation.full ->
-            return this.fullName!!
+            return this.fullName
             NamePresentation.separate -> {
-                if (this.lastName.isNullOrEmpty()) {
-                    return this.firstName!!
+                if (this.lastName.isEmpty()) {
+                    return this.firstName
                 }
-                if (this.firstName.isNullOrEmpty()) {
-                    return this.lastName!!
+                if (this.firstName.isEmpty()) {
+                    return this.lastName
                 }
-                return this.lastName!! + ", " + this.firstName!!
+                return this.lastName + ", " + this.firstName
             }
-            null -> throw java.lang.IllegalArgumentException("namePresentation should not be null")
         }
     }
 
     val isEmpty: Boolean get() {
-        when (this.namePresentation) {
+        return when (this.namePresentation) {
             NamePresentation.full ->
-            return this.fullName.isNullOrEmpty()
+                this.fullName.isEmpty()
             NamePresentation.separate ->
-            return this.firstName.isNullOrEmpty() && this.lastName.isNullOrEmpty()
-            null -> return true
+                this.firstName.isEmpty() && this.lastName.isEmpty()
         }
     }
 
@@ -59,18 +57,18 @@ data class ItemDetailCreator(
 
         when (namePresentation) {
             NamePresentation.full -> {
-                this.fullName = this.firstName + (if (this.firstName.isNullOrEmpty()) "" else " ") + this.lastName
+                this.fullName = this.firstName + (if (this.firstName.isEmpty()) "" else " ") + this.lastName
                 this.firstName = ""
                 this.lastName = ""
             }
             NamePresentation.separate -> {
-                if (this.fullName.isNullOrEmpty()) {
+                if (this.fullName.isEmpty()) {
                     this.firstName = ""
                     this.lastName = ""
                     return
                 }
 
-                if (!(this.fullName?.contains(" ") ?: false)) {
+                if (!(this.fullName.contains(" "))) {
                     this.lastName = this.fullName
                     this.firstName = ""
                     return

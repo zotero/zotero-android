@@ -11,7 +11,6 @@ import okhttp3.internal.closeQuietly
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.zotero.android.androidx.content.getFileSize
-import org.zotero.android.architecture.Defaults
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.helpers.MimeType
@@ -37,7 +36,6 @@ import javax.inject.Singleton
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,
-    private val defaults: Defaults,
     val dataMarshaller: DataMarshaller,
 ) {
 
@@ -75,7 +73,7 @@ class FileStore @Inject constructor (
         cachesDirectory.mkdirs()
     }
 
-    fun pathForFilename(filename: String?): String {
+    fun pathForFilename(filename: String): String {
         return File(rootDirectory, filename).absolutePath
     }
 
@@ -147,7 +145,6 @@ class FileStore @Inject constructor (
         libraryId: LibraryIdentifier,
         key: String,
         filename: String,
-        contentType: String
     ): File {
         val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
         folderPath.mkdirs()
@@ -208,15 +205,15 @@ class FileStore @Inject constructor (
         return result
     }
 
-    private fun split(filename: String): Pair<String, String> {
-        val index = filename.lastIndexOf(".")
-        if (index != -1) {
-            val name = filename.substring(0, index)
-            val ext = filename.substring(index + 1, filename.length)
-            return name to ext
-        }
-        return filename to ""
-    }
+//    private fun split(filename: String): Pair<String, String> {
+//        val index = filename.lastIndexOf(".")
+//        if (index != -1) {
+//            val name = filename.substring(0, index)
+//            val ext = filename.substring(index + 1, filename.length)
+//            return name to ext
+//        }
+//        return filename to ""
+//    }
 
     fun md5(file: File): String {
         val inputStream = FileInputStream(file)

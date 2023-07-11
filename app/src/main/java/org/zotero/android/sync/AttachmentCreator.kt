@@ -191,14 +191,14 @@ class AttachmentCreator {
                 }
 
                 LinkMode.linkedFile -> {
-                    return linkedFileType(item = item, libraryId = libraryId)
+                    return linkedFileType(item = item)
                 }
 
                 LinkMode.linkedUrl -> {
                     if (urlDetector == null) {
                         return null
                     }
-                    return linkedUrlType(item, libraryId = libraryId, urlDetector = urlDetector)
+                    return linkedUrlType(item = item, urlDetector = urlDetector)
                 }
             }
         }
@@ -237,7 +237,6 @@ class AttachmentCreator {
                 libraryId,
                 key = item.key,
                 filename = filename,
-                contentType = contentType
             )
             val location = location(item, file = file, fileStorage = fileStorage, isForceRemote = isForceRemote)
             return Attachment.Kind.file(
@@ -362,7 +361,7 @@ class AttachmentCreator {
             )
         }
 
-        private fun linkedUrlType(item: RItem, libraryId: LibraryIdentifier, urlDetector: UrlDetector): Attachment.Kind? {
+        private fun linkedUrlType(item: RItem, urlDetector: UrlDetector): Attachment.Kind? {
             val urlString = item.fields.firstOrNull { it.key ==  FieldKeys.Item.Attachment.url}?.value
             if (urlString == null) {
                 Timber.e("AttachmentCreator: url missing for item ${item.key}")
@@ -385,14 +384,14 @@ class AttachmentCreator {
             }
 
             if( lData.second != rData.second) {
-                return (lData.second as Boolean).compareTo(!(rData.second as Boolean))
+                return (lData.second).compareTo(!(rData.second))
             }
 
             return lData.third.compareTo(rData.third)
         }
 
 
-        private fun linkedFileType(item: RItem, libraryId: LibraryIdentifier): Attachment.Kind? {
+        private fun linkedFileType(item: RItem): Attachment.Kind? {
             val contentType = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.contentType }?.value
             if (contentType == null || contentType.isEmpty()) {
                 Timber.e("AttachmentCreator: content type missing for item ${item.key}")

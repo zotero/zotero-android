@@ -202,7 +202,7 @@ class ItemDetailsViewModel @Inject constructor(
                 attachmentOpened(update.key)
                 when (update.kind) {
                     AttachmentDownloader.Update.Kind.ready -> {
-                        showAttachment(key = update.key, parentKey = update.parentKey, libraryId = update.libraryId)
+                        showAttachment(key = update.key, libraryId = update.libraryId)
                     }
                     is AttachmentDownloader.Update.Kind.failed -> {
                         //TODO implement when unzipping is supported
@@ -942,7 +942,7 @@ class ItemDetailsViewModel @Inject constructor(
             collectionKey = null,
             parentKey = viewState.key
         )
-        val result = perform(
+        perform(
             dbWrapper = dbWrapper,
             request = request,
             invalidateRealm = true
@@ -1358,8 +1358,8 @@ class ItemDetailsViewModel @Inject constructor(
 
     }
 
-    private suspend fun showAttachment(key: String, parentKey: String?, libraryId: LibraryIdentifier) {
-        val attachmentResult = attachment(key = key, parentKey = parentKey, libraryId = libraryId)
+    private suspend fun showAttachment(key: String, libraryId: LibraryIdentifier) {
+        val attachmentResult = attachment(key = key,  libraryId = libraryId)
         if (attachmentResult == null) {
             return
         }
@@ -1369,7 +1369,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    fun attachment(key: String, parentKey: String?, libraryId: LibraryIdentifier): Pair<Attachment, Library>? {
+    fun attachment(key: String, libraryId: LibraryIdentifier): Pair<Attachment, Library>? {
         val index = viewState.attachments.indexOfFirst { it.key == key && it.libraryId == libraryId }
         if (index == -1) {
             return null
@@ -1392,7 +1392,6 @@ class ItemDetailsViewModel @Inject constructor(
                     libraryId = library.identifier,
                     key = attachment.key,
                     filename = filename,
-                    contentType = contentType
                 )
                 when (contentType) {
                     "application/pdf" -> {
@@ -1683,7 +1682,6 @@ class ItemDetailsViewModel @Inject constructor(
                 libraryId = libraryId,
                 key = key,
                 filename = nameWithExtension,
-                contentType = mimeType
             )
             if (!original.renameTo(file)) {
                 Timber.e("ItemDetailActionHandler: can't move attachment from source url $url")
@@ -1737,6 +1735,24 @@ class ItemDetailsViewModel @Inject constructor(
             }
 
         }
+    }
+
+    fun onRowTapped(field: ItemDetailField) {
+        if (!(!viewState.isEditing || viewState.data.type == ItemTypes.attachment) || !field.isTappable) return
+        when (field.key) {
+            FieldKeys.Item.Attachment.url -> {
+                triggerEffect(OpenWebpage(Uri.parse(field.value)))
+            }
+            FieldKeys.Item.doi -> {
+                val encoded = FieldKeys.Item.clean(doi = field.value)
+                showDoi(encoded)
+            }
+        }
+    }
+
+    private fun showDoi(doi: String) {
+        val url = "https://doi.org/$doi"
+        triggerEffect(OpenWebpage(Uri.parse(url)))
     }
 
 }

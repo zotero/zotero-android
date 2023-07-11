@@ -60,7 +60,7 @@ internal fun LoginScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
             NavigateBack -> onBack()
             NavigateToDashboard -> navigateToDashboard()
             null -> Unit

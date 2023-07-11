@@ -2,7 +2,6 @@ package org.zotero.android.database.requests
 
 import io.realm.Realm
 import io.realm.kotlin.where
-import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibrary
@@ -23,7 +22,6 @@ class ReadLibrariesDataDbRequest(
     private val fetchUpdates: Boolean,
     private val loadVersions: Boolean,
     private val webDavEnabled: Boolean,
-    private val defaults: Defaults
 ) : DbResponseRequest<List<LibraryData>> {
 
     override val needsWrite: Boolean
@@ -32,7 +30,6 @@ class ReadLibrariesDataDbRequest(
     override fun process(database: Realm): List<LibraryData> {
         val allLibraryData = mutableListOf<LibraryData>()
 
-        val userId = defaults.getUserId()
         val separatedIds = if (identifiers == null) {
             null
         } else {

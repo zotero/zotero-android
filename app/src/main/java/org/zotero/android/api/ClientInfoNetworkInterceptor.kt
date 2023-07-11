@@ -7,7 +7,6 @@ import okhttp3.Response
 import javax.inject.Inject
 
 class ClientInfoNetworkInterceptor @Inject constructor(
-    configuration: NetworkConfiguration
 ) : Interceptor {
     private val userAgentString =
         "zotero" +

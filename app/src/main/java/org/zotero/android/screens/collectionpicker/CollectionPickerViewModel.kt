@@ -107,6 +107,9 @@ internal class CollectionPickerViewModel @Inject constructor(
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "ItemsViewController: could not load results")
                 }
+                else -> {
+                    //no-op
+                }
             }
         })
     }
@@ -158,10 +161,11 @@ internal class CollectionPickerViewModel @Inject constructor(
         } else {
             select(key)
         }
-        updateTitle(viewState.selected.size)
         if (!multipleSelectionAllowed) {
             EventBus.getDefault().post(CollectionPickerSingleResult(collection))
             triggerEffect(CollectionPickerViewEffect.OnBack)
+        } else {
+            updateTitle(viewState.selected.size)
         }
     }
 

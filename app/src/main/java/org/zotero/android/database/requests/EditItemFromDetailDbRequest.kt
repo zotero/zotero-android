@@ -42,7 +42,7 @@ class EditItemFromDetailDbRequest(
         item.dateModified = this.data.dateModified
 
         updateCreators(this.data, snapshot = this.snapshot, item = item, changes = changes, database = database)
-        updateFields(this.data, snapshot = this.snapshot, item = item, changes = changes, typeChanged = typeChanged, database = database)
+        updateFields(this.data, item = item, changes = changes, typeChanged = typeChanged, database = database)
 
         if (!changes.isEmpty()) {
             item.updateDerivedTitles()
@@ -86,7 +86,6 @@ class EditItemFromDetailDbRequest(
 
     private fun updateFields(
         data: ItemDetailData,
-        snapshot: ItemDetailData,
         item: RItem,
         changes: MutableList<RItemChanges>,
         typeChanged: Boolean,
@@ -119,7 +118,7 @@ class EditItemFromDetailDbRequest(
                 continue
             }
 
-            var fieldToChange: RItemField? = null
+            var fieldToChange: RItemField?
             val existing = item.fields.where().key(field.key).findFirst()
 
             if (existing != null) {

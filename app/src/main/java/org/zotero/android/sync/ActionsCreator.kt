@@ -294,7 +294,6 @@ class ActionsCreator @Inject constructor() {
         keys: List<String>,
         version: Int,
         shouldStoreVersion: Boolean,
-        syncType: SyncKind
     ): List<Action> {
         val batches = createBatchObjects(
             keys = keys,

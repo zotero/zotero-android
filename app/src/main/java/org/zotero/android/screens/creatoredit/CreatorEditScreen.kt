@@ -147,7 +147,7 @@ private fun LazyListScope.displayFields(
             FieldEditableRow(
                 viewModel = viewModel,
                 detailTitle = stringResource(id = Strings.last_name),
-                detailValue = viewState.creator?.lastName ?: "",
+                detailValue = viewState.creator.lastName,
                 onValueChange = viewModel::onLastNameChange,
                 layoutType = layoutType,
                 isLastField = false,
@@ -158,7 +158,7 @@ private fun LazyListScope.displayFields(
             FieldEditableRow(
                 viewModel = viewModel,
                 detailTitle = stringResource(id = Strings.first_name),
-                detailValue = viewState.creator?.firstName ?: "",
+                detailValue = viewState.creator.firstName,
                 onValueChange = viewModel::onFirstNameChange,
                 layoutType = layoutType,
                 isLastField = true,

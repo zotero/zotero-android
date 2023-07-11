@@ -133,7 +133,7 @@
     <string name="page_number">Page %s</string>
     <string name="filter_annotations">Filter Annotations</string>
     <string name="select_tags">Select Tags…</string>
-    <string name="libs">Libs</string>
+    <string name="libs">Libraries</string>
     <string name="group_libraries">GROUP LIBRARIES</string>
     <string name="libraries">Libraries</string>
     <string name="settings">Settings</string>

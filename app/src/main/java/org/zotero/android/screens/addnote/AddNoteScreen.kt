@@ -59,12 +59,12 @@ internal fun AddNoteScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
+            null -> Unit
             is AddNoteViewEffect.NavigateBack -> onBack()
             is AddNoteViewEffect.NavigateToTagPickerScreen -> {
                 navigateToTagPicker()
             }
-            null -> Unit
             AddNoteViewEffect.RefreshUI -> {}
         }
     }

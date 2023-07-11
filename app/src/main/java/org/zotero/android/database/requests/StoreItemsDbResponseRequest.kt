@@ -134,7 +134,7 @@ class StoreItemDbRequest(
             dateParser: DateParser,
             database: Realm
         ): Pair<RItem, StoreItemsResponse.FilenameChange?> {
-            var filenameChange: StoreItemsResponse.FilenameChange? = null
+            var filenameChange: StoreItemsResponse.FilenameChange?
                 item.key = response.key
                 item.rawType = response.rawType
                 item.localizedType =
@@ -408,7 +408,7 @@ class StoreItemDbRequest(
             val sortedPaths = itemPaths.sortedBy { it.sortIndex }
             paths.forEachIndexed { idx, path ->
                 val itemPath = sortedPaths[idx]
-                if (path.size != itemPath.coordinates!!.size) {
+                if (path.size != itemPath.coordinates.size) {
                     return true
                 }
                 val sortedCoordinates = itemPath.coordinates.sort("sortIndex")

@@ -59,9 +59,9 @@ data class Collection(
     val isCollection: Boolean get() {
         return when (this.identifier) {
             is CollectionIdentifier.collection ->
-                return true
+                true
             is CollectionIdentifier.custom, is CollectionIdentifier.search ->
-            return false
+                false
         }
     }
 }

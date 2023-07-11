@@ -98,7 +98,6 @@ class AnnotationConverter {
 
                 AnnotationType.ink -> annotation = inkAnnotation(
                     zoteroAnnotation,
-                    type = type,
                     color = color,
                     boundingBoxConverter = boundingBoxConverter
                 )
@@ -230,7 +229,9 @@ class AnnotationConverter {
 
         private fun inkAnnotation(
             annotation: org.zotero.android.pdf.data.Annotation,
-            type: Kind, color: Int, boundingBoxConverter: AnnotationBoundingBoxConverter): InkAnnotation {
+            color: Int,
+            boundingBoxConverter: AnnotationBoundingBoxConverter
+        ): InkAnnotation {
             val lines = annotation.paths(boundingBoxConverter = boundingBoxConverter)
             val ink = InkAnnotation(annotation.page)
             ink.lines = lines
@@ -243,7 +244,6 @@ class AnnotationConverter {
             document: PdfDocument,
             annotation: Annotation,
             color: String,
-            library: Library,
             username: String,
             displayName: String,
             boundingBoxConverter: AnnotationBoundingBoxConverter?
@@ -346,7 +346,7 @@ class AnnotationConverter {
         }
 
         private fun paths(annotation: InkAnnotation): List<List<PointF>> {
-            return annotation.lines ?: emptyList()
+            return annotation.lines
         }
         fun sortIndex(annotation: Annotation, boundingBoxConverter: AnnotationBoundingBoxConverter?):  String {
             val rect: RectF

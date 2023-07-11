@@ -44,7 +44,7 @@ internal fun SortPickerScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
             null -> Unit
             is SortPickerViewEffect.OnBack -> {
                 onBack()

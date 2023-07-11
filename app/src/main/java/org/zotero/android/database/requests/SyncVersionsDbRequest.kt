@@ -10,7 +10,6 @@ import org.zotero.android.database.objects.RGroup
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.Syncable
-import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
 import java.lang.Integer.min
@@ -20,7 +19,6 @@ private typealias ResultSyncVersionsString = List<String>
 
 class SyncVersionsDbRequest(
     private val versions: Map<String, Int>,
-    private val libraryId: LibraryIdentifier,
     private val syncObject: SyncObject,
     val syncType: SyncKind,
     val delayIntervals: List<Double>
@@ -35,14 +33,12 @@ class SyncVersionsDbRequest(
         when (this.syncObject) {
             SyncObject.collection ->
                 return check(
-                    versions = this.versions,
                     objects = database
                         .where<RCollection>()
                         .findAll()
                 )
             SyncObject.search ->
                 return check(
-                    versions = this.versions,
                     objects = database
                         .where<RSearch>()
                         .findAll()
@@ -53,7 +49,6 @@ class SyncVersionsDbRequest(
                     .isTrash(false)
                     .findAll()
                 return check(
-                    versions = this.versions,
                     objects = objects
                 )
             }
@@ -63,7 +58,6 @@ class SyncVersionsDbRequest(
                     .isTrash(true)
                     .findAll()
                 return check(
-                    versions = this.versions,
                     objects = objects
                 )
             }
@@ -73,7 +67,6 @@ class SyncVersionsDbRequest(
     }
 
     private fun <Obj : Syncable> check(
-        versions: Map<String, Int>,
         objects: RealmResults<Obj>
     ): List<String> {
         val date = Date()
@@ -127,7 +120,6 @@ private typealias ResultSyncVersions = Pair<List<Int>, List<Pair<Int, String>>>
 
 class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
     DbResponseRequest<ResultSyncVersions> {
-
 
     override val needsWrite: Boolean
         get() = false

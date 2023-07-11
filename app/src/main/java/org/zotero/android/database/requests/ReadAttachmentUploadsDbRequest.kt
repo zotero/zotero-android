@@ -50,7 +50,7 @@ class ReadAttachmentUploadsDbRequest(
             val mtime = mtimeField.value.toLongOrNull()
             if (mtime == null) {
                 Timber.e("ReadAttachmentUploadsDbRequest: mtime field " +
-                        "value not a number ${mtimeField.value} !!!")
+                        "value not a number ${mtimeField.value}!!!")
                 return@mapNotNull null
             }
             val md5Field = item.fields
@@ -87,7 +87,6 @@ class ReadAttachmentUploadsDbRequest(
                         this.libraryId,
                         key = item.key,
                         filename = attachmentType.filename,
-                        contentType = attachmentType.contentType
                     )
                     filename = attachmentType.filename
                 }

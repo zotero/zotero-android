@@ -25,7 +25,6 @@ class LoadLibraryDataSyncAction(
                         fetchUpdates = this.fetchUpdates,
                         loadVersions = this.loadVersions,
                         webDavEnabled = this.webDavEnabled,
-                        defaults = defaults
                     )
                 }
                 is Libraries.specific -> {
@@ -37,7 +36,6 @@ class LoadLibraryDataSyncAction(
                         fetchUpdates = this.fetchUpdates,
                         loadVersions = this.loadVersions,
                         webDavEnabled = this.webDavEnabled,
-                        defaults = defaults
                     )
                 }
             }

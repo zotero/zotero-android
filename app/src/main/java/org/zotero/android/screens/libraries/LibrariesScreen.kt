@@ -33,10 +33,9 @@ internal fun LibrariesScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
             null -> Unit
             LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen()
-            else -> {}
         }
     }
 
@@ -51,7 +50,7 @@ internal fun LibrariesScreen(
         BaseLceBox(
             modifier = Modifier.fillMaxSize(),
             lce = viewState.lce,
-            error = { lceError ->
+            error = { _ ->
                 FullScreenError(
                     modifier = Modifier.align(Alignment.Center),
                     errorTitle = stringResource(id = Strings.all_items_load_error),

@@ -56,9 +56,18 @@ internal fun FieldRow(
     textColor: Color = CustomTheme.colors.primaryContent,
     showDivider: Boolean,
     additionalInfoString: String? = null,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    onRowTapped: (() -> Unit)? = null,
 ) {
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .safeClickable(
+            onClick = onRowTapped,
+            interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(bounded = true)
+        )
+    ) {
         Spacer(modifier = Modifier.height(8.dp))
         Row {
             if (onDelete != null) {

@@ -16,14 +16,13 @@ import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.CleanupUnusedTags
 import org.zotero.android.files.FileStore
-import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.websocket.ChangeWsResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class UserControllers @Inject constructor(
-    private val dispatcher: CoroutineDispatcher,
+    dispatcher: CoroutineDispatcher,
     private val fileStore: FileStore,
     private val dbWrapper: DbWrapper,
     private val context: Context,
@@ -35,7 +34,6 @@ class UserControllers @Inject constructor(
     private val webSocketController: WebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
-    private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val defaults: Defaults,
 ) {
 
@@ -47,7 +45,7 @@ class UserControllers @Inject constructor(
 
     var isControllerInitialized: Boolean = false
 
-    fun init(userId: Long, controllers: Controllers) {
+    fun init(userId: Long) {
         createDbStorage(userId)
         syncController.init(
             userId = userId,

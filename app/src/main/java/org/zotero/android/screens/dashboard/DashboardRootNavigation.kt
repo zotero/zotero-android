@@ -14,7 +14,6 @@ import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.PdfReaderNavigation
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.tagpicker.TagPickerScreen
@@ -34,7 +33,6 @@ internal fun DashboardRootNavigation(
         DashboardRootNavigation(navController, dispatcher)
     }
 
-    val layoutType = CustomLayoutSize.calculateLayoutType()
     ZoteroNavHost(
         navController = navController,
         startDestination = DashboardRootDestinations.DASHBOARD_SCREEN,

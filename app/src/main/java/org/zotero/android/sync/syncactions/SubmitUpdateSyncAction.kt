@@ -197,8 +197,14 @@ class SubmitUpdateSyncAction(
 
         if (!changedSearches.isEmpty()) {
             for (response in changedSearches) {
-                val changeUuids = this.changeUuids[response.key] ?:emptyList()
-                requests.add(MarkSearchAsSyncedAndUpdateDbRequest(libraryId= this.libraryId, response =response, changeUuids = changeUuids))
+                val changeUuids = this.changeUuids[response.key] ?: emptyList()
+                requests.add(
+                    MarkSearchAsSyncedAndUpdateDbRequest(
+                        libraryId = this.libraryId,
+                        response = response,
+                        changeUuids = changeUuids
+                    )
+                )
             }
         }
 
@@ -268,18 +274,15 @@ class SubmitUpdateSyncAction(
             try {
                 when (this.objectS) {
                     SyncObject.collection -> {
-                        val response = collectionResponseMapper.fromJson(json)
-                        changedCollections.add(response)
+                        changedCollections.add(collectionResponseMapper.fromJson(json))
                     }
 
                     SyncObject.item, SyncObject.trash -> {
-                        val response = itemResponseMapper.fromJson(json, this.schemaController)
-                        changedItems.add(response)
+                        changedItems.add(itemResponseMapper.fromJson(json, this.schemaController))
                     }
 
                     SyncObject.search -> {
-                        val response = searchResponseMapper.fromJson(json)
-                        changedSearches.add(response)
+                        changedSearches.add(searchResponseMapper.fromJson(json))
                     }
 
                     SyncObject.settings -> {

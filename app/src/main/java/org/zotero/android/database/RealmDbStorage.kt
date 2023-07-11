@@ -3,16 +3,7 @@ import io.realm.Realm
 import io.realm.RealmConfiguration
 import timber.log.Timber
 
-enum class RealmDbError {
-    autocreateMissingPrimaryKey
-}
-
 class RealmDbStorage(val config: RealmConfiguration) {
-
-    val willPerformBetaWipe: Boolean
-        get() {
-            return config.shouldDeleteRealmIfMigrationNeeded()
-        }
 
     fun perform(coordinatorAction: (RealmDbCoordinator) -> Unit) {
         val coordinator = RealmDbCoordinator().init(config)
@@ -23,25 +14,28 @@ class RealmDbStorage(val config: RealmConfiguration) {
         return perform(request = request, invalidateRealm = false, refreshRealm = false)
     }
 
-    inline fun <reified T : Any> perform(request: DbResponseRequest<T>, refreshRealm: Boolean): T {
-            return perform(
-                request = request,
-                invalidateRealm = false,
-                refreshRealm = refreshRealm
-            )
-        }
+    inline fun <reified T : Any> perform(
+        request: DbResponseRequest<T>,
+        refreshRealm: Boolean
+    ): T {
+        return perform(
+            request = request,
+            invalidateRealm = false,
+            refreshRealm = refreshRealm
+        )
+    }
 
-    inline fun <reified T: Any> perform(
+    inline fun <reified T : Any> perform(
         request: DbResponseRequest<T>,
         invalidateRealm: Boolean,
-        q: String = ""
+        functionDifferentiator: Unit = Unit
     ): T {
-            return perform(
-                request = request,
-                invalidateRealm = invalidateRealm,
-                refreshRealm = false
-            )
-        }
+        return perform(
+            request = request,
+            refreshRealm = false,
+            invalidateRealm = invalidateRealm
+        )
+    }
 
     inline fun <reified T: Any> perform(
         request: DbResponseRequest<T>,

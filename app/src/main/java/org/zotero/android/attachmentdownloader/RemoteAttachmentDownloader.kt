@@ -109,9 +109,7 @@ class RemoteAttachmentDownloader @Inject constructor(
         operation.finishedDownload = { result ->
             finish(
                 download = download,
-                file = file,
                 attachment = attachment,
-                parentKey = parentKey,
                 result = result
             )
         }
@@ -124,12 +122,10 @@ class RemoteAttachmentDownloader @Inject constructor(
         when(attachmentType) {
             is Attachment.Kind.file -> {
                 val filename = attachmentType.filename
-                val contentType = attachmentType.contentType
                 return fileStorage.attachmentFile(
                     libraryId = attachment.libraryId,
                     key = attachment.key,
                     filename = filename,
-                    contentType = contentType
                 )
             }
             is Attachment.Kind.url -> {
@@ -140,9 +136,7 @@ class RemoteAttachmentDownloader @Inject constructor(
 
     private fun finish(
         download: Download,
-        file: File,
         attachment: Attachment,
-        parentKey: String,
         result: CustomResult<Unit>
     ) {
         this.operations.remove(download)

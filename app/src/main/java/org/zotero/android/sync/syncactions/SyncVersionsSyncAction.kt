@@ -102,7 +102,6 @@ class SyncVersionsSyncAction(
             libraryId = libraryId,
             userId = userId,
             sinceVersion = sinceVersion,
-            syncType = syncType
         )
         if (networkResult is CustomResult.GeneralSuccess.NetworkSuccess) {
             val decoded = networkResult.value
@@ -128,7 +127,6 @@ class SyncVersionsSyncAction(
         libraryId: LibraryIdentifier,
         userId: Long,
         sinceVersion: Int?,
-        syncType: SyncKind
     )
             : CustomResult<Map<String, Int>> {
         val url =
@@ -142,7 +140,7 @@ class SyncVersionsSyncAction(
         return networkResult
     }
 
-    private suspend fun loadChangedObjects(
+    private fun loadChangedObjects(
         objectS: SyncObject,
         response: Map<String, Int>,
         libraryId: LibraryIdentifier,
@@ -168,10 +166,8 @@ class SyncVersionsSyncAction(
                 }
             }
 
-
             val request = SyncVersionsDbRequest(
                 versions = response,
-                libraryId = libraryId,
                 syncObject = objectS,
                 syncType = syncType,
                 delayIntervals = delayIntervals

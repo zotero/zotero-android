@@ -76,7 +76,6 @@ class MarkOtherObjectsAsChangedByUser(
                     .syncState(ObjectSyncState.synced)
                     .findAll()
                 markAsChangedCollection(
-                    notIn = this.versions,
                     objects = objects,
                     database = database
                 )
@@ -88,7 +87,6 @@ class MarkOtherObjectsAsChangedByUser(
                     .syncState(ObjectSyncState.synced)
                     .findAll()
                 markAsChangedSearch(
-                    notIn = this.versions,
                     objects = objects,
                     database = database
                 )
@@ -102,7 +100,6 @@ class MarkOtherObjectsAsChangedByUser(
                     .isTrash(false)
                     .findAll()
                 markAsChangedItem(
-                    notIn = this.versions,
                     objects = objects,
                     database = database
                 )
@@ -116,7 +113,6 @@ class MarkOtherObjectsAsChangedByUser(
                     .isTrash(true)
                     .findAll()
                 markAsChangedItem(
-                    notIn = this.versions,
                     objects = objects,
                     database = database
                 )
@@ -126,7 +122,6 @@ class MarkOtherObjectsAsChangedByUser(
     }
 
     private fun markAsChangedCollection(
-        notIn: Map<String, Int>,
         objects: RealmResults<RCollection>,
         database: Realm
     ) {
@@ -147,7 +142,6 @@ class MarkOtherObjectsAsChangedByUser(
     }
 
     private fun markAsChangedSearch(
-        notIn: Map<String, Int>,
         objects: RealmResults<RSearch>,
         database: Realm
     ) {
@@ -168,7 +162,6 @@ class MarkOtherObjectsAsChangedByUser(
     }
 
     private fun markAsChangedItem(
-        notIn: Map<String, Int>,
         objects: RealmResults<RItem>,
         database: Realm
     ) {

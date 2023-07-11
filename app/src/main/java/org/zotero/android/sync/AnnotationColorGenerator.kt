@@ -23,20 +23,20 @@ class AnnotationColorGenerator {
 
             if (isDarkMode) {
                 val hsv = getHSVFromColor(colorInt)
-                var hue: Float = hsv[0]
-                var sat: Float = hsv[1]
-                var brg: Float = hsv[2]
-                var alpha: Float = android.graphics.Color.alpha(colorInt) / 255F
+                val hue: Float = hsv[0]
+                val sat: Float = hsv[1]
+                val brg: Float = hsv[2]
+//                var alpha: Float = android.graphics.Color.alpha(colorInt) / 255F
 
                 val adjustedSat = min(1F, (sat * 1.2F))
 
                 val adjustedColor = android.graphics.Color.HSVToColor(
-                    (AnnotationColorGenerator.highlightDarkOpacity * 255).toInt(),
+                    (highlightDarkOpacity * 255).toInt(),
                     listOf(hue, adjustedSat, brg).toFloatArray()
                 )
                 return Triple(
                     adjustedColor,
-                    AnnotationColorGenerator.highlightDarkOpacity,
+                    highlightDarkOpacity,
                     BlendMode.LIGHTEN
                 )
             } else {
@@ -45,11 +45,11 @@ class AnnotationColorGenerator {
                     color.red,
                     color.green,
                     color.blue,
-                    AnnotationColorGenerator.highlightOpacity
+                    highlightOpacity
                 )
                 return Triple(
                     adjustedColor.toArgb(),
-                    AnnotationColorGenerator.highlightOpacity,
+                    highlightOpacity,
                     BlendMode.MULTIPLY
                 )
             }

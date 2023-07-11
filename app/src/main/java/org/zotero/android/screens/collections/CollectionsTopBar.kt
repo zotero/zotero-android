@@ -39,6 +39,7 @@ internal fun CollectionsTopBar(
         },
         navigationIcon = {
             Row {
+                Spacer(modifier = Modifier.width(8.dp))
                 HeadingTextButton(
                     isEnabled = true,
                     onClick = viewModel::navigateToLibraries,

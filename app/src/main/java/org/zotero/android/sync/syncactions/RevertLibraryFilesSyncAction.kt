@@ -98,7 +98,6 @@ class RevertLibraryFilesSyncAction(
                 libraryId,
                 key = change.key,
                 filename = change.oldName,
-                contentType = change.contentType
             )
 
             if (!oldFile.exists()) {
@@ -109,7 +108,6 @@ class RevertLibraryFilesSyncAction(
                 libraryId,
                 key = change.key,
                 filename = change.newName,
-                contentType = change.contentType
             )
 
             val renameResult = oldFile.renameTo(newFile)

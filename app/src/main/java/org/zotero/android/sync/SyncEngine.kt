@@ -505,7 +505,6 @@ class SyncUseCase @Inject constructor(
                 keys = toUpdate,
                 version = newVersion,
                 shouldStoreVersion = versionDidChange,
-                syncType = this.type
             )
             finishSyncVersions(
                 actions = actions,
@@ -699,7 +698,7 @@ class SyncUseCase @Inject constructor(
             }
             is NonFatal.unchanged -> {
                 if (version != null) {
-                    handleUnchangedFailure(lastVersion = version, libraryId = libraryId, additionalAction = additionalAction)
+                    handleUnchangedFailure(lastVersion = version, libraryId = libraryId)
                 } else {
                     if (additionalAction != null) {
                         additionalAction()
@@ -720,7 +719,6 @@ class SyncUseCase @Inject constructor(
     private fun handleUnchangedFailure(
         lastVersion: Int,
         libraryId: LibraryIdentifier,
-        additionalAction: (() -> Unit)?
     ) {
         Timber.i("Sync: received unchanged error, store version: $lastVersion")
         this.lastReturnedVersion = lastVersion
@@ -795,7 +793,7 @@ class SyncUseCase @Inject constructor(
         customResultError: CustomResult.GeneralError,
         data: SyncError.ErrorData
     ): SyncError {
-        return when (customResultError) {
+        when (customResultError) {
             is CustomResult.GeneralError.CodeError -> {
                 val error = customResultError.throwable
                 Timber.e(error)
@@ -835,7 +833,7 @@ class SyncUseCase @Inject constructor(
                             return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.response, data = data))
                         }
                         is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted -> {
-                            return SyncError.nonFatal2(NonFatal.unknown(str = error.localizedMessage, data = data))
+                            return SyncError.nonFatal2(NonFatal.unknown(str = error.localizedMessage!!, data = data))
                         }
                         is SyncActionError.objectPreconditionError -> {
                             return SyncError.fatal2(SyncError.Fatal.uploadObjectConflict(data))
@@ -1086,8 +1084,7 @@ class SyncUseCase @Inject constructor(
             when (libraryId) {
                 is LibraryIdentifier.group -> {
                     val name =
-                        dbWrapper.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = libraryId.groupId))?.name
-                            ?: ""
+                        dbWrapper.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = libraryId.groupId)).name
                     enqueue(
                         actions = listOf(
                             Action.resolveGroupFileWritePermission(
@@ -1119,7 +1116,6 @@ class SyncUseCase @Inject constructor(
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
         failedBeforeReachingApi: Boolean = false,
-        ignoreWebDav: Boolean = false
     ) {
         val nextAction = {
             if (newVersion != null) {
@@ -1147,11 +1143,9 @@ class SyncUseCase @Inject constructor(
                 is SyncActionError.authorizationFailed -> {
                     val statusCode = syncActionError.statusCode
                     val response = syncActionError.response
-                    val hadIfMatchHeader = syncActionError.hadIfMatchHeader
                     handleUploadAuthorizationFailure(
                         statusCode = statusCode,
                         response = response,
-                        hadIfMatchHeader = hadIfMatchHeader,
                         key = (keys.firstOrNull() ?: ""),
                         libraryId = libraryId,
                         objectS = objectS,
@@ -1276,7 +1270,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun reportFinish(errors: List<SyncError.NonFatal>) {
+    private fun reportFinish(errors: List<NonFatal>) {
         val q = requireRetry(errors = errors)
 
         if (q == null || this.retryAttempt >= this.maxRetryCount ) {
@@ -1285,13 +1279,12 @@ class SyncUseCase @Inject constructor(
             return
         }
         val sync = q.first
-        val remainingErrors = q.second
 
         //TODO report finish progress
         this.observable.emitAsync(sync)
     }
 
-    private fun requireRetry(errors: List<NonFatal>): Pair<SyncScheduler.Sync, List<SyncError.NonFatal>>? {
+    private fun requireRetry(errors: List<NonFatal>): Pair<SyncScheduler.Sync, List<NonFatal>>? {
         // Find libraries which reported version mismatch.
         val retryLibraries = mutableListOf<LibraryIdentifier>()
         val reportErrors = mutableListOf<NonFatal>()
@@ -1512,7 +1505,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun markGroupForResync(identifier: Int) {
         try {
-            val result = MarkGroupForResyncSyncAction(
+            MarkGroupForResyncSyncAction(
                 identifier = identifier,
                 dbStorage = dbWrapper
             ).result()
@@ -1680,14 +1673,13 @@ class SyncUseCase @Inject constructor(
     private fun handleUploadAuthorizationFailure(
         statusCode: Int,
         response: String,
-        hadIfMatchHeader: Boolean,
         key: String,
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
         newVersion: Int?,
         failedBeforeReachingApi: Boolean
     ) {
-        val nonFatalError: SyncError.NonFatal
+        val nonFatalError: NonFatal
         when (statusCode) {
             403 -> {
                 when (libraryId) {
@@ -1697,7 +1689,7 @@ class SyncUseCase @Inject constructor(
                             dbWrapper.realmDbStorage.perform(
                                 request = ReadGroupDbRequest
                                     (identifier = groupId)
-                            )?.name ?: ""
+                            ).name
                         enqueue(
                             actions = listOf(
                                 Action.resolveGroupFileWritePermission(
@@ -1710,7 +1702,7 @@ class SyncUseCase @Inject constructor(
                     }
                     is LibraryIdentifier.custom -> {
                         nonFatalError =
-                            SyncError.NonFatal.apiError(
+                            NonFatal.apiError(
                                 response = response,
                                 data = SyncError.ErrorData.from(
                                     syncObject = objectS,
@@ -1722,7 +1714,7 @@ class SyncUseCase @Inject constructor(
                 }
             }
             413 -> {
-                nonFatalError = SyncError.NonFatal.quotaLimit(libraryId)
+                nonFatalError = NonFatal.quotaLimit(libraryId)
             }
             404 -> {
                 markItemForUploadAndRestartSync(key = key, libraryId = libraryId)

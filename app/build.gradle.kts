@@ -6,6 +6,8 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("realm-android")
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -20,9 +22,8 @@ android {
         versionName = "1.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "true")
-        buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
+        buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
         manifestPlaceholders["enableCrashReporting"] = false
     }
     signingConfigs {
@@ -54,6 +55,7 @@ android {
 
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
             manifestPlaceholders["enableCrashReporting"] = false
+            extra.set("enableCrashlytics", false)
         }
         create("eBeta") {//prefix 'e' added for ordering in Android Studio Build Variant's menu
             resValue("string", "app_name", "Zotero Beta")
@@ -63,7 +65,6 @@ android {
 
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
             manifestPlaceholders["enableCrashReporting"] = true
-            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
         }
         getByName("release") {
             resValue("string", "app_name", "Zotero")
@@ -73,7 +74,6 @@ android {
 
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
             manifestPlaceholders["enableCrashReporting"] = true
-            resValue("bool", "FIREBASE_ANALYTICS_DEACTIVATED", "false")
         }
     }
 

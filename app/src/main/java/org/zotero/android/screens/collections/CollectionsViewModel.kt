@@ -192,8 +192,7 @@ internal class CollectionsViewModel @Inject constructor(
                 )
 
                 collections?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
-                    val state = changeSet.state
-                    when (state) {
+                    when (changeSet.state) {
                         OrderedCollectionChangeSet.State.INITIAL -> {
                             //no-op
                         }
@@ -205,6 +204,9 @@ internal class CollectionsViewModel @Inject constructor(
                                 changeSet.error,
                                 "CollectionsViewModel: could not load results"
                             )
+                        }
+                        else -> {
+                            //no-op
                         }
                     }
                 })
@@ -269,8 +271,7 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun observeItemCount(results: RealmResults<RItem>, customType: CollectionIdentifier.CustomType) {
         results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
-            val state = changeSet.state
-            when (state) {
+            when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     //no-op
                 }
@@ -279,6 +280,9 @@ internal class CollectionsViewModel @Inject constructor(
                 }
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "CollectionsViewModel: could not load results")
+                }
+                else -> {
+                    //no-op
                 }
             }
         })
@@ -419,7 +423,7 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun onEdit(collection: Collection) {
         val parentKey = viewState.collectionTree.parent(collection.identifier)?.keyGet
-        var parent: Collection? = null
+        val parent: Collection?
         if (parentKey != null) {
             val request =
                 ReadCollectionDbRequest(libraryId = viewState.library.identifier, key = parentKey)

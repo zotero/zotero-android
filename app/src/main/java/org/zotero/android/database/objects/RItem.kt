@@ -223,7 +223,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 parameters["creators"] = this.creators.map { it.updateParameters }.toTypedArray()
             }
             if (changes.contains(RItemChanges.fields)) {
-                for (field in this.fields.filter { it.changed == true }) {
+                for (field in this.fields.filter { it.changed }) {
                     if (field.baseKey == FieldKeys.Item.Annotation.position) {
                         positionFieldChanged = true
                         continue
@@ -281,7 +281,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             AnnotationType.ink -> {
                 val apiPaths: MutableList<List<Double>> = mutableListOf()
                 for (path in this.paths.sortedBy { it.sortIndex }) {
-                    apiPaths.add(path.coordinates!!
+                    apiPaths.add(path.coordinates
                         .sortedBy { it.sortIndex }
                         .map { it.value.rounded(3) })
                 }
@@ -398,7 +398,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         if (this.tags!!.isValid) {
             val baseTagsToRemove = ReadBaseTagsToDeleteDbRequest(this.tags).process(
                 database,
-            ) ?: emptyList()
+            )
             this.tags.deleteAllFromRealm()
             if (!baseTagsToRemove.isEmpty()) {
                 database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()

@@ -21,7 +21,6 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.manager.AnnotationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
-import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -141,7 +140,7 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun setupAnnotationCacheUpdateStream() {
         annotationPreviewCacheUpdatedEventStream.flow()
-            .onEach { key ->
+            .onEach {
 //                notifyItemChanged(viewModel.viewState.sortedKeys.indexOfFirst { it.key == key })
                 triggerEffect(PdfReaderViewEffect.UpdateAnnotationsList(-1))
             }
@@ -171,7 +170,7 @@ class PdfReaderViewModel @Inject constructor(
             }
 
         })
-        fragment.addOnAnnotationDeselectedListener { annotation, p1 ->
+        fragment.addOnAnnotationDeselectedListener { annotation, _ ->
             deselectSelectedAnnotation(annotation)
         }
     }
@@ -231,7 +230,6 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun loadAnnotations(
         document: PdfDocument,
-        library: Library,
         username: String,
         displayName: String
     ): Map<String, DocumentAnnotation> {
@@ -248,8 +246,7 @@ class PdfReaderViewModel @Inject constructor(
             val annotation = AnnotationConverter.annotation(
                 document = document,
                 annotation = pdfAnnotation,
-                color = (pdfAnnotation.color.toHexString() ?: "#000000"),
-                library = library,
+                color = pdfAnnotation.color.toHexString(),
                 username = username,
                 displayName = displayName,
                 boundingBoxConverter = this.annotationBoundingBoxConverter
@@ -276,7 +273,6 @@ class PdfReaderViewModel @Inject constructor(
                 this.databaseAnnotations = liveAnnotations!!.freeze()
                 val documentAnnotations = loadAnnotations(
                     this.document,
-                    library = library,
                     username = viewState.username,
                     displayName = viewState.displayName
                 )
@@ -473,24 +469,32 @@ class PdfReaderViewModel @Inject constructor(
 
 
     private fun observe(results: RealmResults<RItem>) {
-        results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { objects, changeSet ->
-            val state = changeSet.state
-            when (state) {
+        results.addChangeListener { objects, changeSet ->
+            when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     //no-op
-
                 }
-                OrderedCollectionChangeSet.State.UPDATE ->  {
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
                     val deletions = changeSet.deletions
                     val modifications = changeSet.changes
                     val insertions = changeSet.insertions
-                    update(objects = objects, deletions = deletions, insertions = insertions, modifications = modifications)
+                    update(
+                        objects = objects,
+                        deletions = deletions,
+                        insertions = insertions,
+                        modifications = modifications
+                    )
                 }
+
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "PdfReaderViewModel: could not load results")
                 }
+                else -> {
+                    //no-op
+                }
             }
-        })
+        }
     }
     private fun update(
         objects: RealmResults<RItem>,
@@ -890,7 +894,7 @@ class PdfReaderViewModel @Inject constructor(
                     changes.add(PdfAnnotationChanges.rects)
                 } else {
                     val newRects = annotation.rects(boundingBoxConverter = annotationBoundingBoxConverter)
-                    val oldRects = ((pdfAnnotation as HighlightAnnotation).rects ?: emptyList()).map{ it.rounded(3) }
+                    val oldRects = ((pdfAnnotation as HighlightAnnotation).rects).map{ it.rounded(3) }
                     if (newRects != oldRects) {
                         pdfAnnotation.rects = newRects
                         changes.add(PdfAnnotationChanges.rects)
@@ -902,7 +906,7 @@ class PdfReaderViewModel @Inject constructor(
                 if (inkAnnotation != null) {
                     val newPaths =
                         annotation.paths(boundingBoxConverter = annotationBoundingBoxConverter)
-                    val oldPaths = (inkAnnotation.lines ?: emptyList()).map { points ->
+                    val oldPaths = (inkAnnotation.lines).map { points ->
                         points.map { it.rounded(3) }
                     }
 

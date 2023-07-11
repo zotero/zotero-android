@@ -8,6 +8,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.architecture.crashreporting.CrashReportingTree
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.Controllers
 import timber.log.Timber
@@ -34,10 +35,8 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     override fun onCreate() {
         super<Application>.onCreate()
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
         instance = this
+        setUpLogging()
 
         controllers.init()
 
@@ -59,5 +58,9 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     override fun onDestroy(owner: LifecycleOwner) {
         controllers.willTerminate()
+    }
+
+    private fun setUpLogging() {
+        Timber.plant(CrashReportingTree())
     }
 }

@@ -158,7 +158,6 @@ class RevertLibraryUpdatesSyncAction(
                 libraryId,
                 key = change.key,
                 filename = change.oldName,
-                contentType = change.contentType
             )
             if (!oldFile.exists()) {
                 return
@@ -168,7 +167,6 @@ class RevertLibraryUpdatesSyncAction(
                 libraryId,
                 key = change.key,
                 filename = change.newName,
-                contentType = change.contentType
             )
             if (!oldFile.renameTo(newFile)) {
                 Timber.w("RevertLibraryUpdatesSyncAction: can't rename file")

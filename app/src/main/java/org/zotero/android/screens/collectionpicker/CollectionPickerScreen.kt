@@ -52,12 +52,13 @@ internal fun CollectionPickerScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
+        when (viewEffect?.consume()) {
             is CollectionPickerViewEffect.OnBack -> {
                 onBack()
             }
-            else -> {}
+            else -> {
+                //no-op
+            }
         }
     }
     CustomScaffold(

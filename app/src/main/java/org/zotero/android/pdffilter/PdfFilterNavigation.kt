@@ -10,7 +10,6 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
@@ -23,7 +22,6 @@ internal fun PdfFilterNavigation(
         PdfFilterNavigation(navController, dispatcher)
     }
 
-    val layoutType = CustomLayoutSize.calculateLayoutType()
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfFilterDestinations.PDF_FILTER_SCREEN,

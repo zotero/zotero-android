@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "661529009343",
+    "project_id": "zotero-for-android",
+    "storage_bucket": "zotero-for-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661529009343:android:8ba493b34b0c6b28f97a0a",
+        "android_client_info": {
+          "package_name": "org.zotero.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "661529009343-p2ej175v3bo8vl1pnjmt45bqpt1f0teg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw9crb-EwRov7ZuScfAP81Lxld9hiLAVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "661529009343-p2ej175v3bo8vl1pnjmt45bqpt1f0teg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:661529009343:android:e9703304b9098208f97a0a",
+        "android_client_info": {
+          "package_name": "org.zotero.android.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "661529009343-p2ej175v3bo8vl1pnjmt45bqpt1f0teg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAw9crb-EwRov7ZuScfAP81Lxld9hiLAVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "661529009343-p2ej175v3bo8vl1pnjmt45bqpt1f0teg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

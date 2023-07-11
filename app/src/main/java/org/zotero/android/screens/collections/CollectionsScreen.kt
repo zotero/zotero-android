@@ -34,7 +34,7 @@ internal fun CollectionsScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
             null -> Unit
             CollectionsViewEffect.NavigateBack -> onBack()
             CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
@@ -59,7 +59,7 @@ internal fun CollectionsScreen(
         BaseLceBox(
             modifier = Modifier.fillMaxSize(),
             lce = viewState.lce,
-            error = { lceError ->
+            error = { _ ->
                 FullScreenError(
                     modifier = Modifier.align(Alignment.Center),
                     errorTitle = stringResource(id = Strings.all_items_load_error),

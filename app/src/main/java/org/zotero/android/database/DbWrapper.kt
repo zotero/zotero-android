@@ -18,7 +18,6 @@ class DbWrapper constructor() {
     }
 
     fun clearDatabaseFiles() {
-        val realmUrl = config.path ?: return
         val realmInstance = Realm.getInstance(config)
         realmInstance.removeAllChangeListeners()
         realmInstance.executeTransaction {

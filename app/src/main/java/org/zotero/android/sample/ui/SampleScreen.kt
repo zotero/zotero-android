@@ -23,7 +23,7 @@ internal fun SampleScreen(
     }
 
     LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
+        when (viewEffect?.consume()) {
             NavigateBack -> onBack()
             null -> Unit
         }

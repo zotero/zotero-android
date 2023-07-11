@@ -110,6 +110,7 @@ private fun LibrariesItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
+                        color = CustomTheme.colors.primaryContent,
                         text = item.name,
                         fontSize = 14.sp,
                         maxLines = 1,

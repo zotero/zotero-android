@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.architecture.exhaustive
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
@@ -109,7 +108,6 @@ class AttachmentDownloader @Inject constructor(
             }
             is Attachment.Kind.file -> {
                 val filename = attachmentType.filename
-                val contentType = attachmentType.contentType
                 val location = attachmentType.location
                 val linkType = attachmentType.linkType
                 when (linkType) {
@@ -148,7 +146,6 @@ class AttachmentDownloader @Inject constructor(
                                     libraryId = attachment.libraryId,
                                     key = attachment.key,
                                     filename = filename,
-                                    contentType = contentType
                                 )
                                 download(
                                     file = file,
@@ -163,7 +160,6 @@ class AttachmentDownloader @Inject constructor(
                                     libraryId = attachment.libraryId,
                                     key = attachment.key,
                                     filename = filename,
-                                    contentType = contentType
                                 )
 
                                 var hasLocalCopy = true

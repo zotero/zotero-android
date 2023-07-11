@@ -74,7 +74,7 @@ internal fun PdfReaderSidebar(
             ) {
                 itemsIndexed(
                     items = viewModel.viewState.sortedKeys
-                ) { index, key ->
+                ) { _, key ->
                     val annotation = viewModel.annotation(key) ?: return@itemsIndexed
                     var rowModifier: Modifier = Modifier
                         .fillMaxWidth()

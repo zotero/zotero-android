@@ -46,17 +46,17 @@ private fun BoxScope.set(
         is ContentType.progress -> {
             set(progress = contentType.progress, showsStop = (style != Style.lookup))
             setMainImage(asset = null)
-            setBadge(asset = null, style = style)
+            setBadge(asset = null)
         }
         is ContentType.image -> {
             set(progress = null, showsStop = false)
             setMainImage(asset = contentType.asset)
-            setBadge(asset = null, style = style)
+            setBadge(asset = null)
         }
         is ContentType.imageWithBadge -> {
             set(progress = null, showsStop = false)
             setMainImage(asset = contentType.main)
-            setBadge(asset = contentType.badge, style = style)
+            setBadge(asset = contentType.badge)
         }
     }
 }
@@ -73,7 +73,7 @@ fun BoxScope.setMainImage(asset: Int?) {
 }
 
 @Composable
-fun BoxScope.setBadge(asset: Int?, style: Style) {
+fun BoxScope.setBadge(asset: Int?) {
     if (asset != null) {
         Image(
             modifier = Modifier
@@ -170,7 +170,7 @@ private fun contentType(state: State, style: Style): ContentType? {
 }
 
 private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
-    return when (attachmentType) {
+    when (attachmentType) {
         is Attachment.Kind.url -> {
             return when (style) {
                 Style.detail, Style.shareExtension, Style.lookup -> {

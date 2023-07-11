@@ -49,7 +49,11 @@ internal fun ItemDetailsViewScreen(
                     layoutType = layoutType,
                     onCreatorLongClick = viewModel::onCreatorLongClick
                 )
-                ListOfFieldRows(viewState, layoutType)
+                ListOfFieldRows(
+                    viewState = viewState,
+                    layoutType = layoutType,
+                    viewModel = viewModel
+                )
                 DatesRows(
                     dateAdded = viewState.data.dateAdded,
                     dateModified = viewState.data.dateModified,
@@ -125,7 +129,8 @@ private fun ListOfCreatorRows(
 @Composable
 fun ListOfFieldRows(
     viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType
+    layoutType: CustomLayoutSize.LayoutType,
+    viewModel: ItemDetailsViewModel,
 ) {
     for (fieldId in viewState.data.fieldIds) {
         val field = viewState.data.fields.get(fieldId) ?: continue
@@ -138,13 +143,15 @@ fun ListOfFieldRows(
         } else {
             CustomTheme.colors.primaryContent
         }
+
         FieldRow(
             detailTitle = title,
             detailValue = value,
             layoutType = layoutType,
             textColor = textColor,
             showDivider = false,
-            additionalInfoString = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.dateOrder)
+            additionalInfoString = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.dateOrder),
+            onRowTapped = { viewModel.onRowTapped(field) }
         )
     }
 }

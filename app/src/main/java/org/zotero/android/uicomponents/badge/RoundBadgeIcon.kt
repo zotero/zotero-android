@@ -16,7 +16,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 fun RoundBadgeIcon(
-    modifier: Modifier = Modifier,
     count: Int,
 ) {
     // Actual badge + content

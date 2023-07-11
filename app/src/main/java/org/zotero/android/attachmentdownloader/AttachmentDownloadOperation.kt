@@ -49,7 +49,7 @@ class AttachmentDownloadOperation(
         this.coroutineScope == null || this.coroutineScope?.isActive == false
 
     private suspend fun startDownload() {
-        var isCompressed = false //TODO Use WebDavController
+//        var isCompressed = false //TODO Use WebDavController
         Timber.i("AttachmentDownloadOperation: start downloading ${this.download.key}")
         this.state = State.downloading
 

@@ -76,10 +76,10 @@ class UploadFixSyncAction(
         }
         val attachment = attachmentResult.value!!
         download(attachment = attachment)
-        markAsUploaded(attachment = attachment)
+        markAsUploaded()
     }
 
-    private fun markAsUploaded(attachment: Attachment): CustomResult<Unit> {
+    private fun markAsUploaded(): CustomResult<Unit> {
         if (isOperationNotActive()) {
             return CustomResult.GeneralError.CodeError(Error.expired)
         }
