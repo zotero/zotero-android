@@ -20,8 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.database.objects.ItemTypes
-import org.zotero.android.database.requests.key
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -48,7 +46,8 @@ internal fun BoxScope.AllItemsBottomPanel(
         BottomPanel(
             modifier = commonModifier,
             layoutType = layoutType,
-            viewModel = viewModel
+            viewModel = viewModel,
+            viewState = viewState,
         )
     }
 }
@@ -108,32 +107,6 @@ private fun EditingBottomPanel(
                     }
                 )
             } else {
-                var isDuplicateEnabled = false
-                if (viewState.selectedItems.size == 1) {
-                    val key = viewState.selectedItems.firstOrNull()
-                    if (key != null) {
-                        val rItem = viewModel.results?.where()?.key(key)?.findFirst()
-                        if (rItem != null && rItem.rawType != ItemTypes.attachment && rItem.rawType != ItemTypes.note) {
-                            isDuplicateEnabled = true
-                        }
-                    }
-                }
-
-                Icon(
-                    modifier = Modifier
-                        .size(layoutType.calculateItemsBottomSheetIconSize())
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(),
-                            onClick = {
-                                viewModel.onDuplicate()
-                            },
-                            enabled = isDuplicateEnabled
-                        ),
-                    painter = painterResource(id = Drawables.baseline_content_copy_24),
-                    contentDescription = null,
-                    tint = if (isDuplicateEnabled) CustomTheme.colors.zoteroBlueWithDarkMode else CustomTheme.colors.disabledContent
-                )
                 val isDeleteEnabled = !viewState.selectedItems.isEmpty()
                 Icon(
                     modifier = Modifier
@@ -160,7 +133,8 @@ private fun EditingBottomPanel(
 private fun BottomPanel(
     modifier: Modifier,
     layoutType: CustomLayoutSize.LayoutType,
-    viewModel: AllItemsViewModel
+    viewModel: AllItemsViewModel,
+    viewState: AllItemsViewState,
 ) {
     Box(
         modifier = modifier
@@ -182,6 +156,12 @@ private fun BottomPanel(
             contentDescription = null,
             tint = CustomTheme.colors.zoteroBlueWithDarkMode
         )
+        val filterDrawable =
+            if (viewState.filters.isEmpty()) {
+                Drawables.filter_icon_unselected
+            } else {
+                Drawables.filter_icon_selected
+            }
         Icon(
             modifier = Modifier
                 .padding(start = 30.dp)
@@ -194,7 +174,7 @@ private fun BottomPanel(
                         viewModel.showFilters()
                     }
                 ),
-            painter = painterResource(id = Drawables.baseline_filter_list_24),
+            painter = painterResource(id = filterDrawable),
             contentDescription = null,
             tint = CustomTheme.colors.zoteroBlueWithDarkMode
         )

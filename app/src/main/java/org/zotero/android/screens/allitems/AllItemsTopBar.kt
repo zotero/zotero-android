@@ -30,11 +30,13 @@ internal fun AllItemsTopBar(
 ) {
     CenterAlignedTopAppBar(
         title = {
-            Text(
-                text = viewState.collection.name,
-                color = CustomTheme.colors.primaryContent,
-                style = CustomTheme.typography.h2
-            )
+            if (!viewState.isEditing) {
+                Text(
+                    text = viewState.collection.name,
+                    color = CustomTheme.colors.primaryContent,
+                    style = CustomTheme.typography.h2
+                )
+            }
         },
         navigationIcon = {
             if (!layoutType.isTablet()) {
@@ -76,27 +78,28 @@ internal fun AllItemsTopBar(
                     text = stringResource(Strings.select),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                return@CenterAlignedTopAppBar
-            }
-            val allSelected = viewState.selectedItems.size == (viewModel.results?.size ?: 0)
-            if (allSelected) {
-                HeadingTextButton(
-                    onClick = viewModel::toggleSelectionState,
-                    text = stringResource(Strings.deselect_all),
-                )
             } else {
-                HeadingTextButton(
-                    onClick = viewModel::toggleSelectionState,
-                    text = stringResource(Strings.select_all),
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
+                val allSelected = viewState.selectedItems.size == (viewModel.results?.size ?: 0)
+                if (allSelected) {
+                    HeadingTextButton(
+                        onClick = viewModel::toggleSelectionState,
+                        text = stringResource(Strings.deselect_all),
+                    )
+                } else {
+                    HeadingTextButton(
+                        onClick = viewModel::toggleSelectionState,
+                        text = stringResource(Strings.select_all),
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
 
-            HeadingTextButton(
-                onClick = viewModel::onDone,
-                text = stringResource(Strings.done),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+                HeadingTextButton(
+                    onClick = viewModel::onDone,
+                    text = stringResource(Strings.done),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )

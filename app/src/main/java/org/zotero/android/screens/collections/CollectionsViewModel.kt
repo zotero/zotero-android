@@ -27,6 +27,7 @@ import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
+import org.zotero.android.database.requests.SetCollectionCollapsedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.ItemsSortType
@@ -329,11 +330,25 @@ internal class CollectionsViewModel @Inject constructor(
 
     fun onItemChevronTapped(collection: Collection) {
         val tree = viewState.collectionTree
+        val libraryId = viewState.libraryId
+        val collapsed = tree.collapsed[collection.identifier] ?: return
         tree.set(
-            collapsed = !viewState.collectionTree.collapsed[collection.identifier]!!, collection.identifier
+            collapsed = !collapsed, collection.identifier
         )
         updateState {
             copy(collectionTree = tree)
+        }
+        val request = SetCollectionCollapsedDbRequest(
+            collapsed = !collapsed,
+            identifier = collection.identifier,
+            libraryId = libraryId
+        )
+        viewModelScope.launch {
+            perform(dbWrapper, request)
+                .ifFailure {
+                    Timber.e(it, "CollectionsActionHandler: can't change collapsed")
+                    return@launch
+                }
         }
         triggerEffect(CollectionsViewEffect.ScreenRefresh)
     }

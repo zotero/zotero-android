@@ -23,7 +23,8 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun BoxScope.PdfReaderBottomPanel(
     layoutType: CustomLayoutSize.LayoutType,
-    viewModel: PdfReaderViewModel
+    viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState
 ) {
     Box(
         modifier = Modifier
@@ -32,6 +33,12 @@ internal fun BoxScope.PdfReaderBottomPanel(
             .align(Alignment.BottomStart)
     ) {
         SidebarDivider(modifier = Modifier.align(Alignment.TopStart))
+        val filterDrawable =
+            if (viewState.filter == null) {
+                Drawables.filter_icon_unselected
+            } else {
+                Drawables.filter_icon_selected
+            }
         Icon(
             modifier = Modifier
                 .padding(start = 4.dp)
@@ -44,7 +51,7 @@ internal fun BoxScope.PdfReaderBottomPanel(
                         viewModel.showFilterPopup()
                     }
                 ),
-            painter = painterResource(id = Drawables.baseline_filter_list_24),
+            painter = painterResource(id = filterDrawable),
             contentDescription = null,
             tint = CustomTheme.colors.zoteroBlueWithDarkMode
         )

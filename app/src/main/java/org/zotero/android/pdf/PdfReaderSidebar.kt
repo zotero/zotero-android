@@ -154,7 +154,11 @@ internal fun PdfReaderSidebar(
                 }
             }
         }
-        PdfReaderBottomPanel(layoutType = layoutType, viewModel = viewModel)
+        PdfReaderBottomPanel(
+            layoutType = layoutType,
+            viewModel = viewModel,
+            viewState = viewState
+        )
     }
 }
 

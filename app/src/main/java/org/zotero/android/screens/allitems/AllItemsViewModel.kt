@@ -112,7 +112,7 @@ internal class AllItemsViewModel @Inject constructor(
     val itemAccessories = mutableMapOf<String, ItemAccessory> ()
     var keys = mutableListOf<String>()
     var results: RealmResults<RItem>? = null
-    var filters: MutableList<ItemsFilter> = mutableListOf()
+
 
     private val onSearchStateFlow = MutableStateFlow("")
 
@@ -447,7 +447,7 @@ internal class AllItemsViewModel @Inject constructor(
         val sortType = defaults.getItemsSortType()
         val results = results(
             viewState.searchTerm,
-            filters = this.filters,
+            filters = viewState.filters,
             collectionId = viewState.collection.identifier,
             sortType = sortType,
             libraryId = viewState.library.identifier
@@ -480,7 +480,7 @@ internal class AllItemsViewModel @Inject constructor(
     private fun search(text: String?) {
         val results = results(
             searchText = text,
-            filters = this.filters,
+            filters = viewState.filters,
             collectionId = viewState.collection.identifier,
             sortType = viewState.sortType,
             libraryId = viewState.library.identifier
@@ -902,7 +902,7 @@ internal class AllItemsViewModel @Inject constructor(
     private fun changeSortType(sortType: ItemsSortType) {
         val results = results(
             searchText = viewState.searchTerm,
-            filters = this.filters,
+            filters = viewState.filters,
             collectionId = viewState.collection.identifier,
             sortType = sortType,
             libraryId = viewState.library.identifier
@@ -938,26 +938,34 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun enable(filter: ItemsFilter) {
-        if (this.filters.contains(filter)) {
+        if (viewState.filters.contains(filter)) {
             return
         }
-        filters.add(filter)
+        updateState {
+            copy(
+                filters = viewState.filters + filter
+            )
+        }
         filter()
     }
 
     private fun disable(filter: ItemsFilter) {
-        val index = this.filters.indexOf(filter)
+        val index = viewState.filters.indexOf(filter)
         if (index == -1) {
             return
         }
-        this.filters.removeAt(index)
+        updateState {
+            copy(
+                filters = viewState.filters - filter
+            )
+        }
         filter()
     }
 
     private fun filter() {
         val results = results(
             viewState.searchTerm,
-            filters = this.filters,
+            filters = viewState.filters,
             collectionId = viewState.collection.identifier,
             sortType = viewState.sortType,
             libraryId = viewState.library.identifier
@@ -968,7 +976,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun showFilters() {
         ScreenArguments.filterArgs = FilterArgs(
-            filters = this.filters
+            filters = viewState.filters
         )
         triggerEffect(AllItemsViewEffect.ShowFilterEffect)
     }
@@ -1205,12 +1213,6 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    fun onDuplicate() {
-        val key = viewState.selectedItems.first()
-        loadItemForDuplication(key)
-
-    }
-
     fun onTrash() {
         viewModelScope.launch {
             trashItems(viewState.selectedItems)
@@ -1318,7 +1320,8 @@ internal data class AllItemsViewState(
     val bibliographyError: Throwable? = null,
     val attachmentToOpen: String? = null,
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val filters: List<ItemsFilter> = emptyList(),
 ) : ViewState
 
 internal sealed class AllItemsViewEffect : ViewEffect {
