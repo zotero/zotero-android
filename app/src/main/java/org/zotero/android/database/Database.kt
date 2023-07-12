@@ -15,6 +15,7 @@ class Database {
                 .directory(dbFile.parentFile!!)
                 .name(dbFile.name)
                 .schemaVersion(schemaVersion)
+                .allowWritesOnUiThread(true)
                 .deleteRealmIfMigrationNeeded()
 
             return builder.build()

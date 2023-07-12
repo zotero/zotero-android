@@ -3,6 +3,7 @@ package org.zotero.android.sync
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -144,7 +145,7 @@ class SyncScheduler @Inject constructor(
         val timeSinceLastSync = Date().time - this.lastSyncFinishDate.time
         if (timeSinceLastSync < delay) {
             Timber.i("SyncScheduler: delay sync for ${delay - timeSinceLastSync}")
-            this@SyncScheduler.delay(delay - timeSinceLastSync)
+            delayNextSync(delay - timeSinceLastSync)
             return
         }
 
@@ -162,7 +163,7 @@ class SyncScheduler @Inject constructor(
         )
     }
 
-    private fun delay(timeout: Long) {
+    private fun delayNextSync(timeout: Long) {
         if (this.syncInProgress != null) {
             return
         }

@@ -672,32 +672,29 @@ class ItemDetailsViewModel @Inject constructor(
     private fun save() {
         updateDateFieldIfNeeded()
         updateAccessedFieldIfNeeded()
-
         viewModelScope.launch {
             updateState {
                 copy(data = viewState.data.deepCopy(dateModified = Date()))
             }
-        }
 
-        val snapshot = viewState.snapshot
-        if (snapshot != null) {
-            val request = EditItemFromDetailDbRequest(
-                libraryId = viewState.library!!.identifier,
-                itemKey = viewState.key,
-                data = viewState.data,
-                snapshot = snapshot,
-                schemaController = this.schemaController,
-                dateParser = this.dateParser,
+            val snapshot = viewState.snapshot
+            if (snapshot != null) {
+                val request = EditItemFromDetailDbRequest(
+                    libraryId = viewState.library!!.identifier,
+                    itemKey = viewState.key,
+                    data = viewState.data,
+                    snapshot = snapshot,
+                    schemaController = this@ItemDetailsViewModel.schemaController,
+                    dateParser = this@ItemDetailsViewModel.dateParser,
+                )
+                dbWrapper.realmDbStorage.perform(request = request)
+            }
+            val updatedData = viewState.data.deepCopy(
+                fieldIds = ItemDetailDataCreator.filteredFieldKeys(
+                    viewState.data.fieldIds,
+                    viewState.data.fields
+                )
             )
-            dbWrapper.realmDbStorage.perform(request = request)
-        }
-        val updatedData = viewState.data.deepCopy(
-            fieldIds = ItemDetailDataCreator.filteredFieldKeys(
-                viewState.data.fieldIds,
-                viewState.data.fields
-            )
-        )
-        viewModelScope.launch {
             updateState {
                 copy(
                     snapshot = null,
