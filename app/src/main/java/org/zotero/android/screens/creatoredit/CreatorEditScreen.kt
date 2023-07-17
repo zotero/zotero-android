@@ -77,6 +77,8 @@ internal fun CreatorEditScreen(
         }
     }
     CustomScaffold(
+//        modifier = Modifier
+//            .fillMaxSize(),
         topBar = {
             TopBar(
                 onCloseClicked = onBack,
@@ -87,6 +89,7 @@ internal fun CreatorEditScreen(
     ) {
         LazyColumn(
             modifier = Modifier
+//                .fillMaxSize()
                 .background(color = CustomTheme.colors.surface)
                 .padding(start = 16.dp),
         ) {

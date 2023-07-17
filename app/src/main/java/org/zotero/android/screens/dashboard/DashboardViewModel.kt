@@ -35,7 +35,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-internal class DashboardViewModel @Inject constructor(
+class DashboardViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val defaults: Defaults,
     private val fileStore: FileStore,
@@ -240,14 +240,14 @@ internal class DashboardViewModel @Inject constructor(
 
 }
 
-internal data class DashboardViewState(
+data class DashboardViewState(
     val snackbarMessage: SnackbarMessage? = null,
     val conflictDialog: ConflictDialogData? = null,
     val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     ) : ViewState
 
-internal sealed class DashboardViewEffect : ViewEffect {
+sealed class DashboardViewEffect : ViewEffect {
 }
 
 sealed class ConflictDialogData  {

@@ -93,6 +93,7 @@ internal fun AllItemsScreen(
     }
 
     CustomScaffold(
+//        modifier = Modifier.fillMaxSize(),
         topBar = {
             AllItemsTopBar(
                 viewState = viewState,

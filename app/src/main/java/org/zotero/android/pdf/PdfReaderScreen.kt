@@ -8,8 +8,10 @@ import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
@@ -31,6 +33,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ScreenArguments
@@ -120,9 +123,7 @@ private fun PdfReaderTabletMode(
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = showSideBar, transitionSpec = {
-            slideInHorizontally(animationSpec = tween(100),
-                initialOffsetX = { -it }) with
-                    fadeOut()
+            createSidebarTransitionSpec()
         }) { showSideBar ->
             if (showSideBar) {
                 Column(
@@ -175,7 +176,7 @@ private fun PdfReaderPhoneMode(
             PdfReaderPspdfKitView(uri = uri, viewModel = viewModel)
         }
         AnimatedContent(targetState = showSideBar, transitionSpec = {
-            slideInHorizontally() with slideOutHorizontally()
+            createSidebarTransitionSpec()
         }) { showSideBar ->
             if (showSideBar) {
                 Column(
@@ -193,6 +194,18 @@ private fun PdfReaderPhoneMode(
             }
         }
     }
+}
+
+private fun AnimatedContentScope<Boolean>.createSidebarTransitionSpec(): ContentTransform {
+    val intOffsetSpec = tween<IntOffset>()
+    return (slideInHorizontally(intOffsetSpec) { -it } with
+            slideOutHorizontally(intOffsetSpec) { -it }).using(
+        // Disable clipping since the faded slide-in/out should
+        // be displayed out of bounds.
+        SizeTransform(
+            clip = false,
+            sizeAnimationSpec = { _, _ -> tween() }
+        ))
 }
 
 @Composable

@@ -86,6 +86,8 @@ internal fun ItemDetailsScreen(
         }
     }
     CustomScaffold(
+//        modifier = Modifier
+//            .fillMaxSize(),
         topBar = {
             ItemDetailsTopBar(
                 onViewOrEditClicked = viewModel::onSaveOrEditClicked,

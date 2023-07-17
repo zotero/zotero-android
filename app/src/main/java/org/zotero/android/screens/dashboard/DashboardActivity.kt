@@ -20,6 +20,9 @@ import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
+import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNavigation
+import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -65,12 +68,23 @@ internal class DashboardActivity : BaseActivity() {
 
         setContent {
             CustomTheme {
-                DashboardRootNavigation(
-                    onPickFile = onPickFile,
-                    viewModel = viewModel,
-                    onOpenFile = onOpenFile,
-                    onOpenWebpage = onOpenWebpage,
-                )
+                val layoutType = CustomLayoutSize.calculateLayoutType()
+                if (layoutType.isTablet()) {
+                    DashboardRootTopLevelTabletNavigation(
+                        onPickFile = onPickFile,
+                        viewModel = viewModel,
+                        onOpenFile = onOpenFile,
+                        onOpenWebpage = onOpenWebpage,
+                    )
+                } else {
+                    DashboardRootPhoneNavigation(
+                        onPickFile = onPickFile,
+                        viewModel = viewModel,
+                        onOpenFile = onOpenFile,
+                        onOpenWebpage = onOpenWebpage,
+                    )
+                }
+
             }
         }
     }

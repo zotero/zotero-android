@@ -55,6 +55,7 @@ internal fun SortPickerScreen(
         }
     }
     CustomScaffold(
+//        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopBar(
                 onDone = viewModel::onDone,
@@ -63,6 +64,7 @@ internal fun SortPickerScreen(
     ) {
         Column(
             modifier = Modifier
+//                .fillMaxSize()
                 .background(color = CustomTheme.colors.surface)
         ) {
             DisplayFields(
