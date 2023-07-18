@@ -7,7 +7,7 @@ import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.items
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.formatter.dateAndTimeFormat
+import org.zotero.android.helpers.formatter.dateFormatItemDetails
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
@@ -243,7 +243,7 @@ object ItemDetailDataCreator {
                 if (value.isNotEmpty()) {
                     val date = iso8601DateFormatV2.parse(value)!!
                     additionalInfo = mapOf(
-                        ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
+                        ItemDetailField.AdditionalInfoKey.formattedDate to dateFormatItemDetails().format(date),
                         ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
                 }
             }

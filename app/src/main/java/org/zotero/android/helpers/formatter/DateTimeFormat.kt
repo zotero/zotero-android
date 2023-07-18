@@ -1,21 +1,17 @@
 package org.zotero.android.helpers.formatter
 
 import android.annotation.SuppressLint
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-val dateAndTimeFormat: SimpleDateFormat
-    get() = SimpleDateFormat("MMM d, yyyy 'at' h:mm a z", Locale.getDefault())
-
 val shortDateFormat: SimpleDateFormat
     get() = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
 
-val dateFormatItemDetails: SimpleDateFormat
-    @SuppressLint("SimpleDateFormat")
-    get() = SimpleDateFormat("dd.MM.yyyy, HH:mm:ss").apply {
-//        timeZone = TimeZone.getTimeZone("UTC")
-    }
+fun dateFormatItemDetails(): DateFormat {
+    return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM, Locale.getDefault())
+}
 
 val iso8601DateFormat: SimpleDateFormat
     @SuppressLint("SimpleDateFormat")

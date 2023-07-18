@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.uicomponents.Strings
@@ -175,7 +176,8 @@ private fun ListOfEditFieldRows(
             detailValue = value,
             layoutType = layoutType,
             textColor = CustomTheme.colors.primaryContent,
-            onValueChange = onValueChange
+            onValueChange = onValueChange,
+            isMultilineAllowed = field.key == FieldKeys.Item.extra
         )
     }
 }
@@ -187,6 +189,7 @@ private fun FieldEditableRow(
     detailValue: String,
     layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
+    isMultilineAllowed: Boolean = false,
     onValueChange: (String, String) -> Unit,
 ) {
     Column {
@@ -208,27 +211,41 @@ private fun FieldEditableRow(
             }
 
             Column(modifier = Modifier.padding(start = 12.dp)) {
-                val focusManager = LocalFocusManager.current
-                val moveFocusDownAction = {
-                    focusManager.moveFocus(FocusDirection.Down)
+                if (isMultilineAllowed) {
+                    CustomTextField(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        value = detailValue,
+                        hint = "",
+                        textColor = textColor,
+                        onValueChange = { onValueChange(key, it) },
+                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        ignoreTabsAndCaretReturns = false,
+                    )
+                } else {
+                    val focusManager = LocalFocusManager.current
+                    val moveFocusDownAction = {
+                        focusManager.moveFocus(FocusDirection.Down)
+                    }
+                    CustomTextField(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        value = detailValue,
+                        hint = "",
+                        textColor = textColor,
+                        maxLines = 1,
+                        onValueChange = { onValueChange(key, it) },
+                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { moveFocusDownAction() }
+                        ),
+                        onEnterOrTab = { moveFocusDownAction() },
+                    )
                 }
-                CustomTextField(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    value = detailValue,
-                    hint = "",
-                    textColor = textColor,
-                    maxLines = 1,
-                    onValueChange = { onValueChange(key, it) },
-                    textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Next
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { moveFocusDownAction() }
-                    ),
-                    onEnterOrTab = { moveFocusDownAction() },
-                )
+
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

@@ -18,7 +18,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun ItemDetailsScreen(
     viewModel: ItemDetailsViewModel = hiltViewModel(),
     navigateToCreatorEdit: () -> Unit,

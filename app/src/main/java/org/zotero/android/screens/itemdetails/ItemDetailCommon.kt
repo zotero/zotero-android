@@ -176,13 +176,13 @@ fun DatesRows(
 ) {
     FieldRow(
         detailTitle = stringResource(id = Strings.date_added),
-        detailValue = dateFormatItemDetails.format(dateAdded),
+        detailValue = dateFormatItemDetails().format(dateAdded),
         layoutType = layoutType,
         showDivider = showDivider,
     )
     FieldRow(
         stringResource(id = Strings.date_modified),
-        dateFormatItemDetails.format(dateModified),
+        dateFormatItemDetails().format(dateModified),
         layoutType,
         showDivider = showDivider,
     )

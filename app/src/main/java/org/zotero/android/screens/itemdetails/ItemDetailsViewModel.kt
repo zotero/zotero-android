@@ -47,7 +47,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
-import org.zotero.android.helpers.formatter.dateAndTimeFormat
+import org.zotero.android.helpers.formatter.dateFormatItemDetails
 import org.zotero.android.helpers.formatter.fullDateWithDashes
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
@@ -731,7 +731,7 @@ class ItemDetailsViewModel @Inject constructor(
         if (date != null) {
             field.value = iso8601DateFormatV2.format(date)
             field.additionalInfo = mapOf(
-                ItemDetailField.AdditionalInfoKey.formattedDate to dateAndTimeFormat.format(date),
+                ItemDetailField.AdditionalInfoKey.formattedDate to dateFormatItemDetails().format(date),
                 ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date)
             )
         } else {
