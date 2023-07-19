@@ -836,7 +836,10 @@ class PdfReaderViewModel @Inject constructor(
             if (pdfAnnotation != null) {
                 if (!fragment.selectedAnnotations.contains(pdfAnnotation)) {
                     fragment.setSelectedAnnotation(pdfAnnotation)
-                    fragment.scrollTo(pdfAnnotation.boundingBox, pageIndex, 100, false)
+                    val zoomScale = fragment.getZoomScale(pageIndex)
+                    if (zoomScale > 1.0) {
+                        fragment.scrollTo(pdfAnnotation.boundingBox, pageIndex, 100, false)
+                    }
                 }
             } else {
                 if (!fragment.selectedAnnotations.isEmpty()) {
