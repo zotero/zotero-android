@@ -1,5 +1,6 @@
 package org.zotero.android.screens.itemdetails
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
@@ -32,6 +34,9 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.reorder.ReorderableState
+import org.zotero.android.uicomponents.reorder.draggedItem
+import org.zotero.android.uicomponents.reorder.reorderable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.util.UUID
@@ -40,32 +45,43 @@ import java.util.UUID
 internal fun ItemDetailsEditScreen(
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
-    layoutType: CustomLayoutSize.LayoutType
+    layoutType: CustomLayoutSize.LayoutType,
+    reorderState: ReorderableState,
 ) {
 
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 24.dp)
+            .reorderable(
+                state = reorderState,
+                onMove = viewModel::onMove,
+            ),
+        state = reorderState.listState,
     ) {
         item {
             EditTitle(viewState, layoutType, onValueChange = viewModel::onTitleEdit)
             CustomDivider()
-        }
-        item {
             Column(modifier = Modifier.padding(start = 12.dp)) {
                 ItemType(
                     viewState = viewState,
                     layoutType = layoutType,
                     onItemTypeClicked = viewModel::onItemTypeClicked
                 )
+            }
+        }
+        if (!viewState.data.isAttachment) {
+            listOfCreatorRows(
+                viewState = viewState,
+                layoutType = layoutType,
+                onDeleteCreator = viewModel::onDeleteCreator,
+                onCreatorClicked = viewModel::onCreatorClicked,
+                reorderState = reorderState,
+            )
+        }
+        item {
+            Column(modifier = Modifier.padding(start = 12.dp)) {
                 if (!viewState.data.isAttachment) {
-                    ListOfCreatorRows(
-                        viewState = viewState,
-                        layoutType = layoutType,
-                        onDeleteCreator = viewModel::onDeleteCreator,
-                        onCreatorClicked = viewModel::onCreatorClicked
-                    )
                     CustomDivider()
                     AddItemRow(
                         layoutType = layoutType,
@@ -128,34 +144,38 @@ private fun ItemType(
     }
 }
 
-@Composable
-private fun ListOfCreatorRows(
+private fun LazyListScope.listOfCreatorRows(
     viewState: ItemDetailsViewState,
     layoutType: CustomLayoutSize.LayoutType,
+    reorderState: ReorderableState,
     onDeleteCreator: (UUID) -> Unit,
     onCreatorClicked: (ItemDetailCreator) -> Unit,
 ) {
-    for (creatorId in viewState.data.creatorIds) {
-        val creator = viewState.data.creators.get(creatorId) ?: continue
-        val title = creator.localizedType
-        val value = creator.name
-        Row(
-            modifier = Modifier
-                .safeClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
-                    onClick = { onCreatorClicked(creator) }
+    for ((index, creatorId) in viewState.data.creatorIds.withIndex()) {
+        val creator = viewState.data.creators[creatorId] ?: continue
+        item {
+            val title = creator.localizedType
+            val value = creator.name
+            Row(
+                modifier = Modifier
+                    .safeClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = { onCreatorClicked(creator) }
+                    )
+                    .draggedItem(reorderState.offsetByIndex(index + numberOfRowsInLazyColumnBeforeListOfCreatorsStarts))
+                    .background(color = CustomTheme.colors.surface)
+            ) {
+                FieldRow(
+                    detailTitle = title,
+                    detailValue = value,
+                    layoutType = layoutType,
+                    showDivider = true,
+                    reorderState = reorderState,
+                    onDelete = { onDeleteCreator(creatorId) }
                 )
-        ) {
-            FieldRow(
-                detailTitle = title,
-                detailValue = value,
-                layoutType = layoutType,
-                showDivider = true,
-                onDelete = { onDeleteCreator(creatorId) }
-            )
+            }
         }
-
     }
 }
 

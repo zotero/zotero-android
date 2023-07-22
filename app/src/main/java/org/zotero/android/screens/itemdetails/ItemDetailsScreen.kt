@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
+import org.zotero.android.uicomponents.reorder.rememberReorderState
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -39,6 +41,11 @@ internal fun ItemDetailsScreen(
     LaunchedEffect(key1 = viewModel) {
         viewModel.init()
     }
+    val lazyListState = rememberLazyListState()
+
+    val reorderState = rememberReorderState(
+        listState = lazyListState
+    )
 
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
@@ -108,7 +115,8 @@ internal fun ItemDetailsScreen(
                     ItemDetailsEditScreen(
                         viewState = viewState,
                         layoutType = layoutType,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        reorderState = reorderState,
                     )
                 } else {
                     ItemDetailsViewScreen(

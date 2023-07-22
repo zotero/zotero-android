@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +45,8 @@ import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.checkbox.CircleCheckBox
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.reorder.ReorderableState
+import org.zotero.android.uicomponents.reorder.detectReorderAfterLongPress
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.util.Date
@@ -55,6 +58,7 @@ internal fun FieldRow(
     layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     showDivider: Boolean,
+    reorderState: ReorderableState ? = null,
     additionalInfoString: String? = null,
     onDelete: (() -> Unit)? = null,
     onRowTapped: (() -> Unit)? = null,
@@ -116,6 +120,18 @@ internal fun FieldRow(
                     fontSize = layoutType.calculateTextSize(),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+            }
+            if (reorderState != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                Image(
+                    modifier = Modifier
+                        .size(layoutType.calculateIconSize())
+                        .detectReorderAfterLongPress(reorderState),
+                    painter = painterResource(id = Drawables.baseline_reorder_24),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(CustomTheme.colors.reorderButtonColor),
+                )
+                Spacer(modifier = Modifier.width(12.dp))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))

@@ -93,6 +93,7 @@ import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreItem
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
+import org.zotero.android.uicomponents.reorder.move
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
@@ -102,6 +103,7 @@ import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
+val numberOfRowsInLazyColumnBeforeListOfCreatorsStarts = 1
 
 @HiltViewModel
 class ItemDetailsViewModel @Inject constructor(
@@ -1750,6 +1752,21 @@ class ItemDetailsViewModel @Inject constructor(
     private fun showDoi(doi: String) {
         val url = "https://doi.org/$doi"
         triggerEffect(OpenWebpage(Uri.parse(url)))
+    }
+
+    fun onMove(from: Int, to: Int) {
+        //We need to adjust index by the number of 'rows' we have in LazyColumn before the list of creators start.
+        val adjustedFrom = from - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
+        val adjustedTo = to - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
+        val updatedCreators = viewState.data.creatorIds
+        updateState {
+            copy(
+                data = viewState.data.deepCopy(
+                    creatorIds = updatedCreators.move(IntRange(adjustedFrom, adjustedFrom), adjustedTo)
+                ),
+            )
+        }
+        triggerEffect(ScreenRefresh)
     }
 
 }
