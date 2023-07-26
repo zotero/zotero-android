@@ -7,4 +7,4 @@ typealias Drawables = R.drawable
 typealias Fonts = R.font
 typealias Xmls = R.xml
 typealias Strings = R.string
-//typealias Plurals = R.plurals
+typealias Plurals = R.plurals

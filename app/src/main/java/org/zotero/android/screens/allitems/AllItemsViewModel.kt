@@ -63,6 +63,7 @@ import org.zotero.android.screens.allitems.data.ItemsState
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.screens.filter.data.FilterArgs
+import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
@@ -147,6 +148,9 @@ internal class AllItemsViewModel @Inject constructor(
             }
             is FilterResult.disableFilter -> {
                 disable(filterResult.filter)
+            }
+            is FilterResult.tagSelectionDidChange -> {
+                tagSelectionDidChange(filterResult.selectedTags)
             }
         }
     }
@@ -499,6 +503,7 @@ internal class AllItemsViewModel @Inject constructor(
         updateState {
             copy(snapshot = results.freeze())
         }
+        updateTagFilter()
     }
 
     private fun processRealmResults(realmResults: RealmResults<RItem>?) {
@@ -542,7 +547,7 @@ internal class AllItemsViewModel @Inject constructor(
                         copy(lce = LCE2.Content, snapshot = itemsFrozen)
                     }
                     processRealmResults(itemsFrozen)
-
+                    updateTagFilter()
                 }
                 OrderedCollectionChangeSet.State.UPDATE ->  {
                     val deletions = changeSet.deletions
@@ -554,6 +559,8 @@ internal class AllItemsViewModel @Inject constructor(
                         copy(lce = LCE2.Content, snapshot = itemsFrozen)
                     }
                     processUpdate(items = itemsFrozen, deletions = deletions, insertions = insertions, modifications = correctedModifications)
+
+                    updateTagFilter()
                 }
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "ItemsViewController: could not load results")
@@ -570,6 +577,16 @@ internal class AllItemsViewModel @Inject constructor(
             }
         })
 
+    }
+
+    private fun updateTagFilter() {
+        EventBus.getDefault().post(
+            FilterReloadEvent(
+                filters = viewState.filters,
+                collectionId = viewState.collection.identifier,
+                libraryId = viewState.library.identifier,
+            )
+        )
     }
 
     fun onAdd() {
@@ -941,6 +958,13 @@ internal class AllItemsViewModel @Inject constructor(
         if (viewState.filters.contains(filter)) {
             return
         }
+        if (filter is ItemsFilter.tags) {
+            updateState {
+                copy(
+                    filters = viewState.filters.filter { it !is ItemsFilter.tags }
+                )
+            }
+        }
         updateState {
             copy(
                 filters = viewState.filters + filter
@@ -975,8 +999,12 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun showFilters() {
+        val selectedTags = viewState.filters.filterIsInstance<ItemsFilter.tags>().flatMap { it.tags }.toSet()
         ScreenArguments.filterArgs = FilterArgs(
-            filters = viewState.filters
+            filters = viewState.filters,
+            collectionId = viewState.collection.identifier,
+            libraryId = viewState.library.identifier,
+            selectedTags = selectedTags
         )
         triggerEffect(AllItemsViewEffect.ShowFilterEffect)
     }
@@ -1290,6 +1318,17 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
     }
+
+    private fun tagSelectionDidChange(selected: Set<String>) {
+        if (selected.isEmpty()) {
+            val tags = viewState.tagsFilter
+            if (tags != null) {
+                disable(ItemsFilter.tags(tags))
+            }
+        } else {
+            enable(ItemsFilter.tags(selected))
+        }
+    }
 }
 
 internal data class AllItemsViewState(
@@ -1322,7 +1361,19 @@ internal data class AllItemsViewState(
     val downloadBatchData: ItemsState.DownloadBatchData? = null,
     val isRefreshing: Boolean = false,
     val filters: List<ItemsFilter> = emptyList(),
-) : ViewState
+) : ViewState {
+    val tagsFilter: Set<String>?
+        get() {
+            val tagFilter = this.filters.firstOrNull { filter ->
+                filter is ItemsFilter.tags
+            }
+
+            if (tagFilter == null || tagFilter !is ItemsFilter.tags) {
+                return null
+            }
+            return tagFilter.tags
+        }
+}
 
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowCollectionsEffect: AllItemsViewEffect()

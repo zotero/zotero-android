@@ -1,5 +1,6 @@
 package org.zotero.android.architecture.navigation
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.requiredHeightIn
@@ -11,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 fun NavGraphBuilder.dialogFixedDimens(
     modifier:Modifier,
@@ -59,7 +61,13 @@ private fun NavGraphBuilder.customDialog(
         )
     ) {
         Box(
-            modifier = dialogModifier.clip(RoundedCornerShape(16.dp))
+            modifier = dialogModifier
+                .clip(shape = RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = CustomTheme.colors.dialogBorderColor,
+                    shape = RoundedCornerShape(16.dp)
+                )
         ) {
             content()
         }

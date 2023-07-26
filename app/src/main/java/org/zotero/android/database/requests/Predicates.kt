@@ -368,3 +368,16 @@ fun <T> RealmQuery<T>.parentKeyNil(
 ): RealmQuery<T> {
     return isNull("parentKey")
 }
+
+fun <T> RealmQuery<T>.typedTagLibrary(
+    identifier: LibraryIdentifier
+): RealmQuery<T> {
+    return when (identifier) {
+        is LibraryIdentifier.custom -> {
+            equalTo("tag.customLibraryKey", identifier.type.name)
+        }
+        is LibraryIdentifier.group -> {
+            equalTo("tag.groupKey", identifier.groupId)
+        }
+    }
+}

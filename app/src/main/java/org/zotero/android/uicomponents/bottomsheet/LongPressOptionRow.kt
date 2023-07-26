@@ -20,13 +20,16 @@ fun LongPressOptionRow(
         title = stringResource(id = optionItem.titleId),
         textColor = color,
         titleStyle = CustomTheme.typography.default,
+        heightIn = if (optionItem.resIcon == null) 32.dp else 64.dp,
         onClick = { onOptionClick(optionItem) },
     ) {
-        Icon(
-            painter = painterResource(optionItem.resIcon),
-            contentDescription = null,
-            modifier = Modifier.padding(start = 8.dp),
-            tint = color,
-        )
+        if (optionItem.resIcon != null) {
+            Icon(
+                painter = painterResource(optionItem.resIcon),
+                contentDescription = null,
+                modifier = Modifier.padding(start = 8.dp),
+                tint = color,
+            )
+        }
     }
 }

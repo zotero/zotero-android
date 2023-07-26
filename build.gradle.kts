@@ -52,6 +52,7 @@ allprojects {
                 "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
                 "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
                 "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
             )
         }
     }

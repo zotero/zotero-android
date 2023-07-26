@@ -26,6 +26,7 @@ open class Defaults @Inject constructor(
     private val itemsSortType = "ItemsSortType"
     private val showCollectionItemCounts = "showCollectionItemCounts"
     private val didPerformFullSyncFix = "didPerformFullSyncFix"
+    private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -132,6 +133,14 @@ open class Defaults @Inject constructor(
 
     fun setDidPerformFullSyncFix(newValue: Boolean) {
         sharedPreferences.edit { putBoolean(didPerformFullSyncFix, newValue) }
+    }
+
+    fun setTagPickerShowAutomaticTags(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(tagPickerShowAutomaticTags, newValue) }
+    }
+
+    fun isTagPickerShowAutomaticTags(): Boolean {
+        return sharedPreferences.getBoolean(tagPickerShowAutomaticTags, true)
     }
 
     fun reset() {

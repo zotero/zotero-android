@@ -89,6 +89,7 @@ data class CustomSemanticColors(
     val libraryDividerBackground: Color,
     val addNoteBottomBar: Color,
     val reorderButtonColor: Color,
+    val dialogBorderColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -137,7 +138,8 @@ fun lightCustomColors(
     pdfAnnotationsSearchBarBackground = Color(0xFFE4E3EA),
     libraryDividerBackground = Color(0xFFE4E4E7),
     addNoteBottomBar = Color(0xFFF7F7F7),
-    reorderButtonColor = Color(0xFFC5C5C7)
+    reorderButtonColor = Color(0xFFC5C5C7),
+    dialogBorderColor = Color(0xFF69696F),
 )
 
 fun darkCustomColors(
@@ -175,7 +177,8 @@ fun darkCustomColors(
     pdfAnnotationsSearchBarBackground = CustomPalette.Charcoal,
     libraryDividerBackground = Color(0xFF1B1B1C),
     addNoteBottomBar = Color(0xFF121212),
-    reorderButtonColor = Color(0xFF464649)
+    reorderButtonColor = Color(0xFF464649),
+    dialogBorderColor = Color(0xFFFFFFFF),
 )
 
 internal fun createSemanticColors(

@@ -14,7 +14,7 @@ import org.zotero.android.uicomponents.theme.CustomPalette
 
 sealed class LongPressOptionItem(
     @StringRes val titleId: Int,
-    @DrawableRes val resIcon: Int,
+    @DrawableRes val resIcon: Int? = null,
     val textAndIconColor: Color? = null,
 ) {
     data class TrashNote(val note: Note): LongPressOptionItem(
@@ -104,4 +104,17 @@ sealed class LongPressOptionItem(
             titleId = Strings.new_sub_collection,
             resIcon = Drawables.baseline_create_new_folder_24
         )
+
+
+    object DeselectAll: LongPressOptionItem(
+        titleId = Strings.deselect_all,
+    )
+
+    object ShowAutomaticTags: LongPressOptionItem(
+        titleId = Strings.show_automatic_tags,
+    )
+    object DeleteAutomaticTags: LongPressOptionItem(
+        titleId = Strings.delete_automatic_tags,
+        textAndIconColor = CustomPalette.ErrorRed,
+    )
 }

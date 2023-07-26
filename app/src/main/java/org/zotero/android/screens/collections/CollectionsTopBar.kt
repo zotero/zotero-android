@@ -45,7 +45,7 @@ internal fun CollectionsTopBar(
                     onClick = viewModel::navigateToLibraries,
                     text = stringResource(id = Strings.libs)
                 )
-                Spacer(modifier = Modifier.width(30.dp))
+                Spacer(modifier = Modifier.width(45.dp))
             }
         },
         actions = {

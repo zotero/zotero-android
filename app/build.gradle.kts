@@ -138,6 +138,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.23.1")
     implementation("com.google.accompanist:accompanist-navigation-animation:0.23.1")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.23.1")
+    implementation("com.google.accompanist:accompanist-flowlayout:0.23.1")
 
     //Glide
     implementation("com.github.bumptech.glide:glide:4.11.0")

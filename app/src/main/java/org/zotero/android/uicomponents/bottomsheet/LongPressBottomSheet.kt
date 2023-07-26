@@ -21,6 +21,7 @@ internal fun LongPressBottomSheet(
     layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder? = null,
     onOptionClick: (LongPressOptionItem) -> Unit,
+    tabletWidthPercentage: Float = 0.5f,
 ) {
     val shouldShow = longPressOptionsHolder != null
 
@@ -30,6 +31,7 @@ internal fun LongPressBottomSheet(
                 LongPressBottomSheetContent(
                     layoutType = layoutType,
                     longPressOptionsHolder = longPressOptionsHolder!!,
+                    tabletWidthPercentage = tabletWidthPercentage,
                     onOptionClick = {
                         onCollapse()
                         onOptionClick(it)
@@ -48,11 +50,12 @@ private fun BoxScope.LongPressBottomSheetContent(
     layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder,
     onOptionClick: (LongPressOptionItem) -> Unit,
+    tabletWidthPercentage: Float
 ) {
     Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .fillMaxWidth(if (layoutType.isTablet()) 0.5f else 1f),
+            .fillMaxWidth(if (layoutType.isTablet()) tabletWidthPercentage else 1f),
     ) {
         Text(
                 modifier = Modifier
