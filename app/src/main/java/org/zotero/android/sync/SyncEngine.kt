@@ -11,6 +11,7 @@ import org.zotero.android.api.SyncApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
+import org.zotero.android.api.mappers.SettingsResponseMapper
 import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
@@ -44,6 +45,7 @@ import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
 import org.zotero.android.sync.syncactions.StoreVersionSyncAction
 import org.zotero.android.sync.syncactions.SubmitDeletionSyncAction
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
+import org.zotero.android.sync.syncactions.SyncSettingsSyncAction
 import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
 import org.zotero.android.sync.syncactions.UploadFixSyncAction
@@ -83,6 +85,7 @@ class SyncUseCase @Inject constructor(
     private val conflictEventStream: ConflictEventStream,
     private val attachmentDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
+    private val settingsResponseMapper: SettingsResponseMapper,
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -276,8 +279,72 @@ class SyncUseCase @Inject constructor(
             is Action.restoreDeletions -> {
                 restoreDeletions(libraryId = action.libraryId, collections = action.collections, items = action.items)
             }
+            is Action.syncSettings -> {
+                processSettingsSync(libraryId = action.libraryId, version = action.version)
+            }
             else -> {
                 processNextAction()
+            }
+        }
+    }
+
+    private suspend fun processSettingsSync(libraryId: LibraryIdentifier, version: Int) {
+        val result = SyncSettingsSyncAction(
+            currentVersion = this.lastReturnedVersion,
+            sinceVersion = version,
+            libraryId = libraryId,
+            userId = this.userId,
+            syncApi = this.syncApi,
+            dbWrapper = this.dbWrapper,
+            settingsResponseMapper = settingsResponseMapper,
+        ).result()
+        finishSettingsSync(result = result, libraryId = libraryId, version = version)
+    }
+
+    private fun finishSettingsSync(
+        result: CustomResult<Pair<Boolean, Int>>,
+        libraryId: LibraryIdentifier,
+        version: Int
+    ) {
+        when (result) {
+            is CustomResult.GeneralSuccess -> {
+                val hasNewSettings = result.value!!.first
+                val version = result.value!!.second
+                Timber.i("Sync: store version - $version")
+                this.lastReturnedVersion = version
+                if (hasNewSettings) {
+                    enqueue(
+                        actions = listOf(
+                            Action.storeVersion(
+                                version,
+                                libraryId,
+                                SyncObject.settings
+                            )
+                        ), index = 0
+                    )
+                } else {
+                    processNextAction()
+                }
+            }
+
+            is CustomResult.GeneralError -> {
+                val syncError = syncError(
+                    customResultError = result,
+                    data = SyncError.ErrorData.from(libraryId)
+                )
+                when (syncError) {
+                    is SyncError.fatal2 -> {
+                        abort(syncError.error)
+                    }
+
+                    is SyncError.nonFatal2 -> {
+                        handleNonFatal(
+                            error = syncError.error,
+                            libraryId = libraryId,
+                            version = version
+                        )
+                    }
+                }
             }
         }
     }

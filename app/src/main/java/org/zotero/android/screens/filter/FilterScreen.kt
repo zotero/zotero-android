@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -76,79 +77,90 @@ internal fun FilterScreen(
             )
         },
     ) {
-        Column {
-            CustomDivider()
-            Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(id = Strings.downloaded_files),
-                    fontSize = layoutType.calculateItemsRowTextSize(),
-                    maxLines = 1,
-                )
-                CustomSwitch(
-                    checked = viewState.isDownloadsChecked,
-                    onCheckedChange = { viewModel.onDownloadsTapped() },
-                    modifier = Modifier
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TagsSearchBar(
-                    viewState = viewState,
-                    viewModel = viewModel
-                )
-                Image(
-                    modifier = Modifier
-                        .size(layoutType.calculateIconSize())
-                        .safeClickable(
-                            onClick = viewModel::onMoreSearchOptionsClicked,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(bounded = false)
-                        ),
-                    painter = painterResource(id = Drawables.baseline_more_horiz_24),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-
-            FlowRow(
-                modifier = Modifier,
-            ) {
-                viewState.tags.forEach {
-                    var rowModifier: Modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 12.dp)
-                        .clip(shape = RoundedCornerShape(16.dp))
-                    val selected = viewState.selectedTags.contains(it.tag.name)
-                    if (selected) {
-                        rowModifier = rowModifier
-                            .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
-                            .border(
-                                width = 1.dp,
-                                color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    }
-                    Box(
-                        modifier = rowModifier
+        LazyColumn {
+            item {
+                CustomDivider()
+                Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(id = Strings.downloaded_files),
+                        fontSize = layoutType.calculateItemsRowTextSize(),
+                        maxLines = 1,
+                    )
+                    CustomSwitch(
+                        checked = viewState.isDownloadsChecked,
+                        onCheckedChange = { viewModel.onDownloadsTapped() },
+                        modifier = Modifier
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TagsSearchBar(
+                        viewState = viewState,
+                        viewModel = viewModel
+                    )
+                    Image(
+                        modifier = Modifier
+                            .size(layoutType.calculateIconSize())
                             .safeClickable(
+                                onClick = viewModel::onMoreSearchOptionsClicked,
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { viewModel.onTagTapped(it.tag.name) },
-                            )
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp),
-                            text = it.tag.name,
-                            color = CustomTheme.colors.primaryContent,
-                            style = CustomTheme.typography.default,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-
+                                indication = rememberRipple(bounded = false)
+                            ),
+                        painter = painterResource(id = Drawables.baseline_more_horiz_24),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
             }
+
+            item {
+                FlowRow(
+                    modifier = Modifier,
+                ) {
+                    viewState.tags.forEach {
+                        var rowModifier: Modifier = Modifier
+                            .padding(horizontal = 12.dp, vertical = 12.dp)
+                            .clip(shape = RoundedCornerShape(16.dp))
+                        val selected = viewState.selectedTags.contains(it.tag.name)
+                        if (selected) {
+                            rowModifier = rowModifier
+                                .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
+                                .border(
+                                    width = 1.dp,
+                                    color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                        }
+                        Box(
+                            modifier = rowModifier
+                                .safeClickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { viewModel.onTagTapped(it) },
+                                )
+                        ) {
+                            val textColor = if (it.tag.color.isNotEmpty()) {
+                                val color = android.graphics.Color.parseColor(it.tag.color)
+                                Color(color)
+                            } else {
+                                CustomTheme.colors.primaryContent
+                            }
+                            Text(
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 14.dp),
+                                text = it.tag.name,
+                                color = if(it.isActive) textColor else textColor.copy(alpha = 0.55f),
+                                style = CustomTheme.typography.default,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+
+                    }
+                }
+            }
+
         }
         val dialog = viewState.dialog
         if (dialog != null) {
@@ -222,10 +234,13 @@ internal fun ShowFilterDialog(
         is FilterDialog.confirmDeletion -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.delete_automatic_tags_dialog_title),
-                description = stringResource(id = Strings.delete_automatic_tags_dialog_body, filterDialog.count),
+                description = stringResource(
+                    id = Strings.delete_automatic_tags_dialog_body,
+                    filterDialog.count
+                ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.cancel),
-                    ),
+                ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
                     textColor = CustomPalette.ErrorRed,

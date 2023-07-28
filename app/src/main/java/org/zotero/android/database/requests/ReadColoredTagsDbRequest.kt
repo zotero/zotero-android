@@ -16,8 +16,7 @@ class ReadColoredTagsDbRequest(val libraryId: LibraryIdentifier) :
         return database.where<RTag>()
             .library(this.libraryId)
             .and()
-            .isNotEmpty("color")
-//            .rawPredicate("color != \"\"")
+            .rawPredicate("color != \"\"")
             .findAll()
     }
 }

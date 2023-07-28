@@ -93,4 +93,12 @@ interface SyncApi {
         @HeaderMap headers: Map<String, String>,
         @QueryMap queryMap: Map<String, String>,
     ): retrofit2.Response<DeletionsResponse>
+
+    @GET
+    suspend fun settingsRequest(
+        @Url url: String,
+        @Query("since") since: Int? = null,
+        @HeaderMap headers: Map<String, String>,
+    ): retrofit2.Response<JsonObject>
+
 }

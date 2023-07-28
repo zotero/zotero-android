@@ -100,7 +100,7 @@ class UserControllers @Inject constructor(
 
         this.webSocketController.connect(apiKey = apiKey, completed = {
             //TODO backgroundUploadObserver.updateSessions()
-            val type: SyncKind = if(defaults.didPerformFullSyncFix()) SyncKind.normal else SyncKind.full
+            val type: SyncKind =  SyncKind.normal
             this.syncScheduler.request(type = type, libraries = Libraries.all)
         })
 

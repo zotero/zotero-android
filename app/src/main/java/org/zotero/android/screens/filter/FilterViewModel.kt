@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -52,10 +53,11 @@ internal class FilterViewModel @Inject constructor(
 
     private val onSearchStateFlow = MutableStateFlow("")
 
-    private val downloadsFilterEnabled: Boolean get() {
-        val filters = ScreenArguments.filterArgs.filters
-        return filters.any { it is ItemsFilter.downloadedFiles }
-    }
+    private val downloadsFilterEnabled: Boolean
+        get() {
+            val filters = ScreenArguments.filterArgs.filters
+            return filters.any { it is ItemsFilter.downloadedFiles }
+        }
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
@@ -63,6 +65,7 @@ internal class FilterViewModel @Inject constructor(
             copy(isDownloadsChecked = downloadsFilterEnabled)
         }
         onSearchStateFlow
+            .drop(1)
             .debounce(150)
             .map { text ->
                 search(text)
@@ -78,7 +81,7 @@ internal class FilterViewModel @Inject constructor(
 
     private fun search(term: String) {
         if (!term.isEmpty()) {
-            val filtered = viewState.tags.filter{ it.tag.name.contains(term, ignoreCase = true) }
+            val filtered = viewState.tags.filter { it.tag.name.contains(term, ignoreCase = true) }
             if (viewState.snapshot == null) {
                 updateState {
                     copy(snapshot = viewState.tags)
@@ -136,9 +139,11 @@ internal class FilterViewModel @Inject constructor(
                 is LongPressOptionItem.DeselectAll -> {
                     deselectAll()
                 }
+
                 is LongPressOptionItem.ShowAutomaticTags -> {
                     setShowAutomatic(!viewState.showAutomatic)
                 }
+
                 is LongPressOptionItem.DeleteAutomaticTags -> {
                     loadAutomaticCount()
                 }
@@ -174,7 +179,11 @@ internal class FilterViewModel @Inject constructor(
         EventBus.getDefault().post(FilterResult.tagSelectionDidChange(viewState.selectedTags))
     }
 
-    fun onTagTapped(name:String) {
+    fun onTagTapped(tag: FilterTag) {
+        if (!tag.isActive) {
+            return
+        }
+        val name = tag.tag.name
         if (viewState.selectedTags.contains(name)) {
             deselect(name)
         } else {
@@ -195,9 +204,13 @@ internal class FilterViewModel @Inject constructor(
         }
     }
 
-    private fun itemsDidChange(filters: List<ItemsFilter>, collectionId: CollectionIdentifier, libraryId: LibraryIdentifier) {
+    private fun itemsDidChange(
+        filters: List<ItemsFilter>,
+        collectionId: CollectionIdentifier,
+        libraryId: LibraryIdentifier
+    ) {
         viewModelScope.launch {
-            withContext(dispatchers.default) {
+            withContext(dispatchers.io) {
                 load(filters = filters, collectionId = collectionId, libraryId = libraryId)
             }
         }
@@ -219,33 +232,43 @@ internal class FilterViewModel @Inject constructor(
                 if (first.tag.color.isEmpty() && !second.tag.color.isEmpty()) {
                     return@comparator -1
                 }
+                if(first.tag.name[0].isLetter() && !second.tag.name[0].isLetter()) {
+                    return@comparator 1
+                }
+                if(!first.tag.name[0].isLetter() && second.tag.name[0].isLetter()) {
+                    return@comparator -1
+                }
+
+                if(first.tag.name[0].isDigit() && !second.tag.name[0].isDigit()) {
+                    return@comparator 1
+                }
+                if(!first.tag.name[0].isDigit() && second.tag.name[0].isDigit()) {
+                    return@comparator -1
+                }
+
                 first.tag.name.compareTo(
                     second.tag.name,
                     ignoreCase = true
                 )
             }
             dbWrapper.realmDbStorage.perform { coordinator ->
-                viewModelScope.launch {
+                val filtered = coordinator.perform(
+                    request = ReadFilteredTagsDbRequest(
+                        collectionId = collectionId,
+                        libraryId = libraryId,
+                        showAutomatic = viewState.showAutomatic,
+                        filters = filters
+                    )
+                )
+                val colored =
+                    coordinator.perform(request = ReadColoredTagsDbRequest(libraryId = libraryId))
 
-                    withContext(dispatchers.default) {
-
-                        val filtered = coordinator.perform(
-                            request = ReadFilteredTagsDbRequest(
-                                collectionId = collectionId,
-                                libraryId = libraryId,
-                                showAutomatic = viewState.showAutomatic,
-                                filters = filters
-                            )
-                        )
-                        val colored =
-                            coordinator.perform(request = ReadColoredTagsDbRequest(libraryId = libraryId))
-
-                        for (tag in filtered) {
-                            if (!viewState.selectedTags.contains(tag.name)) {
-                                continue
-                            }
-                            selected.add(tag.name)
-                        }
+                for (tag in filtered) {
+                    if (!viewState.selectedTags.contains(tag.name)) {
+                        continue
+                    }
+                    selected.add(tag.name)
+                }
 
 //                for (rTag in colored) {
 //                    val tag = Tag(tag = rTag)
@@ -254,17 +277,17 @@ internal class FilterViewModel @Inject constructor(
 //                    val index = sorted.index(filterTag, sortedBy = comparator)
 //                    sorted.add(element = filterTag, index = index)
 //                }
-                        sorted.addAll(colored
-                            .map {
-                                val tag = Tag(tag = it)
-                                val isActive = filtered.contains(tag)
-                                val filterTag = FilterTag(tag = tag, isActive = isActive)
-                                filterTag
-                            }
-//                    .sortedWith(comparator)
-                        )
+                sorted.addAll(colored
+                    .map {
+                        val tag = Tag(tag = it)
+                        val isActive = filtered.contains(tag)
+                        val filterTag = FilterTag(tag = tag, isActive = isActive)
+                        filterTag
+                    }
+                    .sortedWith(comparator)
+                )
 
-                        if (!viewState.displayAll) {
+                if (!viewState.displayAll) {
 //                    for (tag in filtered) {
 //                        if (!tag.color.isEmpty()) {
 //                            continue
@@ -273,28 +296,28 @@ internal class FilterViewModel @Inject constructor(
 //                        val index = sorted.index(filterTag, sortedBy = comparator)
 //                        sorted.add(element = filterTag, index = index)
 //                    }
-                            sorted.addAll(filtered.filter { it.color.isEmpty() }
-                                .map { FilterTag(tag = it, isActive = true) })
-//                        .sortedWith(comparator))
-                        } else {
-                            val tags = coordinator.perform(
-                                request = ReadFilteredTagsDbRequest(
-                                    collectionId = CollectionIdentifier.custom(
-                                        CollectionIdentifier.CustomType.all
-                                    ),
-                                    libraryId = libraryId,
-                                    showAutomatic = viewState.showAutomatic,
-                                    filters = emptyList()
-                                )
-                            )
+                    sorted.addAll(filtered.filter { it.color.isEmpty() }
+                        .map { FilterTag(tag = it, isActive = true) }
+                        .sortedWith(comparator))
+                } else {
+                    val tags = coordinator.perform(
+                        request = ReadFilteredTagsDbRequest(
+                            collectionId = CollectionIdentifier.custom(
+                                CollectionIdentifier.CustomType.all
+                            ),
+                            libraryId = libraryId,
+                            showAutomatic = viewState.showAutomatic,
+                            filters = emptyList()
+                        )
+                    )
 
-                            sorted.addAll(tags.filter { it.color.isEmpty() }
-                                .map {
-                                    val isActive = filtered.contains(it)
-                                    val filterTag = FilterTag(tag = it, isActive = isActive)
-                                    filterTag
-                                })
-//                        .sortedWith(comparator))
+                    sorted.addAll(tags.filter { it.color.isEmpty() }
+                        .map {
+                            val isActive = filtered.contains(it)
+                            val filterTag = FilterTag(tag = it, isActive = isActive)
+                            filterTag
+                        }
+                        .sortedWith(comparator))
 
 //                    for (tag in tags) {
 //                        if (!tag.color.isEmpty()) {
@@ -305,35 +328,30 @@ internal class FilterViewModel @Inject constructor(
 //                        val index = sorted.index(filterTag, sortedBy = comparator)
 //                        sorted.add(element = filterTag, index = index)
 //                    }
-                        }
+                }
 
-                        coordinator.invalidate()
-                        sorted = sorted.sortedWith(comparator).toMutableList()
-                        if (!viewState.searchTerm.isEmpty()) {
-                            // Perform search filter if needed
-                            snapshot = sorted
-                            sorted = sorted.filter {
-                                it.tag.name.contains(
-                                    viewState.searchTerm,
-                                    ignoreCase = true
-                                )
-                            }.toMutableList()
-                        }
-                    }
-                    println()
-                    viewModelScope.launch {
-                        updateState {
-                            copy(
-                                tags = sorted,
-                                snapshot = snapshot,
-                                selectedTags = selected
-                            )
-                        }
-                    }
+                coordinator.invalidate()
+                sorted = sorted.take(50).toMutableList()
+                if (!viewState.searchTerm.isEmpty()) {
+                    // Perform search filter if needed
+                    snapshot = sorted
+                    sorted = sorted.filter {
+                        it.tag.name.contains(
+                            viewState.searchTerm,
+                            ignoreCase = true
+                        )
+                    }.toMutableList()
                 }
             }
-
-
+            viewModelScope.launch {
+                updateState {
+                    copy(
+                        tags = sorted,
+                        snapshot = snapshot,
+                        selectedTags = selected
+                    )
+                }
+            }
         } catch (error: Exception) {
             Timber.e(error, "FilterViewModel: can't load tag")
         }
@@ -342,6 +360,7 @@ internal class FilterViewModel @Inject constructor(
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
     }
+
     private fun setShowAutomatic(showAutomatic: Boolean) {
         defaults.setTagPickerShowAutomaticTags(showAutomatic)
         updateState {
