@@ -3,12 +3,14 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
+import org.zotero.android.api.NoRedirectApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.Unzipper
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
@@ -18,10 +20,12 @@ import javax.inject.Singleton
 @Singleton
 class AttachmentDownloader @Inject constructor(
     private val syncApi: SyncApi,
+    private val noRedirectApi: NoRedirectApi,
     private val fileStorage: FileStore,
     private val dbWrapper: DbWrapper,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val dispatcher: CoroutineDispatcher,
+    private val unzipper: Unzipper,
 ) {
     sealed class Error : Exception() {
         object incompatibleAttachment : Error()
@@ -249,7 +253,8 @@ class AttachmentDownloader @Inject constructor(
             download = download,
             userId = this.userId,
             syncApi = syncApi,
-            fileStorage = this.fileStorage,
+            noRedirectApi = this.noRedirectApi,
+            unzipper = this.unzipper,
         )
         operation.onDownloadProgressUpdated = object : OnDownloadProgressUpdated {
             override fun onProgressUpdated(progressInHundreds: Int) {

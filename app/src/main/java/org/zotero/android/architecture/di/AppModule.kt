@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.ApiModule
+import org.zotero.android.api.ApiNoRedirectsModule
 import org.zotero.android.architecture.SdkInt
 import org.zotero.android.architecture.app.AppConfig
 import org.zotero.android.architecture.app.ApplicationIdProvider
@@ -27,7 +28,7 @@ import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module(
-    includes = [ApiModule::class]
+    includes = [ApiModule::class, ApiNoRedirectsModule::class]
 )
 internal class AppModule {
     @Provides

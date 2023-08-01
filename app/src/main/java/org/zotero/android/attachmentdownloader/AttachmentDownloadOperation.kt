@@ -5,10 +5,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import okhttp3.ResponseBody
 import org.zotero.android.BuildConfig
+import org.zotero.android.androidx.file.copyWithExt
+import org.zotero.android.api.NoRedirectApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.Unzipper
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.BufferedInputStream
@@ -20,7 +22,8 @@ class AttachmentDownloadOperation(
     private val download: AttachmentDownloader.Download,
     private val userId: Long,
     private val syncApi: SyncApi,
-    private val fileStorage: FileStore,
+    private val noRedirectApi: NoRedirectApi,
+    private val unzipper: Unzipper,
 ) {
     private enum class State {
         downloading, unzipping, done
@@ -49,7 +52,7 @@ class AttachmentDownloadOperation(
         this.coroutineScope == null || this.coroutineScope?.isActive == false
 
     private suspend fun startDownload() {
-//        var isCompressed = false //TODO Use WebDavController
+        var isCompressed: Boolean //TODO Use WebDavController
         Timber.i("AttachmentDownloadOperation: start downloading ${this.download.key}")
         this.state = State.downloading
 
@@ -65,8 +68,9 @@ class AttachmentDownloadOperation(
         }
 
         try {
-            networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-            val responseBody = networkResult.value!!
+            networkResult as CustomResult.GeneralSuccess
+            isCompressed = networkResult.value!!.second
+            val responseBody = networkResult.value!!.first
             val byteStream = responseBody.byteStream()
 
             val input = BufferedInputStream(byteStream)
@@ -80,8 +84,6 @@ class AttachmentDownloadOperation(
             while (input.read(byteArray).also { numOfBytesRead = it } != -1) {
                 totalNumberOfBytesRead += numOfBytesRead
                 output.write(byteArray, 0, numOfBytesRead)
-
-                //TODO uncompress if necessary
 
                 if (isOperationNotActive()) {
                     return
@@ -100,7 +102,11 @@ class AttachmentDownloadOperation(
             this.coroutineScope = null
             state = State.done
 
-            //TODO unzip if compressed
+            if (isCompressed) {
+                state = State.unzipping
+                unzip()
+                return
+            }
 
             // Finish download
             finish(CustomResult.GeneralSuccess(null))
@@ -110,14 +116,61 @@ class AttachmentDownloadOperation(
 
     }
 
-    private suspend fun downloadRequest(key: String, libraryId: LibraryIdentifier, userId: Long): CustomResult<ResponseBody> {
+    private fun unzip() {
+        val result = _unzip(file = this.file)
+        this.state = State.done
+        finish(result)
+    }
+
+    private fun _unzip(file: File): CustomResult<Unit> {
+        val zipFile = file.copyWithExt("zip")
+        try {
+            if (zipFile.exists()) {
+                zipFile.delete()
+            }
+            file.renameTo(zipFile)
+            val files = zipFile.parentFile!!.listFiles()
+            for (file in files) {
+                if (file.name == zipFile.name && file.extension == zipFile.extension) {
+                    continue
+                }
+                file.delete()
+            }
+            unzipper.unzip(zipFile.absolutePath, zipFile.parent!!)
+            zipFile.delete()
+            val unzippedFiles = file.parentFile!!.listFiles()
+            if (unzippedFiles.size == 1) {
+                val unzipped = unzippedFiles.firstOrNull()
+                if (unzipped != null && (unzipped.name != file.name || unzipped.extension != file.extension)) {
+                    unzipped.renameTo(file)
+                }
+            }
+            if (file.exists()) {
+                return CustomResult.GeneralSuccess(Unit)
+            }
+            return CustomResult.GeneralError.CodeError(AttachmentDownloader.Error.zipDidntContainRequestedFile)
+        } catch (error: Exception) {
+            Timber.e(error, "AttachmentDownloadOperation: unzip error")
+            return CustomResult.GeneralError.CodeError(AttachmentDownloader.Error.cantUnzipSnapshot)
+        }
+    }
+
+    private suspend fun downloadRequest(key: String, libraryId: LibraryIdentifier, userId: Long): CustomResult<Pair<ResponseBody, Boolean>> {
         //TODO download from WebDavController
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/$key/file"
+
+        val headersResponse = noRedirectApi.getRequestHeadersApi(url)
+        val isCompressed = headersResponse.headers()["Zotero-File-Compressed"] != null
+
         val networkResult = safeApiCall {
             syncApi.downloadFile(url)
         }
-        return networkResult
+        if (networkResult is CustomResult.GeneralError) {
+            return networkResult
+        }
+        networkResult as CustomResult.GeneralSuccess
+        return CustomResult.GeneralSuccess(Pair(networkResult.value!!, isCompressed))
     }
 
     private fun finish(result: CustomResult<Unit>) {
@@ -146,7 +199,8 @@ class AttachmentDownloadOperation(
             State.done -> {
             }
             State.unzipping -> {
-                //TODO logic for unzip cancelling
+                this.coroutineScope?.cancel()
+                this.coroutineScope = null
             }
         }
 
