@@ -1,4 +1,4 @@
-package org.zotero.android.screens.settings
+package org.zotero.android.screens.settings.account
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -16,6 +16,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.settings.SettingsItem
+import org.zotero.android.screens.settings.SettingsSection
+import org.zotero.android.screens.settings.SettingsSectionTitle
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.misc.CustomDivider

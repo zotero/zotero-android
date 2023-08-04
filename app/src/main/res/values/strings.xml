@@ -4,7 +4,7 @@
     <string name="save">Save</string>
     <string name="ok">OK</string>
     <string name="clear">Clear</string>
-
+    <string name="retry">Retry</string>
 
     <string name="onboarding_access"><annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
     <string name="onboarding_annotate"><annotation font="bold">Highlight and take notes</annotation> directly in your PDFs as you read them.</string>
@@ -160,4 +160,25 @@
         <item quantity="one">1 tag selected</item>
         <item quantity="other">%d tags selected</item>
     </plurals>
+
+    <string name="errors_logging_title">Debugging Error</string>
+    <string name="errors_logging_start">Unable to start debug logging</string>
+    <string name="errors_logging_upload">Could not upload logs. Please try again.</string>
+    <string name="errors_logging_content_reading">Log files could not be found</string>
+    <string name="errors_logging_no_logs_recorded">No debug output occurred during logging</string>
+    <string name="errors_logging_response_parsing">Unexpected response from server</string>
+    <string name="settings_log_alert_title">Logs Sent</string>
+    <string name="settings_log_alert_message">Your Debug ID is %s</string>
+    <string name="share_copy">Copy</string>
+    <string name="settings_debug_output_logging">Debug Output Logging</string>
+    <string name="settings_debug_start_logging">Start Logging</string>
+    <string name="settings_debug_start_logging_on_next_launch">Start Logging on Next App Launch</string>
+    <string name="settings_debug_number_of_lines">%d lines</string>
+    <string name="settings_debug_cancel_logging">Cancel Logging</string>
+    <string name="settings_debug_stop_logging">Stop Logging</string>
+    <string name="settings_debug_desc_1">To debug a startup issue, force-quit the app and start it again.</string>
+    <string name="settings_debug_desc_2">To debug a share extension issue, open the share extension.</string>
+    <string name="settings_debug_view_output">View Output</string>
+    <string name="settings_debug_clear_output">Clear Output</string>
+    <string name="settings_debug_lines_logged">%d lines logged</string>
 </resources>

@@ -1,4 +1,4 @@
-package org.zotero.android.screens.settings
+package org.zotero.android.screens.settings.account
 
 import android.content.Context
 import android.net.Uri

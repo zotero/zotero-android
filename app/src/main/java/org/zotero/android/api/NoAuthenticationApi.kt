@@ -2,6 +2,7 @@ package org.zotero.android.api
 
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.Multipart
@@ -26,4 +27,9 @@ interface NoAuthenticationApi {
     @GET
     @Streaming
     suspend fun downloadFile(@Url url: String): retrofit2.Response<ResponseBody>
+
+    @POST("https://repo.zotero.org/repo/report?debug=1")
+    suspend fun debugLogUploadRequest(
+        @Body textBody: String,
+    ): retrofit2.Response<String?>
 }

@@ -18,7 +18,7 @@ class SessionController @Inject constructor(
         get() {
             return this.sessionDataEventStream.currentValue() != null
         }
-    private var isInitialized: Boolean = false
+    var isInitialized: Boolean = false
 
     fun initializeSession() {
         val apiToken = this.defaults.getApiToken()

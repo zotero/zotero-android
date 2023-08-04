@@ -9,6 +9,7 @@ import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.crashreporting.CrashReportingTree
+import org.zotero.android.architecture.logging.DebugLoggingTree
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.Controllers
 import timber.log.Timber
@@ -28,6 +29,9 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     @Inject
     lateinit var fileStore: FileStore
+
+    @Inject
+    lateinit var debugLoggingTree: DebugLoggingTree
 
     companion object {
         lateinit var instance: ZoteroApplication
@@ -61,6 +65,6 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
     }
 
     private fun setUpLogging() {
-        Timber.plant(CrashReportingTree())
+        Timber.plant(CrashReportingTree(), this.debugLoggingTree)
     }
 }

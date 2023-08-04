@@ -27,6 +27,7 @@ open class Defaults @Inject constructor(
     private val showCollectionItemCounts = "showCollectionItemCounts"
     private val didPerformFullSyncFix = "didPerformFullSyncFix"
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
+    private val isDebugLogEnabled = "isDebugLogEnabled"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -141,6 +142,14 @@ open class Defaults @Inject constructor(
 
     fun isTagPickerShowAutomaticTags(): Boolean {
         return sharedPreferences.getBoolean(tagPickerShowAutomaticTags, true)
+    }
+
+    fun setDebugLogEnabled(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(isDebugLogEnabled, newValue) }
+    }
+
+    fun isDebugLogEnabled(): Boolean {
+        return sharedPreferences.getBoolean(isDebugLogEnabled, false)
     }
 
     fun reset() {

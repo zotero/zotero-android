@@ -1,14 +1,24 @@
 package org.zotero.android.screens.dashboard
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.logging.DebugLogging
+import org.zotero.android.architecture.logging.DebugLoggingDialogData
+import org.zotero.android.architecture.logging.DebugLoggingDialogDataEventStream
+import org.zotero.android.architecture.logging.DebugLoggingInterface
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadCollectionDbRequest
@@ -24,6 +34,7 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SessionController
 import org.zotero.android.sync.conflictresolution.AskUserToResolveChangedDeletedItem
 import org.zotero.android.sync.conflictresolution.Conflict
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
@@ -32,15 +43,20 @@ import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
-    private val defaults: Defaults,
     private val fileStore: FileStore,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
-) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()) {
+    private val debugLogging: DebugLogging,
+    private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
+    private val context: Context,
+    private val sessionController: SessionController
+) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
+    DebugLoggingInterface {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: AskUserToResolveChangedDeletedItem) {
@@ -102,6 +118,14 @@ class DashboardViewModel @Inject constructor(
     fun init() = initOnce {
         EventBus.getDefault().register(this)
         ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+
+        debugLogging.debugLoggingInterface = this
+        setupDebugLoggingDialogDataEventStream()
+
+        if (sessionController.isInitialized && debugLogging.isEnabled) {
+            setDebugWindow(true)
+        }
+
         val data = loadInitialDetailData(
             collectionId = fileStore.getSelectedCollectionId(),
             libraryId = fileStore.getSelectedLibrary()
@@ -109,6 +133,16 @@ class DashboardViewModel @Inject constructor(
         if (data != null) {
             showItems(data.collection, data.library, searchItemKeys = null)
         }
+    }
+
+    private fun setupDebugLoggingDialogDataEventStream() {
+        debugLoggingDialogDataEventStream.flow()
+            .onEach { dialogData ->
+                updateState {
+                    copy(debugLoggingDialogData = dialogData)
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun loadInitialDetailData(
@@ -228,6 +262,15 @@ class DashboardViewModel @Inject constructor(
             )
         }
     }
+
+    fun onDismissDebugLoggingDialog() {
+        updateState {
+            copy(
+                debugLoggingDialogData = null,
+            )
+        }
+    }
+
     fun dismissBottomSheet() {
         updateState {
             copy(longPressOptionsHolder = null)
@@ -238,13 +281,50 @@ class DashboardViewModel @Inject constructor(
         EventBus.getDefault().post(longPressOptionItem)
     }
 
+    fun onContentReadingRetry(logs: List<File>, userId: Long, customAlertMessage: ((String) -> String)?) {
+        debugLogging.onContentReadingRetry(logs, userId, customAlertMessage)
+    }
+
+    fun onContentReadingOk() {
+        debugLogging.onContentReadingOk()
+    }
+
+    fun onUploadRetry(logs: List<File>, userId: Long, customAlertMessage: ((String) -> String)?) {
+        debugLogging.onUploadRetry(logs, userId, customAlertMessage)
+    }
+
+    fun onUploadOk() {
+        debugLogging.onUploadOk()
+    }
+
+    fun onShareCopy(debugId: String) {
+        val clipboardManager: ClipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipData = ClipData.newPlainText("Identifier", debugId)
+        clipboardManager.setPrimaryClip(clipData)
+    }
+
+    override fun setDebugWindow(visible: Boolean) {
+        viewModelScope.launch {
+            updateState {
+                copy(showDebugWindow = visible)
+            }
+        }
+    }
+
+    fun onDebugStop() {
+        debugLogging.stop()
+    }
+
 }
 
 data class DashboardViewState(
     val snackbarMessage: SnackbarMessage? = null,
     val conflictDialog: ConflictDialogData? = null,
+    val debugLoggingDialogData: DebugLoggingDialogData? = null,
     val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
+    val showDebugWindow: Boolean = false,
     ) : ViewState
 
 sealed class DashboardViewEffect : ViewEffect {

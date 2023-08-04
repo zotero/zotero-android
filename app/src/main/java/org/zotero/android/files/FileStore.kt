@@ -41,6 +41,7 @@ class FileStore @Inject constructor (
 
     private lateinit var rootDirectory: File
     private lateinit var cachesDirectory: File
+    private lateinit var debugDirectory: File
 
     companion object {
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
@@ -71,6 +72,9 @@ class FileStore @Inject constructor (
 
         cachesDirectory = File(context.cacheDir, "Zotero")
         cachesDirectory.mkdirs()
+
+        debugDirectory = File(filesDir, "debugLogging")
+        debugDirectory.mkdirs()
     }
 
     fun pathForFilename(filename: String): String {
@@ -323,6 +327,10 @@ class FileStore @Inject constructor (
     fun cache(): File {
         cachesDirectory.mkdirs()
         return cachesDirectory
+    }
+
+    fun debugLoggingDirectory(): File {
+        return this.debugDirectory
     }
 
     fun getFileSize(uri: Uri): Long? = context.getFileSize(uri)

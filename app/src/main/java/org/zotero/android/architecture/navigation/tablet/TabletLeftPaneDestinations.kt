@@ -11,6 +11,7 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.collectionsScreen
+import org.zotero.android.architecture.navigation.dialogDynamicHeight
 import org.zotero.android.architecture.navigation.dialogFixedMaxHeight
 import org.zotero.android.architecture.navigation.librariesScreen
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
@@ -55,7 +56,7 @@ internal fun TabletLeftPaneNavigation(
             CollectionEditNavigation()
         }
 
-        dialogFixedMaxHeight(
+        dialogDynamicHeight(
             route = TabletLeftPaneDestinations.SETTINGS_NAVIGATION,
         ) {
             SettingsNavigation(onOpenWebpage = onOpenWebpage)

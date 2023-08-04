@@ -27,6 +27,7 @@ internal fun SettingsScreen(
     onBack: () -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     toAccountScreen: () -> Unit,
+    toDebugScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -73,6 +74,17 @@ internal fun SettingsScreen(
                 )
             }
             Spacer(modifier = Modifier.height(30.dp))
+
+            SettingsSection {
+                SettingsItem(
+                    layoutType = layoutType,
+                    isLastItem = true,
+                    title = stringResource(id = Strings.settings_debug_output_logging),
+                    onItemTapped = toDebugScreen
+                )
+            }
+            Spacer(modifier = Modifier.height(30.dp))
+
             SettingsSection {
                 SettingsItem(
                     layoutType = layoutType,

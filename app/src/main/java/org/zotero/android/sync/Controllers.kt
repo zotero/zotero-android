@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.onEach
 import org.apache.commons.io.FileUtils
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.architecture.logging.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
@@ -27,6 +28,7 @@ class Controllers @Inject constructor(
     private val sessionController: SessionController,
     private val userControllers: UserControllers,
     private val fileDownloader: AttachmentDownloader,
+    private val debugLogging: DebugLogging,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -34,6 +36,8 @@ class Controllers @Inject constructor(
 
     fun init() {
         fileStore.init()
+        debugLogging.startLoggingOnLaunchIfNeeded()
+
         initializeSessionIfPossible()
         startApp()
         this.didInitialize = true
