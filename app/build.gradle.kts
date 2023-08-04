@@ -18,8 +18,8 @@ android {
         applicationId = "org.zotero.android"
         minSdk = 23
         targetSdk = 33
-        versionCode = 10
-        versionName = "1.12"
+        versionCode = 11
+        versionName = "1.13"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
