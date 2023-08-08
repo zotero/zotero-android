@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -114,12 +115,11 @@ internal fun FilterScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                 }
             }
-
-            item {
+            items(items = viewState.tags) { chunkedList ->
                 FlowRow(
                     modifier = Modifier,
                 ) {
-                    viewState.tags.forEach {
+                    chunkedList.forEach {
                         var rowModifier: Modifier = Modifier
                             .padding(horizontal = 12.dp, vertical = 12.dp)
                             .clip(shape = RoundedCornerShape(16.dp))
@@ -159,6 +159,7 @@ internal fun FilterScreen(
 
                     }
                 }
+
             }
 
         }

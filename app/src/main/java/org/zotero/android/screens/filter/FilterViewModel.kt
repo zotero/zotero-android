@@ -46,6 +46,8 @@ internal class FilterViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
 ) : BaseViewModel2<FilterViewState, FilterViewEffect>(FilterViewState()) {
 
+    private val LIST_CHUNK_SIZE = 50
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: FilterReloadEvent) {
         itemsDidChange(event.filters, event.collectionId, event.libraryId)
@@ -61,8 +63,12 @@ internal class FilterViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
+        val filterArgs = ScreenArguments.filterArgs
         updateState {
-            copy(isDownloadsChecked = downloadsFilterEnabled)
+            copy(
+                isDownloadsChecked = downloadsFilterEnabled,
+                selectedTags = filterArgs.selectedTags
+            )
         }
         onSearchStateFlow
             .drop(1)
@@ -71,7 +77,6 @@ internal class FilterViewModel @Inject constructor(
                 search(text)
             }
             .launchIn(viewModelScope)
-        val filterArgs = ScreenArguments.filterArgs
         itemsDidChange(
             filters = filterArgs.filters,
             collectionId = filterArgs.collectionId,
@@ -81,7 +86,10 @@ internal class FilterViewModel @Inject constructor(
 
     private fun search(term: String) {
         if (!term.isEmpty()) {
-            val filtered = viewState.tags.filter { it.tag.name.contains(term, ignoreCase = true) }
+            val filtered =
+                viewState.tags
+                    .flatten()
+                    .filter { it.tag.name.contains(term, ignoreCase = true) }.chunked(LIST_CHUNK_SIZE)
             if (viewState.snapshot == null) {
                 updateState {
                     copy(snapshot = viewState.tags)
@@ -225,6 +233,7 @@ internal class FilterViewModel @Inject constructor(
             val selected = mutableSetOf<String>()
             var snapshot: List<FilterTag>? = null
             var sorted = mutableListOf<FilterTag>()
+            var chunkedSorted = emptyList<List<FilterTag>>()
             val comparator: (FilterTag, FilterTag) -> Int = comparator@{ first, second ->
                 if (!first.tag.color.isEmpty() && second.tag.color.isEmpty()) {
                     return@comparator 1
@@ -331,7 +340,6 @@ internal class FilterViewModel @Inject constructor(
                 }
 
                 coordinator.invalidate()
-                sorted = sorted.take(50).toMutableList()
                 if (!viewState.searchTerm.isEmpty()) {
                     // Perform search filter if needed
                     snapshot = sorted
@@ -342,12 +350,13 @@ internal class FilterViewModel @Inject constructor(
                         )
                     }.toMutableList()
                 }
+                chunkedSorted = sorted.chunked(LIST_CHUNK_SIZE)
             }
             viewModelScope.launch {
                 updateState {
                     copy(
-                        tags = sorted,
-                        snapshot = snapshot,
+                        tags = chunkedSorted,
+                        snapshot = snapshot?.chunked(LIST_CHUNK_SIZE),
                         selectedTags = selected
                     )
                 }
@@ -411,8 +420,8 @@ internal data class FilterViewState(
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val showAutomatic: Boolean = false,
     val displayAll: Boolean = false,
-    val tags: List<FilterTag> = emptyList(),
-    val snapshot: List<FilterTag>? = null,
+    val tags: List<List<FilterTag>> = emptyList(),
+    val snapshot: List<List<FilterTag>>? = null,
     val selectedTags: Set<String> = emptySet(),
     val dialog: FilterDialog? = null,
 ) : ViewState
