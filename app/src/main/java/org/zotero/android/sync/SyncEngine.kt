@@ -397,7 +397,8 @@ class SyncUseCase @Inject constructor(
             itemResponseMapper = itemResponseMapper,
             searchResponseMapper = searchResponseMapper,
             updatesResponseMapper = updatesResponseMapper,
-            dispatcher = dispatcher
+            dispatcher = dispatcher,
+            gson = gson,
         ).result()
 
         if (actionResult !is CustomResult.GeneralSuccess) {
@@ -427,10 +428,10 @@ class SyncUseCase @Inject constructor(
             userId = this.userId,
             oldMd5 = upload.oldMd5,
             syncApi = this.syncApi,
-            dbWrapper = dbWrapper,
+            dbWrapper = this.dbWrapper,
             fileStore = this.fileStore,
-            schemaController = this.schemaController,
-            noAuthenticationApi = noAuthenticationApi
+            noAuthenticationApi = this.noAuthenticationApi,
+            gson = this.gson,
         )
 
         val actionResult = action.result()

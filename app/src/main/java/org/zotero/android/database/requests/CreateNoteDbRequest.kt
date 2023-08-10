@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
+import org.zotero.android.androidx.text.strippedHtmlTags
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -53,6 +54,8 @@ class CreateNoteDbRequest(
         item.dateAdded = Date()
         item.dateModified = Date()
         item.libraryId = libraryId
+        item.htmlFreeContent =
+            if (this.note.text.isEmpty()) null else this.note.text.strippedHtmlTags
 
         val itemKey = this.parentKey
         if (itemKey != null) {

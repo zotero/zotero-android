@@ -57,7 +57,8 @@ class SubmitUpdateSyncAction(
     val collectionResponseMapper: CollectionResponseMapper,
     val itemResponseMapper: ItemResponseMapper,
     val searchResponseMapper: SearchResponseMapper,
-    val dispatcher: CoroutineDispatcher
+    val dispatcher: CoroutineDispatcher,
+    val gson: Gson
 ) : SyncActionWithError<Pair<Int, CustomResult.GeneralError.CodeError?>> {
     private val splitMessage = "Annotation position is too long"
 
@@ -87,9 +88,9 @@ class SubmitUpdateSyncAction(
             val jsonBody: String
             when (objectType) {
                 SyncObject.settings ->
-                    jsonBody = Gson().toJson(this.parameters.first())
+                    jsonBody = gson.toJson(this.parameters.first())
                 else ->
-                    jsonBody = Gson().toJson(this.parameters)
+                    jsonBody = gson.toJson(this.parameters)
             }
 
             val headers = mutableMapOf<String, String>()
@@ -306,7 +307,7 @@ class SubmitUpdateSyncAction(
             try {
                 val file = fileStorage.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
                 val fileWriter = FileWriter(file)
-                Gson().toJson(objectS, fileWriter)
+                gson.toJson(objectS, fileWriter)
                 fileWriter.flush()
                 fileWriter.close()
                 println("")

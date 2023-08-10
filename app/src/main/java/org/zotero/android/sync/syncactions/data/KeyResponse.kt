@@ -1,5 +1,6 @@
 package org.zotero.android.sync.syncactions.data
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.zotero.android.ktx.unmarshalMap
 
@@ -12,7 +13,7 @@ data class KeyResponse(
 ) {
 
     companion object {
-        fun fromJson(data: JsonObject): KeyResponse {
+        fun fromJson(data: JsonObject, gson: Gson): KeyResponse {
             val accessData = data["access"].asJsonObject
 
             val username = data.get("username")?.asString ?: ""
@@ -21,7 +22,7 @@ data class KeyResponse(
             val libraryData = accessData["user"]?.asJsonObject
             val user = AccessPermissions.Permissions.fromJson(libraryData)
 
-            val groupDataMap: Map<String, JsonObject>? = accessData["groups"]?.unmarshalMap()
+            val groupDataMap: Map<String, JsonObject>? = accessData["groups"]?.unmarshalMap(gson)
 
             var defaultGroup: AccessPermissions.Permissions? = null
             val groups = mutableMapOf<Int, AccessPermissions.Permissions>()

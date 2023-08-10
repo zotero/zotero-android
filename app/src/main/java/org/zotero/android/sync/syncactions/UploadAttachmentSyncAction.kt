@@ -1,6 +1,7 @@
 package org.zotero.android.sync.syncactions
 
 import android.webkit.MimeTypeMap
+import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -19,7 +20,6 @@ import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncActionWithError
 import org.zotero.android.sync.SyncObject
@@ -28,20 +28,20 @@ import timber.log.Timber
 import java.io.File
 
 class UploadAttachmentSyncAction(
-    val key: String,
-    val file: File,
-    val filename: String,
-    val md5: String,
-    val mtime: Long,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val oldMd5: String?,
+    private val key: String,
+    private val file: File,
+    private val filename: String,
+    private val md5: String,
+    private val mtime: Long,
+    private val libraryId: LibraryIdentifier,
+    private val userId: Long,
+    private val oldMd5: String?,
     var failedBeforeZoteroApiRequest: Boolean = true,
-    val noAuthenticationApi: NoAuthenticationApi,
-    val syncApi: SyncApi,
-    val dbWrapper: DbWrapper,
-    val fileStore: FileStore,
-    val schemaController: SchemaController
+    private val noAuthenticationApi: NoAuthenticationApi,
+    private val syncApi: SyncApi,
+    private val dbWrapper: DbWrapper,
+    private val fileStore: FileStore,
+    private val gson: Gson
 ): SyncActionWithError<Unit> {
 
     override suspend fun result(): CustomResult<Unit> {
@@ -78,7 +78,7 @@ class UploadAttachmentSyncAction(
         this.failedBeforeZoteroApiRequest = false
         val authorizeUploadSyncActionNetworkResult = AuthorizeUploadSyncAction(key = this.key, filename = this.filename,
             filesize = filesize, md5 = this.md5, mtime = this.mtime, libraryId = this.libraryId,
-            userId = this.userId, oldMd5 = this.oldMd5, syncApi = this.syncApi).result()
+            userId = this.userId, oldMd5 = this.oldMd5, syncApi = this.syncApi, gson = gson).result()
 
         if (authorizeUploadSyncActionNetworkResult !is CustomResult.GeneralSuccess) {
             processError(authorizeUploadSyncActionNetworkResult as CustomResult.GeneralError)

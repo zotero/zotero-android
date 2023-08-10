@@ -1,7 +1,9 @@
 package org.zotero.android.api.mappers
 
+import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
@@ -26,6 +28,9 @@ class ItemResponseMapper @Inject constructor(
     private val linksResponseMapper: LinksResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
     private val userResponseMapper: UserResponseMapper,
+    private val gson: Gson,
+    @ForGsonWithRoundedDecimals
+    private val gsonWithRoundedDecimals: Gson
 ) {
     fun fromJson(json: JsonObject, schemaController: SchemaController): ItemResponse {
         val data = json["data"].asJsonObject
@@ -72,7 +77,8 @@ class ItemResponseMapper @Inject constructor(
                     lastModifiedBy = lastModifiedBy,
                     createdBy = createdBy,
                     rawType = itemType,
-                    schemaController = schemaController
+                    schemaController = schemaController,
+                    gson = gson,
                 )
             }
         }
@@ -90,7 +96,8 @@ class ItemResponseMapper @Inject constructor(
         lastModifiedBy: UserResponse?,
         version: Int,
         data: JsonObject,
-        schemaController: SchemaController
+        schemaController: SchemaController,
+        gson: Gson,
     ): ItemResponse {
         val dateAdded = data["dateAdded"]?.asString
         val dateModified = data["dateModified"]?.asString
@@ -98,7 +105,7 @@ class ItemResponseMapper @Inject constructor(
         val creators = data["creators"]?.asJsonArray ?: JsonArray()
 
         val collectionKeys =
-            data["collections"]?.unmarshalList<String>()?.toSet() ?: emptySet<String>()
+            data["collections"]?.unmarshalList<String>(gson)?.toSet() ?: emptySet<String>()
         val parentKey = data["parentItem"]?.asString
         val dateAddedParsed = dateAdded?.let { iso8601DateFormatV2.parse(it) } ?: Date()
         val dateModifiedParsed = dateModified?.let { iso8601DateFormatV2.parse(it) } ?: Date()
@@ -108,7 +115,14 @@ class ItemResponseMapper @Inject constructor(
         val relations = data["relations"]?.asJsonObject ?: JsonObject()
         val inPublications = data["inPublications"].convertFromBooleanOrIntToBoolean()
 
-        val fields = ItemResponse.parseFields(data, rawType = rawType, key = key, schemaController = schemaController).first
+        val fields = ItemResponse.parseFields(
+            data = data,
+            rawType = rawType,
+            key = key,
+            schemaController = schemaController,
+            gson = gson,
+            gsonWithRoundedDecimals = gsonWithRoundedDecimals,
+        ).first
 
         if (rawType == ItemTypes.attachment) {
             val linkMode = fields[KeyBaseKeyPair(
@@ -178,7 +192,14 @@ class ItemResponseMapper @Inject constructor(
         val relations = JsonObject()
         val inPublications = false
 
-        val (fields, rects, paths) = ItemResponse.parseFields(data, rawType =  ItemTypes.annotation, key =  key, schemaController = schemaController)
+        val (fields, rects, paths) = ItemResponse.parseFields(
+            data = data,
+            rawType = ItemTypes.annotation,
+            key = key,
+            schemaController = schemaController,
+            gson = gson,
+            gsonWithRoundedDecimals = gsonWithRoundedDecimals,
+        )
 
         return ItemResponse(
             version = version,

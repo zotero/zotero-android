@@ -13,7 +13,7 @@ buildscript {
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.6")
         classpath("com.google.gms:google-services:4.3.15")
         classpath("com.google.dagger:hilt-android-gradle-plugin:2.43.2")
-        classpath("io.realm:realm-gradle-plugin:10.16.1")
+        classpath("io.realm:realm-gradle-plugin:10.15.1")
         classpath("com.google.gms:google-services:4.3.15")
 
         // NOTE: Do not place your application dependencies here; they belong

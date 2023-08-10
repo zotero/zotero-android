@@ -1,5 +1,6 @@
 package org.zotero.android.api.mappers
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.ItemSchema
 import org.zotero.android.api.pojo.sync.SchemaLocale
@@ -9,7 +10,8 @@ import javax.inject.Inject
 
 class SchemaResponseMapper @Inject constructor(
     private val itemSchemaMapper: ItemSchemaMapper,
-    private val schemaLocaleMapper: SchemaLocaleMapper
+    private val schemaLocaleMapper: SchemaLocaleMapper,
+    private val gson: Gson,
 ) {
 
     fun fromJson(data: JsonObject): SchemaResponse {
@@ -27,7 +29,7 @@ class SchemaResponseMapper @Inject constructor(
 
         val locales = mutableMapOf<String, SchemaLocale>()
 
-        val localeData: Map<String, JsonObject>? = data["locales"]?.unmarshalMap()
+        val localeData: Map<String, JsonObject>? = data["locales"]?.unmarshalMap(gson)
         if (localeData != null) {
             localeData.forEach { data ->
                 val fixedKey = data.key.replace("-", "_")

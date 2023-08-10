@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import com.google.gson.Gson
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -13,7 +14,8 @@ import javax.inject.Inject
 class SyncRepository @Inject constructor(
     private val syncApi: SyncApi,
     private val dbWrapper: DbWrapper,
-    private val defaults: Defaults
+    private val defaults: Defaults,
+    private val gson: Gson,
 ) {
     suspend fun processKeyCheckAction(): CustomResult<AccessPermissions> {
         val networkResult = safeApiCall {
@@ -24,7 +26,7 @@ class SyncRepository @Inject constructor(
             return networkResult as CustomResult.GeneralError
         }
 
-        val keyResponse = KeyResponse.fromJson(networkResult.value!!)
+        val keyResponse = KeyResponse.fromJson(data = networkResult.value!!, gson = gson)
 
         defaults.setUsername( keyResponse.username)
         defaults.setDisplayName( keyResponse.displayName)

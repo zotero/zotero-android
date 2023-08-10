@@ -37,6 +37,7 @@ import javax.inject.Singleton
 class FileStore @Inject constructor (
     private val context: Context,
     val dataMarshaller: DataMarshaller,
+    private val gson: Gson
 ) {
 
     private lateinit var rootDirectory: File
@@ -99,7 +100,7 @@ class FileStore @Inject constructor (
             val assetManager: AssetManager = context.assets
             val assetFileDescriptor = assetManager.openFd(assetFileName)
             val inputStream = assetFileDescriptor.createInputStream()
-            val fromJson = Gson().fromJson(InputStreamReader(inputStream), JsonObject::class.java)
+            val fromJson = gson.fromJson(InputStreamReader(inputStream), JsonObject::class.java)
             inputStream.closeQuietly()
             return fromJson
         } catch (e: IOException) {

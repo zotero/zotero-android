@@ -1,6 +1,6 @@
 package org.zotero.android.database.objects
 
-import com.google.gson.Gson
+import com.google.gson.JsonObject
 import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
@@ -11,6 +11,7 @@ import io.realm.annotations.RealmClass
 import io.realm.kotlin.where
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.ZoteroApplication
+import org.zotero.android.androidx.text.strippedRichTextTags
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.database.requests.ReadBaseTagsToDeleteDbRequest
 import org.zotero.android.database.requests.baseKey
@@ -18,7 +19,6 @@ import org.zotero.android.database.requests.key
 import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
 import org.zotero.android.helpers.formatter.sqlFormat
-import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
@@ -124,6 +124,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     override var changes: RealmList<RObjectChange> = RealmList()
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
+    var htmlFreeContent: String? = null
 
     val doi: String?
         get() {
@@ -171,7 +172,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     }
 
     private fun updateSortTitle() {
-        val newTitle = displayTitle.trim('[', ']', '\'', '"').lowercase()
+        val newTitle = displayTitle.strippedRichTextTags.trim('[', ']', '\'', '"').lowercase()
         if (newTitle != this.sortTitle) {
             sortTitle = newTitle
         }
@@ -248,8 +249,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                         ?.let { AnnotationType.valueOf(it.value) }
                 if (annotationType != null) {
                     parameters[FieldKeys.Item.Annotation.position] = createAnnotationPosition(
-                        annotationType,
-                        this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll()
+                        type = annotationType,
+                        positionFields = this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll(),
                     )
 
                 }
@@ -259,7 +260,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
     private fun createAnnotationPosition(
         type: AnnotationType,
-        positionFields: RealmResults<RItemField>
+        positionFields: RealmResults<RItemField>,
     ): String {
         val jsonData = mutableMapOf<String, Any>()
 
@@ -272,7 +273,13 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 if (doubleVal != null) {
                     jsonData[field.key] = doubleVal
                 } else {
-                    jsonData[field.key] = field.value
+                    try {
+                        val json = ZoteroApplication.instance.gson.fromJson(field.value, JsonObject::class.java)
+                        jsonData[field.key] = json
+                    } catch (e: Exception) {
+                        Timber.w(e)//This is not a bug, but just for debug purposes
+                        jsonData[field.key] = field.value
+                    }
                 }
             }
         }
@@ -283,7 +290,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 for (path in this.paths.sortedBy { it.sortIndex }) {
                     apiPaths.add(path.coordinates
                         .sortedBy { it.sortIndex }
-                        .map { it.value.rounded(3) })
+                        .map { it.value })
                 }
 
                 jsonData[FieldKeys.Item.Annotation.Position.paths] = apiPaths
@@ -293,17 +300,17 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 this.rects.forEach { rRect ->
                     rectArray.add(
                         listOf(
-                            rRect.minX.rounded(3),
-                            rRect.minY.rounded(3),
-                            rRect.maxX.rounded(3),
-                            rRect.maxY.rounded(3)
+                            rRect.minX,
+                            rRect.minY,
+                            rRect.maxX,
+                            rRect.maxY
                         )
                     )
                 }
                 jsonData[FieldKeys.Item.Annotation.Position.rects] = rectArray
             }
         }
-        return Gson().toJson(jsonData)
+        return ZoteroApplication.instance.gsonWithRoundedDecimals.toJson(jsonData)
     }
 
     override val selfOrChildChanged: Boolean

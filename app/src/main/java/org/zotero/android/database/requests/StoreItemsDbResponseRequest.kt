@@ -5,6 +5,7 @@ import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
+import org.zotero.android.androidx.text.strippedRichTextTags
 import org.zotero.android.api.pojo.sync.CreatorResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.LinkResponse
@@ -293,8 +294,13 @@ class StoreItemDbRequest(
                         item.baseTitle = value
                     }
                     field.key == FieldKeys.Item.note && item.rawType == ItemTypes.note -> {
-                        item.baseTitle = NotePreviewGenerator.preview(value) ?: value
+                        item.baseTitle = NotePreviewGenerator.preview(value) ?: ""
+                        item.htmlFreeContent = if(value.isEmpty()) null else value
                     }
+                    field.key == FieldKeys.Item.Annotation.comment && item.rawType == ItemTypes.annotation -> {
+                        item.htmlFreeContent = if(value.isEmpty()) null else value.strippedRichTextTags
+                    }
+
                     field.key == FieldKeys.Item.date -> {
                         date = value
                     }

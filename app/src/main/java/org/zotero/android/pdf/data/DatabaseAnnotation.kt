@@ -15,7 +15,7 @@ import org.zotero.android.sync.Tag
 import timber.log.Timber
 
 data class DatabaseAnnotation(
-    private val item: RItem
+    val item: RItem
 ): Annotation {
 
     override val key: String get() {
@@ -39,6 +39,9 @@ data class DatabaseAnnotation(
         get() {
             return this.item.fields.where().key(FieldKeys.Item.Annotation.text).findFirst()?.value
         }
+    override val sortIndex: String
+        get() = this.item.annotationSortIndex
+
     override val tags: List<Tag>
         get() {
             return this.item.tags!!.map { Tag(it) }

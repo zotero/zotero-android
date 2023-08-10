@@ -5,7 +5,8 @@ enum class PdfAnnotationChanges {
     boundingBox,
     rects,
     lineWidth,
-    paths;
+    paths,
+    contents;
 
     companion object {
         fun stringValues(changes: List<PdfAnnotationChanges>): List<String> {
@@ -24,6 +25,9 @@ enum class PdfAnnotationChanges {
             }
             if (changes.contains(paths)) {
                 rawChanges.addAll(arrayOf("lines", "lineArray"))
+            }
+            if (changes.contains(contents)) {
+                rawChanges.add("contents")
             }
             return rawChanges
         }

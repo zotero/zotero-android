@@ -7,16 +7,23 @@ import javax.inject.Inject
 class PageIndexResponseMapper @Inject constructor(){
 
     fun fromJson(key: String, dictionary: JsonObject): PageIndexResponse? {
-
         if (!key.contains("lastPageIndex")) {
             return null
         }
+        try {
+            val (key, libraryId) = PageIndexResponse.parse(key = key)
 
-        val (key, libraryId) = PageIndexResponse.parse(key = key)
+            val value = dictionary["value"].asInt
+            val version = dictionary["version"].asInt
 
-        val value = dictionary["value"].asInt
-        val version = dictionary["version"].asInt
-
-        return PageIndexResponse(key = key, value = value, version = version, libraryId = libraryId)
+            return PageIndexResponse(
+                key = key,
+                value = value,
+                version = version,
+                libraryId = libraryId
+            )
+        } catch (e: Exception) {
+            return null
+        }
     }
 }

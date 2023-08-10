@@ -6,10 +6,10 @@ import org.zotero.android.websocket.WsResponse
 import timber.log.Timber
 import javax.inject.Inject
 
-class WsResponseMapper @Inject constructor() {
+class WsResponseMapper @Inject constructor(private val gson: Gson) {
 
     fun fromString(textToParse:String): WsResponse {
-        val json = Gson().fromJson(textToParse, JsonObject::class.java)
+        val json = gson.fromJson(textToParse, JsonObject::class.java)
         val eventStr = json["event"].asString
         try {
             return WsResponse(WsResponse.Event.from(eventStr)!!)

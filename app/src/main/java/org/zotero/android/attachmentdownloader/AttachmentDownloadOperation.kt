@@ -161,7 +161,7 @@ class AttachmentDownloadOperation(
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/$key/file"
 
         val headersResponse = noRedirectApi.getRequestHeadersApi(url)
-        val isCompressed = headersResponse.headers()["Zotero-File-Compressed"] != null
+        val isCompressed = headersResponse.headers()["Zotero-File-Compressed"] == "Yes"
 
         val networkResult = safeApiCall {
             syncApi.downloadFile(url)

@@ -21,7 +21,7 @@ data class DocumentAnnotation(
     override val color: String,
     override val comment: String,
     override val text: String?,
-    val sortIndex: String,
+    override val sortIndex: String,
     val dateModified: Date,
 ): Annotation {
     val readerKey: AnnotationKey

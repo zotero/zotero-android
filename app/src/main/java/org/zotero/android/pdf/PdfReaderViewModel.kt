@@ -450,6 +450,7 @@ class PdfReaderViewModel @Inject constructor(
     ): List<AnnotationKey> {
         val keys = mutableListOf<Pair<AnnotationKey, String>>()
         for (item in databaseAnnotations) {
+            if (!validate(databaseAnnotation = DatabaseAnnotation(item = item))) { continue }
             keys.add(
                 AnnotationKey(
                     key = item.key,
@@ -465,6 +466,38 @@ class PdfReaderViewModel @Inject constructor(
             keys.add(element = key to annotation.sortIndex, index = index)
         }
         return keys.map { it.first }
+    }
+
+    private fun validate(databaseAnnotation: DatabaseAnnotation): Boolean {
+        if (databaseAnnotation._page == null) {
+            return false
+        }
+        when (databaseAnnotation.type) {
+            org.zotero.android.database.objects.AnnotationType.ink -> {
+                if (databaseAnnotation.item.paths.isEmpty()) {
+                    Timber.i("PDFReaderActionHandler: ink annotation ${databaseAnnotation.key} missing paths")
+                    return false
+                }
+            }
+            org.zotero.android.database.objects.AnnotationType.note,
+            org.zotero.android.database.objects.AnnotationType.highlight,
+            org.zotero.android.database.objects.AnnotationType.image
+            -> {
+                if (databaseAnnotation.item.rects.isEmpty()) {
+                    Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing rects")
+                    return false
+                }
+            }
+        }
+
+        val sortIndex = databaseAnnotation.sortIndex
+        val parts = sortIndex.split("|")
+        if (parts.size != 3 || parts[0].length != 5 || parts[1].length != 6 || parts[2].length != 5) {
+            Timber.i("PDFReaderActionHandler: invalid sort index (${sortIndex}) for ${databaseAnnotation.key}")
+            return false
+        }
+
+        return true
     }
 
 

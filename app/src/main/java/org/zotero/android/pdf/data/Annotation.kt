@@ -17,6 +17,7 @@ interface Annotation {
     val comment: String
     val color: String
     val text: String?
+    val sortIndex: String
     val tags: List<Tag>
 
 

@@ -60,7 +60,8 @@ class WebSocketController @Inject constructor(
     @ForWebSocket
     private val okHttpClient: OkHttpClient,
     private val wsResponseMapper: WsResponseMapper,
-    private val changeWsResponseMapper: ChangeWsResponseMapper
+    private val changeWsResponseMapper: ChangeWsResponseMapper,
+    private val gson: Gson,
 ) {
     enum class ConnectionState {
         disconnected, connecting, subscribing, connected
@@ -393,7 +394,7 @@ class WebSocketController @Inject constructor(
         }
 
         try {
-            val string = Gson().toJson(message)
+            val string = gson.toJson(message)
             Timber.i("WebSocketController: send message - ${string}")
             createResponse(responseEvent, completion = completion)
             webSocket.send(string)

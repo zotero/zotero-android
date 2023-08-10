@@ -1,5 +1,6 @@
 package org.zotero.android.sync.syncactions.data
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 
 sealed class AuthorizeUploadResponse {
@@ -8,11 +9,15 @@ sealed class AuthorizeUploadResponse {
 
     companion object {
 
-        fun fromJson(data: JsonObject, lastModifiedVersion: Int): AuthorizeUploadResponse {
+        fun fromJson(
+            data: JsonObject,
+            lastModifiedVersion: Int,
+            gson: Gson
+        ): AuthorizeUploadResponse {
             if (data["exists"] != null) {
                 return exists(lastModifiedVersion)
             } else {
-                return new(AuthorizeNewUploadResponse.fromJson(data))
+                return new(AuthorizeNewUploadResponse.fromJson(data = data, gson = gson))
             }
 
         }

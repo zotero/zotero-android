@@ -148,20 +148,15 @@ class FieldKeys {
                         )
                     }
 
-                fun fields(annotationType: AnnotationType): List<KeyBaseKeyPair> {
+                fun mandatoryApiFields(annotationType: AnnotationType): List<KeyBaseKeyPair> {
                     when (annotationType) {
                         AnnotationType.highlight -> {
                             return listOf(
                                 KeyBaseKeyPair(key = type, baseKey = null),
                                 KeyBaseKeyPair(key = comment, baseKey = null),
                                 KeyBaseKeyPair(key = color, baseKey = null),
-                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
                                 KeyBaseKeyPair(key = sortIndex, baseKey = null),
                                 KeyBaseKeyPair(key = text, baseKey = null),
-                                KeyBaseKeyPair(
-                                    key = Position.pageIndex,
-                                    baseKey = position
-                                )
                             )
                         }
 
@@ -170,16 +165,7 @@ class FieldKeys {
                                 KeyBaseKeyPair(key = type, baseKey = null),
                                 KeyBaseKeyPair(key = comment, baseKey = null),
                                 KeyBaseKeyPair(key = color, baseKey = null),
-                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
                                 KeyBaseKeyPair(key = sortIndex, baseKey = null),
-                                KeyBaseKeyPair(
-                                    key = Position.pageIndex,
-                                    baseKey = position
-                                ),
-                                KeyBaseKeyPair(
-                                    key = Position.lineWidth,
-                                    baseKey = position
-                                )
                             )
                         }
 
@@ -188,15 +174,47 @@ class FieldKeys {
                                 KeyBaseKeyPair(key = type, baseKey = null),
                                 KeyBaseKeyPair(key = comment, baseKey = null),
                                 KeyBaseKeyPair(key = color, baseKey = null),
-                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
                                 KeyBaseKeyPair(key = sortIndex, baseKey = null),
-                                KeyBaseKeyPair(
-                                    key = Position.pageIndex,
-                                    baseKey = position
-                                )
                             )
                         }
 
+                    }
+                }
+
+                fun allFields(type: AnnotationType): List<KeyBaseKeyPair> {
+                    when(type) {
+                        AnnotationType.highlight -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Companion.type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = text, baseKey = null),
+                                KeyBaseKeyPair(key = Annotation.Position.pageIndex, baseKey = Annotation.position),
+                            )
+                        }
+                        AnnotationType.ink -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Companion.type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = Annotation.Position.pageIndex, baseKey = Annotation.position),
+                                KeyBaseKeyPair(key = Annotation.Position.lineWidth, baseKey = Annotation.position),
+                            )
+                        }
+                        AnnotationType.note, AnnotationType.image -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Companion.type, baseKey = null),
+                                KeyBaseKeyPair(key = comment, baseKey = null),
+                                KeyBaseKeyPair(key = color, baseKey = null),
+                                KeyBaseKeyPair(key = pageLabel, baseKey = null),
+                                KeyBaseKeyPair(key = sortIndex, baseKey = null),
+                                KeyBaseKeyPair(key = Annotation.Position.pageIndex, baseKey = Annotation.position),
+                            )
+                        }
                     }
                 }
 

@@ -6,10 +6,10 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.websocket.ChangeWsResponse
 import javax.inject.Inject
 
-class ChangeWsResponseMapper @Inject constructor() {
+class ChangeWsResponseMapper @Inject constructor(private val gson: Gson) {
 
     fun fromString(textToParse:String): ChangeWsResponse {
-        val json = Gson().fromJson(textToParse, JsonObject::class.java)
+        val json = gson.fromJson(textToParse, JsonObject::class.java)
         val topic = json["topic"].asString
         if (topic.contains("translators") || topic.contains("styles")) {
             return ChangeWsResponse(type = ChangeWsResponse.Kind.translators)

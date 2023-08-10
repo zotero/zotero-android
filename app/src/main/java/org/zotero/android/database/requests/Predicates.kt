@@ -1,6 +1,5 @@
 package org.zotero.android.database.requests
 
-import io.realm.Case
 import io.realm.RealmQuery
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.ObjectSyncState
@@ -337,30 +336,67 @@ fun <T> RealmQuery<T>.itemSearch(components: List<String>): RealmQuery<T> {
 }
 
 private fun <T> itemSearchSubpredicates(query: RealmQuery<T>, text: String) : RealmQuery<T>  {
+    val quotedText = "\"$text\""
+
+    val keyPredicate = "key == $quotedText"
+    val childrenKeyPredicate = "any children.key == $quotedText"
+    val childrenChildrenKeyPredicate = "any children.children.key contains $quotedText"
+    val contentPredicate = "htmlFreeContent contains[c] $quotedText"
+    val childrenContentPredicate = "any children.htmlFreeContent contains[c] $quotedText"
+    val childrenChildrenContentPredicate = "any children.children.htmlFreeContent contains[c] $quotedText"
+    val titlePredicate = "sortTitle contains[c] $quotedText"
+    val childrenTitlePredicate = "any children.sortTitle contains[c] $quotedText"
+    val creatorFullNamePredicate = "any creators.name contains[c] $quotedText"
+    val creatorFirstNamePredicate = "any creators.firstName contains[c] $quotedText"
+    val creatorLastNamePredicate = "any creators.lastName contains[c] $quotedText"
+    val tagPredicate = "any tags.tag.name contains[c] $quotedText"
+    val childrenTagPredicate = "any children.tags.tag.name contains[c] $quotedText"
+    val childrenChildrenTagPredicate = "any children.children.tags.tag.name contains[c] $quotedText"
+    val fieldsPredicate = "any fields.value contains[c] $quotedText"
+    val childrenFieldsPredicate = "any children.fields.value contains[c] $quotedText"
+    val childrenChildrenFieldsPredicate = "any children.children.fields.value contains[c] $quotedText"
+
     var result = query
-        .equalTo("key", text)
+        .rawPredicate(keyPredicate)
         .or()
-        .equalTo("children.key", text)
+        .rawPredicate(titlePredicate)
         .or()
-        .contains("displayTitle", text, Case.INSENSITIVE)
-        .or()
-        .contains("tags.tag.name", text, Case.INSENSITIVE)
-        .or()
-        .contains("children.tags.tag.name", text, Case.INSENSITIVE)
-        .or()
-        .contains("children.children.tags.tag.name", text, Case.INSENSITIVE)
-        .or()
-        .contains("creators.name", text, Case.INSENSITIVE)
-        .or()
-        .contains("creators.firstName", text, Case.INSENSITIVE)
-        .or()
-        .contains("creators.lastName", text, Case.INSENSITIVE)
+        .rawPredicate(contentPredicate)
 
     val int = text.toIntOrNull()
     if (int != null) {
         result = result.or().equalTo("parsedYear", int)
     }
 
+    result = result
+        .or()
+        .rawPredicate(creatorFullNamePredicate)
+        .or()
+        .rawPredicate(creatorFirstNamePredicate)
+        .or()
+        .rawPredicate(creatorLastNamePredicate)
+        .or()
+        .rawPredicate(tagPredicate)
+        .or()
+        .rawPredicate(childrenKeyPredicate)
+        .or()
+        .rawPredicate(childrenTitlePredicate)
+        .or()
+        .rawPredicate(childrenContentPredicate)
+        .or()
+        .rawPredicate(childrenTagPredicate)
+        .or()
+        .rawPredicate(childrenChildrenKeyPredicate)
+        .or()
+        .rawPredicate(childrenChildrenContentPredicate)
+        .or()
+        .rawPredicate(childrenChildrenTagPredicate)
+        .or()
+        .rawPredicate(fieldsPredicate)
+        .or()
+        .rawPredicate(childrenFieldsPredicate)
+        .or()
+        .rawPredicate(childrenChildrenFieldsPredicate)
     return result
 }
 

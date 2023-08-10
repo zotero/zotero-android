@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
@@ -14,6 +15,7 @@ import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
 import org.zotero.android.database.DbWrapper
+import org.zotero.android.files.FormattedDoubleJsonSerializer
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
@@ -153,11 +155,26 @@ object ApiModule {
     }
 
     @Provides
-    @Singleton
-    fun provideGsonInstance(): Gson {
+    //Must not be singleton as it's used for the creation of multiple Gson instances with different configs
+    fun provideGsonBuilder(): GsonBuilder {
         val gsonBuilder = GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
             .setLenient()
+        return gsonBuilder
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(gsonBuilder: GsonBuilder): Gson {
+        return gsonBuilder.create()
+    }
+
+    @Provides
+    @Singleton
+    @ForGsonWithRoundedDecimals
+    fun provideGsonWithRoundedDecimals(gsonBuilder: GsonBuilder): Gson {
+        val type = object : TypeToken<Double>() {}.type
+        gsonBuilder.registerTypeAdapter(type, FormattedDoubleJsonSerializer())
         return gsonBuilder.create()
     }
 

@@ -1,5 +1,6 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
@@ -22,6 +23,7 @@ class AuthorizeUploadSyncAction(
     val userId: Long,
     val oldMd5: String?,
     val syncApi: SyncApi,
+    val gson: Gson
 ) : SyncAction<CustomResult<AuthorizeUploadResponse>> {
     override suspend fun result(): CustomResult<AuthorizeUploadResponse> =
         withContext(Dispatchers.IO) {
@@ -60,8 +62,9 @@ class AuthorizeUploadSyncAction(
                         )
                     }
                     val authorizeUploadResponse = AuthorizeUploadResponse.fromJson(
-                        networkResult.value!!,
-                        networkResult.lastModifiedVersion
+                        data = networkResult.value!!,
+                        lastModifiedVersion = networkResult.lastModifiedVersion,
+                        gson = gson
                     )
                     return@run CustomResult.GeneralSuccess(authorizeUploadResponse)
                 } catch (e: Exception) {

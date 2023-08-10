@@ -44,8 +44,14 @@ data class ItemResponse(
 
     companion object {
         fun parseFields(
-            data: JsonObject, rawType: String, key: String, schemaController: SchemaController,
-            ignoreUnknownFields: Boolean = false) : Triple<Map<KeyBaseKeyPair, String>, List<List<Double>>?, List<List<Double>>?> {
+            data: JsonObject,
+            rawType: String,
+            key: String,
+            schemaController: SchemaController,
+            ignoreUnknownFields: Boolean = false,
+            gson: Gson,
+            gsonWithRoundedDecimals: Gson,
+        ): Triple<Map<KeyBaseKeyPair, String>, List<List<Double>>?, List<List<Double>>?> {
             val excludedKeys = FieldKeys.Item.knownNonFieldKeys
             var fields = mutableMapOf<KeyBaseKeyPair, String>()
             var rects: List<List<Double>>? = null
@@ -78,7 +84,13 @@ data class ItemResponse(
                 when (objectS.key) {
                     FieldKeys.Item.Annotation.position -> {
                         val (_rects, _paths) =
-                            parsePositionFields(objectS.value, key = key, fields = fields)
+                            parsePositionFields(
+                                encoded = objectS.value,
+                                key = key,
+                                fields = fields,
+                                gson = gson,
+                                gsonWithRoundedDecimals = gsonWithRoundedDecimals,
+                            )
                         rects = _rects
                         paths = _paths
                     }
@@ -136,30 +148,8 @@ data class ItemResponse(
                             key = key
                         )
                     }
-                    when (type) {
-                        AnnotationType.note, AnnotationType.image, AnnotationType.highlight -> {
-                            if (!hasRects) {
-                                throw SchemaError.missingField(
-                                    key = key,
-                                    field = FieldKeys.Item.Annotation.Position.rects,
-                                    itemType = itemType
-                                )
-                            }
-                        }
 
-                        AnnotationType.ink -> {
-                            if (!hasPaths) {
-                                throw SchemaError.missingField(
-                                    key = key,
-                                    field = FieldKeys.Item.Annotation.Position.paths,
-                                    itemType = itemType
-                                )
-                            }
-                        }
-
-                    }
-
-                    val mandatoryFields = FieldKeys.Item.Annotation.fields(type)
+                    val mandatoryFields = FieldKeys.Item.Annotation.mandatoryApiFields(type)
                     for (field in mandatoryFields) {
                         val value = fields[field]
                         if (value == null) {
@@ -178,17 +168,6 @@ data class ItemResponse(
                                         value = value,
                                         field = field.key,
                                         key = key
-                                    )
-                                }
-                            }
-
-
-                            FieldKeys.Item.Annotation.sortIndex -> {
-                                val parts = value.split("|")
-                                if (parts.size != 3 || parts[0].length != 5 || parts[1].length != 6 || parts[2].length != 5) {
-                                    throw SchemaError.invalidValue(
-                                        value = value,
-                                        field = field.key, key = key
                                     )
                                 }
                             }
@@ -238,11 +217,17 @@ data class ItemResponse(
             }
         }
 
-        private fun parsePositionFields(encoded: JsonElement?, key: String, fields: MutableMap<KeyBaseKeyPair, String>) : Pair<List<List<Double>>?, List<List<Double>>?>  {
+        private fun parsePositionFields(
+            encoded: JsonElement?,
+            key: String,
+            fields: MutableMap<KeyBaseKeyPair, String>,
+            gson: Gson,
+            gsonWithRoundedDecimals: Gson
+        ): Pair<List<List<Double>>?, List<List<Double>>?> {
             if (encoded == null) {
                 throw SchemaError.invalidValue(value  = encoded?.asString ?: "", field =  FieldKeys.Item.Annotation.position, key =  key)
             }
-            val json = Gson().fromJson(encoded.asString, JsonObject::class.java)
+            val json = gson.fromJson(encoded.asString, JsonObject::class.java)
 
             var rects: List<List<Double>>? = null
             var paths: List<List<Double>>? = null
@@ -272,7 +257,7 @@ data class ItemResponse(
 
 
                     FieldKeys.Item.Annotation.Position.paths -> {
-                        val parsedPaths = objectS.value?.unmarshalList<List<Double>>()
+                        val parsedPaths = objectS.value?.unmarshalList<List<Double>>(gson)
                         if (parsedPaths == null || (parsedPaths.isEmpty() || parsedPaths.firstOrNull { it.size % 2 != 0 } != null)) {
                             throw SchemaError.invalidValue(
                                 value = "${objectS.value}",
@@ -286,7 +271,7 @@ data class ItemResponse(
                     }
 
                 FieldKeys.Item.Annotation.Position.rects -> {
-                    val parsedRects = objectS.value?.unmarshalList<List<Double>>()
+                    val parsedRects = objectS.value?.unmarshalList<List<Double>>(gson)
                     if (parsedRects == null || (parsedRects.isEmpty() || parsedRects.firstOrNull { it.size != 4 } != null)) {
                         throw SchemaError.invalidValue(
                             value = "${objectS.value}",
@@ -302,12 +287,21 @@ data class ItemResponse(
                 val asStr = objectS.value?.asString
                 val asInt = asStr?.toIntOrNull()
                 val asDouble = asStr?.toDoubleOrNull()
+                val asBoolean = asStr?.toBooleanStrictOrNull()
                 val value = if (asInt != null) {
                     asInt.toString()
-                } else if(asDouble != null) {
+                } else if (asDouble != null) {
                     asDouble.rounded(3).toString()
-                } else{
-                    asStr ?: "null"
+                } else if (asBoolean != null) {
+                    asBoolean.toString()
+                } else {
+                    try {
+                        gsonWithRoundedDecimals.toJson(objectS)
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        asStr ?: "null"
+                    }
+
                 }
 
                 fields[KeyBaseKeyPair(key = objectS.key, baseKey = FieldKeys.Item.Annotation.position)] = value

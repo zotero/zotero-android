@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
+import org.zotero.android.androidx.text.strippedHtmlTags
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.FieldKeys
@@ -36,6 +37,8 @@ class EditNoteDbRequest(
 
         if (field != null && field.value != this.note.text) {
             item.set(title = this.note.title)
+            item.htmlFreeContent =
+                if (this.note.text.isEmpty()) null else this.note.text.strippedHtmlTags
             changes.add(RItemChanges.fields)
 
             field.value = this.note.text

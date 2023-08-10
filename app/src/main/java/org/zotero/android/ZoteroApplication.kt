@@ -6,7 +6,9 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
+import com.google.gson.Gson
 import dagger.hilt.android.HiltAndroidApp
+import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.crashreporting.CrashReportingTree
 import org.zotero.android.architecture.logging.DebugLoggingTree
@@ -32,6 +34,13 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     @Inject
     lateinit var debugLoggingTree: DebugLoggingTree
+
+    @Inject
+    lateinit var gson: Gson
+
+    @Inject
+    @ForGsonWithRoundedDecimals
+    lateinit var gsonWithRoundedDecimals: Gson
 
     companion object {
         lateinit var instance: ZoteroApplication
