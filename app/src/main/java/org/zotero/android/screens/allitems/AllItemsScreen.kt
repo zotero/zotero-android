@@ -9,14 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
@@ -28,14 +23,11 @@ import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
-import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun AllItemsScreen(
-    onBack: () -> Unit,
     viewModel: AllItemsViewModel = hiltViewModel(),
     onPickFile: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
@@ -93,7 +85,6 @@ internal fun AllItemsScreen(
     }
 
     CustomScaffold(
-//        modifier = Modifier.fillMaxSize(),
         topBar = {
             AllItemsTopBar(
                 viewState = viewState,
@@ -161,34 +152,4 @@ internal fun AllItemsScreen(
         }
 
     }
-}
-
-@Composable
-private fun AllItemsSearchBar(
-    viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel
-) {
-    val searchValue = viewState.searchTerm
-    var searchBarTextFieldState by remember {
-        mutableStateOf(
-            TextFieldValue(
-                searchValue ?: ""
-            )
-        )
-    }
-    val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
-        searchBarTextFieldState = it
-        viewModel.onSearch(it.text)
-    }
-    val onSearchAction = {
-        searchBarOnInnerValueChanged.invoke(TextFieldValue())
-    }
-
-    SearchBar(
-        hint = stringResource(id = Strings.search_items),
-        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-        onSearchImeClicked = onSearchAction,
-        onInnerValueChanged = searchBarOnInnerValueChanged,
-        textFieldState = searchBarTextFieldState,
-    )
 }

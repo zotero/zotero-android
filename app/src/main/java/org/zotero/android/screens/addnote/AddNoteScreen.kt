@@ -73,7 +73,7 @@ internal fun AddNoteScreen(
             AddNoteTopBar(titleData = viewState.title, onDoneClicked = viewModel::onDoneClicked)
         },
     ) {
-        Box() {
+        Box {
             WebView(
                 viewModel = viewModel,
                 isKeyboardShown = isKeyboardShown

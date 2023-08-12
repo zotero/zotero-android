@@ -11,6 +11,8 @@ class DebugLoggingTree @Inject constructor() : Tree() {
     private var debugFileWriter: DebugFileWriter? = null
     private var debugLogFormatterInterface: DebugLogFormatterInterface? = null
 
+    private var lastTimestamp: Long? = null
+
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
         val fileWriter = debugFileWriter ?: return
 
@@ -19,10 +21,22 @@ class DebugLoggingTree @Inject constructor() : Tree() {
         fileWriter.append(formattedLog)
     }
 
+    private fun formatTimeDiff(diff: Long): String {
+        return String.format("(+%07d)", diff)
+    }
+
     private fun formatLog(priority: Int, tag: String?, message: String, t: Throwable?): String {
-        val timestamp = System.currentTimeMillis()
+        val currentTimeStamp = System.currentTimeMillis()
+        val formattedTimeDiff = if (this.lastTimestamp == null) {
+            formatTimeDiff(0)
+        } else {
+            val newDiff = currentTimeStamp - this.lastTimestamp!!
+            formatTimeDiff(newDiff)
+        }
+        this.lastTimestamp = currentTimeStamp
+
         val level = logLevelString(priority)
-        val formattedMessage = "$timestamp $level ${
+        val formattedMessage = "$formattedTimeDiff: $level ${
             if (tag != null) {
                 "[$tag] "
             } else {

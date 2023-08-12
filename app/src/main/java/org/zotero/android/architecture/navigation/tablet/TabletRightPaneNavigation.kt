@@ -41,16 +41,10 @@ internal fun TabletRightPaneNavigation(
         navController = navController,
         startDestination = CommonScreenDestinations.ALL_ITEMS,
         modifier = Modifier
-//            .fillMaxSize()
             .navigationBarsPadding(), // do not draw behind nav bar
-//        enterTransition = { EnterTransition.None},
-//        popEnterTransition = { EnterTransition.None},
-//        popExitTransition = { ExitTransition.None},
-//        exitTransition = { ExitTransition.None},
     ) {
         loadingScreen()
         allItemsScreen(
-            onBack = navigation::onBack,
             onPickFile = { onPickFile(CallPoint.AllItems) },
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,

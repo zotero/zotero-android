@@ -102,7 +102,6 @@ internal fun DashboardRootPhoneNavigation(
 
                 loadingScreen()
                 allItemsScreen(
-                    onBack = navigation::onBack,
                     onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.AllItems) },
                     onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,

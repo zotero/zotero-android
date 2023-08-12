@@ -213,7 +213,7 @@ class DebugLogging @Inject constructor(
 
     private fun data(logs: List<File>): String {
         val timestamp = System.currentTimeMillis()
-        var allLogs = DeviceInfoProvider.debugString + "\nTimestamp: $timestamp" + "\n\n"
+        var allLogs = "\n\n" + DeviceInfoProvider.debugString + "\nTimestamp: $timestamp" + "\n\n\n"
         try {
             for (url in logs) {
                 val string = FileUtils.readFileToString(url, "UTF-8")

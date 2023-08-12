@@ -30,7 +30,7 @@ class DebugFileWriter constructor(
 
     fun append(stringToAppend: String) {
         initIfNecessary()
-        printWriter?.appendLine(stringToAppend)
+        printWriter?.appendLine(stringToAppend + "\n")
     }
 
     fun flushAndClose() {

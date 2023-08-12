@@ -16,7 +16,6 @@ import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import java.io.File
 
 fun NavGraphBuilder.allItemsScreen(
-    onBack: () -> Unit,
     navigateToCollectionsScreen: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
@@ -35,7 +34,6 @@ fun NavGraphBuilder.allItemsScreen(
         enterTransition = { EnterTransition.None },
         popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) }) {
         AllItemsScreen(
-            onBack = onBack,
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,

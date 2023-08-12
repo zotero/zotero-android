@@ -157,9 +157,10 @@ private fun ItemRowCentralPart(
             ) {
                 Text(
                     text = if (model.title.isEmpty()) " " else model.title,
-                    fontSize = layoutType.calculateItemsRowTextSize(),
+                    fontSize = layoutType.calculateAllItemsRowTextSize(),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = CustomTheme.colors.allItemsRowTitleColor,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row {
@@ -171,7 +172,7 @@ private fun ItemRowCentralPart(
                     }
                     Text(
                         text = subtitleText,
-                        fontSize = layoutType.calculateItemsRowTextSize(),
+                        fontSize = layoutType.calculateAllItemsRowTextSize(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = CustomPalette.LightCharcoal,
