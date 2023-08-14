@@ -86,6 +86,7 @@ class SyncUseCase @Inject constructor(
     private val attachmentDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val settingsResponseMapper: SettingsResponseMapper,
+    private val progressHandler: SyncProgressHandler,
 ) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -849,6 +850,7 @@ class SyncUseCase @Inject constructor(
         type = SyncKind.normal
         lastReturnedVersion = null
         accessPermissions = null
+        nonFatalErrors = mutableListOf()
         //TODO batch processor reset
         libraryType = Libraries.all
         didEnqueueWriteActionsToZoteroBackend = false
@@ -1311,7 +1313,7 @@ class SyncUseCase @Inject constructor(
         }
 
         // Fatal error not retried, report and confirm finished sync.
-        //TODO report progress abort
+        this.progressHandler.reportAbort(fatalError)
         this.observable.emitAsync(null)
     }
 
@@ -1343,12 +1345,12 @@ class SyncUseCase @Inject constructor(
 
         if (q == null || this.retryAttempt >= this.maxRetryCount ) {
             //TODO report finish progress
+            this.progressHandler.reportFinish(errors)
             this.observable.emitAsync(null)
             return
         }
         val sync = q.first
-
-        //TODO report finish progress
+        this.progressHandler.reportFinish(q.second)
         this.observable.emitAsync(sync)
     }
 

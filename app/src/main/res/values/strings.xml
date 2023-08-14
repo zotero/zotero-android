@@ -161,6 +161,15 @@
         <item quantity="other">%d tags selected</item>
     </plurals>
 
+    <plurals name="sync_toolbar_finished_sync_multiple_errors">
+        <item quantity="zero">No issues</item>
+        <item quantity="one">Finished sync (1 issue)</item>
+        <item quantity="other">Finished sync (%d issues)</item>
+    </plurals>
+    <string name="finished_sync">Finished sync</string>
+    <string name="sync_error_upgrade_required">Some data in My Library could not be downloaded. It may have been saved with a newer version of Zotero. Other data will continue to sync.</string>
+    <string name="sync_error_sync_failed">Sync failed (%s)</string>
+
     <string name="errors_logging_title">Debugging Error</string>
     <string name="errors_logging_start">Unable to start debug logging</string>
     <string name="errors_logging_upload">Could not upload logs. Please try again.</string>
@@ -181,4 +190,5 @@
     <string name="settings_debug_view_output">View Output</string>
     <string name="settings_debug_clear_output">Clear Output</string>
     <string name="settings_debug_lines_logged">%d lines logged</string>
+
 </resources>
