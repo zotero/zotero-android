@@ -125,6 +125,7 @@ class MarkItemAsSyncedAndUpdateDbRequest (
                 item = item,
                 libraryId = this.libraryId,
                 response = response,
+                denyIncorrectCreator = false,
                 schemaController = this.schemaController,
                 dateParser = this.dateParser,
                 database = database
@@ -171,8 +172,13 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         }
 
         if (!localChanges.contains(RItemChanges.creators)) {
-            StoreItemDbRequest.syncCreators(creators = response.creators, item = item,
-                schemaController = this.schemaController, database = database)
+            StoreItemDbRequest.syncCreators(
+                creators = response.creators,
+                item = item,
+                denyIncorrectCreator = false,
+                schemaController = this.schemaController,
+                database = database
+            )
         }
 
         if (!localChanges.contains(RItemChanges.relations)) {

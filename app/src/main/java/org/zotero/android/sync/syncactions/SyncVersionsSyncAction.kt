@@ -1,19 +1,16 @@
 package org.zotero.android.sync.syncactions
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.MarkOtherObjectsAsChangedByUser
 import org.zotero.android.database.requests.SyncVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import java.io.IOException
 
 class SyncVersionsSyncAction(
@@ -25,12 +22,9 @@ class SyncVersionsSyncAction(
     val userId: Long,
     val syncDelayIntervals: List<Double>,
     val checkRemote: Boolean,
-    val dbWrapper: DbWrapper,
-    val syncApi: SyncApi,
-    val dispatcher:CoroutineDispatcher
-) : SyncAction<Pair<Int, List<String>>> {
+) : SyncAction() {
 
-    override suspend fun result(): Pair<Int, List<String>> {
+    suspend fun result(): Pair<Int, List<String>> {
         return withContext(dispatcher) {
             when (this@SyncVersionsSyncAction.objectS) {
                 SyncObject.collection ->

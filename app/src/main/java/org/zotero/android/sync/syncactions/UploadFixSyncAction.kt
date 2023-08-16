@@ -6,30 +6,23 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
-import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.database.requests.ReadItemDbRequest
-import org.zotero.android.files.FileStore
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 
 class UploadFixSyncAction(
     val key: String,
     val libraryId: LibraryIdentifier,
     val userId: Long,
-    val attachmentDownloader: AttachmentDownloader,
-    val fileStorage: FileStore,
-    val dbWrapper: DbWrapper,
     private val coroutineScope: CoroutineScope,
-    private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-) : SyncAction<Unit> {
+) : SyncAction() {
 
     sealed class Error : Exception() {
         object attachmentMissingRemotely : Error()
@@ -44,7 +37,7 @@ class UploadFixSyncAction(
     private fun isOperationNotActive() =
         !this.coroutineScope.isActive
 
-    override suspend fun result() {
+    suspend fun result() {
         Timber.i("UploadFixSyncAction: fix upload for ${this.key}; ${this.libraryId}")
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
@@ -133,7 +126,7 @@ class UploadFixSyncAction(
             val attachment = AttachmentCreator.attachment(
                 item,
                 options = AttachmentCreator.Options.light,
-                fileStorage = this.fileStorage,
+                fileStorage = this.fileStore,
                 urlDetector = null,
                 isForceRemote = false
             )

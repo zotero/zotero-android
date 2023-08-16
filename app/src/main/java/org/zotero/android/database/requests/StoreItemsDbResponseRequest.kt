@@ -43,6 +43,7 @@ class StoreItemsDbResponseRequest(
     val schemaController: SchemaController,
     val dateParser: DateParser,
     val preferResponseData: Boolean,
+    val denyIncorrectCreator: Boolean,
 ) : DbResponseRequest<StoreItemsResponse> {
     override val needsWrite: Boolean
         get() = true
@@ -57,7 +58,8 @@ class StoreItemsDbResponseRequest(
                     response = response,
                     schemaController = this.schemaController,
                     dateParser = this.dateParser,
-                    preferRemoteData = this.preferResponseData
+                    preferRemoteData = this.preferResponseData,
+                    denyIncorrectCreator = this.denyIncorrectCreator,
                 ).process(database)
                 if (change != null) {
                     filenameChanges.add(change)
@@ -81,6 +83,7 @@ class StoreItemDbRequest(
     val schemaController: SchemaController,
     val preferRemoteData: Boolean,
     val dateParser: DateParser,
+    val denyIncorrectCreator: Boolean,
 ) : DbResponseRequest<
         Pair<RItem, StoreItemsResponse.FilenameChange?>> {
     override val needsWrite: Boolean
@@ -118,7 +121,8 @@ class StoreItemDbRequest(
         return update(
             item = item,
             libraryId = libraryId,
-            this.response,
+            response = this.response,
+            denyIncorrectCreator = this.denyIncorrectCreator,
             schemaController = this.schemaController,
             dateParser = dateParser,
             database = database
@@ -131,6 +135,7 @@ class StoreItemDbRequest(
             item: RItem,
             libraryId: LibraryIdentifier,
             response: ItemResponse,
+            denyIncorrectCreator: Boolean,
             schemaController: SchemaController,
             dateParser: DateParser,
             database: Realm
@@ -179,6 +184,7 @@ class StoreItemDbRequest(
                 syncCreators(
                     creators = response.creators,
                     item = item,
+                    denyIncorrectCreator = denyIncorrectCreator,
                     schemaController = schemaController,
                     database = database
                 )
@@ -562,15 +568,26 @@ class StoreItemDbRequest(
         fun syncCreators(
             creators: List<CreatorResponse>,
             item: RItem,
+            denyIncorrectCreator: Boolean,
             schemaController: SchemaController,
             database: Realm
         ) {
+            when(item.rawType) {
+                ItemTypes.annotation, ItemTypes.attachment, ItemTypes.note -> {
+                    // These item types don't support creators, so `validCreators` would always be empty.
+                    return
+                }
+                else -> {
+                    //no-op
+                }
+            }
+
             item.creators.deleteAllFromRealm()
 
             val validCreators = schemaController.creators(item.rawType)
             if (validCreators == null || validCreators.isEmpty()) {
                 Timber.w("StoreItemsDbResponseRequest: can't find valid creators for item type ${item.rawType}. Skipping creators.")
-                return
+                throw StoreItemsResponse.Error.noValidCreators(key = item.key, itemType = item.rawType)
             }
 
             for ((idx, objectS) in creators.withIndex()) {
@@ -582,6 +599,11 @@ class StoreItemDbRequest(
 
                 if (validCreators.any { it.creatorType == objectS.creatorType }) {
                     creator.rawType = objectS.creatorType
+                } else if (denyIncorrectCreator) {
+                    throw StoreItemsResponse.Error.invalidCreator(
+                        key = item.key,
+                        creatorType = objectS.creatorType
+                    )
                 } else {
                     val primaryCreator = validCreators.firstOrNull { it.primary }
                     if (primaryCreator != null) {

@@ -1,28 +1,23 @@
 package org.zotero.android.sync.syncactions
 
 import android.webkit.MimeTypeMap
-import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.NoAuthenticationApi
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.CheckItemIsChangedDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
-import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncActionError
-import org.zotero.android.sync.SyncActionWithError
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 import java.io.File
@@ -37,14 +32,9 @@ class UploadAttachmentSyncAction(
     private val userId: Long,
     private val oldMd5: String?,
     var failedBeforeZoteroApiRequest: Boolean = true,
-    private val noAuthenticationApi: NoAuthenticationApi,
-    private val syncApi: SyncApi,
-    private val dbWrapper: DbWrapper,
-    private val fileStore: FileStore,
-    private val gson: Gson
-): SyncActionWithError<Unit> {
+): SyncAction() {
 
-    override suspend fun result(): CustomResult<Unit> {
+    suspend fun result(): CustomResult<Unit> {
         try {
             when (this.libraryId) {
                 is LibraryIdentifier.custom ->
@@ -76,9 +66,16 @@ class UploadAttachmentSyncAction(
         checkDatabase()
         val filesize = validateFile()
         this.failedBeforeZoteroApiRequest = false
-        val authorizeUploadSyncActionNetworkResult = AuthorizeUploadSyncAction(key = this.key, filename = this.filename,
-            filesize = filesize, md5 = this.md5, mtime = this.mtime, libraryId = this.libraryId,
-            userId = this.userId, oldMd5 = this.oldMd5, syncApi = this.syncApi, gson = gson).result()
+        val authorizeUploadSyncActionNetworkResult = AuthorizeUploadSyncAction(
+            key = this.key,
+            filename = this.filename,
+            filesize = filesize,
+            md5 = this.md5,
+            mtime = this.mtime,
+            libraryId = this.libraryId,
+            userId = this.userId,
+            oldMd5 = this.oldMd5,
+        ).result()
 
         if (authorizeUploadSyncActionNetworkResult !is CustomResult.GeneralSuccess) {
             processError(authorizeUploadSyncActionNetworkResult as CustomResult.GeneralError)

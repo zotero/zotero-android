@@ -1,11 +1,9 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
@@ -14,8 +12,8 @@ import org.zotero.android.database.requests.DeleteObjectsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 
 class SubmitDeletionSyncAction(
@@ -25,10 +23,8 @@ class SubmitDeletionSyncAction(
     val libraryId: LibraryIdentifier,
     val userId: Long,
     val webDavEnabled: Boolean,
-    val dbWrapper: DbWrapper,
-    val syncApi: SyncApi,
-) : SyncAction<CustomResult<Pair<Int, Boolean>>> {
-    override suspend fun result(): CustomResult<Pair<Int, Boolean>> {
+) : SyncAction() {
+    suspend fun result(): CustomResult<Pair<Int, Boolean>> {
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + this.objectS.apiPath
         val networkResult = safeApiCall {
@@ -59,7 +55,6 @@ class SubmitDeletionSyncAction(
         val lastModifiedVersion = networkResult.lastModifiedVersion
         val deleteResult = deleteFromDb(version = lastModifiedVersion)
         return CustomResult.GeneralSuccess(lastModifiedVersion to deleteResult)
-
     }
 
     private fun deleteFromDb(version: Int): Boolean {

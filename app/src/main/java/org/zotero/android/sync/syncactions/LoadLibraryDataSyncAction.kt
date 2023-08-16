@@ -5,7 +5,8 @@ import org.zotero.android.database.RealmDbStorage
 import org.zotero.android.database.requests.ReadLibrariesDataDbRequest
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LibraryData
-import org.zotero.android.sync.SyncAction
+import org.zotero.android.sync.syncactions.architecture.SyncAction
+
 
 class LoadLibraryDataSyncAction(
     val type: Libraries,
@@ -14,9 +15,9 @@ class LoadLibraryDataSyncAction(
     val webDavEnabled: Boolean,
     val dbStorage: RealmDbStorage,
     val defaults: Defaults
-) : SyncAction<List<LibraryData>> {
+) : SyncAction() {
 
-    override suspend fun result(): List<LibraryData> {
+    fun result(): List<LibraryData> {
         val request =
             when (this.type) {
                 Libraries.all -> {

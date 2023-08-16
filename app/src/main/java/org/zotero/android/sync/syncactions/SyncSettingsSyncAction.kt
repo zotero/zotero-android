@@ -1,26 +1,21 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
-import org.zotero.android.api.mappers.SettingsResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.StoreSettingsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
+
 import org.zotero.android.sync.SyncError
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 class SyncSettingsSyncAction(
     private val currentVersion: Int?,
     private val sinceVersion: Int,
     private val libraryId: LibraryIdentifier,
     private val userId: Long,
-    private val syncApi: SyncApi,
-    private val settingsResponseMapper: SettingsResponseMapper,
-    private val dbWrapper: DbWrapper,
-) : SyncAction<CustomResult<Pair<Boolean, Int>>> {
-    override suspend fun result(): CustomResult<Pair<Boolean, Int>> {
+) : SyncAction() {
+    suspend fun result(): CustomResult<Pair<Boolean, Int>> {
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/settings"
 

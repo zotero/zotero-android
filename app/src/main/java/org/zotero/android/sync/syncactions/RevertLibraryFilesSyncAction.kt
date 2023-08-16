@@ -1,44 +1,33 @@
 package org.zotero.android.sync.syncactions
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
-import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.DeleteObjectsDbRequest
 import org.zotero.android.database.requests.ReadAllAttachmentUploadsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
-import org.zotero.android.files.FileStore
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
-import org.zotero.android.sync.SyncAction
+
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileReader
 
 class RevertLibraryFilesSyncAction(
     private val libraryId: LibraryIdentifier,
-    private val dbStorage: DbWrapper,
-    private val fileStorage: FileStore,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
-    private val gson: Gson,
-    private val itemResponseMapper: ItemResponseMapper,
-) : SyncAction<Unit> {
+) : SyncAction() {
 
-    override suspend fun result() {
+    fun result() {
         Timber.i("RevertLibraryFilesSyncAction: revert files to upload")
         val toUpload =
-            dbStorage.realmDbStorage.perform(request = ReadAllAttachmentUploadsDbRequest(libraryId = this.libraryId))
+            this.dbWrapper.realmDbStorage.perform(request = ReadAllAttachmentUploadsDbRequest(libraryId = this.libraryId))
         val cachedResponses = mutableListOf<ItemResponse>()
         val failedKeys = mutableListOf<String>()
         for (item in toUpload) {
             try {
-                val file = fileStorage.jsonCacheFile(
+                val file = this.fileStore.jsonCacheFile(
                     SyncObject.item,
                     libraryId = this.libraryId,
                     key = item.key
@@ -60,11 +49,11 @@ class RevertLibraryFilesSyncAction(
         Timber.i("RevertLibraryFilesSyncAction: loaded ${cachedResponses.size} cached items, missing ${failedKeys.size}")
         Timber.i("RevertLibraryFilesSyncAction: delete files which were not uploaded yet")
         for (key in failedKeys) {
-            val file = fileStorage.attachmentDirectory(this.libraryId, key = key)
+            val file = this.fileStore.attachmentDirectory(this.libraryId, key = key)
             file.delete()
         }
         var changedFilenames = mutableListOf<StoreItemsResponse.FilenameChange>()
-        dbStorage.realmDbStorage.perform { coordinator ->
+        this.dbWrapper.realmDbStorage.perform { coordinator ->
             Timber.e("RevertLibraryFilesSyncAction: delete failed keys")
             coordinator.perform(
                 request = DeleteObjectsDbRequest(
@@ -78,7 +67,8 @@ class RevertLibraryFilesSyncAction(
                 responses = cachedResponses,
                 schemaController = this.schemaController,
                 dateParser = this.dateParser,
-                preferResponseData = true
+                preferResponseData = true,
+                denyIncorrectCreator = true,
             )
             changedFilenames =
                 coordinator.perform(request = request).changedFilenames.toMutableList()
@@ -94,7 +84,7 @@ class RevertLibraryFilesSyncAction(
         libraryId: LibraryIdentifier
     ) {
         for (change in changes) {
-            val oldFile = fileStorage.attachmentFile(
+            val oldFile = this.fileStore.attachmentFile(
                 libraryId,
                 key = change.key,
                 filename = change.oldName,
@@ -104,7 +94,7 @@ class RevertLibraryFilesSyncAction(
                 continue
             }
 
-            val newFile = fileStorage.attachmentFile(
+            val newFile = this.fileStore.attachmentFile(
                 libraryId,
                 key = change.key,
                 filename = change.newName,

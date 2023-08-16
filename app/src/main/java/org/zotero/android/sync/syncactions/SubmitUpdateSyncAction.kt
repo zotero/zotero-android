@@ -1,15 +1,8 @@
 package org.zotero.android.sync.syncactions
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
-import org.zotero.android.api.mappers.CollectionResponseMapper
-import org.zotero.android.api.mappers.ItemResponseMapper
-import org.zotero.android.api.mappers.SearchResponseMapper
-import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
@@ -18,7 +11,6 @@ import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
@@ -30,13 +22,10 @@ import org.zotero.android.database.requests.MarkSearchAsSyncedAndUpdateDbRequest
 import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
-import org.zotero.android.files.FileStore
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
-import org.zotero.android.sync.SyncActionWithError
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileWriter
 
@@ -48,22 +37,10 @@ class SubmitUpdateSyncAction(
     val libraryId: LibraryIdentifier,
     val userId: Long,
     val updateLibraryVersion: Boolean,
-    val syncApi: SyncApi,
-    val dbStorage: DbWrapper,
-    val fileStorage: FileStore,
-    val schemaController: SchemaController,
-    val dateParser: DateParser,
-    val updatesResponseMapper: UpdatesResponseMapper,
-    val collectionResponseMapper: CollectionResponseMapper,
-    val itemResponseMapper: ItemResponseMapper,
-    val searchResponseMapper: SearchResponseMapper,
-    val dispatcher: CoroutineDispatcher,
-    val gson: Gson
-) : SyncActionWithError<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+) : SyncAction() {
     private val splitMessage = "Annotation position is too long"
 
-
-    override suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+    suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
         return withContext(dispatcher) {
             try {
                 when (this@SubmitUpdateSyncAction.objectS) {
@@ -126,7 +103,7 @@ class SubmitUpdateSyncAction(
 
         if (!requests.isEmpty()) {
             try {
-                dbStorage.realmDbStorage.perform(requests)
+                dbWrapper.realmDbStorage.perform(requests)
             } catch (e:Exception) {
                 Timber.e(e, "SubmitUpdateSyncAction: can't store local changes")
                 return CustomResult.GeneralSuccess(Pair(newVersion, CustomResult.GeneralError.CodeError(e)))
@@ -246,7 +223,7 @@ class SubmitUpdateSyncAction(
             Timber.w("SubmitUpdateSyncAction: annotations too long: ${splitKeys} in ${libraryId}")
 
             try {
-                dbStorage.realmDbStorage.perform(request = SplitAnnotationsDbRequest(keys = splitKeys, libraryId = libraryId))
+                dbWrapper.realmDbStorage.perform(request = SplitAnnotationsDbRequest(keys = splitKeys, libraryId = libraryId))
                     return SyncActionError.annotationNeededSplitting(messageS = this.splitMessage, keys = splitKeys, libraryId = libraryId)
                 } catch (e:Exception) {
                     Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
@@ -305,7 +282,7 @@ class SubmitUpdateSyncAction(
             val objectS = obj.asJsonObject
             val key = objectS["key"]?.asString ?: continue
             try {
-                val file = fileStorage.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
+                val file = fileStore.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
                 val fileWriter = FileWriter(file)
                 gson.toJson(objectS, fileWriter)
                 fileWriter.flush()

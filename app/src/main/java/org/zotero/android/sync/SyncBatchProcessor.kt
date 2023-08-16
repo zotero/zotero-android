@@ -216,7 +216,8 @@ class SyncBatchProcessor(
                     responses = items,
                     schemaController = this.schemaController,
                     dateParser = this.dateParser,
-                    preferResponseData = true
+                    preferResponseData = true,
+                    denyIncorrectCreator = true,
                 )
                 val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
                 val failedKeys =

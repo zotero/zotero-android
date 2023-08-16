@@ -1,12 +1,12 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
+
 import org.zotero.android.sync.SyncError
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 data class LoadDeletionsSyncActionResult(
     val collections: List<String>,
@@ -21,10 +21,9 @@ class LoadDeletionsSyncAction(
     private val sinceVersion: Int,
     private val libraryId: LibraryIdentifier,
     private val userId: Long,
-    private val syncApi: SyncApi,
-): SyncAction<CustomResult<LoadDeletionsSyncActionResult>> {
+): SyncAction() {
 
-    override suspend fun result(): CustomResult<LoadDeletionsSyncActionResult> {
+    suspend fun result(): CustomResult<LoadDeletionsSyncActionResult> {
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/deleted"
 

@@ -1,11 +1,10 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.DeleteGroupDbRequest
-import org.zotero.android.sync.SyncAction
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 
-class DeleteGroupSyncAction(val groupId: Int, val dbWrapper: DbWrapper): SyncAction<Unit> {
-    override suspend fun result() {
+class DeleteGroupSyncAction(val groupId: Int): SyncAction() {
+    fun result() {
         val request = DeleteGroupDbRequest(groupId = this.groupId)
         dbWrapper.realmDbStorage.perform(request = request)
     }

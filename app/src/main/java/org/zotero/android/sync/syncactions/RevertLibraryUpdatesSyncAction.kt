@@ -4,11 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
 import io.realm.RealmObject
-import org.zotero.android.api.mappers.CollectionResponseMapper
-import org.zotero.android.api.mappers.ItemResponseMapper
-import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
@@ -19,27 +15,18 @@ import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
 import org.zotero.android.database.requests.StoreSearchesDbRequest
 import org.zotero.android.files.FileStore
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
-import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncObject
+import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileReader
 import kotlin.reflect.KClass
 
 class RevertLibraryUpdatesSyncAction(
     private val libraryId: LibraryIdentifier,
-    private val dbWrapper: DbWrapper,
-    private val fileStorage: FileStore,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
-    private val gson: Gson,
-    private val collectionResponseMapper: CollectionResponseMapper,
-    private val searchResponseMapper: SearchResponseMapper,
-    private val itemResponseMapper: ItemResponseMapper
-) : SyncAction<CustomResult<Map<SyncObject, List<String>>>> {
+
+) : SyncAction() {
 
     companion object {
         fun <T : RealmObject, K> loadCachedJsonForObject(
@@ -80,7 +67,7 @@ class RevertLibraryUpdatesSyncAction(
 
     }
 
-    override suspend fun result(): CustomResult<Map<SyncObject, List<String>>> {
+    suspend fun result(): CustomResult<Map<SyncObject, List<String>>> {
         try {
             var changes = mutableListOf<StoreItemsResponse.FilenameChange>()
             var failedCollections = mutableListOf<String>()
@@ -94,20 +81,20 @@ class RevertLibraryUpdatesSyncAction(
                     this.libraryId,
                     coordinator = coordinator,
                     gson = gson,
-                    fileStorage = fileStorage,
+                    fileStorage = fileStore,
                     createResponse = { collectionResponseMapper.fromJson(it) })
                 val searches = loadCachedJsonForObject(clazz = RSearch::class,
                     objectType = SyncObject.search,
                     this.libraryId,
                     coordinator = coordinator,
-                    fileStorage = fileStorage,
+                    fileStorage = fileStore,
                     gson = gson,
                     createResponse = { searchResponseMapper.fromJson(it) })
                 val items = loadCachedJsonForObject(clazz = RItem::class,
                     objectType = SyncObject.item,
                     this.libraryId,
                     coordinator = coordinator,
-                    fileStorage = fileStorage,
+                    fileStorage = fileStore,
                     gson = gson,
                     createResponse = { itemResponseMapper.fromJson(it, schemaController) })
 
@@ -124,7 +111,8 @@ class RevertLibraryUpdatesSyncAction(
                     responses = items.first,
                     schemaController = this.schemaController,
                     dateParser = this.dateParser,
-                    preferResponseData = true
+                    preferResponseData = true,
+                    denyIncorrectCreator = true
                 )
                 changes =
                     coordinator.perform(request = storeItemsRequest).changedFilenames.toMutableList()
@@ -154,7 +142,7 @@ class RevertLibraryUpdatesSyncAction(
         libraryId: LibraryIdentifier
     ) {
         for (change in changes) {
-            val oldFile = fileStorage.attachmentFile(
+            val oldFile = fileStore.attachmentFile(
                 libraryId,
                 key = change.key,
                 filename = change.oldName,
@@ -163,7 +151,7 @@ class RevertLibraryUpdatesSyncAction(
                 return
             }
 
-            val newFile = fileStorage.attachmentFile(
+            val newFile = fileStore.attachmentFile(
                 libraryId,
                 key = change.key,
                 filename = change.newName,

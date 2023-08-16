@@ -1,15 +1,14 @@
 package org.zotero.android.sync.syncactions
 
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
 import org.zotero.android.sync.SyncActionError
+import org.zotero.android.sync.syncactions.architecture.SyncAction
+
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 
@@ -22,10 +21,8 @@ class AuthorizeUploadSyncAction(
     val libraryId: LibraryIdentifier,
     val userId: Long,
     val oldMd5: String?,
-    val syncApi: SyncApi,
-    val gson: Gson
-) : SyncAction<CustomResult<AuthorizeUploadResponse>> {
-    override suspend fun result(): CustomResult<AuthorizeUploadResponse> =
+) : SyncAction() {
+    suspend fun result(): CustomResult<AuthorizeUploadResponse> =
         withContext(Dispatchers.IO) {
             this@AuthorizeUploadSyncAction.run {
                 val networkResult = safeApiCall {

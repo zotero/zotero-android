@@ -16,5 +16,7 @@ class StoreItemsResponse(
     sealed class Error : Throwable() {
         data class itemDeleted(val itemResponse: ItemResponse) : Error()
         data class itemChanged(val itemResponse: ItemResponse) : Error()
+        data class noValidCreators(val key: String, val itemType: String): Error()
+        data class invalidCreator(val key: String, val creatorType: String): Error()
     }
 }

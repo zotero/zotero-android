@@ -1,20 +1,15 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.ReadAttachmentUploadsDbRequest
-import org.zotero.android.backgrounduploader.BackgroundUploaderContext
-import org.zotero.android.files.FileStore
 import org.zotero.android.sync.AttachmentUpload
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SyncAction
+import org.zotero.android.sync.syncactions.architecture.SyncAction
+
 
 class LoadUploadDataSyncAction constructor(
-    val backgroundUploaderContext: BackgroundUploaderContext,
-    val dbWrapper: DbWrapper,
-    val fileStore: FileStore,
     val libraryId: LibraryIdentifier
-): SyncAction<List<AttachmentUpload>> {
-    override suspend fun result(): List<AttachmentUpload> {
+) : SyncAction() {
+    fun result(): List<AttachmentUpload> {
         val uploads = loadUploads(libraryId = this.libraryId)
         val backgroundUploads = this.backgroundUploaderContext.uploads.map { it.md5 }
         return uploads.filter { !backgroundUploads.contains(it.md5) }
