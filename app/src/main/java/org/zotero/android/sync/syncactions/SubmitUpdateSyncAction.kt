@@ -8,6 +8,7 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
@@ -19,6 +20,7 @@ import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.database.requests.MarkItemAsSyncedAndUpdateDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsSyncedDbRequest
 import org.zotero.android.database.requests.MarkSearchAsSyncedAndUpdateDbRequest
+import org.zotero.android.database.requests.MarkSettingsAsSyncedDbRequest
 import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
@@ -45,14 +47,84 @@ class SubmitUpdateSyncAction(
             try {
                 when (this@SubmitUpdateSyncAction.objectS) {
                     SyncObject.settings ->
-                        TODO()
+                        return@withContext submitSettings()
+
                     SyncObject.collection, SyncObject.item, SyncObject.search, SyncObject.trash ->
                         return@withContext submitOther()
                 }
-            } catch (e:Exception) {
+            } catch (e: Exception) {
                 Timber.e(e, "SubmitUpdateSyncAction: can't parse updates response")
                 return@withContext CustomResult.GeneralError.CodeError(e)
             }
+        }
+    }
+
+    private suspend fun submitSettings(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+        val objectType = this.objectS
+        val url =
+            BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + objectType.apiPath
+
+        val networkResult = safeApiCall {
+            val jsonBody: String
+            when (objectType) {
+                SyncObject.settings ->
+                    jsonBody = gson.toJson(this.parameters.first())
+
+                else ->
+                    jsonBody = gson.toJson(this.parameters)
+            }
+
+            val headers = mutableMapOf<String, String>()
+            this.sinceVersion?.let {
+                headers.put("If-Unmodified-Since-Version", it.toString())
+            }
+            syncApi.updates(url = url, jsonBody = jsonBody, headers = headers)
+        }
+
+        if (networkResult !is CustomResult.GeneralSuccess) {
+            return networkResult as CustomResult.GeneralError
+        }
+        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
+        val newVersion = networkResult.lastModifiedVersion
+        val settings = mutableListOf<Pair<String, LibraryIdentifier>>()
+        for (params in this.parameters) {
+            val key = params.keys.firstOrNull()
+            if (key != null) {
+                try {
+                    val setting = PageIndexResponse.parse(key = key)
+                    settings.add(setting)
+
+                } catch (e: Exception) {
+                    Timber.e(e)
+                }
+            }
+        }
+        try {
+            val requests: MutableList<DbRequest> = mutableListOf(
+                MarkSettingsAsSyncedDbRequest(
+                    settings = settings,
+                    changeUuids = this.changeUuids,
+                    version = newVersion
+                )
+            )
+            if (this.updateLibraryVersion) {
+                requests.add(
+                    UpdateVersionsDbRequest(
+                        version = newVersion,
+                        libraryId = this.libraryId,
+                        type = UpdateVersionType.objectS(this.objectS)
+                    )
+                )
+            }
+            dbWrapper.realmDbStorage.perform(requests)
+            return CustomResult.GeneralSuccess(newVersion to null)
+        } catch (error: Exception) {
+            Timber.e(error)
+            return CustomResult.GeneralSuccess(
+                newVersion to CustomResult.GeneralError.CodeError(
+                    error
+                )
+            )
         }
     }
 
@@ -66,6 +138,7 @@ class SubmitUpdateSyncAction(
             when (objectType) {
                 SyncObject.settings ->
                     jsonBody = gson.toJson(this.parameters.first())
+
                 else ->
                     jsonBody = gson.toJson(this.parameters)
             }
@@ -83,18 +156,29 @@ class SubmitUpdateSyncAction(
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val newVersion = networkResult.lastModifiedVersion
         val json = networkResult.value!!
-        val keys = this.parameters.map{ it["key"]?.toString() }
+        val keys = this.parameters.map { it["key"]?.toString() }
         val updatesResponse = updatesResponseMapper.fromJson(dictionary = json, keys = keys)
         return process(response = updatesResponse, newVersion = newVersion)
     }
 
-    private fun process(response: UpdatesResponse, newVersion: Int): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
-        val requests = createRequests(response = response, version = newVersion, updateLibraryVersion = this.updateLibraryVersion)
+    private fun process(
+        response: UpdatesResponse,
+        newVersion: Int
+    ): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
+        val requests = createRequests(
+            response = response,
+            version = newVersion,
+            updateLibraryVersion = this.updateLibraryVersion
+        )
 
         if (!response.successfulJsonObjects.isEmpty()) {
             when (this.objectS) {
                 SyncObject.item, SyncObject.trash ->
-                    storeIndividualItemJsonObjects(response.successfulJsonObjects.values, libraryId = this.libraryId)
+                    storeIndividualItemJsonObjects(
+                        response.successfulJsonObjects.values,
+                        libraryId = this.libraryId
+                    )
+
                 SyncObject.collection, SyncObject.search, SyncObject.settings -> {
                     //no-op
                 }
@@ -104,32 +188,71 @@ class SubmitUpdateSyncAction(
         if (!requests.isEmpty()) {
             try {
                 dbWrapper.realmDbStorage.perform(requests)
-            } catch (e:Exception) {
+            } catch (e: Exception) {
                 Timber.e(e, "SubmitUpdateSyncAction: can't store local changes")
-                return CustomResult.GeneralSuccess(Pair(newVersion, CustomResult.GeneralError.CodeError(e)))
+                return CustomResult.GeneralSuccess(
+                    Pair(
+                        newVersion,
+                        CustomResult.GeneralError.CodeError(e)
+                    )
+                )
             }
         }
 
         val error = process(failedResponses = response.failed, this.libraryId)
-        return CustomResult.GeneralSuccess(Pair(newVersion, error?.let { CustomResult.GeneralError.CodeError(error) }))
+        return CustomResult.GeneralSuccess(
+            Pair(
+                newVersion,
+                error?.let { CustomResult.GeneralError.CodeError(error) })
+        )
     }
 
-    private fun createRequests(response: UpdatesResponse, version: Int, updateLibraryVersion: Boolean): List<DbRequest> {
-        val (unchangedKeys, parsingFailedKeys, changedCollections, changedItems, changedSearches) = process(response = response)
+    private fun createRequests(
+        response: UpdatesResponse,
+        version: Int,
+        updateLibraryVersion: Boolean
+    ): List<DbRequest> {
+        val (unchangedKeys, parsingFailedKeys, changedCollections, changedItems, changedSearches) = process(
+            response = response
+        )
 
         var requests = mutableListOf<DbRequest>()
 
         if (!unchangedKeys.isEmpty()) {
             when (this.objectS) {
                 SyncObject.collection ->
-                    requests.add(MarkObjectsAsSyncedDbRequest(libraryId = this.libraryId, keys = unchangedKeys,
-                        changeUuids = this.changeUuids, version = version, clazz = RCollection::class.java))
+                    requests.add(
+                        MarkObjectsAsSyncedDbRequest(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            changeUuids = this.changeUuids,
+                            version = version,
+                            clazz = RCollection::class.java
+                        )
+                    )
+
                 SyncObject.item, SyncObject.trash ->
-                    requests.add(MarkObjectsAsSyncedDbRequest(libraryId = this.libraryId, keys = unchangedKeys,
-                        changeUuids = this.changeUuids, version = version, clazz = RItem::class.java))
+                    requests.add(
+                        MarkObjectsAsSyncedDbRequest(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            changeUuids = this.changeUuids,
+                            version = version,
+                            clazz = RItem::class.java
+                        )
+                    )
+
                 SyncObject.search ->
-                    requests.add(MarkObjectsAsSyncedDbRequest(libraryId = this.libraryId, keys = unchangedKeys,
-                        changeUuids = this.changeUuids, version = version, clazz = RSearch::class.java))
+                    requests.add(
+                        MarkObjectsAsSyncedDbRequest(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            changeUuids = this.changeUuids,
+                            version = version,
+                            clazz = RSearch::class.java
+                        )
+                    )
+
                 SyncObject.settings -> {
                     //no-op
                 }
@@ -139,11 +262,32 @@ class SubmitUpdateSyncAction(
         if (!parsingFailedKeys.isEmpty()) {
             when (this.objectS) {
                 SyncObject.collection ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RCollection::class))
+                    requests.add(
+                        MarkForResyncDbAction(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            clazz = RCollection::class
+                        )
+                    )
+
                 SyncObject.item, SyncObject.trash ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RItem::class))
+                    requests.add(
+                        MarkForResyncDbAction(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            clazz = RItem::class
+                        )
+                    )
+
                 SyncObject.search ->
-                    requests.add(MarkForResyncDbAction(libraryId = this.libraryId, keys = unchangedKeys, clazz = RSearch::class))
+                    requests.add(
+                        MarkForResyncDbAction(
+                            libraryId = this.libraryId,
+                            keys = unchangedKeys,
+                            clazz = RSearch::class
+                        )
+                    )
+
                 SyncObject.settings -> {
                     //no-op
                 }
@@ -153,8 +297,12 @@ class SubmitUpdateSyncAction(
         if (!changedCollections.isEmpty()) {
             for (response in changedCollections) {
                 val changeUuids = this.changeUuids[response.key] ?: emptyList()
-                requests.add(MarkCollectionAsSyncedAndUpdateDbRequest(libraryId = this.libraryId,
-                    response = response, changeUuids = changeUuids))
+                requests.add(
+                    MarkCollectionAsSyncedAndUpdateDbRequest(
+                        libraryId = this.libraryId,
+                        response = response, changeUuids = changeUuids
+                    )
+                )
             }
         }
 
@@ -187,15 +335,22 @@ class SubmitUpdateSyncAction(
         }
 
         if (updateLibraryVersion) {
-            requests.add(UpdateVersionsDbRequest(version = version, libraryId = this.libraryId,
-                type = UpdateVersionType.objectS(this.objectS)))
+            requests.add(
+                UpdateVersionsDbRequest(
+                    version = version, libraryId = this.libraryId,
+                    type = UpdateVersionType.objectS(this.objectS)
+                )
+            )
         }
 
         return requests
     }
 
-    private fun process(failedResponses: List<FailedUpdateResponse>, libraryId: LibraryIdentifier): Exception? {
-        if(failedResponses.isEmpty()) {
+    private fun process(
+        failedResponses: List<FailedUpdateResponse>,
+        libraryId: LibraryIdentifier
+    ): Exception? {
+        if (failedResponses.isEmpty()) {
             return null
         }
 
@@ -204,15 +359,19 @@ class SubmitUpdateSyncAction(
         for (response in failedResponses) {
             when (response.code) {
                 412 -> {
-                    Timber.e("SubmitUpdateSyncAction: failed ${response.key ?: "unknown key"} " +
-                            "- ${response.message}. Library ${libraryId}")
+                    Timber.e(
+                        "SubmitUpdateSyncAction: failed ${response.key ?: "unknown key"} " +
+                                "- ${response.message}. Library ${libraryId}"
+                    )
                     return SyncActionError.objectPreconditionError
                 }
+
                 400 -> {
                     if (response.message.contains(this.splitMessage) && response.key != null) {
                         splitKeys.add(response.key)
                     }
                 }
+
                 else -> {
                     continue
                 }
@@ -223,16 +382,25 @@ class SubmitUpdateSyncAction(
             Timber.w("SubmitUpdateSyncAction: annotations too long: ${splitKeys} in ${libraryId}")
 
             try {
-                dbWrapper.realmDbStorage.perform(request = SplitAnnotationsDbRequest(keys = splitKeys, libraryId = libraryId))
-                    return SyncActionError.annotationNeededSplitting(messageS = this.splitMessage, keys = splitKeys, libraryId = libraryId)
-                } catch (e:Exception) {
-                    Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
-                }
+                dbWrapper.realmDbStorage.perform(
+                    request = SplitAnnotationsDbRequest(
+                        keys = splitKeys,
+                        libraryId = libraryId
+                    )
+                )
+                return SyncActionError.annotationNeededSplitting(
+                    messageS = this.splitMessage,
+                    keys = splitKeys,
+                    libraryId = libraryId
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
             }
+        }
 
         Timber.e("SubmitUpdateSyncAction: failures - ${failedResponses}")
 
-        val errorMessages = failedResponses.map{ it.message }.joinToString(separator = "\n")
+        val errorMessages = failedResponses.map { it.message }.joinToString(separator = "\n")
         return SyncActionError.submitUpdateFailures(errorMessages)
     }
 
@@ -244,7 +412,7 @@ class SubmitUpdateSyncAction(
         var parsingFailedKeys = mutableListOf<String>()
 
 
-        for((idx, json) in response.successfulJsonObjects) {
+        for ((idx, json) in response.successfulJsonObjects) {
             val key = response.successful[idx]
             if (key == null) {
                 continue
@@ -267,28 +435,41 @@ class SubmitUpdateSyncAction(
                         //no-op
                     }
                 }
-            } catch (e:Exception) {
-                Timber.e(e, "SubmitUpdateSyncAction: could not parse json for object ${this.objectS}")
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "SubmitUpdateSyncAction: could not parse json for object ${this.objectS}"
+                )
                 unchangedKeys.add(key)
                 parsingFailedKeys.add(key)
             }
         }
 
-        return SubmitUpdateProcessResponse(unchangedKeys, parsingFailedKeys, changedCollections, changedItems, changedSearches)
+        return SubmitUpdateProcessResponse(
+            unchangedKeys,
+            parsingFailedKeys,
+            changedCollections,
+            changedItems,
+            changedSearches
+        )
     }
 
-    private fun storeIndividualItemJsonObjects(jsonObjects: Collection<JsonObject>, libraryId: LibraryIdentifier) {
+    private fun storeIndividualItemJsonObjects(
+        jsonObjects: Collection<JsonObject>,
+        libraryId: LibraryIdentifier
+    ) {
         for (obj in jsonObjects) {
             val objectS = obj.asJsonObject
             val key = objectS["key"]?.asString ?: continue
             try {
-                val file = fileStore.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
+                val file =
+                    fileStore.jsonCacheFile(SyncObject.item, libraryId = libraryId, key = key)
                 val fileWriter = FileWriter(file)
                 gson.toJson(objectS, fileWriter)
                 fileWriter.flush()
                 fileWriter.close()
                 println("")
-            } catch (e:Throwable) {
+            } catch (e: Throwable) {
                 Timber.e(e, "SubmitUpdateSyncAction: can't encode/write item - $objectS")
             }
         }

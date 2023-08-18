@@ -5,10 +5,10 @@ object ProductFlavors {
         DEV(
             url = "",
         ),
-        STAGING(
+        INTERNAL(
             url = "",
         ),
-        PROD(
+        BETA(
             url = "",
         );
 

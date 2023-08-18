@@ -1,3 +1,4 @@
+import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.NamedDomainObjectContainer
 
 fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
@@ -6,11 +7,11 @@ fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
     productFlavors {
         create(ProductFlavors.Environment.DEV.envName()) {
             dimension = ProductFlavors.Environment.dimension
-            create(ProductFlavors.Environment.STAGING.envName()) {
+            create(ProductFlavors.Environment.INTERNAL.envName()) {
                 dimension = ProductFlavors.Environment.dimension
             }
         }
-        create(ProductFlavors.Environment.PROD.envName()) {
+        create(ProductFlavors.Environment.BETA.envName()) {
             dimension = ProductFlavors.Environment.dimension
         }
     }
@@ -20,16 +21,16 @@ fun <T> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.DEV.envName()).block()
 }
 
-fun <T> NamedDomainObjectContainer<T>.staging(block: T.() -> Unit) {
-    getByName(ProductFlavors.Environment.STAGING.envName()).block()
+fun <T> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
+    getByName(ProductFlavors.Environment.INTERNAL.envName()).block()
 }
 
-fun <T> NamedDomainObjectContainer<T>.prod(block: T.() -> Unit) {
-    getByName(ProductFlavors.Environment.PROD.envName()).block()
+fun <T> NamedDomainObjectContainer<T>.beta(block: T.() -> Unit) {
+    getByName(ProductFlavors.Environment.BETA.envName()).block()
 }
 
-private val ignoreSet = setOf("devRelease", "stagingRelease")
+private val ignoreSet = setOf("devRelease", "internalDebug", "betaDebug")
 
-//fun VariantBuilder.ignoreUnusedVariants() {
-//    this.enabled = !ignoreSet.contains(name)
-//}
+fun VariantBuilder.ignoreUnusedVariants() {
+    this.enable = !ignoreSet.contains(name)
+}

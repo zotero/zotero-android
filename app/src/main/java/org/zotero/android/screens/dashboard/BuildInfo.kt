@@ -15,10 +15,9 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 @Composable
 fun ColumnScope.BuildInfo() {
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    val buildType = if (BuildConfig.BUILD_TYPE == "eBeta") "Beta" else BuildConfig.BUILD_TYPE
     Text(
         modifier = Modifier.align(Alignment.CenterHorizontally),
-        text = "Zotero ${buildType.replaceFirstChar(Char::titlecase)} (${BuildConfig.VERSION_NAME})",
+        text = "Zotero (${BuildConfig.VERSION_NAME})",
         fontSize = layoutType.calculateBuildInfoTextSize(),
     )
     Spacer(modifier = Modifier.height(4.dp))

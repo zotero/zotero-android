@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -11,15 +13,15 @@ plugins {
 }
 
 android {
-    compileSdk = 33
+    compileSdk = BuildConfig.compileSdkVersion
     namespace = "org.zotero.android"
 
     defaultConfig {
-        applicationId = "org.zotero.android"
-        minSdk = 23
-        targetSdk = 33
-        versionCode = 12
-        versionName = "1.14"
+        applicationId = BuildConfig.appId
+        minSdk = BuildConfig.minSdkVersion
+        targetSdk = BuildConfig.targetSdk
+        versionCode = BuildConfig.versionCode
+        versionName = BuildConfig.version.name
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
@@ -45,10 +47,8 @@ android {
     }
     buildTypes {
         getByName("debug") {
-            resValue("string", "app_name", "Zotero Debug")
             isDebuggable = true
             isMinifyEnabled = false
-            applicationIdSuffix = ".debug"
             signingConfigs
                 .findByName("debug")
                 ?.storeFile = rootProject.file("debug.keystore")
@@ -57,17 +57,7 @@ android {
             manifestPlaceholders["enableCrashReporting"] = false
             extra.set("enableCrashlytics", false)
         }
-        create("eBeta") {//prefix 'e' added for ordering in Android Studio Build Variant's menu
-            resValue("string", "app_name", "Zotero Beta")
-            isDebuggable = true
-            isMinifyEnabled = false
-            signingConfig = signingConfigs.getAt("release")
-
-            buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
-            manifestPlaceholders["enableCrashReporting"] = true
-        }
         getByName("release") {
-            resValue("string", "app_name", "Zotero")
             isDebuggable = true
             isMinifyEnabled = false
             signingConfig = signingConfigs.getAt("release")
@@ -76,6 +66,20 @@ android {
             manifestPlaceholders["enableCrashReporting"] = true
         }
     }
+    setDefaultProductFlavors()
+    productFlavors {
+        dev {
+            resValue("string", "app_name", """"Zotero Debug""")
+            applicationIdSuffix = ".debug"
+        }
+        internal {
+            resValue("string", "app_name", """"Zotero Internal""")
+        }
+        beta {
+            resValue("string", "app_name", """"Zotero Beta""")
+        }
+    }
+
 
     compileOptions {
         sourceCompatibility = javaVersion
@@ -91,6 +95,20 @@ android {
         viewBinding = true
         compose = true
         buildConfig = true
+    }
+
+    packagingOptions {
+        resources.pickFirsts.add("META-INF/kotlinx-coroutines-core.kotlin_module")
+    }
+
+    androidComponents {
+        beforeVariants { it.ignoreUnusedVariants() }
+        onVariants {
+            it.outputs.forEach { output ->
+                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
+                output.versionName.set(newVersionName)
+            }
+        }
     }
 }
 
@@ -217,4 +235,25 @@ dependencies {
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
+}
+
+kapt {
+    correctErrorTypes = true
+}
+
+fun gitLastCommitHash(): String {
+    return try {
+        val byteOut = ByteArrayOutputStream()
+        project.exec {
+            commandLine = "git rev-parse --verify --short HEAD".split(" ")
+            standardOutput = byteOut
+        }
+        String(byteOut.toByteArray()).trim().also {
+            if (it == "HEAD")
+                logger.warn("Unable to determine current branch: Project is checked out with detached head!")
+        }
+    } catch (e: Exception) {
+        logger.warn("Unable to determine current branch: ${e.message}")
+        "Unknown Branch"
+    }
 }

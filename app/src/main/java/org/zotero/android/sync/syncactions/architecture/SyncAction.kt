@@ -71,4 +71,8 @@ abstract class SyncAction {
     val updatesResponseMapper by lazy {
         bindings.updatesResponseMapper()
     }
+
+    val pageIndexResponseMapper by lazy {
+        bindings.pageIndexResponseMapper()
+    }
 }

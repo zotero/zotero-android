@@ -9,6 +9,7 @@ import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
+import org.zotero.android.api.mappers.PageIndexResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.mappers.SettingsResponseMapper
 import org.zotero.android.api.mappers.UpdatesResponseMapper
@@ -39,5 +40,6 @@ interface SyncActionDependencyProvider {
     fun attachmentDownloaderEventStream(): AttachmentDownloaderEventStream
     fun noAuthenticationApi(): NoAuthenticationApi
     fun updatesResponseMapper(): UpdatesResponseMapper
+    fun pageIndexResponseMapper(): PageIndexResponseMapper
 
 }

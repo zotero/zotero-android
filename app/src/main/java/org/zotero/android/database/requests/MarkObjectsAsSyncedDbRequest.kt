@@ -11,6 +11,7 @@ import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCollectionChanges
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.RSearchChanges
 import org.zotero.android.database.objects.Syncable
@@ -41,6 +42,47 @@ class MarkObjectsAsSyncedDbRequest(
 
             objectS.changeType = UpdatableChangeType.syncResponse.name
             val uuids = this.changeUuids[objectS.key]
+            if (uuids != null) {
+                objectS.deleteChanges(uuids = uuids, database = database)
+            }
+        }
+    }
+}
+
+class MarkSettingsAsSyncedDbRequest(
+    val settings: List<Pair<String, LibraryIdentifier>>,
+    val changeUuids: Map<String, List<String>>,
+    val version: Int
+): DbRequest {
+
+    override val needsWrite: Boolean
+        get() = true
+
+    private fun uuidKey(key: String, libraryId: LibraryIdentifier): String {
+        val libraryPart: String
+        when(libraryId) {
+            is LibraryIdentifier.custom -> {
+                libraryPart = "u"
+            }
+            is LibraryIdentifier.group -> {
+                libraryPart = "g${libraryId.groupId}"
+            }
+        }
+
+        return "lastPageIndex_${libraryPart}_$key"
+    }
+
+    override fun process(database: Realm) {
+        for(setting in this.settings) {
+            val objectS = database.where<RPageIndex>().key(setting.first, setting.second).findFirst() ?: continue
+            if (objectS.version != this.version) {
+                objectS.version = this.version
+            }
+
+            objectS.changeType = UpdatableChangeType.syncResponse.name
+
+            val uuids = this.changeUuids[this.uuidKey(key = setting.first, libraryId = setting.second)]
+
             if (uuids != null) {
                 objectS.deleteChanges(uuids = uuids, database = database)
             }
