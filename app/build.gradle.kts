@@ -58,7 +58,7 @@ android {
             extra.set("enableCrashlytics", false)
         }
         getByName("release") {
-            isDebuggable = true
+            isDebuggable = false
             isMinifyEnabled = false
             signingConfig = signingConfigs.getAt("release")
 

@@ -3,11 +3,11 @@ package org.zotero.android.screens.login
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.zotero.android.ZoteroApplication
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.ZoteroApplication
 import org.zotero.android.screens.login.LoginViewEffect.NavigateToDashboard
 import org.zotero.android.screens.login.usecase.LoginUseCase
 import org.zotero.android.uicomponents.Strings
@@ -100,8 +100,8 @@ internal class LoginViewModel @Inject constructor(
 }
 
 internal data class LoginViewState(
-    val username: String = "testtestf",
-    val password: String = "testtest",
+    val username: String = "",
+    val password: String = "",
     val snackbarMessage: SnackbarMessage? = null,
     val isLoading: Boolean = false,
 ) : ViewState
