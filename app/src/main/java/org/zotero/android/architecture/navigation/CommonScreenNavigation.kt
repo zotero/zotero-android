@@ -4,6 +4,8 @@ import android.net.Uri
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
@@ -13,6 +15,7 @@ import org.zotero.android.screens.libraries.LibrariesScreen
 import org.zotero.android.screens.loading.LoadingScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
+import org.zotero.android.screens.webview.ZoteroWebViewScreen
 import java.io.File
 
 fun NavGraphBuilder.allItemsScreen(
@@ -23,6 +26,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToAllItemsSort: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
@@ -43,6 +47,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToItemDetails = navigateToItemDetails,
             navigateToSinglePicker = navigateToSinglePicker,
             navigateToAllItemsSort = navigateToAllItemsSort,
+            navigateToZoterWebViewScreen = navigateToZoterWebViewScreen,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             navigateToTagFilter = navigateToTagFilter,
@@ -58,6 +63,7 @@ fun NavGraphBuilder.itemDetailsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToZoterWebViewScreen: (String) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -73,6 +79,7 @@ fun NavGraphBuilder.itemDetailsScreen(
             navigateToCreatorEdit = navigateToCreatorEdit,
             navigateToSinglePicker = navigateToSinglePicker,
             navigateToTagPicker = navigateToTagPicker,
+            navigateToZoterWebViewScreen = navigateToZoterWebViewScreen,
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             onOpenFile = onOpenFile,
@@ -94,6 +101,23 @@ fun NavGraphBuilder.addNoteScreen(
         AddNoteScreen(
             onBack = onBack,
             navigateToTagPicker = navigateToTagPicker,
+        )
+    }
+}
+
+private const val ARG_WEBVIEW_URL = "ARG_WEBVIEW_URL"
+
+fun NavGraphBuilder.zoterWebViewScreen(
+) {
+    composable(
+        route = "${CommonScreenDestinations.ZOTERO_WEB_VIEW_SCREEN}/{$ARG_WEBVIEW_URL}",
+        arguments = listOf(
+            navArgument(ARG_WEBVIEW_URL) { type = NavType.StringType },
+        ),
+    ) {backStackEntry ->
+        val url = backStackEntry.arguments?.getString(ARG_WEBVIEW_URL) ?: return@composable
+        ZoteroWebViewScreen(
+            url = url
         )
     }
 }
@@ -166,6 +190,7 @@ object CommonScreenDestinations {
     const val VIDEO_PLAYER_SCREEN = "videoPlayerScreen"
     const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
     const val COLLECTIONS_SCREEN = "collectionsScreen"
+    const val ZOTERO_WEB_VIEW_SCREEN = "zoteroWebViewScreen"
 }
 
 
@@ -183,4 +208,10 @@ fun ZoteroNavigation.toVideoPlayerScreen() {
 
 fun ZoteroNavigation.toImageViewerScreen() {
     navController.navigate(CommonScreenDestinations.IMAGE_VIEWER_SCREEN)
+}
+
+fun ZoteroNavigation.toZoteroWebViewScreen(encodedUrl: String) {
+    navController.navigate(
+        "${CommonScreenDestinations.ZOTERO_WEB_VIEW_SCREEN}/$encodedUrl"
+    )
 }

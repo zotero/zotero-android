@@ -28,6 +28,7 @@ internal fun ItemDetailsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToZoterWebViewScreen: (String) -> Unit,
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
@@ -80,6 +81,9 @@ internal fun ItemDetailsScreen(
 
             is ItemDetailsViewEffect.ShowImageViewer -> {
                 navigateToImageViewerScreen()
+            }
+            is ItemDetailsViewEffect.ShowZoteroWebView -> {
+                navigateToZoterWebViewScreen(consumedEffect.url)
             }
 
             is ItemDetailsViewEffect.AddAttachment -> {

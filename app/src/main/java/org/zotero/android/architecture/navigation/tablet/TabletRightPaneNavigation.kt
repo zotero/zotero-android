@@ -33,6 +33,7 @@ internal fun TabletRightPaneNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
     toAddOrEditNote: () -> Unit,
+    toZoteroWebViewScreen: (String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navController: NavHostController,
     navigation: ZoteroNavigation,
@@ -55,6 +56,7 @@ internal fun TabletRightPaneNavigation(
             navigateToAllItemsSort = navigation::toAllItemsSortDialog,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            navigateToZoterWebViewScreen = toZoteroWebViewScreen,
             navigateToTagFilter = navigation::toTagFilter,
             onShowPdf = onShowPdf,
         )
@@ -65,6 +67,7 @@ internal fun TabletRightPaneNavigation(
             navigateToAddOrEditNote = toAddOrEditNote,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            navigateToZoterWebViewScreen = toZoteroWebViewScreen,
             onBack = navigation::onBack,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,

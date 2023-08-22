@@ -38,7 +38,7 @@
     <string name="tags">Tags</string>
     <string name="attachments">Attachments</string>
 
-    <string name="items.creator_summary.and">$1%s and $2%s</string>
+    <string name="items.creator_summary.and">%1$s and %2$s</string>
     <string name="items.creator_summary.etal">%s et al.</string>
 
     <string name="errors.sync_toolbar.forbidden">Invalid username or password</string>

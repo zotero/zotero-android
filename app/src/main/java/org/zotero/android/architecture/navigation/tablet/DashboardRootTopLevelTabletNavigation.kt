@@ -14,6 +14,8 @@ import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.addNoteScreen
 import org.zotero.android.architecture.navigation.toAddOrEditNote
+import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
+import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderScreenAndNavigation
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.dashboard.DashboardViewModel
@@ -45,14 +47,16 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel,
             onShowPdf = navigation::toPdfScreen,
-            toAddOrEditNote = navigation::toAddOrEditNote
+            toAddOrEditNote = navigation::toAddOrEditNote,
+            toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
         )
         pdfReaderScreenAndNavigation(navigation)
+        tagPickerScreen(onBack = navigation::onBack)
         addNoteScreen(
             onBack = navigation::onBack,
             navigateToTagPicker = navigation::toTagPicker
         )
-        tagPickerScreen(onBack = navigation::onBack)
+        zoterWebViewScreen()
     }
 }
 
@@ -61,6 +65,7 @@ private fun NavGraphBuilder.dashboardScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: () -> Unit,
     toAddOrEditNote: () -> Unit,
+    toZoteroWebViewScreen: (String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
@@ -73,6 +78,7 @@ private fun NavGraphBuilder.dashboardScreen(
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,
             toAddOrEditNote = toAddOrEditNote,
+            toZoteroWebViewScreen = toZoteroWebViewScreen,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel
         )

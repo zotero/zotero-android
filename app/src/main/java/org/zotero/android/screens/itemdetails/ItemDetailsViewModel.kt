@@ -3,6 +3,7 @@ package org.zotero.android.screens.itemdetails
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
@@ -99,6 +100,8 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import timber.log.Timber
 import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
@@ -1397,7 +1400,9 @@ class ItemDetailsViewModel @Inject constructor(
                         showPdf(file = file, attachment = attachment)
                     }
                     "text/html", "text/plain" -> {
-                        openFile(file = file, mime = contentType)
+                        val url = file.toUri().toString()
+                        val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                        triggerEffect(ItemDetailsViewEffect.ShowZoteroWebView(encodedUrl))
                     }
                     else -> {
                         if (contentType.contains("image")) {
@@ -1804,5 +1809,6 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     object NavigateToPdfScreen : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
+    data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
 }

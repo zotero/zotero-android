@@ -1,10 +1,13 @@
-package org.zotero.android.api
+package org.zotero.android.api.module
 
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.AuthNetworkInterceptor
+import org.zotero.android.api.ForApiWithNoRedirects
+import org.zotero.android.api.ForBaseApi
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -48,8 +51,4 @@ object ApiNoRedirectsModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideNoRedirectApi(@ForApiWithNoRedirects retrofit: Retrofit) =
-        retrofit.create(NoRedirectApi::class.java)
 }

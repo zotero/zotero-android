@@ -39,6 +39,7 @@ internal fun AllItemsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
+    navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
     onShowPdf: () -> Unit,
 ) {
@@ -80,6 +81,9 @@ internal fun AllItemsScreen(
             }
             is AllItemsViewEffect.ShowImageViewer -> {
                 navigateToImageViewerScreen()
+            }
+            is AllItemsViewEffect.ShowZoteroWebView -> {
+                navigateToZoterWebViewScreen(consumedEffect.url)
             }
         }
     }

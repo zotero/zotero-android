@@ -19,7 +19,7 @@ class ClientInfoNetworkInterceptor @Inject constructor(
         val request = chain.request()
         val clientInfoRequest = request.newBuilder()
             .header("X-Zotero-Client", "Android")
-            .header("UserAgent", userAgentString)
+            .header("User-Agent", userAgentString)
             .header("Zotero-API-Version", 3.toString())
             .header("Zotero-Schema-Version", schemaController.version.toString())
             .build()

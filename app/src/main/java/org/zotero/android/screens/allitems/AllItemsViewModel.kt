@@ -3,6 +3,7 @@ package org.zotero.android.screens.allitems
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
@@ -93,6 +94,8 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import timber.log.Timber
 import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -319,7 +322,9 @@ internal class AllItemsViewModel @Inject constructor(
                         showPdf(file = file, key = attachment.key, library = library)
                     }
                     "text/html", "text/plain" -> {
-                        openFile(file = file, mime = contentType)
+                        val url = file.toUri().toString()
+                        val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                        triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
                     }
                     else -> {
                         if (contentType.contains("image")) {
@@ -1384,6 +1389,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowFilterEffect : AllItemsViewEffect()
     data class OpenWebpage(val uri: Uri) : AllItemsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
+    data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
     object NavigateToPdfScreen : AllItemsViewEffect()

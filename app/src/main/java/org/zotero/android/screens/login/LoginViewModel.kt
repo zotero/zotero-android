@@ -53,11 +53,10 @@ internal class LoginViewModel @Inject constructor(
         val networkResult =
             loginUseCase.execute(username = viewState.username, password = viewState.password)
 
-        updateState {
-            copy(isLoading = false)
-        }
-
         if (networkResult !is CustomResult.GeneralSuccess) {
+            updateState {
+                copy(isLoading = false)
+            }
             val error = networkResult as CustomResult.GeneralError.NetworkError
             if (error.httpCode == 403) {
                 showErrorRes(Strings.login_invalid_credentials)

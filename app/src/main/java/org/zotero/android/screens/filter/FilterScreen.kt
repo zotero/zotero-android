@@ -121,7 +121,7 @@ internal fun FilterScreen(
                 ) {
                     chunkedList.forEach {
                         var rowModifier: Modifier = Modifier
-                            .padding(horizontal = 12.dp, vertical = 12.dp)
+                            .padding(horizontal = 4.dp, vertical = 4.dp)
                             .clip(shape = RoundedCornerShape(16.dp))
                         val selected = viewState.selectedTags.contains(it.tag.name)
                         if (selected) {

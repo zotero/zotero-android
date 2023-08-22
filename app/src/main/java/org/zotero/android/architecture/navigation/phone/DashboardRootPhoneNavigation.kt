@@ -30,7 +30,9 @@ import org.zotero.android.architecture.navigation.toAddOrEditNote
 import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
+import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
+import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderNavScreens
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
@@ -112,6 +114,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToAllItemsSort = navigation::toSortPicker,
                     navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
                     navigateToImageViewerScreen = navigation::toImageViewerScreen,
+                    navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
                     onShowPdf = navigation::toPdfScreen,
                 )
@@ -122,6 +125,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToAddOrEditNote = navigation::toAddOrEditNote,
                     navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
                     navigateToImageViewerScreen = navigation::toImageViewerScreen,
+                    navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     onBack = navigation::onBack,
                     onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,
@@ -165,6 +169,7 @@ internal fun DashboardRootPhoneNavigation(
                     onBack = navigation::onBack,
                     navigateToTagPicker = navigation::toTagPicker
                 )
+                zoterWebViewScreen()
             }
         }
         DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

@@ -14,8 +14,12 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.ApiModule
-import org.zotero.android.api.ApiNoRedirectsModule
+import org.zotero.android.api.module.ApiInterfacesModule
+import org.zotero.android.api.module.ApiNoRedirectsModule
+import org.zotero.android.api.module.ApiWebSocketModule
+import org.zotero.android.api.module.ApiWithAuthenticationModule
+import org.zotero.android.api.module.BaseApiModule
+import org.zotero.android.api.module.GeneralModule
 import org.zotero.android.architecture.SdkInt
 import org.zotero.android.architecture.app.AppConfig
 import org.zotero.android.architecture.app.ApplicationIdProvider
@@ -28,7 +32,14 @@ import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module(
-    includes = [ApiModule::class, ApiNoRedirectsModule::class]
+    includes = [
+        GeneralModule::class,
+        BaseApiModule::class,
+        ApiNoRedirectsModule::class,
+        ApiInterfacesModule::class,
+        ApiWebSocketModule::class,
+        ApiWithAuthenticationModule::class,
+    ]
 )
 internal class AppModule {
     @Provides
