@@ -4,6 +4,7 @@ import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ObjectSyncState
@@ -160,6 +161,7 @@ class SplitAnnotationsDbRequest(
         }
 
         additionalChange(new)
+        AllItemsDbRowCreator.createOrUpdate(item, database)
     }
 
 

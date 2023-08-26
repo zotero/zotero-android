@@ -2,7 +2,6 @@ package org.zotero.android.sync
 
 import com.google.gson.Gson
 import io.realm.exceptions.RealmError
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -12,6 +11,7 @@ import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
@@ -50,7 +50,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncUseCase @Inject constructor(
-    private val dispatcher: CoroutineDispatcher,
+    private val dispatchers: Dispatchers,
     private val syncRepository: SyncRepository,
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
@@ -67,7 +67,7 @@ class SyncUseCase @Inject constructor(
     private val conflictEventStream: ConflictEventStream,
     private val progressHandler: SyncProgressHandler,
 ) {
-
+    private val dispatcher = dispatchers.default
     private var coroutineScope = CoroutineScope(dispatcher)
     private var runningSyncJob: Job? = null
 

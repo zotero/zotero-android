@@ -13,6 +13,7 @@ import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.api.pojo.sync.UserResponse
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.LinkType
@@ -140,81 +141,81 @@ class StoreItemDbRequest(
             dateParser: DateParser,
             database: Realm
         ): Pair<RItem, StoreItemsResponse.FilenameChange?> {
-            var filenameChange: StoreItemsResponse.FilenameChange?
-                item.key = response.key
-                item.rawType = response.rawType
-                item.localizedType =
-                    schemaController.localizedItemType(itemType = response.rawType) ?: ""
-                item.inPublications = response.inPublications
-                item.version = response.version
-                item.trash = response.isTrash
-                item.dateModified = response.dateModified
-                item.dateAdded = response.dateAdded
-                item.syncState = ObjectSyncState.synced.name
-                item.syncRetries = 0
-                item.lastSyncDate = Date()
-                item.changeType = UpdatableChangeType.sync.name
-                item.libraryId = libraryId
+            item.key = response.key
+            item.rawType = response.rawType
+            item.localizedType =
+                schemaController.localizedItemType(itemType = response.rawType) ?: ""
+            item.inPublications = response.inPublications
+            item.version = response.version
+            item.trash = response.isTrash
+            item.dateModified = response.dateModified
+            item.dateAdded = response.dateAdded
+            item.syncState = ObjectSyncState.synced.name
+            item.syncRetries = 0
+            item.lastSyncDate = Date()
+            item.changeType = UpdatableChangeType.sync.name
+            item.libraryId = libraryId
 
-                filenameChange = syncFields(
-                    data = response,
-                    item = item,
-                    database = database,
-                    schemaController = schemaController,
-                    dateParser = dateParser,
-                )
-                syncParent(
-                    key = response.parentKey,
-                    libraryId = libraryId,
-                    item = item,
-                    database = database
-                )
-                syncCollections(
-                    keys = response.collectionKeys,
-                    libraryId = libraryId,
-                    item = item,
-                    database = database
-                )
-                syncTags(
-                    tags = response.tags,
-                    libraryId = libraryId,
-                    item = item,
-                    database = database
-                )
-                syncCreators(
-                    creators = response.creators,
-                    item = item,
-                    denyIncorrectCreator = denyIncorrectCreator,
-                    schemaController = schemaController,
-                    database = database
-                )
-                syncRelations(
-                    relations = response.relations,
-                    item = item,
-                    database = database
-                )
-                syncLinks(
-                    data = response,
-                    item = item,
-                    database = database
-                )
-                syncUsers(
-                    createdBy = response.createdBy,
-                    lastModifiedBy = response.lastModifiedBy,
-                    item = item,
-                    database = database
-                )
-                syncRects(
-                    rects = response.rects ?: emptyList(),
-                    item = item,
-                    database = database
-                )
-                syncPaths(
-                    paths = response.paths ?: emptyList(),
-                    item = item,
-                    database = database
-                )
-                item.updateDerivedTitles()
+            val filenameChange: StoreItemsResponse.FilenameChange? = syncFields(
+                data = response,
+                item = item,
+                database = database,
+                schemaController = schemaController,
+                dateParser = dateParser,
+            )
+            syncParent(
+                key = response.parentKey,
+                libraryId = libraryId,
+                item = item,
+                database = database
+            )
+            syncCollections(
+                keys = response.collectionKeys,
+                libraryId = libraryId,
+                item = item,
+                database = database
+            )
+            syncTags(
+                tags = response.tags,
+                libraryId = libraryId,
+                item = item,
+                database = database
+            )
+            syncCreators(
+                creators = response.creators,
+                item = item,
+                denyIncorrectCreator = denyIncorrectCreator,
+                schemaController = schemaController,
+                database = database
+            )
+            syncRelations(
+                relations = response.relations,
+                item = item,
+                database = database
+            )
+            syncLinks(
+                data = response,
+                item = item,
+                database = database
+            )
+            syncUsers(
+                createdBy = response.createdBy,
+                lastModifiedBy = response.lastModifiedBy,
+                item = item,
+                database = database
+            )
+            syncRects(
+                rects = response.rects ?: emptyList(),
+                item = item,
+                database = database
+            )
+            syncPaths(
+                paths = response.paths ?: emptyList(),
+                item = item,
+                database = database
+            )
+            item.updateDerivedTitles()
+            AllItemsDbRowCreator.createOrUpdate(item, database)
             return item to filenameChange
         }
 

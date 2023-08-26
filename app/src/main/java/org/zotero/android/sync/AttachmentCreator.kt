@@ -103,7 +103,7 @@ class AttachmentCreator {
             val itemUrl = item.fields.firstOrNull{it.key == FieldKeys.Item.url }?.value
             var data = mutableListOf<AttachmentData>()
             item.children!!
-            for ((idx, child) in item.children.withIndex()) {
+            for ((idx, child) in item.children.freeze().withIndex()) {
                 if (child.rawType == ItemTypes.attachment && child.syncState != ObjectSyncState.dirty.name && !child.trash) {
                     val linkMode = child.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.let{ LinkMode.from(it.value) }
                     if (linkMode == LinkMode.importedUrl || linkMode == LinkMode.importedFile) {

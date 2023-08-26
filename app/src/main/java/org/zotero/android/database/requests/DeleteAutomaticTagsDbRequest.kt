@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RTag
@@ -23,6 +24,7 @@ class DeleteAutomaticTagsDbRequest(
             val item = tag.item ?: continue
             item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.tags)))
             item.dateModified = date
+            AllItemsDbRowCreator.createOrUpdate(item, database)
             tag.item = null
         }
         typedTags.deleteAllFromRealm()

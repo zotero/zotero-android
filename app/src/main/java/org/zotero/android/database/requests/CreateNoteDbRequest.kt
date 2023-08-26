@@ -5,6 +5,7 @@ import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.androidx.text.strippedHtmlTags
 import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.ObjectSyncState
@@ -103,6 +104,7 @@ class CreateNoteDbRequest(
         }
 
         item.changes.add(RObjectChange.create(changes = changes))
+        AllItemsDbRowCreator.createOrUpdate(item, database)
         return item
     }
 }

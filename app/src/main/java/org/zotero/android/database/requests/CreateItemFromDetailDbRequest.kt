@@ -4,6 +4,7 @@ import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -158,7 +159,7 @@ class CreateItemFromDetailDbRequest(
         item.updateDerivedTitles()
         item.changes.add(RObjectChange.create(changes = changes))
         item.changeType = UpdatableChangeType.user.name
-
+        AllItemsDbRowCreator.createOrUpdate(item, database)
         return item
 
     }

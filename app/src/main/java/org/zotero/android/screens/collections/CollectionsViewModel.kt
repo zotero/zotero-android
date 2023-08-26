@@ -6,6 +6,8 @@ import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -63,6 +65,9 @@ internal class CollectionsViewModel @Inject constructor(
 
     var isTablet: Boolean = false
 
+    private var coroutineScope = CoroutineScope(dispatchers.default)
+    private var loadJob: Job? = null
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: LongPressOptionItem) {
         onLongPressOptionsItemSelected(event)
@@ -75,13 +80,13 @@ internal class CollectionsViewModel @Inject constructor(
             val args = ScreenArguments.collectionsArgs
             initViewState(args)
             loadData()
-            maybeRecreateItemsScreen(args.shouldRecreateItemsScreen)
         }
     }
 
     private fun maybeRecreateItemsScreen(shouldRecreateItemsScreen: Boolean) {
         if (shouldRecreateItemsScreen) {
-            onItemTapped(viewState.collectionTree.collections[viewState.selectedCollectionId]!!)
+            val collectionTree = viewState.collectionTree
+            onItemTapped(collectionTree.collections[viewState.selectedCollectionId]!!)
         }
     }
 
@@ -116,6 +121,15 @@ internal class CollectionsViewModel @Inject constructor(
                     coordinator.perform(request = ReadLibraryDbRequest(libraryId = libraryId))
                 collections =
                     coordinator.perform(request = ReadCollectionsDbRequest(libraryId = libraryId))
+
+                viewModelScope.launch {
+                    updateState {
+                        copy(
+                            library = library,
+                            lce = org.zotero.android.architecture.LCE2.Content
+                        )
+                    }
+                }
 
                 var allItemCount = 0
                 var unfiledItemCount = 0
@@ -167,57 +181,61 @@ internal class CollectionsViewModel @Inject constructor(
                         customType = CollectionIdentifier.CustomType.trash
                     )
                 }
-
-                val collectionTree = CollectionTreeBuilder.collections(
-                    rCollections = collections!!,
-                    libraryId = libraryId,
-                    includeItemCounts = includeItemCounts
-                )
-                collectionTree.insert(
-                    collection = Collection.initWithCustomType(
-                        type = CollectionIdentifier.CustomType.all,
-                        itemCount = allItemCount
-                    ), index = 0
-                )
-                collectionTree.append(
-                    collection = Collection.initWithCustomType(
-                        type = CollectionIdentifier.CustomType.unfiled,
-                        itemCount = unfiledItemCount
-                    )
-                )
-                collectionTree.append(
-                    collection = Collection.initWithCustomType(
-                        type = CollectionIdentifier.CustomType.trash,
-                        itemCount = trashItemCount
-                    )
-                )
-
                 collections?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
                     when (changeSet.state) {
                         OrderedCollectionChangeSet.State.INITIAL -> {
                             //no-op
                         }
+
                         OrderedCollectionChangeSet.State.UPDATE -> {
                             update(collections = objects, includeItemCounts = includeItemCounts)
                         }
+
                         OrderedCollectionChangeSet.State.ERROR -> {
                             Timber.e(
                                 changeSet.error,
                                 "CollectionsViewModel: could not load results"
                             )
                         }
+
                         else -> {
                             //no-op
                         }
                     }
                 })
-                updateState {
-                    copy(
-                        library = library,
-                        lce = LCE2.Content
+                val frozenCollections = collections!!.freeze()
+                loadJob = coroutineScope.launch {
+
+                    val collectionTree = CollectionTreeBuilder.collections(
+                        rCollections = frozenCollections,
+                        libraryId = libraryId,
+                        includeItemCounts = includeItemCounts
                     )
+                    collectionTree.insert(
+                        collection = Collection.initWithCustomType(
+                            type = CollectionIdentifier.CustomType.all,
+                            itemCount = allItemCount
+                        ), index = 0
+                    )
+                    collectionTree.append(
+                        collection = Collection.initWithCustomType(
+                            type = CollectionIdentifier.CustomType.unfiled,
+                            itemCount = unfiledItemCount
+                        )
+                    )
+                    collectionTree.append(
+                        collection = Collection.initWithCustomType(
+                            type = CollectionIdentifier.CustomType.trash,
+                            itemCount = trashItemCount
+                        )
+                    )
+                    val snapshot = collectionTree.createSnapshot()
+                    viewModelScope.launch {
+                        updateCollectionTree(collectionTree, snapshot)
+                        maybeRecreateItemsScreen(ScreenArguments.collectionsArgs.shouldRecreateItemsScreen)
+                    }
+
                 }
-                updateCollectionTree(collectionTree)
             }
         } catch (error: Exception) {
             Timber.e(error, "CollectionsActionHandlers: can't load data")
@@ -227,11 +245,11 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
-    private fun updateCollectionTree(collectionTree: CollectionTree) {
+    private fun updateCollectionTree(collectionTree: CollectionTree, snapshot: List<CollectionItemWithChildren>) {
         updateState {
             copy(
                 collectionTree = collectionTree,
-                collectionItemsToDisplay = collectionTree.createSnapshot()
+                collectionItemsToDisplay = snapshot
             )
         }
         expandCollectionsIfNeeded()
@@ -255,7 +273,7 @@ internal class CollectionsViewModel @Inject constructor(
         items: List<CollectionItemWithChildren>,
         listOfParents: List<CollectionIdentifier>
     ): Pair<Boolean, List<CollectionIdentifier>> {
-        for(item in items) {
+        for (item in items) {
             if (item.collection.identifier == viewState.selectedCollectionId) {
                 return true to listOfParents
             }
@@ -270,18 +288,24 @@ internal class CollectionsViewModel @Inject constructor(
         return false to emptyList()
     }
 
-    private fun observeItemCount(results: RealmResults<RItem>, customType: CollectionIdentifier.CustomType) {
+    private fun observeItemCount(
+        results: RealmResults<RItem>,
+        customType: CollectionIdentifier.CustomType
+    ) {
         results.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     //no-op
                 }
-                OrderedCollectionChangeSet.State.UPDATE ->  {
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
                     update(itemsCount = items.size, customType = customType)
                 }
+
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "CollectionsViewModel: could not load results")
                 }
+
                 else -> {
                     //no-op
                 }
@@ -297,17 +321,22 @@ internal class CollectionsViewModel @Inject constructor(
                 itemCount = itemsCount
             )
         )
-        updateCollectionTree(collectionTree)
+        updateCollectionTree(collectionTree, collectionTree.createSnapshot())
     }
 
     private fun update(collections: RealmResults<RCollection>, includeItemCounts: Boolean) {
-        val tree = CollectionTreeBuilder.collections(collections, libraryId = viewState.libraryId, includeItemCounts = includeItemCounts)
+        val tree = CollectionTreeBuilder.collections(
+            collections,
+            libraryId = viewState.libraryId,
+            includeItemCounts = includeItemCounts
+        )
         val collectionTree = viewState.collectionTree
         collectionTree.replace(matching = { it.isCollection }, tree = tree)
-        updateCollectionTree(collectionTree)
+        updateCollectionTree(collectionTree, collectionTree.createSnapshot())
 
         if (viewState.collectionTree.collection(viewState.selectedCollectionId) == null) {
-            val collection = collectionTree.collections[CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)]!!
+            val collection =
+                collectionTree.collections[CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)]!!
             onItemTapped(collection)
         }
 //        triggerEffect(CollectionsViewEffect.ScreenRefresh)
@@ -354,6 +383,7 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        loadJob?.cancel()
         EventBus.getDefault().unregister(this)
         allItems?.removeAllChangeListeners()
         unfiledItems?.removeAllChangeListeners()
@@ -372,7 +402,7 @@ internal class CollectionsViewModel @Inject constructor(
         triggerEffect(CollectionsViewEffect.ShowCollectionEditEffect)
     }
 
-    fun onItemLongTapped(collection: org.zotero.android.sync.Collection) {
+    fun onItemLongTapped(collection: Collection) {
         if (!viewState.library.metadataEditable) {
             return
         }
@@ -384,15 +414,22 @@ internal class CollectionsViewModel @Inject constructor(
                 actions.add(LongPressOptionItem.CollectionNewSubCollection(collection))
                 actions.add(LongPressOptionItem.CollectionDelete(collection))
             }
+
             is CollectionIdentifier.custom -> {
-              //TODO
+                //TODO
                 return
             }
+
             is CollectionIdentifier.search -> {
                 return
             }
         }
-            EventBus.getDefault().post(ShowDashboardLongPressBottomSheet(title = collection.name, longPressOptionItems = actions))
+        EventBus.getDefault().post(
+            ShowDashboardLongPressBottomSheet(
+                title = collection.name,
+                longPressOptionItems = actions
+            )
+        )
 
     }
 
@@ -402,15 +439,18 @@ internal class CollectionsViewModel @Inject constructor(
                 is LongPressOptionItem.CollectionEdit -> {
                     onEdit(longPressOptionItem.collection)
                 }
+
                 is LongPressOptionItem.CollectionNewSubCollection -> {
                     onAddSubcollection(longPressOptionItem.collection)
                 }
+
                 is LongPressOptionItem.CollectionDelete -> {
                     deleteCollection(
                         clazz = RCollection::class,
                         listOf(longPressOptionItem.collection.identifier.keyGet!!)
                     )
                 }
+
                 else -> {
                     //no-op
                 }
@@ -467,13 +507,16 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun navigateToLibraries() {
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        ScreenArguments.collectionsArgs = CollectionsArgs(
+            libraryId = fileStore.getSelectedLibrary(),
+            fileStore.getSelectedCollectionId()
+        )
         triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen)
     }
 
 }
 
-internal data class  CollectionsViewState(
+internal data class CollectionsViewState(
     val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
     val library: Library = Library(
         identifier = LibraryIdentifier.group(0),
@@ -499,10 +542,10 @@ internal data class  CollectionsViewState(
     }
 }
 
-internal sealed class  CollectionsViewEffect : ViewEffect {
+internal sealed class CollectionsViewEffect : ViewEffect {
     object NavigateBack : CollectionsViewEffect()
     object NavigateToAllItemsScreen : CollectionsViewEffect()
     object NavigateToLibrariesScreen : CollectionsViewEffect()
-    object ShowCollectionEditEffect: CollectionsViewEffect()
+    object ShowCollectionEditEffect : CollectionsViewEffect()
     object ScreenRefresh : CollectionsViewEffect()
 }

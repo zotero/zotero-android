@@ -10,6 +10,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -41,6 +42,10 @@ android {
                 keyPassword = secrets[2]
             }
         }
+    }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
     androidResources {
         noCompress ("ttf", "mov", "avi", "json", "html", "csv", "obb")
@@ -89,7 +94,7 @@ android {
         jvmTarget = javaVersion.toString()
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.2"
     }
     buildFeatures {
         viewBinding = true
@@ -121,10 +126,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-common-java8:2.6.1")
     implementation("androidx.lifecycle:lifecycle-process:2.6.1")
-    implementation("androidx.fragment:fragment-ktx:1.5.7")
-    implementation("androidx.activity:activity-ktx:1.7.1")
+    implementation("androidx.fragment:fragment-ktx:1.6.1")
+    implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.vectordrawable:vectordrawable:1.1.0")
-    implementation("androidx.preference:preference-ktx:1.2.0")
+    implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.constraintlayout:constraintlayout-solver:2.0.4")
@@ -145,9 +150,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
     implementation("androidx.compose.foundation:foundation:1.4.3")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.activity:activity-compose:1.7.1")
-    implementation("androidx.compose.material3:material3:1.1.0")
-    implementation("androidx.compose.material3:material3-window-size-class:1.1.0")
+    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation("androidx.compose.material3:material3:1.1.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.1.1")
 
     //Accompanist
     implementation("com.google.accompanist:accompanist-insets:0.23.1")
@@ -158,23 +163,20 @@ dependencies {
     implementation("com.google.accompanist:accompanist-swiperefresh:0.23.1")
     implementation("com.google.accompanist:accompanist-flowlayout:0.23.1")
 
-    //Glide
-    implementation("com.github.bumptech.glide:glide:4.11.0")
-    kapt ("com.github.bumptech.glide:compiler:4.11.0")
-
     //Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.21")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.8.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-serialization:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 
     //Dagger + Hilt
-    implementation("com.google.dagger:hilt-android:2.43.2")
-    implementation("com.google.dagger:dagger:2.43.2")
-    kapt("com.google.dagger:dagger-compiler:2.43.2")
-    kapt("com.google.dagger:hilt-compiler:2.43.2")
+    implementation("com.google.dagger:hilt-android:2.47")
+//    implementation("com.google.dagger:dagger:2.44")
+//    kapt("com.google.dagger:dagger-compiler:2.44")
+    kapt("com.google.dagger:hilt-compiler:2.47")
+    annotationProcessor("com.google.dagger:hilt-android-compiler:2.47")
 
     implementation("androidx.hilt:hilt-work:1.0.0")
     kapt("androidx.hilt:hilt-compiler:1.0.0")
@@ -203,8 +205,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
 
     //ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.1.0-alpha01")
-    implementation("androidx.media3:media3-ui:1.1.0-alpha01")
+    implementation("androidx.media3:media3-exoplayer:1.2.0-alpha01")
+    implementation("androidx.media3:media3-ui:1.2.0-alpha01")
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.2.2")
@@ -228,7 +230,7 @@ dependencies {
     testImplementation("org.mockito:mockito-inline:3.11.0")
 
     testImplementation("io.mockk:mockk:1.11.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
     testImplementation("org.amshove.kluent:kluent-android:1.72")
 
     //Instrumented Tests

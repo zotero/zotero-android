@@ -6,6 +6,7 @@ import io.realm.kotlin.where
 import org.zotero.android.androidx.text.strippedHtmlTags
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
@@ -52,6 +53,7 @@ class EditNoteDbRequest(
             item.changeType = UpdatableChangeType.user.name
             item.dateModified = Date()
         }
+        AllItemsDbRowCreator.createOrUpdate(item, database)
     }
 
     private fun updateTags(tags: List<Tag>, item: RItem, changes: MutableList<RItemChanges>, database: Realm) {

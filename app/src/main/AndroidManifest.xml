@@ -67,10 +67,6 @@
             android:name="com.pspdfkit.ui.PdfActivity"
             android:windowSoftInputMode="adjustNothing" />
 
-        <activity
-            android:name=".pdf.PdfReaderActivity"
-            android:windowSoftInputMode="adjustNothing" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

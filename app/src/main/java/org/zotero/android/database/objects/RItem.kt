@@ -125,6 +125,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
     var htmlFreeContent: String? = null
+    var allItemsDbRow: AllItemsDbRow? = null
 
     val doi: String?
         get() {

@@ -7,6 +7,7 @@ import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCollectionChanges
 import org.zotero.android.database.objects.RItem
@@ -157,6 +158,7 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         if (parent != null) {
             parent.version = parent.version
         }
+        AllItemsDbRowCreator.createOrUpdate(item, database)
     }
 
     private fun updateUnchangedData(item: RItem, response: ItemResponse, database: Realm) {

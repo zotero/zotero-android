@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RCreator
 import org.zotero.android.database.objects.RItem
@@ -49,6 +50,7 @@ class EditItemFromDetailDbRequest(
             item.changeType = UpdatableChangeType.user.name
             item.changes.add(RObjectChange.create(changes = changes))
         }
+        AllItemsDbRowCreator.createOrUpdate(item, database)
     }
 
     private fun updateCreators(data: ItemDetailData, snapshot: ItemDetailData, item: RItem, changes: MutableList<RItemChanges>, database: Realm) {

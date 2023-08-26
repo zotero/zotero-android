@@ -5,6 +5,7 @@ import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.objects.AllItemsDbRowCreator
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -204,6 +205,7 @@ class CreateAttachmentDbRequest(
             }
         }
         item.changes.add(RObjectChange.create(changes = changes))
+        AllItemsDbRowCreator.createOrUpdate(item, database)
         return item
     }
 
