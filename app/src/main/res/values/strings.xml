@@ -41,9 +41,6 @@
     <string name="items.creator_summary.and">%1$s and %2$s</string>
     <string name="items.creator_summary.etal">%s et al.</string>
 
-    <string name="errors.sync_toolbar.forbidden">Invalid username or password</string>
-    <string name="errors.sync_toolbar.forbidden_message">The Zotero sync server did not accept your username and password.\n\nPlease log out and log in with correct login information.</string>
-
     <string name="back">Back</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
@@ -149,7 +146,7 @@
     <string name="tags_label">Tags:</string>
     <string name="reset_group_files">Reset Group Files and Sync</string>
     <string name="skip_group">Skip Group</string>
-    <string name="file_write_denied">You no longer have file-editing access for the group %s, and files you\'ve changed locally cannot be uploaded. If you continue, all group files will be reset to their state on %s.\n\nIf you would like a chance to copy modified files elsewhere or to request file-editing access from a group administrator, you can skip syncing of the group now.</string>
+    <string name="file_write_denied">You no longer have file-editing access for the group %1$s, and files you\'ve changed locally cannot be uploaded. If you continue, all group files will be reset to their state on %2$s.\n\nIf you would like a chance to copy modified files elsewhere or to request file-editing access from a group administrator, you can skip syncing of the group now.</string>
     <string name="show_automatic_tags">Show Automatic Tags</string>
     <string name="delete_automatic_tags">Delete Automatic Tags in This Library</string>
     <string name="delete_automatic_tags_dialog_title">Delete Automatic Tags</string>
@@ -167,8 +164,6 @@
         <item quantity="other">Finished sync (%d issues)</item>
     </plurals>
     <string name="finished_sync">Finished sync</string>
-    <string name="sync_error_upgrade_required">Some data in My Library could not be downloaded. It may have been saved with a newer version of Zotero. Other data will continue to sync.</string>
-    <string name="sync_error_sync_failed">Sync failed (%s)</string>
 
     <string name="errors_logging_title">Debugging Error</string>
     <string name="errors_logging_start">Unable to start debug logging</string>

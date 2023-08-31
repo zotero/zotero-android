@@ -198,7 +198,6 @@ private fun RowScope.ItemRowRightPart(
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel,
 ) {
-//    viewModel.loadItemAccessoryForKey(model.key)
     SetAccessory(
         accessory = model.accessory,
         layoutType = layoutType

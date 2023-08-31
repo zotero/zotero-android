@@ -85,7 +85,7 @@ sealed class SyncError {
     sealed class NonFatal : Exception() {
         data class versionMismatch(val libraryId: LibraryIdentifier) : NonFatal()
         data class apiError(val response: String, val data: ErrorData) : NonFatal()
-        data class unknown(val str: String, val data: ErrorData) : NonFatal()
+        data class unknown(val messageS: String, val data: ErrorData) : NonFatal()
         data class schema(val error: SchemaError, val data: ErrorData) : NonFatal()
         data class parsing(val error: Parsing.Error, val data: ErrorData) : NonFatal()
         data class quotaLimit(val libraryId: LibraryIdentifier) : NonFatal()

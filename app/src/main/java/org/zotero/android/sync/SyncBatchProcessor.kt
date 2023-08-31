@@ -36,6 +36,7 @@ class SyncBatchProcessor(
     val schemaController: SchemaController,
     val dateParser: DateParser,
     val gson: Gson,
+    val progress: (Int) -> Unit,
     dispatcher: CoroutineDispatcher,
     val completion: (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
@@ -109,7 +110,7 @@ class SyncBatchProcessor(
                 objectS = batch.objectS,
                 expectedKeys = batch.keys
             )
-            //TODO report progress
+            this.progress(batch.keys.size)
             finish(response)
 
         } catch (e: Exception) {

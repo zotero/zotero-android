@@ -62,7 +62,7 @@ class SyncScheduler @Inject constructor(
 
                 if (sync != null) {
                     enqueueAndStart(sync = sync)
-                } else if (!this.syncQueue.isEmpty()) {
+                } else {
                     startNextSync()
                 }
             }

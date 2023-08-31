@@ -12,6 +12,7 @@ import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
@@ -113,6 +114,7 @@ class SyncUseCase @Inject constructor(
                 this.type = type
                 this.libraryType = libraries
                 this.retryAttempt = retryAttempt
+                this.progressHandler.reportNewSync()
                 queue.addAll(actionsCreator.createInitialActions(libraries = libraries, syncType = type))
 
                 processNextAction()
@@ -172,9 +174,11 @@ class SyncUseCase @Inject constructor(
             }
 
             is Action.syncGroupVersions -> {
+                this.progressHandler.reportGroupsSync()
                 processSyncGroupVersions()
             }
             is Action.syncVersions -> {
+                this.progressHandler.reportObjectSync(action.objectS, action.libraryId)
                 processSyncVersions(
                     libraryId = action.libraryId,
                     objectS = action.objectS,
@@ -218,7 +222,7 @@ class SyncUseCase @Inject constructor(
             }
 
             is Action.syncDeletions -> {
-                //TODO Report progress
+                this.progressHandler.reportDeletions(action.libraryId)
                 loadRemoteDeletions(libraryId = action.libraryId, sinceVersion = action.version)
             }
 
@@ -260,6 +264,7 @@ class SyncUseCase @Inject constructor(
                 restoreDeletions(libraryId = action.libraryId, collections = action.collections, items = action.items)
             }
             is Action.syncSettings -> {
+                this.progressHandler.reportLibrarySync(action.libraryId)
                 processSettingsSync(libraryId = action.libraryId, version = action.version)
             }
             else -> {
@@ -373,13 +378,13 @@ class SyncUseCase @Inject constructor(
         ).result()
 
         if (actionResult !is CustomResult.GeneralSuccess) {
-            //TODO report uploaded progress
+            this.progressHandler.reportWriteBatchSynced(size = batch.parameters.size)
             finishSubmission(error = actionResult as CustomResult.GeneralError, newVersion = batch.version,
                 keys = batch.parameters.mapNotNull { it["key"]?.toString() }, libraryId = batch.libraryId,
                 objectS = batch.objectS
             )
         } else {
-            //TODO report uploaded progress
+            this.progressHandler.reportWriteBatchSynced(size = batch.parameters.size)
             finishSubmission(error = actionResult.value!!.second, newVersion = actionResult.value!!.first,
                 keys = batch.parameters.mapNotNull { it["key"]?.toString() }, libraryId = batch.libraryId,
                 objectS = batch.objectS
@@ -402,11 +407,11 @@ class SyncUseCase @Inject constructor(
 
         val actionResult = action.result()
         if (actionResult !is CustomResult.GeneralSuccess) {
-            //TODO report uploaded progress
+            this.progressHandler.reportUploaded()
             finishSubmission(error = actionResult as CustomResult.GeneralError, newVersion = null, keys = listOf(upload.key),
                 libraryId = upload.libraryId, objectS = SyncObject.item, failedBeforeReachingApi = action.failedBeforeZoteroApiRequest)
         } else {
-            //TODO report uploaded progress
+            this.progressHandler.reportUploaded()
             finishSubmission(error = null, newVersion = null, keys = listOf(upload.key),
                 libraryId = upload.libraryId, objectS = SyncObject.item)
         }
@@ -436,6 +441,13 @@ class SyncUseCase @Inject constructor(
                 dateParser = this.dateParser,
                 dispatcher = this.dispatcher,
                 gson = this.gson,
+                progress = { processed ->
+                    this.progressHandler.reportDownloadBatchSynced(
+                        size = processed,
+                        objectS = objectS,
+                        libraryId = libraryId
+                    )
+                },
                 completion = { result ->
                     this.batchProcessor = null
                     finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
@@ -463,7 +475,7 @@ class SyncUseCase @Inject constructor(
                         )
                     ).nonFatal2S
                         ?: NonFatal.unknown(
-                            str = it.localizedMessage ?: "",
+                            messageS = it.localizedMessage ?: "",
                             data = SyncError.ErrorData.from(
                                 syncObject = objectS,
                                 keys = failedKeys,
@@ -571,7 +583,11 @@ class SyncUseCase @Inject constructor(
         objectS: SyncObject,
         libraryId: LibraryIdentifier
     ) {
-        //TODO update progress
+        this.progressHandler.reportDownloadCount(
+            objectS = objectS,
+            count = updateCount,
+            libraryId = libraryId
+        )
         enqueue(actions = actions, index = 0)
     }
 
@@ -650,7 +666,10 @@ class SyncUseCase @Inject constructor(
 
         val names = libraryNames
         if (names != null) {
-            //TODO update progress
+            progressHandler.set(libraryNames = names)
+        }
+        if (writeCount > 0) {
+            progressHandler.reportWrite(writeCount)
         }
         enqueue(actions = actions, index = queueIndex)
 
@@ -681,6 +700,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
+        this.progressHandler.reportGroupCount(count = updateCount)
         enqueue(actions = actions, index = 0)
     }
 
@@ -872,12 +892,12 @@ class SyncUseCase @Inject constructor(
                                 )
                             )
                         is SyncActionError.submitUpdateFailures ->
-                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.messageS, data = data))
+                            return SyncError.nonFatal2(NonFatal.unknown(messageS = syncActionError.messageS, data = data))
                         is SyncActionError.authorizationFailed -> {
-                            return SyncError.nonFatal2(NonFatal.unknown(str = syncActionError.response, data = data))
+                            return SyncError.nonFatal2(NonFatal.unknown(messageS = syncActionError.response, data = data))
                         }
                         is SyncActionError.attachmentAlreadyUploaded, is SyncActionError.attachmentItemNotSubmitted -> {
-                            return SyncError.nonFatal2(NonFatal.unknown(str = error.localizedMessage!!, data = data))
+                            return SyncError.nonFatal2(NonFatal.unknown(messageS = error.localizedMessage!!, data = data))
                         }
                         is SyncActionError.objectPreconditionError -> {
                             return SyncError.fatal2(SyncError.Fatal.uploadObjectConflict(data))
@@ -901,7 +921,7 @@ class SyncUseCase @Inject constructor(
                 Timber.e("received unknown error - $error")
                 return SyncError.nonFatal2(
                     NonFatal.unknown(
-                        str = error.localizedMessage ?: "", data = data
+                        messageS = error.localizedMessage ?: "", data = data
                     )
                 )
 
@@ -1157,7 +1177,7 @@ class SyncUseCase @Inject constructor(
             return
         }
 
-        //TODO report progress
+        this.progressHandler.reportUpload(count = uploads.size)
         enqueuedUploads = uploads.size
         uploadsFailedBeforeReachingZoteroBackend = 0
         enqueue(actions = uploads.map { Action.uploadAttachment(it) }, index = 0)
@@ -1586,7 +1606,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun finishGroupSyncAction(identifier: Int, error: Throwable?) {
         if (error == null) {
-            //TODO report progress
+            this.progressHandler.reportGroupSynced()
             processNextAction()
             return
         }
@@ -1607,7 +1627,7 @@ class SyncUseCase @Inject constructor(
 
             is SyncError.nonFatal2 -> {
                 this.nonFatalErrors.add(e.error)
-                //TODO report progress
+                this.progressHandler.reportGroupSynced()
                 markGroupForResync(identifier = identifier)
             }
         }
@@ -1660,7 +1680,7 @@ class SyncUseCase @Inject constructor(
         ).result()
 
         if (actionResult !is CustomResult.GeneralSuccess) {
-            //TODO report reportWriteBatchSynced
+            this.progressHandler.reportWriteBatchSynced(size = batch.keys.size)
             finishSubmission(
                 error = actionResult as CustomResult.GeneralError,
                 newVersion = batch.version,
@@ -1669,7 +1689,7 @@ class SyncUseCase @Inject constructor(
                 objectS = batch.objectS
             )
         } else {
-            //TODO report reportWriteBatchSynced
+            this.progressHandler.reportWriteBatchSynced(size = batch.keys.size)
 
             val version = actionResult.value!!.first
             val didCreateDeletions = actionResult.value!!.second

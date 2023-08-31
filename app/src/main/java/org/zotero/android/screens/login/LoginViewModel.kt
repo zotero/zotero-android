@@ -99,8 +99,8 @@ internal class LoginViewModel @Inject constructor(
 }
 
 internal data class LoginViewState(
-    val username: String = "testtestf",
-    val password: String = "testtest",
+    val username: String = "",
+    val password: String = "",
     val snackbarMessage: SnackbarMessage? = null,
     val isLoading: Boolean = false,
 ) : ViewState
