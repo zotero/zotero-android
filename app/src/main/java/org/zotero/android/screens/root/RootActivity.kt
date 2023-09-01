@@ -14,14 +14,6 @@ import org.zotero.android.screens.onboarding.OnboardingActivity
 class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
     private val viewModel: RootViewModel by viewModels()
 
-    /*
-    On Android Oreo the app crashes if we're trying to request the orientation for
-    translucent activity. Although translucent activity always inherits the
-    orientation from the underlying activity. So it's safe to set this parameter
-    to false for all transparent activities.
-     */
-    override val lockOrientationPortrait = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
