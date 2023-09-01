@@ -28,6 +28,7 @@ import org.zotero.android.sync.syncactions.DeleteGroupSyncAction
 import org.zotero.android.sync.syncactions.FetchAndStoreGroupSyncAction
 import org.zotero.android.sync.syncactions.LoadDeletionsSyncAction
 import org.zotero.android.sync.syncactions.LoadLibraryDataSyncAction
+import org.zotero.android.sync.syncactions.LoadPermissionsSyncAction
 import org.zotero.android.sync.syncactions.LoadUploadDataSyncAction
 import org.zotero.android.sync.syncactions.MarkChangesAsResolvedSyncAction
 import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
@@ -147,21 +148,7 @@ class SyncUseCase @Inject constructor(
     private suspend fun process(action: Action) {
         when (action) {
             is Action.loadKeyPermissions -> {
-                val result = syncRepository.processKeyCheckAction()
-                if (result is CustomResult.GeneralSuccess) {
-                    accessPermissions = result.value
-                    processNextAction()
-                } else {
-                    val customResultError = result as CustomResult.GeneralError
-                    val er = syncError(
-                        customResultError = customResultError, data = SyncError.ErrorData.from(
-                            libraryId = LibraryIdentifier.custom(
-                                RCustomLibraryType.myLibrary
-                            )
-                        )
-                    ).fatal2S ?: SyncError.Fatal.permissionLoadingFailed
-                    abort(er)
-                }
+                processKeyCheckAction()
             }
             is Action.createLibraryActions -> {
                 processCreateLibraryActions(
@@ -271,6 +258,44 @@ class SyncUseCase @Inject constructor(
                 processNextAction()
             }
         }
+    }
+
+    private suspend fun processKeyCheckAction() {
+        val result = LoadPermissionsSyncAction().result()
+        if (result is CustomResult.GeneralSuccess) {
+            val response = result.value!!
+            val permissions = AccessPermissions(
+                user = response.user,
+                groupDefault = response.defaultGroup,
+                groups = response.groups
+            )
+            val group = permissions.groupDefault
+            if (group != null && (!group.library || !group.write)) {
+                processKeyCheckActionFailure(CustomResult.GeneralError.CodeError(SyncError.Fatal.missingGroupPermissions))
+                return
+            }
+            val username = response.username
+            val displayName = response.displayName
+            defaults.setUsername(username)
+            defaults.setDisplayName(displayName)
+            this.accessPermissions = permissions
+            processNextAction()
+        } else {
+            val customResultError = result as CustomResult.GeneralError
+            processKeyCheckActionFailure(customResultError)
+        }
+    }
+
+    private fun processKeyCheckActionFailure(customResultError: CustomResult.GeneralError) {
+        val er = syncError(
+            customResultError = customResultError,
+            data = SyncError.ErrorData.from(
+                libraryId = LibraryIdentifier.custom(
+                    RCustomLibraryType.myLibrary
+                )
+            )
+        ).fatal2S ?: SyncError.Fatal.permissionLoadingFailed
+        abort(er)
     }
 
     private suspend fun processSettingsSync(libraryId: LibraryIdentifier, version: Int) {

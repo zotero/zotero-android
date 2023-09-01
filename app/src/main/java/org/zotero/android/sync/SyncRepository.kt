@@ -7,8 +7,6 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.SyncGroupVersionsDbRequest
-import org.zotero.android.sync.syncactions.data.AccessPermissions
-import org.zotero.android.sync.syncactions.data.KeyResponse
 import javax.inject.Inject
 
 class SyncRepository @Inject constructor(
@@ -17,29 +15,6 @@ class SyncRepository @Inject constructor(
     private val defaults: Defaults,
     private val gson: Gson,
 ) {
-    suspend fun processKeyCheckAction(): CustomResult<AccessPermissions> {
-        val networkResult = safeApiCall {
-            syncApi.getKeys()
-        }
-
-        if (networkResult !is CustomResult.GeneralSuccess) {
-            return networkResult as CustomResult.GeneralError
-        }
-
-        val keyResponse = KeyResponse.fromJson(data = networkResult.value!!, gson = gson)
-
-        defaults.setUsername( keyResponse.username)
-        defaults.setDisplayName( keyResponse.displayName)
-
-        return CustomResult.GeneralSuccess(
-            AccessPermissions(
-                user = keyResponse.user,
-                groupDefault = keyResponse.defaultGroup,
-                groups = keyResponse.groups
-            )
-        )
-    }
-
     suspend fun processSyncGroupVersions(): CustomResult<Pair<List<Int>, List<Pair<Int, String>>>> {
         val networkResult = safeApiCall {
             syncApi.groupVersionsRequest(userId = defaults.getUserId())
@@ -53,8 +28,6 @@ class SyncRepository @Inject constructor(
             request = SyncGroupVersionsDbRequest(versions = networkResult.value!!),
             invalidateRealm = true
         )
-
-
 
         return CustomResult.GeneralSuccess(dbRes)
     }

@@ -127,10 +127,12 @@ internal fun AllItemsScreen(
                     modifier = Modifier
                         .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                 ) {
-                    AllItemsSearchBar(
-                        viewState = viewState,
-                        viewModel = viewModel
-                    )
+                    if (!layoutType.isTablet()) {
+                        AllItemsSearchBar(
+                            viewState = viewState,
+                            viewModel = viewModel
+                        )
+                    }
                     CustomDivider()
                     AllItemsTable(viewState, layoutType, viewModel)
                 }

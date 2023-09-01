@@ -85,9 +85,10 @@ fun syncToolbarText(progress: SyncProgress, viewModel: SyncToolbarViewModel): St
             if (error is SyncError.Fatal.forbidden) {
                 return stringResource(id = Strings.errors_sync_toolbar_forbidden)
             }
+            val formatArgs = syncToolbarAlertMessage(error, viewModel = viewModel).first
             return stringResource(
                 id = Strings.sync_toolbar_aborted,
-                syncToolbarAlertMessage(error, viewModel = viewModel).first
+                formatArgs
             )
         }
     }

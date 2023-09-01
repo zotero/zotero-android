@@ -16,7 +16,7 @@ fun syncToolbarAlertMessage(
     val fatalError = dialogError as? SyncError.Fatal
     if (fatalError != null) {
         when (fatalError) {
-            SyncError.Fatal.cancelled -> {
+            is SyncError.Fatal.cancelled -> {
                 //no-op
             }
 
@@ -27,11 +27,11 @@ fun syncToolbarAlertMessage(
                 ) to fatalError.data
             }
 
-            SyncError.Fatal.dbError -> {
+            is SyncError.Fatal.dbError -> {
                 return stringResource(id = Strings.errors_db) to null
             }
 
-            SyncError.Fatal.allLibrariesFetchFailed -> {
+            is SyncError.Fatal.allLibrariesFetchFailed -> {
                 return stringResource(id = Strings.errors_sync_toolbar_libraries_missing) to null
             }
 
@@ -39,23 +39,23 @@ fun syncToolbarAlertMessage(
                 return stringResource(id = Strings.errors_sync_toolbar_conflict_retry_limit) to null
             }
 
-            SyncError.Fatal.groupSyncFailed -> {
+            is SyncError.Fatal.groupSyncFailed -> {
                 return stringResource(id = Strings.errors_sync_toolbar_groups_failed) to null
             }
 
-            SyncError.Fatal.missingGroupPermissions, SyncError.Fatal.permissionLoadingFailed -> {
+            is SyncError.Fatal.missingGroupPermissions, is SyncError.Fatal.permissionLoadingFailed -> {
                 return stringResource(id = Strings.errors_sync_toolbar_group_permissions) to null
             }
 
-            SyncError.Fatal.noInternetConnection -> {
+            is SyncError.Fatal.noInternetConnection -> {
                 return stringResource(id = Strings.errors_sync_toolbar_internet_connection) to null
             }
 
-            SyncError.Fatal.serviceUnavailable -> {
+            is SyncError.Fatal.serviceUnavailable -> {
                 return stringResource(id = Strings.errors_sync_toolbar_unavailable) to null
             }
 
-            SyncError.Fatal.forbidden -> {
+            is SyncError.Fatal.forbidden -> {
                 return stringResource(id = Strings.errors_sync_toolbar_forbidden_message) to null
             }
 

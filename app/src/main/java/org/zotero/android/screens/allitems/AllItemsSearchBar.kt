@@ -15,6 +15,7 @@ import org.zotero.android.uicomponents.textinput.SearchBar
 
 @Composable
 internal fun AllItemsSearchBar(
+    modifier: Modifier = Modifier,
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel
 ) {
@@ -36,7 +37,7 @@ internal fun AllItemsSearchBar(
 
     SearchBar(
         hint = stringResource(id = Strings.search_items),
-        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+        modifier = modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

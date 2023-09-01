@@ -99,6 +99,7 @@ internal fun LoginScreen(
                     focusManager.moveFocus(FocusDirection.Down)
                 }
                 CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
                     value = viewState.username,
                     hint = stringResource(id = Strings.login_username),
                     onValueChange = viewModel::onUsernameChanged,
@@ -115,6 +116,7 @@ internal fun LoginScreen(
                 )
                 CustomDivider(modifier = Modifier.padding(vertical = 16.dp))
                 CustomTextField(
+                    modifier = Modifier.fillMaxWidth(),
                     value = viewState.password,
                     hint = stringResource(id = Strings.login_password),
                     visualTransformation = PasswordVisualTransformation(),

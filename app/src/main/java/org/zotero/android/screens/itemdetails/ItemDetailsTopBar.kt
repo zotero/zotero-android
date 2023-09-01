@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
@@ -22,15 +23,7 @@ internal fun ItemDetailsTopBar(
 ) {
     TopAppBar(
         title = {
-            HeadingTextButton(
-                isEnabled = true,
-                onClick = onCancelOrBackClicked,
-                text = if (isEditing) {
-                    stringResource(Strings.cancel)
-                } else {
-                    stringResource(Strings.all_items)
-                }
-            )
+            ItemDetailsTopBarEditing(onCancelOrBackClicked, isEditing)
         },
         actions = {
             HeadingTextButton(
@@ -48,4 +41,22 @@ internal fun ItemDetailsTopBar(
         elevation = elevation,
     )
 
+}
+
+@Composable
+private fun ItemDetailsTopBarEditing(onCancelOrBackClicked: () -> Unit, isEditing: Boolean) {
+    HeadingTextButton(
+        isEnabled = true,
+        onClick = onCancelOrBackClicked,
+        text = if (isEditing) {
+            stringResource(Strings.cancel)
+        } else {
+            val layoutType = CustomLayoutSize.calculateLayoutType()
+            if (layoutType.isTablet()) {
+                stringResource(Strings.back)
+            } else {
+                stringResource(Strings.all_items)
+            }
+        }
+    )
 }
