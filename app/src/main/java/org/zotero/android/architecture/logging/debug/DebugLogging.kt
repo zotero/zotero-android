@@ -1,4 +1,4 @@
-package org.zotero.android.architecture.logging
+package org.zotero.android.architecture.logging.debug
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -9,6 +9,7 @@ import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.File

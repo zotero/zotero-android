@@ -43,6 +43,7 @@ class FileStore @Inject constructor (
     private lateinit var rootDirectory: File
     private lateinit var cachesDirectory: File
     private lateinit var debugDirectory: File
+    private lateinit var crashDirectory: File
 
     companion object {
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
@@ -76,6 +77,9 @@ class FileStore @Inject constructor (
 
         debugDirectory = File(filesDir, "debugLogging")
         debugDirectory.mkdirs()
+
+        crashDirectory = File(filesDir, "crashLogging")
+        crashDirectory.mkdirs()
     }
 
     fun pathForFilename(filename: String): String {
@@ -331,7 +335,13 @@ class FileStore @Inject constructor (
     }
 
     fun debugLoggingDirectory(): File {
+        this.debugDirectory.mkdirs()
         return this.debugDirectory
+    }
+
+    fun crashLoggingDirectory(): File {
+        this.debugDirectory.mkdirs()
+        return this.crashDirectory
     }
 
     fun getFileSize(uri: Uri): Long? = context.getFileSize(uri)

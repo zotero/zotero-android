@@ -1,4 +1,4 @@
-package org.zotero.android.architecture.logging
+package org.zotero.android.architecture.logging.crash
 
 import okhttp3.internal.closeQuietly
 import org.zotero.android.files.FileStore
@@ -6,9 +6,11 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
-import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class DebugFileWriter constructor(
+@Singleton
+class CrashFileWriter @Inject constructor(
     private val fileStore: FileStore
 ) {
 
@@ -16,24 +18,18 @@ class DebugFileWriter constructor(
     private var bufferWriter: BufferedWriter? = null
     private var printWriter: PrintWriter? = null
 
-    private fun initIfNecessary() {
-        if (printWriter != null) {
-            return
-        }
-        val fileName = UUID.randomUUID().toString().replace("-", "")
-        val file = File(fileStore.debugLoggingDirectory(), fileName)
+    fun writeCrashToFile(stackTrace: String) {
+        val fileName = System.currentTimeMillis().toString()
+        val file = File(fileStore.crashLoggingDirectory(), fileName)
 
-        fileWriter = FileWriter(file, true);
+        fileWriter = FileWriter(file, false);
         bufferWriter = BufferedWriter(fileWriter);
         printWriter = PrintWriter(bufferWriter!!)
+        printWriter?.write(stackTrace)
+        flushAndClose()
     }
 
-    fun append(stringToAppend: String) {
-        initIfNecessary()
-        printWriter?.appendLine(stringToAppend + "\n")
-    }
-
-    fun flushAndClose() {
+    private fun flushAndClose() {
         this.printWriter?.flush()
 
         this.printWriter?.closeQuietly()
@@ -44,4 +40,5 @@ class DebugFileWriter constructor(
         this.bufferWriter = null
         this.fileWriter = null
     }
+
 }

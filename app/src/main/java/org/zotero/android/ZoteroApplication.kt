@@ -10,8 +10,9 @@ import com.google.gson.Gson
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.architecture.crashreporting.CrashReportingTree
-import org.zotero.android.architecture.logging.DebugLoggingTree
+import org.zotero.android.architecture.crashreporting.FirebaseCrashReportingTree
+import org.zotero.android.architecture.logging.crash.CrashFileWriter
+import org.zotero.android.architecture.logging.debug.DebugLoggingTree
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.Controllers
 import timber.log.Timber
@@ -39,6 +40,9 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
     lateinit var gson: Gson
 
     @Inject
+    lateinit var crashFileWriter: CrashFileWriter
+
+    @Inject
     @ForGsonWithRoundedDecimals
     lateinit var gsonWithRoundedDecimals: Gson
 
@@ -48,6 +52,7 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     override fun onCreate() {
         super<Application>.onCreate()
+
         instance = this
         setUpLogging()
 
@@ -74,6 +79,14 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
     }
 
     private fun setUpLogging() {
-        Timber.plant(CrashReportingTree(), this.debugLoggingTree)
+        val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            crashFileWriter.writeCrashToFile(throwable.stackTraceToString())
+            defaultExceptionHandler?.uncaughtException(
+                thread,
+                throwable
+            )
+        }
+        Timber.plant(FirebaseCrashReportingTree(), this.debugLoggingTree)
     }
 }

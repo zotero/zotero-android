@@ -15,10 +15,12 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.logging.DebugLogging
-import org.zotero.android.architecture.logging.DebugLoggingDialogData
-import org.zotero.android.architecture.logging.DebugLoggingDialogDataEventStream
-import org.zotero.android.architecture.logging.DebugLoggingInterface
+import org.zotero.android.architecture.logging.crash.CrashReportIdDialogData
+import org.zotero.android.architecture.logging.crash.CrashShareDataEventStream
+import org.zotero.android.architecture.logging.debug.DebugLogging
+import org.zotero.android.architecture.logging.debug.DebugLoggingDialogData
+import org.zotero.android.architecture.logging.debug.DebugLoggingDialogDataEventStream
+import org.zotero.android.architecture.logging.debug.DebugLoggingInterface
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadCollectionDbRequest
@@ -53,6 +55,7 @@ class DashboardViewModel @Inject constructor(
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val debugLogging: DebugLogging,
     private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
+    private val crashShareDataEventStream: CrashShareDataEventStream,
     private val context: Context,
     private val sessionController: SessionController
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
@@ -121,6 +124,7 @@ class DashboardViewModel @Inject constructor(
 
         debugLogging.debugLoggingInterface = this
         setupDebugLoggingDialogDataEventStream()
+        setupCrashShareDataEventStream()
 
         if (sessionController.isInitialized && debugLogging.isEnabled) {
             setDebugWindow(true)
@@ -140,6 +144,16 @@ class DashboardViewModel @Inject constructor(
             .onEach { dialogData ->
                 updateState {
                     copy(debugLoggingDialogData = dialogData)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun setupCrashShareDataEventStream() {
+        crashShareDataEventStream.flow()
+            .onEach { dialogData ->
+                updateState {
+                    copy(crashReportIdDialogData = dialogData)
                 }
             }
             .launchIn(viewModelScope)
@@ -271,6 +285,14 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun onDismissCrashLoggingDialog() {
+        updateState {
+            copy(
+                crashReportIdDialogData = null,
+            )
+        }
+    }
+
     fun dismissBottomSheet() {
         updateState {
             copy(longPressOptionsHolder = null)
@@ -322,6 +344,7 @@ data class DashboardViewState(
     val snackbarMessage: SnackbarMessage? = null,
     val conflictDialog: ConflictDialogData? = null,
     val debugLoggingDialogData: DebugLoggingDialogData? = null,
+    val crashReportIdDialogData: CrashReportIdDialogData? = null,
     val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val showDebugWindow: Boolean = false,

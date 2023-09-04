@@ -2,7 +2,7 @@ package org.zotero.android.screens.dashboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import org.zotero.android.architecture.logging.DebugLoggingDialogData
+import org.zotero.android.architecture.logging.debug.DebugLoggingDialogData
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import java.io.File

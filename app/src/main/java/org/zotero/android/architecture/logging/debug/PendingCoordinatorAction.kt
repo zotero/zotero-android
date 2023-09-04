@@ -1,4 +1,4 @@
-package org.zotero.android.architecture.logging
+package org.zotero.android.architecture.logging.debug
 
 data class PendingCoordinatorAction(
     val ignoreEmptyLogs: Boolean,

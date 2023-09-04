@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.onEach
 import org.apache.commons.io.FileUtils
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.architecture.logging.DebugLogging
+import org.zotero.android.architecture.logging.crash.CrashReporter
+import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
@@ -29,6 +30,7 @@ class Controllers @Inject constructor(
     private val userControllers: UserControllers,
     private val fileDownloader: AttachmentDownloader,
     private val debugLogging: DebugLogging,
+    private val crashReporter: CrashReporter,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -38,6 +40,7 @@ class Controllers @Inject constructor(
         fileStore.init()
         debugLogging.startLoggingOnLaunchIfNeeded()
 
+        crashReporter.processPendingReports()
         initializeSessionIfPossible()
         startApp()
         this.didInitialize = true

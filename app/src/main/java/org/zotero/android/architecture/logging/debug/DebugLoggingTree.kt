@@ -1,4 +1,4 @@
-package org.zotero.android.architecture.logging
+package org.zotero.android.architecture.logging.debug
 
 import android.util.Log
 import timber.log.Timber.Tree

@@ -185,5 +185,7 @@
     <string name="settings_debug_view_output">View Output</string>
     <string name="settings_debug_clear_output">Clear Output</string>
     <string name="settings_debug_lines_logged">%d lines logged</string>
-
+    <string name="settings_crash_alert_copy_id">Copy Report ID</string>
+    <string name="settings_crash_alert_title">Crash Log Sent</string>
+    <string name="settings_crash_alert_message">Your Report ID is %s.\n\nPlease post a message to the Zotero Forums (forums.zotero.org) with this Report ID and any steps necessary to reproduce the crash.</string>
 </resources>

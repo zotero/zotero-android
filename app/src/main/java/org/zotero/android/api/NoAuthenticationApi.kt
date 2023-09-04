@@ -3,6 +3,8 @@ package org.zotero.android.api
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.Multipart
@@ -31,5 +33,13 @@ interface NoAuthenticationApi {
     @POST("https://repo.zotero.org/repo/report?debug=1")
     suspend fun debugLogUploadRequest(
         @Body textBody: String,
+    ): retrofit2.Response<String?>
+
+    @FormUrlEncoded
+    @POST("https://repo.zotero.org/repo/report")
+    suspend fun crashLogUploadRequest(
+        @Field("error") error: Int = 1,
+        @Field("errorData") errorData: String,
+        @Field("diagnostic") diagnostic: String,
     ): retrofit2.Response<String?>
 }

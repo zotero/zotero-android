@@ -1,4 +1,4 @@
-package org.zotero.android.architecture.logging
+package org.zotero.android.architecture.logging.debug
 
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope

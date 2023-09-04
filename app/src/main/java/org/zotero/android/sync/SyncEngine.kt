@@ -475,7 +475,13 @@ class SyncUseCase @Inject constructor(
                 },
                 completion = { result ->
                     this.batchProcessor = null
-                    finishBatchesSyncAction(libraryId, objectS = objectS, result = result)
+                    val keys = batches.flatMap { it.keys }
+                    finishBatchesSyncAction(
+                        libraryId = libraryId,
+                        objectS = objectS,
+                        result = result,
+                        keys = keys
+                    )
                 }
             )
         this.batchProcessor?.start()
@@ -484,7 +490,8 @@ class SyncUseCase @Inject constructor(
     private fun finishBatchesSyncAction(
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
-        result: CustomResult<SyncBatchResponse>
+        result: CustomResult<SyncBatchResponse>,
+        keys: List<String>
     ) {
         when (result) {
             is CustomResult.GeneralSuccess -> {
@@ -526,8 +533,16 @@ class SyncUseCase @Inject constructor(
                 when (syncError) {
                     is SyncError.fatal2 ->
                         abort(error = syncError.error)
+
                     is SyncError.nonFatal2 ->
-                        handleNonFatal(error = syncError.error, libraryId = libraryId, version = null)
+                        handleNonFatal(
+                            error = syncError.error,
+                            libraryId = libraryId,
+                            version = null
+                        ) {
+                            markForResync(keys = keys, libraryId = libraryId, objectS = objectS)
+                            return@handleNonFatal false
+                        }
                 }
             }
         }
@@ -769,14 +784,14 @@ class SyncUseCase @Inject constructor(
         error: NonFatal,
         libraryId: LibraryIdentifier,
         version: Int?,
-        additionalAction: (() -> Unit)? = null
+        additionalAction: (() -> Boolean)? = null
     ) {
         val appendAndContinue: () -> Unit = {
             this.nonFatalErrors.add(error)
-            if (additionalAction != null) {
-                additionalAction()
+            val extraAction = additionalAction?.invoke() ?: true
+            if (extraAction) {
+                processNextAction()
             }
-            processNextAction()
         }
 
         when (error) {
@@ -786,7 +801,11 @@ class SyncUseCase @Inject constructor(
             }
             is NonFatal.unchanged -> {
                 if (version != null) {
-                    handleUnchangedFailure(lastVersion = version, libraryId = libraryId)
+                    handleUnchangedFailure(
+                        lastVersion = version,
+                        libraryId = libraryId,
+                        additionalAction = additionalAction
+                    )
                 } else {
                     if (additionalAction != null) {
                         additionalAction()
@@ -807,12 +826,16 @@ class SyncUseCase @Inject constructor(
     private fun handleUnchangedFailure(
         lastVersion: Int,
         libraryId: LibraryIdentifier,
+        additionalAction: (() -> Boolean)?
     ) {
         Timber.i("Sync: received unchanged error, store version: $lastVersion")
         this.lastReturnedVersion = lastVersion
 
         if(this.type == SyncKind.full) {
-            processNextAction()
+            val shouldProcessNext = additionalAction?.invoke() ?: true
+            if (shouldProcessNext) {
+                processNextAction()
+            }
             return
         }
 
@@ -848,6 +871,8 @@ class SyncUseCase @Inject constructor(
         }
 
         toDelete.reversed().forEach { this.queue.removeAt(it) }
+        val extraAction = additionalAction?.invoke() ?: true
+        if (!extraAction) { return }
         processNextAction()
     }
 
@@ -1284,6 +1309,7 @@ class SyncUseCase @Inject constructor(
                     if (failedBeforeReachingApi) {
                         handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId)
                     }
+                    true
                 })
             }
         }
@@ -1826,6 +1852,7 @@ class SyncUseCase @Inject constructor(
                 if (failedBeforeReachingApi) {
                     handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId)
                 }
+                true
             })
     }
 

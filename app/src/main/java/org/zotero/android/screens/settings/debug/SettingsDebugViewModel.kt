@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.logging.DebugLogging
+import org.zotero.android.architecture.logging.debug.DebugLogging
 import javax.inject.Inject
 
 @HiltViewModel

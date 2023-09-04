@@ -4,6 +4,10 @@ import android.os.Build
 import org.zotero.android.BuildConfig
 
 object DeviceInfoProvider {
+    val crashString: String get() {
+        return "device => $device, os => $osVersion, version => $versionAndBuild"
+    }
+
     val debugString: String get() {
         return "Version: $versionAndBuild\nDevice: $device\nOS: $osVersion"
     }

@@ -15,6 +15,7 @@ import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.ChangedItemsDeletedAlert
 import org.zotero.android.screens.dashboard.ConflictResolutionDialogs
+import org.zotero.android.screens.dashboard.CrashLoggingDialogs
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.dashboard.DebugLoggingDialogs
@@ -60,6 +61,15 @@ fun BoxScope.DashboardTopLevelDialogs(
             onUploadOk = viewModel::onUploadOk,
             onShareCopy = viewModel::onShareCopy
             )
+    }
+
+    val crashReportIdDialogData = viewState.crashReportIdDialogData
+    if (crashReportIdDialogData != null) {
+        CrashLoggingDialogs(
+            dialogData = crashReportIdDialogData,
+            onDismissDialog = viewModel::onDismissCrashLoggingDialog,
+            onShareCopy = viewModel::onShareCopy
+        )
     }
 
     LongPressBottomSheet(

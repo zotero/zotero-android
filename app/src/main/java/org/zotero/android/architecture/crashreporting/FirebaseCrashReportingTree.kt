@@ -4,7 +4,7 @@ import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import timber.log.Timber
 
-class CrashReportingTree : Timber.DebugTree() {
+class FirebaseCrashReportingTree : Timber.DebugTree() {
     private var isTesting: Boolean? = null
 
     override fun createStackElementTag(element: StackTraceElement): String {
