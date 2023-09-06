@@ -18,7 +18,7 @@ sealed class LongPressOptionItem(
     val textAndIconColor: Color? = null,
 ) {
     data class TrashNote(val note: Note): LongPressOptionItem(
-        titleId = Strings.moveToTrash,
+        titleId = Strings.move_to_trash,
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.ic_delete_20dp
     )
@@ -35,43 +35,43 @@ sealed class LongPressOptionItem(
     )
 
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
-        titleId = Strings.removeDownload,
+        titleId = Strings.item_detail_delete_attachment_file,
         resIcon = Drawables.ic_delete_20dp
     )
 
     data class MoveToTrashAttachment(val attachment: Attachment): LongPressOptionItem(
-        titleId = Strings.moveToTrash,
+        titleId = Strings.move_to_trash,
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.ic_delete_20dp
     )
 
     data class MoveToStandaloneAttachment(val attachment: Attachment): LongPressOptionItem(
-        titleId = Strings.moveToStandaloneAttachment,
+        titleId = Strings.item_detail_move_to_standalone_attachment,
         resIcon = Drawables.baseline_arrow_upward_24
     )
 
     data class MoveToTrashItem(val item: RItem): LongPressOptionItem(
-        titleId = Strings.moveToTrash,
+        titleId = Strings.move_to_trash,
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.ic_delete_20dp
     )
     data class RemoveDownload(val item: RItem): LongPressOptionItem(
-        titleId = Strings.removeDownload,
+        titleId = Strings.items_action_remove_download,
         resIcon = Drawables.ic_delete_20dp
     )
 
     data class Download(val item: RItem): LongPressOptionItem(
-        titleId = Strings.download,
+        titleId = Strings.items_action_download,
         resIcon = Drawables.baseline_download_for_offline_24
     )
 
     data class Duplicate(val item: RItem): LongPressOptionItem(
-        titleId = Strings.duplicate,
+        titleId = Strings.items_action_duplicate,
         resIcon = Drawables.baseline_content_copy_24
     )
 
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
-        titleId = Strings.createParentItem,
+        titleId = Strings.items_action_create_parent,
         resIcon = Drawables.baseline_add_24
     )
 
@@ -101,20 +101,20 @@ sealed class LongPressOptionItem(
 
     data class CollectionNewSubCollection(val collection: org.zotero.android.sync.Collection) :
         LongPressOptionItem(
-            titleId = Strings.new_sub_collection,
+            titleId = Strings.collections_new_subcollection,
             resIcon = Drawables.baseline_create_new_folder_24
         )
 
 
     object DeselectAll: LongPressOptionItem(
-        titleId = Strings.deselect_all,
+        titleId = Strings.items_deselect_all,
     )
 
     object ShowAutomaticTags: LongPressOptionItem(
-        titleId = Strings.show_automatic_tags,
+        titleId = Strings.tag_picker_show_auto,
     )
     object DeleteAutomaticTags: LongPressOptionItem(
-        titleId = Strings.delete_automatic_tags,
+        titleId = Strings.tag_picker_delete_automatic,
         textAndIconColor = CustomPalette.ErrorRed,
     )
 }

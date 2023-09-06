@@ -23,7 +23,7 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.Plurals
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -140,14 +140,11 @@ internal class CollectionPickerViewModel @Inject constructor(
 
     private fun updateTitle(selectedCount: Int) {
         val title =
-        when(selectedCount) {
-            0 ->
-                context.getString(Strings.zeroCollectionsSelected)
-            1 ->
-                context.getString(Strings.oneCollectionsSelected)
-            else ->
-                context.getString(Strings.manyCollectionsSelected, selectedCount)
-        }
+            context.resources.getQuantityString(
+                Plurals.items_collections_selected,
+                selectedCount,
+                selectedCount
+            )
         updateState {
             copy(title = title)
         }

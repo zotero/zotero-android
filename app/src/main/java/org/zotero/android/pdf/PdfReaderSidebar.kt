@@ -318,7 +318,7 @@ fun HeaderRow(
     annotationColor: Color,
     layoutType: CustomLayoutSize.LayoutType
 ) {
-    val title = stringResource(R.string.page_number, annotation.pageLabel)
+    val title = stringResource(R.string.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
         AnnotationType.note -> Drawables.note_large
         AnnotationType.highlight -> Drawables.highlighter_large

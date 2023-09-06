@@ -12,13 +12,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.SidebarDivider
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.Plurals
+import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
@@ -75,7 +75,7 @@ private fun TopBar(
     numberOfLines: Int,
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_debug_number_of_lines, numberOfLines),
+        title = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
         onBack = onBack,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
     )

@@ -78,7 +78,7 @@ internal fun TagPickerScreen(
                 searchBarOnInnerValueChanged.invoke(TextFieldValue())
             }
             SearchBar(
-                hint = stringResource(id = Strings.tag_name),
+                hint = stringResource(id = Strings.tag_picker_placeholder),
                 modifier = Modifier.padding(12.dp),
                 onSearchImeClicked = onSearchAction,
                 onInnerValueChanged = searchBarOnInnerValueChanged,
@@ -153,7 +153,7 @@ fun CreateTagRow(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(id = Strings.create_tag, tagName),
+            text = stringResource(id = Strings.tag_picker_create_tag, tagName),
             fontSize = layoutType.calculateTextSize(),
             color = CustomTheme.colors.primaryContent,
             maxLines = 1,
@@ -172,7 +172,7 @@ private fun TopBar(
     viewState: TagPickerViewState
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.num_of_selected, viewState.selectedTags.size),
+        title = stringResource(id = Strings.tag_picker_title, viewState.selectedTags.size),
         onCancel = onCancelClicked,
         onSave = onSave,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,

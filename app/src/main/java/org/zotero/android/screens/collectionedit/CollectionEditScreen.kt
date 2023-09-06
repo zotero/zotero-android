@@ -101,13 +101,13 @@ private fun LazyListScope.collectionEditRows(
         if (viewState.key != null) {
             Spacer(modifier = Modifier.height(30.dp))
             CollectionEditFieldTappableRow(
-                title = stringResource(id = Strings.delete_collection),
+                title = stringResource(id = Strings.collections_delete),
                 layoutType = layoutType,
                 onClick = viewModel::delete
             )
             Spacer(modifier = Modifier.height(10.dp))
             CollectionEditFieldTappableRow(
-                title = stringResource(id = Strings.delete_collection_and_items),
+                title = stringResource(id = Strings.collections_delete_with_items),
                 layoutType = layoutType,
                 onClick = viewModel::deleteWithItems
             )
@@ -123,7 +123,7 @@ private fun TopBar(
     viewState: CollectionEditViewState
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = if(viewState.key != null) Strings.edit_collection else Strings.create_collection),
+        title = stringResource(id = if(viewState.key != null) Strings.collections_edit_title else Strings.collections_create_title),
         onCancel = onCancel,
         onSave = onSave,
         isSaveButtonEnabled = viewState.isValid

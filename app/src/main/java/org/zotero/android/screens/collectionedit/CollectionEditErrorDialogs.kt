@@ -16,7 +16,7 @@ internal fun CollectionEditErrorDialogs(
     when (error) {
         is CollectionEditError.askUserToDeleteOrRestoreCollection -> {
             CustomAlertDialog(
-                title = stringResource(id = Strings.deletedTitle),
+                title = stringResource(id = Strings.item_detail_deleted_title),
                 description = stringResource(
                     id = Strings.collection_was_deleted,
                 ),

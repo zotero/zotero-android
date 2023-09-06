@@ -55,7 +55,7 @@ private fun ItemDetailsTopBarEditing(onCancelOrBackClicked: () -> Unit, isEditin
             if (layoutType.isTablet()) {
                 stringResource(Strings.back)
             } else {
-                stringResource(Strings.all_items)
+                stringResource(Strings.collections_all_items)
             }
         }
     )

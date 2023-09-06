@@ -100,7 +100,7 @@ private fun AllItemsTopBarActions(
     if (viewState.collection.identifier.isTrash) {
         HeadingTextButton(
             onClick = viewModel::onEmptyTrash,
-            text = stringResource(Strings.empty_trash),
+            text = stringResource(Strings.collections_empty_trash),
         )
     } else {
         Icon(
@@ -128,12 +128,12 @@ private fun AllItemsTopBarActions(
         if (allSelected) {
             HeadingTextButton(
                 onClick = viewModel::toggleSelectionState,
-                text = stringResource(Strings.deselect_all),
+                text = stringResource(Strings.items_deselect_all),
             )
         } else {
             HeadingTextButton(
                 onClick = viewModel::toggleSelectionState,
-                text = stringResource(Strings.select_all),
+                text = stringResource(Strings.items_select_all),
             )
         }
         Spacer(modifier = Modifier.width(8.dp))

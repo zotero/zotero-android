@@ -214,7 +214,7 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
 ) {
     if (!viewState.data.isAttachment) {
         listOfItems(
-            sectionTitle = Strings.notes,
+            sectionTitle = Strings.citation_notes,
             itemIcon = Drawables.item_note,
             itemTitles = viewState.notes.map { it.title },
             layoutType = layoutType,
@@ -225,7 +225,7 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
                 onNoteLongClicked(viewState.notes[it])
             },
             onAddItemClick = onAddNote,
-            addTitleRes = Strings.add_note
+            addTitleRes = Strings.item_detail_add_note
         )
     }
 
@@ -335,7 +335,7 @@ private fun LazyListScope.listOfTags(
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
 ) {
-    itemDetailHeaderSection(Strings.tags, layoutType)
+    itemDetailHeaderSection(Strings.item_detail_tags, layoutType)
     items(
         viewState.tags
     ) { item ->
@@ -380,7 +380,7 @@ private fun LazyListScope.listOfTags(
     item {
         AddItemRow(
             layoutType = layoutType,
-            titleRes = Strings.add_tag,
+            titleRes = Strings.item_detail_add_tag,
             onClick = viewModel::onAddTag
         )
     }
@@ -391,7 +391,7 @@ private fun LazyListScope.listOfAttachments(
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
 ) {
-    itemDetailHeaderSection(Strings.attachments, layoutType)
+    itemDetailHeaderSection(Strings.item_detail_attachments, layoutType)
     items(
         items = viewState.attachments
     ) { item ->
@@ -468,7 +468,7 @@ private fun LazyListScope.listOfAttachments(
         item {
             AddItemRow(
                 layoutType = layoutType,
-                titleRes = Strings.add_attachment,
+                titleRes = Strings.item_detail_add_attachment,
                 onClick = viewModel::onAddAttachment
             )
         }

@@ -20,7 +20,9 @@ import org.zotero.android.pdf.SidebarDivider
 import org.zotero.android.screens.settings.SettingsItem
 import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
@@ -68,26 +70,26 @@ internal fun SettingsDebugScreen(
                         layoutType = layoutType,
                         isLastItem = false,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_cancel_logging),
+                        title = stringResource(id = Strings.settings_cancel_logging),
                         onItemTapped = viewModel::cancelLogging
                     )
                     SettingsItem(
                         layoutType = layoutType,
                         isLastItem = false,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_stop_logging),
+                        title = stringResource(id = Strings.settings_stop_logging),
                         onItemTapped = viewModel::stopLogging
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
-                        text = stringResource(id = Strings.settings_debug_desc_1),
+                        text = stringResource(id = Strings.settings_logging_desc1),
                         fontSize = layoutType.calculateItemsRowTextSize(),
                     )
                     SidebarDivider(modifier = Modifier.padding(vertical = 12.dp))
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
-                        text = stringResource(id = Strings.settings_debug_desc_2),
+                        text = stringResource(id = Strings.settings_logging_desc2),
                         fontSize = layoutType.calculateItemsRowTextSize(),
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -96,14 +98,14 @@ internal fun SettingsDebugScreen(
                         layoutType = layoutType,
                         isLastItem = false,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_start_logging),
+                        title = stringResource(id = Strings.settings_start_logging),
                         onItemTapped = viewModel::startLogging
                     )
                     SettingsItem(
                         layoutType = layoutType,
                         isLastItem = true,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_start_logging_on_next_launch),
+                        title = stringResource(id = Strings.settings_start_logging_on_launch),
                         onItemTapped = viewModel::startLoggingOnNextAppLaunch
                     )
                 }
@@ -115,20 +117,20 @@ internal fun SettingsDebugScreen(
                         layoutType = layoutType,
                         isLastItem = false,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_view_output),
+                        title = stringResource(id = Strings.settings_view_output),
                         onItemTapped = toDebugLogScreen
                     )
                     SettingsItem(
                         layoutType = layoutType,
                         isLastItem = false,
                         textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        title = stringResource(id = Strings.settings_debug_clear_output),
+                        title = stringResource(id = Strings.settings_clear_output),
                         onItemTapped = viewModel::clearLogs
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         modifier = Modifier.padding(start = 12.dp),
-                        text = stringResource(id = Strings.settings_debug_lines_logged, viewState.numberOfLines),
+                        text = quantityStringResource(id = Plurals.settings_lines_logged, viewState.numberOfLines),
                         fontSize = layoutType.calculateItemsRowTextSize(),
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -143,7 +145,7 @@ private fun TopBar(
     onBack: () -> Unit,
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_debug_output_logging),
+        title = stringResource(id = Strings.settings_debug),
         onBack = onBack,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
     )

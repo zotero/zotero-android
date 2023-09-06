@@ -126,7 +126,7 @@ internal fun OnboardingScreen(
                 PrimaryButton(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    text = stringResource(id = Strings.onboarding_sign_up),
+                    text = stringResource(id = Strings.onboarding_create_account),
                     onClick = {
                         uriHandler.openUri("https://www.zotero.org/user/register?app=1")
                     }
@@ -141,7 +141,7 @@ internal fun OnboardingScreen(
                                 uriHandler.openUri("https://www.zotero.org/?app=1")
                             }
                         ),
-                    text = stringResource(id = Strings.onboarding_about),
+                    text = stringResource(id = Strings.about_zotero),
                     color = CustomTheme.colors.zoteroBlueWithDarkMode,
                     style = CustomTheme.typography.default,
                     fontSize = layoutType.calculateTextSize(),

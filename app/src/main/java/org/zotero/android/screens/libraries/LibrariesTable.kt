@@ -59,7 +59,7 @@ internal fun LibrariesTable(
                 Spacer(modifier = Modifier.height(26.dp))
                 Text(
                     modifier = Modifier.padding(start = 54.dp, bottom = 4.dp),
-                    text = stringResource(id = Strings.group_libraries),
+                    text = stringResource(id = Strings.libraries_group_libraries).uppercase(),
                     fontSize = layoutType.calculateLibraryRowTextSize(),
                     color = CustomTheme.colors.secondaryContent,
                     maxLines = 1,

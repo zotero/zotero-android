@@ -79,7 +79,7 @@ internal fun SettingsAccountScreen(
                     layoutType = layoutType,
                     isLastItem = true,
                     textColor = CustomPalette.ErrorRed,
-                    title = stringResource(id = Strings.settings_sign_out),
+                    title = stringResource(id = Strings.settings_logout),
                     onItemTapped = viewModel::onSignOut
                 )
             }
@@ -90,14 +90,14 @@ internal fun SettingsAccountScreen(
                     layoutType = layoutType,
                     isLastItem = false,
                     textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                    title = stringResource(id = Strings.settings_manage_account),
+                    title = stringResource(id = Strings.settings_sync_manage_account),
                     onItemTapped = viewModel::openManageAccount
                 )
                 SettingsItem(
                     layoutType = layoutType,
                     isLastItem = true,
                     textColor = CustomPalette.ErrorRed,
-                    title = stringResource(id = Strings.settings_delete_account),
+                    title = stringResource(id = Strings.settings_sync_delete_account),
                     onItemTapped = viewModel::openDeleteAccount
                 )
             }
@@ -110,7 +110,7 @@ private fun TopBar(
     onBack: () -> Unit,
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_account),
+        title = stringResource(id = Strings.settings_sync_account),
         onBack = onBack,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
     )

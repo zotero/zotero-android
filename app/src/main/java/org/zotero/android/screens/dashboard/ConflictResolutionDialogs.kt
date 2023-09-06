@@ -22,7 +22,7 @@ internal fun ConflictResolutionDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
-                    id = Strings.group_removed_message,
+                    id = Strings.errors_sync_group_removed,
                     conflictDialogData.groupName
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
@@ -42,15 +42,15 @@ internal fun ConflictResolutionDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
-                    id = Strings.group_write_denied_message,
+                    id = Strings.errors_sync_metadata_write_denied,
                     conflictDialogData.groupName
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.revert_to_original),
+                    text = stringResource(id = Strings.errors_sync_revert_to_original),
                     onClick = { revertGroupChanges(conflictDialogData.groupId) }
                 ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.keep_changes),
+                    text = stringResource(id = Strings.errors_sync_keep_changes),
                     onClick = { keepGroupChanges(conflictDialogData.groupId) }
                 ),
                 dismissOnClickOutside = false,
@@ -61,16 +61,16 @@ internal fun ConflictResolutionDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
-                    id = Strings.file_write_denied,
+                    id = Strings.errors_sync_file_write_denied,
                     conflictDialogData.groupName,
                     conflictDialogData.domainName
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.reset_group_files),
+                    text = stringResource(id = Strings.errors_sync_reset_group_files),
                     onClick = { revertGroupFiles(conflictDialogData.groupId) }
                 ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.skip_group),
+                    text = stringResource(id = Strings.errors_sync_skip_group),
                     onClick = { skipGroup(conflictDialogData.groupId) }
                 ),
                 dismissOnClickOutside = false,
@@ -91,7 +91,7 @@ internal fun ChangedItemsDeletedAlert(
     CustomAlertDialog(
         title = stringResource(id = Strings.warning),
         description = stringResource(
-            id = Strings.changed_item_deleted,
+            id = Strings.sync_conflict_resolution_changed_item_deleted,
             conflictDialogData.title
         ),
         primaryAction = CustomAlertDialog.ActionConfig(

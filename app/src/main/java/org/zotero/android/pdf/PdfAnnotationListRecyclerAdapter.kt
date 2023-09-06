@@ -137,7 +137,7 @@ class PdfAnnotationListRecyclerAdapter(
             val annotationColor = Color.parseColor(color)
             itemBinding.highlighterIcon.setColorFilter(annotationColor)
             itemBinding.headerTitle.text =
-                activity.getString(R.string.page_number, annotation.pageLabel)
+                activity.getString(R.string.page) + " " + annotation.pageLabel
 
             itemBinding.tagsCommentDivider.isVisible = !annotation.tags.isEmpty()
             itemBinding.tags.isVisible = !annotation.tags.isEmpty()
@@ -161,7 +161,7 @@ class PdfAnnotationListRecyclerAdapter(
             val annotationColor = Color.parseColor(annotation.displayColor)
             itemBinding.highlighterIcon.setColorFilter(annotationColor)
             itemBinding.headerTitle.text =
-                activity.getString(R.string.page_number, annotation.pageLabel)
+                activity.getString(R.string.page) + " " + annotation.pageLabel
 
             itemBinding.tagsCommentDivider.isVisible =
                 !annotation.tags.isEmpty() && !annotation.comment.isEmpty()
@@ -190,7 +190,7 @@ class PdfAnnotationListRecyclerAdapter(
             val annotationColor = Color.parseColor(annotation.displayColor)
             itemBinding.highlighterIcon.setColorFilter(annotationColor)
             itemBinding.headerTitle.text =
-                activity.getString(R.string.page_number, annotation.pageLabel)
+                activity.getString(R.string.page) + " " + annotation.pageLabel
             itemBinding.bodyHighlight.setBackgroundColor(annotationColor)
             itemBinding.body.text = annotation.text ?: ""
 
@@ -212,7 +212,7 @@ class PdfAnnotationListRecyclerAdapter(
             val annotationColor = Color.parseColor(annotation.displayColor)
             itemBinding.highlighterIcon.setColorFilter(annotationColor)
             itemBinding.headerTitle.text =
-                activity.getString(R.string.page_number, annotation.pageLabel)
+                activity.getString(R.string.page) + " " + annotation.pageLabel
 
             val showTagsAndCommentsLayout = !annotation.tags.isEmpty() || !annotation.comment.isEmpty()
             itemBinding.headerBodyDivider.isVisible =

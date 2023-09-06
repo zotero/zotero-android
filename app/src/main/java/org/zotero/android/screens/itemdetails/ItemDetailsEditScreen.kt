@@ -85,7 +85,7 @@ internal fun ItemDetailsEditScreen(
                     CustomDivider()
                     AddItemRow(
                         layoutType = layoutType,
-                        titleRes = Strings.add_creator,
+                        titleRes = Strings.item_detail_add_creator,
                         onClick = viewModel::onAddCreator
                     )
                     CustomDivider()
@@ -287,7 +287,7 @@ private fun EditTitle(
         modifier = Modifier
             .padding(bottom = 12.dp, end = 12.dp, start = 12.dp),
         value = viewState.data.title,
-        hint = stringResource(id = Strings.untitled),
+        hint = stringResource(id = Strings.item_detail_untitled),
         onValueChange = onValueChange,
         textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTitleTextSize()),
         keyboardOptions = KeyboardOptions(
@@ -311,7 +311,7 @@ private fun EditAbstractRow(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier.align(Alignment.Start),
-            text = stringResource(id = Strings.abstractS),
+            text = stringResource(id = Strings.abstract_1),
             color = CustomTheme.colors.secondaryContent,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculateTextSize(),

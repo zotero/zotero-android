@@ -85,13 +85,13 @@ private fun ColumnScope.DisplayFields(
     Spacer(modifier = Modifier.height(20.dp))
     CustomDivider()
     FieldTappableRow(
-        detailTitle = stringResource(id = Strings.sort_by, viewState.sortByTitle),
+        detailTitle = stringResource(id = Strings.items_sort_by) + ": " + viewState.sortByTitle,
         layoutType = layoutType,
         onClick = viewModel::onSortFieldClicked
     )
     Spacer(modifier = Modifier.height(20.dp))
-    val ascendingString = stringResource(id = Strings.ascending)
-    val descendingString = stringResource(id = Strings.descending)
+    val ascendingString = stringResource(id = Strings.items_ascending)
+    val descendingString = stringResource(id = Strings.items_descending)
     MultiSelector(
         modifier = Modifier
             .padding(all = 16.dp)

@@ -214,7 +214,7 @@ fun BottomModalDialogInfoPreview() {
                 message = StringId(Strings.delete_item_body),
                 onDismiss = {},
                 action = ModalDialog.Action(
-                    textResId = StringId(Strings.delete_item_yes)
+                    textResId = StringId(Strings.yes)
                 )
             )
         )
@@ -232,7 +232,7 @@ fun BottomModalDialogModalDialogConfirmationPreview() {
                 message = StringId(Strings.delete_item_body),
                 onDismiss = {},
                 confirmAction = ModalDialog.Action(
-                    textResId = StringId(Strings.delete_item_yes)
+                    textResId = StringId(Strings.yes)
                 ),
                 cancelAction = ModalDialog.Action(
                     textResId = StringId(Strings.cancel)

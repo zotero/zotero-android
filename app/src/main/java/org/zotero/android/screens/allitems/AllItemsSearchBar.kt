@@ -36,7 +36,7 @@ internal fun AllItemsSearchBar(
     }
 
     SearchBar(
-        hint = stringResource(id = Strings.search_items),
+        hint = stringResource(id = Strings.items_search_title),
         modifier = modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,

@@ -166,7 +166,7 @@ internal class FilterViewModel @Inject constructor(
             copy(
                 longPressOptionsHolder = LongPressOptionsHolder(
                     title = context.resources.getQuantityString(
-                        Plurals.number_of_tags_selected,
+                        Plurals.tag_picker_tags_selected,
                         viewState.selectedTags.size,
                         viewState.selectedTags.size
                     ),

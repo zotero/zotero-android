@@ -3,7 +3,9 @@ package org.zotero.android.screens.allitems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.allitems.data.ItemsError
+import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.theme.CustomPalette
 
@@ -18,12 +20,8 @@ internal fun ShowErrorOrDialog(
         is ItemsError.deleteConfirmationForItems -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.delete),
-                description = stringResource(
-                    id = if (itemsError.itemsKeys.size == 1) {
-                        Strings.delete_one_item
-                    } else {
-                        Strings.delete_multiple_items
-                    }
+                description = quantityStringResource(
+                    id = Plurals.items_delete_question, itemsError.itemsKeys.size
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.yes),
@@ -41,7 +39,9 @@ internal fun ShowErrorOrDialog(
         is ItemsError.deleteConfirmationForEmptyTrash -> {
             CustomAlertDialog(
                 title = stringResource(id = Strings.delete),
-                description = stringResource(Strings.delete_multiple_items),
+                description = quantityStringResource(
+                    id = Plurals.items_delete_question, 2
+                ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.yes),
                     textColor = CustomPalette.ErrorRed,

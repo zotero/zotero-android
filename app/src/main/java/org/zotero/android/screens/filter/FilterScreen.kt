@@ -39,9 +39,11 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.filter.data.FilterDialog
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.controls.CustomSwitch
+import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
@@ -84,7 +86,7 @@ internal fun FilterScreen(
                 Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = stringResource(id = Strings.downloaded_files),
+                        text = stringResource(id = Strings.items_filters_downloads),
                         fontSize = layoutType.calculateItemsRowTextSize(),
                         maxLines = 1,
                     )
@@ -187,7 +189,7 @@ private fun TopBar(
     onDone: () -> Unit,
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.filters),
+        title = stringResource(id = Strings.items_filters_title),
         onDone = onDone,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
     )
@@ -215,7 +217,7 @@ private fun RowScope.TagsSearchBar(
     }
 
     SearchBar(
-        hint = stringResource(id = Strings.search),
+        hint = stringResource(id = Strings.searchbar_placeholder),
         modifier = Modifier
             .weight(1f)
             .padding(start = 12.dp, end = 12.dp),
@@ -234,9 +236,9 @@ internal fun ShowFilterDialog(
     when (filterDialog) {
         is FilterDialog.confirmDeletion -> {
             CustomAlertDialog(
-                title = stringResource(id = Strings.delete_automatic_tags_dialog_title),
-                description = stringResource(
-                    id = Strings.delete_automatic_tags_dialog_body,
+                title = stringResource(id = Strings.tag_picker_confirm_deletion_question),
+                description = quantityStringResource(
+                    id = Plurals.tag_picker_confirm_deletion,
                     filterDialog.count
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(

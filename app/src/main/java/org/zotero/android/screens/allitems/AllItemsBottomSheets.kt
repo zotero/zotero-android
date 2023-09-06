@@ -67,17 +67,17 @@ private fun AddBottomSheetContent(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             RowItemWithArrow(
-                title = stringResource(id = Strings.add_item_bottom_sheet_manual),
+                title = stringResource(id = Strings.items_new),
                 onClick = { onAddManually() }
             )
             CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
-                title = stringResource(id = Strings.add_item_bottom_sheet_note),
+                title = stringResource(id = Strings.items_new_note),
                 onClick = { onAddNote() }
             )
             CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
-                title = stringResource(id = Strings.add_item_bottom_sheet_file),
+                title = stringResource(id = Strings.items_new_file),
                 onClick = { onAddFile() }
             )
         }

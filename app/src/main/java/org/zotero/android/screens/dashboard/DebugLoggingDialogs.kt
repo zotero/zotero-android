@@ -141,7 +141,7 @@ internal fun DebugLoggingDialogs(
                     text = stringResource(id = Strings.ok),
                 ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.share_copy),
+                    text = stringResource(id = Strings.copy_1),
                     onClick = { onShareCopy(dialogData.debugId) }
                 ),
                 dismissOnClickOutside = false,

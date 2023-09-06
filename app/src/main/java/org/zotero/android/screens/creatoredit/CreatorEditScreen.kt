@@ -112,7 +112,7 @@ internal fun CreatorEditScreen(
                         ),
                     text = stringResource(
                         id = if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.full)
-                            Strings.switch_to_two_field else Strings.switch_to_single_field
+                            Strings.creator_editor_switch_to_dual else Strings.creator_editor_switch_to_single
                     ),
                     color = CustomTheme.colors.zoteroBlueWithDarkMode,
                     style = CustomTheme.typography.default,
@@ -136,7 +136,7 @@ private fun LazyListScope.displayFields(
         Spacer(modifier = Modifier.height(20.dp))
         CustomDivider()
         FieldTappableRow(
-            detailTitle = stringResource(id = Strings.creator_type),
+            detailTitle = stringResource(id = Strings.creator_editor_creator),
             detailValue = viewState.creator?.localizedType ?: "",
             layoutType = layoutType,
             onClick = viewModel::onCreatorTypeClicked
@@ -149,7 +149,7 @@ private fun LazyListScope.displayFields(
         item {
             FieldEditableRow(
                 viewModel = viewModel,
-                detailTitle = stringResource(id = Strings.last_name),
+                detailTitle = stringResource(id = Strings.creator_editor_last_name),
                 detailValue = viewState.creator.lastName,
                 onValueChange = viewModel::onLastNameChange,
                 layoutType = layoutType,
@@ -160,7 +160,7 @@ private fun LazyListScope.displayFields(
         item {
             FieldEditableRow(
                 viewModel = viewModel,
-                detailTitle = stringResource(id = Strings.first_name),
+                detailTitle = stringResource(id = Strings.creator_editor_first_name),
                 detailValue = viewState.creator.firstName,
                 onValueChange = viewModel::onFirstNameChange,
                 layoutType = layoutType,

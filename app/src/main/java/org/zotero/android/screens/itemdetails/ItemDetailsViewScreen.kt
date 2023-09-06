@@ -181,7 +181,7 @@ internal fun AbstractFieldRow(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier.align(Alignment.Start),
-            text = stringResource(id = Strings.abstractS),
+            text = stringResource(id = Strings.abstract_1),
             color = CustomTheme.colors.secondaryContent,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculateTextSize(),

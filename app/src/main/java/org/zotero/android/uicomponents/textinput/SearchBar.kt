@@ -90,7 +90,7 @@ fun SearchBar(
         )
         if (textFieldState.text.isNotEmpty()) {
             TextFieldClearButton(
-                contentDescription = stringResource(id = Strings.clear_search),
+                contentDescription = stringResource(id = Strings.searchbar_accessibility_clear),
                 contentScale = ContentScale.None,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)

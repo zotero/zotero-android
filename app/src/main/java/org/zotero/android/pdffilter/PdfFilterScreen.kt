@@ -116,7 +116,7 @@ private fun TagsListAndSelect(
             val formattedTags = viewState.formattedTags()
             Text(
                 modifier = Modifier.weight(1f),
-                text = if (formattedTags.isEmpty()) stringResource(id = Strings.select_tags) else formattedTags,
+                text = if (formattedTags.isEmpty()) stringResource(id = Strings.pdf_annotations_sidebar_filter_tags_placeholder) else formattedTags,
                 color = CustomTheme.colors.primaryContent,
                 style = CustomTheme.typography.default,
                 fontSize = layoutType.calculateTextSize(),
@@ -158,7 +158,7 @@ private fun TopBar(
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = stringResource(id = Strings.filter_annotations),
+                text = stringResource(id = Strings.pdf_annotations_sidebar_filter_title),
                 color = CustomTheme.colors.primaryContent,
                 style = CustomTheme.typography.h2
             )

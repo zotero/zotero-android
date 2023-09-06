@@ -111,7 +111,7 @@ fun ErrorIcon(
     ) {
         Icon(
             painter = painterResource(id = Drawables.ic_alert_icon),
-            contentDescription = stringResource(id = Strings.error_content_description),
+            contentDescription = stringResource(id = Strings.error),
             modifier = Modifier.align(Alignment.Center),
             tint = iconTint
         )

@@ -25,7 +25,7 @@ internal fun ItemDetailsErrorDialogs(
                     CustomAlertDialog(
                         title = stringResource(id = Strings.error),
                         description = stringResource(
-                            id = Strings.cantCreateAttachmentsWithNames,
+                            id = Strings.errors_item_detail_cant_create_attachments_with_names,
                             itemDetailError.attachmentError.names.joinToString(separator = ", ")
                         ),
                         primaryAction = CustomAlertDialog.ActionConfig(
@@ -39,7 +39,7 @@ internal fun ItemDetailsErrorDialogs(
                     CustomAlertDialog(
                         title = stringResource(id = Strings.error),
                         description = stringResource(
-                            id = Strings.cantCreateAttachmentsWithNames,
+                            id = Strings.errors_item_detail_cant_create_attachments_with_names,
                             itemDetailError.attachmentError.names.joinToString(separator = ", ")
                         ),
                         primaryAction = CustomAlertDialog.ActionConfig(
@@ -55,7 +55,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.cantLoadData
+                    id = Strings.errors_item_detail_cant_load_data
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -68,7 +68,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.unknown
+                    id = Strings.errors_unknown
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -81,7 +81,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.cantSaveNotes
+                    id = Strings.errors_item_detail_cant_save_note
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -94,7 +94,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.cantSaveTags
+                    id = Strings.errors_item_detail_cant_save_tags
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -107,7 +107,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.cantStoreChanges
+                    id = Strings.errors_item_detail_cant_save_changes
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -120,7 +120,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.cantTrashItem
+                    id = Strings.errors_item_detail_cant_trash_item
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -131,7 +131,7 @@ internal fun ItemDetailsErrorDialogs(
         }
         is ItemDetailError.droppedFields -> {
             CustomAlertDialog(
-                title = stringResource(id = Strings.droppedFieldsTitle),
+                title = stringResource(id = Strings.errors_item_detail_dropped_fields_title),
                 description = droppedFieldsMessage(names = itemDetailError.fields),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -148,7 +148,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
-                    id = Strings.unsupportedType,
+                    id = Strings.errors_item_detail_unsupported_type,
                     itemDetailError.type
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
@@ -162,7 +162,7 @@ internal fun ItemDetailsErrorDialogs(
             CustomAlertDialog(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
-                    id = Strings.dataReloaded,
+                    id = Strings.item_detail_data_reloaded,
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.ok),
@@ -173,9 +173,9 @@ internal fun ItemDetailsErrorDialogs(
         }
         is ItemDetailError.askUserToDeleteOrRestoreItem -> {
             CustomAlertDialog(
-                title = stringResource(id = Strings.deletedTitle),
+                title = stringResource(id = Strings.item_detail_deleted_title),
                 description = stringResource(
-                    id = Strings.deletedMessage,
+                    id = Strings.item_detail_deleted_message,
                 ),
                 primaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.yes),
@@ -195,5 +195,5 @@ internal fun ItemDetailsErrorDialogs(
 @Composable
 private fun droppedFieldsMessage(names: List<String>): String {
     val formattedNames = names.map { "- $it\n" }.joinToString(separator = "")
-    return stringResource(id = Strings.droppedFieldsMessage, formattedNames)
+    return stringResource(id = Strings.errors_item_detail_dropped_fields_message, formattedNames)
 }

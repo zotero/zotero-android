@@ -69,7 +69,7 @@ internal fun SettingsScreen(
                 SettingsItem(
                     layoutType = layoutType,
                     isLastItem = true,
-                    title = stringResource(id = Strings.settings_account),
+                    title = stringResource(id = Strings.settings_sync_account),
                     onItemTapped = toAccountScreen
                 )
             }
@@ -79,7 +79,7 @@ internal fun SettingsScreen(
                 SettingsItem(
                     layoutType = layoutType,
                     isLastItem = true,
-                    title = stringResource(id = Strings.settings_debug_output_logging),
+                    title = stringResource(id = Strings.settings_debug),
                     onItemTapped = toDebugScreen
                 )
             }
@@ -89,13 +89,13 @@ internal fun SettingsScreen(
                 SettingsItem(
                     layoutType = layoutType,
                     isLastItem = false,
-                    title = stringResource(id = Strings.settings_support_and_feedback),
+                    title = stringResource(id = Strings.support_feedback),
                     onItemTapped = viewModel::openSupportAndFeedback
                 )
                 SettingsItem(
                     layoutType = layoutType,
                     isLastItem = true,
-                    title = stringResource(id = Strings.settings_privacy_policy),
+                    title = stringResource(id = Strings.privacy_policy),
                     onItemTapped = viewModel::openPrivacyPolicy
                 )
             }
@@ -108,7 +108,7 @@ private fun TopBar(
     onClose: () -> Unit,
 ) {
     CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings),
+        title = stringResource(id = Strings.settings_title),
         onClose = onClose,
         backgroundColor = CustomTheme.colors.popupBackgroundContent,
     )

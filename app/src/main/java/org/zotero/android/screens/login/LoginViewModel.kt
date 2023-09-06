@@ -37,12 +37,12 @@ internal class LoginViewModel @Inject constructor(
 
     fun onSignInClicked() = viewModelScope.launch {
         if (viewState.username.isEmpty()) {
-            showErrorRes(Strings.login_invalid_username)
+            showErrorRes(Strings.errors_login_invalid_username)
             return@launch
         }
 
         if (viewState.password.isEmpty()) {
-            showErrorRes(Strings.login_invalid_password)
+            showErrorRes(Strings.errors_login_invalid_password)
             return@launch
         }
 
@@ -59,7 +59,7 @@ internal class LoginViewModel @Inject constructor(
             }
             val error = networkResult as CustomResult.GeneralError.NetworkError
             if (error.httpCode == 403) {
-                showErrorRes(Strings.login_invalid_credentials)
+                showErrorRes(Strings.errors_login_invalid_credentials)
             } else {
                 showError(error.stringResponse)
             }

@@ -29,7 +29,7 @@ internal fun PdfSidebarSearchBar(
         viewModel.onSearch(it.text)
     }
     SearchBar(
-        hint = stringResource(id = Strings.search),
+        hint = stringResource(id = Strings.pdf_annotations_sidebar_search_title),
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,
         backgroundColor = CustomTheme.colors.pdfAnnotationsSearchBarBackground
