@@ -264,8 +264,13 @@ fun gitLastCommitHash(): String {
 }
 
 fun readPspdfkitKey() : String {
-    val keys: List<String> = rootProject
+    val file = rootProject
         .file("pspdfkit-key.txt")
+    if (!file.exists()) {
+        logger.warn("pspdfkit-key.txt file not found. Using PSPDFKit without a key")
+        return "\"\""
+    }
+    val keys: List<String> = file
         .readLines()
     return "\"${keys[0]}\""
 }
