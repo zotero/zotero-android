@@ -2,6 +2,7 @@ package org.zotero.android.pdf
 
 import android.content.Context
 import android.graphics.RectF
+import android.net.Uri
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
@@ -14,14 +15,19 @@ import com.pspdfkit.annotations.HighlightAnnotation
 import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
 import com.pspdfkit.configuration.PdfConfiguration
+import com.pspdfkit.configuration.page.PageFitMode
+import com.pspdfkit.configuration.page.PageScrollMode
+import com.pspdfkit.configuration.theming.ThemeMode
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.document.PdfDocumentLoader
+import com.pspdfkit.listeners.DocumentListener
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.manager.AnnotationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
@@ -46,7 +52,6 @@ import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.key
-import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.index
@@ -59,7 +64,13 @@ import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.DatabaseAnnotation
 import org.zotero.android.pdf.data.DocumentAnnotation
+import org.zotero.android.pdf.data.PDFSettings
+import org.zotero.android.pdf.data.PageFitting
+import org.zotero.android.pdf.data.PageLayoutMode
+import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PdfAnnotationChanges
+import org.zotero.android.pdf.settings.PdfSettingsArgs
+import org.zotero.android.pdf.settings.PdfSettingsChangeResult
 import org.zotero.android.pdffilter.PdfFilterArgs
 import org.zotero.android.pdffilter.PdfFilterResult
 import org.zotero.android.sync.AnnotationColorGenerator
@@ -77,10 +88,11 @@ class PdfReaderViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val sessionDataEventStream: SessionDataEventStream,
+    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
+    private val pdfReaderThemeDecider: PdfReaderThemeDecider,
     private val annotationPreviewManager: AnnotationPreviewManager,
     private val fileCache: AnnotationPreviewFileCache,
     private val context: Context,
-    private val fileStore: FileStore,
     private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
     val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
@@ -96,6 +108,7 @@ class PdfReaderViewModel @Inject constructor(
     private val onSearchStateFlow = MutableStateFlow("")
     var pspdfLayoutWrapper: FrameLayout? = null
     private lateinit var fragmentManager: FragmentManager
+    private var isTablet: Boolean = false
 
     var annotationMaxSideSize = 0
 
@@ -106,6 +119,83 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfSettingsChangeResult) {
+        viewModelScope.launch {
+            update(result.pdfSettings)
+        }
+    }
+    private var fragmentManagerReplaceRequired: Boolean = false
+
+    private fun update(pdfSettings: PDFSettings) {
+        defaults.setPDFSettings(pdfSettings)
+        pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
+        if (isTablet) {
+            updateFragment()
+        } else {
+            fragmentManagerReplaceRequired = true
+        }
+    }
+
+    private fun updateFragment() {
+        val updatedConfiguration = generatePdfConfiguration(defaults.getPDFSettings())
+
+        this.fragment = PdfFragment.newInstance(this.fragment, updatedConfiguration)
+        fragmentManager.commit {
+            replace(pspdfLayoutWrapper!!.id, this@PdfReaderViewModel.fragment)
+        }
+    }
+
+    private var pdfReaderThemeCancellable: Job? = null
+
+    private fun startObservingTheme() {
+        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .onEach { data ->
+                updateState {
+                    copy(isDark = data!!.isDark)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+
+    fun init2(
+        uri: Uri,
+        annotationMaxSideSize: Int,
+        pspdfLayoutWrapper: FrameLayout,
+        fragmentManager: FragmentManager,
+        isTablet: Boolean
+    ) = initOnce {
+        this.isTablet = isTablet
+        EventBus.getDefault().register(this)
+
+        startObservingTheme()
+
+        val pdfSettings = defaults.getPDFSettings()
+        pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
+        val configuration = generatePdfConfiguration(pdfSettings)
+        val initialFragment = PdfFragment.newInstance(uri, configuration)
+
+        initialFragment.addDocumentListener(object : DocumentListener {
+            override fun onDocumentLoaded(document: PdfDocument) {
+                this@PdfReaderViewModel.fragmentManager = fragmentManager
+                this@PdfReaderViewModel.pspdfLayoutWrapper = pspdfLayoutWrapper
+                this@PdfReaderViewModel.annotationMaxSideSize = annotationMaxSideSize
+                this@PdfReaderViewModel.fragment = initialFragment
+                this@PdfReaderViewModel.document = document
+                setupAnnotationCacheUpdateStream()
+                setupSearchStateFlow()
+                loadRawDocument()
+                annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
+                initState()
+                loadDocumentData()
+                setupInteractionListeners()
+            }
+        })
+        fragmentManager.commit {
+            replace(pspdfLayoutWrapper.id, initialFragment)
+        }
+    }
 
     fun init(
         document: PdfDocument,
@@ -1056,14 +1146,37 @@ class PdfReaderViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun generatePdfConfiguration(): PdfConfiguration {
-        val pdfSettings = fileStore.getPDFSettings()
+    private fun generatePdfConfiguration(pdfSettings: PDFSettings): PdfConfiguration {
+
+        val scrollDirection = when(pdfSettings.direction) {
+            PageScrollDirection.HORIZONTAL -> com.pspdfkit.configuration.page.PageScrollDirection.HORIZONTAL
+            PageScrollDirection.VERTICAL -> com.pspdfkit.configuration.page.PageScrollDirection.VERTICAL
+        }
+        val pageMode = when (pdfSettings.pageMode) {
+            PageLayoutMode.SINGLE -> com.pspdfkit.configuration.page.PageLayoutMode.SINGLE
+            PageLayoutMode.DOUBLE -> com.pspdfkit.configuration.page.PageLayoutMode.DOUBLE
+            PageLayoutMode.AUTOMATIC -> com.pspdfkit.configuration.page.PageLayoutMode.AUTO
+        }
+        val scrollMode = when (pdfSettings.transition) {
+            org.zotero.android.pdf.data.PageScrollMode.JUMP -> PageScrollMode.PER_PAGE
+            org.zotero.android.pdf.data.PageScrollMode.CONTINUOUS -> PageScrollMode.CONTINUOUS
+        }
+        val fitMode = when (pdfSettings.pageFitting) {
+            PageFitting.FIT -> PageFitMode.FIT_TO_WIDTH
+            PageFitting.FILL -> PageFitMode.FIT_TO_SCREEN
+        }
+        val isCalculatedThemeDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark
+        val themeMode = when(isCalculatedThemeDark) {
+            true -> ThemeMode.NIGHT
+            false -> ThemeMode.DEFAULT
+        }
         return PdfConfiguration.Builder()
-            .scrollDirection(pdfSettings.direction)
-            .scrollMode(pdfSettings.transition)
-            .fitMode(pdfSettings.pageFitting)
-            .layoutMode(pdfSettings.pageMode)
-            .themeMode(pdfSettings.appearanceMode)
+            .scrollDirection(scrollDirection)
+            .scrollMode(scrollMode)
+            .fitMode(fitMode)
+            .layoutMode(pageMode)
+            .invertColors(isCalculatedThemeDark)
+            .themeMode(themeMode)
             .disableFormEditing()
             .disableAnnotationRotation()
             .setSelectedAnnotationResizeEnabled(false)
@@ -1263,6 +1376,24 @@ class PdfReaderViewModel @Inject constructor(
             }
         }, 200)
     }
+
+    fun navigateToPdfSettings() {
+        ScreenArguments.pdfSettingsArgs = PdfSettingsArgs(defaults.getPDFSettings())
+        triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
+
+    }
+
+    fun setOsTheme(isDark: Boolean) {
+        pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+    }
+
+    fun onResume() {
+        if (fragmentManagerReplaceRequired) {
+            fragmentManagerReplaceRequired = false
+            updateFragment()
+        }
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -1297,6 +1428,7 @@ data class PdfReaderViewState(
 sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
+    object ShowPdfSettings : PdfReaderViewEffect()
     data class UpdateAnnotationsList(val scrollToIndex: Int): PdfReaderViewEffect()
 }
 

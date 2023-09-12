@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.zotero.android.files.DataMarshaller
+import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import javax.inject.Inject
@@ -28,6 +29,7 @@ open class Defaults @Inject constructor(
     private val didPerformFullSyncFix = "didPerformFullSyncFix"
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
     private val isDebugLogEnabled = "isDebugLogEnabled"
+    private val pdfSettings = "pdfSettings"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -118,6 +120,21 @@ open class Defaults @Inject constructor(
         )
             ?: return ItemsSortType.default
         return dataMarshaller.unmarshal(json)
+    }
+
+    fun getPDFSettings(): PDFSettings {
+        val json: String = sharedPreferences.getString(
+            this.pdfSettings,
+            null
+        ) ?: return PDFSettings.default()
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun setPDFSettings(
+        pdfSettings: PDFSettings,
+    ) {
+        val json = dataMarshaller.marshal(pdfSettings)
+        sharedPreferences.edit { putString(this@Defaults.pdfSettings, json) }
     }
 
     fun showCollectionItemCounts(): Boolean {

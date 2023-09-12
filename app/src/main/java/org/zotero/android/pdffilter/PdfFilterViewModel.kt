@@ -2,6 +2,9 @@ package org.zotero.android.pdffilter
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -11,6 +14,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.pdf.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
@@ -20,7 +24,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class PdfFilterViewModel @Inject constructor(
+    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
 ) : BaseViewModel2<PdfFilterViewState, PdfFilterViewEffect>(PdfFilterViewState()) {
+
+    private var pdfReaderThemeCancellable: Job? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
@@ -40,6 +47,11 @@ internal class PdfFilterViewModel @Inject constructor(
     }
 
     fun init() = initOnce {
+        updateState {
+            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+        }
+        startObservingTheme()
+
         EventBus.getDefault().register(this)
         val args = ScreenArguments.pdfFilterArgs
 
@@ -104,6 +116,17 @@ internal class PdfFilterViewModel @Inject constructor(
         EventBus.getDefault().unregister(this)
     }
 
+    private fun startObservingTheme() {
+        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .onEach { data ->
+                updateState {
+                    copy(isDark = data!!.isDark)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+
 }
 
 internal data class PdfFilterViewState(
@@ -111,6 +134,7 @@ internal data class PdfFilterViewState(
     val availableTags: List<Tag> = emptyList(),
     var colors: Set<String> = emptySet(),
     var tags: Set<String> = emptySet(),
+    val isDark: Boolean = false,
 ) : ViewState {
     fun isClearVisible(): Boolean {
         return !colors.isEmpty() || !tags.isEmpty()

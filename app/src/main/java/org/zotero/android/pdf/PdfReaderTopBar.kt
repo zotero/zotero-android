@@ -21,6 +21,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun PdfReaderTopBar(
     onShowHideSideBar: () -> Unit,
+    toPdfSettings: () -> Unit,
     elevation: Dp = AppBarDefaults.TopAppBarElevation,
 ) {
     TopAppBar(
@@ -42,6 +43,21 @@ internal fun PdfReaderTopBar(
             )
         },
         actions = {
+            Icon(
+                modifier = Modifier
+                    .size(28.dp)
+                    .safeClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(),
+                        onClick = {
+                            toPdfSettings()
+                        },
+                    ),
+                painter = painterResource(id = Drawables.baseline_settings_24),
+                contentDescription = null,
+                tint = CustomTheme.colors.zoteroBlueWithDarkMode
+            )
+            Spacer(modifier = Modifier.width(8.dp))
         },
         backgroundColor = CustomTheme.colors.surface,
         elevation = elevation,

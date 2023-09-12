@@ -39,7 +39,6 @@ import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
-import org.zotero.android.screens.dashboard.BuildInfo
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.filter.FilterScreen
@@ -75,7 +74,6 @@ internal fun DashboardRootPhoneNavigation(
     }
     Box{
         Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
-            BuildInfo()
             ZoteroNavHost(
                 navController = navController,
                 startDestination = CommonScreenDestinations.ALL_ITEMS,

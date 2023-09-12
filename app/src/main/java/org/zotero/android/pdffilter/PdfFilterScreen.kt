@@ -39,6 +39,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
@@ -47,50 +48,54 @@ internal fun PdfFilterScreen(
     navigateToTagPicker: () -> Unit,
     viewModel: PdfFilterViewModel = hiltViewModel(),
 ) {
+    viewModel.init()
+
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(PdfFilterViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                is PdfFilterViewEffect.OnBack -> {
+                    onBack()
+                }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            is PdfFilterViewEffect.OnBack -> {
-                onBack()
-            }
-
-            is PdfFilterViewEffect.NavigateToTagPickerScreen -> {
-                navigateToTagPicker()
-            }
-        }
-    }
-    CustomScaffold(
-        topBar = {
-            TopBar(
-                onClose = viewModel::onClose,
-                onClear = if (viewState.isClearVisible()) viewModel::onClear else null
-            )
-        },
-    ) {
-        Column(
-            modifier = Modifier
-                .background(color = CustomTheme.colors.surface)
-        ) {
-            LazyRow(
-                modifier = Modifier.align(CenterHorizontally),
-                contentPadding = PaddingValues(horizontal = 10.dp)
-            ) {
-                items(items = viewState.availableColors) { colorHex ->
-                    FilterCircle(
-                        hex = colorHex,
-                        isSelected = viewState.colors.contains(colorHex),
-                        onClick = { viewModel.toggleColor(colorHex) })
-                    Spacer(modifier = Modifier.width(12.dp))
+                is PdfFilterViewEffect.NavigateToTagPickerScreen -> {
+                    navigateToTagPicker()
                 }
             }
-            TagsListAndSelect(viewState = viewState, viewModel = viewModel, layoutType = layoutType)
+        }
+        CustomScaffold(
+            topBar = {
+                TopBar(
+                    onClose = viewModel::onClose,
+                    onClear = if (viewState.isClearVisible()) viewModel::onClear else null
+                )
+            },
+        ) {
+            Column(
+                modifier = Modifier
+                    .background(color = CustomTheme.colors.surface)
+            ) {
+                LazyRow(
+                    modifier = Modifier.align(CenterHorizontally),
+                    contentPadding = PaddingValues(horizontal = 10.dp)
+                ) {
+                    items(items = viewState.availableColors) { colorHex ->
+                        FilterCircle(
+                            hex = colorHex,
+                            isSelected = viewState.colors.contains(colorHex),
+                            onClick = { viewModel.toggleColor(colorHex) })
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+                }
+                TagsListAndSelect(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    layoutType = layoutType
+                )
+            }
         }
     }
 }

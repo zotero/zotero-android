@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration
 import com.google.gson.Gson
+import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.architecture.coroutines.ApplicationScope
@@ -59,6 +60,13 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
         controllers.init()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        initializePspdfKit()
+    }
+
+    private fun initializePspdfKit() {
+        if (BuildConfig.PSPDFKIT_KEY.isNotBlank()) {
+            PSPDFKit.initialize(this, BuildConfig.PSPDFKIT_KEY)
+        }
     }
 
     override fun getWorkManagerConfiguration() =

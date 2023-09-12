@@ -390,17 +390,6 @@ class FileStore @Inject constructor (
         serializeToFile(selectedCollectionId, collectionIdentifier)
     }
 
-    fun getPDFSettings(): PDFSettings {
-        return deserializeFromFile(pdfSetting)
-            ?: PDFSettings.default()
-    }
-
-    fun setPDFSettings(
-        pdfSettings: PDFSettings,
-    ) {
-        serializeToFile(pdfSetting, pdfSettings)
-    }
-
     private fun serializeToFile(fileName: String, objectToSave: Any) {
         val fileToSave = File(pathForFilename(fileName))
         val file = FileOutputStream(fileToSave)

@@ -16,6 +16,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,86 +31,109 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun PdfReaderScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
+    navigateToPdfSettings: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
-    LockScreenOrientation()
-    val params = ScreenArguments.pdfReaderArgs
-    val uri = params.uri
+    viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    ObserveLifecycleEvent { event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> { viewModel.onResume() }
+            else -> {}
+        }
+    }
+    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+        LockScreenOrientation()
+        val params = ScreenArguments.pdfReaderArgs
+        val uri = params.uri
 
-    val lazyListState = rememberLazyListState()
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            PdfReaderViewEffect.NavigateBack -> {
-                onBack()
-            }
-            PdfReaderViewEffect.ShowPdfFilters -> {
-                navigateToPdfFilter()
-            }
-            is PdfReaderViewEffect.UpdateAnnotationsList -> {
-                if (consumedEffect.scrollToIndex != -1) {
-                    lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
+        val lazyListState = rememberLazyListState()
+
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (val consumedEffect = viewEffect?.consume()) {
+                PdfReaderViewEffect.NavigateBack -> {
+                    onBack()
+                }
+
+                PdfReaderViewEffect.ShowPdfFilters -> {
+                    navigateToPdfFilter()
+                }
+
+                is PdfReaderViewEffect.UpdateAnnotationsList -> {
+                    if (consumedEffect.scrollToIndex != -1) {
+                        lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
+                    }
+                }
+
+                is PdfReaderViewEffect.ShowPdfSettings -> {
+                    navigateToPdfSettings()
+                }
+
+                null -> {
+
                 }
             }
+        }
 
-            null -> {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+//    var showSideBar by remember { mutableStateOf(false) }
 
+        CustomScaffold(
+            backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
+            topBar = {
+                PdfReaderTopBar(
+                    onShowHideSideBar = {
+                        viewModel.toggleSideBar()
+                    },
+                    toPdfSettings = { viewModel.navigateToPdfSettings() }
+                )
+            },
+        ) {
+            if (layoutType.isTablet()) {
+                PdfReaderTabletMode(
+                    showSideBar = viewState.showSideBar,
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    lazyListState = lazyListState,
+                    layoutType = layoutType,
+                    uri = uri
+                )
+            } else {
+                PdfReaderPhoneMode(
+                    showSideBar = viewState.showSideBar,
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    lazyListState = lazyListState,
+                    layoutType = layoutType,
+                    uri = uri
+                )
             }
         }
     }
-    SolidStatusBar()
 
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-//    var showSideBar by remember { mutableStateOf(false) }
-
-    CustomScaffold(
-        backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
-        topBar = {
-            PdfReaderTopBar(
-                onShowHideSideBar = {
-                    viewModel.toggleSideBar()
-                },
-            )
-        },
-    ) {
-        if (layoutType.isTablet()) {
-            PdfReaderTabletMode(
-                showSideBar = viewState.showSideBar,
-                viewState = viewState,
-                viewModel = viewModel,
-                lazyListState = lazyListState,
-                layoutType = layoutType,
-                uri = uri
-            )
-        } else {
-            PdfReaderPhoneMode(
-                showSideBar = viewState.showSideBar,
-                viewState = viewState,
-                viewModel = viewModel,
-                lazyListState = lazyListState,
-                layoutType = layoutType,
-                uri = uri
-            )
-        }
-    }
 }
 
 @Composable
@@ -229,4 +253,26 @@ private fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
+@Composable
+fun ObserveLifecycleEvent(onEvent: (Lifecycle.Event) -> Unit = {}) {
+    // Safely update the current lambdas when a new one is provided
+    val currentOnEvent by rememberUpdatedState(onEvent)
+    val lifecycleOwner = LocalLifecycleOwner.current
 
+    // If `lifecycleOwner` changes, dispose and reset the effect
+    DisposableEffect(lifecycleOwner) {
+        // Create an observer that triggers our remembered callbacks
+        // for sending analytics events
+        val observer = LifecycleEventObserver { _, event ->
+            currentOnEvent(event)
+        }
+
+        // Add the observer to the lifecycle
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        // When the effect leaves the Composition, remove the observer
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+}

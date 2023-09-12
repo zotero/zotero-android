@@ -26,6 +26,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.selector.MultiSelector
+import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
@@ -90,21 +91,21 @@ private fun ColumnScope.DisplayFields(
         onClick = viewModel::onSortFieldClicked
     )
     Spacer(modifier = Modifier.height(20.dp))
-    val ascendingString = stringResource(id = Strings.items_ascending)
-    val descendingString = stringResource(id = Strings.items_descending)
+    val ascendingOption = MultiSelectorOption(1, stringResource(id = Strings.items_ascending))
+    val descendingOption = MultiSelectorOption(2, stringResource(id = Strings.items_descending))
     MultiSelector(
         modifier = Modifier
             .padding(all = 16.dp)
             .fillMaxWidth()
             .height(layoutType.calculateSelectorHeight()),
         options = listOf(
-            ascendingString,
-            descendingString
+            ascendingOption,
+            descendingOption
         ),
-        selectedOption = if (viewState.isAscending)
-            ascendingString
-        else descendingString,
-        onOptionSelect = { viewModel.onSortDirectionChanged(it == ascendingString) },
+        selectedOptionId = if (viewState.isAscending)
+            ascendingOption.id
+        else descendingOption.id,
+        onOptionSelect = { viewModel.onSortDirectionChanged(it == ascendingOption.id) },
         fontSize = layoutType.calculateTextSize(),
     )
 }

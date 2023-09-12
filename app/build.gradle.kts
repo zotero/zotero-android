@@ -27,6 +27,7 @@ android {
 
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
         buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
+        buildConfigField("String", "PSPDFKIT_KEY", "\"\"")
         manifestPlaceholders["enableCrashReporting"] = false
     }
     signingConfigs {
@@ -75,10 +76,12 @@ android {
     productFlavors {
         dev {
             resValue("string", "app_name", """"Zotero Debug""")
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
         internal {
             resValue("string", "app_name", """"Zotero Internal""")
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
         beta {
             resValue("string", "app_name", """"Zotero Beta""")
@@ -189,7 +192,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx:21.2.2")
 
     //PSPDFKIT
-    implementation("com.pspdfkit:pspdfkit:8.7.2")
+    implementation("com.pspdfkit:pspdfkit:8.8.1")
 
     //Retrofit 2
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
@@ -258,4 +261,11 @@ fun gitLastCommitHash(): String {
         logger.warn("Unable to determine current branch: ${e.message}")
         "Unknown Branch"
     }
+}
+
+fun readPspdfkitKey() : String {
+    val keys: List<String> = rootProject
+        .file("pspdfkit-key.txt")
+        .readLines()
+    return "\"${keys[0]}\""
 }

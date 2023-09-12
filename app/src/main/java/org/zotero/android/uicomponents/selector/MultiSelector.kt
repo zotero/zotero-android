@@ -53,8 +53,8 @@ interface MultiSelectorState {
 
 @Stable
 class MultiSelectorStateImpl(
-    options: List<String>,
-    selectedOption: String,
+    options: List<MultiSelectorOption>,
+    selectedOption: Int,
     private val selectedColor: Color,
     private val unselectedColor: Color,
 ) : MultiSelectorState {
@@ -69,16 +69,16 @@ class MultiSelectorStateImpl(
     override val textColors: List<Color>
         get() = _textColors.value
 
-    private var _selectedIndex = Animatable(options.indexOf(selectedOption).toFloat())
+    private var _selectedIndex = Animatable(options.indexOfFirst {it.id == selectedOption}.toFloat())
     private var _startCornerPercent = Animatable(
-        if (options.first() == selectedOption) {
+        if (options.first().id == selectedOption) {
             50f
         } else {
             15f
         }
     )
     private var _endCornerPercent = Animatable(
-        if (options.last() == selectedOption) {
+        if (options.last().id == selectedOption) {
             50f
         } else {
             15f
@@ -153,44 +153,44 @@ class MultiSelectorStateImpl(
 
 @Composable
 fun rememberMultiSelectorState(
-    options: List<String>,
-    selectedOption: String,
+    options: List<MultiSelectorOption>,
+    selectedOptionId: Int,
     selectedColor: Color,
     unSelectedColor: Color,
 ) = remember {
     MultiSelectorStateImpl(
         options,
-        selectedOption,
+        selectedOptionId,
         selectedColor,
         unSelectedColor,
     )
 }
 
-enum class MultiSelectorOption {
+enum class MultiSelectorDrawOption {
     Option,
     Background,
 }
 
 @Composable
 fun MultiSelector(
-    options: List<String>,
-    selectedOption: String,
-    onOptionSelect: (String) -> Unit,
+    options: List<MultiSelectorOption>,
+    selectedOptionId: Int,
+    onOptionSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     selectedColor: Color = CustomTheme.colors.primaryContent,
     unselectedcolor: Color = CustomTheme.colors.primaryContent,
     state: MultiSelectorState = rememberMultiSelectorState(
         options = options,
-        selectedOption = selectedOption,
+        selectedOptionId = selectedOptionId,
         selectedColor = selectedColor,
         unSelectedColor = unselectedcolor,
     ),
     fontSize: TextUnit,
 ) {
     require(options.size >= 2) { "This composable requires at least 2 options" }
-    require(options.contains(selectedOption)) { "Invalid selected option [$selectedOption]" }
-    LaunchedEffect(key1 = options, key2 = selectedOption) {
-        state.selectOption(this, options.indexOf(selectedOption))
+    require(options.any { it.id == selectedOptionId}) { "Invalid selected option [$selectedOptionId]" }
+    LaunchedEffect(key1 = options, key2 = selectedOptionId) {
+        state.selectOption(this, options.indexOfFirst { it.id == selectedOptionId})
     }
     Layout(
         modifier = modifier
@@ -203,14 +203,14 @@ fun MultiSelector(
             options.forEachIndexed { index, option ->
                 Box(
                     modifier = Modifier
-                        .layoutId(MultiSelectorOption.Option)
-                        .clickable { onOptionSelect(option) },
+                        .layoutId(MultiSelectorDrawOption.Option)
+                        .clickable { onOptionSelect(option.id) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = option,
+                        text = option.optionString,
                         style = CustomTheme.typography.default,
-                        color = colors[index],
+                        color = selectedColor,
                         fontSize = fontSize,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -220,7 +220,7 @@ fun MultiSelector(
             }
             Box(
                 modifier = Modifier
-                    .layoutId(MultiSelectorOption.Background)
+                    .layoutId(MultiSelectorDrawOption.Background)
                     .padding(2.dp)
                     .clip(
                         shape = RoundedCornerShape(
@@ -240,10 +240,10 @@ fun MultiSelector(
             height = constraints.maxHeight,
         )
         val optionPlaceables = measurables
-            .filter { measurable -> measurable.layoutId == MultiSelectorOption.Option }
+            .filter { measurable -> measurable.layoutId == MultiSelectorDrawOption.Option }
             .map { measurable -> measurable.measure(optionConstraints) }
         val backgroundPlaceable = measurables
-            .first { measurable -> measurable.layoutId == MultiSelectorOption.Background }
+            .first { measurable -> measurable.layoutId == MultiSelectorDrawOption.Background }
             .measure(optionConstraints)
         layout(
             width = constraints.maxWidth,
@@ -270,13 +270,25 @@ fun PreviewMultiSelector() {
         Surface(
             color = CustomTheme.colors.surface,
         ) {
-            val options1 = listOf("Lorem", "Ipsum", "Dolor")
+            val options1 = listOf(
+                MultiSelectorOption(1, "Lorem"),
+                MultiSelectorOption(2, "Ipsum"),
+                MultiSelectorOption(3, "Dolor")
+            )
             var selectedOption1 by remember {
-                mutableStateOf(options1.first())
+                mutableStateOf(options1.first().id)
             }
-            val options2 = listOf("Sit", "Amet", "Consectetur", "Elit", "Quis")
+            val options2 =
+                listOf(
+                    MultiSelectorOption(1, "Sit"),
+                    MultiSelectorOption(2, "Amet"),
+                    MultiSelectorOption(3, "Consectetur"),
+                    MultiSelectorOption(4, "Elit"),
+                    MultiSelectorOption(5, "Quis")
+                )
+
             var selectedOption2 by remember {
-                mutableStateOf(options2.first())
+                mutableStateOf(options2.first().id)
             }
             Column(
                 modifier = Modifier
@@ -286,7 +298,7 @@ fun PreviewMultiSelector() {
             ) {
                 MultiSelector(
                     options = options1,
-                    selectedOption = selectedOption1,
+                    selectedOptionId = selectedOption1,
                     onOptionSelect = { option ->
                         selectedOption1 = option
                     },
@@ -299,7 +311,7 @@ fun PreviewMultiSelector() {
 
                 MultiSelector(
                     options = options2,
-                    selectedOption = selectedOption2,
+                    selectedOptionId = selectedOption2,
                     onOptionSelect = { option ->
                         selectedOption2 = option
                     },

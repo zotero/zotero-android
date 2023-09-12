@@ -21,7 +21,6 @@ import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
-import org.zotero.android.screens.dashboard.BuildInfo
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -61,7 +60,6 @@ internal fun DashboardRootTabletNavigationScreen(
 //        modifier = Modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
-            BuildInfo()
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(0.35f)) {
                     TabletLeftPaneNavigation(

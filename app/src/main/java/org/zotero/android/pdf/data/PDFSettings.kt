@@ -1,27 +1,45 @@
 package org.zotero.android.pdf.data
 
-import com.pspdfkit.configuration.page.PageFitMode
-import com.pspdfkit.configuration.page.PageLayoutMode
-import com.pspdfkit.configuration.page.PageScrollDirection
-import com.pspdfkit.configuration.page.PageScrollMode
-import com.pspdfkit.configuration.theming.ThemeMode
+
+enum class PageScrollMode {
+ JUMP, CONTINUOUS
+}
+
+enum class PageLayoutMode {
+    SINGLE,
+    DOUBLE,
+    AUTOMATIC,
+}
+
+enum class PageScrollDirection {
+    HORIZONTAL, VERTICAL
+}
+
+enum class PageFitting {
+    FIT, FILL
+}
+
+enum class PageAppearanceMode {
+    LIGHT, DARK, AUTOMATIC
+}
+
 
 data class PDFSettings(
     var transition: PageScrollMode,
     var pageMode: PageLayoutMode,
     var direction: PageScrollDirection,
-    var pageFitting: PageFitMode,
-    var appearanceMode: ThemeMode,
+    var pageFitting: PageFitting,
+    var appearanceMode: PageAppearanceMode,
     var idleTimerDisabled: Boolean,
 ) {
     companion object {
         fun default(): PDFSettings {
             return PDFSettings(
                 transition = PageScrollMode.CONTINUOUS,
-                pageMode = PageLayoutMode.AUTO,
+                pageMode = PageLayoutMode.AUTOMATIC,
                 direction = PageScrollDirection.HORIZONTAL,
-                pageFitting = PageFitMode.FIT_TO_WIDTH,
-                appearanceMode = ThemeMode.DEFAULT,
+                pageFitting = PageFitting.FIT,
+                appearanceMode = PageAppearanceMode.AUTOMATIC,
                 idleTimerDisabled = false
             )
         }

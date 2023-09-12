@@ -11,17 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.fragment.app.commit
-import com.pspdfkit.document.PdfDocument
-import com.pspdfkit.listeners.DocumentListener
-import com.pspdfkit.ui.PdfFragment
 import org.zotero.android.R
+import org.zotero.android.architecture.ui.CustomLayoutSize
 
 @Composable
 fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     val activity = LocalContext.current as? AppCompatActivity ?: return
     val annotationMaxSideSize = annotationMaxSideSize()
     val fragmentManager = activity.supportFragmentManager
+    val layoutType = CustomLayoutSize.calculateLayoutType()
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -33,22 +31,14 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
             val frameLayout = FrameLayout(context).apply {
                 val wrapperLayout = this
                 id = View.generateViewId()
-                fragmentManager.commit {
-                    val configuration = viewModel.generatePdfConfiguration()
-                    val newFragment = PdfFragment.newInstance(uri, configuration)
-                    newFragment.addDocumentListener(object : DocumentListener {
-                        override fun onDocumentLoaded(document: PdfDocument) {
-                            viewModel.init(
-                                document = document,
-                                pspdfLayoutWrapper = wrapperLayout,
-                                fragment = newFragment,
-                                fragmentManager = fragmentManager,
-                                annotationMaxSideSize = annotationMaxSideSize
-                            )
-                        }
-                    })
-                    add(id, newFragment)
-                }
+                viewModel.init2(
+                    isTablet = layoutType.isTablet(),
+                    uri = uri,
+                    pspdfLayoutWrapper = wrapperLayout,
+                    fragmentManager = fragmentManager,
+                    annotationMaxSideSize = annotationMaxSideSize
+                )
+
             }
             frameLayout
         },

@@ -115,6 +115,13 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculatePdfSettingsOptionTextSize(): TextUnit {
+            return when (this) {
+                big, medium -> 14.sp
+                small -> 14.sp
+            }
+        }
+
         fun calculateAllItemsRowTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 16.sp
