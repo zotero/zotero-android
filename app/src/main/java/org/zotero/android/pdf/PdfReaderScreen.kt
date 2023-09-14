@@ -1,11 +1,5 @@
 package org.zotero.android.pdf
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-import android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
@@ -27,22 +21,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
@@ -59,12 +48,11 @@ internal fun PdfReaderScreen(
     val viewEffect by viewModel.viewEffects.observeAsState()
     ObserveLifecycleEvent { event ->
         when (event) {
-            Lifecycle.Event.ON_RESUME -> { viewModel.onResume() }
+            Lifecycle.Event.ON_STOP -> { viewModel.onStop() }
             else -> {}
         }
     }
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
-        LockScreenOrientation()
         val params = ScreenArguments.pdfReaderArgs
         val uri = params.uri
 
@@ -232,47 +220,3 @@ private fun AnimatedContentScope<Boolean>.createSidebarTransitionSpec(): Content
         ))
 }
 
-@Composable
-fun LockScreenOrientation() {
-    val currentOrientation =
-        if (LocalConfiguration.current.orientation == SCREEN_ORIENTATION_PORTRAIT) SCREEN_ORIENTATION_USER_PORTRAIT else SCREEN_ORIENTATION_USER_LANDSCAPE
-    val context = LocalContext.current
-    DisposableEffect(currentOrientation) {
-        val activity = context.findActivity() ?: return@DisposableEffect onDispose {}
-        val originalOrientation = activity.requestedOrientation
-        activity.requestedOrientation = currentOrientation
-        onDispose {
-            activity.requestedOrientation = originalOrientation
-        }
-    }
-}
-
-private fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
-}
-
-@Composable
-fun ObserveLifecycleEvent(onEvent: (Lifecycle.Event) -> Unit = {}) {
-    // Safely update the current lambdas when a new one is provided
-    val currentOnEvent by rememberUpdatedState(onEvent)
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    // If `lifecycleOwner` changes, dispose and reset the effect
-    DisposableEffect(lifecycleOwner) {
-        // Create an observer that triggers our remembered callbacks
-        // for sending analytics events
-        val observer = LifecycleEventObserver { _, event ->
-            currentOnEvent(event)
-        }
-
-        // Add the observer to the lifecycle
-        lifecycleOwner.lifecycle.addObserver(observer)
-
-        // When the effect leaves the Composition, remove the observer
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-}

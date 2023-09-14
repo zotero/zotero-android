@@ -23,18 +23,13 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
-            val savedWrapper = viewModel.pspdfLayoutWrapper
-            if (savedWrapper != null) {
-                viewModel.updateVisibilityOfAnnotations()
-                return@AndroidView savedWrapper
-            }
             val frameLayout = FrameLayout(context).apply {
                 val wrapperLayout = this
                 id = View.generateViewId()
-                viewModel.init2(
+                viewModel.init(
                     isTablet = layoutType.isTablet(),
                     uri = uri,
-                    pspdfLayoutWrapper = wrapperLayout,
+                    containerId = id,
                     fragmentManager = fragmentManager,
                     annotationMaxSideSize = annotationMaxSideSize
                 )
@@ -46,52 +41,6 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
         }
     )
 }
-
-
-//@Composable
-//fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
-//    val activity = LocalContext.current as? AppCompatActivity ?: return
-//    val annotationMaxSideSize = annotationMaxSideSize()
-//    val fragmentManager = activity.supportFragmentManager
-//    AndroidView(
-//        modifier = Modifier.fillMaxSize(),
-//        onRelease = {t ->
-//            fragmentManager.commitNow {
-//                remove(viewModel.fragment)
-//            }
-//            println()
-//        },
-//        onReset = {t ->},
-//        factory = { context ->
-//            val savedWrapper = viewModel.pspdfLayoutWrapper
-//            if (savedWrapper != null) {
-//                return@AndroidView savedWrapper
-//            }
-//            val frameLayout = FrameLayout(context).apply {
-//                val wrapperLayout = this
-//                id = View.generateViewId()
-//                fragmentManager.commit {
-//                    val configuration = viewModel.generatePdfConfiguration()
-//                    val newFragment = PdfFragment.newInstance(uri, configuration)
-//                    newFragment.addDocumentListener(object : DocumentListener {
-//                        override fun onDocumentLoaded(document: PdfDocument) {
-//                            viewModel.init(
-//                                document = document,
-//                                wrapperLayout = wrapperLayout,
-//                                fragment = newFragment,
-//                                annotationMaxSideSize = annotationMaxSideSize
-//                            )
-//                        }
-//                    })
-//                    add(id, newFragment)
-//                }
-//            }
-//            frameLayout
-//        },
-//        update = {
-//        }
-//    )
-//}
 
 @Composable
 private fun annotationMaxSideSize(): Int {
