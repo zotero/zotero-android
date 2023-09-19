@@ -3,14 +3,13 @@ package org.zotero.android.pdf
 import android.content.res.Resources
 import android.net.Uri
 import android.util.TypedValue
-import android.view.View
-import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.FragmentContainerView
 import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 
@@ -23,21 +22,20 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
-            val frameLayout = FrameLayout(context).apply {
-                val wrapperLayout = this
-                id = View.generateViewId()
-                viewModel.init(
-                    isTablet = layoutType.isTablet(),
-                    uri = uri,
-                    containerId = id,
-                    fragmentManager = fragmentManager,
-                    annotationMaxSideSize = annotationMaxSideSize
-                )
-
+            val containerId = R.id.container
+            val fragmentContainerView = FragmentContainerView(context).apply {
+                id = containerId
             }
-            frameLayout
+            viewModel.init(
+                isTablet = layoutType.isTablet(),
+                uri = uri,
+                containerId = fragmentContainerView.id,
+                fragmentManager = fragmentManager,
+                annotationMaxSideSize = annotationMaxSideSize
+            )
+            fragmentContainerView
         },
-        update = {
+        update = { _ ->
         }
     )
 }

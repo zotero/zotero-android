@@ -5,6 +5,8 @@ import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.AnnotationKey
+import org.zotero.android.sync.Library
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
 import java.util.Date
 
@@ -43,11 +45,15 @@ data class DocumentAnnotation(
         return this.author
     }
 
-//    fun isAuthor(currentUserId: Int): Boolean {
-//        return this.isAuthor
-//    }
-//
-//    fun author(displayName: String, username: String): String {
-//        return this.author
-//    }
+    override fun editability(currentUserId: Long, library: Library): AnnotationEditability {
+        when (library.identifier) {
+            is LibraryIdentifier.custom -> return AnnotationEditability.editable
+            is LibraryIdentifier.group -> {
+                if (!library.metadataEditable) {
+                    AnnotationEditability.notEditable
+                }
+                return if (this.isAuthor) AnnotationEditability.editable else AnnotationEditability.deletable
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package org.zotero.android.pdf
 
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ContentTransform
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -41,42 +43,50 @@ internal fun PdfReaderScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: () -> Unit,
+    navigateToPdfAnnotation: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    val activity = LocalContext.current as? AppCompatActivity ?: return
     ObserveLifecycleEvent { event ->
         when (event) {
-            Lifecycle.Event.ON_STOP -> { viewModel.onStop() }
+            Lifecycle.Event.ON_STOP -> { viewModel.onStop(activity.isChangingConfigurations) }
             else -> {}
         }
     }
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
         val params = ScreenArguments.pdfReaderArgs
         val uri = params.uri
-
-
         val lazyListState = rememberLazyListState()
-
-
+        val layoutType = CustomLayoutSize.calculateLayoutType()
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
-                PdfReaderViewEffect.NavigateBack -> {
+                is PdfReaderViewEffect.NavigateBack -> {
                     onBack()
                 }
 
-                PdfReaderViewEffect.ShowPdfFilters -> {
+                is PdfReaderViewEffect.ShowPdfFilters -> {
                     navigateToPdfFilter()
                 }
 
-                is PdfReaderViewEffect.UpdateAnnotationsList -> {
+                is PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList -> {
+                    if (consumedEffect.showAnnotationPopup) {
+                        if (!layoutType.isTablet()) {
+                            viewModel.removeFragment()
+                        }
+                        navigateToPdfAnnotation()
+                    }
                     if (consumedEffect.scrollToIndex != -1) {
                         lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
                     }
                 }
 
                 is PdfReaderViewEffect.ShowPdfSettings -> {
+                    if (!layoutType.isTablet()) {
+                        viewModel.removeFragment()
+                    }
                     navigateToPdfSettings()
                 }
 
@@ -85,9 +95,6 @@ internal fun PdfReaderScreen(
                 }
             }
         }
-
-        val layoutType = CustomLayoutSize.calculateLayoutType()
-//    var showSideBar by remember { mutableStateOf(false) }
 
         CustomScaffold(
             backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
@@ -136,7 +143,7 @@ private fun PdfReaderTabletMode(
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = showSideBar, transitionSpec = {
             createSidebarTransitionSpec()
-        }) { showSideBar ->
+        }, label = "") { showSideBar ->
             if (showSideBar) {
                 Column(
                     modifier = Modifier
@@ -189,7 +196,7 @@ private fun PdfReaderPhoneMode(
         }
         AnimatedContent(targetState = showSideBar, transitionSpec = {
             createSidebarTransitionSpec()
-        }) { showSideBar ->
+        }, label = "") { showSideBar ->
             if (showSideBar) {
                 Column(
                     modifier = Modifier

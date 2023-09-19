@@ -1,5 +1,6 @@
 package org.zotero.android.architecture
 
+import org.zotero.android.pdf.annotation.PdfAnnotationArgs
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.settings.PdfSettingsArgs
 import org.zotero.android.pdffilter.PdfFilterArgs
@@ -34,4 +35,5 @@ object ScreenArguments {
     lateinit var pdfReaderArgs: PdfReaderArgs
     lateinit var pdfFilterArgs: PdfFilterArgs
     lateinit var pdfSettingsArgs: PdfSettingsArgs
+    lateinit var pdfAnnotationArgs: PdfAnnotationArgs
 }

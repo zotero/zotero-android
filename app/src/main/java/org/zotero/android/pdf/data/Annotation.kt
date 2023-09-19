@@ -6,6 +6,7 @@ import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
+import org.zotero.android.sync.Library
 import org.zotero.android.sync.Tag
 
 interface Annotation {
@@ -20,7 +21,7 @@ interface Annotation {
     val sortIndex: String
     val tags: List<Tag>
 
-
+    fun editability(currentUserId: Long, library: Library): AnnotationEditability
     fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<List<PointF>>
     fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<RectF>
 

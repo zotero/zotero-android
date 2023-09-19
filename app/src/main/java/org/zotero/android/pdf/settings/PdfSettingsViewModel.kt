@@ -11,6 +11,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.pdf.PdfReaderCurrentThemeEventStream
+import org.zotero.android.pdf.PdfReaderThemeDecider
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.pdf.data.PageAppearanceMode
 import org.zotero.android.pdf.data.PageFitting
@@ -22,6 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class PdfSettingsViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
+    private val pdfReaderThemeDecider: PdfReaderThemeDecider,
 ) : BaseViewModel2<PdfSettingsViewState, PdfSettingsViewEffect>(PdfSettingsViewState()) {
 
     private lateinit var pdfSettings: PDFSettings
@@ -180,6 +182,10 @@ internal class PdfSettingsViewModel @Inject constructor(
         }
 
         EventBus.getDefault().post(PdfSettingsChangeResult(pdfSettings))
+    }
+
+    fun setOsTheme(isDark: Boolean) {
+        pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
 }

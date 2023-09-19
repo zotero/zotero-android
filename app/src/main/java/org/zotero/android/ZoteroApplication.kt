@@ -9,6 +9,7 @@ import androidx.work.Configuration
 import com.google.gson.Gson
 import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
+import org.zotero.android.BuildConfig.EVENT_AND_CRASH_LOGGING_ENABLED
 import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.crashreporting.FirebaseCrashReportingTree
@@ -87,6 +88,9 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
     }
 
     private fun setUpLogging() {
+        if (!EVENT_AND_CRASH_LOGGING_ENABLED) {
+            return
+        }
         val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             crashFileWriter.writeCrashToFile(throwable.stackTraceToString())

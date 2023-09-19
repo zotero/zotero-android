@@ -76,12 +76,12 @@ android {
     productFlavors {
         dev {
             resValue("string", "app_name", """"Zotero Debug""")
-            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
+//            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
         internal {
             resValue("string", "app_name", """"Zotero Internal""")
-            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
+//            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
         beta {
             resValue("string", "app_name", """"Zotero Beta""")

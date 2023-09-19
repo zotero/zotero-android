@@ -3,6 +3,7 @@ package org.zotero.android.pdf
 import android.content.Context
 import android.graphics.RectF
 import android.net.Uri
+import android.os.Handler
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.viewModelScope
@@ -57,6 +58,7 @@ import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.annotation.PdfAnnotationArgs
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
@@ -109,6 +111,8 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var fragmentManager: FragmentManager
     private var isTablet: Boolean = false
 
+    private val handler = Handler(context.mainLooper)
+
     //Used to recreate a new fragment preserving viewport state
     private lateinit var pdfDocumentBeforeFragmentDestruction: PdfDocument
 
@@ -149,13 +153,12 @@ class PdfReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-
     fun init(
         uri: Uri,
         annotationMaxSideSize: Int,
         containerId: Int,
         fragmentManager: FragmentManager,
-        isTablet: Boolean
+        isTablet: Boolean,
     ) {
         this.isTablet = isTablet
         this.fragmentManager = fragmentManager
@@ -184,7 +187,7 @@ class PdfReaderViewModel @Inject constructor(
             }
         })
         fragmentManager.commit {
-            replace(containerId, this@PdfReaderViewModel.fragment)
+            add(containerId, this@PdfReaderViewModel.fragment)
         }
     }
 
@@ -209,7 +212,12 @@ class PdfReaderViewModel @Inject constructor(
         annotationPreviewCacheUpdatedEventStream.flow()
             .onEach {
 //                notifyItemChanged(viewModel.viewState.sortedKeys.indexOfFirst { it.key == key })
-                triggerEffect(PdfReaderViewEffect.UpdateAnnotationsList(-1))
+                triggerEffect(
+                    PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(
+                        scrollToIndex = -1,
+                        showAnnotationPopup = false
+                    )
+                )
             }
             .launchIn(viewModelScope)
     }
@@ -411,7 +419,7 @@ class PdfReaderViewModel @Inject constructor(
             else -> {}
         }
         observeDocument()
-        updateAnnotationsList()
+        updateAnnotationsList(forceNotShowAnnotationPopup = true)
     }
 
     private fun observeDocument() {
@@ -796,7 +804,7 @@ class PdfReaderViewModel @Inject constructor(
         observeDocument()
         this.comments = comments
         this.databaseAnnotations = objects.freeze()
-        updateAnnotationsList()
+        updateAnnotationsList(forceNotShowAnnotationPopup = true)
         if (viewState.snapshotKeys != null) {
             updateState {
                 copy(
@@ -893,9 +901,18 @@ class PdfReaderViewModel @Inject constructor(
         updateAnnotationsList()
     }
 
-    private fun updateAnnotationsList() {
+    private fun updateAnnotationsList(forceNotShowAnnotationPopup: Boolean = false) {
+        val showAnnotationPopup = !forceNotShowAnnotationPopup && !viewState.showSideBar && selectedAnnotation != null
+        if (showAnnotationPopup) {
+            ScreenArguments.pdfAnnotationArgs = PdfAnnotationArgs(
+                selectedAnnotation = selectedAnnotation,
+                userId = viewState.userId,
+                library = viewState.library
+            )
+        }
+
         val index = viewState.sortedKeys.indexOf(viewState.selectedAnnotationKey)
-        triggerEffect(PdfReaderViewEffect.UpdateAnnotationsList(index))
+        triggerEffect(PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(index, showAnnotationPopup))
     }
 
     private fun selectAndFocusAnnotationInDocument() {
@@ -1387,29 +1404,29 @@ class PdfReaderViewModel @Inject constructor(
         if (filter == viewState.filter) {
             return
         }
-        filterAnnotations(term = viewState.searchTerm, filter = filter,)
+        filterAnnotations(term = viewState.searchTerm, filter = filter)
     }
 
     fun navigateToPdfSettings() {
         ScreenArguments.pdfSettingsArgs = PdfSettingsArgs(defaults.getPDFSettings())
         triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
-
     }
 
     fun setOsTheme(isDark: Boolean) {
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
-    fun onStop() {
-        removeFragment()
+    fun onStop(isChangingConfigurations: Boolean) {
+        pdfDocumentBeforeFragmentDestruction = fragment.document!!
+        if (isChangingConfigurations) {
+            removeFragment()
+        }
     }
 
-    private fun removeFragment() {
-        pdfDocumentBeforeFragmentDestruction = fragment.document!!
+    fun removeFragment() {
         fragmentManager.commit {
             remove(this@PdfReaderViewModel.fragment)
         }
-
     }
 
     private fun replaceFragment() {
@@ -1424,16 +1441,27 @@ class PdfReaderViewModel @Inject constructor(
                         document.annotation(annotationToReselect.page, annotationToReselect.key)
                     if (pdfAnnotation != null) {
                         fragment.setSelectedAnnotation(pdfAnnotation)
-                        setupInteractionListeners()
-                        observeDocument()
                     }
                 }
+                setupInteractionListeners()
+                observeDocument()
             }
         })
         fragmentManager.commit {
             replace(containerId, this@PdfReaderViewModel.fragment)
         }
+        updateVisibilityOfAnnotations()
     }
+
+    private fun updateVisibilityOfAnnotations() {
+        handler.postDelayed({
+            val pageIndex = if (fragment.pageIndex == -1) 0 else fragment.pageIndex
+            this.document.annotationProvider.getAnnotations(pageIndex).forEach {
+                this.fragment.notifyAnnotationHasChanged(it)
+            }
+        }, 200)
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -1469,7 +1497,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
-    data class UpdateAnnotationsList(val scrollToIndex: Int): PdfReaderViewEffect()
+    data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()
 }
 
 data class AnnotationKey(

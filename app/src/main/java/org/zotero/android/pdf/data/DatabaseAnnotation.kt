@@ -55,7 +55,7 @@ data class DatabaseAnnotation(
         }
     }
 
-    fun editability(currentUserId: Long, library: Library): AnnotationEditability {
+    override fun editability(currentUserId: Long, library: Library): AnnotationEditability {
         when (library.identifier) {
             is LibraryIdentifier.custom -> {
                 return if (library.metadataEditable) AnnotationEditability.editable else AnnotationEditability.notEditable

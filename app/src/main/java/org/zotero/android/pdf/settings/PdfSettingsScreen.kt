@@ -2,6 +2,7 @@ package org.zotero.android.pdf.settings
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,7 @@ internal fun PdfSettingsScreen(
     viewModel: PdfSettingsViewModel = hiltViewModel(),
 ) {
     viewModel.init()
+    viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfSettingsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
