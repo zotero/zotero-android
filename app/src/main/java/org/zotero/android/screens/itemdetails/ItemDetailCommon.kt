@@ -67,10 +67,10 @@ internal fun FieldRow(
         modifier = Modifier
             .fillMaxWidth()
             .safeClickable(
-            onClick = onRowTapped,
-            interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(bounded = true)
-        )
+                onClick = onRowTapped,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true)
+            )
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         Row {
@@ -163,7 +163,7 @@ fun AddItemRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                modifier = Modifier.size(layoutType.calculateIconSize()),
+                modifier = Modifier.size(layoutType.calculateItemDetailsAddButtonSize()),
                 painter = painterResource(id = Drawables.add_icon),
                 contentDescription = null,
             )
@@ -180,7 +180,6 @@ fun AddItemRow(
             )
         }
     }
-
 }
 
 @Composable
@@ -256,18 +255,17 @@ private fun LazyListScope.listOfItems(
     itemsIndexed(
         itemTitles
     ) { index, item ->
-        Box {
+        Column(modifier = Modifier.combinedClickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(),
+            onClick = { onItemClicked(index) },
+            onLongClick = { onItemLongClicked(index) }
+        )) {
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = { onItemClicked(index) },
-                        onLongClick = { onItemLongClicked(index) }
-                    )
-                    .padding(all = 8.dp)
-                    .padding(start = 4.dp),
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
@@ -275,25 +273,23 @@ private fun LazyListScope.listOfItems(
                     modifier = Modifier.size(layoutType.calculateIconSize()),
                     contentDescription = null,
                 )
-                Column(
+
+                Text(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp, top = 8.dp)
-                ) {
-                    Text(
-                        text = HtmlCompat.fromHtml(
-                            item,
-                            HtmlCompat.FROM_HTML_MODE_LEGACY
-                        ).toString(),
-                        fontSize = layoutType.calculateTextSize(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    CustomDivider(modifier = Modifier.padding(top = 8.dp))
-                }
+                        .padding(start = 12.dp),
+                    text = HtmlCompat.fromHtml(
+                        item,
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    ).toString(),
+                    fontSize = layoutType.calculateTextSize(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            CustomDivider(modifier = Modifier.padding(start = layoutType.calculateItemDetailsDividerStartPadding()))
         }
-
     }
     if (onAddItemClick != null) {
         item {
@@ -339,43 +335,39 @@ private fun LazyListScope.listOfTags(
     items(
         viewState.tags
     ) { item ->
-        Box {
+        Column(modifier = Modifier.combinedClickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = rememberRipple(),
+            onClick = {},
+            onLongClick = { viewModel.onTagLongClick(item) }
+        )) {
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = {},
-                        onLongClick = { viewModel.onTagLongClick(item) }
-                    )
-                    .padding(all = 8.dp)
-                    .padding(start = 4.dp),
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CircleCheckBox(
                     isChecked = false,
                     layoutType = layoutType
                 )
-                Column(
+                Text(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp, top = 8.dp)
-                ) {
-                    Text(
-                        text = HtmlCompat.fromHtml(
-                            item.name,
-                            HtmlCompat.FROM_HTML_MODE_LEGACY
-                        ).toString(),
-                        fontSize = layoutType.calculateTextSize(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    CustomDivider(modifier = Modifier.padding(top = 8.dp))
-                }
+                        .padding(start = 12.dp),
+                    text = HtmlCompat.fromHtml(
+                        item.name,
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    ).toString(),
+                    fontSize = layoutType.calculateTextSize(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            CustomDivider(modifier = Modifier.padding(start = layoutType.calculateItemDetailsDividerStartPadding()))
         }
-
     }
     item {
         AddItemRow(

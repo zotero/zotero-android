@@ -1,4 +1,4 @@
-package org.zotero.android.pdffilter
+package org.zotero.android.pdffilter.data
 
 import org.zotero.android.pdf.data.AnnotationsFilter
 

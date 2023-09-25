@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.settings.PdfSettingsViewEffect.NavigateBack
+import org.zotero.android.pdf.settings.data.PdfSettingsOptions
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -55,9 +56,11 @@ internal fun PdfSettingsScreen(
                 )
             },
         ) {
-            LazyColumn(modifier = Modifier
-                .fillMaxSize()
-                .background(CustomTheme.colors.surface)) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(CustomTheme.colors.surface)
+            ) {
                 settingsRow(
                     titleResId = Strings.pdf_settings_page_transition_title,
                     options = viewState.pageTransitionOptions,
@@ -139,7 +142,6 @@ private fun LazyListScope.settingsRow(
                     unselectedcolor = selectorColor
                 )
             }
-//            SidebarDivider()
         }
     }
 }

@@ -76,12 +76,12 @@ android {
     productFlavors {
         dev {
             resValue("string", "app_name", """"Zotero Debug""")
-//            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
         internal {
             resValue("string", "app_name", """"Zotero Internal""")
-//            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
         beta {
             resValue("string", "app_name", """"Zotero Beta""")
@@ -97,7 +97,7 @@ android {
         jvmTarget = javaVersion.toString()
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     buildFeatures {
         viewBinding = true
@@ -167,9 +167,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-flowlayout:0.23.1")
 
     //Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.9.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.10")
+    implementation("org.jetbrains.kotlin:kotlin-serialization:1.9.10")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")

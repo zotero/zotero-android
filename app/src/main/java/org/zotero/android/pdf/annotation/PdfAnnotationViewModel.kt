@@ -58,5 +58,4 @@ internal data class PdfAnnotationViewState(
 ) : ViewState
 
 internal sealed class PdfAnnotationViewEffect : ViewEffect {
-    object NavigateBack : PdfAnnotationViewEffect()
 }

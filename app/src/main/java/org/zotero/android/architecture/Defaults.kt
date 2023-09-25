@@ -28,6 +28,7 @@ open class Defaults @Inject constructor(
     private val showCollectionItemCounts = "showCollectionItemCounts"
     private val didPerformFullSyncFix = "didPerformFullSyncFix"
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
+    private val tagPickerDisplayAllTags = "tagPickerDisplayAllTags"
     private val isDebugLogEnabled = "isDebugLogEnabled"
     private val pdfSettings = "pdfSettings"
 
@@ -159,6 +160,14 @@ open class Defaults @Inject constructor(
 
     fun isTagPickerShowAutomaticTags(): Boolean {
         return sharedPreferences.getBoolean(tagPickerShowAutomaticTags, true)
+    }
+
+    fun setTagPickerDisplayAllTags(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(tagPickerDisplayAllTags, newValue) }
+    }
+
+    fun isTagPickerDisplayAllTags(): Boolean {
+        return sharedPreferences.getBoolean(tagPickerDisplayAllTags, true)
     }
 
     fun setDebugLogEnabled(newValue: Boolean) {

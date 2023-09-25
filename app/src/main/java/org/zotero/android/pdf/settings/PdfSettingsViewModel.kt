@@ -18,6 +18,8 @@ import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PageScrollMode
+import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
+import org.zotero.android.pdf.settings.data.PdfSettingsOptions
 import javax.inject.Inject
 
 @HiltViewModel

@@ -16,6 +16,7 @@ sealed class LongPressOptionItem(
     @StringRes val titleId: Int,
     @DrawableRes val resIcon: Int? = null,
     val textAndIconColor: Color? = null,
+    val isEnabled: Boolean = true,
 ) {
     data class TrashNote(val note: Note): LongPressOptionItem(
         titleId = Strings.move_to_trash,
@@ -106,15 +107,30 @@ sealed class LongPressOptionItem(
         )
 
 
-    object DeselectAll: LongPressOptionItem(
+    data class DeselectAll(val enabled: Boolean): LongPressOptionItem(
         titleId = Strings.items_deselect_all,
+        isEnabled = enabled,
     )
 
-    object ShowAutomaticTags: LongPressOptionItem(
+    object ShowAutomaticTagsUnchecked: LongPressOptionItem(
         titleId = Strings.tag_picker_show_auto,
+    )
+
+    object ShowAutomaticTagsChecked: LongPressOptionItem(
+        titleId = Strings.tag_picker_show_auto,
+        resIcon = Drawables.baseline_check_24,
     )
     object DeleteAutomaticTags: LongPressOptionItem(
         titleId = Strings.tag_picker_delete_automatic,
         textAndIconColor = CustomPalette.ErrorRed,
+    )
+
+    object DisplayAllTagsInThisLibraryUnchecked: LongPressOptionItem(
+        titleId = Strings.tag_picker_show_all,
+    )
+
+    object DisplayAllTagsInThisLibraryChecked: LongPressOptionItem(
+        titleId = Strings.tag_picker_show_all,
+        resIcon = Drawables.baseline_check_24,
     )
 }

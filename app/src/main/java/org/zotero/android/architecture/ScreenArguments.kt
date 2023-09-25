@@ -1,9 +1,9 @@
 package org.zotero.android.architecture
 
-import org.zotero.android.pdf.annotation.PdfAnnotationArgs
+import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.data.PdfReaderArgs
-import org.zotero.android.pdf.settings.PdfSettingsArgs
-import org.zotero.android.pdffilter.PdfFilterArgs
+import org.zotero.android.pdf.settings.data.PdfSettingsArgs
+import org.zotero.android.pdffilter.data.PdfFilterArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs

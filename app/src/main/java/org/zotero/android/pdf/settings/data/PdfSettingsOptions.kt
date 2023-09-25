@@ -1,4 +1,4 @@
-package org.zotero.android.pdf.settings
+package org.zotero.android.pdf.settings.data
 
 import androidx.annotation.StringRes
 import org.zotero.android.uicomponents.Strings

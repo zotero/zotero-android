@@ -65,7 +65,7 @@ private fun BoxScope.set(
 fun BoxScope.setMainImage(asset: Int?) {
     if (asset != null) {
         Image(
-            modifier = Modifier.fillMaxSize(fraction = 0.9f),
+            modifier = Modifier.fillMaxSize(fraction = 0.8f),
             painter = painterResource(id = asset),
             contentDescription = null,
         )

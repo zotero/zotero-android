@@ -1,4 +1,4 @@
-package org.zotero.android.pdf.settings
+package org.zotero.android.pdf.settings.data
 
 import org.zotero.android.pdf.data.PDFSettings
 

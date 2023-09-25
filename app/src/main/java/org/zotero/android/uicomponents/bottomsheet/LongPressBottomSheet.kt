@@ -58,24 +58,28 @@ private fun BoxScope.LongPressBottomSheetContent(
             .fillMaxWidth(if (layoutType.isTablet()) tabletWidthPercentage else 1f),
     ) {
         Text(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(
-                        start = 16.dp, end = 16.dp, top = 16.dp
-                    ),
-                text = longPressOptionsHolder.title,
-                color = CustomTheme.colors.primaryContent,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = CustomTheme.typography.default,
-                fontSize = layoutType.calculateTextSize(),
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(
+                    start = 16.dp, end = 16.dp, top = 16.dp
+                ),
+            text = longPressOptionsHolder.title,
+            color = if (longPressOptionsHolder.isTitleEnabled) {
+                CustomTheme.colors.primaryContent
+            } else {
+                CustomTheme.colors.disabledContent
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = CustomTheme.typography.default,
+            fontSize = layoutType.calculateTextSize(),
+        )
+        longPressOptionsHolder.longPressOptionItems.forEach { mention ->
+            LongPressOptionRow(
+                optionItem = mention,
+                onOptionClick = onOptionClick
             )
-            longPressOptionsHolder.longPressOptionItems.forEach { mention ->
-                LongPressOptionRow(
-                    optionItem = mention,
-                    onOptionClick = onOptionClick
-                )
-                CustomDivider()
-            }
+            CustomDivider()
         }
+    }
 }

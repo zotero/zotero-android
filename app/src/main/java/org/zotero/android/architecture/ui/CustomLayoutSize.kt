@@ -26,10 +26,24 @@ object CustomLayoutSize {
             }
         }
 
+        fun calculateItemDetailsAddButtonSize(): Dp {
+            return when (this) {
+                big, medium -> 24.dp
+                small -> 18.dp
+            }
+        }
+
         fun calculateTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 20.sp
                 small -> 14.sp
+            }
+        }
+
+        fun calculateItemDetailsDividerStartPadding(): Dp {
+            return when (this) {
+                big, medium -> 56.dp
+                small -> 50.dp
             }
         }
 
@@ -77,8 +91,8 @@ object CustomLayoutSize {
 
         fun calculateItemsBottomSheetIconSize(): Dp {
             return when (this) {
-                big, medium -> 50.dp
-                small -> 36.dp
+                big, medium -> 28.dp
+                small -> 26.dp
             }
         }
 
@@ -91,14 +105,14 @@ object CustomLayoutSize {
 
         fun calculateItemsRowAccessoryIconSize(): Dp {
             return when (this) {
-                big, medium -> 22.dp
-                small -> 18.dp
+                big, medium -> 18.dp
+                small -> 14.dp
             }
         }
         fun calculateItemsRowAccessoryInfoIconSize(): Dp {
             return when (this) {
-                big, medium -> 28.dp
-                small -> 24.dp
+                big, medium -> 24.dp
+                small -> 20.dp
             }
         }
 

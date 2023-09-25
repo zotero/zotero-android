@@ -58,7 +58,7 @@ import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
-import org.zotero.android.pdf.annotation.PdfAnnotationArgs
+import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
@@ -70,10 +70,10 @@ import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PdfAnnotationChanges
-import org.zotero.android.pdf.settings.PdfSettingsArgs
-import org.zotero.android.pdf.settings.PdfSettingsChangeResult
-import org.zotero.android.pdffilter.PdfFilterArgs
-import org.zotero.android.pdffilter.PdfFilterResult
+import org.zotero.android.pdf.settings.data.PdfSettingsArgs
+import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
+import org.zotero.android.pdffilter.data.PdfFilterArgs
+import org.zotero.android.pdffilter.data.PdfFilterResult
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.Library

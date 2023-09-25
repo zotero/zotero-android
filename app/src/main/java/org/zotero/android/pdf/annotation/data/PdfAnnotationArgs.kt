@@ -1,4 +1,4 @@
-package org.zotero.android.pdf.annotation
+package org.zotero.android.pdf.annotation.data
 
 import org.zotero.android.sync.Library
 

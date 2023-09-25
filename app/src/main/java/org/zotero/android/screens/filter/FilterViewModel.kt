@@ -67,7 +67,9 @@ internal class FilterViewModel @Inject constructor(
         updateState {
             copy(
                 isDownloadsChecked = downloadsFilterEnabled,
-                selectedTags = filterArgs.selectedTags
+                selectedTags = filterArgs.selectedTags,
+                displayAll = defaults.isTagPickerDisplayAllTags(),
+                showAutomatic = defaults.isTagPickerShowAutomaticTags()
             )
         }
         onSearchStateFlow
@@ -148,12 +150,23 @@ internal class FilterViewModel @Inject constructor(
                     deselectAll()
                 }
 
-                is LongPressOptionItem.ShowAutomaticTags -> {
+                is LongPressOptionItem.ShowAutomaticTagsChecked -> {
+                    setShowAutomatic(!viewState.showAutomatic)
+                }
+
+                is LongPressOptionItem.ShowAutomaticTagsUnchecked -> {
                     setShowAutomatic(!viewState.showAutomatic)
                 }
 
                 is LongPressOptionItem.DeleteAutomaticTags -> {
                     loadAutomaticCount()
+                }
+
+                is LongPressOptionItem.DisplayAllTagsInThisLibraryChecked -> {
+                    setDisplayAll(!viewState.displayAll)
+                }
+                is LongPressOptionItem.DisplayAllTagsInThisLibraryUnchecked -> {
+                    setDisplayAll(!viewState.displayAll)
                 }
 
                 else -> {}
@@ -162,17 +175,28 @@ internal class FilterViewModel @Inject constructor(
     }
 
     fun onMoreSearchOptionsClicked() {
+        val isDeselectAllEnabled = viewState.selectedTags.isNotEmpty()
         updateState {
             copy(
                 longPressOptionsHolder = LongPressOptionsHolder(
+                    isTitleEnabled = isDeselectAllEnabled,
                     title = context.resources.getQuantityString(
                         Plurals.tag_picker_tags_selected,
                         viewState.selectedTags.size,
                         viewState.selectedTags.size
                     ),
                     longPressOptionItems = listOf(
-                        LongPressOptionItem.DeselectAll,
-                        LongPressOptionItem.ShowAutomaticTags,
+                        LongPressOptionItem.DeselectAll(isDeselectAllEnabled),
+                        if (viewState.showAutomatic) {
+                            LongPressOptionItem.ShowAutomaticTagsChecked
+                        } else {
+                            LongPressOptionItem.ShowAutomaticTagsUnchecked
+                        },
+                        if (viewState.displayAll) {
+                            LongPressOptionItem.DisplayAllTagsInThisLibraryChecked
+                        } else {
+                            LongPressOptionItem.DisplayAllTagsInThisLibraryUnchecked
+                        },
                         LongPressOptionItem.DeleteAutomaticTags
                     )
                 )
@@ -380,6 +404,19 @@ internal class FilterViewModel @Inject constructor(
             collectionId = ScreenArguments.filterArgs.collectionId,
             libraryId = ScreenArguments.filterArgs.libraryId
         )
+    }
+
+    private fun setDisplayAll(displayAll: Boolean) {
+        defaults.setTagPickerDisplayAllTags(displayAll)
+        updateState {
+            copy(displayAll = displayAll)
+        }
+        itemsDidChange(
+            filters = ScreenArguments.filterArgs.filters,
+            collectionId = ScreenArguments.filterArgs.collectionId,
+            libraryId = ScreenArguments.filterArgs.libraryId
+        )
+
     }
 
     private fun loadAutomaticCount() {
