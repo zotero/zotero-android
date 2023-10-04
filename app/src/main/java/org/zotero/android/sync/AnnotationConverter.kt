@@ -16,7 +16,7 @@ import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
-import org.zotero.android.pdf.AnnotationBoundingBoxConverter
+import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.data.AnnotationEditability
 import org.zotero.android.pdf.data.DatabaseAnnotation
 import org.zotero.android.pdf.data.DocumentAnnotation
@@ -33,6 +33,7 @@ class AnnotationConverter {
     }
 
     companion object {
+
         fun annotations(
             items: RealmResults<RItem>,
             type: Kind = Kind.zotero,
@@ -345,8 +346,27 @@ class AnnotationConverter {
             return listOf(annotation.boundingBox)
         }
 
-        private fun paths(annotation: InkAnnotation): List<List<PointF>> {
-            return annotation.lines
+        fun rects(annotation: Annotation): List<RectF>? {
+            when(annotation) {
+                is NoteAnnotation -> {
+                    rects(annotation)
+                }
+                is HighlightAnnotation -> {
+                    rects(annotation)
+                }
+                is SquareAnnotation -> {
+                    rects(annotation)
+                }
+            }
+            return null
+        }
+
+        fun paths(annotation: InkAnnotation): List<List<PointF>> {
+            return annotation.lines.map { lines ->
+                lines.map { group ->
+                    group.rounded(3)
+                }
+            }
         }
         fun sortIndex(annotation: Annotation, boundingBoxConverter: AnnotationBoundingBoxConverter?):  String {
             val rect: RectF

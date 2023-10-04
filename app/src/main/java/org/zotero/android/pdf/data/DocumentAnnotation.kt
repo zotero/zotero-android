@@ -3,8 +3,7 @@ package org.zotero.android.pdf.data
 import android.graphics.PointF
 import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
-import org.zotero.android.pdf.AnnotationBoundingBoxConverter
-import org.zotero.android.pdf.AnnotationKey
+import org.zotero.android.pdf.reader.AnnotationKey
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag

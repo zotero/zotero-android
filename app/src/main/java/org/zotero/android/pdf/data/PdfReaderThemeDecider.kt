@@ -1,14 +1,14 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import org.zotero.android.architecture.core.StateEventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.pdf.data.PageAppearanceMode
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PdfReaderThemeDecider @Inject constructor(
-    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream) {
+    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream
+) {
 
     private var isOsThemeDark: Boolean = false
     private var pdfPageAppearanceMode: PageAppearanceMode = PageAppearanceMode.AUTOMATIC

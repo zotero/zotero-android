@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.reader
 
 import android.content.res.Resources
 import android.net.Uri

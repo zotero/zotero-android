@@ -24,7 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.SidebarDivider
+import org.zotero.android.pdf.reader.SidebarDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable

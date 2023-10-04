@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.reader
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box

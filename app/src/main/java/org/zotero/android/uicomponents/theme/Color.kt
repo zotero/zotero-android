@@ -91,6 +91,7 @@ data class CustomSemanticColors(
     val reorderButtonColor: Color,
     val dialogBorderColor: Color,
     val allItemsRowTitleColor: Color,
+    val pdfToolbarBackgroundColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -142,6 +143,7 @@ fun lightCustomColors(
     reorderButtonColor = Color(0xFFC5C5C7),
     dialogBorderColor = Color(0xFF69696F),
     allItemsRowTitleColor = Color.Black,
+    pdfToolbarBackgroundColor= Color(0xFFFCFBFD),
 )
 
 fun darkCustomColors(
@@ -182,6 +184,7 @@ fun darkCustomColors(
     reorderButtonColor = Color(0xFF464649),
     dialogBorderColor = Color(0xFFFFFFFF),
     allItemsRowTitleColor = Color.White,
+    pdfToolbarBackgroundColor= Color(0xFF282729),
 )
 
 internal fun createSemanticColors(

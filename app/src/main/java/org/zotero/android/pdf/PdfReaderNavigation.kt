@@ -10,6 +10,7 @@ import com.google.accompanist.navigation.animation.composable
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogFixedDimens
 import org.zotero.android.pdf.annotation.PdfAnnotationScreen
+import org.zotero.android.pdf.reader.PdfReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
 import org.zotero.android.pdffilter.PdfFilterNavigation
 import org.zotero.android.pdffilter.pdfFilterNavScreens

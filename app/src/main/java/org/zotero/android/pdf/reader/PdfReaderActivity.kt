@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.reader
 
 //@AndroidEntryPoint
 //internal class PdfReaderActivity: BaseActivity() {

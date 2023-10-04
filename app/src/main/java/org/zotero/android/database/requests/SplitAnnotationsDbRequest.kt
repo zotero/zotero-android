@@ -1,5 +1,7 @@
 package org.zotero.android.database.requests
 
+import android.graphics.PointF
+import android.graphics.RectF
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -18,18 +20,13 @@ import org.zotero.android.database.objects.RRect
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.AnnotationSplitter
-import org.zotero.android.sync.CGRect
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SplittablePathPoint
 
 class SplitAnnotationsDbRequest(
     val keys:Set<String>,
     val libraryId:LibraryIdentifier,
 ):DbRequest {
-    private data class Point(
-        override val x:Double, override val y:Double
-    ) : SplittablePathPoint
 
     override val needsWrite: Boolean
         get() = true
@@ -53,7 +50,14 @@ class SplitAnnotationsDbRequest(
 
         when (annotationType) {
             AnnotationType.highlight -> {
-                val rects = item.rects.map{ CGRect(x = it.minX, y = it.minY, width = (it.maxX - it.minY), height = (it.maxY - it.minY)) }
+                val rects = item.rects.map {
+                    RectF(
+                        /* left = */ it.minX.toFloat(),
+                        /* top = */ it.maxY.toFloat(),
+                        /* right = */ it.maxX.toFloat(),
+                        /* bottom = */ it.minY.toFloat(),
+                    )
+                }
 
                 val splitRects = AnnotationSplitter.splitRectsIfNeeded(rects = rects)
                 if (splitRects == null) {
@@ -61,13 +65,17 @@ class SplitAnnotationsDbRequest(
                 }
 
                 for (split in splitRects) {
-                    createCopyWithoutPathsAndRects(item, database = database, additionalChange = { new ->
+                    createCopyWithoutPathsAndRects(
+                        item,
+                        database = database,
+                        additionalChange = { new ->
                             for (rect in split) {
-                                val rRect = database.createEmbeddedObject(RRect::class.java, new, "rects")
-                                rRect.minX = rect.minX
-                                rRect.minY = rect.minY
-                                rRect.maxX = rect.maxX
-                                rRect.maxY = rect.maxY
+                                val rRect =
+                                    database.createEmbeddedObject(RRect::class.java, new, "rects")
+                                rRect.minX = rect.left.toDouble()
+                                rRect.minY = rect.bottom.toDouble()
+                                rRect.maxX = rect.right.toDouble()
+                                rRect.maxY = rect.top.toDouble()
                             }
                         new.changes.add(RObjectChange.create(changes = listOf(RItemChanges.rects)))
                     })
@@ -91,11 +99,11 @@ class SplitAnnotationsDbRequest(
 
                             for ((idy, coordinate) in path.withIndex()) {
                                 val rXCoordinate = database.createEmbeddedObject(RPathCoordinate::class.java, rPath, "coordinates")
-                                rXCoordinate.value = coordinate.x
+                                rXCoordinate.value = coordinate.x.toDouble()
                                 rXCoordinate.sortIndex = idy * 2
 
                                 val rYCoordinate = database.createEmbeddedObject(RPathCoordinate::class.java, rPath, "coordinates")
-                                rYCoordinate.value = coordinate.y
+                                rYCoordinate.value = coordinate.y.toDouble()
                                 rYCoordinate.sortIndex = (idy * 2) + 1
                             }
                         }
@@ -109,17 +117,17 @@ class SplitAnnotationsDbRequest(
         }
     }
 
-    private fun points(paths:List<RPath>): List<List<Point>> {
-        var points: MutableList<List<Point>> = mutableListOf()
+    private fun points(paths:List<RPath>): List<List<PointF>> {
+        var points: MutableList<List<PointF>> = mutableListOf()
 
         for (path in paths.sortedBy { it.sortIndex }) {
             val sortedCoordinates = path.coordinates.sortedBy { it.sortIndex }
-            var coordinates = mutableListOf<Point>()
+            var coordinates = mutableListOf<PointF>()
 
             for (idx in 0 until (sortedCoordinates.size / 2)) {
                 val xCoord = sortedCoordinates[idx * 2]
                 val yCoord = sortedCoordinates[(idx * 2) + 1]
-                coordinates.add(Point(x = xCoord.value, y = yCoord.value))
+                coordinates.add(PointF(xCoord.value.toFloat(), yCoord.value.toFloat()))
             }
 
             points.add(coordinates)

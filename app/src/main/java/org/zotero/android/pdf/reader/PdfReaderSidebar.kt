@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.reader
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image

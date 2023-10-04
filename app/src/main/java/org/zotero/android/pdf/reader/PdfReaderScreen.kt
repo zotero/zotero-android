@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.reader
 
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -93,6 +93,8 @@ internal fun PdfReaderScreen(
                 null -> {
 
                 }
+
+                else -> {}
             }
         }
 
@@ -100,10 +102,10 @@ internal fun PdfReaderScreen(
             backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
             topBar = {
                 PdfReaderTopBar(
-                    onShowHideSideBar = {
-                        viewModel.toggleSideBar()
-                    },
-                    toPdfSettings = { viewModel.navigateToPdfSettings() }
+                    onShowHideSideBar = viewModel::toggleSideBar,
+                    toPdfSettings = viewModel::navigateToPdfSettings,
+                    toggleToolbarButton = viewModel::toggleToolbarButton,
+                    isToolbarButtonSelected = viewState.showCreationToolbar,
                 )
             },
         ) {
@@ -168,11 +170,11 @@ private fun PdfReaderTabletMode(
             )
         }
 
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            PdfReaderPspdfKitView(uri = uri, viewModel = viewModel)
-        }
+        PdfReaderPspdfKitBox(
+            uri = uri,
+            viewModel = viewModel,
+            viewState = viewState
+        )
     }
 }
 
@@ -189,11 +191,7 @@ private fun PdfReaderPhoneMode(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            PdfReaderPspdfKitView(uri = uri, viewModel = viewModel)
-        }
+        PdfReaderPspdfKitBox(uri = uri, viewModel = viewModel, viewState = viewState)
         AnimatedContent(targetState = showSideBar, transitionSpec = {
             createSidebarTransitionSpec()
         }, label = "") { showSideBar ->

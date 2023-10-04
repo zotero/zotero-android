@@ -119,6 +119,14 @@ abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
             Result.Failure(e)
         }
     }
+    suspend fun perform(dbWrapper: DbWrapper,writeRequests: List<DbRequest>):Result<Unit> = withContext(Dispatchers.IO)  {
+        try {
+            dbWrapper.realmDbStorage.perform(writeRequests)
+            Result.Success(Unit)
+        }catch (e: Exception) {
+            Result.Failure(e)
+        }
+    }
 
     suspend inline fun<reified T: Any> perform(dbWrapper: DbWrapper, invalidateRealm: Boolean, request: DbResponseRequest<T>): Result<T> = withContext(Dispatchers.IO) {
         try {

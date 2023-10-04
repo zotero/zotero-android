@@ -8,7 +8,6 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.key
 import org.zotero.android.ktx.rounded
-import org.zotero.android.pdf.AnnotationBoundingBoxConverter
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag

@@ -10,14 +10,14 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.pdf.PdfReaderCurrentThemeEventStream
-import org.zotero.android.pdf.PdfReaderThemeDecider
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.pdf.data.PageAppearanceMode
 import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PageScrollMode
+import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
+import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
 import org.zotero.android.pdf.settings.data.PdfSettingsOptions
 import javax.inject.Inject

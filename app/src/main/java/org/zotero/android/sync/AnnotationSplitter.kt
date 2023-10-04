@@ -1,35 +1,32 @@
 package org.zotero.android.sync
 
+import android.graphics.PointF
+import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.ktx.rounded
 
-interface SplittablePathPoint {
-    val x: Double
-    val y: Double
-}
-
 object AnnotationSplitter {
-    fun splitRectsIfNeeded(rects: List<CGRect>): List<List<CGRect>>? {
+    fun splitRectsIfNeeded(rects: List<RectF>): List<List<RectF>>? {
         if (rects.isEmpty()) {
             return null
         }
         val sortedRects = rects.sortedWith { lRect, rRect ->
-            if (lRect.minY == rRect.minY) {
-                return@sortedWith rRect.minX.compareTo(lRect.minX)
+            if (lRect.bottom == rRect.bottom) {
+                return@sortedWith rRect.left.compareTo(lRect.left)
             }
-            return@sortedWith lRect.minY.compareTo(rRect.minY)
+            return@sortedWith lRect.bottom.compareTo(rRect.bottom)
         }
 
         var count = 2
-        val splitRects = mutableListOf<List<CGRect>>()
-        var currentRects = mutableListOf<CGRect>()
+        val splitRects = mutableListOf<List<RectF>>()
+        var currentRects = mutableListOf<RectF>()
 
         for (rect in sortedRects) {
             val size =
-                rect.minX.rounded(3).toString().length +
-                        rect.minY.rounded(3).toString().length +
-                        rect.maxX.rounded(3).toString().length +
-                        rect.maxY.rounded(3)
+                rect.left.rounded(3).toString().length +
+                        rect.bottom.rounded(3).toString().length +
+                        rect.right.rounded(3).toString().length +
+                        rect.top.rounded(3)
                             .toString().length + 6
 
             if (count + size > AnnotationsConfig.positionSizeLimit) {
@@ -53,15 +50,15 @@ object AnnotationSplitter {
         return splitRects
     }
 
-    fun splitPathsIfNeeded(paths: List<List<SplittablePathPoint>>): List<List<List<SplittablePathPoint>>>? {
+    fun splitPathsIfNeeded(paths: List<List<PointF>>): List<List<List<PointF>>>? {
         if (paths.isEmpty()) {
             return null
         }
 
         var count = 2
-        val splitPaths = mutableListOf<MutableList<MutableList<SplittablePathPoint>>>()
-        var currentLines = mutableListOf<MutableList<SplittablePathPoint>>()
-        var currentPoints = mutableListOf<SplittablePathPoint>()
+        val splitPaths = mutableListOf<MutableList<MutableList<PointF>>>()
+        var currentLines = mutableListOf<MutableList<PointF>>()
+        var currentPoints = mutableListOf<PointF>()
 
         for (subpaths in paths) {
             if (count + 3 > AnnotationsConfig.positionSizeLimit) {

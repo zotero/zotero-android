@@ -3,6 +3,7 @@ package org.zotero.android.architecture
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.files.DataMarshaller
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
@@ -31,12 +32,66 @@ open class Defaults @Inject constructor(
     private val tagPickerDisplayAllTags = "tagPickerDisplayAllTags"
     private val isDebugLogEnabled = "isDebugLogEnabled"
     private val pdfSettings = "pdfSettings"
+    private val highlightColorHex = "highlightColorHex"
+    private val noteColorHex = "noteColorHex"
+    private val squareColorHex = "squareColorHex"
+    private val inkColorHex = "inkColorHex"
+    private val activeLineWidth = "activeLineWidth"
+    private val activeEraserSize = "activeEraserSize"
 
     val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
             Context.MODE_PRIVATE
         )
+    }
+
+    fun setHighlightColorHex(str: String) {
+        sharedPreferences.edit { putString(highlightColorHex, str) }
+    }
+
+    fun getHighlightColorHex(): String {
+        return sharedPreferences.getString(highlightColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
+    fun setNoteColorHex(str: String) {
+        sharedPreferences.edit { putString(noteColorHex, str) }
+    }
+
+    fun getNoteColorHex(): String {
+        return sharedPreferences.getString(noteColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
+    fun setSquareColorHex(str: String) {
+        sharedPreferences.edit { putString(squareColorHex, str) }
+    }
+
+    fun getSquareColorHex(): String {
+        return sharedPreferences.getString(squareColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
+    fun setInkColorHex(str: String) {
+        sharedPreferences.edit { putString(inkColorHex, str) }
+    }
+
+    fun getInkColorHex(): String {
+        return sharedPreferences.getString(inkColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
+    fun setActiveLineWidth(width: Float) {
+        sharedPreferences.edit { putFloat(activeLineWidth, width) }
+    }
+
+    fun getActiveLineWidth(): Float {
+        return sharedPreferences.getFloat(activeLineWidth, 2f )
+    }
+
+    fun setActiveEraserSize(width: Float) {
+        sharedPreferences.edit { putFloat(activeEraserSize, width) }
+    }
+
+    fun getActiveEraserSize(): Float {
+        return sharedPreferences.getFloat(activeEraserSize, 10f )
     }
 
     fun setUserId(str: Long) {
@@ -185,6 +240,14 @@ open class Defaults @Inject constructor(
         setShowSubcollectionItems(false)
         setApiToken(null)
         setWebDavPassword(null)
+        setItemsSortType(ItemsSortType.default)
+
+        setActiveLineWidth(1f)
+        setInkColorHex(AnnotationsConfig.defaultActiveColor)
+        setSquareColorHex(AnnotationsConfig.defaultActiveColor)
+        setNoteColorHex(AnnotationsConfig.defaultActiveColor)
+        setHighlightColorHex(AnnotationsConfig.defaultActiveColor)
+        setPDFSettings(pdfSettings = PDFSettings.default())
     }
 
 }

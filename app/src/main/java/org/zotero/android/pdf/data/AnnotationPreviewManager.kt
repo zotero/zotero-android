@@ -1,4 +1,4 @@
-package org.zotero.android.pdf
+package org.zotero.android.pdf.data
 
 import android.content.Context
 import android.graphics.Bitmap

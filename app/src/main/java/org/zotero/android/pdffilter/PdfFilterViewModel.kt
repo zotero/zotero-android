@@ -14,7 +14,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.RCustomLibraryType
-import org.zotero.android.pdf.PdfReaderCurrentThemeEventStream
+import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdffilter.data.PdfFilterResult
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
