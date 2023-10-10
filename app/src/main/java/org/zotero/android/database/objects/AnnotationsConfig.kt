@@ -60,4 +60,35 @@ object AnnotationsConfig {
         }
         return map
     }
+
+    fun colors(type: org.zotero.android.database.objects.AnnotationType): List<String> {
+        return when (type) {
+            org.zotero.android.database.objects.AnnotationType.ink -> {
+                listOf(
+                    "#ffd400",
+                    "#ff6666",
+                    "#5fb236",
+                    "#2ea8e5",
+                    "#a28ae5",
+                    "#e56eee",
+                    "#f19837",
+                    "#aaaaaa",
+                    "#000000"
+                )
+            }
+
+            else -> {
+                listOf(
+                    "#ffd400",
+                    "#ff6666",
+                    "#5fb236",
+                    "#2ea8e5",
+                    "#a28ae5",
+                    "#e56eee",
+                    "#f19837",
+                    "#aaaaaa"
+                )
+            }
+        }
+    }
 }

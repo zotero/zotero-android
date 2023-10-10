@@ -81,6 +81,9 @@ import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerResult
+import org.zotero.android.pdf.colorpicker.queuedUpPdfReaderColorPickerResult
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.data.AnnotationPreviewManager
 import org.zotero.android.pdf.data.AnnotationsFilter
@@ -146,7 +149,8 @@ class PdfReaderViewModel @Inject constructor(
 
     var annotationMaxSideSize = 0
 
-    var toolColors: Map<AnnotationTool, String> = emptyMap()
+    var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
+    var changedColorForTool: AnnotationTool? = null
     var activeLineWidth: Float = 0.0f
     var activeEraserSize: Float = 0.0f
 
@@ -164,6 +168,22 @@ class PdfReaderViewModel @Inject constructor(
         viewModelScope.launch {
             update(result.pdfSettings)
         }
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfReaderColorPickerResult) {
+        if (isTablet) {
+            viewModelScope.launch {
+                setToolOptions(
+                    hex = result.colorHex,
+                    size = result.size,
+                    tool = result.annotationTool
+                )
+            }
+        }
+
+
     }
 
     private fun update(pdfSettings: PDFSettings) {
@@ -239,6 +259,12 @@ class PdfReaderViewModel @Inject constructor(
             add(containerId, this@PdfReaderViewModel.fragment)
         }
     }
+    private fun set(color: String) {
+        val annotationKey = this.selectedAnnotation?.key ?: return
+        val annotation = annotation(AnnotationKey(key = annotationKey, type = AnnotationKey.Kind.database)) ?: return
+        update(annotation = annotation, color = (color to viewState.isDark), document = this.document)
+    }
+
 
     fun set(selected: Boolean) {
         updateState {
@@ -315,7 +341,7 @@ class PdfReaderViewModel @Inject constructor(
         val userId = sessionDataEventStream.currentValue()!!.userId
         val displayName = defaults.getDisplayName()
 
-        this.toolColors = mapOf(
+        this.toolColors = mutableMapOf(
             AnnotationTool.HIGHLIGHT to defaults.getHighlightColorHex(),
             AnnotationTool.SQUARE to defaults.getSquareColorHex(),
             AnnotationTool.NOTE to defaults.getNoteColorHex(),
@@ -1192,6 +1218,58 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    private fun update(
+        annotation: org.zotero.android.pdf.data.Annotation,
+        color: Pair<String, Boolean>? = null,
+        lineWidth: Float? = null,
+        contents: String? = null,
+        document: PdfDocument
+    ) {
+        val pdfAnnotation = document.annotationProvider.getAnnotations(annotation.page)
+            .firstOrNull { it.key == annotation.key } ?: return
+
+        val changes = mutableListOf<PdfAnnotationChanges>()
+
+        if (lineWidth != null && lineWidth.rounded(3) != annotation.lineWidth) {
+            changes.add(PdfAnnotationChanges.lineWidth)
+        }
+        if (color != null && color.first != annotation.color) {
+            changes.add(PdfAnnotationChanges.color)
+        }
+        if (contents != null && contents != annotation.comment) {
+            changes.add(PdfAnnotationChanges.contents)
+        }
+
+        if (changes.isEmpty()) {
+            return
+        }
+        //Android's PSPDFKit seems to not have "recordCommand" functionality
+        if (changes.contains(PdfAnnotationChanges.lineWidth) && pdfAnnotation is InkAnnotation && lineWidth != null) {
+            pdfAnnotation.lineWidth = lineWidth.rounded(3)
+        }
+        if (changes.contains(PdfAnnotationChanges.color) && color != null) {
+            val (color, isDark) = color
+            val (_color, alpha, blendMode) = AnnotationColorGenerator.color(
+                color,
+                isHighlight = (annotation.type == org.zotero.android.database.objects.AnnotationType.highlight),
+                isDarkMode = isDark
+            )
+            pdfAnnotation.color = _color
+            pdfAnnotation.alpha = alpha
+            if (blendMode != null) {
+                pdfAnnotation.blendMode = blendMode
+            }
+        }
+
+        if (changes.contains(PdfAnnotationChanges.contents) && contents != null) {
+            pdfAnnotation.contents = contents
+        }
+        processAnnotationObserving(
+            pdfAnnotation,
+            PdfAnnotationChanges.stringValues(changes),
+            PdfReaderNotification.PSPDFAnnotationChanged
+        )
+    }
 
     private fun update(
         pdfAnnotation: Annotation,
@@ -1607,6 +1685,32 @@ class PdfReaderViewModel @Inject constructor(
         triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
     }
 
+    fun showToolOptions() {
+        val tool = this.activeAnnotationTool ?: return
+
+        val colorHex = this.toolColors[tool]
+        var size: Float? = null
+        when (tool) {
+            AnnotationTool.INK -> {
+                size = this.activeLineWidth
+            }
+            AnnotationTool.ERASER -> {
+                size = this.activeEraserSize
+
+            }
+            else -> {
+                size = null
+            }
+        }
+
+        ScreenArguments.pdfReaderColorPickerArgs = PdfReaderColorPickerArgs(
+            tool = tool,
+            size = size,
+            colorHex = colorHex,
+        )
+        triggerEffect(PdfReaderViewEffect.ShowPdfColorPicker)
+    }
+
     fun setOsTheme(isDark: Boolean) {
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
@@ -1640,7 +1744,32 @@ class PdfReaderViewModel @Inject constructor(
                 }
                 setupInteractionListeners()
                 observeDocument()
+                if (queuedUpPdfReaderColorPickerResult != null) {
+                    setToolOptions(
+                        hex = queuedUpPdfReaderColorPickerResult!!.colorHex,
+                        size = queuedUpPdfReaderColorPickerResult!!.size,
+                        tool = queuedUpPdfReaderColorPickerResult!!.annotationTool
+                    )
+                    queuedUpPdfReaderColorPickerResult = null
+
+                }
+
             }
+        })
+        this.fragment.addOnAnnotationCreationModeChangeListener(object:
+            AnnotationManager.OnAnnotationCreationModeChangeListener {
+            override fun onEnterAnnotationCreationMode(p0: AnnotationCreationController) {
+                set(true)
+            }
+
+            override fun onChangeAnnotationCreationMode(p0: AnnotationCreationController) {
+                set(true)
+            }
+
+            override fun onExitAnnotationCreationMode(p0: AnnotationCreationController) {
+                set(false)
+            }
+
         })
 
         fragmentManager.commit {
@@ -1683,7 +1812,7 @@ class PdfReaderViewModel @Inject constructor(
             return
         }
 
-        fragment.enterAnnotationCreationMode(annotationTool)
+//        fragment.enterAnnotationCreationMode(annotationTool)
 
         var drawColor: Int? = null
         var blendMode: BlendMode? = null
@@ -1698,6 +1827,15 @@ class PdfReaderViewModel @Inject constructor(
             blendMode = bM ?: BlendMode.NORMAL
         }
 
+        updateAnnotationToolDrawColorAndSize(annotationTool, drawColor)
+
+    }
+
+    private fun updateAnnotationToolDrawColorAndSize(
+        annotationTool: AnnotationTool,
+        drawColor: Int?
+    ) {
+        fragment.exitCurrentlyActiveMode()
         when (annotationTool) {
             AnnotationTool.INK -> {
                 configureInk(drawColor, this.activeLineWidth)
@@ -1706,18 +1844,23 @@ class PdfReaderViewModel @Inject constructor(
             AnnotationTool.HIGHLIGHT -> {
                 configureHighlight(drawColor)
             }
+
             AnnotationTool.NOTE -> {
                 configureNote(drawColor)
             }
+
             AnnotationTool.SQUARE -> {
                 configureSquare(drawColor)
             }
+
             AnnotationTool.ERASER -> {
                 configureEraser(this.activeEraserSize)
             }
+
             else -> {}
         }
-
+        fragment.enterAnnotationCreationMode(annotationTool)
+        triggerEffect(PdfReaderViewEffect.ScreenRefresh)
     }
 
     private fun configureNote(drawColor: Int?) {
@@ -2004,6 +2147,75 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    private fun updateChangedColorForTool() {
+        val tool = this.changedColorForTool
+        val color = this.toolColors[tool]
+    }
+
+    private fun setToolOptions(hex: String?, size: Float?, tool: AnnotationTool) {
+        if (hex != null) {
+            when (tool) {
+                AnnotationTool.HIGHLIGHT -> {
+                    defaults.setHighlightColorHex(hex)
+                }
+                AnnotationTool.NOTE -> {
+                    defaults.setNoteColorHex(hex)
+                }
+                AnnotationTool.SQUARE -> {
+                    defaults.setSquareColorHex(hex)
+                }
+                AnnotationTool.INK -> {
+                    defaults.setInkColorHex(hex)
+                }
+                else -> {
+                    //no-op
+                }
+            }
+        }
+        if (size != null) {
+            when (tool) {
+                AnnotationTool.ERASER -> {
+                    defaults.setActiveEraserSize(size)
+                }
+                AnnotationTool.INK -> {
+                    defaults.setActiveLineWidth(size)
+                }
+                else -> {
+                    //no-op
+                }
+            }
+        }
+        if (hex != null) {
+            this.toolColors[tool] = hex
+            this.changedColorForTool = tool
+            updateChangedColorForTool()
+        }
+        if (size != null) {
+            when (tool) {
+                AnnotationTool.INK -> {
+                    this.activeLineWidth = size
+                }
+                AnnotationTool.ERASER -> {
+                    this.activeEraserSize = size
+                }
+                else -> {
+                    //no-op
+                }
+            }
+        }
+        var drawColor: Int? = null
+        if (hex != null) {
+            val (_color, _, bM) = AnnotationColorGenerator.color(
+                colorHex = hex,
+                isHighlight = (tool == AnnotationTool.HIGHLIGHT),
+                isDarkMode = viewState.isDark
+            )
+            drawColor = _color
+        }
+        updateAnnotationToolDrawColorAndSize(tool, drawColor = drawColor)
+    }
+
+
 }
 
 data class PdfReaderViewState(
@@ -2040,6 +2252,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
+    object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()
     object ScreenRefresh: PdfReaderViewEffect()
 }

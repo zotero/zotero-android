@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -111,9 +112,13 @@ fun PdfReaderAnnotationCreationToolbar(
             }
             val activeAnnotationTool = viewModel.activeAnnotationTool
             if (viewState.isColorPickerButtonVisible && activeAnnotationTool != null) {
-                val color = viewModel.toolColors[activeAnnotationTool]
-                if (color != null) {
-                    FilterCircle(hex = color, onClick = {})
+                if (activeAnnotationTool == AnnotationTool.ERASER) {
+                    EmptyFilterCircle(onClick = { viewModel.showToolOptions() })
+                } else {
+                    val color = viewModel.toolColors[activeAnnotationTool]
+                    if (color != null) {
+                        FilledFilterCircle(hex = color, onClick = { viewModel.showToolOptions() })
+                    }
                 }
             }
         }
@@ -180,7 +185,7 @@ private fun AnnotationCreationToggleButton(
 }
 
 @Composable
-private fun FilterCircle(hex: String, onClick: () -> Unit) {
+private fun FilledFilterCircle(hex: String, onClick: () -> Unit) {
     val color = android.graphics.Color.parseColor(hex)
     Canvas(modifier = Modifier
         .padding(horizontal = 8.dp)
@@ -190,6 +195,20 @@ private fun FilterCircle(hex: String, onClick: () -> Unit) {
             indication = null,
         ), onDraw = {
         drawCircle(color = Color(color))
+    })
+}
+
+@Composable
+private fun EmptyFilterCircle(onClick: () -> Unit) {
+    val color = CustomTheme.colors.zoteroBlueWithDarkMode
+    Canvas(modifier = Modifier
+        .padding(horizontal = 8.dp)
+        .size(28.dp)
+        .safeClickable(
+            onClick = onClick, interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+        ), onDraw = {
+        drawCircle(color = color, style = Stroke(1.5.dp.toPx()))
     })
 }
 

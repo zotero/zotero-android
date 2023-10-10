@@ -43,6 +43,7 @@ internal fun PdfReaderScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: () -> Unit,
+    navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
@@ -89,11 +90,12 @@ internal fun PdfReaderScreen(
                     }
                     navigateToPdfSettings()
                 }
-
-                null -> {
-
+                is PdfReaderViewEffect.ShowPdfColorPicker -> {
+                    if (!layoutType.isTablet()) {
+                        viewModel.removeFragment()
+                    }
+                    navigateToPdfColorPicker()
                 }
-
                 else -> {}
             }
         }

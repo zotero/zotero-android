@@ -92,6 +92,7 @@ data class CustomSemanticColors(
     val dialogBorderColor: Color,
     val allItemsRowTitleColor: Color,
     val pdfToolbarBackgroundColor: Color,
+    val pdfSizePickerColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -144,6 +145,7 @@ fun lightCustomColors(
     dialogBorderColor = Color(0xFF69696F),
     allItemsRowTitleColor = Color.Black,
     pdfToolbarBackgroundColor= Color(0xFFFCFBFD),
+    pdfSizePickerColor = Color(0xFF6E6D73)
 )
 
 fun darkCustomColors(
@@ -185,6 +187,8 @@ fun darkCustomColors(
     dialogBorderColor = Color(0xFFFFFFFF),
     allItemsRowTitleColor = Color.White,
     pdfToolbarBackgroundColor= Color(0xFF282729),
+    pdfSizePickerColor = Color(0xFF8E8E93),
+
 )
 
 internal fun createSemanticColors(
