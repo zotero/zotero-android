@@ -156,6 +156,7 @@ fun CustomTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     maxCharacters: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
     maxLines: Int = Int.MAX_VALUE,
     singleLine: Boolean = false,
     ignoreTabsAndCaretReturns: Boolean = true,
@@ -219,6 +220,7 @@ fun CustomTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
+            minLines = minLines,
             maxLines = maxLines,
             cursorBrush = SolidColor(LocalContentColor.current),
             decorationBox = { innerTextField ->

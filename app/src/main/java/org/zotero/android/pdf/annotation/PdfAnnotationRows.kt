@@ -2,12 +2,16 @@ package org.zotero.android.pdf.annotation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +25,7 @@ import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.reader.SidebarDivider
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -75,32 +80,166 @@ internal fun PdfAnnotationHeaderRow(
 }
 
 @Composable
-internal fun PdfAnnotationNoteRow(annotation: Annotation, layoutType: CustomLayoutSize.LayoutType) {
-    TagsAndCommentsSection(annotation = annotation, layoutType = layoutType)
+internal fun PdfAnnotationNoteRow(
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
+    layoutType: CustomLayoutSize.LayoutType
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp, bottom = 8.dp)
+    ) {
+        CommentSection(viewState, layoutType, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        ColorPicker(viewState, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+
+    }
 }
 
 @Composable
 internal fun PdfAnnotationHighlightRow(
-    annotation: Annotation,
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
 ) {
-    TagsAndCommentsSection(annotation = annotation, layoutType = layoutType)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp, bottom = 8.dp)
+    ) {
+        CommentSection(viewState, layoutType, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        ColorPicker(viewState, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+    }
 }
 
 @Composable
 internal fun PdfAnnotationInkRow(
-    annotation: Annotation,
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
 ) {
-    TagsSection(annotation = annotation, layoutType = layoutType)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp, bottom = 8.dp)
+    ) {
+        CommentSection(viewState, layoutType, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        SizeSelector(
+            viewState = viewState,
+            viewModel = viewModel,
+            layoutType = layoutType
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+    }
+}
+
+@Composable
+private fun SizeSelector(
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
+    layoutType: CustomLayoutSize.LayoutType,
+) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            modifier = Modifier.padding(horizontal = 10.dp),
+            text = stringResource(id = Strings.size),
+            color = CustomTheme.colors.pdfSizePickerColor,
+            style = CustomTheme.typography.default,
+            fontSize = layoutType.calculatePdfSidebarTextSize(),
+        )
+        Slider(
+            modifier = Modifier.weight(1f),
+            value = viewState.size,
+            onValueChange = { viewModel.onSizeChanged(it) },
+            valueRange = 0.5f..25f
+        )
+        Text(
+            modifier = Modifier.padding(horizontal = 10.dp),
+            text = String.format("%.1f", viewState.size),
+            color = CustomTheme.colors.pdfSizePickerColor,
+            style = CustomTheme.typography.default,
+            fontSize = layoutType.calculatePdfSidebarTextSize(),
+        )
+    }
 }
 
 @Composable
 internal fun PdfAnnotationImageRow(
-    annotation: Annotation,
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
 ) {
-    TagsAndCommentsSection(annotation = annotation, layoutType = layoutType)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp, bottom = 8.dp)
+    ) {
+        CommentSection(viewState, layoutType, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        ColorPicker(viewState, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+
+    }
 }
 
 

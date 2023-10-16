@@ -23,6 +23,7 @@ interface Annotation {
     fun editability(currentUserId: Long, library: Library): AnnotationEditability
     fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<List<PointF>>
     fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<RectF>
+    fun isAuthor(currentUserId: Long): Boolean
 
     fun boundingBox(boundingBoxConverter: AnnotationBoundingBoxConverter): RectF {
         when (this.type) {

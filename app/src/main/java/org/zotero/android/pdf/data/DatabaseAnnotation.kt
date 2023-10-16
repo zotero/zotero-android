@@ -46,7 +46,7 @@ data class DatabaseAnnotation(
             return this.item.tags!!.map { Tag(it) }
         }
 
-    fun isAuthor(currentUserId: Long): Boolean {
+    override fun isAuthor(currentUserId: Long): Boolean {
         return if (this.item.libraryId == LibraryIdentifier.custom(RCustomLibraryType.myLibrary)) {
             true
         } else {

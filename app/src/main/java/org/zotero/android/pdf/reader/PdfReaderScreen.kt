@@ -25,8 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,6 +48,7 @@ internal fun PdfReaderScreen(
     navigateToPdfSettings: () -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
+    navigateToTagPicker: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
@@ -62,6 +66,8 @@ internal fun PdfReaderScreen(
         val uri = params.uri
         val lazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
+        val focusRequester: FocusRequester = remember { FocusRequester() }
+        val focusManager = LocalFocusManager.current
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 is PdfReaderViewEffect.NavigateBack -> {
@@ -96,6 +102,12 @@ internal fun PdfReaderScreen(
                     }
                     navigateToPdfColorPicker()
                 }
+                is PdfReaderViewEffect.ClearFocus -> {
+                    focusManager.clearFocus()
+                }
+                is PdfReaderViewEffect.NavigateToTagPickerScreen -> {
+                    navigateToTagPicker()
+                }
                 else -> {}
             }
         }
@@ -118,7 +130,8 @@ internal fun PdfReaderScreen(
                     viewModel = viewModel,
                     lazyListState = lazyListState,
                     layoutType = layoutType,
-                    uri = uri
+                    uri = uri,
+                    focusRequester = focusRequester,
                 )
             } else {
                 PdfReaderPhoneMode(
@@ -127,7 +140,8 @@ internal fun PdfReaderScreen(
                     viewModel = viewModel,
                     lazyListState = lazyListState,
                     layoutType = layoutType,
-                    uri = uri
+                    uri = uri,
+                    focusRequester = focusRequester,
                 )
             }
         }
@@ -142,7 +156,8 @@ private fun PdfReaderTabletMode(
     viewModel: PdfReaderViewModel,
     lazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
-    uri: Uri
+    uri: Uri,
+    focusRequester: FocusRequester,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = showSideBar, transitionSpec = {
@@ -158,7 +173,8 @@ private fun PdfReaderTabletMode(
                         viewState = viewState,
                         viewModel = viewModel,
                         lazyListState = lazyListState,
-                        layoutType = layoutType
+                        layoutType = layoutType,
+                        focusRequester = focusRequester,
                     )
                 }
 
@@ -187,7 +203,8 @@ private fun PdfReaderPhoneMode(
     viewModel: PdfReaderViewModel,
     lazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
-    uri: Uri
+    uri: Uri,
+    focusRequester: FocusRequester,
 ) {
     Box(
         modifier = Modifier
@@ -207,7 +224,9 @@ private fun PdfReaderPhoneMode(
                         viewState = viewState,
                         viewModel = viewModel,
                         lazyListState = lazyListState,
-                        layoutType = layoutType
+                        layoutType = layoutType,
+                        focusRequester = focusRequester,
+
                     )
                 }
             }

@@ -33,7 +33,7 @@ import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
-import org.zotero.android.pdf.pdfReaderNavScreens
+import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
@@ -162,7 +162,10 @@ internal fun DashboardRootPhoneNavigation(
                 videoPlayerScreen()
                 imageViewerScreen(onBack = navigation::onBack)
 
-                pdfReaderNavScreens(navigation)
+                pdfReaderNavScreensForPhone(
+                    navigation = navigation,
+                    navigateToTagPicker = navigation::toTagPicker
+                )
                 addNoteScreen(
                     onBack = navigation::onBack,
                     navigateToTagPicker = navigation::toTagPicker

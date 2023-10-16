@@ -14,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.FileProvider
 import dagger.hilt.android.AndroidEntryPoint
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseActivity
@@ -37,6 +39,18 @@ internal class DashboardActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        KeyboardVisibilityEvent.setEventListener(
+            this,
+            this,
+            listener = object: KeyboardVisibilityEventListener {
+                override fun onVisibilityChanged(isOpen: Boolean) {
+                    EventBus.getDefault().post(EventBusConstants.OnKeyboardVisibilityChange(isOpen))
+                }
+
+            }
+        )
+
         pickFileLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result: ActivityResult ->

@@ -13,10 +13,11 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.addNoteScreen
+import org.zotero.android.architecture.navigation.dialogDynamicHeight
 import org.zotero.android.architecture.navigation.toAddOrEditNote
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
-import org.zotero.android.pdf.pdfReaderScreenAndNavigation
+import org.zotero.android.pdf.pdfReaderScreenAndNavigationForTablet
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.tagpicker.TagPickerScreen
@@ -50,11 +51,15 @@ internal fun DashboardRootTopLevelTabletNavigation(
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
         )
-        pdfReaderScreenAndNavigation(navigation)
+        pdfReaderScreenAndNavigationForTablet(
+            navigation = navigation,
+            navigateToTagPickerDialog = navigation::toTagPickerDialog
+        )
         tagPickerScreen(onBack = navigation::onBack)
+        tagPickerDialog(onBack = navigation::onBack)
         addNoteScreen(
             onBack = navigation::onBack,
-            navigateToTagPicker = navigation::toTagPicker
+            navigateToTagPicker = navigation::toTagPickerScreen
         )
         zoterWebViewScreen()
     }
@@ -96,11 +101,26 @@ private fun NavGraphBuilder.tagPickerScreen(
     }
 }
 
+private fun NavGraphBuilder.tagPickerDialog(
+    onBack: () -> Unit,
+) {
+    dialogDynamicHeight(
+        route = DashboardRootDestinations.TAG_PICKER_DIALOG,
+    ) {
+        TagPickerScreen(onBack = onBack)
+    }
+}
+
 private object DashboardRootDestinations {
     const val DASHBOARD_SCREEN = "dashboardScreen"
     const val TAG_PICKER_SCREEN = "tagPickerScreen"
+    const val TAG_PICKER_DIALOG = "tagPickerDialog"
 }
 
-private fun ZoteroNavigation.toTagPicker() {
+private fun ZoteroNavigation.toTagPickerScreen() {
     navController.navigate(DashboardRootDestinations.TAG_PICKER_SCREEN)
+}
+
+private fun ZoteroNavigation.toTagPickerDialog() {
+    navController.navigate(DashboardRootDestinations.TAG_PICKER_DIALOG)
 }

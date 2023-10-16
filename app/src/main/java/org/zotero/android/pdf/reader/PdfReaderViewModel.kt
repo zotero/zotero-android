@@ -29,6 +29,7 @@ import com.pspdfkit.configuration.theming.ThemeMode
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.listeners.DocumentListener
+import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
@@ -53,6 +54,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -67,6 +69,7 @@ import org.zotero.android.database.requests.CreateAnnotationsDbRequest
 import org.zotero.android.database.requests.EditAnnotationPathsDbRequest
 import org.zotero.android.database.requests.EditAnnotationRectsDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
+import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
@@ -78,6 +81,10 @@ import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
+import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
+import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
+import org.zotero.android.pdf.annotation.data.PdfAnnotationDeleteResult
+import org.zotero.android.pdf.annotation.data.PdfAnnotationSizeResult
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
@@ -100,6 +107,8 @@ import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
 import org.zotero.android.pdffilter.data.PdfFilterArgs
 import org.zotero.android.pdffilter.data.PdfFilterResult
+import org.zotero.android.screens.tagpicker.data.TagPickerArgs
+import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
@@ -137,8 +146,9 @@ class PdfReaderViewModel @Inject constructor(
     private var onAnnotationUpdatedListener: AnnotationProvider.OnAnnotationUpdatedListener? = null
     private lateinit var document: PdfDocument
     private lateinit var rawDocument: PdfDocument
-    private var comments = mutableMapOf<String, String>()
+    var comments = mutableMapOf<String, String>()
     private val onSearchStateFlow = MutableStateFlow("")
+    private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private lateinit var fragmentManager: FragmentManager
     private var isTablet: Boolean = false
 
@@ -155,6 +165,44 @@ class PdfReaderViewModel @Inject constructor(
     var activeEraserSize: Float = 0.0f
 
     private var toolHistory = mutableListOf<AnnotationTool>()
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(tagPickerResult: TagPickerResult) {
+        if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfReaderScreen) {
+            val annotation = this@PdfReaderViewModel.selectedAnnotation ?: return
+            set(tags = tagPickerResult.tags, key = annotation.key)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(pdfAnnotationCommentResult: PdfAnnotationCommentResult) {
+        setComment(pdfAnnotationCommentResult.annotationKey, pdfAnnotationCommentResult.comment)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfAnnotationSizeResult) {
+        setLineWidth(key = result.key, width = result.size)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfAnnotationDeleteResult) {
+        val key = viewState.selectedAnnotationKey ?: return
+        remove(key)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfAnnotationColorResult) {
+        setColor(key = result.annotationKey, color = result.color)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: EventBusConstants.OnKeyboardVisibilityChange) {
+        viewModelScope.launch {
+            if (!result.isOpen) {
+                triggerEffect(PdfReaderViewEffect.ClearFocus)
+            }
+        }
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfFilterResult) {
@@ -230,6 +278,7 @@ class PdfReaderViewModel @Inject constructor(
         startObservingTheme()
         setupAnnotationCacheUpdateStream()
         setupSearchStateFlow()
+        setupCommentChangeFlow()
 
         val pdfSettings = defaults.getPDFSettings()
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
@@ -259,9 +308,13 @@ class PdfReaderViewModel @Inject constructor(
             add(containerId, this@PdfReaderViewModel.fragment)
         }
     }
-    private fun set(color: String) {
-        val annotationKey = this.selectedAnnotation?.key ?: return
-        val annotation = annotation(AnnotationKey(key = annotationKey, type = AnnotationKey.Kind.database)) ?: return
+
+    private fun setColor(key: String, color: String) {
+        setC(key = key, color = color)
+    }
+
+    private fun setC(color: String, key:String) {
+        val annotation = annotation(AnnotationKey(key = key, type = AnnotationKey.Kind.database)) ?: return
         update(annotation = annotation, color = (color to viewState.isDark), document = this.document)
     }
 
@@ -287,6 +340,17 @@ class PdfReaderViewModel @Inject constructor(
             .debounce(150)
             .map { text ->
                 search(text)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun setupCommentChangeFlow() {
+        onCommentChangeFlow
+            .debounce(500)
+            .map { data ->
+                if (data != null) {
+                    setComment(data.first, data.second)
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -1447,6 +1511,10 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun generatePdfConfiguration(pdfSettings: PDFSettings): PdfConfiguration {
 
+        if (!PSPDFKitPreferences.get(context).isAnnotationCreatorSet) {
+            PSPDFKitPreferences.get(context).setAnnotationCreator(viewState.displayName)
+        }
+
         val scrollDirection = when (pdfSettings.direction) {
             PageScrollDirection.HORIZONTAL -> com.pspdfkit.configuration.page.PageScrollDirection.HORIZONTAL
             PageScrollDirection.VERTICAL -> com.pspdfkit.configuration.page.PageScrollDirection.VERTICAL
@@ -2125,6 +2193,13 @@ class PdfReaderViewModel @Inject constructor(
         return listOf(a)
     }
 
+    private fun remove(key: AnnotationKey) {
+        val annotation = annotation(key) ?: return
+        val pdfAnnotation = this.document.annotationProvider.getAnnotations(annotation.page)
+            .firstOrNull { it.key == annotation.key } ?: return
+        remove(annotations = listOf(pdfAnnotation))
+    }
+
     private fun remove(annotations: List<Annotation>) {
         val keys = annotations.mapNotNull { it.key }
 
@@ -2215,6 +2290,82 @@ class PdfReaderViewModel @Inject constructor(
         updateAnnotationToolDrawColorAndSize(tool, drawColor = drawColor)
     }
 
+    fun onCommentTextChange(annotationKey: String, comment: String) {
+        updateState {
+            copy(commentFocusText = comment)
+        }
+        onCommentChangeFlow.tryEmit(annotationKey to comment)
+    }
+
+    fun setComment(annotationKey: String, comment: String) {
+        set(comment = comment, key = annotationKey)
+    }
+
+    private fun set(comment: String, key: String) {
+        val annotation = annotation(AnnotationKey(key = key, type = AnnotationKey.Kind.database)) ?: return
+
+        val htmlComment = comment //TODO Use HtmlAttributedStringConverter
+
+        this.comments[key] = comment
+
+        update(annotation = annotation, contents = htmlComment, document = this.document)
+    }
+
+    fun onCommentFocusFieldChange(annotationKey: String) {
+        val key = AnnotationKey(key = annotationKey, type = AnnotationKey.Kind.database)
+        val annotation =
+            annotation(key)
+                ?: return
+        selectAnnotationFromDocument(key)
+
+        updateState {
+            copy(
+                commentFocusKey = annotationKey,
+                commentFocusText = annotation.comment
+            )
+        }
+    }
+
+    fun onTagsClicked(annotation: org.zotero.android.pdf.data.Annotation) {
+//        if (!annotation.isAuthor(viewState.userId)) {
+//            return
+//        }
+        val annotationKey = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.database)
+        selectAnnotationFromDocument(annotationKey)
+
+        val selected = annotation.tags.map { it.name }.toSet()
+
+        ScreenArguments.tagPickerArgs = TagPickerArgs(
+            libraryId = viewState.library.identifier,
+            selectedTags = selected,
+            tags = emptyList(),
+            callPoint = TagPickerResult.CallPoint.PdfReaderScreen,
+        )
+
+        triggerEffect(PdfReaderViewEffect.NavigateToTagPickerScreen)
+    }
+
+    private fun set(tags: List<Tag>, key: String) {
+        val request = EditTagsForItemDbRequest(key = key, libraryId = viewState.library.identifier, tags = tags)
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapper,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "PDFReaderViewModel: can't set tags $key")
+                return@launch
+            }
+        }
+    }
+
+    private fun setLineWidth(key:String, width: Float) {
+        set(lineWidth = width, key = key)
+    }
+
+    private fun set(lineWidth: Float, key: String) {
+        val annotation = annotation(AnnotationKey(key = key, type = AnnotationKey.Kind.database)) ?: return
+        update(annotation = annotation, lineWidth = lineWidth, document = this.document)
+    }
 
 }
 
@@ -2246,6 +2397,8 @@ data class PdfReaderViewState(
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
     val isColorPickerButtonVisible: Boolean = false,
+    val commentFocusKey: String? = null,
+    val commentFocusText: String = ""
 ): ViewState
 
 sealed class PdfReaderViewEffect : ViewEffect {
@@ -2255,6 +2408,8 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()
     object ScreenRefresh: PdfReaderViewEffect()
+    object ClearFocus: PdfReaderViewEffect()
+    object NavigateToTagPickerScreen: PdfReaderViewEffect()
 }
 
 data class AnnotationKey(

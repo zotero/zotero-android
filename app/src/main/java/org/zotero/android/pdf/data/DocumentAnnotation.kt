@@ -25,6 +25,10 @@ data class DocumentAnnotation(
     override val sortIndex: String,
     val dateModified: Date,
 ): Annotation {
+    override fun isAuthor(currentUserId: Long): Boolean {
+        return this.isAuthor
+    }
+
     val readerKey: AnnotationKey
         get() {
             return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)

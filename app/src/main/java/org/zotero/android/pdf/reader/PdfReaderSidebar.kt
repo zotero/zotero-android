@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
@@ -42,7 +45,9 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.Annotation
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -51,6 +56,7 @@ internal fun PdfReaderSidebar(
     viewState: PdfReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
     viewModel: PdfReaderViewModel,
+    focusRequester: FocusRequester,
     lazyListState: LazyListState
 ) {
     Box(
@@ -126,13 +132,19 @@ internal fun PdfReaderSidebar(
                             when (annotation.type) {
                                 AnnotationType.note -> NoteRow(
                                     annotation = annotation,
-                                    layoutType = layoutType
+                                    layoutType = layoutType,
+                                    viewModel = viewModel,
+                                    viewState = viewState,
+                                    focusRequester = focusRequester,
                                 )
 
                                 AnnotationType.highlight -> HighlightRow(
                                     annotation = annotation,
                                     layoutType = layoutType,
                                     annotationColor = annotationColor,
+                                    viewModel = viewModel,
+                                    viewState = viewState,
+                                    focusRequester = focusRequester,
                                 )
 
                                 AnnotationType.ink -> InkRow(
@@ -144,9 +156,11 @@ internal fun PdfReaderSidebar(
 
                                 AnnotationType.image -> ImageRow(
                                     viewModel = viewModel,
+                                    viewState = viewState,
                                     annotation = annotation,
                                     loadPreview = loadPreview,
                                     layoutType = layoutType,
+                                    focusRequester = focusRequester,
                                 )
                             }
                         }
@@ -165,9 +179,11 @@ internal fun PdfReaderSidebar(
 @Composable
 fun ImageRow(
     viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
     layoutType: CustomLayoutSize.LayoutType,
+    focusRequester: FocusRequester,
 ) {
     val cachedBitmap = loadPreview()
     if (cachedBitmap != null) {
@@ -180,7 +196,13 @@ fun ImageRow(
             contentDescription = null,
         )
     }
-    TagsAndCommentsSection(annotation, layoutType)
+    TagsAndCommentsSection(
+        annotation = annotation,
+        viewModel = viewModel,
+        viewState = viewState,
+        layoutType = layoutType,
+        focusRequester = focusRequester,
+    )
 }
 
 
@@ -217,22 +239,37 @@ fun InkRow(
             )
             Spacer(modifier = Modifier.height(4.dp))
         }
-        TagsSection(annotation, layoutType)
+        TagsSection(viewModel = viewModel, annotation = annotation, layoutType = layoutType)
     }
 
 }
 
 
 @Composable
-fun NoteRow(annotation: Annotation, layoutType: CustomLayoutSize.LayoutType) {
-    TagsAndCommentsSection(annotation, layoutType)
+fun NoteRow(
+    annotation: Annotation,
+    layoutType: CustomLayoutSize.LayoutType,
+    viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState,
+    focusRequester: FocusRequester,
+) {
+    TagsAndCommentsSection(
+        annotation = annotation,
+        viewModel = viewModel,
+        viewState = viewState,
+        layoutType = layoutType,
+        focusRequester = focusRequester,
+    )
 }
 
 @Composable
 fun HighlightRow(
     annotation: Annotation,
+    viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    annotationColor: Color
+    annotationColor: Color,
+    focusRequester: FocusRequester,
 ) {
     Box(
         modifier = Modifier
@@ -256,33 +293,46 @@ fun HighlightRow(
         )
     }
 
-    TagsAndCommentsSection(annotation, layoutType)
+    TagsAndCommentsSection(
+        annotation = annotation,
+        viewModel = viewModel,
+        viewState = viewState,
+        layoutType = layoutType,
+        focusRequester = focusRequester,
+    )
 }
 
 @Composable
 private fun TagsAndCommentsSection(
     annotation: Annotation,
-    layoutType: CustomLayoutSize.LayoutType
+    viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState,
+    layoutType: CustomLayoutSize.LayoutType,
+    focusRequester: FocusRequester,
 ) {
-    val showTagsAndCommentsLayout = !annotation.tags.isEmpty() || !annotation.comment.isEmpty()
-    if (!showTagsAndCommentsLayout) {
-        return
-    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        if (!annotation.comment.isEmpty()) {
-            Text(
-                modifier = Modifier.padding(start = 8.dp),
-                text = annotation.comment,
-                color = CustomTheme.colors.primaryContent,
-                style = CustomTheme.typography.default,
-                fontSize = layoutType.calculatePdfSidebarTextSize(),
-            )
-        }
-        if (!annotation.tags.isEmpty() && !annotation.comment.isEmpty()) {
+        CustomTextField(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .onFocusChanged {
+                    if (it.hasFocus) {
+                        viewModel.onCommentFocusFieldChange(annotation.key)
+                    }
+                },
+            value = if (annotation.key == viewState.commentFocusKey) {
+                viewState.commentFocusText
+            } else {
+                annotation.comment
+            },
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize()),
+            hint = stringResource(id = Strings.pdf_annotations_sidebar_add_comment),
+            focusRequester = focusRequester,
+            ignoreTabsAndCaretReturns = false,
+            onValueChange = { viewModel.onCommentTextChange(annotationKey = annotation.key, it) })
             Spacer(modifier = Modifier.height(4.dp))
             SidebarDivider(
                 modifier = Modifier
@@ -290,22 +340,41 @@ private fun TagsAndCommentsSection(
                     .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
-        }
-        TagsSection(annotation, layoutType)
-
+        TagsSection(viewModel = viewModel, annotation = annotation, layoutType = layoutType)
     }
 }
 
 @Composable
 private fun TagsSection(
+    viewModel: PdfReaderViewModel,
     annotation: Annotation,
     layoutType: CustomLayoutSize.LayoutType
 ) {
     if (!annotation.tags.isEmpty()) {
         Text(
-            modifier = Modifier.padding(start = 8.dp),
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { viewModel.onTagsClicked(annotation) }
+                ),
             text = annotation.tags.joinToString(separator = ", ") { it.name },
             color = CustomTheme.colors.primaryContent,
+            style = CustomTheme.typography.default,
+            fontSize = layoutType.calculatePdfSidebarTextSize(),
+        )
+    } else {
+        Text(
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { viewModel.onTagsClicked(annotation) }
+                ),
+            text = stringResource(id = Strings.pdf_annotations_sidebar_add_tags),
+            color = CustomTheme.colors.zoteroBlueWithDarkMode,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculatePdfSidebarTextSize(),
         )
