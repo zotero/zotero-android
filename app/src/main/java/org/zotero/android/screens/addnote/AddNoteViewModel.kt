@@ -1,6 +1,7 @@
 package org.zotero.android.screens.addnote
 
 import android.webkit.WebMessage
+import android.webkit.WebMessagePort
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,7 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
-import org.zotero.android.screens.addnote.data.WebViewInitMessage
+import org.zotero.android.screens.addnote.data.WebViewSendMessage
 import org.zotero.android.screens.addnote.data.WebViewUpdateResponse
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
@@ -27,6 +28,10 @@ import javax.inject.Inject
 internal class AddNoteViewModel @Inject constructor(
     private val gson: Gson,
 ) : BaseViewModel2<AddNoteViewState, AddNoteViewEffect>(AddNoteViewState()) {
+
+    private lateinit var port: WebMessagePort
+
+    private var isSaveDuringExit: Boolean = false
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
@@ -54,26 +59,27 @@ internal class AddNoteViewModel @Inject constructor(
         }
     }
 
-    fun onDoneClicked() {
-        val args = ScreenArguments.addOrEditNoteArgs
-        EventBus.getDefault().post(
-            SaveNoteAction(
-                text = viewState.text,
-                tags = viewState.tags,
-                key = args.key,
-                isFromDashboard = args.isFromDashboard
-            )
-        )
-        triggerEffect(AddNoteViewEffect.NavigateBack)
-    }
-
     fun generateInitWebMessage(): WebMessage {
         val gson = gson.toJson(
-            WebViewInitMessage(
+            WebViewSendMessage(
                 instanceId = 1,
-                message = WebViewInitMessage.WebViewInitPayload(
+                message = WebViewSendMessage.WebViewSendMessagePayload(
                     action = "init",
                     value = viewState.text,
+                    readOnly = false,
+                )
+            )
+        )
+        return WebMessage(gson)
+    }
+
+    private fun generateForceSaveMessage(): WebMessage {
+        val gson = gson.toJson(
+            WebViewSendMessage(
+                instanceId = 1,
+                message = WebViewSendMessage.WebViewSendMessagePayload(
+                    action = "forceSave",
+                    value = "",
                     readOnly = false,
                 )
             )
@@ -85,7 +91,12 @@ internal class AddNoteViewModel @Inject constructor(
         val data = message.data
         if (data.contains("update")) {
             val parsedMessage = gson.fromJson(data, WebViewUpdateResponse::class.java)
-            updateNoteText(parsedMessage.message.value)
+            if (parsedMessage.message.value != null) {
+                updateNoteText(parsedMessage.message.value)
+            }
+            if (isSaveDuringExit) {
+                saveAndExit()
+            }
         }
     }
 
@@ -111,12 +122,38 @@ internal class AddNoteViewModel @Inject constructor(
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
     }
+
+    fun setPort(port: WebMessagePort) {
+        this.port = port
+    }
+
+    fun onDoneClicked() {
+        this.isSaveDuringExit = true
+        updateState {
+            copy(backHandlerInterceptionEnabled = false)
+        }
+        this.port.postMessage(generateForceSaveMessage())
+    }
+
+    private fun saveAndExit() {
+        val args = ScreenArguments.addOrEditNoteArgs
+        EventBus.getDefault().post(
+            SaveNoteAction(
+                text = viewState.text,
+                tags = viewState.tags,
+                key = args.key,
+                isFromDashboard = args.isFromDashboard
+            )
+        )
+        triggerEffect(AddNoteViewEffect.NavigateBack)
+    }
 }
 
 internal data class AddNoteViewState(
     val title: AddOrEditNoteArgs.TitleData? = null,
     val text: String = "",
     var tags: List<Tag> = emptyList(),
+    val backHandlerInterceptionEnabled: Boolean = true,
 ) : ViewState {
     fun formattedTags(): String {
         return tags.joinToString(separator = ", ") { it.name }

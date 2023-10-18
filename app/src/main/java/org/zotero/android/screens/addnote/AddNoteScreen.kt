@@ -12,6 +12,7 @@ import android.webkit.WebMessage
 import android.webkit.WebMessagePort
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
@@ -57,6 +58,11 @@ internal fun AddNoteScreen(
             isKeyboardShown = isOpen
         }
     }
+
+    BackHandler(
+        enabled = viewState.backHandlerInterceptionEnabled,
+        onBack = { viewModel.onDoneClicked() }
+    )
 
     LaunchedEffect(key1 = viewEffect) {
         when (viewEffect?.consume()) {
@@ -118,6 +124,7 @@ private fun BoxScope.WebView(viewModel: AddNoteViewModel, isKeyboardShown: Boole
                 override fun onPageFinished(view: WebView, url: String) {
                     val channel: Array<WebMessagePort> = webView.createWebMessageChannel()
                     val port = channel[0]
+                    viewModel.setPort(port)
                     port.setWebMessageCallback(object :
                         WebMessagePort.WebMessageCallback() {
                         override fun onMessage(port: WebMessagePort, message: WebMessage) {

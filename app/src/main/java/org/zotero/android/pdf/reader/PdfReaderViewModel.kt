@@ -1547,7 +1547,7 @@ class PdfReaderViewModel @Inject constructor(
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
-//            .autosaveEnabled(false)
+            .autosaveEnabled(false)
             .build()
     }
 
