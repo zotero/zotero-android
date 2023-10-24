@@ -32,6 +32,7 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.row.BaseRowItem
 import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -40,95 +41,102 @@ internal fun TagPickerScreen(
     scaffoldModifier: Modifier = Modifier,
     viewModel: TagPickerViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(TagPickerViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    val backgroundColor = CustomTheme.colors.popupBackgroundContent
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            is TagPickerViewEffect.OnBack -> {
-                onBack()
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
+        statusBarBackgroundColor = backgroundColor
+    ) {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(TagPickerViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                is TagPickerViewEffect.OnBack -> {
+                    onBack()
+                }
             }
         }
-    }
-    CustomScaffold(
-        modifier = scaffoldModifier,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-        topBar = {
-            TopBar(
-                onCancelClicked = onBack,
-                onSave = viewModel::onSave,
-                viewState = viewState,
-            )
-        },
-    ) {
-        Column {
-            val searchValue = viewState.searchTerm
-            var searchBarTextFieldState by remember { mutableStateOf(TextFieldValue(searchValue)) }
-            val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
-                searchBarTextFieldState = it
-                viewModel.search(it.text)
-            }
-            val onSearchAction = {
-                viewModel.addTagIfNeeded()
-                searchBarOnInnerValueChanged.invoke(TextFieldValue())
-            }
-            SearchBar(
-                hint = stringResource(id = Strings.tag_picker_placeholder),
-                modifier = Modifier.padding(12.dp),
-                onSearchImeClicked = onSearchAction,
-                onInnerValueChanged = searchBarOnInnerValueChanged,
-                textFieldState = searchBarTextFieldState,
-            )
-            CustomDivider()
-            LazyColumn(
-                modifier = Modifier
-            ) {
-                items(items = viewState.tags) { tag ->
-                    val isChecked = viewState.selectedTags.contains(tag.name)
-                    val backgroundColor =
-                        if (isChecked) CustomTheme.colors.popupSelectedRow else CustomTheme.colors.popupBackgroundContent
-
-                    Column(modifier = Modifier
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { viewModel.selectOrDeselect(tag.name) }
-                        )
-                        .background(color = backgroundColor)) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        BaseRowItem(
-                            modifier = Modifier.padding(start = 16.dp),
-                            title = tag.name,
-                            heightIn = 24.dp,
-                            startContentPadding = 12.dp,
-                            backgroundColor = backgroundColor,
-                            textColor = CustomTheme.colors.primaryContent,
-                            titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                            startContent = {
-                                CircleCheckBox(
-                                    isChecked = isChecked,
-                                    layoutType = layoutType
-                                )
-                            })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomDivider()
-                    }
+        CustomScaffold(
+            modifier = scaffoldModifier,
+            backgroundColor = backgroundColor,
+            topBar = {
+                TopBar(
+                    onCancelClicked = onBack,
+                    onSave = viewModel::onSave,
+                    viewState = viewState,
+                )
+            },
+        ) {
+            Column {
+                val searchValue = viewState.searchTerm
+                var searchBarTextFieldState by remember { mutableStateOf(TextFieldValue(searchValue)) }
+                val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
+                    searchBarTextFieldState = it
+                    viewModel.search(it.text)
                 }
-                item {
-                    if (viewState.showAddTagButton) {
-                        CreateTagRow(
-                            tagName = viewState.searchTerm,
-                            onClick = onSearchAction,
-                            layoutType = layoutType
-                        )
-                    }
+                val onSearchAction = {
+                    viewModel.addTagIfNeeded()
+                    searchBarOnInnerValueChanged.invoke(TextFieldValue())
                 }
+                SearchBar(
+                    hint = stringResource(id = Strings.tag_picker_placeholder),
+                    modifier = Modifier.padding(12.dp),
+                    onSearchImeClicked = onSearchAction,
+                    onInnerValueChanged = searchBarOnInnerValueChanged,
+                    textFieldState = searchBarTextFieldState,
+                )
+                CustomDivider()
+                LazyColumn(
+                    modifier = Modifier
+                ) {
+                    items(items = viewState.tags) { tag ->
+                        val isChecked = viewState.selectedTags.contains(tag.name)
+                        val selectableBackgroundColor =
+                            if (isChecked) CustomTheme.colors.popupSelectedRow else backgroundColor
 
+                        Column(modifier = Modifier
+                            .safeClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { viewModel.selectOrDeselect(tag.name) }
+                            )
+                            .background(color = selectableBackgroundColor)) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            BaseRowItem(
+                                modifier = Modifier.padding(start = 16.dp),
+                                title = tag.name,
+                                heightIn = 24.dp,
+                                startContentPadding = 12.dp,
+                                backgroundColor = selectableBackgroundColor,
+                                textColor = CustomTheme.colors.primaryContent,
+                                titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                                startContent = {
+                                    CircleCheckBox(
+                                        isChecked = isChecked,
+                                        layoutType = layoutType
+                                    )
+                                })
+                            Spacer(modifier = Modifier.height(8.dp))
+                            CustomDivider()
+                        }
+                    }
+                    item {
+                        if (viewState.showAddTagButton) {
+                            CreateTagRow(
+                                tagName = viewState.searchTerm,
+                                onClick = onSearchAction,
+                                layoutType = layoutType
+                            )
+                        }
+                    }
+
+                }
             }
         }
     }

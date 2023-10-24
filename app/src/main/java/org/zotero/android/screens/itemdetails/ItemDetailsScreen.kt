@@ -17,6 +17,7 @@ import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.reorder.rememberReorderState
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import java.io.File
 
 @Composable
@@ -35,120 +36,133 @@ internal fun ItemDetailsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
+    CustomThemeWithStatusAndNavBars {
 
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
-    val lazyListState = rememberLazyListState()
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
 
-    val reorderState = rememberReorderState(
-        listState = lazyListState
-    )
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
-            ItemDetailsViewEffect.ShowCreatorEditEffect -> {
-                navigateToCreatorEdit()
-            }
-            ItemDetailsViewEffect.ShowItemTypePickerEffect -> {
-                navigateToSinglePicker()
-            }
-            ItemDetailsViewEffect.ScreenRefresh -> {
-                //no-op
-            }
-            ItemDetailsViewEffect.OnBack -> {
-                onBack()
-            }
-            ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
-                navigateToAddOrEditNote()
-            }
-            is ItemDetailsViewEffect.OpenFile -> {
-                onOpenFile(consumedEffect.file, consumedEffect.mimeType)
-            }
-            is ItemDetailsViewEffect.NavigateToPdfScreen -> {
-                onShowPdf()
-            }
-            is ItemDetailsViewEffect.OpenWebpage -> {
-                onOpenWebpage(consumedEffect.uri)
-            }
-            is ItemDetailsViewEffect.ShowVideoPlayer -> {
-                navigateToVideoPlayerScreen()
-            }
-
-            is ItemDetailsViewEffect.ShowImageViewer -> {
-                navigateToImageViewerScreen()
-            }
-            is ItemDetailsViewEffect.ShowZoteroWebView -> {
-                navigateToZoterWebViewScreen(consumedEffect.url)
-            }
-
-            is ItemDetailsViewEffect.AddAttachment -> {
-                onPickFile()
-            }
-            ItemDetailsViewEffect.ShowTagPickerEffect -> {
-                navigateToTagPicker()
-            }
-
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
         }
-    }
-    CustomScaffold(
-//        modifier = Modifier
-//            .fillMaxSize(),
-        topBar = {
-            ItemDetailsTopBar(
-                onViewOrEditClicked = viewModel::onSaveOrEditClicked,
-                onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
-                isEditing = viewState.isEditing
-            )
-        },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.surface),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight(),
-            ) {
-                if (viewState.isEditing) {
-                    ItemDetailsEditScreen(
-                        viewState = viewState,
-                        layoutType = layoutType,
-                        viewModel = viewModel,
-                        reorderState = reorderState,
-                    )
-                } else {
-                    ItemDetailsViewScreen(
-                        viewState = viewState,
-                        layoutType = layoutType,
-                        viewModel = viewModel
-                    )
+        val lazyListState = rememberLazyListState()
+
+        val reorderState = rememberReorderState(
+            listState = lazyListState
+        )
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (val consumedEffect = viewEffect?.consume()) {
+                null -> Unit
+                ItemDetailsViewEffect.ShowCreatorEditEffect -> {
+                    navigateToCreatorEdit()
+                }
+
+                ItemDetailsViewEffect.ShowItemTypePickerEffect -> {
+                    navigateToSinglePicker()
+                }
+
+                ItemDetailsViewEffect.ScreenRefresh -> {
+                    //no-op
+                }
+
+                ItemDetailsViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
+                    navigateToAddOrEditNote()
+                }
+
+                is ItemDetailsViewEffect.OpenFile -> {
+                    onOpenFile(consumedEffect.file, consumedEffect.mimeType)
+                }
+
+                is ItemDetailsViewEffect.NavigateToPdfScreen -> {
+                    onShowPdf()
+                }
+
+                is ItemDetailsViewEffect.OpenWebpage -> {
+                    onOpenWebpage(consumedEffect.uri)
+                }
+
+                is ItemDetailsViewEffect.ShowVideoPlayer -> {
+                    navigateToVideoPlayerScreen()
+                }
+
+                is ItemDetailsViewEffect.ShowImageViewer -> {
+                    navigateToImageViewerScreen()
+                }
+
+                is ItemDetailsViewEffect.ShowZoteroWebView -> {
+                    navigateToZoterWebViewScreen(consumedEffect.url)
+                }
+
+                is ItemDetailsViewEffect.AddAttachment -> {
+                    onPickFile()
+                }
+
+                ItemDetailsViewEffect.ShowTagPickerEffect -> {
+                    navigateToTagPicker()
                 }
 
             }
         }
-        val itemDetailError = viewState.error
-        if (itemDetailError != null) {
-            ItemDetailsErrorDialogs(
-                itemDetailError = itemDetailError,
-                onDismissErrorDialog = viewModel::onDismissErrorDialog,
-                onBack = onBack,
-                acceptPrompt = viewModel::acceptPrompt,
-                cancelPrompt = viewModel::cancelPrompt,
-                acceptItemWasChangedRemotely = viewModel::acceptItemWasChangedRemotely,
-                deleteOrRestoreItem = viewModel::deleteOrRestoreItem
+        CustomScaffold(
+//        modifier = Modifier
+//            .fillMaxSize(),
+            topBar = {
+                ItemDetailsTopBar(
+                    onViewOrEditClicked = viewModel::onSaveOrEditClicked,
+                    onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
+                    isEditing = viewState.isEditing
+                )
+            },
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = CustomTheme.colors.surface),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight(),
+                ) {
+                    if (viewState.isEditing) {
+                        ItemDetailsEditScreen(
+                            viewState = viewState,
+                            layoutType = layoutType,
+                            viewModel = viewModel,
+                            reorderState = reorderState,
+                        )
+                    } else {
+                        ItemDetailsViewScreen(
+                            viewState = viewState,
+                            layoutType = layoutType,
+                            viewModel = viewModel
+                        )
+                    }
+
+                }
+            }
+            val itemDetailError = viewState.error
+            if (itemDetailError != null) {
+                ItemDetailsErrorDialogs(
+                    itemDetailError = itemDetailError,
+                    onDismissErrorDialog = viewModel::onDismissErrorDialog,
+                    onBack = onBack,
+                    acceptPrompt = viewModel::acceptPrompt,
+                    cancelPrompt = viewModel::cancelPrompt,
+                    acceptItemWasChangedRemotely = viewModel::acceptItemWasChangedRemotely,
+                    deleteOrRestoreItem = viewModel::deleteOrRestoreItem
+                )
+            }
+            LongPressBottomSheet(
+                layoutType = layoutType,
+                longPressOptionsHolder = viewState.longPressOptionsHolder,
+                onCollapse = viewModel::dismissBottomSheet,
+                onOptionClick = viewModel::onLongPressOptionsItemSelected
             )
         }
-        LongPressBottomSheet(
-            layoutType = layoutType,
-            longPressOptionsHolder = viewState.longPressOptionsHolder,
-            onCollapse = viewModel::dismissBottomSheet,
-            onOptionClick = viewModel::onLongPressOptionsItemSelected
-        )
     }
 }

@@ -24,60 +24,64 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.row.BaseRowItem
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 fun SinglePickerScreen(
     onCloseClicked: () -> Unit,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val pickerArgs = ScreenArguments.singlePickerArgs
-    val singlePickerState = pickerArgs.singlePickerState
-    CustomScaffold(
-        topBar = {
-            TopBar(
-                title = pickerArgs.title,
-                onCancel = onCloseClicked
-            )
-        },
-    ) {
-        LazyColumn(
-            modifier = Modifier.padding(bottom = 16.dp)
+    CustomThemeWithStatusAndNavBars {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val pickerArgs = ScreenArguments.singlePickerArgs
+        val singlePickerState = pickerArgs.singlePickerState
+        CustomScaffold(
+            topBar = {
+                TopBar(
+                    title = pickerArgs.title,
+                    onCancel = onCloseClicked
+                )
+            },
         ) {
-            items(
-                singlePickerState.objects
-            ) { option ->
-                Column(modifier = Modifier
-                    .safeClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            onCloseClicked()
-                            EventBus.getDefault().post(SinglePickerResult(option.id, pickerArgs.callPoint))
-                        }
-                    )) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    BaseRowItem(
-                        modifier = Modifier.padding(start = 16.dp),
-                        title = option.name,
-                        heightIn = 24.dp,
-                        startContentPadding = 12.dp,
-                        textColor = CustomTheme.colors.primaryContent,
-                        titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                        endContent = {
-                            if (option.id == singlePickerState.selectedRow) {
-                                Icon(
-                                    modifier = Modifier.size(layoutType.calculateIconSize()),
-                                    painter = painterResource(id = Drawables.baseline_check_24),
-                                    contentDescription = null,
-                                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
+            LazyColumn(
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                items(
+                    singlePickerState.objects
+                ) { option ->
+                    Column(modifier = Modifier
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {
+                                onCloseClicked()
+                                EventBus.getDefault()
+                                    .post(SinglePickerResult(option.id, pickerArgs.callPoint))
                             }
+                        )) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        BaseRowItem(
+                            modifier = Modifier.padding(start = 16.dp),
+                            title = option.name,
+                            heightIn = 24.dp,
+                            startContentPadding = 12.dp,
+                            textColor = CustomTheme.colors.primaryContent,
+                            titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                            endContent = {
+                                if (option.id == singlePickerState.selectedRow) {
+                                    Icon(
+                                        modifier = Modifier.size(layoutType.calculateIconSize()),
+                                        painter = painterResource(id = Drawables.baseline_check_24),
+                                        contentDescription = null,
+                                        tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                }
 
-                        })
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CustomDivider()
+                            })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        CustomDivider()
+                    }
                 }
             }
         }

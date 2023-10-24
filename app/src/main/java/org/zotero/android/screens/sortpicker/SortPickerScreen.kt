@@ -28,51 +28,54 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.selector.MultiSelector
 import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun SortPickerScreen(
     onBack: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     viewModel: SortPickerViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(SortPickerViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    CustomThemeWithStatusAndNavBars {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(SortPickerViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            is SortPickerViewEffect.OnBack -> {
-                onBack()
-            }
-            is SortPickerViewEffect.NavigateToSinglePickerScreen -> {
-                navigateToSinglePickerScreen()
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                is SortPickerViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                is SortPickerViewEffect.NavigateToSinglePickerScreen -> {
+                    navigateToSinglePickerScreen()
+                }
             }
         }
-    }
-    CustomScaffold(
+        CustomScaffold(
 //        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopBar(
-                onDone = viewModel::onDone,
-            )
-        },
-    ) {
-        Column(
-            modifier = Modifier
-//                .fillMaxSize()
-                .background(color = CustomTheme.colors.surface)
+            topBar = {
+                TopBar(
+                    onDone = viewModel::onDone,
+                )
+            },
         ) {
-            DisplayFields(
-                viewState = viewState,
-                layoutType = layoutType,
-                viewModel = viewModel,
-            )
+            Column(
+                modifier = Modifier
+//                .fillMaxSize()
+                    .background(color = CustomTheme.colors.surface)
+            ) {
+                DisplayFields(
+                    viewState = viewState,
+                    layoutType = layoutType,
+                    viewModel = viewModel,
+                )
+            }
         }
     }
 }
@@ -130,7 +133,9 @@ private fun FieldTappableRow(
                 .fillMaxWidth(),
         ) {
             Text(
-                modifier = Modifier.align(Alignment.Start).padding(start = 16.dp),
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = 16.dp),
                 text = detailTitle,
                 color = CustomTheme.colors.secondaryContent,
                 style = CustomTheme.typography.default,

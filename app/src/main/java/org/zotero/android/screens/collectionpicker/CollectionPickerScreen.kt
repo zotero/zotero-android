@@ -11,6 +11,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -19,39 +20,51 @@ internal fun CollectionPickerScreen(
     scaffoldModifier: Modifier = Modifier,
     viewModel: CollectionPickerViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            is CollectionPickerViewEffect.OnBack -> {
-                onBack()
-            }
-            else -> {
-                //no-op
-            }
-        }
-    }
-    CustomScaffold(
-        modifier = scaffoldModifier,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-        topBar = {
-            TopBar(
-                onCancelClicked = onBack,
-                onAdd = viewModel::confirmSelection,
-                viewState = viewState,
-                viewModel = viewModel,
-            )
-        },
+    val backgroundColor = CustomTheme.colors.popupBackgroundContent
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
+        statusBarBackgroundColor = backgroundColor
     ) {
-        Column {
-            CustomDivider()
-            CollectionsPickerTable(viewState = viewState, viewModel = viewModel, layoutType = layoutType)
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
         }
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                is CollectionPickerViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                else -> {
+                    //no-op
+                }
+            }
+        }
+        CustomScaffold(
+            modifier = scaffoldModifier,
+            backgroundColor = backgroundColor,
+            topBar = {
+                TopBar(
+                    onCancelClicked = onBack,
+                    onAdd = viewModel::confirmSelection,
+                    viewState = viewState,
+                    viewModel = viewModel,
+                )
+            },
+        ) {
+            Column {
+                CustomDivider()
+                CollectionsPickerTable(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    layoutType = layoutType
+                )
+            }
+        }
+
     }
 }
 

@@ -18,6 +18,7 @@ import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun LibrariesScreen(
@@ -25,48 +26,53 @@ internal fun LibrariesScreen(
     onSettingsTapped: () -> Unit,
     viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init(isTablet = layoutType.isTablet())
-    }
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen()
-        }
-    }
-
-    CustomScaffold(
-        backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground,
-        topBar = {
-            LibrariesTopBar(
-                onSettingsTapped = onSettingsTapped,
-            )
-        },
+    val backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
     ) {
-        BaseLceBox(
-            modifier = Modifier.fillMaxSize(),
-            lce = viewState.lce,
-            error = { _ ->
-                FullScreenError(
-                    modifier = Modifier.align(Alignment.Center),
-                    errorTitle = stringResource(id = Strings.all_items_load_error),
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init(isTablet = layoutType.isTablet())
+        }
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen()
+            }
+        }
+
+        CustomScaffold(
+            backgroundColor = backgroundColor,
+            topBar = {
+                LibrariesTopBar(
+                    onSettingsTapped = onSettingsTapped,
                 )
-            },
-            loading = {
-                CircularLoading()
             },
         ) {
-            Column {
-                CustomDivider()
-                LibrariesTable(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    layoutType = layoutType
-                )
+            BaseLceBox(
+                modifier = Modifier.fillMaxSize(),
+                lce = viewState.lce,
+                error = { _ ->
+                    FullScreenError(
+                        modifier = Modifier.align(Alignment.Center),
+                        errorTitle = stringResource(id = Strings.all_items_load_error),
+                    )
+                },
+                loading = {
+                    CircularLoading()
+                },
+            ) {
+                Column {
+                    CustomDivider()
+                    LibrariesTable(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        layoutType = layoutType
+                    )
+                }
             }
         }
     }

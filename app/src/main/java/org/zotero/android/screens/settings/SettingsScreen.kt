@@ -21,6 +21,7 @@ import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -31,78 +32,84 @@ internal fun SettingsScreen(
     toDebugScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-//    val viewState by viewModel.viewStates.observeAsState(SettingsViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
-            is SettingsViewEffect.OnBack -> {
-                onBack()
-            }
-
-            is SettingsViewEffect.OpenWebpage -> {
-                onOpenWebpage(consumedEffect.uri)
-            }
-        }
-    }
-    CustomScaffold(
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-        topBar = {
-            TopBar(
-                onClose = onBack,
-            )
-        },
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
     ) {
-        CustomDivider()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                .padding(horizontal = 20.dp)
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (val consumedEffect = viewEffect?.consume()) {
+                null -> Unit
+                is SettingsViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                is SettingsViewEffect.OpenWebpage -> {
+                    onOpenWebpage(consumedEffect.uri)
+                }
+            }
+        }
+        CustomScaffold(
+            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBar = {
+                TopBar(
+                    onClose = onBack,
+                )
+            },
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
-            SettingsSection {
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = true,
-                    title = stringResource(id = Strings.settings_sync_account),
-                    onItemTapped = toAccountScreen
-                )
-            }
-            Spacer(modifier = Modifier.height(30.dp))
+            CustomDivider()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = backgroundColor)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSection {
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = true,
+                        title = stringResource(id = Strings.settings_sync_account),
+                        onItemTapped = toAccountScreen
+                    )
+                }
+                Spacer(modifier = Modifier.height(30.dp))
 
-            SettingsSection {
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = true,
-                    title = stringResource(id = Strings.settings_debug),
-                    onItemTapped = toDebugScreen
-                )
-            }
-            Spacer(modifier = Modifier.height(30.dp))
+                SettingsSection {
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = true,
+                        title = stringResource(id = Strings.settings_debug),
+                        onItemTapped = toDebugScreen
+                    )
+                }
+                Spacer(modifier = Modifier.height(30.dp))
 
-            SettingsSection {
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = false,
-                    title = stringResource(id = Strings.support_feedback),
-                    onItemTapped = viewModel::openSupportAndFeedback
-                )
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = true,
-                    title = stringResource(id = Strings.privacy_policy),
-                    onItemTapped = viewModel::openPrivacyPolicy
-                )
+                SettingsSection {
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = false,
+                        title = stringResource(id = Strings.support_feedback),
+                        onItemTapped = viewModel::openSupportAndFeedback
+                    )
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = true,
+                        title = stringResource(id = Strings.privacy_policy),
+                        onItemTapped = viewModel::openPrivacyPolicy
+                    )
+                }
+                BuildInfo()
             }
-            BuildInfo()
         }
     }
+
 }
 
 @Composable
@@ -112,6 +119,6 @@ private fun TopBar(
     CancelSaveTitleTopBar(
         title = stringResource(id = Strings.settings_title),
         onClose = onClose,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
+        backgroundColor = CustomTheme.colors.surface,
     )
 }

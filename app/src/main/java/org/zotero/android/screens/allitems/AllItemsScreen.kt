@@ -1,4 +1,3 @@
-
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
@@ -24,6 +23,7 @@ import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import java.io.File
 
 @Composable
@@ -43,119 +43,128 @@ internal fun AllItemsScreen(
     navigateToTagFilter: () -> Unit,
     onShowPdf: () -> Unit,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
-            is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen()
-            is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
-            is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
-            AllItemsViewEffect.ShowFilterEffect -> {
-                navigateToTagFilter()
-            }
-            AllItemsViewEffect.ShowItemTypePickerEffect -> {
-                navigateToSinglePicker()
-            }
-            AllItemsViewEffect.ShowSortPickerEffect -> {
-                navigateToAllItemsSort()
-            }
-            AllItemsViewEffect.ScreenRefresh -> {
-                //no-op
-            }
-            is AllItemsViewEffect.OpenFile -> onOpenFile(
-                consumedEffect.file,
-                consumedEffect.mimeType
-            )
-            is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.uri)
-            is AllItemsViewEffect.NavigateToPdfScreen -> {
-                onShowPdf()
-            }
-            is AllItemsViewEffect.ShowVideoPlayer -> {
-                navigateToVideoPlayerScreen()
-            }
-            is AllItemsViewEffect.ShowImageViewer -> {
-                navigateToImageViewerScreen()
-            }
-            is AllItemsViewEffect.ShowZoteroWebView -> {
-                navigateToZoterWebViewScreen(consumedEffect.url)
-            }
+    CustomThemeWithStatusAndNavBars {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
         }
-    }
 
-    CustomScaffold(
-        topBar = {
-            AllItemsTopBar(
-                viewState = viewState,
-                viewModel = viewModel,
-                layoutType = layoutType,
-            )
-        },
-    ) {
-        SwipeRefresh(
-            state = rememberSwipeRefreshState(viewState.isRefreshing),
-            onRefresh = viewModel::startSync,
-            indicator = { state, trigger ->
-                SwipeRefreshIndicator(
-                    state = state,
-                    refreshTriggerDistance = trigger,
-                    scale = true,
-                    contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
+        LaunchedEffect(key1 = viewEffect) {
+            when (val consumedEffect = viewEffect?.consume()) {
+                null -> Unit
+                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen()
+                is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails()
+                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
+                AllItemsViewEffect.ShowFilterEffect -> {
+                    navigateToTagFilter()
+                }
+
+                AllItemsViewEffect.ShowItemTypePickerEffect -> {
+                    navigateToSinglePicker()
+                }
+
+                AllItemsViewEffect.ShowSortPickerEffect -> {
+                    navigateToAllItemsSort()
+                }
+
+                AllItemsViewEffect.ScreenRefresh -> {
+                    //no-op
+                }
+
+                is AllItemsViewEffect.OpenFile -> onOpenFile(
+                    consumedEffect.file,
+                    consumedEffect.mimeType
                 )
-            }
-        ) {
-            BaseLceBox(
-                modifier = Modifier.fillMaxSize(),
-                lce = viewState.lce,
-                error = { _ ->
-                    FullScreenError(
-                        modifier = Modifier.align(Alignment.Center),
-                        errorTitle = stringResource(id = Strings.all_items_load_error),
-                    )
-                },
-                loading = {
-                    CircularLoading()
-                },
-            ) {
-                AllItemsBottomPanel(layoutType, viewState, viewModel)
-                Column(
-                    modifier = Modifier
-                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-                ) {
-                    if (!layoutType.isTablet()) {
-                        AllItemsSearchBar(
-                            viewState = viewState,
-                            viewModel = viewModel
-                        )
-                    }
-                    CustomDivider()
-                    AllItemsTable(viewState, layoutType, viewModel)
+
+                is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.uri)
+                is AllItemsViewEffect.NavigateToPdfScreen -> {
+                    onShowPdf()
+                }
+
+                is AllItemsViewEffect.ShowVideoPlayer -> {
+                    navigateToVideoPlayerScreen()
+                }
+
+                is AllItemsViewEffect.ShowImageViewer -> {
+                    navigateToImageViewerScreen()
+                }
+
+                is AllItemsViewEffect.ShowZoteroWebView -> {
+                    navigateToZoterWebViewScreen(consumedEffect.url)
                 }
             }
-
-            val itemsError = viewState.error
-            if (itemsError != null) {
-                ShowErrorOrDialog(
-                    itemsError = itemsError,
-                    onDismissDialog = viewModel::onDismissDialog,
-                    onDeleteItems = { viewModel.delete(it) },
-                    onEmptyTrash = { viewModel.emptyTrash() }
-                )
-            }
-
-            AllItemsAddBottomSheet(
-                onAddFile = onPickFile,
-                onAddNote = viewModel::onAddNote,
-                onAddManually = viewModel::onAddManually,
-                onClose = viewModel::onAddBottomSheetCollapse,
-                showBottomSheet = viewState.shouldShowAddBottomSheet
-            )
         }
 
+        CustomScaffold(
+            topBar = {
+                AllItemsTopBar(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    layoutType = layoutType,
+                )
+            },
+        ) {
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(viewState.isRefreshing),
+                onRefresh = viewModel::startSync,
+                indicator = { state, trigger ->
+                    SwipeRefreshIndicator(
+                        state = state,
+                        refreshTriggerDistance = trigger,
+                        scale = true,
+                        contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
+                    )
+                }
+            ) {
+                BaseLceBox(
+                    modifier = Modifier.fillMaxSize(),
+                    lce = viewState.lce,
+                    error = { _ ->
+                        FullScreenError(
+                            modifier = Modifier.align(Alignment.Center),
+                            errorTitle = stringResource(id = Strings.all_items_load_error),
+                        )
+                    },
+                    loading = {
+                        CircularLoading()
+                    },
+                ) {
+                    AllItemsBottomPanel(layoutType, viewState, viewModel)
+                    Column(
+                        modifier = Modifier
+                            .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
+                    ) {
+                        if (!layoutType.isTablet()) {
+                            AllItemsSearchBar(
+                                viewState = viewState,
+                                viewModel = viewModel
+                            )
+                        }
+                        CustomDivider()
+                        AllItemsTable(viewState, layoutType, viewModel)
+                    }
+                }
+
+                val itemsError = viewState.error
+                if (itemsError != null) {
+                    ShowErrorOrDialog(
+                        itemsError = itemsError,
+                        onDismissDialog = viewModel::onDismissDialog,
+                        onDeleteItems = { viewModel.delete(it) },
+                        onEmptyTrash = { viewModel.emptyTrash() }
+                    )
+                }
+
+                AllItemsAddBottomSheet(
+                    onAddFile = onPickFile,
+                    onAddNote = viewModel::onAddNote,
+                    onAddManually = viewModel::onAddManually,
+                    onClose = viewModel::onAddBottomSheetCollapse,
+                    showBottomSheet = viewState.shouldShowAddBottomSheet
+                )
+            }
+        }
     }
 }

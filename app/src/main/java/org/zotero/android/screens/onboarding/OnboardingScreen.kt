@@ -40,9 +40,9 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.PrimaryButton
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 private val onboardingPages =
     listOf(
@@ -58,97 +58,98 @@ internal fun OnboardingScreen(
     onBack: () -> Unit,
     onSignInClick: () -> Unit,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-
-    SolidStatusBar()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = CustomTheme.colors.surface),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom
-    ) {
-
+    CustomThemeWithStatusAndNavBars {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+//    SolidStatusBar()
         Column(
             modifier = Modifier
-                .widthIn(max = 430.dp)
-                .fillMaxHeight()
-                .padding(horizontal = 8.dp),
+                .fillMaxSize()
+                .background(color = CustomTheme.colors.surface),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
         ) {
-            val uriHandler = LocalUriHandler.current
-            val pagerState = rememberPagerState()
-            Spacer(modifier = Modifier.weight(1f))
-            HorizontalPager(
-                state = pagerState,
-                count = onboardingPages.size,
-            ) { pageIndex ->
-                val onboardingPage = onboardingPages[pageIndex]
 
-                Column(
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 430.dp)
+                    .fillMaxHeight()
+                    .padding(horizontal = 8.dp),
+            ) {
+                val uriHandler = LocalUriHandler.current
+                val pagerState = rememberPagerState()
+                Spacer(modifier = Modifier.weight(1f))
+                HorizontalPager(
+                    state = pagerState,
+                    count = onboardingPages.size,
+                ) { pageIndex ->
+                    val onboardingPage = onboardingPages[pageIndex]
+
+                    Column(
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = StyledTextHelper.annotatedStringResource(
+                                LocalContext.current,
+                                stringRes = onboardingPage.strRes
+                            ),
+                            modifier = Modifier.height((26 * 3).dp),
+                            color = CustomTheme.colors.primaryContent,
+                            textAlign = TextAlign.Center,
+                            style = CustomTheme.typography.default.copy(lineHeight = 26.sp),
+                            fontSize = layoutType.calculateTextSize(),
+                        )
+                        Spacer(modifier = Modifier.height(layoutType.calculatePadding()))
+                        Image(
+                            painter = painterResource(onboardingPage.drawableRes),
+                            contentDescription = null,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    DotsIndicator(
+                        totalDots = pagerState.pageCount,
+                        selectedIndex = pagerState.currentPage,
+                        selectedColor = CustomPalette.CoolGray,
+                        unSelectedColor = CustomPalette.Charcoal
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        text = stringResource(id = Strings.onboarding_sign_in),
+                        onClick = onSignInClick
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    PrimaryButton(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        text = stringResource(id = Strings.onboarding_create_account),
+                        onClick = {
+                            uriHandler.openUri("https://www.zotero.org/user/register?app=1")
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
-                        text = StyledTextHelper.annotatedStringResource(
-                            LocalContext.current,
-                            stringRes = onboardingPage.strRes
-                        ),
-                        modifier = Modifier.height((26 * 3).dp),
-                        color = CustomTheme.colors.primaryContent,
-                        textAlign = TextAlign.Center,
-                        style = CustomTheme.typography.default.copy(lineHeight = 26.sp),
+                        modifier = Modifier
+                            .safeClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {
+                                    uriHandler.openUri("https://www.zotero.org/?app=1")
+                                }
+                            ),
+                        text = stringResource(id = Strings.about_zotero),
+                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                        style = CustomTheme.typography.default,
                         fontSize = layoutType.calculateTextSize(),
                     )
-                    Spacer(modifier = Modifier.height(layoutType.calculatePadding()))
-                    Image(
-                        painter = painterResource(onboardingPage.drawableRes),
-                        contentDescription = null,
-                    )
                 }
+                Spacer(modifier = Modifier.weight(0.7f))
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                DotsIndicator(
-                    totalDots = pagerState.pageCount,
-                    selectedIndex = pagerState.currentPage,
-                    selectedColor = CustomPalette.CoolGray,
-                    unSelectedColor = CustomPalette.Charcoal
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                PrimaryButton(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    text = stringResource(id = Strings.onboarding_sign_in),
-                    onClick = onSignInClick
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                PrimaryButton(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    text = stringResource(id = Strings.onboarding_create_account),
-                    onClick = {
-                        uriHandler.openUri("https://www.zotero.org/user/register?app=1")
-                    }
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    modifier = Modifier
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {
-                                uriHandler.openUri("https://www.zotero.org/?app=1")
-                            }
-                        ),
-                    text = stringResource(id = Strings.about_zotero),
-                    color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
-                )
-            }
-            Spacer(modifier = Modifier.weight(0.7f))
         }
+
     }
 
 

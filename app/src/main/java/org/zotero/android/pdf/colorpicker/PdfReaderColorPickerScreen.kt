@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -83,6 +84,10 @@ internal fun PdfReaderColorPickerScreen(
                             modifier = Modifier.weight(1f),
                             value = size,
                             onValueChange = { viewModel.onSizeChanged(it) },
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = CustomTheme.colors.dynamicTheme.primaryColor,
+                                thumbColor = CustomTheme.colors.dynamicTheme.primaryColor
+                            ),
                             valueRange = 0.5f..25f
                         )
                         Text(

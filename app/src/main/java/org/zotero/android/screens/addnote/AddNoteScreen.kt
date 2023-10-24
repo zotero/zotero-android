@@ -33,6 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import timber.log.Timber
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -42,54 +44,60 @@ internal fun AddNoteScreen(
     viewModel: AddNoteViewModel = hiltViewModel(),
     navigateToTagPicker: () -> Unit,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(AddNoteViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val context = LocalContext.current
-    var isKeyboardShown by remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-
-        KeyboardVisibilityEvent.setEventListener(
-            context.findActivity()!!,
-            lifecycleOwner
-        ) { isOpen ->
-            isKeyboardShown = isOpen
-        }
-    }
-
-    BackHandler(
-        enabled = viewState.backHandlerInterceptionEnabled,
-        onBack = { viewModel.onDoneClicked() }
-    )
-
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            is AddNoteViewEffect.NavigateBack -> onBack()
-            is AddNoteViewEffect.NavigateToTagPickerScreen -> {
-                navigateToTagPicker()
-            }
-            AddNoteViewEffect.RefreshUI -> {}
-        }
-    }
-    CustomScaffold(
-        topBar = {
-            AddNoteTopBar(titleData = viewState.title, onDoneClicked = viewModel::onDoneClicked)
-        },
+    CustomThemeWithStatusAndNavBars(
+        statusBarBackgroundColor = CustomTheme.colors.addNoteBottomBar,
+        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     ) {
-        Box {
-            WebView(
-                viewModel = viewModel,
-                isKeyboardShown = isKeyboardShown
-            )
-            if (!isKeyboardShown) {
-                AddNoteTagSelector(
-                    viewState = viewState,
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(AddNoteViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val context = LocalContext.current
+        var isKeyboardShown by remember { mutableStateOf(false) }
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+
+            KeyboardVisibilityEvent.setEventListener(
+                context.findActivity()!!,
+                lifecycleOwner
+            ) { isOpen ->
+                isKeyboardShown = isOpen
+            }
+        }
+
+        BackHandler(
+            enabled = viewState.backHandlerInterceptionEnabled,
+            onBack = { viewModel.onDoneClicked() }
+        )
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                is AddNoteViewEffect.NavigateBack -> onBack()
+                is AddNoteViewEffect.NavigateToTagPickerScreen -> {
+                    navigateToTagPicker()
+                }
+
+                AddNoteViewEffect.RefreshUI -> {}
+            }
+        }
+        CustomScaffold(
+            topBar = {
+                AddNoteTopBar(titleData = viewState.title, onDoneClicked = viewModel::onDoneClicked)
+            },
+        ) {
+            Box {
+                WebView(
                     viewModel = viewModel,
-                    layoutType = layoutType
+                    isKeyboardShown = isKeyboardShown
                 )
+                if (!isKeyboardShown) {
+                    AddNoteTagSelector(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        layoutType = layoutType
+                    )
+                }
             }
         }
     }

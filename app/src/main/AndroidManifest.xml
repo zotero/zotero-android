@@ -42,9 +42,8 @@
 
         <activity
             android:name=".screens.onboarding.OnboardingActivity"
-            android:theme="@style/AppTheme.IntroActivity"
             android:exported="false"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
+            android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity

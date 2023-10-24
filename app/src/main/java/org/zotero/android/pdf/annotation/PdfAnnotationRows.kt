@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -197,6 +198,10 @@ private fun SizeSelector(
             modifier = Modifier.weight(1f),
             value = viewState.size,
             onValueChange = { viewModel.onSizeChanged(it) },
+            colors = SliderDefaults.colors(
+                activeTrackColor = CustomTheme.colors.dynamicTheme.primaryColor,
+                thumbColor = CustomTheme.colors.dynamicTheme.primaryColor
+            ),
             valueRange = 0.5f..25f
         )
         Text(

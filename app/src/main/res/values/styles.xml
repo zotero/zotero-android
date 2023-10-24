@@ -35,29 +35,6 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="MemberApplicationTheme" parent="AppTheme">
-        <item name="shapeAppearanceSmallComponent">
-            @style/ShapeAppearance.MaterialComponents.SmallComponent
-        </item>
-        <item name="textInputStyle">@style/MemberApplicationTextInputStyle</item>
-    </style>
-
-    <style name="MemberApplicationTextInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/cool_grey</item>
-    </style>
-
-    <style name="AppTheme.DarkStatusBar">
-        <item name="android:statusBarColor">@color/toolbarColor</item>
-        <item name="android:windowLightStatusBar">false</item>
-    </style>
-
-    <style name="AppTheme.TransparentStatusBar">
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:statusBarColor">#00FFFFFF</item>
-        <item name="statusBarColor">#00FFFFFF</item>
-    </style>
-
     <style name="ShapeAppearance.Custom.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">32dp</item>
@@ -98,25 +75,6 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-    </style>
-
-    <!-- Used for activities that are showing modal dialogs/bottom sheets -->
-    <!-- Make sure activity which use this style has set lockOrientationPortrait=false-->
-    <!-- to block orientation. Otherwise that may cause crash on Android 8.0 devices-->
-    <!-- https://issuetracker.google.com/issues/68454482-->
-    <style name="AppTheme.Modal">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@color/clear</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:statusBarColor">@color/clear</item>
-    </style>
-
-    <!-- A style that will assure that keyboard will always push the bottom sheet content up  -->
-    <style name="ClearBottomSheetDialogTheme.AboveKeyboard">
-        <item name="android:statusBarColor">?attr/statusBarColor</item>
-        <item name="android:windowIsFloating">false</item>
-        <item name="android:windowSoftInputMode">adjustResize|stateVisible</item>
     </style>
 
     <style name="ClearBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">

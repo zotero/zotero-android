@@ -20,6 +20,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize.LayoutType
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -28,52 +29,56 @@ internal fun CollectionEditScreen(
     navigateToCollectionPickerScreen: () -> Unit,
     viewModel: CollectionEditViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(CollectionEditViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    CustomThemeWithStatusAndNavBars(navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground) {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(CollectionEditViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            is CollectionEditViewEffect.OnBack -> {
-                onBack()
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                is CollectionEditViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                is CollectionEditViewEffect.NavigateToCollectionPickerScreen -> {
+                    navigateToCollectionPickerScreen()
+                }
+
+                else -> {}
             }
-            is CollectionEditViewEffect.NavigateToCollectionPickerScreen -> {
-                navigateToCollectionPickerScreen()
-            }
-            else -> {}
         }
-    }
-    CustomScaffold(
-        topBar = {
-            TopBar(
-                onCancel = onBack,
-                onSave = viewModel::onSave,
-                viewState = viewState,
-            )
-        },
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                .padding(horizontal = 20.dp)
+        CustomScaffold(
+            topBar = {
+                TopBar(
+                    onCancel = onBack,
+                    onSave = viewModel::onSave,
+                    viewState = viewState,
+                )
+            },
         ) {
-            collectionEditRows(
-                viewState = viewState,
-                layoutType = layoutType,
-                viewModel = viewModel,
-            )
-        }
-        val error = viewState.error
-        if (error != null) {
-            CollectionEditErrorDialogs(
-                error = error,
-                onDismissErrorDialog = viewModel::onDismissErrorDialog,
-                deleteOrRestoreItem = viewModel::deleteOrRestoreCollection
-            )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
+                    .padding(horizontal = 20.dp)
+            ) {
+                collectionEditRows(
+                    viewState = viewState,
+                    layoutType = layoutType,
+                    viewModel = viewModel,
+                )
+            }
+            val error = viewState.error
+            if (error != null) {
+                CollectionEditErrorDialogs(
+                    error = error,
+                    onDismissErrorDialog = viewModel::onDismissErrorDialog,
+                    deleteOrRestoreItem = viewModel::deleteOrRestoreCollection
+                )
+            }
         }
     }
 }

@@ -24,7 +24,6 @@ import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.uicomponents.misc.CustomDivider
-import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -43,7 +42,7 @@ internal fun DashboardRootTabletNavigationScreen(
         viewModel.init()
     }
 
-    SolidStatusBar()
+//    SolidStatusBar()
 
     val rightPaneNavController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher

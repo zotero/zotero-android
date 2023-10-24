@@ -116,6 +116,7 @@ internal fun PdfReaderScreen(
             backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
             topBar = {
                 PdfReaderTopBar(
+                    onBack = onBack,
                     onShowHideSideBar = viewModel::toggleSideBar,
                     toPdfSettings = viewModel::navigateToPdfSettings,
                     toggleToolbarButton = viewModel::toggleToolbarButton,

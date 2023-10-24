@@ -1859,6 +1859,9 @@ class PdfReaderViewModel @Inject constructor(
         updateState {
             copy(showCreationToolbar = !viewState.showCreationToolbar)
         }
+        if (!viewState.showCreationToolbar) {
+            fragment.exitCurrentlyActiveMode()
+        }
     }
     fun toggle(tool: AnnotationTool) {
         val color = this.toolColors[tool]

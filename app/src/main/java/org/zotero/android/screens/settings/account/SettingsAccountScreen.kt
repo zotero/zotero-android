@@ -24,6 +24,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -32,74 +33,82 @@ internal fun SettingsAccountScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: SettingsAccountViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(SettingsAccountViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
+    ) {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(SettingsAccountViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (val consumedEffect = viewEffect?.consume()) {
-            null -> Unit
-            is SettingsAccountViewEffect.OnBack -> {
-                onBack()
-            }
+        LaunchedEffect(key1 = viewEffect) {
+            when (val consumedEffect = viewEffect?.consume()) {
+                null -> Unit
+                is SettingsAccountViewEffect.OnBack -> {
+                    onBack()
+                }
 
-            is SettingsAccountViewEffect.OpenWebpage -> {
-                onOpenWebpage(consumedEffect.uri)
+                is SettingsAccountViewEffect.OpenWebpage -> {
+                    onOpenWebpage(consumedEffect.uri)
+                }
             }
         }
-    }
-    CustomScaffold(
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-        topBar = {
-            TopBar(
-                onBack = onBack,
-            )
-        },
-    ) {
-        CustomDivider()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                .padding(horizontal = 20.dp)
+        CustomScaffold(
+            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBar = {
+                TopBar(
+                    onBack = onBack,
+                )
+            },
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
-            SettingsSectionTitle(layoutType = layoutType, titleId = Strings.settings_data_sync)
-            SettingsSection {
-                SettingsItem(
+            CustomDivider()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = backgroundColor)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSectionTitle(layoutType = layoutType, titleId = Strings.settings_data_sync)
+                SettingsSection {
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = false,
+                        title = viewState.username,
+                        onItemTapped = {}
+                    )
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = true,
+                        textColor = CustomPalette.ErrorRed,
+                        title = stringResource(id = Strings.settings_logout),
+                        onItemTapped = viewModel::onSignOut
+                    )
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSectionTitle(
                     layoutType = layoutType,
-                    isLastItem = false,
-                    title = viewState.username,
-                    onItemTapped = {}
+                    titleId = Strings.settings_account_caps
                 )
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = true,
-                    textColor = CustomPalette.ErrorRed,
-                    title = stringResource(id = Strings.settings_logout),
-                    onItemTapped = viewModel::onSignOut
-                )
-            }
-            Spacer(modifier = Modifier.height(30.dp))
-            SettingsSectionTitle(layoutType = layoutType, titleId = Strings.settings_account_caps)
-            SettingsSection {
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = false,
-                    textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
-                    title = stringResource(id = Strings.settings_sync_manage_account),
-                    onItemTapped = viewModel::openManageAccount
-                )
-                SettingsItem(
-                    layoutType = layoutType,
-                    isLastItem = true,
-                    textColor = CustomPalette.ErrorRed,
-                    title = stringResource(id = Strings.settings_sync_delete_account),
-                    onItemTapped = viewModel::openDeleteAccount
-                )
+                SettingsSection {
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = false,
+                        textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                        title = stringResource(id = Strings.settings_sync_manage_account),
+                        onItemTapped = viewModel::openManageAccount
+                    )
+                    SettingsItem(
+                        layoutType = layoutType,
+                        isLastItem = true,
+                        textColor = CustomPalette.ErrorRed,
+                        title = stringResource(id = Strings.settings_sync_delete_account),
+                        onItemTapped = viewModel::openDeleteAccount
+                    )
+                }
             }
         }
     }
@@ -112,6 +121,6 @@ private fun TopBar(
     CancelSaveTitleTopBar(
         title = stringResource(id = Strings.settings_sync_account),
         onBack = onBack,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
+        backgroundColor = CustomTheme.colors.surface,
     )
 }

@@ -50,6 +50,7 @@ import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
@@ -57,130 +58,139 @@ internal fun FilterScreen(
     onBack: () -> Unit,
     viewModel: FilterViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(FilterViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    val backgroundColor = CustomTheme.colors.popupBackgroundContent
+    CustomThemeWithStatusAndNavBars(
+        navBarBackgroundColor = backgroundColor,
+        statusBarBackgroundColor = backgroundColor
+    ) {
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(FilterViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            is FilterViewEffect.OnBack -> {
-                onBack()
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                is FilterViewEffect.OnBack -> {
+                    onBack()
+                }
             }
         }
-    }
-    CustomScaffold(
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-        topBar = {
-            TopBar(
-                onDone = viewModel::onDone,
-            )
-        },
-    ) {
-        LazyColumn {
-            item {
-                CustomDivider()
-                Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = stringResource(id = Strings.items_filters_downloads),
-                        fontSize = layoutType.calculateItemsRowTextSize(),
-                        maxLines = 1,
-                    )
-                    CustomSwitch(
-                        checked = viewState.isDownloadsChecked,
-                        onCheckedChange = { viewModel.onDownloadsTapped() },
-                        modifier = Modifier
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TagsSearchBar(
-                        viewState = viewState,
-                        viewModel = viewModel
-                    )
-                    Image(
-                        modifier = Modifier
-                            .size(layoutType.calculateIconSize())
-                            .safeClickable(
-                                onClick = viewModel::onMoreSearchOptionsClicked,
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(bounded = false)
-                            ),
-                        painter = painterResource(id = Drawables.baseline_more_horiz_24),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
-            }
-            items(items = viewState.tags) { chunkedList ->
-                FlowRow(
-                    modifier = Modifier,
-                ) {
-                    chunkedList.forEach {
-                        var rowModifier: Modifier = Modifier
-                            .padding(horizontal = 4.dp, vertical = 4.dp)
-                            .clip(shape = RoundedCornerShape(16.dp))
-                        val selected = viewState.selectedTags.contains(it.tag.name)
-                        if (selected) {
-                            rowModifier = rowModifier
-                                .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
-                                .border(
-                                    width = 1.dp,
-                                    color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                        }
-                        Box(
-                            modifier = rowModifier
+        CustomScaffold(
+            backgroundColor = backgroundColor,
+            topBar = {
+                TopBar(
+                    onDone = viewModel::onDone,
+                )
+            },
+        ) {
+            LazyColumn {
+                item {
+                    CustomDivider()
+                    Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = stringResource(id = Strings.items_filters_downloads),
+                            fontSize = layoutType.calculateItemsRowTextSize(),
+                            maxLines = 1,
+                        )
+                        CustomSwitch(
+                            checked = viewState.isDownloadsChecked,
+                            onCheckedChange = { viewModel.onDownloadsTapped() },
+                            modifier = Modifier
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TagsSearchBar(
+                            viewState = viewState,
+                            viewModel = viewModel
+                        )
+                        Image(
+                            modifier = Modifier
+                                .size(layoutType.calculateIconSize())
                                 .safeClickable(
+                                    onClick = viewModel::onMoreSearchOptionsClicked,
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = { viewModel.onTagTapped(it) },
-                                )
-                        ) {
-                            val textColor = if (it.tag.color.isNotEmpty()) {
-                                val color = android.graphics.Color.parseColor(it.tag.color)
-                                Color(color)
-                            } else {
-                                CustomTheme.colors.primaryContent
-                            }
-                            Text(
-                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 14.dp),
-                                text = it.tag.name,
-                                color = if(it.isActive) textColor else textColor.copy(alpha = 0.55f),
-                                style = CustomTheme.typography.default,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-
+                                    indication = rememberRipple(bounded = false)
+                                ),
+                            painter = painterResource(id = Drawables.baseline_more_horiz_24),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
                 }
+                items(items = viewState.tags) { chunkedList ->
+                    FlowRow(
+                        modifier = Modifier,
+                    ) {
+                        chunkedList.forEach {
+                            var rowModifier: Modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 4.dp)
+                                .clip(shape = RoundedCornerShape(16.dp))
+                            val selected = viewState.selectedTags.contains(it.tag.name)
+                            if (selected) {
+                                rowModifier = rowModifier
+                                    .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                            }
+                            Box(
+                                modifier = rowModifier
+                                    .safeClickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { viewModel.onTagTapped(it) },
+                                    )
+                            ) {
+                                val textColor = if (it.tag.color.isNotEmpty()) {
+                                    val color = android.graphics.Color.parseColor(it.tag.color)
+                                    Color(color)
+                                } else {
+                                    CustomTheme.colors.primaryContent
+                                }
+                                Text(
+                                    modifier = Modifier.padding(
+                                        vertical = 4.dp,
+                                        horizontal = 14.dp
+                                    ),
+                                    text = it.tag.name,
+                                    color = if (it.isActive) textColor else textColor.copy(alpha = 0.55f),
+                                    style = CustomTheme.typography.default,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+
+                        }
+                    }
+
+                }
 
             }
+            val dialog = viewState.dialog
+            if (dialog != null) {
+                ShowFilterDialog(
+                    filterDialog = dialog,
+                    onDismissDialog = viewModel::onDismissDialog,
+                    onDeleteAutomaticTags = { viewModel.deleteAutomaticTags() }
+                )
+            }
 
-        }
-        val dialog = viewState.dialog
-        if (dialog != null) {
-            ShowFilterDialog(
-                filterDialog = dialog,
-                onDismissDialog = viewModel::onDismissDialog,
-                onDeleteAutomaticTags = { viewModel.deleteAutomaticTags() }
+            LongPressBottomSheet(
+                layoutType = layoutType,
+                longPressOptionsHolder = viewState.longPressOptionsHolder,
+                onCollapse = viewModel::dismissBottomSheet,
+                onOptionClick = viewModel::onLongPressOptionsItemSelected,
+                tabletWidthPercentage = 0.6f,
             )
         }
-
-        LongPressBottomSheet(
-            layoutType = layoutType,
-            longPressOptionsHolder = viewState.longPressOptionsHolder,
-            onCollapse = viewModel::dismissBottomSheet,
-            onOptionClick = viewModel::onLongPressOptionsItemSelected,
-            tabletWidthPercentage = 0.6f,
-        )
     }
 }
 

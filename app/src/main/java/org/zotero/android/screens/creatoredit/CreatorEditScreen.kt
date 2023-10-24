@@ -40,86 +40,91 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import org.zotero.android.uicomponents.topbar.CloseIconTopBar
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun CreatorEditScreen(
     onBack: () -> Unit,
     navigateToSinglePickerScreen: () -> Unit,
     viewModel: CreatorEditViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    val lastNameFocusRequester = remember { FocusRequester() }
-    val fullNameFocusRequester = remember { FocusRequester() }
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
-    }
+    CustomThemeWithStatusAndNavBars {
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (val effect = viewEffect?.consume()) {
-            null -> Unit
-            is CreatorEditViewEffect.OnBack -> {
-                onBack()
-            }
-            is CreatorEditViewEffect.NavigateToSinglePickerScreen -> {
-                navigateToSinglePickerScreen()
-            }
-            is CreatorEditViewEffect.RequestFocus -> {
-                when (effect.field) {
-                    FocusField.FullName -> fullNameFocusRequester.requestFocus()
-                    FocusField.LastName -> lastNameFocusRequester.requestFocus()
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        val lastNameFocusRequester = remember { FocusRequester() }
+        val fullNameFocusRequester = remember { FocusRequester() }
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init()
+        }
+
+        LaunchedEffect(key1 = viewEffect) {
+            when (val effect = viewEffect?.consume()) {
+                null -> Unit
+                is CreatorEditViewEffect.OnBack -> {
+                    onBack()
+                }
+
+                is CreatorEditViewEffect.NavigateToSinglePickerScreen -> {
+                    navigateToSinglePickerScreen()
+                }
+
+                is CreatorEditViewEffect.RequestFocus -> {
+                    when (effect.field) {
+                        FocusField.FullName -> fullNameFocusRequester.requestFocus()
+                        FocusField.LastName -> lastNameFocusRequester.requestFocus()
+                    }
                 }
             }
         }
-    }
-    CustomScaffold(
+        CustomScaffold(
 //        modifier = Modifier
 //            .fillMaxSize(),
-        topBar = {
-            TopBar(
-                onCloseClicked = onBack,
-                onSave = viewModel::onSave,
-                viewState = viewState,
-            )
-        },
-    ) {
-        LazyColumn(
-            modifier = Modifier
-//                .fillMaxSize()
-                .background(color = CustomTheme.colors.surface)
-                .padding(start = 16.dp),
-        ) {
-            displayFields(
-                viewState = viewState,
-                layoutType = layoutType,
-                viewModel = viewModel,
-                lastNameFocusRequester = lastNameFocusRequester,
-                fullNameFocusRequester = fullNameFocusRequester
-            )
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(),
-                            onClick = viewModel::toggleNamePresentation
-                        ),
-                    text = stringResource(
-                        id = if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.full)
-                            Strings.creator_editor_switch_to_dual else Strings.creator_editor_switch_to_single
-                    ),
-                    color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
+            topBar = {
+                TopBar(
+                    onCloseClicked = onBack,
+                    onSave = viewModel::onSave,
+                    viewState = viewState,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                CustomDivider()
+            },
+        ) {
+            LazyColumn(
+                modifier = Modifier
+//                .fillMaxSize()
+                    .background(color = CustomTheme.colors.surface)
+                    .padding(start = 16.dp),
+            ) {
+                displayFields(
+                    viewState = viewState,
+                    layoutType = layoutType,
+                    viewModel = viewModel,
+                    lastNameFocusRequester = lastNameFocusRequester,
+                    fullNameFocusRequester = fullNameFocusRequester
+                )
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .safeClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = rememberRipple(),
+                                onClick = viewModel::toggleNamePresentation
+                            ),
+                        text = stringResource(
+                            id = if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.full)
+                                Strings.creator_editor_switch_to_dual else Strings.creator_editor_switch_to_single
+                        ),
+                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                        style = CustomTheme.typography.default,
+                        fontSize = layoutType.calculateTextSize(),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    CustomDivider()
+                }
             }
         }
     }
@@ -180,6 +185,7 @@ private fun LazyListScope.displayFields(
             )
         }
     }
+
 }
 
 @Composable
@@ -265,7 +271,7 @@ private fun FieldTappableRow(
     detailTitle: String,
     detailValue: String,
     layoutType: LayoutType,
-    onClick: () ->Unit,
+    onClick: () -> Unit,
     textColor: Color = CustomTheme.colors.primaryContent,
 ) {
     Column {

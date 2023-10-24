@@ -49,7 +49,6 @@ import org.zotero.android.screens.sortpicker.toSortPicker
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
-import org.zotero.android.uicomponents.systemui.SolidStatusBar
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -65,7 +64,7 @@ internal fun DashboardRootPhoneNavigation(
         viewModel.init()
     }
 
-    SolidStatusBar()
+//    SolidStatusBar()
 
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher

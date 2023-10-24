@@ -17,6 +17,7 @@ import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun CollectionsScreen(
@@ -26,56 +27,61 @@ internal fun CollectionsScreen(
     navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init(isTablet = layoutType.isTablet())
-    }
+    CustomThemeWithStatusAndNavBars {
 
-    LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
-            null -> Unit
-            CollectionsViewEffect.NavigateBack -> onBack()
-            CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
-            CollectionsViewEffect.ShowCollectionEditEffect -> {
-                navigateToCollectionEdit()
-            }
-            CollectionsViewEffect.NavigateToLibrariesScreen -> {
-                navigateToLibraries()
-            }
-            else -> {}
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+        val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
+        val viewEffect by viewModel.viewEffects.observeAsState()
+        LaunchedEffect(key1 = viewModel) {
+            viewModel.init(isTablet = layoutType.isTablet())
         }
-    }
 
-    CustomScaffold(
-        topBar = {
-            CollectionsTopBar(
-                viewState = viewState,
-                viewModel = viewModel,
-            )
-        },
-    ) {
-        BaseLceBox(
-            modifier = Modifier.fillMaxSize(),
-            lce = viewState.lce,
-            error = { _ ->
-                FullScreenError(
-                    modifier = Modifier.align(Alignment.Center),
-                    errorTitle = stringResource(id = Strings.all_items_load_error),
-                )
-            },
-            loading = {
-                CircularLoading()
-            },
-        ) {
-            Column {
-                CustomDivider()
-                CollectionsTable(
+        LaunchedEffect(key1 = viewEffect) {
+            when (viewEffect?.consume()) {
+                null -> Unit
+                CollectionsViewEffect.NavigateBack -> onBack()
+                CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
+                CollectionsViewEffect.ShowCollectionEditEffect -> {
+                    navigateToCollectionEdit()
+                }
+
+                CollectionsViewEffect.NavigateToLibrariesScreen -> {
+                    navigateToLibraries()
+                }
+
+                else -> {}
+            }
+        }
+
+        CustomScaffold(
+            topBar = {
+                CollectionsTopBar(
                     viewState = viewState,
                     viewModel = viewModel,
-                    layoutType = layoutType
                 )
+            },
+        ) {
+            BaseLceBox(
+                modifier = Modifier.fillMaxSize(),
+                lce = viewState.lce,
+                error = { _ ->
+                    FullScreenError(
+                        modifier = Modifier.align(Alignment.Center),
+                        errorTitle = stringResource(id = Strings.all_items_load_error),
+                    )
+                },
+                loading = {
+                    CircularLoading()
+                },
+            ) {
+                Column {
+                    CustomDivider()
+                    CollectionsTable(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        layoutType = layoutType
+                    )
+                }
             }
         }
     }
