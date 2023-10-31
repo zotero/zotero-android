@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,8 +34,6 @@ import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
 import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.checkbox.CircleCheckBox
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.loading.IconLoadingPlaceholder
-import org.zotero.android.uicomponents.loading.TextLoadingPlaceholder
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -109,7 +106,7 @@ private fun ItemRowLeftPart(
     layoutType: CustomLayoutSize.LayoutType,
     model: ItemCellModel
 ) {
-    AnimatedContent(targetState = viewState.isEditing) { isEditing ->
+    AnimatedContent(targetState = viewState.isEditing, label = "") { isEditing ->
         if (isEditing) {
             Row {
                 Spacer(modifier = Modifier.width(16.dp))
@@ -122,7 +119,7 @@ private fun ItemRowLeftPart(
     }
     Spacer(modifier = Modifier.width(16.dp))
     Image(
-        modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
+        modifier = Modifier.size(28.dp),
         painter = painterResource(id = model.typeIconName),
         contentDescription = null,
     )
@@ -138,16 +135,16 @@ private fun ItemRowCentralPart(
 ) {
     Column(modifier = Modifier.padding(start = 16.dp)) {
         Spacer(modifier = Modifier.height(8.dp))
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = if (model.title.isEmpty()) " " else model.title,
-                    fontSize = layoutType.calculateAllItemsRowTextSize(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = CustomTheme.colors.allItemsRowTitleColor,
+                    style = CustomTheme.typography.newHeadline
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row {
@@ -159,18 +156,20 @@ private fun ItemRowCentralPart(
                     }
                     Text(
                         text = subtitleText,
-                        fontSize = layoutType.calculateAllItemsRowTextSize(),
+                        style = CustomTheme.typography.newBody,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = CustomPalette.LightCharcoal,
+                        color = CustomPalette.SystemGray,
                     )
                     if (model.hasNote) {
-                        Spacer(modifier = Modifier.width(4.dp))
+                        if(model.subtitle.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
                         Image(
                             modifier = Modifier
-                                .size(layoutType.calculateItemsRowNoteIconSize())
+                                .size(12.dp)
                                 .align(Alignment.CenterVertically),
-                            painter = painterResource(id = Drawables.item_note),
+                            painter = painterResource(id = Drawables.cell_note),
                             contentDescription = null,
                         )
                     }
@@ -202,7 +201,7 @@ private fun RowScope.ItemRowRightPart(
         accessory = model.accessory,
         layoutType = layoutType
     )
-    Spacer(modifier = Modifier.width(12.dp))
+    Spacer(modifier = Modifier.width(20.dp))
     AnimatedContent(
         modifier = Modifier.align(Alignment.CenterVertically),
         targetState = viewState.isEditing,
@@ -212,7 +211,7 @@ private fun RowScope.ItemRowRightPart(
             Row {
                 Icon(
                     modifier = Modifier
-                        .size(layoutType.calculateItemsRowAccessoryInfoIconSize())
+                        .size(24.dp)
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -222,7 +221,7 @@ private fun RowScope.ItemRowRightPart(
                         ),
                     painter = painterResource(id = Drawables.accessory_icon),
                     contentDescription = null,
-                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                    tint = CustomTheme.colors.allItemsInfoIconColor
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
@@ -243,69 +242,24 @@ private fun RowScope.SetAccessory(
         is ItemCellModel.Accessory.attachment -> {
             FileAttachmentView(
                 modifier = Modifier
-                    .size(layoutType.calculateItemsRowAccessoryIconSize())
+                    .size(20.dp)
                     .align(Alignment.CenterVertically),
                 state = accessory.state,
                 style = Style.list,
+                mainIconSize = 16.dp,
+                badgeIconSize = 10.dp,
             )
         }
 
         is ItemCellModel.Accessory.doi, is ItemCellModel.Accessory.url -> {
             Image(
                 modifier = Modifier
-                    .size(layoutType.calculateItemsRowAccessoryIconSize())
+                    .size(16.dp)
                     .align(Alignment.CenterVertically),
                 painter = painterResource(id = Drawables.list_link),
                 contentDescription = null,
             )
-        }
-    }
-}
-
-@Composable
-private fun ItemPlaceHolderRow(
-    layoutType: CustomLayoutSize.LayoutType,
-    showBottomDivider: Boolean = false
-) {
-    Row {
-        Spacer(modifier = Modifier.width(16.dp))
-        IconLoadingPlaceholder(
-            modifier = Modifier
-                .size(layoutType.calculateItemsRowMainIconSize())
-                .align(Alignment.CenterVertically),
-        )
-        Column(modifier = Modifier.padding(start = 16.dp)) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                ) {
-                    TextLoadingPlaceholder(
-                        modifier = Modifier
-                            .height(layoutType.calculateItemsRowPlaceholderSize())
-                            .fillMaxWidth(0.8f),
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row {
-                        TextLoadingPlaceholder(
-                            modifier = Modifier
-                                .height(layoutType.calculateItemsRowPlaceholderSize())
-                                .fillMaxWidth(0.4f),
-                        )
-                    }
-                }
-                IconLoadingPlaceholder(
-                    modifier = Modifier
-                        .size(layoutType.calculateItemsRowInfoIconSize())
-                        .align(Alignment.CenterVertically)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (showBottomDivider) {
-                CustomDivider()
-            }
+            Spacer(modifier = Modifier.width(2.dp))
         }
     }
 }

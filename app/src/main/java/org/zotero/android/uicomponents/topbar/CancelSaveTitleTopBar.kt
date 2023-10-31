@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -37,27 +38,24 @@ fun CancelSaveTitleTopBar(
             }
         },
         navigationIcon = {
-            if (onCancel != null) {
-                Row {
+            Row {
+                Spacer(modifier = Modifier.width(4.dp))
+                if (onCancel != null) {
                     Spacer(modifier = Modifier.width(8.dp))
                     HeadingTextButton(
                         onClick = onCancel,
                         text = stringResource(Strings.cancel),
                     )
                 }
-            }
-            if (onClose != null) {
-                Row {
-                    Spacer(modifier = Modifier.width(8.dp))
+                if (onClose != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
                     HeadingTextButton(
                         onClick = onClose,
                         text = stringResource(Strings.close),
                     )
                 }
-            }
-            if (onBack != null) {
-                Row {
-                    Spacer(modifier = Modifier.width(8.dp))
+                if (onBack != null) {
+                    Spacer(modifier = Modifier.width(1.dp))
                     HeadingTextButton(
                         onClick = onBack,
                         text = stringResource(Strings.back),
@@ -66,13 +64,22 @@ fun CancelSaveTitleTopBar(
             }
         },
         actions = {
+            var isInitialPaddingUsed = false
+            val calculatePadding: () -> Dp = {
+                if (isInitialPaddingUsed) {
+                    8.dp
+                } else {
+                    isInitialPaddingUsed = true
+                    4.dp
+                }
+            }
             if (onAdd != null) {
                 HeadingTextButton(
                     onClick = onAdd,
                     isEnabled = isSaveButtonEnabled,
                     text = stringResource(Strings.add),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(calculatePadding()))
             }
             if (onSave != null) {
                 HeadingTextButton(
@@ -80,14 +87,14 @@ fun CancelSaveTitleTopBar(
                     isEnabled = isSaveButtonEnabled,
                     text = stringResource(Strings.save),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(calculatePadding()))
             }
             if (onDone != null) {
                 HeadingTextButton(
                     onClick = onDone,
                     text = stringResource(Strings.done),
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(calculatePadding()))
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = backgroundColor),

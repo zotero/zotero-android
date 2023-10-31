@@ -63,7 +63,7 @@ internal fun PdfReaderSidebar(
         modifier = Modifier
             .fillMaxSize()
             .background(CustomTheme.colors.pdfAnnotationsFormBackground)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 16.dp),
     ) {
         Column(
             modifier = Modifier
@@ -72,7 +72,7 @@ internal fun PdfReaderSidebar(
 
 
         ) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             PdfSidebarSearchBar(viewState = viewState, viewModel = viewModel)
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),

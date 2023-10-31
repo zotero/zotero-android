@@ -69,7 +69,7 @@ internal fun SettingsAccountScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = backgroundColor)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSectionTitle(layoutType = layoutType, titleId = Strings.settings_data_sync)

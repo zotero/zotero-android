@@ -94,7 +94,7 @@ internal fun SettingsSectionTitle(
     @StringRes titleId: Int
 ) {
     androidx.compose.material3.Text(
-        modifier = Modifier.padding(start = 14.dp, bottom = 4.dp),
+        modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
         text = stringResource(id = titleId),
         fontSize = layoutType.calculateSettingsSectionTextSize(),
         color = CustomTheme.colors.secondaryContent,

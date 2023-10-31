@@ -86,7 +86,7 @@ internal fun TagPickerScreen(
                 }
                 SearchBar(
                     hint = stringResource(id = Strings.tag_picker_placeholder),
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(12.dp).padding(horizontal = 4.dp),
                     onSearchImeClicked = onSearchAction,
                     onInnerValueChanged = searchBarOnInnerValueChanged,
                     textFieldState = searchBarTextFieldState,

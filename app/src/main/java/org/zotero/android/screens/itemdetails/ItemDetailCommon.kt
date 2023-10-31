@@ -30,7 +30,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.Attachment
@@ -72,13 +74,13 @@ internal fun FieldRow(
                 indication = rememberRipple(bounded = true)
             )
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Row {
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
             if (onDelete != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Image(
                     modifier = Modifier
-                        .size(layoutType.calculateIconSize())
+                        .size(28.dp)
                         .safeClickable(
                             onClick = onDelete,
                             interactionSource = remember { MutableInteractionSource() },
@@ -97,8 +99,7 @@ internal fun FieldRow(
                     overflow =TextOverflow.Ellipsis,
                     maxLines = 1,
                     color = CustomTheme.colors.secondaryContent,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newHeadline,
                 )
             }
 
@@ -107,8 +108,7 @@ internal fun FieldRow(
                     modifier = Modifier,
                     text = detailValue,
                     color = textColor,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newBody,
                 )
             }
             if (additionalInfoString != null) {
@@ -116,8 +116,7 @@ internal fun FieldRow(
                 Text(
                     text = additionalInfoString,
                     color = CustomTheme.colors.secondaryContent,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newBody,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
@@ -125,7 +124,7 @@ internal fun FieldRow(
                 Spacer(modifier = Modifier.weight(1f))
                 Image(
                     modifier = Modifier
-                        .size(layoutType.calculateIconSize())
+                        .size(28.dp)
                         .detectReorderAfterLongPress(reorderState),
                     painter = painterResource(id = Drawables.baseline_reorder_24),
                     contentDescription = null,
@@ -144,8 +143,8 @@ internal fun FieldRow(
 @Composable
 fun AddItemRow(
     titleRes: Int,
+    startPadding:Dp = 8.dp,
     onClick: () -> Unit,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     Column(
         modifier = Modifier
@@ -159,21 +158,22 @@ fun AddItemRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-                .padding(start = 4.dp),
+                .padding(start = startPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                modifier = Modifier.size(layoutType.calculateItemDetailsAddButtonSize()),
+                modifier = Modifier.size(26.dp),
                 painter = painterResource(id = Drawables.add_icon),
+                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
                 contentDescription = null,
             )
 
             Text(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 12.dp),
+                    .padding(start = 16.dp),
                 text = stringResource(id = titleRes),
-                fontSize = layoutType.calculateTextSize(),
+                style = CustomTheme.typography.newBody,
                 color = CustomTheme.colors.zoteroBlueWithDarkMode,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -212,11 +212,10 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
     onAddNote: () -> Unit,
 ) {
     if (!viewState.data.isAttachment) {
-        listOfItems(
+        listOfNotes(
             sectionTitle = Strings.citation_notes,
-            itemIcon = Drawables.item_note,
+            itemIcon = Drawables.item_type_note,
             itemTitles = viewState.notes.map { it.title },
-            layoutType = layoutType,
             onItemClicked = {
                 onNoteClicked(viewState.notes[it])
             },
@@ -237,11 +236,10 @@ fun LazyListScope.notesTagsAndAttachmentsBlock(
     listOfAttachments(
         viewState = viewState,
         viewModel = viewModel,
-        layoutType = layoutType,
     )
 }
 
-private fun LazyListScope.listOfItems(
+private fun LazyListScope.listOfNotes(
     sectionTitle: Int,
     @DrawableRes itemIcon: Int,
     itemTitles: List<String>,
@@ -249,9 +247,8 @@ private fun LazyListScope.listOfItems(
     onItemLongClicked: (Int) -> Unit,
     @StringRes addTitleRes: Int,
     onAddItemClick: (() -> Unit)? = null,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
-    itemDetailHeaderSection(sectionTitle, layoutType)
+    itemDetailHeaderSection(sectionTitle)
     itemsIndexed(
         itemTitles
     ) { index, item ->
@@ -265,36 +262,35 @@ private fun LazyListScope.listOfItems(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
                     painter = painterResource(id = itemIcon),
-                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                    modifier = Modifier.size(28.dp),
                     contentDescription = null,
                 )
 
                 Text(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp),
+                        .padding(start = 16.dp),
                     text = HtmlCompat.fromHtml(
                         item,
                         HtmlCompat.FROM_HTML_MODE_LEGACY
                     ).toString(),
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newBody,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            CustomDivider(modifier = Modifier.padding(start = layoutType.calculateItemDetailsDividerStartPadding()))
+            CustomDivider(modifier = Modifier.padding(start = 62.dp))
         }
     }
     if (onAddItemClick != null) {
         item {
             AddItemRow(
-                layoutType = layoutType,
                 titleRes = addTitleRes,
                 onClick = onAddItemClick
             )
@@ -305,7 +301,6 @@ private fun LazyListScope.listOfItems(
 
 private fun LazyListScope.itemDetailHeaderSection(
     sectionTitle: Int,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     item {
         Column(
@@ -315,11 +310,11 @@ private fun LazyListScope.itemDetailHeaderSection(
         ) {
             CustomDivider()
             Text(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(12.dp).padding(start = 4.dp),
                 text = stringResource(id = sectionTitle),
                 color = CustomPalette.zoteroItemDetailSectionTitle,
                 style = CustomTheme.typography.h6,
-                fontSize = layoutType.calculateTextSize(),
+                fontSize = 17.sp,
             )
             CustomDivider()
         }
@@ -331,7 +326,7 @@ private fun LazyListScope.listOfTags(
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
 ) {
-    itemDetailHeaderSection(Strings.item_detail_tags, layoutType)
+    itemDetailHeaderSection(Strings.item_detail_tags)
     items(
         viewState.tags
     ) { item ->
@@ -345,33 +340,33 @@ private fun LazyListScope.listOfTags(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CircleCheckBox(
                     isChecked = false,
-                    layoutType = layoutType
+                    layoutType = layoutType,
+                    size = 28.dp
                 )
                 Text(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = 12.dp),
+                        .padding(start = 16.dp),
                     text = HtmlCompat.fromHtml(
                         item.name,
                         HtmlCompat.FROM_HTML_MODE_LEGACY
                     ).toString(),
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newBody,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            CustomDivider(modifier = Modifier.padding(start = layoutType.calculateItemDetailsDividerStartPadding()))
+            CustomDivider(modifier = Modifier.padding(start = 62.dp))
         }
     }
     item {
         AddItemRow(
-            layoutType = layoutType,
             titleRes = Strings.item_detail_add_tag,
             onClick = viewModel::onAddTag
         )
@@ -379,11 +374,10 @@ private fun LazyListScope.listOfTags(
 }
 
 private fun LazyListScope.listOfAttachments(
-    layoutType: CustomLayoutSize.LayoutType,
     viewState: ItemDetailsViewState,
     viewModel: ItemDetailsViewModel,
 ) {
-    itemDetailHeaderSection(Strings.item_detail_attachments, layoutType)
+    itemDetailHeaderSection(Strings.item_detail_attachments)
     items(
         items = viewState.attachments
     ) { item ->
@@ -397,40 +391,51 @@ private fun LazyListScope.listOfAttachments(
                         onClick = { viewModel.openAttachment(item) },
                         onLongClick = { viewModel.onAttachmentLongClick(item) },
                     )
-                    .padding(all = 8.dp)
-                    .padding(start = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 1.dp)
+                    .padding(start = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val iconSize = 28.dp
+                val mainIconSize = 22.dp
+                val badgeIconSize = 12.dp
+
                 val type = viewModel.calculateAttachmentKind(attachment = item)
+                val modifier = Modifier.size(iconSize)
                 when (item.type) {
                     is Attachment.Kind.file -> {
                         when (type) {
                             ItemDetailAttachmentKind.default, ItemDetailAttachmentKind.disabled -> {
                                 FileAttachmentView(
-                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    modifier = modifier,
                                     state = State.ready(item.type),
                                     style = Style.detail,
+                                    mainIconSize = mainIconSize,
+                                    badgeIconSize = badgeIconSize,
                                 )
                             }
                             is ItemDetailAttachmentKind.inProgress -> {
                                 FileAttachmentView(
-                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    modifier = modifier,
                                     state = State.progress(type.progressInHundreds),
                                     style = Style.detail,
+                                    mainIconSize = mainIconSize,
+                                    badgeIconSize = badgeIconSize,
                                 )
                             }
                             is ItemDetailAttachmentKind.failed -> {
                                 FileAttachmentView(
-                                    modifier = Modifier.size(layoutType.calculateIconSize()),
+                                    modifier = modifier,
                                     state = State.failed(item.type, type.error),
                                     style = Style.detail,
+                                    mainIconSize = mainIconSize,
+                                    badgeIconSize = badgeIconSize,
                                 )
                             }
                         }
                     }
                     is Attachment.Kind.url -> {
                         Image(
-                            modifier = Modifier.size(layoutType.calculateIconSize()),
+                            modifier = modifier,
                             painter = painterResource(id = Drawables.web_page),
                             contentDescription = null,
                         )
@@ -446,7 +451,7 @@ private fun LazyListScope.listOfAttachments(
                             item.title,
                             HtmlCompat.FROM_HTML_MODE_LEGACY
                         ).toString(),
-                        fontSize = layoutType.calculateTextSize(),
+                        style = CustomTheme.typography.newBody,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -459,7 +464,6 @@ private fun LazyListScope.listOfAttachments(
     if (!viewState.data.isAttachment) {
         item {
             AddItemRow(
-                layoutType = layoutType,
                 titleRes = Strings.item_detail_add_attachment,
                 onClick = viewModel::onAddAttachment
             )

@@ -2,15 +2,18 @@ package org.zotero.android.uicomponents.attachmentprogress
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.uicomponents.Drawables
@@ -22,66 +25,109 @@ internal fun FileAttachmentView(
     modifier: Modifier = Modifier,
     state: State,
     style: Style,
+    mainIconSize: Dp,
+    badgeIconSize: Dp,
 ) {
     Box(modifier = modifier) {
-        set(state = state, style = style)
+        set(
+            state = state,
+            style = style,
+            mainIconSize = mainIconSize,
+            badgeIconSize = badgeIconSize
+        )
     }
 }
 
 @Composable
-private fun BoxScope.set(state: State, style: Style) {
+private fun BoxScope.set(
+    state: State,
+    style: Style,
+    mainIconSize: Dp,
+    badgeIconSize: Dp,
+) {
     val type = contentType(state = state, style = style)
     if (type == null) {
         return
     }
-    set(contentType = type, style = style)
+    set(
+        contentType = type,
+        style = style,
+        mainIconSize = mainIconSize,
+        badgeIconSize = badgeIconSize
+    )
 }
 
 @Composable
 private fun BoxScope.set(
     contentType: ContentType,
     style: Style,
+    mainIconSize: Dp,
+    badgeIconSize: Dp,
 ) {
     when (contentType) {
         is ContentType.progress -> {
             set(progress = contentType.progress, showsStop = (style != Style.lookup))
-            setMainImage(asset = null)
-            setBadge(asset = null)
+            setMainImage(
+                asset = null,
+                shouldAccountForBadge = false,
+                mainIconSize = mainIconSize
+            )
+            setBadge(asset = null, badgeIconSize = badgeIconSize)
         }
+
         is ContentType.image -> {
             set(progress = null, showsStop = false)
-            setMainImage(asset = contentType.asset)
-            setBadge(asset = null)
+            setMainImage(
+                asset = contentType.asset,
+                shouldAccountForBadge = false,
+                mainIconSize = mainIconSize
+            )
+            setBadge(asset = null, badgeIconSize = badgeIconSize)
         }
+
         is ContentType.imageWithBadge -> {
             set(progress = null, showsStop = false)
-            setMainImage(asset = contentType.main)
-            setBadge(asset = contentType.badge)
+            setMainImage(
+                asset = contentType.main,
+                shouldAccountForBadge = true,
+                mainIconSize = mainIconSize
+            )
+            setBadge(asset = contentType.badge, badgeIconSize = badgeIconSize)
         }
     }
 }
 
 @Composable
-fun BoxScope.setMainImage(asset: Int?) {
-    if (asset != null) {
-        Image(
-            modifier = Modifier.fillMaxSize(fraction = 0.8f),
-            painter = painterResource(id = asset),
-            contentDescription = null,
-        )
-    }
-}
-
-@Composable
-fun BoxScope.setBadge(asset: Int?) {
+fun BoxScope.setMainImage(asset: Int?, shouldAccountForBadge: Boolean, mainIconSize: Dp) {
     if (asset != null) {
         Image(
             modifier = Modifier
-                .fillMaxSize(0.4f)
-                .align(Alignment.BottomEnd),
+                .size(mainIconSize)
+                .align(if (shouldAccountForBadge) Alignment.TopStart else Alignment.Center),
             painter = painterResource(id = asset),
             contentDescription = null,
         )
+    }
+}
+
+@Composable
+fun BoxScope.setBadge(asset: Int?, badgeIconSize: Dp) {
+    if (asset != null) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(badgeIconSize)
+                .clip(CircleShape)
+                .background(CustomTheme.colors.surface)
+                .align(Alignment.BottomEnd),
+        ) {
+            Image(
+                painter = painterResource(id = asset),
+                modifier = Modifier
+                    .size(badgeIconSize - 1.dp),
+                contentDescription = null,
+            )
+        }
     }
 }
 

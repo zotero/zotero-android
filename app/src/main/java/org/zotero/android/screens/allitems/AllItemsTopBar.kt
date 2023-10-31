@@ -76,7 +76,7 @@ private fun AllItemsPhoneTopBar(
         },
         navigationIcon = {
             Row {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 HeadingTextButton(
                     isEnabled = true,
                     onClick = viewModel::navigateToCollections,
@@ -142,6 +142,6 @@ private fun AllItemsTopBarActions(
             onClick = viewModel::onDone,
             text = stringResource(Strings.done),
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(4.dp))
     }
 }

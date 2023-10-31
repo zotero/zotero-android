@@ -23,7 +23,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.uicomponents.Drawables
@@ -147,9 +146,9 @@ private fun CollectionItem(
                 ) {
                     Text(
                         text = item.collection.name,
-                        fontSize = 16.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        style = CustomTheme.typography.newBody,
                         color = CustomTheme.colors.allItemsRowTitleColor,
                     )
                 }

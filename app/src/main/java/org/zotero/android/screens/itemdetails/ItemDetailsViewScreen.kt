@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -38,11 +37,12 @@ internal fun ItemDetailsViewScreen(
             .padding(top = 24.dp)
     ) {
         item {
-            Title(viewState, layoutType)
-            CustomDivider()
+            Title(viewState)
+            Spacer(modifier = Modifier.height(12.dp))
+            CustomDivider(modifier = Modifier.padding(start = 16.dp))
         }
         item {
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 ItemType(viewState, layoutType)
                 ListOfCreatorRows(
                     viewState = viewState,
@@ -68,7 +68,6 @@ internal fun ItemDetailsViewScreen(
                     )
                     AbstractFieldRow(
                         detailValue = viewState.data.abstract ?: "",
-                        layoutType = layoutType
                     )
                 }
 
@@ -159,23 +158,19 @@ fun ListOfFieldRows(
 @Composable
 private fun Title(
     viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     Text(
         modifier = Modifier
-            .padding(bottom = 12.dp, end = 12.dp, start = 12.dp),
+            .padding(horizontal = 16.dp),
         text = viewState.data.title,
         color = CustomTheme.colors.primaryContent,
-        style = CustomTheme.typography.default,
-        fontSize = layoutType.calculateTitleTextSize(),
+        style = CustomTheme.typography.newTitleOne,
     )
 }
 
 @Composable
 internal fun AbstractFieldRow(
     detailValue: String,
-    layoutType: CustomLayoutSize.LayoutType,
-    textColor: Color = CustomTheme.colors.primaryContent,
 ) {
     Column {
         Spacer(modifier = Modifier.height(8.dp))
@@ -183,16 +178,13 @@ internal fun AbstractFieldRow(
             modifier = Modifier.align(Alignment.Start),
             text = stringResource(id = Strings.abstract_1),
             color = CustomTheme.colors.secondaryContent,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculateTextSize(),
+            style = CustomTheme.typography.newHeadline,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            modifier = Modifier,
             text = detailValue,
-            color = textColor,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculateTextSize(),
+            color = CustomTheme.colors.primaryContent,
+            style = CustomTheme.typography.newBody,
         )
         Spacer(modifier = Modifier.height(8.dp))
     }

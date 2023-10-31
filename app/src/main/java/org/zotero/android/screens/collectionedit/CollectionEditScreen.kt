@@ -63,7 +63,7 @@ internal fun CollectionEditScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 collectionEditRows(
                     viewState = viewState,

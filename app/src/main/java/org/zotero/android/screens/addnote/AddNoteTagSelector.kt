@@ -34,7 +34,7 @@ internal fun BoxScope.AddNoteTagSelector(
             .align(Alignment.BottomCenter)
             .fillMaxWidth()
             .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-            .padding(horizontal = 10.dp, vertical = 20.dp)
+            .padding(horizontal = 16.dp, vertical = 20.dp)
             .safeClickable(
                 onClick = viewModel::onTagsClicked,
                 interactionSource = remember { MutableInteractionSource() },

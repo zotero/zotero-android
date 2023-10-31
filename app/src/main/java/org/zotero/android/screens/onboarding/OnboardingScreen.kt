@@ -73,7 +73,7 @@ internal fun OnboardingScreen(
                 modifier = Modifier
                     .widthIn(max = 430.dp)
                     .fillMaxHeight()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 16.dp),
             ) {
                 val uriHandler = LocalUriHandler.current
                 val pagerState = rememberPagerState()

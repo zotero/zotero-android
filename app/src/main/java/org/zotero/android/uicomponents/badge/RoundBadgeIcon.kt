@@ -24,16 +24,16 @@ fun RoundBadgeIcon(
         .height(16.dp)
         .background(
             color = CustomTheme.colors.zoteroItemDetailSectionBackground,
-            shape = RoundedCornerShape(size = 14.dp)
+            shape = RoundedCornerShape(size = 16.dp)
         )
     textModifier = if (count < 10) {
-        textModifier.padding(horizontal = 2.dp, vertical = 2.dp)
+        textModifier.padding(horizontal = 1.dp, vertical = 1.dp)
     } else {
-        textModifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        textModifier.padding(horizontal = 6.dp, vertical = 1.dp)
     }
     Text(
         text = count.prettyPrint(),
-        style = CustomTheme.typography.label,
+        style = CustomTheme.typography.newCaptionOne,
         color = CustomTheme.colors.primaryContent,
         modifier = textModifier,
         textAlign = TextAlign.Center,

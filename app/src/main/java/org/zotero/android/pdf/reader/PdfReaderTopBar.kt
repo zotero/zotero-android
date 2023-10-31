@@ -4,13 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AppBarDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,9 +38,10 @@ internal fun PdfReaderTopBar(
     isToolbarButtonSelected: Boolean,
     elevation: Dp = AppBarDefaults.TopAppBarElevation,
 ) {
-    TopAppBar(
-        title = {
+    CenterAlignedTopAppBar(
+        navigationIcon = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.width(4.dp))
                 HeadingTextButton(
                     onClick = onBack,
                     text = stringResource(Strings.back),
@@ -46,7 +49,8 @@ internal fun PdfReaderTopBar(
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(40.dp)
+                        .padding(4.dp)
                         .safeClickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = rememberRipple(),
@@ -68,7 +72,8 @@ internal fun PdfReaderTopBar(
             Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(40.dp)
+                    .padding(4.dp)
                     .safeClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(),
@@ -80,10 +85,12 @@ internal fun PdfReaderTopBar(
                 contentDescription = null,
                 tint = CustomTheme.colors.zoteroBlueWithDarkMode
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
         },
-        backgroundColor = CustomTheme.colors.surface,
-        elevation = elevation,
+        title = {
+
+        },
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )
 
 }
@@ -97,8 +104,9 @@ internal fun ToolbarToggleTopButton(isSelected: Boolean, toggleToolbarButton: ()
     }
     val roundCornerShape = RoundedCornerShape(size = 4.dp)
     var modifier = Modifier
-        .size(28.dp)
+        .size(40.dp)
         .clip(roundCornerShape)
+
         .safeClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
@@ -111,7 +119,7 @@ internal fun ToolbarToggleTopButton(isSelected: Boolean, toggleToolbarButton: ()
         )
     }
     Icon(
-        modifier = modifier,
+        modifier = modifier.padding(4.dp),
         painter = painterResource(id = Drawables.outline_edit_24),
         contentDescription = null,
         tint = tintColor

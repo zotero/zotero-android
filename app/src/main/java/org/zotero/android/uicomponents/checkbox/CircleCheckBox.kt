@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -21,10 +22,11 @@ fun CircleCheckBox(
     isChecked: Boolean,
     modifier: Modifier = Modifier,
     layoutType: CustomLayoutSize.LayoutType,
+    size: Dp = layoutType.calculateIconSize(),
 ) {
     Box(
         modifier = modifier
-            .size(layoutType.calculateIconSize())
+            .size(size)
             .clip(CircleShape),
         contentAlignment = Alignment.Center,
     ) {

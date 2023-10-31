@@ -66,7 +66,7 @@ internal fun SettingsDebugScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = backgroundColor)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSection {

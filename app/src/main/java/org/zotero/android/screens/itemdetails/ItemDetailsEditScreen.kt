@@ -48,7 +48,6 @@ internal fun ItemDetailsEditScreen(
     layoutType: CustomLayoutSize.LayoutType,
     reorderState: ReorderableState,
 ) {
-
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,9 +59,10 @@ internal fun ItemDetailsEditScreen(
         state = reorderState.listState,
     ) {
         item {
-            EditTitle(viewState, layoutType, onValueChange = viewModel::onTitleEdit)
-            CustomDivider()
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            EditTitle(viewState, onValueChange = viewModel::onTitleEdit)
+            Spacer(modifier = Modifier.height(12.dp))
+            CustomDivider(modifier = Modifier.padding(start = 16.dp))
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
                 ItemType(
                     viewState = viewState,
                     layoutType = layoutType,
@@ -80,12 +80,12 @@ internal fun ItemDetailsEditScreen(
             )
         }
         item {
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 if (!viewState.data.isAttachment) {
                     CustomDivider()
                     AddItemRow(
-                        layoutType = layoutType,
                         titleRes = Strings.item_detail_add_creator,
+                        startPadding = 0.dp,
                         onClick = viewModel::onAddCreator
                     )
                     CustomDivider()
@@ -101,7 +101,7 @@ internal fun ItemDetailsEditScreen(
                 if (!viewState.data.isAttachment) {
                     EditAbstractRow(
                         detailValue = viewState.data.abstract ?: "",
-                        layoutType = layoutType, onValueChange = viewModel::onAbstractEdit
+                        onValueChange = viewModel::onAbstractEdit
                     )
                 }
             }
@@ -164,7 +164,8 @@ private fun LazyListScope.listOfCreatorRows(
                         onClick = { onCreatorClicked(creator) }
                     )
                     .draggedItem(reorderState.offsetByIndex(index + numberOfRowsInLazyColumnBeforeListOfCreatorsStarts))
-                    .background(color = CustomTheme.colors.surface)
+                    .background(color = CustomTheme.colors.surface),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 FieldRow(
                     detailTitle = title,
@@ -225,8 +226,7 @@ private fun FieldEditableRow(
                     overflow =TextOverflow.Ellipsis,
                     maxLines = 1,
                     color = CustomTheme.colors.secondaryContent,
-                    style = CustomTheme.typography.default,
-                    fontSize = layoutType.calculateTextSize(),
+                    style = CustomTheme.typography.newHeadline,
                 )
             }
 
@@ -239,7 +239,7 @@ private fun FieldEditableRow(
                         hint = "",
                         textColor = textColor,
                         onValueChange = { onValueChange(key, it) },
-                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        textStyle = CustomTheme.typography.newBody,
                         ignoreTabsAndCaretReturns = false,
                     )
                 } else {
@@ -255,7 +255,7 @@ private fun FieldEditableRow(
                         textColor = textColor,
                         maxLines = 1,
                         onValueChange = { onValueChange(key, it) },
-                        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+                        textStyle = CustomTheme.typography.newBody,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
                         ),
@@ -276,7 +276,6 @@ private fun FieldEditableRow(
 @Composable
 private fun EditTitle(
     viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType,
     onValueChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -285,11 +284,11 @@ private fun EditTitle(
     }
     CustomTextField(
         modifier = Modifier
-            .padding(bottom = 12.dp, end = 12.dp, start = 12.dp),
+            .padding(horizontal = 16.dp),
         value = viewState.data.title,
         hint = stringResource(id = Strings.item_detail_untitled),
         onValueChange = onValueChange,
-        textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTitleTextSize()),
+        textStyle = CustomTheme.typography.newTitleOne,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Next
         ),
@@ -303,7 +302,6 @@ private fun EditTitle(
 @Composable
 private fun EditAbstractRow(
     detailValue: String,
-    layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     onValueChange: (String) -> Unit,
 ) {
@@ -313,8 +311,7 @@ private fun EditAbstractRow(
             modifier = Modifier.align(Alignment.Start),
             text = stringResource(id = Strings.abstract_1),
             color = CustomTheme.colors.secondaryContent,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculateTextSize(),
+            style = CustomTheme.typography.newHeadline,
         )
         Spacer(modifier = Modifier.height(8.dp))
         CustomTextField(
@@ -324,7 +321,7 @@ private fun EditAbstractRow(
             hint = "",
             textColor = textColor,
             onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
+            textStyle = CustomTheme.typography.newBody,
             ignoreTabsAndCaretReturns = false,
         )
         Spacer(modifier = Modifier.height(8.dp))

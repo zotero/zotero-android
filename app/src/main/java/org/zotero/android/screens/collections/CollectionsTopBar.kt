@@ -32,14 +32,14 @@ internal fun CollectionsTopBar(
             Text(
                 text = viewState.library.name,
                 color = CustomTheme.colors.primaryContent,
-                style = CustomTheme.typography.h3,
+                style = CustomTheme.typography.h2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         },
         navigationIcon = {
             Row {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 HeadingTextButton(
                     isEnabled = true,
                     onClick = viewModel::navigateToLibraries,
@@ -59,6 +59,7 @@ internal fun CollectionsTopBar(
                 contentDescription = null,
                 tint = CustomTheme.colors.dynamicTheme.primaryColor,
             )
+            Spacer(modifier = Modifier.width(12.dp))
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )

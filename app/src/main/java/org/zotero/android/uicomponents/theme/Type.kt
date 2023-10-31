@@ -160,6 +160,35 @@ data class CustomTypography(
         letterSpacing = 0.sp,
         lineHeight = 12.sp,
     ),
+    val newTitleOne: TextStyle = TextStyle(
+        fontSize = 28.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 34.sp,
+    ),
+
+    val newHeadline: TextStyle = TextStyle(
+        fontSize = 17.sp,
+        fontWeight = FontWeight.Normal,//Supposed to be Semibold, but for suisse intl it's too 'strong'
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 22.sp,
+    ),
+    val newBody: TextStyle = TextStyle(
+        fontSize = 17.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 22.sp,
+    ),
+    val newCaptionOne: TextStyle = TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 16.sp,
+    ),
 )
 
 @Preview(showBackground = true)

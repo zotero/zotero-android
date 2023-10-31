@@ -25,7 +25,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.libraries.data.LibraryRowData
 import org.zotero.android.screens.libraries.data.LibraryState
@@ -58,7 +57,7 @@ internal fun LibrariesTable(
             item {
                 Spacer(modifier = Modifier.height(26.dp))
                 Text(
-                    modifier = Modifier.padding(start = 54.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(start = 57.dp, bottom = 4.dp),
                     text = stringResource(id = Strings.libraries_group_libraries).uppercase(),
                     fontSize = layoutType.calculateLibraryRowTextSize(),
                     color = CustomTheme.colors.secondaryContent,
@@ -97,7 +96,7 @@ private fun LibrariesItem(
     ) {
         Spacer(modifier = Modifier.width(16.dp))
         Icon(
-            modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
+            modifier = Modifier.size(28.dp),
             painter = painterResource(id = image(item.state)),
             contentDescription = null,
             tint = CustomTheme.colors.zoteroBlueWithDarkMode
@@ -112,9 +111,8 @@ private fun LibrariesItem(
                     Text(
                         color = CustomTheme.colors.primaryContent,
                         text = item.name,
-                        fontSize = 14.sp,
                         maxLines = 1,
-                        style = CustomTheme.typography.h4,
+                        style = CustomTheme.typography.newBody,
                         overflow = TextOverflow.Ellipsis
                     )
                 }

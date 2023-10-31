@@ -63,7 +63,7 @@ internal fun BoxScope.SyncToolbarScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(layoutType.calculateAllItemsBottomPanelHeight())
+                    .height(layoutType.calculateSyncProgressBottomPanelHeight())
                     .background(color = CustomTheme.colors.surface)
                     .safeClickable(
                         onClick = viewModel::showErrorDialog,

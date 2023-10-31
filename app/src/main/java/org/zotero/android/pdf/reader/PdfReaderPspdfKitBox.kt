@@ -162,8 +162,8 @@ private fun AnnotationCreationToggleButton(
     }
     val roundCornerShape = RoundedCornerShape(size = 4.dp)
     var modifier = Modifier
-        .padding(horizontal = 8.dp)
-        .size(28.dp)
+        .padding(horizontal = 10.dp)
+        .size(32.dp)
         .clip(roundCornerShape)
         .safeClickable(
             interactionSource = remember { MutableInteractionSource() },
@@ -177,7 +177,7 @@ private fun AnnotationCreationToggleButton(
         )
     }
     Icon(
-        modifier = modifier,
+        modifier = modifier.padding(2.dp),
         painter = painterResource(id = pdfReaderTool.image),
         contentDescription = null,
         tint = tintColor
@@ -188,8 +188,9 @@ private fun AnnotationCreationToggleButton(
 private fun FilledFilterCircle(hex: String, onClick: () -> Unit) {
     val color = android.graphics.Color.parseColor(hex)
     Canvas(modifier = Modifier
-        .padding(horizontal = 8.dp)
-        .size(28.dp)
+        .padding(horizontal = 10.dp)
+        .size(30.dp)
+        .padding(2.dp)
         .safeClickable(
             onClick = onClick, interactionSource = remember { MutableInteractionSource() },
             indication = null,
@@ -202,8 +203,9 @@ private fun FilledFilterCircle(hex: String, onClick: () -> Unit) {
 private fun EmptyFilterCircle(onClick: () -> Unit) {
     val color = CustomTheme.colors.zoteroBlueWithDarkMode
     Canvas(modifier = Modifier
-        .padding(horizontal = 8.dp)
-        .size(28.dp)
+        .padding(horizontal = 10.dp)
+        .size(30.dp)
+        .padding(2.dp)
         .safeClickable(
             onClick = onClick, interactionSource = remember { MutableInteractionSource() },
             indication = null,
@@ -224,8 +226,9 @@ private fun AnnotationCreationButton(
         CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.5f)
     }
     val modifier = Modifier
-        .padding(horizontal = 8.dp)
-        .size(28.dp)
+        .padding(horizontal = 10.dp)
+        .size(32.dp)
+        .padding(2.dp)
         .safeClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,

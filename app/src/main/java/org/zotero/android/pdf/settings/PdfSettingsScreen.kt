@@ -117,7 +117,7 @@ private fun LazyListScope.settingsRow(
             )
         }
         CustomDivider()
-        Column(modifier = Modifier.padding(top = 0.dp, start = 12.dp, end = 0.dp)) {
+        Column(modifier = Modifier.padding(top = 0.dp, start = 16.dp, end = 0.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {

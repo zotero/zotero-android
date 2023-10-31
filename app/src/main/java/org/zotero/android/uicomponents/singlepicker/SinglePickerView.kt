@@ -75,7 +75,7 @@ fun SinglePickerScreen(
                                         contentDescription = null,
                                         tint = CustomTheme.colors.zoteroBlueWithDarkMode
                                     )
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(16.dp))
                                 }
 
                             })

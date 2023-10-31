@@ -26,24 +26,10 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateItemDetailsAddButtonSize(): Dp {
-            return when (this) {
-                big, medium -> 24.dp
-                small -> 18.dp
-            }
-        }
-
         fun calculateTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 20.sp
                 small -> 14.sp
-            }
-        }
-
-        fun calculateItemDetailsDividerStartPadding(): Dp {
-            return when (this) {
-                big, medium -> 56.dp
-                small -> 50.dp
             }
         }
 
@@ -54,24 +40,10 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateTitleTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 26.sp
-                small -> 20.sp
-            }
-        }
-
         fun calculatePadding(): Dp {
             return when (this) {
                 big, medium -> 50.dp
                 small -> 8.dp
-            }
-        }
-
-        fun showScreenOrDialog(): ScreenOrDialogToShow {
-            return when (this) {
-                LayoutType.big, LayoutType.medium -> ScreenOrDialogToShow.DIALOG
-                LayoutType.small -> ScreenOrDialogToShow.SCREEN
             }
         }
 
@@ -82,37 +54,10 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateItemsRowInfoIconSize(): Dp {
-            return when (this) {
-                big, medium -> 50.dp
-                small -> 24.dp
-            }
-        }
-
         fun calculateItemsBottomSheetIconSize(): Dp {
             return when (this) {
                 big, medium -> 28.dp
                 small -> 26.dp
-            }
-        }
-
-        fun calculateItemsRowNoteIconSize(): Dp {
-            return when (this) {
-                big, medium -> 14.dp
-                small -> 10.dp
-            }
-        }
-
-        fun calculateItemsRowAccessoryIconSize(): Dp {
-            return when (this) {
-                big, medium -> 18.dp
-                small -> 14.dp
-            }
-        }
-        fun calculateItemsRowAccessoryInfoIconSize(): Dp {
-            return when (this) {
-                big, medium -> 24.dp
-                small -> 20.dp
             }
         }
 
@@ -136,13 +81,6 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateAllItemsRowTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 16.sp
-                small -> 14.sp
-            }
-        }
-
         fun calculateLibraryRowTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 14.sp
@@ -157,17 +95,17 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateItemsRowPlaceholderSize(): Dp {
-            return when (this) {
-                big, medium -> 20.dp
-                small -> 14.dp
-            }
-        }
-
         fun calculateAllItemsBottomPanelHeight(): Dp {
             return when (this) {
                 big, medium -> 60.dp
                 small -> 50.dp
+            }
+        }
+
+        fun calculateSyncProgressBottomPanelHeight(): Dp {
+            return when (this) {
+                big, medium -> 56.dp
+                small -> 48.dp
             }
         }
 
@@ -212,8 +150,6 @@ object CustomLayoutSize {
         }
     }
 
-
-
     @Composable
     fun calculateLayoutType(): LayoutType {
         val configuration = LocalConfiguration.current
@@ -228,8 +164,5 @@ object CustomLayoutSize {
             return LayoutType.medium
         }
         return LayoutType.small
-    }
-    enum class ScreenOrDialogToShow {
-        SCREEN, DIALOG
     }
 }

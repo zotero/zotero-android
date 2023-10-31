@@ -35,7 +35,7 @@ internal fun ItemDetailsTopBar(
                     stringResource(Strings.edit)
                 }
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(if (isEditing) 4.dp else 0.dp))
         },
         backgroundColor = CustomTheme.colors.surface,
         elevation = elevation,

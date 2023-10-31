@@ -87,7 +87,7 @@ internal fun LoginScreen(
                     modifier = Modifier
                         .widthIn(max = 430.dp)
                         .fillMaxHeight()
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.Center,
                 ) {
                     val focusManager = LocalFocusManager.current

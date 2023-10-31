@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -89,7 +90,10 @@ internal fun FilterScreen(
             LazyColumn {
                 item {
                     CustomDivider()
-                    Row(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp, start = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             modifier = Modifier.weight(1f),
                             text = stringResource(id = Strings.items_filters_downloads),
@@ -101,8 +105,10 @@ internal fun FilterScreen(
                             onCheckedChange = { viewModel.onDownloadsTapped() },
                             modifier = Modifier
                         )
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
+                    CustomDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TagsSearchBar(
                             viewState = viewState,
@@ -120,7 +126,7 @@ internal fun FilterScreen(
                             contentDescription = null,
                             colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
                     }
                 }
                 items(items = viewState.tags) { chunkedList ->
@@ -230,7 +236,7 @@ private fun RowScope.TagsSearchBar(
         hint = stringResource(id = Strings.searchbar_placeholder),
         modifier = Modifier
             .weight(1f)
-            .padding(start = 12.dp, end = 12.dp),
+            .padding(start = 16.dp, end = 12.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

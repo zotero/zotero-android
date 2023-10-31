@@ -31,6 +31,8 @@ object CustomPalette {
     val PendingYellow = Color(0xFFF2C94C)
     val zoteroItemDetailSectionTitle = Color(0xFF6C6C73)
     val pdfAnnotationSidebarSelectedItem = Color(0xFF3C59B2)
+
+    val SystemGray = Color(0xFF8E8E93)
 }
 
 /**
@@ -93,6 +95,7 @@ data class CustomSemanticColors(
     val allItemsRowTitleColor: Color,
     val pdfToolbarBackgroundColor: Color,
     val pdfSizePickerColor: Color,
+    val allItemsInfoIconColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -145,7 +148,8 @@ fun lightCustomColors(
     dialogBorderColor = Color(0xFF69696F),
     allItemsRowTitleColor = Color.Black,
     pdfToolbarBackgroundColor= Color(0xFFFCFBFD),
-    pdfSizePickerColor = Color(0xFF6E6D73)
+    pdfSizePickerColor = Color(0xFF6E6D73),
+    allItemsInfoIconColor = Color(0xFF1A88FF),
 )
 
 fun darkCustomColors(
@@ -188,6 +192,7 @@ fun darkCustomColors(
     allItemsRowTitleColor = Color.White,
     pdfToolbarBackgroundColor= Color(0xFF282729),
     pdfSizePickerColor = Color(0xFF8E8E93),
+    allItemsInfoIconColor = Color(0xFF0976E5),
 
 )
 

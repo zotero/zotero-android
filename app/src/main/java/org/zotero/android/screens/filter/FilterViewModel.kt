@@ -68,7 +68,7 @@ internal class FilterViewModel @Inject constructor(
             copy(
                 isDownloadsChecked = downloadsFilterEnabled,
                 selectedTags = filterArgs.selectedTags,
-                displayAll = defaults.isTagPickerDisplayAllTags(),
+//                displayAll = defaults.isTagPickerDisplayAllTags(),
                 showAutomatic = defaults.isTagPickerShowAutomaticTags()
             )
         }
@@ -192,11 +192,11 @@ internal class FilterViewModel @Inject constructor(
                         } else {
                             LongPressOptionItem.ShowAutomaticTagsUnchecked
                         },
-                        if (viewState.displayAll) {
-                            LongPressOptionItem.DisplayAllTagsInThisLibraryChecked
-                        } else {
-                            LongPressOptionItem.DisplayAllTagsInThisLibraryUnchecked
-                        },
+//                        if (viewState.displayAll) {
+//                            LongPressOptionItem.DisplayAllTagsInThisLibraryChecked
+//                        } else {
+//                            LongPressOptionItem.DisplayAllTagsInThisLibraryUnchecked
+//                        },
                         LongPressOptionItem.DeleteAutomaticTags
                     )
                 )
@@ -294,7 +294,7 @@ internal class FilterViewModel @Inject constructor(
                     )
                 )
                 val colored =
-                    coordinator.perform(request = ReadColoredTagsDbRequest(libraryId = libraryId))
+                    coordinator.perform(request = ReadColoredTagsDbRequest(libraryId = libraryId)) //TODO!!!!
 
                 for (tag in filtered) {
                     if (!viewState.selectedTags.contains(tag.name)) {

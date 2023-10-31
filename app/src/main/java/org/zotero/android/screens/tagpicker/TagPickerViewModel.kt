@@ -116,8 +116,8 @@ internal class TagPickerViewModel @Inject constructor(
         try {
             val request = ReadTagPickerTagsDbRequest(libraryId = viewState.libraryId!!)
             val results = dbWrapper.realmDbStorage.perform(request = request)
-            val colored = results.where().notEqualTo("color", "\"\"").sort("name").findAll()
-            val others = results.where().equalTo("color", "\"\"").sort("name").findAll()
+            val colored = results.where().isNotEmpty("color").sort("name").findAll()
+            val others = results.where().isEmpty("color").sort("name").findAll()
             val tags = colored.map { Tag(it) } + others.map { Tag(it) }
             updateState {
                 copy(tags = tags)
