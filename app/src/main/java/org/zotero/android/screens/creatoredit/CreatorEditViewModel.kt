@@ -98,6 +98,7 @@ internal class CreatorEditViewModel @Inject constructor(
         updatedCreator.type = selectedCreatorType
         updatedCreator.localizedType =
             this.schemaController.localizedCreator(selectedCreatorType) ?: ""
+        updatedCreator.primary = schemaController.creatorIsPrimary(selectedCreatorType, itemType = viewState.itemType)
         updateState {
             copy(creator = updatedCreator)
         }

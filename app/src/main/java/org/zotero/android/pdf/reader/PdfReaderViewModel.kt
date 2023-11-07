@@ -113,6 +113,7 @@ import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.AnnotationSplitter
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
@@ -136,6 +137,7 @@ class PdfReaderViewModel @Inject constructor(
     private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
     val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
     private val schemaController: SchemaController,
+    private val dateParser: DateParser,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -439,10 +441,10 @@ class PdfReaderViewModel @Inject constructor(
         library: Library
     ): CustomResult<Pair<RealmResults<RItem>, Int>> {
         try {
-            var page: Int = -1
+            var pageStr = "0"
             var results: RealmResults<RItem>? = null
             dbWrapper.realmDbStorage.perform { coordinator ->
-                page = coordinator.perform(
+                pageStr = coordinator.perform(
                     request = ReadDocumentDataDbRequest(
                         attachmentKey = key,
                         libraryId = library.identifier
@@ -455,6 +457,11 @@ class PdfReaderViewModel @Inject constructor(
                     )
                 )
             }
+            val page = pageStr.toIntOrNull()
+            if (page == null) {
+                return CustomResult.GeneralError.CodeError(Exception("Can't add annotations"))//TODO pageNotInt
+            }
+
             return CustomResult.GeneralSuccess(results!! to page)
         } catch (e: Exception) {
             Timber.e(e)
@@ -657,7 +664,8 @@ class PdfReaderViewModel @Inject constructor(
                 val request = EditItemFieldsDbRequest(
                     key = key,
                     libraryId = viewState.library.identifier,
-                    fieldValues = values
+                    fieldValues = values,
+                    dateParser = this.dateParser,
                 )
                 requests.add(request)
             }
@@ -676,14 +684,34 @@ class PdfReaderViewModel @Inject constructor(
         }
 
         if (hasChanges(listOf(PdfAnnotationChanges.color))) {
-            val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.baseColor)
-            val request = EditItemFieldsDbRequest(key= key, libraryId = viewState.library.identifier, fieldValues = values)
+            val values = mapOf(
+                KeyBaseKeyPair(
+                    key = FieldKeys.Item.Annotation.color,
+                    baseKey = null
+                ) to annotation.baseColor
+            )
+            val request = EditItemFieldsDbRequest(
+                key = key,
+                libraryId = viewState.library.identifier,
+                fieldValues = values,
+                dateParser = this.dateParser,
+            )
             requests.add(request)
         }
 
         if (hasChanges(listOf(PdfAnnotationChanges.contents))) {
-            val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to (annotation.contents ?: ""))
-            val request = EditItemFieldsDbRequest(key = key, libraryId = viewState.library.identifier, fieldValues = values)
+            val values = mapOf(
+                KeyBaseKeyPair(
+                    key = FieldKeys.Item.Annotation.comment,
+                    baseKey = null
+                ) to (annotation.contents ?: "")
+            )
+            val request = EditItemFieldsDbRequest(
+                key = key,
+                libraryId = viewState.library.identifier,
+                fieldValues = values,
+                dateParser = this.dateParser,
+            )
             requests.add(request)
         }
 

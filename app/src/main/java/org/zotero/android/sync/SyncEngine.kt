@@ -814,12 +814,44 @@ class SyncUseCase @Inject constructor(
                 }
             }
             is NonFatal.quotaLimit -> {
-                //TODO handleQuotaLimitFailure
+                handleQuotaLimit(
+                    libraryId = libraryId,
+                    error = error,
+                    additionalAction = additionalAction
+                )
             }
 
             else -> {
                 appendAndContinue()
             }
+        }
+    }
+
+    private fun handleQuotaLimit(
+        libraryId: LibraryIdentifier,
+        error: NonFatal.quotaLimit,
+        additionalAction: (() -> Boolean)?
+    ) {
+        Timber.i("Sync: received quota limit for $libraryId")
+        this.queue.removeAll {action ->
+            when (action) {
+                is Action.uploadAttachment -> {
+                    action.upload.libraryId == libraryId
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+        this.queue.add(index = 0, Action.createLibraryActions(Libraries.specific(listOf(libraryId)), CreateLibraryActionsOptions.onlyDownloads))
+
+        if (!this.nonFatalErrors.contains(error)) {
+            this.nonFatalErrors.add(error)
+        }
+
+        val shouldProcessNext = additionalAction?.invoke() ?: true
+        if (shouldProcessNext) {
+            processNextAction()
         }
     }
 
@@ -1440,7 +1472,7 @@ class SyncUseCase @Inject constructor(
                 //TODO handle webDavVerification && webDavDownload
                 is NonFatal.unknown, is NonFatal.schema, is NonFatal.parsing, is NonFatal.apiError,
                 is NonFatal.unchanged, is NonFatal.quotaLimit, is NonFatal.attachmentMissing,
-                is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed ->
+                is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed, is NonFatal.webDavUpload ->
                 reportErrors.add(error)
             }
         }

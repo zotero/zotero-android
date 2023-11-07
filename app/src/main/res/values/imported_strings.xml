@@ -559,4 +559,6 @@
         <item quantity="one">Could not delete %d file from your WebDAV server</item>
         <item quantity="other">Could not delete %d files from your WebDAV server</item>
     </plurals>
+    <string name="errors.sync_toolbar.webdav_request_failed">Your WebDAV server returned an HTTP %d error for a %s request.</string>
+    <string name="errors.pdf.page_index_not_int">Incorrect format of page stored for this document.</string>
 </resources>

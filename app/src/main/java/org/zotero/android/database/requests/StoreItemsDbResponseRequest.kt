@@ -38,6 +38,7 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
 import timber.log.Timber
 import java.util.Date
+import java.util.UUID
 
 class StoreItemsDbResponseRequest(
     val responses: List<ItemResponse>,
@@ -331,7 +332,11 @@ class StoreItemDbRequest(
                 }
             }
 
-            item.setDateFieldMetadata(date, parser = dateParser)
+            if (date != null) {
+                item.setDateFieldMetadata(date, parser = dateParser)
+            } else {
+                item.clearDateFieldMedatada()
+            }
             item.setP(publisher = publisher)
             item.setPT(publicationTitle = publicationTitle)
             item.annotationSortIndex = sortIndex ?: ""
@@ -597,6 +602,7 @@ class StoreItemDbRequest(
                 val name = objectS.name ?: ""
 
                 val creator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
+                creator.uuid = UUID.randomUUID().toString()
 
                 if (validCreators.any { it.creatorType == objectS.creatorType }) {
                     creator.rawType = objectS.creatorType

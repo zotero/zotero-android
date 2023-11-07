@@ -122,6 +122,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     override var lastSyncDate: Date? = null
     override var syncRetries: Int = 0
     override var changes: RealmList<RObjectChange> = RealmList()
+    var changesSyncPaused: Boolean = false
     override lateinit var changeType: String //UpdatableChangeType
     override var deleted: Boolean = false
     var htmlFreeContent: String? = null
@@ -222,7 +223,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 parameters["parentItem"] = this.parent?.key ?: false
             }
             if (changes.contains(RItemChanges.creators)) {
-                parameters["creators"] = this.creators.map { it.updateParameters }.toTypedArray()
+                parameters["creators"] = this.creators.sort("orderId").map { it.updateParameters }.toTypedArray()
             }
             if (changes.contains(RItemChanges.fields)) {
                 for (field in this.fields.filter { it.changed }) {
@@ -557,12 +558,19 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         hasCreatorSummary = this.creatorSummary != null
     }
 
-    fun setDateFieldMetadata(date: String?, parser: DateParser) {
-        val components = date?.let { parser.parse(it)}
+    fun setDateFieldMetadata(date: String, parser: DateParser) {
+        val components = parser.parse(date)
         this.parsedYear = components?.year ?: 0
         this.hasParsedYear = this.parsedYear != 0
         this.parsedDate = components?.date
         this.hasParsedDate = this.parsedDate != null
+    }
+
+    fun clearDateFieldMedatada() {
+        this.parsedYear = 0
+        this.hasParsedYear = false
+        this.parsedDate = null
+        this.hasParsedDate = false
     }
 
     fun fieldValue(key: String): String? {

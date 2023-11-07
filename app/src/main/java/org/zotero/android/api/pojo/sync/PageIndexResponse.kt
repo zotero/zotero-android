@@ -3,10 +3,11 @@ package org.zotero.android.api.pojo.sync
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Parsing
+import timber.log.Timber
 
 data class PageIndexResponse(
     val key: String,
-    val value: Int,
+    val value: String,
     val version: Int,
     val libraryId: LibraryIdentifier,
 ) {
@@ -16,6 +17,7 @@ data class PageIndexResponse(
         fun parse(key: String): Pair<String, LibraryIdentifier> {
             val parts = key.split("_")
             if (parts.size != 3) {
+                Timber.e("PageIndexResponse: key is invalid format - $key")
                 throw Parsing.Error.incompatibleValue(key)
             }
 
@@ -32,6 +34,7 @@ data class PageIndexResponse(
                     libraryId = LibraryIdentifier.group(groupId)
                 }
                 else -> {
+                    Timber.e("PageIndexResponse: key is invalid format - $key")
                     throw Parsing.Error.incompatibleValue("libraryPart=$libraryPart")
 
                 }

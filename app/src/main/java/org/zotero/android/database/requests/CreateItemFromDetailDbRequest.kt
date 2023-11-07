@@ -26,6 +26,7 @@ import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
 import timber.log.Timber
+import java.util.UUID
 
 class CreateItemFromDetailDbRequest(
     private val key: String,
@@ -60,6 +61,7 @@ class CreateItemFromDetailDbRequest(
         item.dateAdded = this.data.dateAdded
         item.dateModified = this.data.dateModified
         item.libraryId = this.libraryId
+        item.changesSyncPaused = true
 
         val changes = mutableListOf<RItemChanges>(RItemChanges.type, RItemChanges.fields)
 
@@ -77,6 +79,7 @@ class CreateItemFromDetailDbRequest(
             val creator = this.data.creators[creatorId] ?: continue
 
             val rCreator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
+            rCreator.uuid = UUID.randomUUID().toString()
             rCreator.rawType = creator.type
             rCreator.firstName = creator.firstName
             rCreator.lastName = creator.lastName
@@ -118,6 +121,7 @@ class CreateItemFromDetailDbRequest(
                 parentKey = null
             ).process(database)
             rNote.parent = item
+            rNote.changesSyncPaused = true
             rNote.changes.add(RObjectChange.create(changes = listOf(RItemChanges.parent)))
         }
 
@@ -128,6 +132,7 @@ class CreateItemFromDetailDbRequest(
                 rAttachment.parent = item
                 rAttachment.changes.add(RObjectChange.create(changes = listOf(RItemChanges.parent)))
                 rAttachment.changeType = UpdatableChangeType.user.name
+                rAttachment.changesSyncPaused = true
             } else {
                 val rAttachment = CreateAttachmentDbRequest(
                     fileStore = this.fileStore,
@@ -140,6 +145,7 @@ class CreateItemFromDetailDbRequest(
                 ).process(database)
                 rAttachment.libraryId = this.libraryId
                 rAttachment.parent = item
+                rAttachment.changesSyncPaused = true
                 rAttachment.changes.add(RObjectChange.create(changes = listOf(RItemChanges.parent)))
             }
         }

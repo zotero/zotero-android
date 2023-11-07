@@ -3,15 +3,14 @@ package org.zotero.android.screens.itemdetails.data
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.sync.SchemaController
 import java.util.Date
-import java.util.UUID
 
 data class ItemDetailData(
     var title: String,
     var type: String,
     var isAttachment: Boolean,
     var localizedType: String,
-    var creators: Map<UUID, ItemDetailCreator>,
-    var creatorIds: List<UUID>,
+    var creators: Map<String, ItemDetailCreator>,
+    var creatorIds: List<String>,
     val fields: Map<String, ItemDetailField>,
     var fieldIds: List<String> = emptyList(),
     var abstract: String? = null,
@@ -56,8 +55,8 @@ data class ItemDetailData(
         type: String = this.type,
         isAttachment: Boolean = this.isAttachment,
         localizedType: String = this.localizedType,
-        creators: Map<UUID, ItemDetailCreator> = this.creators,
-        creatorIds: List<UUID> = this.creatorIds,
+        creators: Map<String, ItemDetailCreator> = this.creators,
+        creatorIds: List<String> = this.creatorIds,
         fields: Map<String, ItemDetailField> = this.fields,
         fieldIds: List<String> = this.fieldIds,
         abstract: String? = this.abstract,
@@ -66,7 +65,7 @@ data class ItemDetailData(
         maxFieldTitleWidth: Double = this.maxFieldTitleWidth,
         maxNonemptyFieldTitleWidth: Double = this.maxNonemptyFieldTitleWidth
     ): ItemDetailData {
-        val clonedCreatorsMap = mutableMapOf<UUID, ItemDetailCreator>()
+        val clonedCreatorsMap = mutableMapOf<String, ItemDetailCreator>()
         for (cr in creators) {
             clonedCreatorsMap[cr.key] = cr.value.copy()
         }

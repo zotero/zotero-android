@@ -11,12 +11,14 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 
 class EditItemFieldsDbRequest(
     private val key: String,
     private val libraryId: LibraryIdentifier,
-    private val fieldValues: Map<KeyBaseKeyPair, String>
+    private val fieldValues: Map<KeyBaseKeyPair, String>,
+    private val dateParser: DateParser,
 ) : DbRequest {
     override val needsWrite: Boolean
         get() = true
@@ -42,20 +44,31 @@ class EditItemFieldsDbRequest(
             field.changed = true
             didChange = true
 
-            when (field.key) {
-                FieldKeys.Item.note -> {
+            when {
+                field.key == FieldKeys.Item.note -> {
                     item.htmlFreeContent = if (data.value.isEmpty()) {
                         null
                     } else {
                         data.value.strippedHtmlTags
                     }
-
                 }
-
-                FieldKeys.Item.Annotation.comment -> {
+                field.key == FieldKeys.Item.Annotation.comment -> {
                     item.htmlFreeContent =
                         if (data.value.isEmpty()) null else data.value.strippedRichTextTags
                 }
+                field.key == FieldKeys.Item.title || field.baseKey == FieldKeys.Item.title  -> {
+                    item.set(title = field.value)
+                }
+                field.key == FieldKeys.Item.date || field.baseKey == FieldKeys.Item.date  -> {
+                    item.setDateFieldMetadata(field.value, parser = dateParser)
+                }
+                field.key == FieldKeys.Item.publisher || field.baseKey == FieldKeys.Item.publisher  -> {
+                    item.setP(publisher = field.value)
+                }
+                field.key == FieldKeys.Item.publicationTitle || field.baseKey == FieldKeys.Item.publicationTitle  -> {
+                    item.setPT(publicationTitle = field.value)
+                }
+
             }
         }
 

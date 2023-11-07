@@ -17,6 +17,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.joda.time.DateTime
+import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -27,23 +28,30 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
+import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.database.requests.CancelParentCreationDbRequest
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateItemFromDetailDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
+import org.zotero.android.database.requests.DeleteCreatorItemDetailDbRequest
+import org.zotero.android.database.requests.DeleteObjectsDbRequest
 import org.zotero.android.database.requests.DeleteTagFromItemDbRequest
-import org.zotero.android.database.requests.EditItemFromDetailDbRequest
+import org.zotero.android.database.requests.EditCreatorItemDetailDbRequest
+import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
+import org.zotero.android.database.requests.EditTypeItemDetailDbRequest
+import org.zotero.android.database.requests.EndItemDetailEditingDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
-import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.RemoveItemFromParentDbRequest
+import org.zotero.android.database.requests.ReorderCreatorsItemDetailDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
@@ -103,7 +111,6 @@ import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.Date
-import java.util.UUID
 import javax.inject.Inject
 
 val numberOfRowsInLazyColumnBeforeListOfCreatorsStarts = 1
@@ -552,23 +559,41 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun onSaveCreator(creator: ItemDetailCreator) {
-        if (!viewState.data.creatorIds.contains(creator.id)) {
+        viewModelScope.launch {
+            if (!viewState.data.creatorIds.contains(creator.id)) {
+                updateState {
+                    copy(
+                        data = viewState.data.deepCopy(
+                            creatorIds = viewState.data.creatorIds + creator.id,
+                        )
+                    )
+                }
+            }
+            val updatedCreators = viewState.data.creators.toMutableMap()
+            updatedCreators[creator.id] = creator
             updateState {
                 copy(
                     data = viewState.data.deepCopy(
-                        creatorIds = viewState.data.creatorIds + creator.id,
+                        creators = updatedCreators
                     )
                 )
             }
-        }
-        val updatedCreators = viewState.data.creators.toMutableMap()
-        updatedCreators[creator.id] = creator
-        updateState {
-            copy(
-                data = viewState.data.deepCopy(
-                    creators = updatedCreators
-                )
+
+            val orderId = viewState.data.creatorIds.indexOfFirst { it == creator.id }
+            if (orderId == -1) {
+                return@launch
+            }
+            val request = EditCreatorItemDetailDbRequest(
+                key = viewState.key,
+                libraryId = viewState.library!!.identifier,
+                creator = creator,
+                orderId = orderId
             )
+
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't create creator")
+            }
         }
     }
 
@@ -603,13 +628,56 @@ class ItemDetailsViewModel @Inject constructor(
         updateState {
             copy(data = updatedData)
         }
+
+        val request = EditItemFieldsDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library!!.identifier,
+            fieldValues = mapOf(
+                KeyBaseKeyPair(
+                    key = field.key,
+                    baseKey = field.baseField
+                ) to field.value
+            ),
+            dateParser = this.dateParser
+        )
+
+        viewModelScope.launch {
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't store field")
+            }
+        }
+
         triggerEffect(ScreenRefresh)
     }
 
     fun onTitleEdit(newTitle: String) {
+        val key = this.schemaController.titleKey(viewState.data.type)
+        if (key == null) {
+            Timber.e("ItemDetailActionHandler: schema controller doesn't contain title key for item type ${viewState.data.type}")
+            return
+        }
+
         val updatedData = viewState.data.deepCopy(title = newTitle)
         updateState {
             copy(data = updatedData)
+        }
+
+        val keyPair = KeyBaseKeyPair(
+            key = key,
+            baseKey = (if (key != FieldKeys.Item.title) FieldKeys.Item.title else null)
+        )
+        val request = EditItemFieldsDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library!!.identifier,
+            fieldValues = mapOf(keyPair to newTitle),
+            dateParser = this.dateParser
+        )
+        viewModelScope.launch {
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't store title")
+            }
         }
     }
 
@@ -617,6 +685,25 @@ class ItemDetailsViewModel @Inject constructor(
         val updatedData = viewState.data.deepCopy(abstract = newAbstract)
         updateState {
             copy(data = updatedData)
+        }
+
+        val request = EditItemFieldsDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library!!.identifier,
+            fieldValues = mapOf(
+                KeyBaseKeyPair(
+                    key = FieldKeys.Item.abstractN,
+                    baseKey = null
+                ) to newAbstract
+            ),
+            dateParser = this.dateParser
+        )
+
+        viewModelScope.launch {
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't store abstract")
+            }
         }
     }
 
@@ -633,29 +720,25 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun updateDateFieldIfNeeded() {
-        val field =
-            viewState.data.fields.values.firstOrNull { it.baseField == FieldKeys.Item.date || it.key == FieldKeys.Item.date }
-        if (field != null) {
-            val date = parseDateSpecialValue(field.value)
-            if (date != null) {
-                field.value = fullDateWithDashes.format(date)
-                val order = this.dateParser.parse(field.value)?.orderWithSpaces
-                if (order != null) {
-                    val mutableAdditionalInfo = (field.additionalInfo ?: emptyMap()).toMutableMap()
-                    mutableAdditionalInfo[ItemDetailField.AdditionalInfoKey.dateOrder] = order
-                    field.additionalInfo = mutableAdditionalInfo
-                }
-
-                val updatedFieldsMap = viewState.data.fields.toMutableMap()
-                updatedFieldsMap[field.key] = field
-
-                val updatedData = viewState.data.deepCopy(fields = updatedFieldsMap)
-                updateState {
-                    copy(data = updatedData)
-                }
-            }
+    private fun updated(dateField: ItemDetailField): ItemDetailField? {
+        val date = parseDateSpecialValue(dateField.value) ?: return null
+        var field = dateField
+        field.value = fullDateWithDashes.format(date)
+        val order = this.dateParser.parse(field.value)?.orderWithSpaces
+        if (order != null) {
+            val mutableAdditionalInfo = (field.additionalInfo ?: emptyMap()).toMutableMap()
+            mutableAdditionalInfo[ItemDetailField.AdditionalInfoKey.dateOrder] = order
+            field.additionalInfo = mutableAdditionalInfo
         }
+
+//        val updatedFieldsMap = viewState.data.fields.toMutableMap()
+//        updatedFieldsMap[field.key] = field
+
+//        val updatedData = viewState.data.deepCopy(fields = updatedFieldsMap)
+//        updateState {
+//            copy(data = updatedData)
+//        }
+        return field
     }
 
     fun saveChanges() {
@@ -664,7 +747,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
         try {
             coroutineScope.launch {
-                save()
+                endEditing()
             }
         } catch (error: Exception) {
             Timber.e(error, "ItemDetailStore: can't store changes")
@@ -674,31 +757,64 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun save() {
-        updateDateFieldIfNeeded()
-        updateAccessedFieldIfNeeded()
+    private fun endEditing() {
+//        updateDateFieldIfNeeded()
+//        updateAccessedFieldIfNeeded()
         viewModelScope.launch {
-            updateState {
-                copy(data = viewState.data.deepCopy(dateModified = Date()))
+            val updatedFields: MutableMap<KeyBaseKeyPair, String> = mutableMapOf()
+            val updatedFieldsMap = viewState.data.fields.toMutableMap()
+            val fieldAccessDate = viewState.data.fields[FieldKeys.Item.accessDate]
+            if (fieldAccessDate != null) {
+                val updated = updated(accessDateField = fieldAccessDate, originalField = viewState.snapshot?.fields?.get(FieldKeys.Item.accessDate))
+                if (updated.value != fieldAccessDate.value) {
+                    updatedFields[KeyBaseKeyPair(key = updated.key, baseKey = updated.baseField)] = updated.value
+                    updatedFieldsMap[updated.key] = updated
+                }
+            }
+            val itemDateField = viewState.data.fields.values.firstOrNull { it.baseField == FieldKeys.Item.date || it.key == FieldKeys.Item.date }
+
+            if(itemDateField != null) {
+                val updated = updated(dateField = itemDateField)
+                if (updated != null) {
+                    if (updated.value != itemDateField.value) {
+                        updatedFields[KeyBaseKeyPair(key=  updated.key, baseKey = updated.baseField)] = updated.value
+                        updatedFieldsMap[updated.key] = updated
+                    }
+                }
+
             }
 
-            val snapshot = viewState.snapshot
-            if (snapshot != null) {
-                val request = EditItemFromDetailDbRequest(
+            var requests: MutableList<DbRequest> = mutableListOf(
+                EndItemDetailEditingDbRequest(
                     libraryId = viewState.library!!.identifier,
-                    itemKey = viewState.key,
-                    data = viewState.data,
-                    snapshot = snapshot,
-                    schemaController = this@ItemDetailsViewModel.schemaController,
-                    dateParser = this@ItemDetailsViewModel.dateParser,
+                    itemKey = viewState.key
                 )
-                dbWrapper.realmDbStorage.perform(request = request)
+            )
+            if (!updatedFields.isEmpty()) {
+                requests.add(
+                    element = EditItemFieldsDbRequest(
+                        key = viewState.key,
+                        libraryId = viewState.library!!.identifier,
+                        fieldValues = updatedFields,
+                        dateParser = this@ItemDetailsViewModel.dateParser
+                    ), index = 0
+                )
             }
+            perform(
+                dbWrapper = dbWrapper,
+                writeRequests = requests
+            ).ifFailure {
+                Timber.e(it)
+                return@launch
+            }
+
             val updatedData = viewState.data.deepCopy(
+                fields = updatedFieldsMap,
                 fieldIds = ItemDetailDataCreator.filteredFieldKeys(
                     viewState.data.fieldIds,
-                    viewState.data.fields
-                )
+                    viewState.data.fields,
+                ),
+                dateModified = Date()
             )
             updateState {
                 copy(
@@ -712,11 +828,9 @@ class ItemDetailsViewModel @Inject constructor(
 
     }
 
-    private fun updateAccessedFieldIfNeeded() {
-        var field = viewState.data.fields[FieldKeys.Item.accessDate]
-        if (field == null) {
-            return
-        }
+    private fun updated(accessDateField: ItemDetailField, originalField: ItemDetailField?): ItemDetailField {
+        var field = accessDateField
+
         var date: Date? = null
         val dateSpecific = parseDateSpecialValue(field.value)
         if (dateSpecific != null) {
@@ -740,24 +854,24 @@ class ItemDetailsViewModel @Inject constructor(
                 ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date)
             )
         } else {
-            val snapshotField = viewState.snapshot?.fields?.get(FieldKeys.Item.accessDate)
-            if (snapshotField != null) {
-                field = snapshotField
+            if (originalField != null) {
+                field = originalField
             } else {
                 field.value = ""
                 field.additionalInfo = emptyMap()
             }
         }
 
-        val updatedFieldsMap = viewState.data.fields.toMutableMap()
-        updatedFieldsMap[field.key] = field
+//        val updatedFieldsMap = viewState.data.fields.toMutableMap()
+//        updatedFieldsMap[field.key] = field
 
-        val updatedData = viewState.data.deepCopy(fields = updatedFieldsMap)
-        viewModelScope.launch {
-            updateState {
-                copy(data = updatedData)
-            }
-        }
+//        val updatedData = viewState.data.deepCopy(fields = updatedFieldsMap)
+//        viewModelScope.launch {
+//            updateState {
+//                copy(data = updatedData)
+//            }
+//        }
+        return field
     }
 
     private fun process(update: AttachmentDownloader.Update) {
@@ -803,18 +917,18 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun cancelChanges() {
         viewModelScope.launch {
-            val type = viewState.type
+            val type = viewState.type!!
             when (type) {
-                is DetailType.duplication, is DetailType.creation -> {
+                is DetailType.duplication -> {
                     perform(
                         dbWrapper = dbWrapper,
-                        request = MarkObjectsAsDeletedDbRequest(
+                        request = DeleteObjectsDbRequest(
                             clazz = RItem::class,
                             keys = listOf(viewState.key),
                             libraryId = viewState.library!!.identifier
                         )
                     ).ifFailure {
-                        Timber.e(it, "ItemDetailActionHandler: can't remove duplicated/cancelled item")
+                        Timber.e(it, "ItemDetailActionHandler: can't remove duplicated and cancelled item")
                         updateState {
                             copy(error = ItemDetailError.cantRemoveItem)
                         }
@@ -823,20 +937,36 @@ class ItemDetailsViewModel @Inject constructor(
                     triggerEffect(OnBack)
                 }
 
-                is DetailType.preview -> {
-                    val snapshot = viewState.snapshot?.deepCopy()
-                    if (snapshot == null) {
-                        return@launch
-                    }
-                    updateState {
-                        copy(
-                            data = snapshot,
-                            snapshot = null,
-                            isEditing = false
+                is DetailType.creation -> {
+                    val child = type.child
+                    var actions: MutableList<DbRequest> = mutableListOf(
+                        DeleteObjectsDbRequest(
+                            clazz = RItem::class,
+                            keys = listOf(viewState.key),
+                            libraryId = viewState.library!!.identifier
+                        )
+                    )
+                    if (child != null) {
+                        actions.add(
+                            element = CancelParentCreationDbRequest(
+                                key = child.key,
+                                libraryId = child.libraryId
+                            ), index = 0
                         )
                     }
+                    perform(
+                        dbWrapper = dbWrapper,
+                        writeRequests = actions
+                    ).ifFailure {
+                        Timber.e(it, "ItemDetailActionHandler: can't remove created and cancelled item")
+                        updateState {
+                            copy(error = ItemDetailError.cantRemoveItem)
+                        }
+                        return@launch
+                    }
+                    triggerEffect(OnBack)
                 }
-                null -> {
+                is DetailType.preview -> {
                     //no-op
                 }
             }
@@ -847,20 +977,33 @@ class ItemDetailsViewModel @Inject constructor(
         showCreatorEditor(creator = creator, itemType = viewState.data.type)
     }
 
-    fun onDeleteCreator(creatorId: UUID) {
-        val index = viewState.data.creatorIds.indexOf(creatorId)
-        if (index == -1) {
-            return
-        }
-        val updatedCreators = viewState.data.creators.toMutableMap()
-        updatedCreators.remove(creatorId)
-        updateState {
-            copy(
-                data = viewState.data.deepCopy(
-                    creatorIds = viewState.data.creatorIds - creatorId,
-                    creators = updatedCreators
+    fun onDeleteCreator(creatorId: String) {
+        viewModelScope.launch {
+            val index = viewState.data.creatorIds.indexOf(creatorId)
+            if (index == -1) {
+                return@launch
+            }
+            val updatedCreators = viewState.data.creators.toMutableMap()
+            updatedCreators.remove(creatorId)
+            updateState {
+                copy(
+                    data = viewState.data.deepCopy(
+                        creatorIds = viewState.data.creatorIds - creatorId,
+                        creators = updatedCreators
+                    )
                 )
+            }
+
+            val request = DeleteCreatorItemDetailDbRequest(
+                key = viewState.key,
+                libraryId = viewState.library!!.identifier,
+                creatorId = creatorId
             )
+
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e("ItemDetailActionHandler: can't delete creator")
+            }
         }
     }
 
@@ -1000,9 +1143,9 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun changeType(newType: String) {
-        val data: ItemDetailData
+        val itemData: ItemDetailData
         try {
-            data = data(newType, viewState.data)
+            itemData = data(newType, viewState.data)
         } catch (error: Throwable) {
             Timber.e(error)
             updateState {
@@ -1013,16 +1156,19 @@ class ItemDetailsViewModel @Inject constructor(
             return
         }
 
-        val droppedFields = droppedFields(viewState.data, data)
+        val droppedFields = droppedFields(viewState.data, itemData)
         updateState {
             if (droppedFields.isEmpty()) {
-                copy(data = data)
+                copy(data = itemData)
             } else {
                 copy(
-                    promptSnapshot = data,
+                    promptSnapshot = itemData,
                     error = ItemDetailError.droppedFields(droppedFields)
                 )
             }
+        }
+        if (droppedFields.isEmpty()) {
+            changeTypeInDb()
         }
     }
 
@@ -1039,7 +1185,7 @@ class ItemDetailsViewModel @Inject constructor(
         return subtracted.map{ it.name }.sorted()
     }
 
-    private fun creators(type: String, originalData: Map<UUID, ItemDetailCreator>): Map<UUID, ItemDetailCreator> {
+    private fun creators(type: String, originalData: Map<String, ItemDetailCreator>): Map<String, ItemDetailCreator> {
         val schemas = schemaController.creators(type)
         if (schemas == null) {
             throw ItemDetailError.typeNotSupported(type)
@@ -1132,6 +1278,7 @@ class ItemDetailsViewModel @Inject constructor(
                 promptSnapshot = null
             )
         }
+        changeTypeInDb()
     }
 
     fun acceptItemWasChangedRemotely() {
@@ -1760,20 +1907,55 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     fun onMove(from: Int, to: Int) {
-        //We need to adjust index by the number of 'rows' we have in LazyColumn before the list of creators start.
-        val adjustedFrom = from - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
-        val adjustedTo = to - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
-        val updatedCreators = viewState.data.creatorIds
-        updateState {
-            copy(
-                data = viewState.data.deepCopy(
-                    creatorIds = updatedCreators.move(IntRange(adjustedFrom, adjustedFrom), adjustedTo)
-                ),
+        viewModelScope.launch {
+            //We need to adjust index by the number of 'rows' we have in LazyColumn before the list of creators start.
+            val adjustedFrom = from - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
+            val adjustedTo = to - numberOfRowsInLazyColumnBeforeListOfCreatorsStarts
+            val updatedCreators = viewState.data.creatorIds
+            updateState {
+                copy(
+                    data = viewState.data.deepCopy(
+                        creatorIds = updatedCreators.move(
+                            IntRange(adjustedFrom, adjustedFrom),
+                            adjustedTo
+                        )
+                    ),
+                )
+            }
+
+            val request = ReorderCreatorsItemDetailDbRequest(
+                key = viewState.key,
+                libraryId = viewState.library!!.identifier,
+                ids = viewState.data.creatorIds
             )
+
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't reorder creators")
+            }
+
+            triggerEffect(ScreenRefresh)
         }
-        triggerEffect(ScreenRefresh)
     }
 
+    private fun changeTypeInDb() {
+        val request = EditTypeItemDetailDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library!!.identifier,
+            type = viewState.data.type,
+            fields = viewState.data.databaseFields(schemaController = schemaController),
+            creatorIds = viewState.data.creatorIds,
+            creators = viewState.data.creators,
+            dateParser = this.dateParser
+        )
+
+        viewModelScope.launch {
+            val result = perform(dbWrapper = dbWrapper, request = request)
+            if (result is Result.Failure) {
+                Timber.e(result.exception, "ItemDetailActionHandler: can't change type")
+            }
+        }
+    }
 }
 
 data class ItemDetailsViewState(

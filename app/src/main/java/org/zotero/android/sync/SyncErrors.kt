@@ -1,5 +1,7 @@
 package org.zotero.android.sync
 
+import org.zotero.android.webdav.WebDavError
+
 sealed class SyncError {
     class ErrorData(
         val itemKeys: List<String>?,
@@ -103,6 +105,7 @@ sealed class SyncError {
         data class webDavDeletion(val count: Int, val library: String) : NonFatal()
         data class webDavDeletionFailed(val error: String, val library: String) : NonFatal()
         data class preconditionFailed(val libraryId: LibraryIdentifier): NonFatal()
+        data class webDavUpload(val error: WebDavError.Upload): NonFatal()
 
         val isVersionMismatch: Boolean
             get() {

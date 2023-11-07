@@ -69,6 +69,10 @@ fun <T> RealmQuery<T>.attachmentChanged(): RealmQuery<T> {
     return equalTo("attachmentNeedsSync", true)
 }
 
+fun <T> RealmQuery<T>.changesNotPaused(): RealmQuery<T> {
+    return rawPredicate("changesSyncPaused == false")
+}
+
 fun <T> RealmQuery<T>.syncState(syncState: ObjectSyncState): RealmQuery<T> {
     return equalTo("syncState", syncState.name)
 }
@@ -302,7 +306,7 @@ fun <T> RealmQuery<T>.changedByUser(
 fun <T> RealmQuery<T>.itemUserChanges(
 ): RealmQuery<T> {
     val changes = beginGroup().changed().or().attachmentChanged().or().deleted(true).endGroup()
-    return changes.and().changedByUser()
+    return changes.and().changedByUser().and().changesNotPaused()
 }
 
 fun <T> RealmQuery<T>.pageIndexUserChanges(

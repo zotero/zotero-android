@@ -39,7 +39,6 @@ import org.zotero.android.uicomponents.reorder.draggedItem
 import org.zotero.android.uicomponents.reorder.reorderable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
-import java.util.UUID
 
 @Composable
 internal fun ItemDetailsEditScreen(
@@ -148,7 +147,7 @@ private fun LazyListScope.listOfCreatorRows(
     viewState: ItemDetailsViewState,
     layoutType: CustomLayoutSize.LayoutType,
     reorderState: ReorderableState,
-    onDeleteCreator: (UUID) -> Unit,
+    onDeleteCreator: (String) -> Unit,
     onCreatorClicked: (ItemDetailCreator) -> Unit,
 ) {
     for ((index, creatorId) in viewState.data.creatorIds.withIndex()) {

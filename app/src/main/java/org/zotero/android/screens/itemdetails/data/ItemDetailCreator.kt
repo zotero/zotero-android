@@ -6,7 +6,7 @@ import java.util.UUID
 
 @Parcelize
 data class ItemDetailCreator(
-    var id: UUID,
+    var id: String,
     var type: String,
     var primary: Boolean,
     var localizedType:String,
@@ -89,6 +89,7 @@ data class ItemDetailCreator(
 
     companion object {
         fun init(
+            uuid: String,
             firstName: String,
             lastName: String,
             fullName: String,
@@ -97,7 +98,7 @@ data class ItemDetailCreator(
             localizedType: String
         ): ItemDetailCreator {
             return ItemDetailCreator(
-                id = UUID.randomUUID(),
+                id = uuid,
                 type = type,
                 primary = primary,
                 localizedType = localizedType,
@@ -111,7 +112,7 @@ data class ItemDetailCreator(
 
         fun init(type: String, primary: Boolean, localizedType: String, namePresentation: NamePresentation): ItemDetailCreator {
             return ItemDetailCreator(
-                id = UUID.randomUUID(),
+                id = UUID.randomUUID().toString(),
                 type = type,
                 primary = primary,
                 localizedType = localizedType,

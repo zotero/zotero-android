@@ -9,14 +9,14 @@ import org.zotero.android.sync.LibraryIdentifier
 class ReadDocumentDataDbRequest(
     private val attachmentKey: String,
     private val libraryId: LibraryIdentifier,
-): DbResponseRequest<Int> {
+): DbResponseRequest<String> {
     override val needsWrite: Boolean
         get() = false
 
-    override fun process(database: Realm): Int {
+    override fun process(database: Realm): String {
         val pageIndex =
             database.where<RPageIndex>().key(this.attachmentKey, this.libraryId).findFirst()
-                ?: return 0
+                ?: return "0"
         return pageIndex.index
     }
 }

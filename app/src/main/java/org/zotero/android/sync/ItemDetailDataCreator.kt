@@ -16,7 +16,6 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import timber.log.Timber
 import java.util.Date
-import java.util.UUID
 
 object ItemDetailDataCreator {
 
@@ -79,6 +78,7 @@ object ItemDetailDataCreator {
             when (field.key) {
                 FieldKeys.Item.abstractN ->
                     abstract = field.value
+
                 else ->
                     values[field.key] = field.value
             }
@@ -95,24 +95,30 @@ object ItemDetailDataCreator {
             }
         )
 
-        var creatorIds = mutableListOf<UUID>()
-        var creators = mutableMapOf<UUID, ItemDetailCreator>()
+        var creatorIds = mutableListOf<String>()
+        var creators = mutableMapOf<String, ItemDetailCreator>()
         for (creator in item.creators.sort("orderId")) {
             val localizedType = schemaController.localizedCreator(creator.rawType)
             if (localizedType == null) {
                 continue
             }
-            val creator = ItemDetailCreator.init(firstName = creator.firstName,
-            lastName = creator.lastName,
-            fullName = creator.name,
-            type = creator.rawType,
-            primary = schemaController.creatorIsPrimary(creator.rawType, itemType = item.rawType),
-            localizedType = localizedType)
+            val creator = ItemDetailCreator.init(
+                uuid = creator.uuid,
+                firstName = creator.firstName,
+                lastName = creator.lastName,
+                fullName = creator.name,
+                type = creator.rawType,
+                primary = schemaController.creatorIsPrimary(
+                    creator.rawType,
+                    itemType = item.rawType
+                ),
+                localizedType = localizedType
+            )
             creatorIds.add(creator.id)
             creators[creator.id] = creator
         }
 
-        val notes:MutableList<Note>
+        val notes: MutableList<Note>
         if (ignoreChildren) {
             notes = mutableListOf()
         } else {
@@ -122,35 +128,48 @@ object ItemDetailDataCreator {
                 .findAll().mapNotNull { Note.init(it) }.toMutableList()
         }
         val attachments: List<Attachment>
-        if(ignoreChildren) {
+        if (ignoreChildren) {
             attachments = mutableListOf()
         } else if (item.rawType == ItemTypes.attachment) {
-            val attachment = AttachmentCreator.attachment(item, fileStorage = fileStorage, urlDetector = urlDetector, isForceRemote = false)
+            val attachment = AttachmentCreator.attachment(
+                item,
+                fileStorage = fileStorage,
+                urlDetector = urlDetector,
+                isForceRemote = false
+            )
             attachments = attachment?.let { listOf(it) } ?: emptyList()
         } else {
-            val mappedAttachments = item.children!!.where().items(type = ItemTypes.attachment, notSyncState = ObjectSyncState.dirty, trash=  false)
-            .sort("displayTitle")
-            .findAll().mapNotNull{ item ->
-                AttachmentCreator.attachment(item = item,
-                    fileStorage = fileStorage,
-                    isForceRemote = false,
-                    urlDetector = urlDetector)
-            }
+            val mappedAttachments = item.children!!.where().items(
+                type = ItemTypes.attachment,
+                notSyncState = ObjectSyncState.dirty,
+                trash = false
+            )
+                .sort("displayTitle")
+                .findAll().mapNotNull { item ->
+                    AttachmentCreator.attachment(
+                        item = item,
+                        fileStorage = fileStorage,
+                        isForceRemote = false,
+                        urlDetector = urlDetector
+                    )
+                }
             attachments = mappedAttachments
         }
 
-        val tags = item.tags!!.sort("tag.name").map{Tag(it)}
-        val data = ItemDetailData(title = item.baseTitle,
-        type =item.rawType,
-        isAttachment = (item.rawType == ItemTypes.attachment),
-        localizedType = localizedType,
-        creators = creators,
-        creatorIds = creatorIds,
-        fields = fields,
-        fieldIds = fieldIds,
-        abstract = abstract,
-        dateModified = item.dateModified,
-        dateAdded = item.dateAdded)
+        val tags = item.tags!!.sort("tag.name").map { Tag(it) }
+        val data = ItemDetailData(
+            title = item.baseTitle,
+            type = item.rawType,
+            isAttachment = (item.rawType == ItemTypes.attachment),
+            localizedType = localizedType,
+            creators = creators,
+            creatorIds = creatorIds,
+            fields = fields,
+            fieldIds = fieldIds,
+            abstract = abstract,
+            dateModified = item.dateModified,
+            dateAdded = item.dateAdded
+        )
         return ItemDetailCreateDataResult(data, attachments, notes, tags)
     }
 

@@ -16,6 +16,7 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import java.util.UUID
 
 class EditItemFromDetailDbRequest(
     val libraryId: LibraryIdentifier,
@@ -41,6 +42,7 @@ class EditItemFromDetailDbRequest(
             changes.add(RItemChanges.type)
         }
         item.dateModified = this.data.dateModified
+        item.changesSyncPaused = false
 
         updateCreators(this.data, snapshot = this.snapshot, item = item, changes = changes, database = database)
         updateFields(this.data, item = item, changes = changes, typeChanged = typeChanged, database = database)
@@ -65,6 +67,7 @@ class EditItemFromDetailDbRequest(
             }
 
             val rCreator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
+            rCreator.uuid = UUID.randomUUID().toString()
             rCreator.rawType = creator.type
             rCreator.orderId = offset
             rCreator.primary = creator.primary
@@ -104,7 +107,7 @@ class EditItemFromDetailDbRequest(
 
             toRemove.forEach { field ->
                 if (field.key == FieldKeys.Item.date) {
-                    item.setDateFieldMetadata(null, parser = this.dateParser)
+                    item.clearDateFieldMedatada()
                 } else if (field.key == FieldKeys.Item.publisher || field.baseKey == FieldKeys.Item.publisher) {
                     item.setP(null)
                 } else if (field.key == FieldKeys.Item.publicationTitle || field.baseKey == FieldKeys.Item.publicationTitle) {

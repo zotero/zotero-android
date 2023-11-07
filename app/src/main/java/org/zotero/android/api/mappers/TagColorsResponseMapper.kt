@@ -8,7 +8,9 @@ class TagColorsResponseMapper @Inject constructor(private val tagColorResponseMa
 
     fun fromJson(json: JsonObject): TagColorsResponse {
         val array = json["value"].asJsonArray
-        val value = array.map { tagColorResponseMapper.fromJson(it.asJsonObject) }
+        val value = array.map {
+            tagColorResponseMapper.fromJson(it.asJsonObject)
+        }
         return TagColorsResponse(value = value)
     }
 }

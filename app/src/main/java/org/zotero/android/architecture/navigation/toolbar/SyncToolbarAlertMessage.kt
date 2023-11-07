@@ -160,6 +160,10 @@ fun syncToolbarAlertMessage(
                     libraryId = nonFatalError.libraryId
                 )
             }
+
+            is SyncError.NonFatal.webDavUpload -> {
+                return "" to null //TODO
+            }
         }
     }
     return "" to null

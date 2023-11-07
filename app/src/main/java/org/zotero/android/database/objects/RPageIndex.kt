@@ -4,6 +4,7 @@ import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Index
+import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
 
@@ -14,7 +15,7 @@ enum class RPageIndexChanges {
 open class RPageIndex : RealmObject(), Updatable, Syncable {
     @Index
     override var key: String = ""
-    var index: Int = 0
+    var index: String = ""
     var changed: Boolean = false
     override var customLibraryKey: String? = null
     override var groupKey: Int? = null
@@ -47,12 +48,23 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
                 when (libraryId) {
                     is LibraryIdentifier.custom ->
                         "u"
+
                     is LibraryIdentifier.group ->
                         "g${libraryId.groupId}"
                 }
 
-            return mapOf("lastPageIndex_${libraryPart}_${this.key}" to mapOf("value" to this.index))
+            val value: Any
+            val intValue = index.toIntOrNull()
+            val doubleValue = index.toDoubleOrNull()
+            if (intValue != null) {
+                value = intValue
+            } else if (doubleValue != null) {
+                value = doubleValue.rounded(1)
+            } else {
+                value = index
+            }
 
+            return mapOf("lastPageIndex_${libraryPart}_${this.key}" to mapOf("value" to value))
         }
 
     override val selfOrChildChanged: Boolean

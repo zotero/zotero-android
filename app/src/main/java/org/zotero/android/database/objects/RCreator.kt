@@ -5,6 +5,7 @@ import io.realm.annotations.RealmClass
 
 @RealmClass(embedded = true)
 open class RCreator : RealmObject() {
+    var uuid: String = ""
     var rawType: String = ""
     var firstName: String = ""
     var lastName: String = ""
