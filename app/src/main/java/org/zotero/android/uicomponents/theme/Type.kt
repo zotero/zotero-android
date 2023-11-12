@@ -137,7 +137,7 @@ data class CustomTypography(
         fontWeight = FontWeight.Normal,
         fontFamily = fonts,
         letterSpacing = 0.sp,
-        lineHeight = 18.2.sp,
+        lineHeight = 20.sp,
     ),
     val caption: TextStyle = TextStyle(
         fontSize = 12.sp,

@@ -3,10 +3,11 @@ package org.zotero.android.screens.collections
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +28,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.badge.RoundBadgeIcon
-import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -57,7 +58,7 @@ private fun LazyListScope.recursiveCollectionItem(
     viewModel: CollectionsViewModel,
     layoutType: CustomLayoutSize.LayoutType,
     collectionItems: List<CollectionItemWithChildren>,
-    levelPadding: Dp = 36.dp
+    levelPadding: Dp = 8.dp
 ) {
     for (item in collectionItems) {
         item {
@@ -90,79 +91,69 @@ private fun CollectionItem(
     layoutType: CustomLayoutSize.LayoutType,
     levelPadding: Dp
 ) {
-    var rowModifier: Modifier = Modifier
+    var rowModifier: Modifier = Modifier.height(44.dp)
     if (layoutType.isTablet() && viewState.selectedCollectionId == item.collection.identifier) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
     }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = rowModifier
-            .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
-                onClick = { viewModel.onItemTapped(item.collection) },
-                onLongClick = { viewModel.onItemLongTapped(item.collection) }
-            )
-    ) {
-        val hasChildren = item.children.isNotEmpty()
-        if (!hasChildren) {
-            Spacer(modifier = Modifier.width(levelPadding))
-        } else {
-            val paddingBetweenArrowAndItemIcon = 8.dp
-            val arrowIconSize = 22.dp
-            val leftPadding = levelPadding - arrowIconSize - paddingBetweenArrowAndItemIcon
-            Spacer(modifier = Modifier.width(leftPadding))
-            Row(
-                modifier = Modifier.safeClickable(
-                    onClick = { viewModel.onItemChevronTapped(item.collection) })
-            ) {
-                Icon(
-                    modifier = Modifier.size(arrowIconSize),
-                    painter = painterResource(
-                        id = if (viewState.isCollapsed(item)) {
-                            Drawables.baseline_keyboard_arrow_right_24
-                        } else {
-                            Drawables.baseline_keyboard_arrow_down_24
-                        }
-                    ),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
+    val arrowIconAreaSize = 32.dp
+    val mainIconSize = 28.dp
+    val paddingBetweenIconAndText = 16.dp
+    val levelPaddingWithArrowIconAreaSize = levelPadding + arrowIconAreaSize
+    val dividerOffset = levelPaddingWithArrowIconAreaSize + mainIconSize + paddingBetweenIconAndText
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = rowModifier
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(),
+                    onClick = { viewModel.onItemTapped(item.collection) },
+                    onLongClick = { viewModel.onItemLongTapped(item.collection) }
                 )
-                Spacer(modifier = Modifier.width(paddingBetweenArrowAndItemIcon))
+        ) {
+            val hasChildren = item.children.isNotEmpty()
+            if (!hasChildren) {
+                Spacer(modifier = Modifier.width(levelPaddingWithArrowIconAreaSize))
+            } else {
+                Spacer(modifier = Modifier.width(levelPadding))
+                IconWithPadding(
+                    drawableRes = if (viewState.isCollapsed(item)) {
+                        Drawables.chevron_right_24px
+                    } else {
+                        Drawables.expand_more_24px
+                    },
+                    onClick = { viewModel.onItemChevronTapped(item.collection) },
+                    areaSize = arrowIconAreaSize,
+                    shouldShowRipple = false
+                )
             }
-        }
-        Icon(
-            modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
-            painter = painterResource(id = item.collection.iconName),
-            contentDescription = null,
-            tint = CustomTheme.colors.zoteroBlueWithDarkMode
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = item.collection.name,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = CustomTheme.typography.newBody,
-                        color = CustomTheme.colors.allItemsRowTitleColor,
-                    )
-                }
-                if ((!item.collection.isCollection || viewModel.defaults.showCollectionItemCounts()) && item.collection.itemCount != 0) {
-                    Row {
-                        RoundBadgeIcon(count = item.collection.itemCount)
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            CustomDivider()
-        }
-    }
+            Icon(
+                modifier = Modifier.size(mainIconSize),
+                painter = painterResource(id = item.collection.iconName),
+                contentDescription = null,
+                tint = CustomTheme.colors.zoteroDefaultBlue
+            )
+            Spacer(modifier = Modifier.width(paddingBetweenIconAndText))
 
+            Text(
+                modifier = Modifier.weight(1f),
+                text = item.collection.name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = CustomTheme.typography.newBody,
+                color = CustomTheme.colors.allItemsRowTitleColor,
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            if ((!item.collection.isCollection || viewModel.defaults.showCollectionItemCounts()) && item.collection.itemCount != 0) {
+                RoundBadgeIcon(count = item.collection.itemCount)
+                Spacer(modifier = Modifier.width(16.dp))
+            }
+        }
+        CustomDivider(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = dividerOffset)
+        )
+    }
 }
 

@@ -128,19 +128,19 @@ fun PdfReaderAnnotationCreationToolbar(
         ) {
             AnnotationCreationButton(
                 isEnabled = viewModel.canUndo(),
-                iconInt = Drawables.baseline_undo_24,
+                iconInt = Drawables.undo_24px,
                 onButtonClick = viewModel::onUndoClick
             )
             Spacer(modifier = Modifier.height(20.dp))
             AnnotationCreationButton(
                 isEnabled = viewModel.canRedo(),
-                iconInt = Drawables.baseline_redo_24,
+                iconInt = Drawables.redo_24px,
                 onButtonClick = viewModel::onRedoClick
             )
             Spacer(modifier = Modifier.height(20.dp))
             AnnotationCreationButton(
                 isEnabled = true,
-                iconInt = Drawables.x_mark_circle,
+                iconInt = Drawables.cancel_24px,
                 onButtonClick = viewModel::onCloseClick
             )
             Spacer(modifier = Modifier.height(20.dp))
@@ -158,7 +158,7 @@ private fun AnnotationCreationToggleButton(
     val tintColor = if (isSelected) {
         Color.White
     } else {
-        CustomTheme.colors.zoteroBlueWithDarkMode
+        CustomTheme.colors.zoteroDefaultBlue
     }
     val roundCornerShape = RoundedCornerShape(size = 4.dp)
     var modifier = Modifier
@@ -172,7 +172,7 @@ private fun AnnotationCreationToggleButton(
         )
     if (isSelected) {
         modifier = modifier.background(
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+            color = CustomTheme.colors.zoteroDefaultBlue,
             shape = roundCornerShape
         )
     }
@@ -201,7 +201,7 @@ private fun FilledFilterCircle(hex: String, onClick: () -> Unit) {
 
 @Composable
 private fun EmptyFilterCircle(onClick: () -> Unit) {
-    val color = CustomTheme.colors.zoteroBlueWithDarkMode
+    val color = CustomTheme.colors.zoteroDefaultBlue
     Canvas(modifier = Modifier
         .padding(horizontal = 10.dp)
         .size(30.dp)
@@ -221,9 +221,9 @@ private fun AnnotationCreationButton(
     onButtonClick: () -> Unit
 ) {
     val tintColor = if (isEnabled) {
-        CustomTheme.colors.zoteroBlueWithDarkMode
+        CustomTheme.colors.zoteroDefaultBlue
     } else {
-        CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.5f)
+        CustomTheme.colors.zoteroDefaultBlue.copy(alpha = 0.5f)
     }
     val modifier = Modifier
         .padding(horizontal = 10.dp)

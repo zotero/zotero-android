@@ -93,7 +93,7 @@ fun BaseRowItemWithIcon(
     iconResId: Int? = null,
     iconTint: Color = CustomTheme.colors.dynamicTheme.primaryColor,
     titleStyle: TextStyle = CustomTheme.typography.h3,
-    textColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
+    textColor: Color = CustomTheme.colors.zoteroDefaultBlue,
     verticalPadding: Dp = 16.dp,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,

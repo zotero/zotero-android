@@ -70,7 +70,6 @@ internal fun LibrariesScreen(
                     LibrariesTable(
                         viewState = viewState,
                         viewModel = viewModel,
-                        layoutType = layoutType
                     )
                 }
             }

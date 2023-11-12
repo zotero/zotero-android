@@ -15,7 +15,7 @@ fun HeadingTextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
+    contentColor: Color = CustomTheme.colors.zoteroDefaultBlue,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
 ) {

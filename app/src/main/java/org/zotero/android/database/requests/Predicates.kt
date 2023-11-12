@@ -139,13 +139,13 @@ fun <T> RealmQuery<T>.parentKey(parentKey: String, library: LibraryIdentifier): 
 }
 
 fun <T> RealmQuery<T>.baseTagsToDelete(): RealmQuery<T> {
-    return equalTo("tag.tags.@count", 1L)
+    return rawPredicate("tag.tags.@count = 1")
         .and()
-        .equalTo("tag.color", "")
+        .rawPredicate("tag.color = $0", "")
 }
 
 fun <T> RealmQuery<T>.name(name: String): RealmQuery<T> {
-    return equalTo("name", name)
+    return rawPredicate("name = $0", name)
 }
 
 fun <T> RealmQuery<T>.name(name: String, libraryId: LibraryIdentifier): RealmQuery<T> {
@@ -185,7 +185,7 @@ fun <T> RealmQuery<T>.tagNameNotIn(names: List<String>): RealmQuery<T> {
 }
 
 fun <T> RealmQuery<T>.tagName(name: String): RealmQuery<T> {
-    return equalTo("tag.name", name)
+    return rawPredicate("tag.name = $0", name)
 }
 
 fun <T> RealmQuery<T>.attachmentNeedsUpload(): RealmQuery<T> {

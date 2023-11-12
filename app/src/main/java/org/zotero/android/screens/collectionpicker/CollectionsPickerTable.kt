@@ -111,7 +111,7 @@ private fun CollectionItem(
             modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
             painter = painterResource(id = item.collection.iconName),
             contentDescription = null,
-            tint = CustomTheme.colors.zoteroBlueWithDarkMode
+            tint = CustomTheme.colors.zoteroDefaultBlue
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column {

@@ -3,7 +3,7 @@ package org.zotero.android.pdf.reader
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
@@ -121,6 +121,7 @@ internal fun PdfReaderScreen(
                     toPdfSettings = viewModel::navigateToPdfSettings,
                     toggleToolbarButton = viewModel::toggleToolbarButton,
                     isToolbarButtonSelected = viewState.showCreationToolbar,
+                    showSideBar = viewState.showSideBar,
                 )
             },
         ) {
@@ -235,7 +236,7 @@ private fun PdfReaderPhoneMode(
     }
 }
 
-private fun AnimatedContentScope<Boolean>.createSidebarTransitionSpec(): ContentTransform {
+private fun AnimatedContentTransitionScope<Boolean>.createSidebarTransitionSpec(): ContentTransform {
     val intOffsetSpec = tween<IntOffset>()
     return (slideInHorizontally(intOffsetSpec) { -it } with
             slideOutHorizontally(intOffsetSpec) { -it }).using(

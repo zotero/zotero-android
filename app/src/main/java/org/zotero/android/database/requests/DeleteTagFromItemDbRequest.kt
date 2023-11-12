@@ -19,13 +19,10 @@ class DeleteTagFromItemDbRequest(
         get() = true
 
     override fun process(database: Realm) {
-        val item = database.where<RItem>().key(this.key, this.libraryId).findFirst()
-        if (item == null) {
-            return
-        }
+        val item = database.where<RItem>().key(this.key, this.libraryId).findFirst() ?: return
         val tagsToRemove = item.tags?.where()?.tagName(this.tagName)?.findAll()
 
-        if (tagsToRemove == null || tagsToRemove.isEmpty()) {
+        if (tagsToRemove.isNullOrEmpty()) {
             return
         }
 
@@ -33,7 +30,7 @@ class DeleteTagFromItemDbRequest(
             ReadBaseTagsToDeleteDbRequest(fromTags = tagsToRemove).process(database)
         tagsToRemove.deleteAllFromRealm()
 
-        if (!baseTagsToRemove.isEmpty()) {
+        if (baseTagsToRemove.isNotEmpty()) {
             database.where<RTag>().nameIn(baseTagsToRemove).findAll().deleteAllFromRealm()
         }
         item.rawType = item.rawType

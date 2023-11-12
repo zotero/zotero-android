@@ -118,7 +118,7 @@ internal fun CreatorEditScreen(
                             id = if (viewState.creator?.namePresentation == ItemDetailCreator.NamePresentation.full)
                                 Strings.creator_editor_switch_to_dual else Strings.creator_editor_switch_to_single
                         ),
-                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                        color = CustomTheme.colors.zoteroDefaultBlue,
                         style = CustomTheme.typography.default,
                         fontSize = layoutType.calculateTextSize(),
                     )

@@ -34,7 +34,7 @@ fun CircleCheckBox(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = CustomTheme.colors.zoteroBlueWithDarkMode,
+                tint = CustomTheme.colors.zoteroDefaultBlue,
             )
         } else {
             Icon(

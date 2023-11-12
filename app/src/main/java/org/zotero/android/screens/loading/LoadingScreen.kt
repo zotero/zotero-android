@@ -12,14 +12,13 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun LoadingScreen(
 ) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
             modifier = Modifier.size(layoutType.calculateMainLoaderIconSize()),
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+            color = CustomTheme.colors.zoteroDefaultBlue,
             strokeWidth = 2.dp
         )
     }

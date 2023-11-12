@@ -73,7 +73,7 @@ sealed class LongPressOptionItem(
 
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_create_parent,
-        resIcon = Drawables.baseline_add_24
+        resIcon = Drawables.add_24px
     )
 
     data class TrashRestore(val item: RItem): LongPressOptionItem(

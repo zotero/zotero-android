@@ -112,7 +112,7 @@ internal fun LibrarySelectorRow(
                     }
                 ),
                 contentDescription = null,
-                tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                tint = CustomTheme.colors.zoteroDefaultBlue
             )
 
             Text(

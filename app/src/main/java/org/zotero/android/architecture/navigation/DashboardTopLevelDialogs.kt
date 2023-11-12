@@ -86,7 +86,7 @@ fun BoxScope.DashboardTopLevelDialogs(
 @Composable
 private fun BoxScope.DebugStopButton(isVisible: Boolean, onClick: () -> Unit) {
     if (isVisible) {
-        val color = CustomTheme.colors.zoteroBlueWithDarkMode
+        val color = CustomTheme.colors.zoteroDefaultBlue
         Canvas(modifier = Modifier
             .align(Alignment.BottomStart)
             .padding(50.dp)

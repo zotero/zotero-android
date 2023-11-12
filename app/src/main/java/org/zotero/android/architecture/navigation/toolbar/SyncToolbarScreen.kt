@@ -1,7 +1,7 @@
 package org.zotero.android.architecture.navigation.toolbar
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
@@ -88,7 +88,7 @@ internal fun BoxScope.SyncToolbarScreen(
     SyncToolbarDialogs(viewState = viewState, viewModel = viewModel)
 }
 
-private fun AnimatedContentScope<Boolean>.toolbarTransitionSpec(): ContentTransform {
+private fun AnimatedContentTransitionScope<Boolean>.toolbarTransitionSpec(): ContentTransform {
     val intOffsetSpec = tween<IntOffset>()
     return (slideInVertically(intOffsetSpec) { it } with
             slideOutVertically(intOffsetSpec) { it }).using(

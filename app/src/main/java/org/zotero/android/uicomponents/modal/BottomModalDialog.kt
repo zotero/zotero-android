@@ -252,7 +252,7 @@ sealed class ModalDialog {
         override val title: StringId? = null,
         override val message: StringId? = null,
         override val onDismiss: () -> Unit,
-        override val iconResId: Int? = R.drawable.ic_info_24dp,
+        override val iconResId: Int? = R.drawable.info_24px,
         val action: Action,
         val secondaryAction: Action? = null,
     ) : ModalDialog()

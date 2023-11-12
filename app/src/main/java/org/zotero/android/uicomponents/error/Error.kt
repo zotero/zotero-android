@@ -92,7 +92,7 @@ fun SectionError(
                 modifier = Modifier.padding(top = 20.dp),
                 text = errorButtonText,
                 onClick = { errorAction() },
-                backgroundColor = CustomTheme.colors.dynamicTheme.primaryColor
+                backgroundColor = CustomTheme.colors.zoteroDefaultBlue
             )
         }
     }

@@ -85,8 +85,8 @@ internal fun PdfReaderColorPickerScreen(
                             value = size,
                             onValueChange = { viewModel.onSizeChanged(it) },
                             colors = SliderDefaults.colors(
-                                activeTrackColor = CustomTheme.colors.dynamicTheme.primaryColor,
-                                thumbColor = CustomTheme.colors.dynamicTheme.primaryColor
+                                activeTrackColor = CustomTheme.colors.zoteroDefaultBlue,
+                                thumbColor = CustomTheme.colors.zoteroDefaultBlue
                             ),
                             valueRange = 0.5f..25f
                         )

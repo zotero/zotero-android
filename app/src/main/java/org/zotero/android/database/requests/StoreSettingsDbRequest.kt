@@ -58,8 +58,10 @@ class StoreSettingsDbRequest(
 
     private fun syncTagColors(tags: List<TagColorResponse>, database: Realm) {
         val names = tags.map { it.name }
-        val toDelete = database.where<RTag>().library(this.libraryId)
-            .isNotEmpty("color")
+        val toDelete = database.where<RTag>()
+            .library(this.libraryId)
+            .and()
+            .rawPredicate("color != \"\"")
             .and()
             .not().`in`("name", names.toTypedArray())
             .findAll()
@@ -68,9 +70,9 @@ class StoreSettingsDbRequest(
         }
         toDelete.deleteAllFromRealm()
 
-        val allTags = database.where<RTag>()
+        val allTags = database.where<RTag>().findAll()
         for ((idx, tag) in tags.withIndex()) {
-            val existing = allTags.name(tag.name, this.libraryId).findFirst()
+            val existing = allTags.where().name(tag.name, this.libraryId).findFirst()
             if (existing != null) {
                 var didChange = false
                 if (existing.color != tag.color) {

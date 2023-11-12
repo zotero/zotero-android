@@ -67,7 +67,7 @@ internal fun TagsSection(
                     onClick = { viewModel.onTagsClicked() }
                 ),
             text = stringResource(id = Strings.pdf_annotations_sidebar_add_tags),
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+            color = CustomTheme.colors.zoteroDefaultBlue,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculatePdfSidebarTextSize(),
         )

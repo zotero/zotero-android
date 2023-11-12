@@ -97,7 +97,7 @@ internal fun SettingsAccountScreen(
                     SettingsItem(
                         layoutType = layoutType,
                         isLastItem = false,
-                        textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                        textColor = CustomTheme.colors.zoteroDefaultBlue,
                         title = stringResource(id = Strings.settings_sync_manage_account),
                         onItemTapped = viewModel::openManageAccount
                     )

@@ -1,6 +1,6 @@
 package org.zotero.android.uicomponents.navigation
 
-import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
+import androidx.navigation.compose.NavHost
 
 @Composable
 fun ZoteroNavHost(
@@ -20,17 +20,17 @@ fun ZoteroNavHost(
     modifier: Modifier = Modifier,
     contentAlignment: Alignment = Alignment.Center,
     route: String? = null,
-    enterTransition: (AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition) =
+    enterTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition) =
         { slideInHorizontally(initialOffsetX = { it }) },
-    exitTransition: (AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition) =
+    exitTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.()-> ExitTransition) =
         { slideOutHorizontally(targetOffsetX = { -it }) },
-    popEnterTransition: (AnimatedContentScope<NavBackStackEntry>.() -> EnterTransition) =
+    popEnterTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition) =
         { slideInHorizontally(initialOffsetX = { -it }) },
-    popExitTransition: (AnimatedContentScope<NavBackStackEntry>.() -> ExitTransition) =
+    popExitTransition: (AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition) =
         { slideOutHorizontally(targetOffsetX = { it }) },
     builder: NavGraphBuilder.() -> Unit
 ) {
-    AnimatedNavHost(
+    NavHost(
         builder = builder,
         contentAlignment = contentAlignment,
         enterTransition = enterTransition,

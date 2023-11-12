@@ -163,8 +163,8 @@ fun AddItemRow(
         ) {
             Image(
                 modifier = Modifier.size(26.dp),
-                painter = painterResource(id = Drawables.add_icon),
-                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
+                painter = painterResource(id = Drawables.add_circle_24px),
+                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
                 contentDescription = null,
             )
 
@@ -174,7 +174,7 @@ fun AddItemRow(
                     .padding(start = 16.dp),
                 text = stringResource(id = titleRes),
                 style = CustomTheme.typography.newBody,
-                color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                color = CustomTheme.colors.zoteroDefaultBlue,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

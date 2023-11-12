@@ -538,6 +538,8 @@ class StoreItemDbRequest(
                 return
             }
 
+            val allTags = database.where<RTag>().findAll()
+
             for (tag in tags) {
                 val existingA = item.tags
                     .where()
@@ -551,7 +553,8 @@ class StoreItemDbRequest(
                 }
 
                 val rTag: RTag
-                val existing = database.where<RTag>()
+                val existing = allTags
+                    .where()
                     .name(tag.tag, libraryId)
                     .findFirst()
 

@@ -3,7 +3,7 @@ package org.zotero.android.screens.libraries
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -25,53 +25,60 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.libraries.data.LibraryRowData
 import org.zotero.android.screens.libraries.data.LibraryState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun LibrariesTable(
     viewState: LibrariesViewState,
     viewModel: LibrariesViewModel,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     LazyColumn(
         state = rememberLazyListState(),
     ) {
         item {
             Spacer(modifier = Modifier.height(30.dp))
+            NewDivider()
         }
         itemsIndexed(viewState.customLibraries) { index, item ->
             LibrariesItem(
                 item = item,
-                layoutType = layoutType,
                 isLastItem = index == viewState.customLibraries.size - 1,
                 onItemTapped = { viewModel.onCustomLibraryTapped(index) }
             )
         }
+        item {
+            NewDivider()
+        }
 
-        if (!viewState.groupLibraries.isEmpty()) {
+        if (viewState.groupLibraries.isNotEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(26.dp))
                 Text(
-                    modifier = Modifier.padding(start = 57.dp, bottom = 4.dp),
+                    modifier = Modifier.padding(start = 60.dp, bottom = 8.dp),
                     text = stringResource(id = Strings.libraries_group_libraries).uppercase(),
-                    fontSize = layoutType.calculateLibraryRowTextSize(),
                     color = CustomTheme.colors.secondaryContent,
                     maxLines = 1,
+                    style = CustomTheme.typography.info,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+            item {
+                NewDivider()
             }
             itemsIndexed(viewState.groupLibraries) { index, item ->
                 LibrariesItem(
                     item = item,
-                    layoutType = layoutType,
                     isLastItem = index == viewState.groupLibraries.size - 1,
                     onItemTapped = { viewModel.onGroupLibraryTapped(index) }
                 )
+            }
+            item {
+                NewDivider()
             }
         }
     }
@@ -80,47 +87,46 @@ internal fun LibrariesTable(
 @Composable
 private fun LibrariesItem(
     item: LibraryRowData,
-    layoutType: CustomLayoutSize.LayoutType,
     isLastItem: Boolean,
     onItemTapped: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .background(CustomTheme.colors.surface)
-            .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
-                onClick = { onItemTapped() },
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+//                .fillMaxWidth()
+                .height(44.dp)
+                .background(CustomTheme.colors.surface)
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(),
+                    onClick = { onItemTapped() },
+                )
+        ) {
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                modifier = Modifier.size(28.dp),
+                painter = painterResource(id = image(item.state)),
+                contentDescription = null,
+                tint = CustomTheme.colors.zoteroDefaultBlue
             )
-    ) {
-        Spacer(modifier = Modifier.width(16.dp))
-        Icon(
-            modifier = Modifier.size(28.dp),
-            painter = painterResource(id = image(item.state)),
-            contentDescription = null,
-            tint = CustomTheme.colors.zoteroBlueWithDarkMode
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        color = CustomTheme.colors.primaryContent,
-                        text = item.name,
-                        maxLines = 1,
-                        style = CustomTheme.typography.newBody,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (!isLastItem) {
-                TableDivider()
-            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                modifier = Modifier.weight(1f),
+                color = CustomTheme.colors.primaryContent,
+                text = item.name,
+                maxLines = 1,
+                style = CustomTheme.typography.newBody,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+        }
+        if (!isLastItem) {
+            TableDivider(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 60.dp)
+            )
         }
     }
 }

@@ -73,7 +73,7 @@ fun SinglePickerScreen(
                                         modifier = Modifier.size(layoutType.calculateIconSize()),
                                         painter = painterResource(id = Drawables.baseline_check_24),
                                         contentDescription = null,
-                                        tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                                        tint = CustomTheme.colors.zoteroDefaultBlue
                                     )
                                     Spacer(modifier = Modifier.width(16.dp))
                                 }

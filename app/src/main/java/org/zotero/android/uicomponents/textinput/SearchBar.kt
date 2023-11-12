@@ -49,7 +49,7 @@ fun SearchBar(
         verticalAlignment = CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = Drawables.ic_search_24dp),
+            painter = painterResource(id = Drawables.search_24px),
             contentDescription = null,
             modifier = Modifier.padding(start = 8.dp, top = 8.dp, end = 0.dp, bottom = 8.dp),
             tint = CustomTheme.colors.secondaryContent

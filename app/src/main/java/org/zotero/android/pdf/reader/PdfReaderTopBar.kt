@@ -1,31 +1,19 @@
 package org.zotero.android.pdf.reader
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AppBarDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.icon.IconWithPadding
+import org.zotero.android.uicomponents.icon.ToggleIconWithPadding
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
@@ -36,7 +24,7 @@ internal fun PdfReaderTopBar(
     toPdfSettings: () -> Unit,
     toggleToolbarButton:() -> Unit,
     isToolbarButtonSelected: Boolean,
-    elevation: Dp = AppBarDefaults.TopAppBarElevation,
+    showSideBar: Boolean,
 ) {
     CenterAlignedTopAppBar(
         navigationIcon = {
@@ -47,45 +35,24 @@ internal fun PdfReaderTopBar(
                     text = stringResource(Strings.back),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .padding(4.dp)
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(),
-                            onClick = {
-                                onShowHideSideBar()
-                            },
-                        ),
-                    painter = painterResource(id = Drawables.outline_view_sidebar_24),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.zoteroBlueWithDarkMode
+                ToggleIconWithPadding(
+                    drawableRes = Drawables.view_sidebar_24px,
+                    onToggle = {
+                        onShowHideSideBar()
+                    },
+                    isSelected = showSideBar
+
                 )
             }
         },
         actions = {
-            ToolbarToggleTopButton(
-                isSelected = isToolbarButtonSelected,
-                toggleToolbarButton = toggleToolbarButton
+            ToggleIconWithPadding(
+                drawableRes = Drawables.draw_24px,
+                onToggle = toggleToolbarButton,
+                isSelected = isToolbarButtonSelected
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(4.dp)
-                    .safeClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
-                        onClick = {
-                            toPdfSettings()
-                        },
-                    ),
-                painter = painterResource(id = Drawables.baseline_settings_24),
-                contentDescription = null,
-                tint = CustomTheme.colors.zoteroBlueWithDarkMode
-            )
-            Spacer(modifier = Modifier.width(10.dp))
+            IconWithPadding(drawableRes = Drawables.settings_24px, onClick = toPdfSettings)
         },
         title = {
 
@@ -93,35 +60,4 @@ internal fun PdfReaderTopBar(
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.surface),
     )
 
-}
-
-@Composable
-internal fun ToolbarToggleTopButton(isSelected: Boolean, toggleToolbarButton: () -> Unit) {
-    val tintColor = if (isSelected) {
-        Color.White
-    } else {
-        CustomTheme.colors.zoteroBlueWithDarkMode
-    }
-    val roundCornerShape = RoundedCornerShape(size = 4.dp)
-    var modifier = Modifier
-        .size(40.dp)
-        .clip(roundCornerShape)
-
-        .safeClickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            onClick = toggleToolbarButton,
-        )
-    if (isSelected) {
-        modifier = modifier.background(
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
-            shape = roundCornerShape
-        )
-    }
-    Icon(
-        modifier = modifier.padding(4.dp),
-        painter = painterResource(id = Drawables.outline_edit_24),
-        contentDescription = null,
-        tint = tintColor
-    )
 }

@@ -32,3 +32,14 @@ fun CustomBackgroundDivider(
         thickness = 8.dp
     )
 }
+
+@Composable
+fun NewDivider(
+    modifier: Modifier = Modifier
+) {
+    Divider(
+        modifier = modifier,
+        color = CustomTheme.colors.newDividerColor,
+        thickness = 1.dp
+    )
+}

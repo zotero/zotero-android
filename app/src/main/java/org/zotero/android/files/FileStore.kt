@@ -14,7 +14,6 @@ import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.helpers.MimeType
-import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
@@ -45,16 +44,19 @@ class FileStore @Inject constructor (
     private lateinit var debugDirectory: File
     private lateinit var crashDirectory: File
 
+
     companion object {
+        private const val file_store_version = 1
+
+
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
 
         private const val ACTIVE_KEY_FILE = "uploads"
         private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
 
-        private const val selectedLibraryId = "selectedLibraryId.bin"
-        private const val selectedCollectionId = "selectedCollectionId2.bin"
-        private const val pdfSetting = "pdfSettings.bin"
+        private const val selectedLibraryId = "selectedLibraryId_${file_store_version}.bin"
+        private const val selectedCollectionId = "selectedCollectionId_${file_store_version}.bin"
     }
 
     fun init() {

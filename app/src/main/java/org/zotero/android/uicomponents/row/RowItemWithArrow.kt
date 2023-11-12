@@ -42,7 +42,7 @@ fun RowItemWithArrow(
             painter = painterResource(Drawables.ic_arrow_small_right),
             contentDescription = null,
             modifier = Modifier.padding(start = 8.dp),
-            tint = CustomTheme.colors.secondaryContent,
+            tint = CustomTheme.colors.zoteroDefaultBlue,
         )
     }
 }

@@ -54,13 +54,6 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateItemsBottomSheetIconSize(): Dp {
-            return when (this) {
-                big, medium -> 28.dp
-                small -> 26.dp
-            }
-        }
-
         fun calculateItemsRowMainIconSize(): Dp {
             return when (this) {
                 big, medium -> 26.dp
@@ -81,11 +74,8 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateLibraryRowTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 14.sp
-                small -> 14.sp
-            }
+        fun calculateAllItemsBottomPanelHeight(): Dp {
+            return 48.dp
         }
 
         fun calculateBuildInfoTextSize(): TextUnit {
@@ -95,18 +85,8 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateAllItemsBottomPanelHeight(): Dp {
-            return when (this) {
-                big, medium -> 60.dp
-                small -> 50.dp
-            }
-        }
-
         fun calculateSyncProgressBottomPanelHeight(): Dp {
-            return when (this) {
-                big, medium -> 56.dp
-                small -> 48.dp
-            }
+            return calculateAllItemsBottomPanelHeight() - 4.dp
         }
 
         fun calculateSelectorHeight(): Dp {
@@ -132,13 +112,6 @@ object CustomLayoutSize {
             return when (this) {
                 big, medium -> 16.sp
                 small -> 16.sp
-            }
-        }
-
-        fun calculatePdfSidebarBottomPanelIconSize(): Dp {
-            return when (this) {
-                big, medium -> 30.dp
-                small -> 30.dp
             }
         }
 

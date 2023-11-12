@@ -16,7 +16,7 @@ fun LongPressOptionRow(
     onOptionClick: (LongPressOptionItem) -> Unit
 ) {
     val color = if (optionItem.isEnabled) {
-        optionItem.textAndIconColor ?: CustomTheme.colors.primaryContent
+        optionItem.textAndIconColor ?: CustomTheme.colors.zoteroDefaultBlue
     } else {
         CustomTheme.colors.disabledContent
     }

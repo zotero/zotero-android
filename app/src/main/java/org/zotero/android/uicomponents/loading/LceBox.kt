@@ -46,7 +46,7 @@ fun FullScreenLceBox(
 @Composable
 fun BoxScope.CircularLoading() {
     CircularProgressIndicator(
-        color = CustomTheme.colors.dynamicTheme.primaryColor,
+        color = CustomTheme.colors.zoteroDefaultBlue,
         modifier = Modifier
             .size(48.dp)
             .align(Center),

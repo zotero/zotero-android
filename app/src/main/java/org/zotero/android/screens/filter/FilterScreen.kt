@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -73,10 +74,10 @@ internal fun FilterScreen(
 
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
-                null -> Unit
                 is FilterViewEffect.OnBack -> {
                     onBack()
                 }
+                else -> {}
             }
         }
         CustomScaffold(
@@ -87,96 +88,97 @@ internal fun FilterScreen(
                 )
             },
         ) {
-            LazyColumn {
-                item {
-                    CustomDivider()
-                    Row(
-                        modifier = Modifier.padding(top = 4.dp, start = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = stringResource(id = Strings.items_filters_downloads),
-                            fontSize = layoutType.calculateItemsRowTextSize(),
-                            maxLines = 1,
-                        )
-                        CustomSwitch(
-                            checked = viewState.isDownloadsChecked,
-                            onCheckedChange = { viewModel.onDownloadsTapped() },
-                            modifier = Modifier
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    CustomDivider()
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TagsSearchBar(
-                            viewState = viewState,
-                            viewModel = viewModel
-                        )
-                        Image(
-                            modifier = Modifier
-                                .size(layoutType.calculateIconSize())
-                                .safeClickable(
-                                    onClick = viewModel::onMoreSearchOptionsClicked,
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = rememberRipple(bounded = false)
-                                ),
-                            painter = painterResource(id = Drawables.baseline_more_horiz_24),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroBlueWithDarkMode),
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                    }
-                }
-                items(items = viewState.tags) { chunkedList ->
-                    FlowRow(
-                        modifier = Modifier,
-                    ) {
-                        chunkedList.forEach {
-                            var rowModifier: Modifier = Modifier
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
-                                .clip(shape = RoundedCornerShape(16.dp))
-                            val selected = viewState.selectedTags.contains(it.tag.name)
-                            if (selected) {
-                                rowModifier = rowModifier
-                                    .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
-                                    .border(
-                                        width = 1.dp,
-                                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
-                            }
-                            Box(
-                                modifier = rowModifier
-                                    .safeClickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null,
-                                        onClick = { viewModel.onTagTapped(it) },
-                                    )
-                            ) {
-                                val textColor = if (it.tag.color.isNotEmpty()) {
-                                    val color = android.graphics.Color.parseColor(it.tag.color)
-                                    Color(color)
-                                } else {
-                                    CustomTheme.colors.primaryContent
-                                }
-                                Text(
-                                    modifier = Modifier.padding(
-                                        vertical = 4.dp,
-                                        horizontal = 14.dp
-                                    ),
-                                    text = it.tag.name,
-                                    color = if (it.isActive) textColor else textColor.copy(alpha = 0.55f),
-                                    style = CustomTheme.typography.default,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
 
+            Column {
+                CustomDivider()
+                Row(
+                    modifier = Modifier.padding(top = 4.dp, start = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = stringResource(id = Strings.items_filters_downloads),
+                        fontSize = layoutType.calculateItemsRowTextSize(),
+                        maxLines = 1,
+                    )
+                    CustomSwitch(
+                        checked = viewState.isDownloadsChecked,
+                        onCheckedChange = { viewModel.onDownloadsTapped() },
+                        modifier = Modifier
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                CustomDivider()
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyColumn {
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TagsSearchBar(
+                                viewState = viewState,
+                                viewModel = viewModel
+                            )
+                            Image(
+                                modifier = Modifier
+                                    .size(layoutType.calculateIconSize())
+                                    .safeClickable(
+                                        onClick = viewModel::onMoreSearchOptionsClicked,
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = rememberRipple(bounded = false)
+                                    ),
+                                painter = painterResource(id = Drawables.more_horiz_24px),
+                                contentDescription = null,
+                                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
                         }
                     }
-
+                    items(items = viewState.tags) { chunkedList ->
+                        FlowRow(
+                            modifier = Modifier,
+                        ) {
+                            chunkedList.forEach {
+                                var rowModifier: Modifier = Modifier
+                                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                                    .clip(shape = RoundedCornerShape(16.dp))
+                                val selected = viewState.selectedTags.contains(it.tag.name)
+                                if (selected) {
+                                    rowModifier = rowModifier
+                                        .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
+                                        .border(
+                                            width = 1.dp,
+                                            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                }
+                                Box(
+                                    modifier = rowModifier
+                                        .safeClickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { viewModel.onTagTapped(it) },
+                                        )
+                                ) {
+                                    val textColor = if (it.tag.color.isNotEmpty()) {
+                                        val color = android.graphics.Color.parseColor(it.tag.color)
+                                        Color(color)
+                                    } else {
+                                        CustomTheme.colors.primaryContent
+                                    }
+                                    Text(
+                                        modifier = Modifier.padding(
+                                            vertical = 4.dp,
+                                            horizontal = 14.dp
+                                        ),
+                                        text = it.tag.name,
+                                        color = if (it.isActive) textColor else textColor.copy(alpha = 0.55f),
+                                        style = CustomTheme.typography.default,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
             }
@@ -207,7 +209,7 @@ private fun TopBar(
     CancelSaveTitleTopBar(
         title = stringResource(id = Strings.items_filters_title),
         onDone = onDone,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
+        backgroundColor = CustomTheme.colors.topBarBackgroundColor,
     )
 }
 

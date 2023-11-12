@@ -103,7 +103,7 @@ fun BoxScope.setMainImage(asset: Int?, shouldAccountForBadge: Boolean, mainIconS
         Image(
             modifier = Modifier
                 .size(mainIconSize)
-                .align(if (shouldAccountForBadge) Alignment.TopStart else Alignment.Center),
+                .align(if (shouldAccountForBadge) Alignment.TopStart else Alignment.CenterStart),
             painter = painterResource(id = asset),
             contentDescription = null,
         )
@@ -136,7 +136,7 @@ private fun BoxScope.set(progress: Int?, showsStop: Boolean) {
     val isHidden = progress == null
     if (showsStop) {
         if (!isHidden) {
-            val color = CustomTheme.colors.zoteroBlueWithDarkMode
+            val color = CustomTheme.colors.zoteroDefaultBlue
             Canvas(
                 Modifier
                     .size(8.dp)
@@ -152,7 +152,7 @@ private fun BoxScope.set(progress: Int?, showsStop: Boolean) {
         val progressFloat = if (progress == null) 0f else progress / 100f
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.Center),
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+            color = CustomTheme.colors.zoteroDefaultBlue,
             backgroundColor = CustomPalette.CoolGray,
             strokeWidth = 1.dp,
             progress = progressFloat

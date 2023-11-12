@@ -36,7 +36,7 @@ fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = CustomTheme.colors.dynamicTheme.primaryColor,
+    backgroundColor: Color = CustomTheme.colors.zoteroDefaultBlue,
     contentColor: Color = CustomTheme.colors.dynamicTheme.buttonTextColor,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,

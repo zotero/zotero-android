@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -33,7 +32,7 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
 import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.checkbox.CircleCheckBox
-import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -71,32 +70,38 @@ private fun ItemRow(
     layoutType: CustomLayoutSize.LayoutType,
     showBottomDivider: Boolean = false
 ) {
-    var rowModifier: Modifier = Modifier
+    var rowModifier: Modifier = Modifier.height(64.dp)
     if (viewState.selectedItems.contains(cellModel.key)) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
     }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = rowModifier
-            .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = if (viewState.isEditing) null else rememberRipple(),
-                onClick = { viewModel.onItemTapped(cellModel.key) },
-                onLongClick = { viewModel.onItemLongTapped(cellModel.key) }
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = rowModifier
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = if (viewState.isEditing) null else rememberRipple(),
+                    onClick = { viewModel.onItemTapped(cellModel.key) },
+                    onLongClick = { viewModel.onItemLongTapped(cellModel.key) }
+                )
+        ) {
+            ItemRowLeftPart(
+                viewState = viewState,
+                layoutType = layoutType,
+                model = cellModel
             )
-    ) {
-        ItemRowLeftPart(
-            viewState = viewState,
-            layoutType = layoutType,
-            model = cellModel
-        )
-        ItemRowCentralPart(
-            model = cellModel,
-            layoutType = layoutType,
-            viewState = viewState,
-            viewModel = viewModel,
-            showBottomDivider = showBottomDivider
-        )
+            Spacer(modifier = Modifier.width(16.dp))
+            ItemRowCentralPart(
+                model = cellModel,
+                viewState = viewState,
+                viewModel = viewModel,
+            )
+        }
+        if (showBottomDivider) {
+            CustomDivider(modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 60.dp))
+        }
     }
 }
 
@@ -128,13 +133,10 @@ private fun ItemRowLeftPart(
 @Composable
 private fun ItemRowCentralPart(
     model: ItemCellModel,
-    layoutType: CustomLayoutSize.LayoutType,
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel,
-    showBottomDivider: Boolean
 ) {
-    Column(modifier = Modifier.padding(start = 16.dp)) {
-        Spacer(modifier = Modifier.height(8.dp))
+    Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 modifier = Modifier.weight(1f)
@@ -146,7 +148,7 @@ private fun ItemRowCentralPart(
                     color = CustomTheme.colors.allItemsRowTitleColor,
                     style = CustomTheme.typography.newHeadline
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Row {
                     var subtitleText = if (model.subtitle.isEmpty()) " " else model.subtitle
                     val shouldHideSubtitle =
@@ -176,16 +178,12 @@ private fun ItemRowCentralPart(
 
                 }
             }
+            Spacer(modifier = Modifier.width(8.dp))
             ItemRowRightPart(
                 model = model,
-                layoutType = layoutType,
                 viewState = viewState,
                 viewModel = viewModel,
             )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        if (showBottomDivider) {
-            CustomDivider()
         }
     }
 }
@@ -193,15 +191,12 @@ private fun ItemRowCentralPart(
 @Composable
 private fun RowScope.ItemRowRightPart(
     model: ItemCellModel,
-    layoutType: CustomLayoutSize.LayoutType,
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel,
 ) {
     SetAccessory(
         accessory = model.accessory,
-        layoutType = layoutType
     )
-    Spacer(modifier = Modifier.width(20.dp))
     AnimatedContent(
         modifier = Modifier.align(Alignment.CenterVertically),
         targetState = viewState.isEditing,
@@ -209,19 +204,11 @@ private fun RowScope.ItemRowRightPart(
     ) { isEditing ->
         if (!isEditing) {
             Row {
-                Icon(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(),
-                            onClick = {
-                                viewModel.onAccessoryTapped(model.key)
-                            }
-                        ),
-                    painter = painterResource(id = Drawables.accessory_icon),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.allItemsInfoIconColor
+                IconWithPadding(
+                    onClick = {
+                        viewModel.onAccessoryTapped(model.key)
+                    },
+                    drawableRes = Drawables.info_24px
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
@@ -232,34 +219,30 @@ private fun RowScope.ItemRowRightPart(
 @Composable
 private fun RowScope.SetAccessory(
     accessory: ItemCellModel.Accessory?,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     if (accessory == null) {
         return
     }
-    Spacer(modifier = Modifier.width(8.dp))
     when (accessory) {
         is ItemCellModel.Accessory.attachment -> {
-            FileAttachmentView(
-                modifier = Modifier
-                    .size(20.dp)
-                    .align(Alignment.CenterVertically),
-                state = accessory.state,
-                style = Style.list,
-                mainIconSize = 16.dp,
-                badgeIconSize = 10.dp,
-            )
+            IconWithPadding(content = {
+                FileAttachmentView(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.CenterVertically),
+                    state = accessory.state,
+                    style = Style.list,
+                    mainIconSize = 16.dp,
+                    badgeIconSize = 10.dp,
+                )
+            })
         }
 
         is ItemCellModel.Accessory.doi, is ItemCellModel.Accessory.url -> {
-            Image(
-                modifier = Modifier
-                    .size(16.dp)
-                    .align(Alignment.CenterVertically),
-                painter = painterResource(id = Drawables.list_link),
-                contentDescription = null,
-            )
-            Spacer(modifier = Modifier.width(2.dp))
+            IconWithPadding(drawableRes = Drawables.list_link, iconSize = 16.dp)
+        }
+        else -> {
+            //no-op
         }
     }
 }

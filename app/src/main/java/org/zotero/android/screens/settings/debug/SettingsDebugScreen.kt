@@ -74,14 +74,14 @@ internal fun SettingsDebugScreen(
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = false,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_cancel_logging),
                             onItemTapped = viewModel::cancelLogging
                         )
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = false,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_stop_logging),
                             onItemTapped = viewModel::stopLogging
                         )
@@ -102,14 +102,14 @@ internal fun SettingsDebugScreen(
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = false,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_start_logging),
                             onItemTapped = viewModel::startLogging
                         )
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = true,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_start_logging_on_launch),
                             onItemTapped = viewModel::startLoggingOnNextAppLaunch
                         )
@@ -121,14 +121,14 @@ internal fun SettingsDebugScreen(
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = false,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_view_output),
                             onItemTapped = toDebugLogScreen
                         )
                         SettingsItem(
                             layoutType = layoutType,
                             isLastItem = false,
-                            textColor = CustomTheme.colors.zoteroBlueWithDarkMode,
+                            textColor = CustomTheme.colors.zoteroDefaultBlue,
                             title = stringResource(id = Strings.settings_clear_output),
                             onItemTapped = viewModel::clearLogs
                         )

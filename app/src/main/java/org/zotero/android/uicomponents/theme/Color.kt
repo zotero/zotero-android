@@ -74,6 +74,7 @@ data class CustomSemanticColors(
     val surface: Color,
     val uiControl: Color,
     val windowBackground: Color,
+    val zoteroDefaultBlue:Color,
     val zoteroBlueWithDarkMode: Color,
     val zoteroItemDetailSectionBackground: Color,
     val zoteroEditFieldBackground: Color,
@@ -96,6 +97,8 @@ data class CustomSemanticColors(
     val pdfToolbarBackgroundColor: Color,
     val pdfSizePickerColor: Color,
     val allItemsInfoIconColor: Color,
+    val topBarBackgroundColor: Color,
+    val newDividerColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -150,6 +153,9 @@ fun lightCustomColors(
     pdfToolbarBackgroundColor= Color(0xFFFCFBFD),
     pdfSizePickerColor = Color(0xFF6E6D73),
     allItemsInfoIconColor = Color(0xFF1A88FF),
+    zoteroDefaultBlue = Color(0xFF4072E5),
+    topBarBackgroundColor = Color(0xFFF7F7F7),
+    newDividerColor = Color(0xFFE5E5E5),
 )
 
 fun darkCustomColors(
@@ -193,6 +199,9 @@ fun darkCustomColors(
     pdfToolbarBackgroundColor= Color(0xFF282729),
     pdfSizePickerColor = Color(0xFF8E8E93),
     allItemsInfoIconColor = Color(0xFF0976E5),
+    zoteroDefaultBlue = Color(0xFF4072E5),
+    topBarBackgroundColor = Color(0xFF282928),
+    newDividerColor = CustomPalette.Charcoal,
 
 )
 
