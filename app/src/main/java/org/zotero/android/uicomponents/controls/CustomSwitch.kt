@@ -48,8 +48,8 @@ private object CustomSwitch {
             CustomPalette.DarkCharcoal
         }
         return SwitchDefaults.colors(
-            checkedThumbColor = CustomTheme.colors.dynamicTheme.primaryColor,
-            checkedTrackColor = CustomTheme.colors.dynamicTheme.shadeTwo,
+            checkedThumbColor = CustomTheme.colors.zoteroDefaultBlue,
+            checkedTrackColor = CustomTheme.colors.zoteroDefaultBlue,
             checkedTrackAlpha = 1f,
             uncheckedThumbColor = if (isLight) {
                 CustomPalette.White

@@ -24,7 +24,7 @@ fun LongPressOptionRow(
     BaseRowItemWithIcon(
         title = stringResource(id = optionItem.titleId),
         textColor = color,
-        titleStyle = CustomTheme.typography.default,
+        titleStyle = CustomTheme.typography.newBody,
         heightIn = if (optionItem.resIcon == null) 32.dp else 64.dp,
         onClick = { onOptionClick(optionItem) },
     ) {

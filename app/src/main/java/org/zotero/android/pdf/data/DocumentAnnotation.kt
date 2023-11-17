@@ -29,7 +29,7 @@ data class DocumentAnnotation(
         return this.isAuthor
     }
 
-    val readerKey: AnnotationKey
+    override val readerKey: AnnotationKey
         get() {
             return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
         }

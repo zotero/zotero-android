@@ -88,6 +88,7 @@ data class CustomSemanticColors(
     val pdfAnnotationsTopbarBackground: Color,
     val pdfAnnotationsFormBackground: Color,
     val pdfAnnotationsDividerBackground: Color,
+    val pdfEditAnnotationDividerBackground: Color,
     val pdfAnnotationsSearchBarBackground: Color,
     val libraryDividerBackground: Color,
     val addNoteBottomBar: Color,
@@ -156,6 +157,7 @@ fun lightCustomColors(
     zoteroDefaultBlue = Color(0xFF4072E5),
     topBarBackgroundColor = Color(0xFFF7F7F7),
     newDividerColor = Color(0xFFE5E5E5),
+    pdfEditAnnotationDividerBackground = Color(0xFFE4E4E5)
 )
 
 fun darkCustomColors(
@@ -202,6 +204,7 @@ fun darkCustomColors(
     zoteroDefaultBlue = Color(0xFF4072E5),
     topBarBackgroundColor = Color(0xFF282928),
     newDividerColor = CustomPalette.Charcoal,
+    pdfEditAnnotationDividerBackground = Color(0xFF2F2F31)
 
 )
 

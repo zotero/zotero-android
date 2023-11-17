@@ -38,7 +38,7 @@ fun SearchBar(
     hint: String = "",
     onSearchImeClicked: (() -> Unit)? = null,
     onInnerValueChanged: (TextFieldValue) -> Unit,
-    textStyle: TextStyle = CustomTheme.typography.default,
+    textStyle: TextStyle = CustomTheme.typography.newBody,
     textFieldState: TextFieldValue,
     backgroundColor: Color = CustomTheme.colors.inputBar,
 ) {

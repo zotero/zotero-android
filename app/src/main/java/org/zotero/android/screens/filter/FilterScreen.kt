@@ -98,8 +98,8 @@ internal fun FilterScreen(
                     Text(
                         modifier = Modifier.weight(1f),
                         text = stringResource(id = Strings.items_filters_downloads),
-                        fontSize = layoutType.calculateItemsRowTextSize(),
                         maxLines = 1,
+                        style = CustomTheme.typography.newBody,
                     )
                     CustomSwitch(
                         checked = viewState.isDownloadsChecked,
@@ -171,7 +171,7 @@ internal fun FilterScreen(
                                         ),
                                         text = it.tag.name,
                                         color = if (it.isActive) textColor else textColor.copy(alpha = 0.55f),
-                                        style = CustomTheme.typography.default,
+                                        style = CustomTheme.typography.newBody,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
@@ -221,9 +221,7 @@ private fun RowScope.TagsSearchBar(
     val searchValue = viewState.searchTerm
     var searchBarTextFieldState by remember {
         mutableStateOf(
-            TextFieldValue(
-                searchValue ?: ""
-            )
+            TextFieldValue(searchValue)
         )
     }
     val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {

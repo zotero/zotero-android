@@ -71,8 +71,7 @@ private fun BoxScope.LongPressBottomSheetContent(
             },
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculateTextSize(),
+            style = CustomTheme.typography.newBody,
         )
         longPressOptionsHolder.longPressOptionItems.forEach { mention ->
             LongPressOptionRow(

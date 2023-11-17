@@ -7,6 +7,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -18,6 +19,7 @@ fun HeadingTextButton(
     contentColor: Color = CustomTheme.colors.zoteroDefaultBlue,
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
+    style: TextStyle = CustomTheme.typography.default,
 ) {
     IconButton(
         onClick = { if (!isLoading) onClick() },
@@ -33,7 +35,7 @@ fun HeadingTextButton(
             Text(
                 text = text,
                 color = if (isEnabled) contentColor else CustomTheme.colors.disabledContent,
-                style = CustomTheme.typography.default
+                style = style
             )
         }
     }

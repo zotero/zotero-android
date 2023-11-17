@@ -12,6 +12,9 @@ import org.zotero.android.architecture.navigation.dialogFixedDimens
 import org.zotero.android.pdf.annotation.PdfAnnotationNavigation
 import org.zotero.android.pdf.annotation.pdfAnnotationNavScreens
 import org.zotero.android.pdf.annotation.toPdfAnnotationScreen
+import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreNavigation
+import org.zotero.android.pdf.annotationmore.pdfAnnotationMoreNavScreens
+import org.zotero.android.pdf.annotationmore.toPdfAnnotationMoreScreen
 import org.zotero.android.pdf.colorpicker.PdfReaderColorPickerScreen
 import org.zotero.android.pdf.reader.PdfReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
@@ -29,6 +32,7 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
         navigateToPdfSettings = navigation::toPdfSettings,
         navigateToPdfColorPicker = navigation::toPdfColorPicker,
         navigateToPdfAnnotation = navigation::toPdfAnnotationNavigation,
+        navigateToPdfAnnotationMore = navigation::toPdfAnnotationMoreNavigation,
         navigateToTagPicker = navigateToTagPickerDialog,
     )
     dialogFixedDimens(
@@ -57,6 +61,14 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
     }
     dialogFixedDimens(
         modifier = Modifier
+            .height(500.dp)
+            .width(420.dp),
+        route = PdfReaderDestinations.PDF_ANNOTATION_MORE_NAVIGATION,
+    ) {
+        PdfAnnotationMoreNavigation()
+    }
+    dialogFixedDimens(
+        modifier = Modifier
             .height(220.dp)
             .width(300.dp),
         route = PdfReaderDestinations.PDF_COLOR_PICKER,
@@ -74,12 +86,14 @@ internal fun NavGraphBuilder.pdfReaderNavScreensForPhone(
         navigateToPdfFilter = navigation::toPdfFilterScreen,
         navigateToPdfSettings = navigation::toPdfSettings,
         navigateToPdfAnnotation = navigation::toPdfAnnotationScreen,
+        navigateToPdfAnnotationMore = navigation::toPdfAnnotationMoreScreen,
         navigateToPdfColorPicker = navigation::toPdfColorPicker,
         navigateToTagPicker = navigateToTagPicker,
     )
     pdfFilterNavScreens(navigation)
     pdfSettings(navigation)
     pdfColorPicker(navigation)
+    pdfAnnotationMoreNavScreens(navigation)
     pdfAnnotationNavScreens(navigation)
 }
 
@@ -109,6 +123,7 @@ private fun NavGraphBuilder.pdfScreen(
     navigateToPdfSettings: () -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
+    navigateToPdfAnnotationMore: () -> Unit,
     navigateToTagPicker: () -> Unit,
 ) {
     composable(
@@ -119,6 +134,7 @@ private fun NavGraphBuilder.pdfScreen(
             navigateToPdfFilter = navigateToPdfFilter,
             navigateToPdfSettings = navigateToPdfSettings,
             navigateToPdfAnnotation = navigateToPdfAnnotation,
+            navigateToPdfAnnotationMore = navigateToPdfAnnotationMore,
             navigateToPdfColorPicker = navigateToPdfColorPicker,
             navigateToTagPicker = navigateToTagPicker,
         )
@@ -131,6 +147,7 @@ private object PdfReaderDestinations {
     const val PDF_SETTINGS = "pdfSettings"
     const val PDF_COLOR_PICKER = "pdfColorPicker"
     const val PDF_ANNOTATION_NAVIGATION = "pdfAnnotationNavigation"
+    const val PDF_ANNOTATION_MORE_NAVIGATION = "pdfAnnotationMoreNavigation"
 }
 
 fun ZoteroNavigation.toPdfScreen() {
@@ -147,6 +164,10 @@ private fun ZoteroNavigation.toPdfSettings() {
 
 private fun ZoteroNavigation.toPdfAnnotationNavigation() {
     navController.navigate(PdfReaderDestinations.PDF_ANNOTATION_NAVIGATION)
+}
+
+private fun ZoteroNavigation.toPdfAnnotationMoreNavigation() {
+    navController.navigate(PdfReaderDestinations.PDF_ANNOTATION_MORE_NAVIGATION)
 }
 
 private fun ZoteroNavigation.toPdfColorPicker() {

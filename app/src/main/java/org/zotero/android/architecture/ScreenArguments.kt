@@ -1,6 +1,8 @@
 package org.zotero.android.architecture
 
 import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
+import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageArgs
 import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
@@ -37,5 +39,7 @@ object ScreenArguments {
     lateinit var pdfFilterArgs: PdfFilterArgs
     lateinit var pdfSettingsArgs: PdfSettingsArgs
     lateinit var pdfAnnotationArgs: PdfAnnotationArgs
+    lateinit var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs
+    lateinit var pdfAnnotationEditPageArgs: PdfAnnotationEditPageArgs
     lateinit var pdfReaderColorPickerArgs: PdfReaderColorPickerArgs
 }

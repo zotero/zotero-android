@@ -85,6 +85,9 @@ import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationDeleteResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationSizeResult
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreDeleteResult
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreSaveResult
 import org.zotero.android.pdf.cache.AnnotationPreviewCacheUpdatedEventStream
 import org.zotero.android.pdf.cache.AnnotationPreviewFileCache
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
@@ -169,6 +172,18 @@ class PdfReaderViewModel @Inject constructor(
     private var toolHistory = mutableListOf<AnnotationTool>()
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfAnnotationMoreSaveResult) {
+        set(
+            color = result.color,
+            lineWidth = result.lineWidth,
+            pageLabel = result.pageLabel,
+            updateSubsequentLabels = result.updateSubsequentLabels,
+            highlightText = result.highlightText,
+            key = result.key.key,
+        )
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfReaderScreen) {
             val annotation = this@PdfReaderViewModel.selectedAnnotation ?: return
@@ -184,6 +199,12 @@ class PdfReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationSizeResult) {
         setLineWidth(key = result.key, width = result.size)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfAnnotationMoreDeleteResult) {
+        val key = viewState.selectedAnnotationKey ?: return
+        remove(key)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -2398,6 +2419,57 @@ class PdfReaderViewModel @Inject constructor(
         update(annotation = annotation, lineWidth = lineWidth, document = this.document)
     }
 
+    fun onMoreOptionsForItemClicked() {
+        ScreenArguments.pdfAnnotationMoreArgs = PdfAnnotationMoreArgs(
+            selectedAnnotation = selectedAnnotation,
+            userId = viewState.userId,
+            library = viewState.library
+        )
+        triggerEffect(PdfReaderViewEffect.ShowPdfAnnotationMore)
+    }
+
+    private fun set(
+        color: String,
+        lineWidth: Float,
+        pageLabel: String,
+        updateSubsequentLabels: Boolean,
+        highlightText: String,
+        key: String
+    ) {
+        val annotation =
+            annotation(AnnotationKey(key = key, type = AnnotationKey.Kind.database)) ?: return
+        update(
+            annotation = annotation,
+            color = color to viewState.isDark,
+            lineWidth = lineWidth,
+            document = this.document
+        )
+
+        val values = mapOf(
+            KeyBaseKeyPair(
+                key = FieldKeys.Item.Annotation.pageLabel,
+                baseKey = null
+            ) to pageLabel,
+            KeyBaseKeyPair(key = FieldKeys.Item.Annotation.text, baseKey = null) to highlightText
+        )
+        val request = EditItemFieldsDbRequest(
+            key = key,
+            libraryId = viewState.library.identifier,
+            fieldValues = values,
+            dateParser = this.dateParser
+        )
+
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapper,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "PDFReaderViewModel:  can't update annotation $key")
+                return@launch
+            }
+        }
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -2436,6 +2508,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
+    object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()
     object ScreenRefresh: PdfReaderViewEffect()

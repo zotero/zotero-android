@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -122,7 +123,9 @@ internal fun PdfReaderSidebar(
                             HeaderRow(
                                 annotation = annotation,
                                 annotationColor = annotationColor,
-                                layoutType = layoutType
+                                layoutType = layoutType,
+                                viewState = viewState,
+                                viewModel = viewModel,
                             )
                             if (!annotation.tags.isEmpty() || !annotation.comment.isEmpty()) {
                                 SidebarDivider(modifier = Modifier.fillMaxWidth())
@@ -382,7 +385,9 @@ private fun TagsSection(
 }
 
 @Composable
-fun HeaderRow(
+private fun HeaderRow(
+    viewModel: PdfReaderViewModel,
+    viewState: PdfReaderViewState,
     annotation: Annotation,
     annotationColor: Color,
     layoutType: CustomLayoutSize.LayoutType
@@ -410,7 +415,21 @@ fun HeaderRow(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-
+        if (viewState.selectedAnnotationKey?.key == annotation.key) {
+            Spacer(modifier = Modifier.weight(1f))
+            Image(
+                modifier = Modifier
+                    .size(layoutType.calculatePdfSidebarHeaderIconSize())
+                    .safeClickable(
+                        onClick = { viewModel.onMoreOptionsForItemClicked() },
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = rememberRipple(bounded = false)
+                    ),
+                painter = painterResource(id = Drawables.more_horiz_24px),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
+            )
+        }
     }
 }
 

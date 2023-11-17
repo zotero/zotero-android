@@ -8,6 +8,7 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.reader.AnnotationKey
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
@@ -16,6 +17,11 @@ import timber.log.Timber
 data class DatabaseAnnotation(
     val item: RItem
 ): Annotation {
+
+    override val readerKey: AnnotationKey
+        get() {
+            return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
+        }
 
     override val key: String get() {
         return this.item.key

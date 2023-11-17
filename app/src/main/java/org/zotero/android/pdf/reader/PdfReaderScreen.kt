@@ -48,6 +48,7 @@ internal fun PdfReaderScreen(
     navigateToPdfSettings: () -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
+    navigateToPdfAnnotationMore: () -> Unit,
     navigateToTagPicker: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
@@ -88,6 +89,12 @@ internal fun PdfReaderScreen(
                     if (consumedEffect.scrollToIndex != -1) {
                         lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
                     }
+                }
+                is PdfReaderViewEffect.ShowPdfAnnotationMore -> {
+                    if (!layoutType.isTablet()) {
+                        viewModel.removeFragment()
+                    }
+                    navigateToPdfAnnotationMore()
                 }
 
                 is PdfReaderViewEffect.ShowPdfSettings -> {
