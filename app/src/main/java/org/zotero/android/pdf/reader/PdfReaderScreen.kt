@@ -37,6 +37,8 @@ import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
+import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebar
+import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars

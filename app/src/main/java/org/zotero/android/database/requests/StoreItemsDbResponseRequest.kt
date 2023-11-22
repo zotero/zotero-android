@@ -468,6 +468,7 @@ class StoreItemDbRequest(
                 parent.libraryId = libraryId
             }
             item.parent = parent
+            AllItemsDbRowCreator.createOrUpdate(parent, database)
         }
 
         fun syncCollections(

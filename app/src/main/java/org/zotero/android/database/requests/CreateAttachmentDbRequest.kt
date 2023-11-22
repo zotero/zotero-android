@@ -202,6 +202,7 @@ class CreateAttachmentDbRequest(
             if (parent != null) {
                 item.parent = parent
                 changes.add(RItemChanges.parent)
+                AllItemsDbRowCreator.createOrUpdate(parent, database)
             }
         }
         item.changes.add(RObjectChange.create(changes = changes))

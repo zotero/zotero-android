@@ -239,7 +239,7 @@ private fun RowScope.SetAccessory(
         }
 
         is ItemCellModel.Accessory.doi, is ItemCellModel.Accessory.url -> {
-            IconWithPadding(drawableRes = Drawables.list_link, iconSize = 16.dp)
+            IconWithPadding(drawableRes = Drawables.list_link, iconSize = 16.dp, tintColor = null)
         }
         else -> {
             //no-op

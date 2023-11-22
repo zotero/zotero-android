@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
     // This constant is duplicated in root/build.gradle.kts. Make sure to also update there
-    implementation("com.android.tools.build:gradle:8.1.2")
+    implementation("com.android.tools.build:gradle:8.1.4")
     // Without this dependency the compiler has problems with inline Composables
     // This constant is duplicated in buildSrc/src/main/kotlin/Libs. Make sure to also update there
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20")

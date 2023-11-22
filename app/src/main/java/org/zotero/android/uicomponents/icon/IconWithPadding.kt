@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,7 +28,7 @@ fun IconWithPadding(
     @DrawableRes drawableRes: Int,
     areaSize: Dp = 40.dp,
     iconSize: Dp = 24.dp,
-    tintColor: Color = CustomTheme.colors.zoteroDefaultBlue,
+    tintColor: Color? = CustomTheme.colors.zoteroDefaultBlue,
     isEnabled: Boolean = true,
     shouldShowRipple: Boolean = true,
     onClick: (() -> Unit)? = null
@@ -50,7 +52,7 @@ fun IconWithPadding(
             modifier = Modifier.size(iconSize),
             painter = painterResource(id = drawableRes),
             contentDescription = null,
-            tint = tintColor,
+            tint = tintColor ?: LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
         )
     }
 }

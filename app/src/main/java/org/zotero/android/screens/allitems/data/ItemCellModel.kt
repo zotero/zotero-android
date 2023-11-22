@@ -24,13 +24,14 @@ data class ItemCellModel(
     companion object {
         fun init(item: RItem, typeName: String, accessory: Accessory?): ItemCellModel {
             val dbRow = item.allItemsDbRow!!
+            val hasNote = dbRow.hasNote
             return ItemCellModel(
                 key = item.key,
                 typeIconName = dbRow.typeIconName,
                 typeName = typeName,
                 title = dbRow.title,
                 subtitle = dbRow.subtitle,
-                hasNote = dbRow.hasNote,
+                hasNote = hasNote,
                 accessory = accessory,
                 tagColors = listOf()
             )

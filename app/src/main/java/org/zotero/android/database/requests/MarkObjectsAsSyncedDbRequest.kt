@@ -157,6 +157,7 @@ class MarkItemAsSyncedAndUpdateDbRequest (
         val parent = item.parent
         if (parent != null) {
             parent.version = parent.version
+            AllItemsDbRowCreator.createOrUpdate(parent, database)
         }
         AllItemsDbRowCreator.createOrUpdate(item, database)
     }

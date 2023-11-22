@@ -30,7 +30,6 @@ object CustomPalette {
     val ErrorRedLightShadeFour = Color(0xFFF8E6EA)
     val PendingYellow = Color(0xFFF2C94C)
     val zoteroItemDetailSectionTitle = Color(0xFF6C6C73)
-    val pdfAnnotationSidebarSelectedItem = Color(0xFF3C59B2)
 
     val SystemGray = Color(0xFF8E8E93)
 }

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.reader.SidebarDivider
+import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.foundation.quantityStringResource

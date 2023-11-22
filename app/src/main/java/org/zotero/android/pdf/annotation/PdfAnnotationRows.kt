@@ -26,7 +26,7 @@ import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.Annotation
-import org.zotero.android.pdf.reader.SidebarDivider
+import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -93,19 +93,11 @@ internal fun PdfAnnotationNoteRow(
     ) {
         CommentSection(viewState, layoutType, viewModel)
         Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
+        SidebarDivider()
         Spacer(modifier = Modifier.height(4.dp))
         ColorPicker(viewState, viewModel)
         Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
+        SidebarDivider()
         Spacer(modifier = Modifier.height(4.dp))
         TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
 

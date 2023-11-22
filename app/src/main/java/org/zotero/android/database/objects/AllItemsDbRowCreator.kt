@@ -22,7 +22,8 @@ class AllItemsDbRowCreator {
             )
             dbRow.title = item.displayTitle
             dbRow.subtitle = subtitle(item = item)
-            dbRow.hasNote = hasNote(item = item)
+            val hasNote = hasNote(item = item)
+            dbRow.hasNote = hasNote
         }
 
         private fun subtitle(item: RItem): String {

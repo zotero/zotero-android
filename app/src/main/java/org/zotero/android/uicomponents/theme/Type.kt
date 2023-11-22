@@ -189,6 +189,20 @@ data class CustomTypography(
         letterSpacing = 0.sp,
         lineHeight = 16.sp,
     ),
+    val newH4: TextStyle = TextStyle(
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Bold,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 22.sp,
+    ),
+    val newInfo: TextStyle = TextStyle(
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 22.sp,
+    ),
 )
 
 @Preview(showBackground = true)

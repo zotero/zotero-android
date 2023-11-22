@@ -2502,7 +2502,11 @@ data class PdfReaderViewState(
     val isColorPickerButtonVisible: Boolean = false,
     val commentFocusKey: String? = null,
     val commentFocusText: String = ""
-): ViewState
+): ViewState {
+    fun isAnnotationSelected(annotationKey: String): Boolean {
+        return this.selectedAnnotationKey?.key == annotationKey
+    }
+}
 
 sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()

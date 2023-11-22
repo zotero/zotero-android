@@ -1,5 +1,6 @@
 package org.zotero.android.pdf.reader
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
+import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun BoxScope.PdfReaderBottomPanel(
@@ -24,8 +27,9 @@ internal fun BoxScope.PdfReaderBottomPanel(
             .fillMaxWidth()
             .height(layoutType.calculateAllItemsBottomPanelHeight())
             .align(Alignment.BottomStart)
+            .background(color = CustomTheme.colors.surface)
     ) {
-        SidebarDivider(modifier = Modifier.align(Alignment.TopStart))
+        CustomDivider(modifier = Modifier.align(Alignment.TopStart))
         val filterDrawable =
             if (viewState.filter == null) {
                 Drawables.filter_list_off_24px
@@ -34,7 +38,7 @@ internal fun BoxScope.PdfReaderBottomPanel(
             }
         IconWithPadding(
             modifier = Modifier
-                .padding(start = 4.dp)
+                .padding(start = 24.dp)
                 .align(Alignment.CenterStart),
             drawableRes = filterDrawable,
             onClick = viewModel::showFilterPopup

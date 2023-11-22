@@ -59,8 +59,9 @@ class CreateNoteDbRequest(
             if (this.note.text.isEmpty()) null else this.note.text.strippedHtmlTags
 
         val itemKey = this.parentKey
+        var parent: RItem? = null
         if (itemKey != null) {
-            val parent = database.where<RItem>().key(itemKey, this.libraryId).findFirst()
+            parent = database.where<RItem>().key(itemKey, this.libraryId).findFirst()
             if (parent != null) {
                 item.parent = parent
                 changes.add(RItemChanges.parent)
@@ -105,6 +106,9 @@ class CreateNoteDbRequest(
 
         item.changes.add(RObjectChange.create(changes = changes))
         AllItemsDbRowCreator.createOrUpdate(item, database)
+        if (parent != null) {
+            AllItemsDbRowCreator.createOrUpdate(parent, database)
+        }
         return item
     }
 }
