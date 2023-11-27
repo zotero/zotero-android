@@ -21,11 +21,9 @@ import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.screens.settings.SettingsSectionTitle
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun SettingsAccountScreen(
@@ -59,12 +57,11 @@ internal fun SettingsAccountScreen(
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                TopBar(
+                SettingsAccountTopBar(
                     onBack = onBack,
                 )
             },
         ) {
-            CustomDivider()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -112,15 +109,4 @@ internal fun SettingsAccountScreen(
             }
         }
     }
-}
-
-@Composable
-private fun TopBar(
-    onBack: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_sync_account),
-        onBack = onBack,
-        backgroundColor = CustomTheme.colors.surface,
-    )
 }

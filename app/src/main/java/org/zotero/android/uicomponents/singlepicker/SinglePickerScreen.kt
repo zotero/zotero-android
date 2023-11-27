@@ -25,19 +25,18 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.row.BaseRowItem
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 fun SinglePickerScreen(
     onCloseClicked: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val pickerArgs = ScreenArguments.singlePickerArgs
         val singlePickerState = pickerArgs.singlePickerState
         CustomScaffold(
             topBar = {
-                TopBar(
+                SinglePickerTopBar(
                     title = pickerArgs.title,
                     onCancel = onCloseClicked
                 )
@@ -87,18 +86,6 @@ fun SinglePickerScreen(
         }
     }
 }
-
-@Composable
-private fun TopBar(
-    title: String?,
-    onCancel: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        title = title,
-        onCancel = onCancel,
-    )
-}
-
 
 data class SinglePickerState(
     val objects: List<SinglePickerItem>,

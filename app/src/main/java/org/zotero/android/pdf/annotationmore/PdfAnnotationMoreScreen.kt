@@ -30,7 +30,6 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun PdfAnnotationMoreScreen(
@@ -64,12 +63,7 @@ internal fun PdfAnnotationMoreScreen(
         CustomScaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                CancelSaveTitleTopBar(
-                    title = stringResource(id = Strings.pdf_annotation_popover_title),
-                    onCancel = onBack,
-                    onSave = viewModel::onSave,
-                    backgroundColor = CustomTheme.colors.zoteroEditFieldBackground,
-                )
+                PdfAnnotationMoreTopBar(onBack = onBack, viewModel = viewModel)
             },
         ) {
             PdfAnnotationMorePart(
@@ -93,7 +87,6 @@ internal fun PdfAnnotationMorePart(
             .background(CustomTheme.colors.pdfAnnotationsFormBackground)
     ) {
         item {
-            SpacerDivider()
             when (viewState.type) {
                 AnnotationType.note -> PdfAnnotationMoreNoteRow(
                     viewModel = viewModel,

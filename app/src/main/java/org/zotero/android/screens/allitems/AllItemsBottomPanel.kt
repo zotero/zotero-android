@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -51,7 +51,7 @@ private fun EditingBottomPanel(
     modifier: Modifier,
 ) {
     Column(modifier = modifier) {
-        CustomDivider()
+        NewDivider()
         Row(
             modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -105,7 +105,7 @@ private fun BottomPanel(
     Box(
         modifier = modifier
     ) {
-        CustomDivider(modifier = Modifier.align(Alignment.TopStart))
+        NewDivider(modifier = Modifier.align(Alignment.TopStart))
 
         IconWithPadding(
             modifier = Modifier

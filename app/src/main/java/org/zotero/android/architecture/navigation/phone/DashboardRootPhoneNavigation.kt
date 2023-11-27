@@ -169,7 +169,7 @@ internal fun DashboardRootPhoneNavigation(
                     onBack = navigation::onBack,
                     navigateToTagPicker = navigation::toTagPicker
                 )
-                zoterWebViewScreen()
+                zoterWebViewScreen(onClose = navigation::onBack)
             }
         }
         DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

@@ -36,7 +36,6 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun PdfReaderColorPickerScreen(
@@ -56,7 +55,7 @@ internal fun PdfReaderColorPickerScreen(
         }
         CustomScaffold(
             topBar = {
-                TopBar(
+                PdfReaderColorPickerTopBar(
                     onDone = onBack,
                 )
             },
@@ -146,11 +145,4 @@ private fun FilterCircle(hex: String, isSelected: Boolean, onClick: () -> Unit) 
     })
 }
 
-@Composable
-private fun TopBar(
-    onDone: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        onDone = onDone,
-    )
-}
+

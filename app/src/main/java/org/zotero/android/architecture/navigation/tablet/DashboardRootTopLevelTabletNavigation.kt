@@ -61,7 +61,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onBack = navigation::onBack,
             navigateToTagPicker = navigation::toTagPickerScreen
         )
-        zoterWebViewScreen()
+        zoterWebViewScreen(onClose = navigation::onBack)
     }
 }
 

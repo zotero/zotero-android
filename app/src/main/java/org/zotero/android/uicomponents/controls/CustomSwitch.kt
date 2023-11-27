@@ -50,7 +50,7 @@ private object CustomSwitch {
         return SwitchDefaults.colors(
             checkedThumbColor = CustomTheme.colors.zoteroDefaultBlue,
             checkedTrackColor = CustomTheme.colors.zoteroDefaultBlue,
-            checkedTrackAlpha = 1f,
+            checkedTrackAlpha = 0.5f,
             uncheckedThumbColor = if (isLight) {
                 CustomPalette.White
             } else {

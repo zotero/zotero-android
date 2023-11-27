@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,16 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.pdf.annotationmore.SpacerDivider
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun PdfAnnotationEditPageScreen(
@@ -52,11 +49,7 @@ internal fun PdfAnnotationEditPageScreen(
         CustomScaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                CancelSaveTitleTopBar(
-                    title = stringResource(id = Strings.pdf_annotation_popover_page_label_title),
-                    onBack = viewModel::onBack,
-                    backgroundColor = CustomTheme.colors.zoteroEditFieldBackground,
-                )
+                PdfAnnotationEditPageTopBar(viewModel)
             },
         ) {
             PdfAnnotationEditPagePart(
@@ -77,7 +70,7 @@ private fun PdfAnnotationEditPagePart(
             .fillMaxSize()
             .background(CustomTheme.colors.pdfAnnotationsFormBackground)
     ) {
-        SpacerDivider()
+        Spacer(modifier = Modifier.height(40.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -86,7 +79,9 @@ private fun PdfAnnotationEditPagePart(
             contentAlignment = Alignment.CenterStart
         ) {
             CustomTextField(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp),
                 maxCharacters = 16,
                 value = viewState.pageLabel,
                 hint = "",

@@ -1,32 +1,24 @@
 package org.zotero.android.screens.itemdetails
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.AppBarDefaults
-import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
+import org.zotero.android.uicomponents.topbar.NewCustomTopBar
+import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun ItemDetailsTopBar(
     onViewOrEditClicked: () -> Unit,
     onCancelOrBackClicked: () -> Unit,
     isEditing: Boolean,
-    elevation: Dp = AppBarDefaults.TopAppBarElevation,
 ) {
-    TopAppBar(
-        title = {
+    NewCustomTopBar(
+        leftContainerContent = listOf {
             ItemDetailsTopBarEditing(onCancelOrBackClicked, isEditing)
         },
-        actions = {
-            HeadingTextButton(
+        rightContainerContent = listOf {
+            NewHeadingTextButton(
                 isEnabled = true,
                 onClick = onViewOrEditClicked,
                 text = if (isEditing) {
@@ -35,17 +27,13 @@ internal fun ItemDetailsTopBar(
                     stringResource(Strings.edit)
                 }
             )
-            Spacer(modifier = Modifier.width(if (isEditing) 4.dp else 0.dp))
         },
-        backgroundColor = CustomTheme.colors.surface,
-        elevation = elevation,
     )
-
 }
 
 @Composable
 private fun ItemDetailsTopBarEditing(onCancelOrBackClicked: () -> Unit, isEditing: Boolean) {
-    HeadingTextButton(
+    NewHeadingTextButton(
         isEnabled = true,
         onClick = onCancelOrBackClicked,
         text = if (isEditing) {

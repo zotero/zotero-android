@@ -41,8 +41,6 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CloseIconTopBar
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
 internal fun CreatorEditScreen(
@@ -81,10 +79,8 @@ internal fun CreatorEditScreen(
             }
         }
         CustomScaffold(
-//        modifier = Modifier
-//            .fillMaxSize(),
             topBar = {
-                TopBar(
+                CreatorEditTopBar(
                     onCloseClicked = onBack,
                     onSave = viewModel::onSave,
                     viewState = viewState,
@@ -93,7 +89,6 @@ internal fun CreatorEditScreen(
         ) {
             LazyColumn(
                 modifier = Modifier
-//                .fillMaxSize()
                     .background(color = CustomTheme.colors.surface)
                     .padding(start = 16.dp),
             ) {
@@ -309,25 +304,4 @@ private fun FieldTappableRow(
         Spacer(modifier = Modifier.height(8.dp))
         CustomDivider()
     }
-}
-
-
-@Composable
-private fun TopBar(
-    onCloseClicked: () -> Unit,
-    onSave: () -> Unit,
-    viewState: CreatorEditViewState
-) {
-    CloseIconTopBar(
-        title = viewState.creator?.localizedType,
-        onClose = onCloseClicked,
-        actions = {
-            HeadingTextButton(
-                onClick = onSave,
-                text = stringResource(Strings.save),
-                isEnabled = viewState.isValid
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-    )
 }

@@ -21,7 +21,6 @@ import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun CollectionEditScreen(
@@ -29,7 +28,10 @@ internal fun CollectionEditScreen(
     navigateToCollectionPickerScreen: () -> Unit,
     viewModel: CollectionEditViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars(navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground) {
+    CustomThemeWithStatusAndNavBars(
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
+        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
+    ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionEditViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -46,13 +48,12 @@ internal fun CollectionEditScreen(
                 is CollectionEditViewEffect.NavigateToCollectionPickerScreen -> {
                     navigateToCollectionPickerScreen()
                 }
-
                 else -> {}
             }
         }
         CustomScaffold(
             topBar = {
-                TopBar(
+                CollectionEditTopBar(
                     onCancel = onBack,
                     onSave = viewModel::onSave,
                     viewState = viewState,
@@ -119,18 +120,4 @@ private fun LazyListScope.collectionEditRows(
         }
     }
 
-}
-
-@Composable
-private fun TopBar(
-    onCancel: () -> Unit,
-    onSave: () -> Unit,
-    viewState: CollectionEditViewState
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = if(viewState.key != null) Strings.collections_edit_title else Strings.collections_create_title),
-        onCancel = onCancel,
-        onSave = onSave,
-        isSaveButtonEnabled = viewState.isValid
-    )
 }

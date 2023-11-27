@@ -1,4 +1,4 @@
-package org.zotero.android.pdffilter
+package org.zotero.android.screens.collectionpicker
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -7,23 +7,25 @@ import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
-internal fun PdfFilterScreenTopBar(
-    onClose: () -> Unit,
-    onClear: (() -> Unit)?,
+internal fun CollectionPickerTopBar(
+    onCancelClicked: () -> Unit,
+    onAdd: () -> Unit,
+    viewState: CollectionPickerViewState,
+    viewModel: CollectionPickerViewModel
 ) {
     NewCustomTopBar(
-        title = stringResource(id = Strings.pdf_annotations_sidebar_filter_title),
+        title = viewState.title,
         leftContainerContent = listOf {
             NewHeadingTextButton(
-                onClick = onClose,
-                text = stringResource(Strings.close),
+                text = stringResource(id = Strings.cancel),
+                onClick = onCancelClicked
             )
         },
         rightContainerContent = listOf {
-            if (onClear != null) {
+            if (viewModel.multipleSelectionAllowed) {
                 NewHeadingTextButton(
-                    onClick = onClear,
-                    text = stringResource(Strings.clear),
+                    text = stringResource(id = Strings.add),
+                    onClick = onAdd
                 )
             }
         }

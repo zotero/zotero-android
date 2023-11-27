@@ -15,13 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Plurals
-import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun SettingsDebugLogScreen(
@@ -50,7 +46,7 @@ internal fun SettingsDebugLogScreen(
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                TopBar(
+                SettingsDebugLogTopBar(
                     onBack = onBack,
                     numberOfLines = viewState.numberOfLines
                 )
@@ -62,7 +58,6 @@ internal fun SettingsDebugLogScreen(
                     .background(color = backgroundColor)
             ) {
                 item {
-                    SidebarDivider()
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -75,14 +70,3 @@ internal fun SettingsDebugLogScreen(
     }
 }
 
-@Composable
-private fun TopBar(
-    onBack: () -> Unit,
-    numberOfLines: Int,
-) {
-    CancelSaveTitleTopBar(
-        title = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
-        onBack = onBack,
-        backgroundColor = CustomTheme.colors.surface,
-    )
-}

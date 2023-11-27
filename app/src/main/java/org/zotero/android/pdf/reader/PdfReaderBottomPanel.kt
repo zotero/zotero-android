@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -29,7 +29,7 @@ internal fun BoxScope.PdfReaderBottomPanel(
             .align(Alignment.BottomStart)
             .background(color = CustomTheme.colors.surface)
     ) {
-        CustomDivider(modifier = Modifier.align(Alignment.TopStart))
+        NewDivider(modifier = Modifier.align(Alignment.TopStart))
         val filterDrawable =
             if (viewState.filter == null) {
                 Drawables.filter_list_off_24px

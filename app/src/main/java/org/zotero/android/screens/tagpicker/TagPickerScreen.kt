@@ -33,7 +33,6 @@ import org.zotero.android.uicomponents.row.BaseRowItem
 import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun TagPickerScreen(
@@ -44,8 +43,8 @@ internal fun TagPickerScreen(
     val backgroundColor = CustomTheme.colors.popupBackgroundContent
 
     CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-        statusBarBackgroundColor = backgroundColor
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
+        navBarBackgroundColor = backgroundColor
     ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(TagPickerViewState())
@@ -66,7 +65,7 @@ internal fun TagPickerScreen(
             modifier = scaffoldModifier,
             backgroundColor = backgroundColor,
             topBar = {
-                TopBar(
+                TagPickerTopBar(
                     onCancelClicked = onBack,
                     onSave = viewModel::onSave,
                     viewState = viewState,
@@ -84,14 +83,19 @@ internal fun TagPickerScreen(
                     viewModel.addTagIfNeeded()
                     searchBarOnInnerValueChanged.invoke(TextFieldValue())
                 }
-                SearchBar(
-                    hint = stringResource(id = Strings.tag_picker_placeholder),
-                    modifier = Modifier.padding(12.dp).padding(horizontal = 4.dp),
-                    onSearchImeClicked = onSearchAction,
-                    onInnerValueChanged = searchBarOnInnerValueChanged,
-                    textFieldState = searchBarTextFieldState,
-                )
-                CustomDivider()
+                Column(modifier = Modifier.background(color = CustomTheme.colors.topBarBackgroundColor)) {
+                    SearchBar(
+                        hint = stringResource(id = Strings.tag_picker_placeholder),
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .padding(horizontal = 4.dp),
+                        onSearchImeClicked = onSearchAction,
+                        onInnerValueChanged = searchBarOnInnerValueChanged,
+                        textFieldState = searchBarTextFieldState,
+                    )
+                    CustomDivider()
+                }
+
                 LazyColumn(
                     modifier = Modifier
                 ) {
@@ -135,7 +139,6 @@ internal fun TagPickerScreen(
                             )
                         }
                     }
-
                 }
             }
         }
@@ -171,18 +174,4 @@ fun CreateTagRow(
         CustomDivider()
     }
 
-}
-
-@Composable
-private fun TopBar(
-    onCancelClicked: () -> Unit,
-    onSave: () -> Unit,
-    viewState: TagPickerViewState
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.tag_picker_title, viewState.selectedTags.size),
-        onCancel = onCancelClicked,
-        onSave = onSave,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-    )
 }

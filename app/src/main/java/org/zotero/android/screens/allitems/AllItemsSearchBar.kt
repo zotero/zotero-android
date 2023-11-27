@@ -1,6 +1,6 @@
 package org.zotero.android.screens.allitems
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +37,7 @@ internal fun AllItemsSearchBar(
 
     SearchBar(
         hint = stringResource(id = Strings.items_search_title),
-        modifier = modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+        modifier = modifier.height(40.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

@@ -29,7 +29,7 @@ import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.badge.RoundBadgeIcon
 import org.zotero.android.uicomponents.icon.IconWithPadding
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 private val levelPaddingConst = 8.dp
@@ -149,7 +149,7 @@ private fun CollectionItem(
                 Spacer(modifier = Modifier.width(16.dp))
             }
         }
-        CustomDivider(
+        NewDivider(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(start = dividerOffset)

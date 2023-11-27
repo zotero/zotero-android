@@ -19,10 +19,8 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.BuildInfo
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun SettingsScreen(
@@ -58,12 +56,11 @@ internal fun SettingsScreen(
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                TopBar(
+                SettingsTopBar(
                     onClose = onBack,
                 )
             },
         ) {
-            CustomDivider()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -109,16 +106,4 @@ internal fun SettingsScreen(
             }
         }
     }
-
-}
-
-@Composable
-private fun TopBar(
-    onClose: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_title),
-        onClose = onClose,
-        backgroundColor = CustomTheme.colors.surface,
-    )
 }

@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,17 +17,20 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
+import org.zotero.android.uicomponents.topbar.NewCustomTopBarWithTitleContainer
+import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun AddNoteTopBar(
     titleData: AddOrEditNoteArgs.TitleData?,
     onDoneClicked: () -> Unit,
 ) {
-    CenterAlignedTopAppBar(
-        title = {
-            Row(modifier = Modifier.padding(end = 24.dp),
-                verticalAlignment = Alignment.CenterVertically) {
+    NewCustomTopBarWithTitleContainer(
+        titleContainerContent = { modifier ->
+            Row(
+                modifier = modifier.padding(start = 40.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 val iconInt = titleData?.type?.let { ItemTypes.iconName(it, null) }
                 if (iconInt != null) {
                     Image(
@@ -50,17 +51,11 @@ internal fun AddNoteTopBar(
                 }
             }
         },
-        navigationIcon = {
-        },
-        actions = {
-            HeadingTextButton(
+        rightContainerContent = listOf {
+            NewHeadingTextButton(
                 isEnabled = true,
                 onClick = onDoneClicked,
                 text = stringResource(Strings.done)
             )
-            Spacer(modifier = Modifier.width(6.dp))
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = CustomTheme.colors.addNoteBottomBar)
-    )
-
+        })
 }

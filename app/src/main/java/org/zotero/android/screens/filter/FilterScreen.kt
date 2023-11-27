@@ -53,7 +53,6 @@ import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun FilterScreen(
@@ -62,8 +61,8 @@ internal fun FilterScreen(
 ) {
     val backgroundColor = CustomTheme.colors.popupBackgroundContent
     CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-        statusBarBackgroundColor = backgroundColor
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
+        navBarBackgroundColor = backgroundColor
     ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(FilterViewState())
@@ -83,14 +82,13 @@ internal fun FilterScreen(
         CustomScaffold(
             backgroundColor = backgroundColor,
             topBar = {
-                TopBar(
+                FilterTopBar(
                     onDone = viewModel::onDone,
                 )
             },
         ) {
 
             Column {
-                CustomDivider()
                 Row(
                     modifier = Modifier.padding(top = 4.dp, start = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -202,16 +200,7 @@ internal fun FilterScreen(
     }
 }
 
-@Composable
-private fun TopBar(
-    onDone: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.items_filters_title),
-        onDone = onDone,
-        backgroundColor = CustomTheme.colors.topBarBackgroundColor,
-    )
-}
+
 
 @Composable
 private fun RowScope.TagsSearchBar(

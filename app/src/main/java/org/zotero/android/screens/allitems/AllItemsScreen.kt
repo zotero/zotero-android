@@ -1,8 +1,11 @@
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -11,6 +14,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
@@ -21,7 +25,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 import java.io.File
@@ -43,7 +47,7 @@ internal fun AllItemsScreen(
     navigateToTagFilter: () -> Unit,
     onShowPdf: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -137,12 +141,19 @@ internal fun AllItemsScreen(
                             .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                     ) {
                         if (!layoutType.isTablet()) {
-                            AllItemsSearchBar(
-                                viewState = viewState,
-                                viewModel = viewModel
-                            )
+                            Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
+                                AllItemsSearchBar(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    viewState = viewState,
+                                    viewModel = viewModel
+                                )
+                                Spacer(
+                                    modifier = Modifier
+                                        .height(16.dp)
+                                )
+                                NewDivider()
+                            }
                         }
-                        CustomDivider()
                         AllItemsTable(viewState, layoutType, viewModel)
                     }
                 }

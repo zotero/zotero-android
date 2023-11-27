@@ -29,7 +29,6 @@ import org.zotero.android.uicomponents.selector.MultiSelector
 import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun SortPickerScreen(
@@ -37,7 +36,7 @@ internal fun SortPickerScreen(
     navigateToSinglePickerScreen: () -> Unit,
     viewModel: SortPickerViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
+    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(SortPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -58,9 +57,8 @@ internal fun SortPickerScreen(
             }
         }
         CustomScaffold(
-//        modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopBar(
+                SortPickerTopBar(
                     onDone = viewModel::onDone,
                 )
             },
@@ -86,8 +84,7 @@ private fun ColumnScope.DisplayFields(
     viewModel: SortPickerViewModel,
     layoutType: LayoutType
 ) {
-    Spacer(modifier = Modifier.height(20.dp))
-    CustomDivider()
+//    Spacer(modifier = Modifier.height(20.dp))
     FieldTappableRow(
         detailTitle = stringResource(id = Strings.items_sort_by) + ": " + viewState.sortByTitle,
         layoutType = layoutType,
@@ -147,15 +144,4 @@ private fun FieldTappableRow(
         CustomDivider()
     }
 }
-
-
-@Composable
-private fun TopBar(
-    onDone: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        onDone = onDone,
-    )
-}
-
 

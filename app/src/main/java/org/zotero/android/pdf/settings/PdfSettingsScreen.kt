@@ -31,7 +31,6 @@ import org.zotero.android.uicomponents.selector.MultiSelector
 import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun PdfSettingsScreen(
@@ -42,7 +41,10 @@ internal fun PdfSettingsScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfSettingsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    CustomThemeWithStatusAndNavBars(
+        isDarkTheme = viewState.isDark,
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor
+    ) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
                 NavigateBack -> onBack()
@@ -51,7 +53,7 @@ internal fun PdfSettingsScreen(
         }
         CustomScaffold(
             topBar = {
-                TopBar(
+                PdfSettingsTopBar(
                     onDone = onBack,
                 )
             },
@@ -96,10 +98,7 @@ internal fun PdfSettingsScreen(
                     optionSelected = viewModel::onOptionSelected
                 )
             }
-
         }
-
-
     }
 }
 
@@ -116,7 +115,6 @@ private fun LazyListScope.settingsRow(
                 id = it.ordinal, optionString = stringResource(id = it.optionStringId)
             )
         }
-        CustomDivider()
         Column(modifier = Modifier.padding(top = 0.dp, start = 16.dp, end = 0.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -143,14 +141,7 @@ private fun LazyListScope.settingsRow(
                 )
             }
         }
+        CustomDivider()
     }
 }
 
-@Composable
-private fun TopBar(
-    onDone: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        onDone = onDone,
-    )
-}

@@ -42,8 +42,6 @@ import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
-import org.zotero.android.uicomponents.topbar.NoIconTopBar
 
 @Composable
 internal fun LoginScreen(
@@ -66,11 +64,9 @@ internal fun LoginScreen(
                 null -> Unit
             }
         }
-//    SolidStatusBar()
-
         CustomScaffold(
             topBar = {
-                TopBar(
+                LoginTopBar(
                     onCancelClicked = onBack,
                 )
             },
@@ -162,24 +158,5 @@ internal fun LoginScreen(
                 }
             }
         }
-    }
-
-}
-
-@Composable
-private fun TopBar(
-    onCancelClicked: () -> Unit,
-) {
-    NoIconTopBar(
-        title = "",
-    ) {
-        HeadingTextButton(
-            onClick = onCancelClicked,
-            text = stringResource(id = Strings.cancel),
-            isEnabled = true,
-            isLoading = false,
-            modifier = Modifier
-                .padding(end = 8.dp)
-        )
     }
 }

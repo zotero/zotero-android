@@ -16,7 +16,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
@@ -27,7 +27,7 @@ internal fun CollectionsScreen(
     navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
+    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
 
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
@@ -75,7 +75,6 @@ internal fun CollectionsScreen(
                 },
             ) {
                 Column {
-                    CustomDivider()
                     CollectionsTable(
                         viewState = viewState,
                         viewModel = viewModel,

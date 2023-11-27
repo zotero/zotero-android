@@ -9,10 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun CollectionPickerScreen(
@@ -22,8 +20,8 @@ internal fun CollectionPickerScreen(
 ) {
     val backgroundColor = CustomTheme.colors.popupBackgroundContent
     CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-        statusBarBackgroundColor = backgroundColor
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
+        navBarBackgroundColor = backgroundColor
     ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
@@ -47,7 +45,7 @@ internal fun CollectionPickerScreen(
             modifier = scaffoldModifier,
             backgroundColor = backgroundColor,
             topBar = {
-                TopBar(
+                CollectionPickerTopBar(
                     onCancelClicked = onBack,
                     onAdd = viewModel::confirmSelection,
                     viewState = viewState,
@@ -56,7 +54,6 @@ internal fun CollectionPickerScreen(
             },
         ) {
             Column {
-                CustomDivider()
                 CollectionsPickerTable(
                     viewState = viewState,
                     viewModel = viewModel,
@@ -64,21 +61,5 @@ internal fun CollectionPickerScreen(
                 )
             }
         }
-
     }
-}
-
-@Composable
-private fun TopBar(
-    onCancelClicked: () -> Unit,
-    onAdd: () -> Unit,
-    viewState: CollectionPickerViewState,
-    viewModel: CollectionPickerViewModel
-) {
-    CancelSaveTitleTopBar(
-        title = viewState.title,
-        onCancel = onCancelClicked,
-        onAdd = if (viewModel.multipleSelectionAllowed) onAdd else null,
-        backgroundColor = CustomTheme.colors.popupBackgroundContent,
-    )
 }

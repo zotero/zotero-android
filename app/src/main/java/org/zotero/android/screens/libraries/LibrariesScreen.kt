@@ -16,7 +16,6 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -28,6 +27,7 @@ internal fun LibrariesScreen(
 ) {
     val backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground
     CustomThemeWithStatusAndNavBars(
+        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
         navBarBackgroundColor = backgroundColor,
     ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -66,7 +66,6 @@ internal fun LibrariesScreen(
                 },
             ) {
                 Column {
-                    CustomDivider()
                     LibrariesTable(
                         viewState = viewState,
                         viewModel = viewModel,

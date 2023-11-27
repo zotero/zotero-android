@@ -23,10 +23,8 @@ import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.quantityStringResource
-import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import org.zotero.android.uicomponents.topbar.CancelSaveTitleTopBar
 
 @Composable
 internal fun SettingsDebugScreen(
@@ -56,12 +54,11 @@ internal fun SettingsDebugScreen(
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                TopBar(
+                SettingsDebugTopBar(
                     onBack = onBack,
                 )
             },
         ) {
-            CustomDivider()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -147,15 +144,4 @@ internal fun SettingsDebugScreen(
             }
         }
     }
-}
-
-@Composable
-private fun TopBar(
-    onBack: () -> Unit,
-) {
-    CancelSaveTitleTopBar(
-        title = stringResource(id = Strings.settings_debug),
-        onBack = onBack,
-        backgroundColor = CustomTheme.colors.surface,
-    )
 }

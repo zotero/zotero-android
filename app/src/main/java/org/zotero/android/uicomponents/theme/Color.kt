@@ -57,6 +57,7 @@ object CustomPalette {
  * It is similar to window background in Android framework.
  */
 data class CustomSemanticColors(
+    val defaultTextColor: Color,
     val cardBackground: Color,
     val disabledButtonBackground: Color,
     val disabledButtonContent: Color,
@@ -115,6 +116,7 @@ data class CustomSemanticColors(
 fun lightCustomColors(
     dynamicThemeColors: DynamicThemeColors,
 ) = CustomSemanticColors(
+    defaultTextColor = CustomPalette.Black,
     cardBackground = CustomPalette.White,
     disabledButtonBackground = CustomPalette.LightCoolGray,
     disabledButtonContent = CustomPalette.White,
@@ -162,6 +164,7 @@ fun lightCustomColors(
 fun darkCustomColors(
     dynamicThemeColors: DynamicThemeColors,
 ) = CustomSemanticColors(
+    defaultTextColor = CustomPalette.White,
     cardBackground = CustomPalette.DarkCharcoal,
     disabledButtonBackground = CustomPalette.DarkCharcoal,
     disabledButtonContent = CustomPalette.LightCharcoal,

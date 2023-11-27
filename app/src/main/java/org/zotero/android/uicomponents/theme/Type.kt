@@ -203,6 +203,13 @@ data class CustomTypography(
         letterSpacing = 0.sp,
         lineHeight = 22.sp,
     ),
+    val newH2: TextStyle = TextStyle(
+        fontSize = 17.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 22.sp,
+    ),
 )
 
 @Preview(showBackground = true)

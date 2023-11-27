@@ -36,7 +36,7 @@ internal fun ItemDetailsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
 
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
@@ -109,8 +109,6 @@ internal fun ItemDetailsScreen(
             }
         }
         CustomScaffold(
-//        modifier = Modifier
-//            .fillMaxSize(),
             topBar = {
                 ItemDetailsTopBar(
                     onViewOrEditClicked = viewModel::onSaveOrEditClicked,

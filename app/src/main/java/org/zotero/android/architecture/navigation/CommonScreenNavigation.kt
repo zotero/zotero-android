@@ -107,8 +107,7 @@ fun NavGraphBuilder.addNoteScreen(
 
 private const val ARG_WEBVIEW_URL = "ARG_WEBVIEW_URL"
 
-fun NavGraphBuilder.zoterWebViewScreen(
-) {
+fun NavGraphBuilder.zoterWebViewScreen(onClose: () -> Unit) {
     composable(
         route = "${CommonScreenDestinations.ZOTERO_WEB_VIEW_SCREEN}/{$ARG_WEBVIEW_URL}",
         arguments = listOf(
@@ -117,7 +116,8 @@ fun NavGraphBuilder.zoterWebViewScreen(
     ) {backStackEntry ->
         val url = backStackEntry.arguments?.getString(ARG_WEBVIEW_URL) ?: return@composable
         ZoteroWebViewScreen(
-            url = url
+            url = url,
+            onClose = onClose,
         )
     }
 }

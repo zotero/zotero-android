@@ -23,7 +23,7 @@ import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
-import org.zotero.android.uicomponents.misc.CustomDivider
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
@@ -66,7 +66,7 @@ internal fun DashboardRootTabletNavigationScreen(
                         onOpenWebpage = onOpenWebpage
                     )
                 }
-                CustomDivider(
+                NewDivider(
                     modifier = Modifier
                         .width(1.dp)
                         .fillMaxHeight()
