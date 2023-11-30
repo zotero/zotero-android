@@ -20,7 +20,6 @@ import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
-import org.zotero.android.screens.filter.FilterScreen
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -57,7 +56,7 @@ internal fun TabletRightPaneNavigation(
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
             navigateToZoterWebViewScreen = toZoteroWebViewScreen,
-            navigateToTagFilter = navigation::toTagFilter,
+            navigateToTagFilter = { },
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
@@ -82,11 +81,6 @@ internal fun TabletRightPaneNavigation(
             TagPickerScreen(onBack = navigation::onBack)
         }
 
-        dialogFixedMaxHeight(
-            route = TabletRightPaneDestinations.TAG_FILTER_DIALOG,
-        ) {
-            FilterScreen(onBack = navigation::onBack)
-        }
         dialogFixedMaxHeight(
             route = TabletRightPaneDestinations.ALL_ITEMS_SORT_DIALOG,
         ) {
@@ -129,8 +123,4 @@ private fun ZoteroNavigation.toTagPickerDialog() {
 
 private fun ZoteroNavigation.toSinglePickerDialog() {
     navController.navigate(TabletRightPaneDestinations.SINGLE_PICKER_DIALOG)
-}
-
-private fun ZoteroNavigation.toTagFilter() {
-    navController.navigate(TabletRightPaneDestinations.TAG_FILTER_DIALOG)
 }

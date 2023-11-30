@@ -106,25 +106,6 @@ sealed class LongPressOptionItem(
             resIcon = Drawables.baseline_create_new_folder_24
         )
 
-
-    data class DeselectAll(val enabled: Boolean): LongPressOptionItem(
-        titleId = Strings.items_deselect_all,
-        isEnabled = enabled,
-    )
-
-    object ShowAutomaticTagsUnchecked: LongPressOptionItem(
-        titleId = Strings.tag_picker_show_auto,
-    )
-
-    object ShowAutomaticTagsChecked: LongPressOptionItem(
-        titleId = Strings.tag_picker_show_auto,
-        resIcon = Drawables.baseline_check_24,
-    )
-    object DeleteAutomaticTags: LongPressOptionItem(
-        titleId = Strings.tag_picker_delete_automatic,
-        textAndIconColor = CustomPalette.ErrorRed,
-    )
-
     object DisplayAllTagsInThisLibraryUnchecked: LongPressOptionItem(
         titleId = Strings.tag_picker_show_all,
     )

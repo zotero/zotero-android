@@ -32,9 +32,7 @@ import org.zotero.android.screens.filter.data.FilterTag
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
-import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
-import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -139,29 +137,15 @@ internal class FilterViewModel @Inject constructor(
 
     fun dismissBottomSheet() {
         updateState {
-            copy(longPressOptionsHolder = null)
+            copy(
+                showFilterOptionsPopup = false
+            )
         }
     }
 
     fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
         viewModelScope.launch {
             when (longPressOptionItem) {
-                is LongPressOptionItem.DeselectAll -> {
-                    deselectAll()
-                }
-
-                is LongPressOptionItem.ShowAutomaticTagsChecked -> {
-                    setShowAutomatic(!viewState.showAutomatic)
-                }
-
-                is LongPressOptionItem.ShowAutomaticTagsUnchecked -> {
-                    setShowAutomatic(!viewState.showAutomatic)
-                }
-
-                is LongPressOptionItem.DeleteAutomaticTags -> {
-                    loadAutomaticCount()
-                }
-
                 is LongPressOptionItem.DisplayAllTagsInThisLibraryChecked -> {
                     setDisplayAll(!viewState.displayAll)
                 }
@@ -175,38 +159,19 @@ internal class FilterViewModel @Inject constructor(
     }
 
     fun onMoreSearchOptionsClicked() {
-        val isDeselectAllEnabled = viewState.selectedTags.isNotEmpty()
         updateState {
             copy(
-                longPressOptionsHolder = LongPressOptionsHolder(
-                    isTitleEnabled = isDeselectAllEnabled,
-                    title = context.resources.getQuantityString(
-                        Plurals.tag_picker_tags_selected,
-                        viewState.selectedTags.size,
-                        viewState.selectedTags.size
-                    ),
-                    longPressOptionItems = listOf(
-                        LongPressOptionItem.DeselectAll(isDeselectAllEnabled),
-                        if (viewState.showAutomatic) {
-                            LongPressOptionItem.ShowAutomaticTagsChecked
-                        } else {
-                            LongPressOptionItem.ShowAutomaticTagsUnchecked
-                        },
-//                        if (viewState.displayAll) {
-//                            LongPressOptionItem.DisplayAllTagsInThisLibraryChecked
-//                        } else {
-//                            LongPressOptionItem.DisplayAllTagsInThisLibraryUnchecked
-//                        },
-                        LongPressOptionItem.DeleteAutomaticTags
-                    )
-                )
+                showFilterOptionsPopup = true,
             )
         }
     }
 
-    private fun deselectAll() {
+    fun deselectAll() {
         updateState {
-            copy(selectedTags = emptySet())
+            copy(
+                selectedTags = emptySet(),
+                showFilterOptionsPopup = false
+            )
         }
         EventBus.getDefault().post(FilterResult.tagSelectionDidChange(viewState.selectedTags))
     }
@@ -394,10 +359,13 @@ internal class FilterViewModel @Inject constructor(
         EventBus.getDefault().unregister(this)
     }
 
-    private fun setShowAutomatic(showAutomatic: Boolean) {
+    fun setShowAutomatic(showAutomatic: Boolean) {
         defaults.setTagPickerShowAutomaticTags(showAutomatic)
         updateState {
-            copy(showAutomatic = showAutomatic)
+            copy(
+                showAutomatic = showAutomatic,
+                showFilterOptionsPopup = false
+            )
         }
         itemsDidChange(
             filters = ScreenArguments.filterArgs.filters,
@@ -419,7 +387,10 @@ internal class FilterViewModel @Inject constructor(
 
     }
 
-    private fun loadAutomaticCount() {
+    fun loadAutomaticCount() {
+        updateState {
+            copy(showFilterOptionsPopup = false)
+        }
         val request = ReadAutomaticTagsDbRequest(libraryId = ScreenArguments.filterArgs.libraryId)
         val count = dbWrapper.realmDbStorage.perform(request = request).size
         confirmDeletion(count)
@@ -454,7 +425,7 @@ internal class FilterViewModel @Inject constructor(
 internal data class FilterViewState(
     val isDownloadsChecked: Boolean = false,
     val searchTerm: String = "",
-    val longPressOptionsHolder: LongPressOptionsHolder? = null,
+    val showFilterOptionsPopup: Boolean = false,
     val showAutomatic: Boolean = false,
     val displayAll: Boolean = false,
     val tags: List<List<FilterTag>> = emptyList(),

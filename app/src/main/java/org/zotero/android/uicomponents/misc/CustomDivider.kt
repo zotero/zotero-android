@@ -43,3 +43,14 @@ fun NewDivider(
         thickness = 1.dp
     )
 }
+
+@Composable
+fun PopupDivider(
+    modifier: Modifier = Modifier
+) {
+    Divider(
+        modifier = modifier,
+        color = CustomTheme.colors.popupDividerColor,
+        thickness = 1.dp
+    )
+}

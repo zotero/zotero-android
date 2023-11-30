@@ -100,6 +100,9 @@ data class CustomSemanticColors(
     val allItemsInfoIconColor: Color,
     val topBarBackgroundColor: Color,
     val newDividerColor: Color,
+    val popupDividerColor: Color,
+    val popupBackgroundColor: Color,
+    val popupRowBackgroundColor: Color,
 ) {
 
     data class DynamicTheme(
@@ -158,7 +161,10 @@ fun lightCustomColors(
     zoteroDefaultBlue = Color(0xFF4072E5),
     topBarBackgroundColor = Color(0xFFF7F7F7),
     newDividerColor = Color(0xFFE5E5E5),
-    pdfEditAnnotationDividerBackground = Color(0xFFE4E4E5)
+    popupDividerColor = Color(0xFFE5E5E5),
+    pdfEditAnnotationDividerBackground = Color(0xFFE4E4E5),
+    popupBackgroundColor = Color(0xFFE1E2E1),
+    popupRowBackgroundColor = Color(0xFFFFFFFF)
 )
 
 fun darkCustomColors(
@@ -206,7 +212,10 @@ fun darkCustomColors(
     zoteroDefaultBlue = Color(0xFF4072E5),
     topBarBackgroundColor = Color(0xFF282928),
     newDividerColor = CustomPalette.Charcoal,
-    pdfEditAnnotationDividerBackground = Color(0xFF2F2F31)
+    popupDividerColor = Color(0xFF505051),
+    pdfEditAnnotationDividerBackground = Color(0xFF2F2F31),
+    popupBackgroundColor = Color(0xFF232324),
+    popupRowBackgroundColor = Color(0xFF2A2B2B)
 
 )
 

@@ -51,8 +51,9 @@ internal fun AllItemsScreen(
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
+        val isTablet = layoutType.isTablet()
         LaunchedEffect(key1 = viewModel) {
-            viewModel.init()
+            viewModel.init(isTablet)
         }
 
         LaunchedEffect(key1 = viewEffect) {

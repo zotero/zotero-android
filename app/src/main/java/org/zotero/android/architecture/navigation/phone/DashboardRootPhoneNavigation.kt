@@ -41,7 +41,7 @@ import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
-import org.zotero.android.screens.filter.FilterScreen
+import org.zotero.android.screens.filter.FilterScreenPhone
 import org.zotero.android.screens.settings.settingsNavScreens
 import org.zotero.android.screens.settings.toSettingsScreen
 import org.zotero.android.screens.sortpicker.sortPickerNavScreens
@@ -63,8 +63,6 @@ internal fun DashboardRootPhoneNavigation(
     LaunchedEffect(key1 = viewModel) {
         viewModel.init()
     }
-
-//    SolidStatusBar()
 
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -141,7 +139,7 @@ internal fun DashboardRootPhoneNavigation(
                     route = DashboardRootPhoneDestinations.TAG_FILTER,
                     arguments = listOf(),
                 ) {
-                    FilterScreen(onBack = navigation::onBack)
+                    FilterScreenPhone(onBack = navigation::onBack)
                 }
 
                 composable(

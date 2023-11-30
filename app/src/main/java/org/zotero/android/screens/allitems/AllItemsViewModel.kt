@@ -208,12 +208,12 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowItemDetailEffect)
     }
 
-    fun init() = initOnce {
+    fun init(isTablet: Boolean) = initOnce {
         EventBus.getDefault().register(this)
         val args = ScreenArguments.allItemsArgs
         initViewState(args)
 
-        loadInitialState()
+        loadInitialState(isTablet)
     }
 
     private var coroutineScope = CoroutineScope(dispatchers.default)
@@ -467,7 +467,7 @@ internal class AllItemsViewModel @Inject constructor(
         return null
     }
 
-    private fun loadInitialState() {
+    private fun loadInitialState(isTablet: Boolean) {
         onSearchStateFlow
             .drop(1)
             .debounce(150)
@@ -493,7 +493,9 @@ internal class AllItemsViewModel @Inject constructor(
         }
         setupFileObservers()
         updateResults(results)
-
+        if (isTablet) {
+            initShowFilterArgs()
+        }
     }
 
     fun onSearch(text: String) {
@@ -1038,14 +1040,19 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun showFilters() {
-        val selectedTags = viewState.filters.filterIsInstance<ItemsFilter.tags>().flatMap { it.tags }.toSet()
+        initShowFilterArgs()
+        triggerEffect(AllItemsViewEffect.ShowFilterEffect)
+    }
+
+    private fun initShowFilterArgs() {
+        val selectedTags =
+            viewState.filters.filterIsInstance<ItemsFilter.tags>().flatMap { it.tags }.toSet()
         ScreenArguments.filterArgs = FilterArgs(
             filters = viewState.filters,
             collectionId = viewState.collection.identifier,
             libraryId = viewState.library.identifier,
             selectedTags = selectedTags
         )
-        triggerEffect(AllItemsViewEffect.ShowFilterEffect)
     }
 
     private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
