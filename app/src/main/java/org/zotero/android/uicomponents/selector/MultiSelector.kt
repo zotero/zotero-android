@@ -209,7 +209,7 @@ fun MultiSelector(
                 ) {
                     Text(
                         text = option.optionString,
-                        style = CustomTheme.typography.default,
+                        style = CustomTheme.typography.newBody,
                         color = selectedColor,
                         fontSize = fontSize,
                         maxLines = 1,

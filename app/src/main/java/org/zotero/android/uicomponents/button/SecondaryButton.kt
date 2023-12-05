@@ -98,7 +98,7 @@ private fun SecondaryButtonPreview() {
                 modifier = Modifier
                     .width(200.dp)
                     .padding(top = 16.dp),
-                iconPainter = painterResource(id = Drawables.ic_delete_20dp)
+                iconPainter = painterResource(id = Drawables.delete_24px)
             )
             SecondaryButton(
                 text = "Disabled button",

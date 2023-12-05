@@ -137,7 +137,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.constraintlayout:constraintlayout-solver:2.0.4")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("androidx.work:work-runtime-ktx:2.8.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     //Material design
     implementation("com.google.android.material:material:1.10.0")
@@ -208,8 +208,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
 
     //ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.2.0-rc01")
-    implementation("androidx.media3:media3-ui:1.2.0-rc01")
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
 
     //Coil
     implementation("io.coil-kt:coil-compose:2.2.2")

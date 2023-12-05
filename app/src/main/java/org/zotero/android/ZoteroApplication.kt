@@ -70,8 +70,8 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
         }
     }
 
-    override fun getWorkManagerConfiguration() =
-        Configuration.Builder()
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
 

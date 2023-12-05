@@ -1,5 +1,6 @@
 package org.zotero.android.screens.itemdetails
 
+import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
@@ -100,6 +101,7 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
 import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreItem
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.reorder.move
@@ -130,6 +132,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val fileCleanupController: AttachmentFileCleanupController,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val dateParser: DateParser,
+    private val context: Context,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -1137,6 +1140,7 @@ class ItemDetailsViewModel @Inject constructor(
                 schemaController
             ),
             showSaveButton = false,
+            title = context.getString(Strings.item_type),
             callPoint = SinglePickerResult.CallPoint.ItemDetails
         )
         triggerEffect(ShowItemTypePickerEffect)

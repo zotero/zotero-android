@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -78,7 +79,7 @@ internal fun FieldRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onDelete != null) {
                 Spacer(modifier = Modifier.width(8.dp))
-                Image(
+                Icon(
                     modifier = Modifier
                         .size(28.dp)
                         .safeClickable(
@@ -87,8 +88,9 @@ internal fun FieldRow(
                             indication = rememberRipple(bounded = false)
                         )
                         .padding(start = 4.dp),
-                    painter = painterResource(id = Drawables.ic_delete_20dp),
+                    painter = painterResource(id = Drawables.do_not_disturb_on_24px),
                     contentDescription = null,
+                    tint = Color(0xFFDB2C3A)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
@@ -126,7 +128,7 @@ internal fun FieldRow(
                     modifier = Modifier
                         .size(28.dp)
                         .detectReorderAfterLongPress(reorderState),
-                    painter = painterResource(id = Drawables.baseline_reorder_24),
+                    painter = painterResource(id = Drawables.drag_handle_24px),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(CustomTheme.colors.reorderButtonColor),
                 )

@@ -1,5 +1,6 @@
 package org.zotero.android.screens.allitems
 
+import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
@@ -89,6 +90,7 @@ import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.UrlDetector
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.attachmentprogress.State
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
@@ -113,7 +115,8 @@ internal class AllItemsViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val dispatchers: Dispatchers,
     private val fileCleanupController: AttachmentFileCleanupController,
-    private val syncScheduler: SyncScheduler
+    private val syncScheduler: SyncScheduler,
+    private val context: Context,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()) {
 
     private val itemAccessories = mutableMapOf<String, ItemAccessory> ()
@@ -751,6 +754,7 @@ internal class AllItemsViewModel @Inject constructor(
                 schemaController
             ),
             showSaveButton = false,
+            title = context.getString(Strings.item_type),
             callPoint = SinglePickerResult.CallPoint.AllItemsShowItem
         )
         triggerEffect(ShowItemTypePickerEffect)

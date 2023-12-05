@@ -26,10 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.checkbox.CircleCheckBox
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
-import org.zotero.android.uicomponents.row.BaseRowItem
 import org.zotero.android.uicomponents.textinput.SearchBar
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
@@ -87,8 +85,8 @@ internal fun TagPickerScreen(
                     SearchBar(
                         hint = stringResource(id = Strings.tag_picker_placeholder),
                         modifier = Modifier
-                            .padding(12.dp)
-                            .padding(horizontal = 4.dp),
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp),
                         onSearchImeClicked = onSearchAction,
                         onInnerValueChanged = searchBarOnInnerValueChanged,
                         textFieldState = searchBarTextFieldState,
@@ -101,34 +99,13 @@ internal fun TagPickerScreen(
                 ) {
                     items(items = viewState.tags) { tag ->
                         val isChecked = viewState.selectedTags.contains(tag.name)
-                        val selectableBackgroundColor =
-                            if (isChecked) CustomTheme.colors.popupSelectedRow else backgroundColor
 
-                        Column(modifier = Modifier
-                            .safeClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { viewModel.selectOrDeselect(tag.name) }
-                            )
-                            .background(color = selectableBackgroundColor)) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            BaseRowItem(
-                                modifier = Modifier.padding(start = 16.dp),
-                                title = tag.name,
-                                heightIn = 24.dp,
-                                startContentPadding = 12.dp,
-                                backgroundColor = selectableBackgroundColor,
-                                textColor = CustomTheme.colors.primaryContent,
-                                titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                                startContent = {
-                                    CircleCheckBox(
-                                        isChecked = isChecked,
-                                        layoutType = layoutType
-                                    )
-                                })
-                            Spacer(modifier = Modifier.height(8.dp))
-                            CustomDivider()
-                        }
+                        TagPickerRow(
+                            text = tag.name,
+                            rowBackgroundColor = backgroundColor,
+                            tagColorHex = tag.color,
+                            isChecked = isChecked,
+                            onTap = { viewModel.selectOrDeselect(tag.name) })
                     }
                     item {
                         if (viewState.showAddTagButton) {
@@ -146,7 +123,7 @@ internal fun TagPickerScreen(
 }
 
 @Composable
-fun CreateTagRow(
+private fun CreateTagRow(
     tagName: String,
     onClick: () -> Unit,
     layoutType: CustomLayoutSize.LayoutType

@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +30,9 @@ fun CircleCheckBox(
     ) {
         if (isChecked) {
             Icon(
-                imageVector = Icons.Default.CheckCircle,
+                painter = painterResource(
+                    id = Drawables.check_small_24px
+                ),
                 contentDescription = null,
                 tint = CustomTheme.colors.zoteroDefaultBlue,
             )

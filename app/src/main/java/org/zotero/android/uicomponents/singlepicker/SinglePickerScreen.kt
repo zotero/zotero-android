@@ -1,28 +1,29 @@
 package org.zotero.android.uicomponents.singlepicker
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.ScreenArguments
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.misc.CustomDivider
-import org.zotero.android.uicomponents.row.BaseRowItem
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -31,7 +32,6 @@ fun SinglePickerScreen(
     onCloseClicked: () -> Unit,
 ) {
     CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val pickerArgs = ScreenArguments.singlePickerArgs
         val singlePickerState = pickerArgs.singlePickerState
         CustomScaffold(
@@ -48,38 +48,44 @@ fun SinglePickerScreen(
                 items(
                     singlePickerState.objects
                 ) { option ->
-                    Column(modifier = Modifier
-                        .safeClickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {
-                                onCloseClicked()
-                                EventBus.getDefault()
-                                    .post(SinglePickerResult(option.id, pickerArgs.callPoint))
-                            }
-                        )) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        BaseRowItem(
-                            modifier = Modifier.padding(start = 16.dp),
-                            title = option.name,
-                            heightIn = 24.dp,
-                            startContentPadding = 12.dp,
-                            textColor = CustomTheme.colors.primaryContent,
-                            titleStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculateTextSize()),
-                            endContent = {
-                                if (option.id == singlePickerState.selectedRow) {
-                                    Icon(
-                                        modifier = Modifier.size(layoutType.calculateIconSize()),
-                                        painter = painterResource(id = Drawables.baseline_check_24),
-                                        contentDescription = null,
-                                        tint = CustomTheme.colors.zoteroDefaultBlue
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(44.dp)
+                            .safeClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {
+                                    onCloseClicked()
+                                    EventBus
+                                        .getDefault()
+                                        .post(SinglePickerResult(option.id, pickerArgs.callPoint))
                                 }
-
-                            })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomDivider()
+                            )
+                    ) {
+                        Row(modifier = Modifier.align(Alignment.CenterStart)) {
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = option.name,
+                                style = CustomTheme.typography.newBody,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                color = CustomTheme.colors.primaryContent,
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                            if (option.id == singlePickerState.selectedRow) {
+                                Icon(
+                                    painter = painterResource(id = Drawables.check_24px),
+                                    contentDescription = null,
+                                    tint = CustomTheme.colors.zoteroDefaultBlue
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                            }
+                        }
+                        NewDivider(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(start = 16.dp)
+                        )
                     }
                 }
             }

@@ -1,5 +1,6 @@
 package org.zotero.android.screens.creatoredit
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -14,6 +15,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
@@ -23,7 +25,8 @@ import javax.inject.Inject
 @HiltViewModel
 internal class CreatorEditViewModel @Inject constructor(
     private val defaults: Defaults,
-    private val schemaController: SchemaController
+    private val schemaController: SchemaController,
+    private val context: Context,
 ) : BaseViewModel2<CreatorEditViewState, CreatorEditViewEffect>(CreatorEditViewState()) {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -111,7 +114,7 @@ internal class CreatorEditViewModel @Inject constructor(
         ScreenArguments.singlePickerArgs =
             SinglePickerArgs(
                 singlePickerState = pickerState,
-                title = viewState.creator!!.localizedType,
+                title = context.getString(Strings.creator_editor_creator),
                 callPoint = SinglePickerResult.CallPoint.CreatorEdit,
             )
         triggerEffect(CreatorEditViewEffect.NavigateToSinglePickerScreen)

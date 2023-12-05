@@ -70,7 +70,7 @@ private fun EditingBottomPanel(
                     onClick = viewModel::onRestore
                 )
                 IconWithPadding(
-                    drawableRes = Drawables.empty_trash,
+                    drawableRes = Drawables.delete_24px,
                     isEnabled = isRestoreAndDeleteEnabled,
                     tintColor = if (isRestoreAndDeleteEnabled) {
                         CustomTheme.colors.zoteroDefaultBlue
@@ -84,7 +84,7 @@ private fun EditingBottomPanel(
             } else {
                 val isDeleteEnabled = viewState.selectedItems.isNotEmpty()
                 IconWithPadding(
-                    drawableRes = Drawables.ic_delete_20dp,
+                    drawableRes = Drawables.delete_24px,
                     isEnabled = isDeleteEnabled,
                     tintColor = if (isDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
                     onClick = {

@@ -1,5 +1,6 @@
 package org.zotero.android.screens.sortpicker
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -12,6 +13,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.sortpicker.data.SortDirectionResult
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
@@ -20,6 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SortPickerViewModel @Inject constructor(
+    private val context: Context,
 ) : BaseViewModel2<SortPickerViewState, SortPickerViewEffect>(SortPickerViewState()) {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -53,7 +56,7 @@ internal class SortPickerViewModel @Inject constructor(
         ScreenArguments.singlePickerArgs =
             SinglePickerArgs(
                 singlePickerState = pickerState,
-                title = viewState.sortByTitle,
+                title = context.getString(Strings.items_sort_by),
                 callPoint = SinglePickerResult.CallPoint.AllItemsSortPicker,
             )
         triggerEffect(SortPickerViewEffect.NavigateToSinglePickerScreen)

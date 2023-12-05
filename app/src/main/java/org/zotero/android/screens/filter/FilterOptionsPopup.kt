@@ -86,7 +86,7 @@ internal fun FilterOptionsPopup(
             if (viewState.showAutomatic) {
                 PopupOptionRow(
                     text = stringResource(id = Strings.tag_picker_show_auto),
-                    resIcon = Drawables.baseline_check_24,
+                    resIcon = Drawables.check_24px,
                     onOptionClick = { viewModel.setShowAutomatic(false) }
                 )
             } else {

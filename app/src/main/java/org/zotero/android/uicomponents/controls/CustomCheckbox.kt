@@ -78,7 +78,7 @@ fun CustomCheckbox(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(id = Drawables.ic_checkmark),
+                painter = painterResource(id = Drawables.check_24px),
                 contentDescription = null,
                 tint = checkColor
             )
