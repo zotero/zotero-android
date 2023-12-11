@@ -32,7 +32,6 @@ import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.SetCollectionCollapsedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
-import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
@@ -142,7 +141,8 @@ internal class CollectionsViewModel @Inject constructor(
                                 CollectionIdentifier.CustomType.all
                             ),
                             libraryId = libraryId,
-                            defaults = defaults
+                            defaults = defaults,
+                            isAsync = false,
                         )
                     )
                     allItemCount = allItems!!.size
@@ -153,7 +153,8 @@ internal class CollectionsViewModel @Inject constructor(
                                 CollectionIdentifier.CustomType.unfiled
                             ),
                             libraryId = libraryId,
-                            defaults = defaults
+                            defaults = defaults,
+                            isAsync = false,
                         )
                     )
                     unfiledItemCount = unfiledItems!!.size
@@ -164,7 +165,8 @@ internal class CollectionsViewModel @Inject constructor(
                                 CollectionIdentifier.CustomType.trash
                             ),
                             libraryId = libraryId,
-                            defaults = defaults
+                            defaults = defaults,
+                            isAsync = false,
                         )
                     )
                     trashItemCount = trashItems!!.size
@@ -350,7 +352,6 @@ internal class CollectionsViewModel @Inject constructor(
         ScreenArguments.allItemsArgs = AllItemsArgs(
             collection = collection,
             library = viewState.library,
-            sortType = ItemsSortType.default,
             searchTerm = null,
             error = null
         )

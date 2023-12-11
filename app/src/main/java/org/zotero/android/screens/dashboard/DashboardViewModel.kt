@@ -29,7 +29,6 @@ import org.zotero.android.database.requests.ReadSearchDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
-import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.sync.Collection
@@ -219,7 +218,6 @@ class DashboardViewModel @Inject constructor(
         ScreenArguments.allItemsArgs = AllItemsArgs(
             collection = collection,
             library = library,
-            sortType = ItemsSortType.default,
             searchTerm = searchTerm,
             error = null
         )

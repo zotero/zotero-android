@@ -167,7 +167,6 @@ class SyncScheduler @Inject constructor(
         if (this.syncInProgress != null) {
             return
         }
-
         runningJob = coroutineScope.launch {
             delay(timeout)
             startNextSync()

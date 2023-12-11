@@ -89,6 +89,12 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
 
     private fun setUpLogging() {
         if (!EVENT_AND_CRASH_LOGGING_ENABLED) {
+            Timber.plant(object : Timber.DebugTree() {
+                override fun createStackElementTag(element: StackTraceElement): String {
+                    return "[${Thread.currentThread().name}]" +
+                            "${super.createStackElementTag(element)}"
+                }
+            })
             return
         }
         val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()

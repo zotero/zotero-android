@@ -168,11 +168,11 @@ internal fun AllItemsScreen(
                         onEmptyTrash = { viewModel.emptyTrash() }
                     )
                 }
-
+                val bottomSheetTitle = stringResource(id = Strings.item_type)
                 AllItemsAddBottomSheet(
                     onAddFile = onPickFile,
                     onAddNote = viewModel::onAddNote,
-                    onAddManually = viewModel::onAddManually,
+                    onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
                     onClose = viewModel::onAddBottomSheetCollapse,
                     showBottomSheet = viewState.shouldShowAddBottomSheet
                 )

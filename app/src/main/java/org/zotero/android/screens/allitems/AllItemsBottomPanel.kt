@@ -57,7 +57,7 @@ private fun EditingBottomPanel(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (viewState.collection.identifier.isTrash) {
+            if (viewState.isCollectionTrash) {
                 val isRestoreAndDeleteEnabled = viewState.selectedItems.isNotEmpty()
                 IconWithPadding(
                     drawableRes = Drawables.restore_trash,

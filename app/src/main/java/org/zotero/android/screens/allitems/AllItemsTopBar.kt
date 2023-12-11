@@ -76,7 +76,7 @@ private fun AllItemsPhoneTopBar(
 ) {
     NewCustomTopBar(
         title = if (!viewState.isEditing) {
-            viewState.collection.name
+            viewState.collectionName
         } else {
             null
         },
@@ -96,7 +96,7 @@ private fun allItemsTopBarActions(
     viewModel: AllItemsViewModel
 ): List<@Composable (RowScope.() -> Unit)> {
     val buttonsList :MutableList<@Composable (RowScope.() -> Unit)> = mutableListOf()
-    if (viewState.collection.identifier.isTrash) {
+    if (viewState.isCollectionTrash) {
         buttonsList.add {
             NewHeadingTextButton(
                 onClick = viewModel::onEmptyTrash,
@@ -120,7 +120,7 @@ private fun allItemsTopBarActions(
             )
         }
     } else {
-        val allSelected = viewState.selectedItems.size == (viewModel.results?.size ?: 0)
+        val allSelected = viewState.selectedItems.size == (viewState.itemCellModels.size)
         if (allSelected) {
             buttonsList.add {
                 NewHeadingTextButton(

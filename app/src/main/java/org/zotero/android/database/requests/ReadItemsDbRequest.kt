@@ -1,6 +1,7 @@
 package org.zotero.android.database.requests
 
 import io.realm.Realm
+import io.realm.RealmQuery
 import io.realm.RealmResults
 import io.realm.kotlin.where
 import org.zotero.android.architecture.Defaults
@@ -18,7 +19,8 @@ class ReadItemsDbRequest(
     val filters: List<ItemsFilter> = emptyList(),
     val sortType: ItemsSortType? = null,
     val searchTextComponents: List<String> = emptyList(),
-    val defaults: Defaults
+    val defaults: Defaults,
+    val isAsync: Boolean,
 ) : DbResponseRequest<RealmResults<RItem>> {
 
     override val needsWrite: Boolean
@@ -27,48 +29,53 @@ class ReadItemsDbRequest(
     override fun process(
         database: Realm,
     ): RealmResults<RItem> {
-        var results: RealmResults<RItem>
+        var resultsQuery: RealmQuery<RItem>
         if (defaults.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
             val keys = selfAndSubcollectionKeys(collectionId.key, database)
 
-            results = database
+            resultsQuery = database
                 .where<RItem>()
                 .items(forCollectionsKeys = keys, libraryId = this.libraryId)
-                .findAll()
+
         } else {
-            results = database
+            resultsQuery = database
             .where<RItem>()
             .items(this.collectionId, libraryId = this.libraryId)
-            .findAll()
         }
         if (!this.searchTextComponents.isEmpty()) {
-            results = results.where().itemSearch(this.searchTextComponents).findAll()
+            resultsQuery = resultsQuery.itemSearch(this.searchTextComponents)
         }
 
         if (!this.filters.isEmpty()) {
             for (filter in this.filters) {
                 when (filter) {
                     is ItemsFilter.downloadedFiles -> {
-                        results = results.where().rawPredicate("fileDownloaded = true or any children.fileDownloaded = true").findAll()
+                        resultsQuery = resultsQuery.rawPredicate("fileDownloaded = true or any children.fileDownloaded = true")
                     }
                     is ItemsFilter.tags -> {
                         val tags = filter.tags
-                        var predicates = results.where()
+                        var predicates = resultsQuery
                         for (tag in tags) {
                             predicates = predicates.rawPredicate("any tags.tag.name == $0 or any children.tags.tag.name == $1 or SUBQUERY(children, \$item, any \$item.children.tags.tag.name == $2).@count > 0", tag, tag, tag)
                         }
-                        results = predicates.findAll()
+                        resultsQuery = predicates
                     }
                 }
             }
         }
+
         // Sort if needed
-        return this.sortType?.let { sort ->
-            results.sort(
-                sort.descriptors.first,
-                sort.descriptors.second
+        if (this.sortType != null) {
+            resultsQuery = resultsQuery.sort(
+                this.sortType.descriptors.first,
+                this.sortType.descriptors.second
             )
-        } ?: results
+        }
+        if (isAsync) {
+            return resultsQuery.findAllAsync()
+        } else {
+            return resultsQuery.findAll()
+        }
     }
 
     private fun selfAndSubcollectionKeys(
