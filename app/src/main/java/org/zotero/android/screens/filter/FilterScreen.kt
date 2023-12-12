@@ -53,18 +53,26 @@ internal fun FilterScreen(
                         viewState = viewState,
                         viewModel = viewModel
                     )
-                    Image(
-                        modifier = Modifier
-                            .size(layoutType.calculateIconSize())
-                            .safeClickable(
-                                onClick = viewModel::onMoreSearchOptionsClicked,
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = rememberRipple(bounded = false)
-                            ),
-                        painter = painterResource(id = Drawables.more_horiz_24px),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
-                    )
+                    Box {
+                        if (viewState.showFilterOptionsPopup) {
+                            FilterOptionsPopup(
+                                viewState = viewState,
+                                viewModel = viewModel,
+                            )
+                        }
+                        Image(
+                            modifier = Modifier
+                                .size(layoutType.calculateIconSize())
+                                .safeClickable(
+                                    onClick = viewModel::onMoreSearchOptionsClicked,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple(bounded = false)
+                                ),
+                            painter = painterResource(id = Drawables.more_horiz_24px),
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
+                        )
+                    }
                     Spacer(modifier = Modifier.width(16.dp))
                 }
             }
@@ -124,13 +132,6 @@ internal fun FilterScreen(
             filterDialog = dialog,
             onDismissDialog = viewModel::onDismissDialog,
             onDeleteAutomaticTags = { viewModel.deleteAutomaticTags() }
-        )
-    }
-
-    if (viewState.showFilterOptionsPopup) {
-        FilterOptionsPopup(
-            viewState = viewState,
-            viewModel = viewModel,
         )
     }
 }

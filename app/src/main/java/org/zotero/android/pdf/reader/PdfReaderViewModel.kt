@@ -1593,6 +1593,7 @@ class PdfReaderViewModel @Inject constructor(
             .layoutMode(pageMode)
             .invertColors(isCalculatedThemeDark)
             .themeMode(themeMode)
+            .showNoteEditorForNewNoteAnnotations(false)
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)

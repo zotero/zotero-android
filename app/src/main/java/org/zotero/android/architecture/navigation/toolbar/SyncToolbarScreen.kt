@@ -74,13 +74,12 @@ internal fun BoxScope.SyncToolbarScreen(
                 Text(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .padding(start = 12.dp, end = 12.dp),
+                        .padding(horizontal = 12.dp),
                     text = syncToolbarText(syncProgress, viewModel),
                     color = CustomTheme.colors.primaryContent,
-                    style = CustomTheme.typography.default,
+                    style = CustomTheme.typography.newBody,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = layoutType.calculateTextSize(),
                 )
             }
         }

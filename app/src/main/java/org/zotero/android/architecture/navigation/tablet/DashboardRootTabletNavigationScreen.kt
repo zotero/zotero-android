@@ -21,6 +21,7 @@ import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.uicomponents.misc.NewDivider
@@ -82,6 +83,7 @@ internal fun DashboardRootTabletNavigationScreen(
                         navController = rightPaneNavController,
                         navigation = rightPaneNavigation
                     )
+                    SyncToolbarScreen()
                 }
 
             }

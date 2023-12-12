@@ -11,7 +11,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.ChangedItemsDeletedAlert
 import org.zotero.android.screens.dashboard.ConflictResolutionDialogs
@@ -79,8 +78,6 @@ fun BoxScope.DashboardTopLevelDialogs(
         onOptionClick = viewModel::onLongPressOptionsItemSelected
     )
     DebugStopButton(isVisible = viewState.showDebugWindow, onClick = viewModel::onDebugStop)
-
-    SyncToolbarScreen()
 }
 
 @Composable

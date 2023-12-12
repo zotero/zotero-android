@@ -40,7 +40,7 @@ private val pdfReaderToolsList = listOf(
         type = AnnotationTool.NOTE,
         title = Strings.pdf_annotation_toolbar_note,
         image = Drawables.note_large,
-        isHidden = true
+        isHidden = false
     ),
     PdfReaderTool(
         type = AnnotationTool.SQUARE,

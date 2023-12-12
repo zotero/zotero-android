@@ -192,7 +192,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx:21.5.0")
 
     //PSPDFKIT
-    implementation("com.pspdfkit:pspdfkit:8.9.1")
+    implementation("com.pspdfkit:pspdfkit:8.10.0")
 
     //Retrofit 2
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")

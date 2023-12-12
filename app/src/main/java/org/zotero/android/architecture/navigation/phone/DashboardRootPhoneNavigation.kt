@@ -31,6 +31,7 @@ import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
+import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderNavScreensForPhone
@@ -171,6 +172,8 @@ internal fun DashboardRootPhoneNavigation(
             }
         }
         DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
+        SyncToolbarScreen()
+
     }
 }
 

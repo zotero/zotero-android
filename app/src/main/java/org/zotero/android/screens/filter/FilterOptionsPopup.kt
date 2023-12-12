@@ -2,14 +2,14 @@ package org.zotero.android.screens.filter
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,12 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -59,12 +58,10 @@ internal fun FilterOptionsPopup(
     ) {
         Column(
             modifier = Modifier
-                .width(IntrinsicSize.Max)
-                .clip(shape = RoundedCornerShape(16.dp))
-                .border(
-                    width = 1.dp,
-                    color = CustomPalette.Black,
-                    shape = RoundedCornerShape(16.dp)
+                .width(250.dp)
+                .shadow(
+                    elevation = 2.dp,
+                    shape = RoundedCornerShape(16.dp),
                 )
                 .background(color = CustomTheme.colors.popupBackgroundColor)
         ) {
@@ -116,20 +113,21 @@ private fun createFilterOptionsPopupPositionProvider() = object : PopupPositionP
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize
     ): IntOffset {
-        val popupOffsetX = with(localDensity) {
-            8.dp.toPx()
+        val extraYOffset = with(localDensity) {
+            4.dp.toPx()
         }.toInt()
 
         val xOffset = if (isTablet) {
-            anchorBounds.right
+            anchorBounds.left
         } else {
-            anchorBounds.right - popupContentSize.width - popupOffsetX
+            val q = windowSize.width - popupContentSize.width
+            q - (windowSize.width - anchorBounds.right)
         }
 
         val yOffset = if (isTablet) {
-            anchorBounds.top - popupContentSize.height
+            anchorBounds.top - popupContentSize.height - extraYOffset
         } else {
-            popupContentSize.height
+            anchorBounds.bottom + extraYOffset
         }
         return IntOffset(
             x = xOffset,
@@ -154,7 +152,7 @@ private fun PopupOptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth(1f)
-            .height(48.dp)
+            .heightIn(min=44.dp)
             .background(color = CustomTheme.colors.popupRowBackgroundColor)
             .safeClickable(
                 enabled = isEnabled,
@@ -176,13 +174,12 @@ private fun PopupOptionRow(
         } else {
             Spacer(modifier = Modifier.width(iconSize))
         }
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
+            modifier = Modifier.padding(vertical = 10.dp),
             color = color,
             text = text,
             style = CustomTheme.typography.newBody,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.width(16.dp))
     }
