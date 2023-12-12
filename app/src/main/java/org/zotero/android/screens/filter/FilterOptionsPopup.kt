@@ -60,7 +60,7 @@ internal fun FilterOptionsPopup(
             modifier = Modifier
                 .width(250.dp)
                 .shadow(
-                    elevation = 2.dp,
+                    elevation = 4.dp,
                     shape = RoundedCornerShape(16.dp),
                 )
                 .background(color = CustomTheme.colors.popupBackgroundColor)
@@ -114,7 +114,7 @@ private fun createFilterOptionsPopupPositionProvider() = object : PopupPositionP
         popupContentSize: IntSize
     ): IntOffset {
         val extraYOffset = with(localDensity) {
-            4.dp.toPx()
+            12.dp.toPx()
         }.toInt()
 
         val xOffset = if (isTablet) {
