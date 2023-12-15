@@ -120,7 +120,7 @@ private fun allItemsTopBarActions(
             )
         }
     } else {
-        val allSelected = viewState.selectedItems.size == (viewState.itemCellModels.size)
+        val allSelected = viewState.getSelectedKeys().size == (viewState.itemCellModels.size)
         if (allSelected) {
             buttonsList.add {
                 NewHeadingTextButton(

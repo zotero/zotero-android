@@ -13,6 +13,7 @@ data class ItemCellModel(
     val hasNote: Boolean,
     var accessory: Accessory?,
     val tagColors: List<Color>,
+    var isSelected: Boolean = false,
 ) {
 
     sealed class Accessory {

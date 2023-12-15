@@ -64,7 +64,6 @@ class AllItemsProcessor @Inject constructor(
 
     private var results: RealmResults<RItem>? = null
 
-    private var keys = mutableListOf<String>()
     private val itemAccessories = mutableMapOf<String, ItemAccessory> ()
     private var updateItemKey: String? = null
     private var downloadBatchData: ItemsState.DownloadBatchData? = null
@@ -402,7 +401,6 @@ class AllItemsProcessor @Inject constructor(
         var currentProcessingCount = 0
 
         resultsProcessorCoroutineScope!!.launch {
-            maybeUpdateSelectedItems(deletions)
             val itemCellModelsToUpdate = mutableItemCellModels
             deletions.sorted().reversed().forEach { idx ->
                 if (!isActive) {
@@ -417,9 +415,6 @@ class AllItemsProcessor @Inject constructor(
                     return@launch
                 }
                 val item = frozenItems[idx]!!
-                if (processorInterface.isEditing()) {
-                    this@AllItemsProcessor.keys.add(element = item.key, index = idx)
-                }
 
                 val itemAccessory = accessory(item)
                 if (itemAccessory != null) {
@@ -469,17 +464,6 @@ class AllItemsProcessor @Inject constructor(
             sendItemCellModelsToUi()
         }
 
-    }
-
-    private fun maybeUpdateSelectedItems(deletions: IntArray) {
-        if (processorInterface.isEditing()) {
-            val mutableSelectedItems = processorInterface.getSelectedItems().toMutableSet()
-            deletions.sorted().reversed().forEach { idx ->
-                val key = this@AllItemsProcessor.keys.removeAt(idx)
-                mutableSelectedItems.remove(key)
-            }
-            processorInterface.setSelectedItems(mutableSelectedItems)
-        }
     }
 
     private fun accessory(item: RItem): ItemAccessory? {
@@ -578,19 +562,6 @@ class AllItemsProcessor @Inject constructor(
 
     fun getSortType(): ItemsSortType {
         return this.sortType
-    }
-
-    fun stopEditing() {
-        this.keys.clear()
-    }
-
-    fun startEditing() {
-        var keys = emptyList<String>()
-        val results = this.mutableItemCellModels
-//        if (results != null) {
-        keys = results.map { it.key }
-//        }
-        this.keys = keys.toMutableList()
     }
 
     fun onSearch(text: String) {

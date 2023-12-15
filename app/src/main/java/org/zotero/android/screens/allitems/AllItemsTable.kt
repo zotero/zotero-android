@@ -71,7 +71,7 @@ private fun ItemRow(
     showBottomDivider: Boolean = false
 ) {
     var rowModifier: Modifier = Modifier.height(64.dp)
-    if (viewState.selectedItems.contains(cellModel.key)) {
+    if (cellModel.isSelected) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
     }
     Box {
@@ -81,7 +81,7 @@ private fun ItemRow(
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = if (viewState.isEditing) null else rememberRipple(),
-                    onClick = { viewModel.onItemTapped(cellModel.key) },
+                    onClick = { viewModel.onItemTapped(cellModel) },
                     onLongClick = { viewModel.onItemLongTapped(cellModel.key) }
                 )
         ) {
@@ -116,7 +116,7 @@ private fun ItemRowLeftPart(
             Row {
                 Spacer(modifier = Modifier.width(16.dp))
                 CircleCheckBox(
-                    isChecked = viewState.selectedItems.contains(model.key),
+                    isChecked = model.isSelected,
                     layoutType = layoutType
                 )
             }

@@ -13,6 +13,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.screens.itemdetails.data.DeleteCreatorAction
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
@@ -42,7 +43,7 @@ internal class CreatorEditViewModel @Inject constructor(
         EventBus.getDefault().register(this)
         val args = ScreenArguments.creatorEditArgs
         updateState {
-            copy(itemType = args.itemType, creator = args.creator)
+            copy(itemType = args.itemType, creator = args.creator, isEditing = args.isEditing)
         }
         focusFirstField()
     }
@@ -136,6 +137,23 @@ internal class CreatorEditViewModel @Inject constructor(
         return state
     }
 
+    fun showDeleteCreatorConfirmation() {
+        updateState {
+            copy(shouldShowDeleteConfirmation = true)
+        }
+    }
+
+    fun onDismissDeleteConformation() {
+        updateState {
+            copy(shouldShowDeleteConfirmation = false)
+        }
+    }
+
+    fun deleteCreator() {
+        EventBus.getDefault().post(DeleteCreatorAction(viewState.creator!!.id))
+        triggerEffect(CreatorEditViewEffect.OnBack)
+    }
+
     override fun onCleared() {
         super.onCleared()
         EventBus.getDefault().unregister(this)
@@ -145,6 +163,8 @@ internal class CreatorEditViewModel @Inject constructor(
 internal data class CreatorEditViewState(
     val itemType: String = "",
     val creator: ItemDetailCreator? = null,
+    val isEditing: Boolean = false,
+    val shouldShowDeleteConfirmation: Boolean = false,
 ) : ViewState {
     val isValid: Boolean
         get() {

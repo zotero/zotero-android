@@ -1,6 +1,5 @@
 package org.zotero.android.screens.allitems
 
-import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toFile
@@ -88,7 +87,6 @@ internal class AllItemsViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val syncScheduler: SyncScheduler,
     private val allItemsProcessor: AllItemsProcessor,
-    private val context: Context,
     private val dispatchers: Dispatchers,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
@@ -517,42 +515,32 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    private fun selectItem(key: String) {
-        updateState {
-            copy(selectedItems = selectedItems + key)
-        }
-    }
-    private fun deselectItem(key: String) {
-        updateState {
-            copy(selectedItems = selectedItems - key)
-        }
-    }
-
     private fun showMetadata(item: RItem) {
         showItemDetail(item)
 //        resetActiveSearch() //TODO implement
     }
 
-    fun onItemTapped(key: String) {
+    fun onItemTapped(item: ItemCellModel) {
         if (viewState.isEditing) {
-            if (viewState.selectedItems.contains(key)) {
-                deselectItem(key)
+            if (item.isSelected) {
+                item.isSelected = false
             } else{
-                selectItem(key)
+                item.isSelected = true
             }
+            triggerScreenRefresh()
             return
         }
 
-        val accessory = allItemsProcessor.getItemAccessoryByKey(key)
+        val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
         if (accessory == null) {
-            showMetadata(allItemsProcessor.getResultByKey(key))
+            showMetadata(allItemsProcessor.getResultByKey(item.key))
             return
         }
 
         viewModelScope.launch {
             when (accessory) {
                 is ItemAccessory.attachment -> {
-                    val parentKey = if (key == accessory.attachment.key) null else key
+                    val parentKey = if (item.key == accessory.attachment.key) null else item.key
                     allItemsProcessor.open(attachment = accessory.attachment, parentKey = parentKey)
                 }
                 is ItemAccessory.doi -> showDoi(accessory.doi)
@@ -802,7 +790,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun startEditing() {
-        allItemsProcessor.startEditing()
+//        allItemsProcessor.startEditing()
         updateState {
             copy(
                 isEditing = true,
@@ -811,11 +799,12 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun stopEditing() {
-        allItemsProcessor.stopEditing()
+        viewState.itemCellModels.forEach {
+            it.isSelected = false
+        }
         updateState {
             copy(
                 isEditing = false,
-                selectedItems = emptySet()
             )
         }
     }
@@ -829,32 +818,32 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun toggleSelectionState() {
-        if (viewState.selectedItems.size != viewState.itemCellModels.size) {
-            updateState {
-                copy(selectedItems = (viewState.itemCellModels.map { it.key }
-                    ?: emptyList()).toSet())
+        if (viewState.getSelectedKeys().size != viewState.itemCellModels.size) {
+            viewState.itemCellModels.forEach {
+                it.isSelected = true
             }
         } else{
-            updateState {
-                copy(selectedItems = emptySet())
+            viewState.itemCellModels.forEach {
+                it.isSelected = false
             }
         }
+        triggerScreenRefresh()
     }
 
     fun onTrash() {
         viewModelScope.launch {
-            trashItems(viewState.selectedItems)
+            trashItems(viewState.getSelectedKeys())
         }
     }
 
     fun onRestore() {
         viewModelScope.launch {
-            set(trashed = false, keys = viewState.selectedItems)
+            set(trashed = false, keys = viewState.getSelectedKeys())
         }
     }
 
     fun onDelete() {
-        showDeleteItemsConfirmation(viewState.selectedItems)
+        showDeleteItemsConfirmation(viewState.getSelectedKeys())
     }
 
     fun onEmptyTrash() {
@@ -929,25 +918,12 @@ internal class AllItemsViewModel @Inject constructor(
             enable(ItemsFilter.tags(selected))
         }
     }
-
-    override fun getSelectedItems(): Set<String> {
-        return viewState.selectedItems
-    }
-
-    override fun setSelectedItems(newItems: Set<String>) {
-        viewModelScope.launch {
-            updateState {
-                copy(selectedItems = newItems)
-            }
-        }
-    }
 }
 
 internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Content,
     val snackbarMessage: SnackbarMessage? = null,
     val itemCellModels: List<ItemCellModel> = emptyList(),
-    val selectedItems: Set<String> = emptySet(),
     val isEditing: Boolean = false,
     val error: ItemsError? = null,
     val shouldShowAddBottomSheet: Boolean = false,
@@ -968,6 +944,7 @@ internal data class AllItemsViewState(
             }
             return tagFilter.tags
         }
+    fun getSelectedKeys() = itemCellModels.filter { it.isSelected }.map { it.key }.toSet()
 }
 
 internal sealed class AllItemsViewEffect : ViewEffect {

@@ -76,6 +76,7 @@ import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowCreatorE
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowImageViewer
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowItemTypePickerEffect
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.ShowVideoPlayer
+import org.zotero.android.screens.itemdetails.data.DeleteCreatorAction
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailAttachmentKind
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
@@ -150,6 +151,11 @@ class ItemDetailsViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(itemDetailCreator: ItemDetailCreator) {
         onSaveCreator(itemDetailCreator)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(action: DeleteCreatorAction) {
+        onDeleteCreator(action.id)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -549,15 +555,20 @@ class ItemDetailsViewModel @Inject constructor(
             type = schema.creatorType, primary = schema.primary,
             localizedType = localized, namePresentation = defaults.getCreatorNamePresentation()
         )
-        _showCreatorEditor(creator, itemType = itemType)
+        _showCreatorEditor(creator, itemType = itemType, isEditing = false)
     }
 
     private fun showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
-        _showCreatorEditor(creator, itemType = itemType)
+        _showCreatorEditor(creator, itemType = itemType, isEditing = true)
     }
 
-    private fun _showCreatorEditor(creator: ItemDetailCreator, itemType: String) {
-        ScreenArguments.creatorEditArgs = CreatorEditArgs(creator = creator, itemType = itemType)
+    private fun _showCreatorEditor(
+        creator: ItemDetailCreator,
+        itemType: String,
+        isEditing: Boolean
+    ) {
+        ScreenArguments.creatorEditArgs =
+            CreatorEditArgs(creator = creator, itemType = itemType, isEditing = isEditing)
         triggerEffect(ShowCreatorEditEffect)
     }
 

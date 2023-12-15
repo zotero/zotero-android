@@ -20,8 +20,6 @@ interface AllItemsProcessorInterface {
     fun triggerScreenRefresh()
     fun updateTagFilter()
     fun isEditing(): Boolean
-    fun getSelectedItems(): Set<String>
-    fun setSelectedItems(newItems: Set<String>)
     fun showItemDetailWithDelay(creation: DetailType.creation)
     fun updateItemCellModels(itemCellModels: List<ItemCellModel>)
 

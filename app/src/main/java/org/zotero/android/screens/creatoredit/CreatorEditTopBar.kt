@@ -14,6 +14,7 @@ internal fun CreatorEditTopBar(
     viewState: CreatorEditViewState
 ) {
     NewCustomTopBar(
+        shouldAddBottomDivider = false,
         backgroundColor = CustomTheme.colors.surface,
         title = viewState.creator?.localizedType,
         leftContainerContent = listOf {

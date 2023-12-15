@@ -57,8 +57,8 @@ private fun EditingBottomPanel(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val isRestoreAndDeleteEnabled = viewState.getSelectedKeys().isNotEmpty()
             if (viewState.isCollectionTrash) {
-                val isRestoreAndDeleteEnabled = viewState.selectedItems.isNotEmpty()
                 IconWithPadding(
                     drawableRes = Drawables.restore_trash,
                     isEnabled = isRestoreAndDeleteEnabled,
@@ -82,11 +82,10 @@ private fun EditingBottomPanel(
                     }
                 )
             } else {
-                val isDeleteEnabled = viewState.selectedItems.isNotEmpty()
                 IconWithPadding(
                     drawableRes = Drawables.delete_24px,
-                    isEnabled = isDeleteEnabled,
-                    tintColor = if (isDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
+                    isEnabled = isRestoreAndDeleteEnabled,
+                    tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
                     onClick = {
                         viewModel.onTrash()
                     }
