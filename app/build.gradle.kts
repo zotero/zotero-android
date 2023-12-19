@@ -186,10 +186,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     //Crash & Analytics
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation("com.google.android.play:core-ktx:1.8.1")
     implementation("com.google.firebase:firebase-crashlytics-ktx:18.5.1")
-    implementation("com.google.firebase:firebase-analytics-ktx:21.5.0")
 
     //PSPDFKIT
     implementation("com.pspdfkit:pspdfkit:8.10.0")
