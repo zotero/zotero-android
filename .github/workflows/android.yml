@@ -6,6 +6,9 @@ on:
     tags:
       - '**'  # Push events to every tag including hierarchical tags like v1.0/beta
 
+env:
+  ANDROID_PUBLISHER_CREDENTIALS: ${{secrets.ANDROID_PUBLISHER_CREDENTIALS}}
+
 jobs:
   build:
 
