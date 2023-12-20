@@ -1,0 +1,39 @@
+name: Zotero Android CI
+
+on:
+  push:
+    # Pattern matched against refs/tags
+    tags:
+      - '**'  # Push events to every tag including hierarchical tags like v1.0/beta
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Writing PSPDFKIT's key into a file to be then picked up by gradle.
+        run: echo ${{secrets.PSPDFKIT_KEY}} | sed 's/./& /g' > pspdfkit-key.txt
+
+      - name: Decrypt Keystore
+        run: openssl aes-256-cbc -d -in .github/keystore.cipher -k ${{secrets.SIGNING_KEY}} -md sha256 > release.keystore
+
+      - name: Decrypt Keystore secrets
+        run: openssl aes-256-cbc -d -in .github/keystore-secrets.cipher -k ${{secrets.SIGNING_KEY}} -md sha256 > keystore-secrets.txt
+
+      - name: Download Android dependencies
+        run: ./gradlew androidDependencies --no-configuration-cache
+
+      - name: Deploy to Google Play Internal Test Track
+        run: ./gradlew --no-configuration-cache -PpreDexLibs=false publishInternalReleaseBundle --stacktrace
