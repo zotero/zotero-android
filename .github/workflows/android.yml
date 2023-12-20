@@ -30,7 +30,7 @@ jobs:
         run: echo ${{secrets.PSPDFKIT_KEY}} | sed 's/./& /g' > pspdfkit-key.txt
 
       - name: Decrypt Keystore
-        run: openssl aes-256-cbc -d -in .github/keystore.cipher -k ${{secrets.SIGNING_KEY}} -md sha256 > release.keystore
+        run: openssl aes-256-cbc -d -in .github/keystore.cipher -k ${{secrets.SIGNING_KEY}} -md sha256 > zotero.release.keystore
 
       - name: Decrypt Keystore secrets
         run: openssl aes-256-cbc -d -in .github/keystore-secrets.cipher -k ${{secrets.SIGNING_KEY}} -md sha256 > keystore-secrets.txt
