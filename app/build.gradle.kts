@@ -1,3 +1,4 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import java.io.ByteArrayOutputStream
 
@@ -125,6 +126,7 @@ android {
 play {
     track.set("internal")
     defaultToAppBundles.set(true)
+    releaseStatus.set(ReleaseStatus.DRAFT)
     resolutionStrategy.set(ResolutionStrategy.AUTO)
 }
 
