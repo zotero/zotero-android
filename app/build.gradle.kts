@@ -79,7 +79,7 @@ android {
     productFlavors {
         dev {
             resValue("string", "app_name", """"Zotero Debug""")
-//            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
         internal {
@@ -112,15 +112,15 @@ android {
         resources.pickFirsts.add("META-INF/kotlinx-coroutines-core.kotlin_module")
     }
 
-//    androidComponents {
-//        beforeVariants { it.ignoreUnusedVariants() }
+    androidComponents {
+        beforeVariants { it.ignoreUnusedVariants() }
 //        onVariants {
 //            it.outputs.forEach { output ->
 //                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
 //                output.versionName.set(newVersionName)
 //            }
 //        }
-//    }
+    }
 }
 
 play {
