@@ -4,18 +4,20 @@ object BuildConfig {
     const val compileSdkVersion = 34
     const val targetSdk = 33
 
-    val versionCode = 32 // Must be updated on every build
+    val versionCode = 33 // Must be updated on every build
     val version = Version(
         major = 1,
         minor = 0,
-        patch = 19,
+        patch = 0,
+        versionCode = versionCode,
     )
 }
 
 data class Version(
     val major: Int,
     val minor: Int,
-    val patch: Int
+    val patch: Int,
+    val versionCode: Int,
 ) {
-    val name = "$major.$minor.$patch"
+    val name = "$major.$minor.$patch-$versionCode"
 }

@@ -1,3 +1,5 @@
+import java.util.Locale
+
 object ProductFlavors {
     enum class Environment(
         val url: String,
@@ -19,4 +21,4 @@ object ProductFlavors {
 }
 
 @Suppress("DefaultLocale")
-fun ProductFlavors.Environment.envName() = name.toLowerCase()
+fun ProductFlavors.Environment.envName() = name.lowercase(Locale.getDefault())

@@ -1,4 +1,4 @@
-import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+
 import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import java.io.ByteArrayOutputStream
 
@@ -112,21 +112,20 @@ android {
         resources.pickFirsts.add("META-INF/kotlinx-coroutines-core.kotlin_module")
     }
 
-    androidComponents {
-        beforeVariants { it.ignoreUnusedVariants() }
-        onVariants {
-            it.outputs.forEach { output ->
-                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
-                output.versionName.set(newVersionName)
-            }
-        }
-    }
+//    androidComponents {
+//        beforeVariants { it.ignoreUnusedVariants() }
+//        onVariants {
+//            it.outputs.forEach { output ->
+//                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
+//                output.versionName.set(newVersionName)
+//            }
+//        }
+//    }
 }
 
 play {
     track.set("internal")
     defaultToAppBundles.set(true)
-    releaseStatus.set(ReleaseStatus.DRAFT)
     resolutionStrategy.set(ResolutionStrategy.AUTO)
 }
 
