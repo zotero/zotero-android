@@ -15,10 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.architecture.ui.CustomLayoutSize.LayoutType
+import org.zotero.android.screens.settings.SettingsDivider
+import org.zotero.android.screens.settings.SettingsItem
+import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -32,7 +34,6 @@ internal fun CollectionEditScreen(
         statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
         navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     ) {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionEditViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -68,7 +69,6 @@ internal fun CollectionEditScreen(
             ) {
                 collectionEditRows(
                     viewState = viewState,
-                    layoutType = layoutType,
                     viewModel = viewModel,
                 )
             }
@@ -87,36 +87,35 @@ internal fun CollectionEditScreen(
 private fun LazyListScope.collectionEditRows(
     viewState: CollectionEditViewState,
     viewModel: CollectionEditViewModel,
-    layoutType: LayoutType
 ) {
     item {
         Spacer(modifier = Modifier.height(30.dp))
         CollectionEditFieldEditableRow(
             detailValue = viewState.name,
-            viewModel  = viewModel,
-            layoutType = layoutType
+            viewModel = viewModel,
         )
     }
     item {
         Spacer(modifier = Modifier.height(30.dp))
         LibrarySelectorRow(
             viewState = viewState,
-            layoutType = layoutType,
             onClick = viewModel::onParentClicked
         )
         if (viewState.key != null) {
             Spacer(modifier = Modifier.height(30.dp))
-            CollectionEditFieldTappableRow(
-                title = stringResource(id = Strings.collections_delete),
-                layoutType = layoutType,
-                onClick = viewModel::delete
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            CollectionEditFieldTappableRow(
-                title = stringResource(id = Strings.collections_delete_with_items),
-                layoutType = layoutType,
-                onClick = viewModel::deleteWithItems
-            )
+            SettingsSection {
+                SettingsItem(
+                    textColor = CustomPalette.ErrorRed,
+                    title = stringResource(id = Strings.collections_delete),
+                    onItemTapped = viewModel::delete
+                )
+                SettingsDivider()
+                SettingsItem(
+                    textColor = CustomPalette.ErrorRed,
+                    title = stringResource(id = Strings.collections_delete_with_items),
+                    onItemTapped = viewModel::deleteWithItems
+                )
+            }
         }
     }
 

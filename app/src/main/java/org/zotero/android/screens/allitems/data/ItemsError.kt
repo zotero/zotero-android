@@ -17,4 +17,5 @@ sealed class ItemsError  {
 
     data class deleteConfirmationForItems(val itemsKeys: Set<String>): ItemsError()
     object deleteConfirmationForEmptyTrash: ItemsError()
+    data class showRemoveFromCollectionQuestion(val itemsKeys: Set<String>): ItemsError()
 }

@@ -28,6 +28,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
+    navigateToCollectionPicker: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -51,6 +52,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToVideoPlayerScreen = navigateToVideoPlayerScreen,
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             navigateToTagFilter = navigateToTagFilter,
+            navigateToCollectionPicker = navigateToCollectionPicker,
         )
     }
 }

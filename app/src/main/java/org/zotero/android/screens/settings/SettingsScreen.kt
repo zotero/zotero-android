@@ -70,34 +70,29 @@ internal fun SettingsScreen(
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSection {
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = true,
                         title = stringResource(id = Strings.settings_sync_account),
-                        onItemTapped = toAccountScreen
+                        onItemTapped = toAccountScreen,
+                        addNewScreenNavigationIndicator = true,
                     )
                 }
                 Spacer(modifier = Modifier.height(30.dp))
 
                 SettingsSection {
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = true,
                         title = stringResource(id = Strings.settings_debug),
-                        onItemTapped = toDebugScreen
+                        onItemTapped = toDebugScreen,
+                        addNewScreenNavigationIndicator = true,
                     )
                 }
                 Spacer(modifier = Modifier.height(30.dp))
 
                 SettingsSection {
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = false,
                         title = stringResource(id = Strings.support_feedback),
                         onItemTapped = viewModel::openSupportAndFeedback
                     )
+                    SettingsDivider()
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = true,
                         title = stringResource(id = Strings.privacy_policy),
                         onItemTapped = viewModel::openPrivacyPolicy
                     )

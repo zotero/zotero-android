@@ -210,6 +210,13 @@ data class CustomTypography(
         letterSpacing = 0.sp,
         lineHeight = 22.sp,
     ),
+    val newFootnote: TextStyle = TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Normal,
+        fontFamily = fonts,
+        letterSpacing = 0.sp,
+        lineHeight = 18.sp,
+    ),
 )
 
 @Preview(showBackground = true)

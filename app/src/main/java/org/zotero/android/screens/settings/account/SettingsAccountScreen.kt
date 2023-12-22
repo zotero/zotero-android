@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.settings.SettingsDivider
 import org.zotero.android.screens.settings.SettingsItem
 import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.screens.settings.SettingsSectionTitle
@@ -35,7 +35,6 @@ internal fun SettingsAccountScreen(
     CustomThemeWithStatusAndNavBars(
         navBarBackgroundColor = backgroundColor,
     ) {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(SettingsAccountViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -69,17 +68,14 @@ internal fun SettingsAccountScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
-                SettingsSectionTitle(layoutType = layoutType, titleId = Strings.settings_data_sync)
+                SettingsSectionTitle(titleId = Strings.settings_data_sync)
                 SettingsSection {
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = false,
                         title = viewState.username,
                         onItemTapped = {}
                     )
+                    SettingsDivider()
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = true,
                         textColor = CustomPalette.ErrorRed,
                         title = stringResource(id = Strings.settings_logout),
                         onItemTapped = viewModel::onSignOut
@@ -87,20 +83,16 @@ internal fun SettingsAccountScreen(
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSectionTitle(
-                    layoutType = layoutType,
                     titleId = Strings.settings_account_caps
                 )
                 SettingsSection {
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = false,
                         textColor = CustomTheme.colors.zoteroDefaultBlue,
                         title = stringResource(id = Strings.settings_sync_manage_account),
                         onItemTapped = viewModel::openManageAccount
                     )
+                    SettingsDivider()
                     SettingsItem(
-                        layoutType = layoutType,
-                        isLastItem = true,
                         textColor = CustomPalette.ErrorRed,
                         title = stringResource(id = Strings.settings_sync_delete_account),
                         onItemTapped = viewModel::openDeleteAccount

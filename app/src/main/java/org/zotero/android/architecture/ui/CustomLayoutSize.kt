@@ -78,13 +78,6 @@ object CustomLayoutSize {
             return 48.dp
         }
 
-        fun calculateBuildInfoTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 14.sp
-                small -> 10.sp
-            }
-        }
-
         fun calculateSyncProgressBottomPanelHeight(): Dp {
             return calculateAllItemsBottomPanelHeight() - 4.dp
         }
@@ -112,13 +105,6 @@ object CustomLayoutSize {
             return when (this) {
                 big, medium -> 16.sp
                 small -> 16.sp
-            }
-        }
-
-        fun calculateSettingsSectionTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 14.sp
-                small -> 14.sp
             }
         }
     }

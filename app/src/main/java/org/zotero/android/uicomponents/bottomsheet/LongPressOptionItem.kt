@@ -71,6 +71,16 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.content_copy_24px
     )
 
+    data class AddToCollection(val item: RItem): LongPressOptionItem(
+        titleId = Strings.items_action_add_to_collection,
+        resIcon = Drawables.create_new_folder_24px
+    )
+
+    data class RemoveFromCollection(val item: RItem): LongPressOptionItem(
+        titleId = Strings.items_action_remove_from_collection,
+        resIcon = Drawables.unsubscribe_24
+    )
+
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_create_parent,
         resIcon = Drawables.add_24px

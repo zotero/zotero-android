@@ -26,7 +26,9 @@ fun NewCustomTopBar(
     rightContainerContent: List<@Composable (RowScope.() -> Unit)> = emptyList(),
     shouldFillMaxWidth: Boolean = true,
     shouldAddBottomDivider: Boolean = true,
-    backgroundColor: Color = CustomTheme.colors.topBarBackgroundColor
+    backgroundColor: Color = CustomTheme.colors.topBarBackgroundColor,
+    leftGuidelineStartPercentage: Float = 0.3f,
+    rightGuidelineStartPercentage: Float = 0.3f,
 ) {
     var modifier: Modifier = Modifier
     if (shouldFillMaxWidth) {
@@ -53,8 +55,8 @@ fun NewCustomTopBar(
         }
 
         if (title != null) {
-            val startGuideline = createGuidelineFromStart(0.3f)
-            val endGuideline = createGuidelineFromEnd(0.3f)
+            val startGuideline = createGuidelineFromStart(leftGuidelineStartPercentage)
+            val endGuideline = createGuidelineFromEnd(rightGuidelineStartPercentage)
             Text(
                 modifier = Modifier
 //                    .background(color = Color.Red)

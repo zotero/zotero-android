@@ -19,6 +19,7 @@ import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
+import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
@@ -57,6 +58,7 @@ internal fun TabletRightPaneNavigation(
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
             navigateToZoterWebViewScreen = toZoteroWebViewScreen,
             navigateToTagFilter = { },
+            navigateToCollectionPicker = navigation::toCollectionPickerDialog,
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
@@ -79,6 +81,12 @@ internal fun TabletRightPaneNavigation(
             route = TabletRightPaneDestinations.TAG_PICKER_DIALOG,
         ) {
             TagPickerScreen(onBack = navigation::onBack)
+        }
+
+        dialogDynamicHeight(
+            route = TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG,
+        ) {
+            CollectionPickerScreen(onBack = { navController.popBackStack()})
         }
 
         dialogFixedMaxHeight(
@@ -106,7 +114,8 @@ private object TabletRightPaneDestinations {
     const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
     const val SINGLE_PICKER_DIALOG = "singlePickerDialog"
     const val TAG_PICKER_DIALOG = "tagPickerDialog"
-    const val TAG_FILTER_DIALOG = "tagFilterDialog"
+    const val COLLECTION_PICKER_DIALOG = "collectionPickerDialog"
+
 }
 
 private fun ZoteroNavigation.toAllItemsSortDialog() {
@@ -123,4 +132,8 @@ private fun ZoteroNavigation.toTagPickerDialog() {
 
 private fun ZoteroNavigation.toSinglePickerDialog() {
     navController.navigate(TabletRightPaneDestinations.SINGLE_PICKER_DIALOG)
+}
+
+private fun ZoteroNavigation.toCollectionPickerDialog() {
+    navController.navigate(TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG)
 }

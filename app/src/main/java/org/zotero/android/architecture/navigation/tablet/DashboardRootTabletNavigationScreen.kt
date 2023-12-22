@@ -43,8 +43,6 @@ internal fun DashboardRootTabletNavigationScreen(
         viewModel.init()
     }
 
-//    SolidStatusBar()
-
     val rightPaneNavController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val rightPaneNavigation = remember(rightPaneNavController) {

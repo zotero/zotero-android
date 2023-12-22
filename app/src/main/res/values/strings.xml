@@ -16,5 +16,6 @@
     <string name="tags_label">Tags:</string>
     <string name="no_tags">No Tags</string>
     <string name="no_comments">No Comments</string>
+    <string name="select_collection">Select a Collection</string>
 
 </resources>

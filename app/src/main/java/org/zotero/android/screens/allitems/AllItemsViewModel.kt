@@ -25,13 +25,16 @@ import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.requests.AssignItemsToCollectionsDbRequest
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateNoteDbRequest
+import org.zotero.android.database.requests.DeleteItemsFromCollectionDbRequest
 import org.zotero.android.database.requests.EditNoteDbRequest
 import org.zotero.android.database.requests.EmptyTrashDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetMimeTypeUseCase
 import org.zotero.android.helpers.MediaSelectionResult
@@ -46,6 +49,9 @@ import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
+import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.screens.filter.data.FilterArgs
@@ -142,6 +148,11 @@ internal class AllItemsViewModel @Inject constructor(
         onLongPressOptionsItemSelected(event)
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: CollectionPickerMultiResult) {
+        add(itemKeys = preSelectedItemKeysToAddToCollection, collectionKeys = result.keys)
+    }
+
     override fun showItemDetailWithDelay(creation: DetailType.creation) {
         viewModelScope.launch {
             delay(800)
@@ -169,6 +180,7 @@ internal class AllItemsViewModel @Inject constructor(
                 searchTerm = searchTerm,
                 error = args.error,
                 isCollectionTrash = this@AllItemsViewModel.collection.identifier.isTrash,
+                isCollectionACollection = this@AllItemsViewModel.collection.identifier.isCollection,
                 collectionName = this@AllItemsViewModel.collection.name
             )
         }
@@ -639,6 +651,12 @@ internal class AllItemsViewModel @Inject constructor(
                 is LongPressOptionItem.Duplicate -> {
                     loadItemForDuplication(longPressOptionItem.item.key)
                 }
+                is LongPressOptionItem.AddToCollection -> {
+                    showCollectionPicker(setOf(longPressOptionItem.item.key))
+                }
+                is LongPressOptionItem.RemoveFromCollection -> {
+                    showRemoveFromCollectionQuestion(setOf(longPressOptionItem.item.key))
+                }
                 is LongPressOptionItem.CreateParentItem -> {
                     createParent(longPressOptionItem.item)
                 }
@@ -653,6 +671,19 @@ internal class AllItemsViewModel @Inject constructor(
                 else -> {}
             }
         }
+    }
+
+    private var preSelectedItemKeysToAddToCollection: Set<String> = emptySet()
+
+    private fun showCollectionPicker(selectedItemKeys: Set<String>) {
+        preSelectedItemKeysToAddToCollection = selectedItemKeys
+        ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
+            mode = CollectionPickerMode.multiple,
+            library = this.library,
+            excludedKeys = emptySet(),
+            selected = emptySet()
+        )
+        triggerEffect(AllItemsViewEffect.ShowCollectionPickerEffect)
     }
 
     private fun createParent(item: RItem) {
@@ -717,6 +748,14 @@ internal class AllItemsViewModel @Inject constructor(
                     }
                 }
             }
+        }
+
+        val identifier = this.collection.identifier
+
+        actions.add(LongPressOptionItem.AddToCollection(item))
+
+        if (identifier is CollectionIdentifier.collection && item.collections?.where()?.key(identifier.key)?.findFirst() != null) {
+            actions.add(LongPressOptionItem.RemoveFromCollection(item))
         }
 
         if (item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment) {
@@ -918,6 +957,60 @@ internal class AllItemsViewModel @Inject constructor(
             enable(ItemsFilter.tags(selected))
         }
     }
+
+    fun onAddToCollection() {
+       showCollectionPicker(viewState.getSelectedKeys())
+    }
+
+    fun showRemoveFromCollectionQuestion(itemsKeys: Set<String>) {
+        updateState {
+            copy(
+                error = ItemsError.showRemoveFromCollectionQuestion(
+                    itemsKeys
+                )
+            )
+        }
+    }
+
+    fun deleteItemsFromCollection(keys: Set<String>) {
+        val identifier = this.collection.identifier
+        if (identifier !is CollectionIdentifier.collection) {
+            return
+        }
+
+        val request = DeleteItemsFromCollectionDbRequest(
+            collectionKey = identifier.key,
+            itemKeys = keys,
+            libraryId = this.library.identifier
+        )
+        viewModelScope.launch {
+            perform(dbWrapper, request = request).ifFailure {
+                Timber.e(it, "ItemsStore: can't delete items")
+                updateState {
+                    copy(error = ItemsError.deletionFromCollection)
+                }
+                return@launch
+            }
+        }
+    }
+
+    private fun add(itemKeys: Set<String>, collectionKeys: Set<String>) {
+        val request = AssignItemsToCollectionsDbRequest(
+            collectionKeys = collectionKeys,
+            itemKeys = itemKeys,
+            libraryId = this.library.identifier
+        )
+
+        viewModelScope.launch {
+            perform(dbWrapper, request = request).ifFailure {
+                Timber.e(it, "ItemsStore: can't assign collections to items")
+                updateState {
+                    copy(error = ItemsError.collectionAssignment)
+                }
+                return@launch
+            }
+        }
+    }
 }
 
 internal data class AllItemsViewState(
@@ -931,6 +1024,7 @@ internal data class AllItemsViewState(
     val isRefreshing: Boolean = false,
     val filters: List<ItemsFilter> = emptyList(),
     val isCollectionTrash: Boolean = false,
+    val isCollectionACollection: Boolean = false,
     val collectionName: String = ""
 ) : ViewState {
     val tagsFilter: Set<String>?
@@ -953,6 +1047,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
     object ShowSortPickerEffect : AllItemsViewEffect()
+    object ShowCollectionPickerEffect: AllItemsViewEffect()
     object ShowFilterEffect : AllItemsViewEffect()
     data class OpenWebpage(val uri: Uri) : AllItemsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()

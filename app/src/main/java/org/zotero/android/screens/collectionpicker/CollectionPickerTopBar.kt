@@ -28,6 +28,8 @@ internal fun CollectionPickerTopBar(
                     onClick = onAdd
                 )
             }
-        }
+        },
+        leftGuidelineStartPercentage = 0.2f,
+        rightGuidelineStartPercentage = 0.2f,
     )
 }

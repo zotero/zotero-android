@@ -83,6 +83,25 @@ private fun EditingBottomPanel(
                 )
             } else {
                 IconWithPadding(
+                    drawableRes = Drawables.create_new_folder_24px,
+                    isEnabled = isRestoreAndDeleteEnabled,
+                    tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
+                    onClick = {
+                        viewModel.onAddToCollection()
+                    }
+                )
+                if(viewState.isCollectionACollection) {
+                    IconWithPadding(
+                        drawableRes = Drawables.unsubscribe_24,
+                        isEnabled = isRestoreAndDeleteEnabled,
+                        tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
+                        onClick = {
+                            viewModel.showRemoveFromCollectionQuestion(viewState.getSelectedKeys().toSet())
+                        }
+                    )
+                }
+
+                IconWithPadding(
                     drawableRes = Drawables.delete_24px,
                     isEnabled = isRestoreAndDeleteEnabled,
                     tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,

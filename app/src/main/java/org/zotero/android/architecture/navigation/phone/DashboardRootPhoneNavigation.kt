@@ -38,6 +38,7 @@ import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
+import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewModel
@@ -112,6 +113,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToImageViewerScreen = navigation::toImageViewerScreen,
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
+                    navigateToCollectionPicker = navigation::toCollectionPicker,
                     onShowPdf = navigation::toPdfScreen,
                 )
                 itemDetailsScreen(
@@ -152,6 +154,13 @@ internal fun DashboardRootPhoneNavigation(
                     )
                 }
 
+                composable(
+                    route = DashboardRootPhoneDestinations.COLLECTION_PICKER,
+                    arguments = listOf(),
+                ) {
+                    CollectionPickerScreen(onBack = navigation::onBack)
+                }
+
                 sortPickerNavScreens(navigation)
                 creatorEditNavScreens(navigation)
                 collectionEditNavScreens(navigation)
@@ -181,6 +190,7 @@ private object DashboardRootPhoneDestinations {
     const val SINGLE_PICKER = "singlePicker"
     const val TAG_PICKER = "tagPicker"
     const val TAG_FILTER = "tagFilter"
+    const val COLLECTION_PICKER = "collectionPicker"
 
 }
 
@@ -196,6 +206,10 @@ private fun ZoteroNavigation.toTagPicker() {
 
 private fun ZoteroNavigation.toSinglePicker() {
     navController.navigate(DashboardRootPhoneDestinations.SINGLE_PICKER)
+}
+
+private fun ZoteroNavigation.toCollectionPicker() {
+    navController.navigate(DashboardRootPhoneDestinations.COLLECTION_PICKER)
 }
 
 private fun ZoteroNavigation.toTagFilter() {

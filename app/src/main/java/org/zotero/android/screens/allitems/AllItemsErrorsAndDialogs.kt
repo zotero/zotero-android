@@ -15,6 +15,7 @@ internal fun ShowErrorOrDialog(
     onDismissDialog: () -> Unit,
     onDeleteItems: (keys: Set<String>) -> Unit,
     onEmptyTrash: () -> Unit,
+    deleteItemsFromCollection: (Set<String>) -> Unit,
 ) {
     when (itemsError) {
         is ItemsError.deleteConfirmationForItems -> {
@@ -51,6 +52,25 @@ internal fun ShowErrorOrDialog(
                 ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
                     text = stringResource(id = Strings.no),
+                ),
+                onDismiss = onDismissDialog
+            )
+        }
+        is ItemsError.showRemoveFromCollectionQuestion -> {
+            CustomAlertDialog(
+                title = stringResource(id = Strings.items_remove_from_collection_title),
+                description = quantityStringResource(
+                    id = Plurals.items_remove_from_collection_question, itemsError.itemsKeys.size
+                ),
+                primaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.no),
+
+                ),
+                secondaryAction = CustomAlertDialog.ActionConfig(
+                    text = stringResource(id = Strings.yes),
+                    onClick = {
+                        deleteItemsFromCollection(itemsError.itemsKeys)
+                    }
                 ),
                 onDismiss = onDismissDialog
             )

@@ -7,18 +7,18 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.zotero.android.BuildConfig
-import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 fun ColumnScope.BuildInfo() {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
     Spacer(modifier = Modifier.height(4.dp))
     Text(
         modifier = Modifier.align(Alignment.CenterHorizontally),
         text = "Zotero (${BuildConfig.VERSION_NAME})",
-        fontSize = layoutType.calculateBuildInfoTextSize(),
+        style = CustomTheme.typography.newFootnote,
+        color = Color(0xFF8E8E92),
     )
-    Spacer(modifier = Modifier.height(4.dp))
 }

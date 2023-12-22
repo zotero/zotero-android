@@ -39,6 +39,7 @@ internal fun AllItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAllItemsSort: () -> Unit,
+    navigateToCollectionPicker: () -> Unit,
     navigateToItemDetails: () -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
@@ -72,6 +73,9 @@ internal fun AllItemsScreen(
 
                 AllItemsViewEffect.ShowSortPickerEffect -> {
                     navigateToAllItemsSort()
+                }
+                AllItemsViewEffect.ShowCollectionPickerEffect -> {
+                    navigateToCollectionPicker()
                 }
 
                 AllItemsViewEffect.ScreenRefresh -> {
@@ -165,7 +169,8 @@ internal fun AllItemsScreen(
                         itemsError = itemsError,
                         onDismissDialog = viewModel::onDismissDialog,
                         onDeleteItems = { viewModel.delete(it) },
-                        onEmptyTrash = { viewModel.emptyTrash() }
+                        onEmptyTrash = { viewModel.emptyTrash() },
+                        deleteItemsFromCollection = { viewModel.deleteItemsFromCollection(it) },
                     )
                 }
                 val bottomSheetTitle = stringResource(id = Strings.item_type)
