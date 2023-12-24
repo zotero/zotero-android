@@ -213,6 +213,9 @@ internal class CollectionsViewModel @Inject constructor(
                         libraryId = libraryId,
                         includeItemCounts = includeItemCounts
                     )
+
+                    collectionTree.sortNodes()
+
                     collectionTree.insert(
                         collection = Collection.initWithCustomType(
                             type = CollectionIdentifier.CustomType.all,
@@ -332,6 +335,7 @@ internal class CollectionsViewModel @Inject constructor(
             libraryId = viewState.libraryId,
             includeItemCounts = includeItemCounts
         )
+        tree.sortNodes()
         val collectionTree = viewState.collectionTree
         collectionTree.replace(matching = { it.isCollection }, tree = tree)
         updateCollectionTree(collectionTree, collectionTree.createSnapshot())

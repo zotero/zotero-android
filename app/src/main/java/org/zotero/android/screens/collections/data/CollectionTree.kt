@@ -13,7 +13,7 @@ data class CollectionTree(
     data class Node(
         val identifier: CollectionIdentifier,
         val parent: CollectionIdentifier?,
-        val children: List<Node>,
+        var children: List<Node>,
     )
 
     enum class CollapseState {
@@ -147,6 +147,23 @@ data class CollectionTree(
             }
         }
         return null
+    }
+
+    fun sortNodes() {
+        nodes.sortBy { this.collections[it.identifier]!!.name.lowercase() }
+        nodes.forEach { node ->
+            recursivelySortChildren(node)
+        }
+    }
+
+    private fun recursivelySortChildren(node: Node) {
+        val childsSorted =
+            node.children
+                .sortedBy { this.collections[it.identifier]!!.name.lowercase() }
+        node.children = childsSorted
+        node.children.forEach {
+            recursivelySortChildren(it)
+        }
     }
 
 }

@@ -89,6 +89,7 @@ internal class CollectionPickerViewModel @Inject constructor(
                 libraryId = libraryId,
                 includeItemCounts = false
             )
+            collectionTree.sortNodes()
             startObservingResults()
             updateCollectionTree(collectionTree)
         } catch (error: Throwable) {
@@ -121,6 +122,7 @@ internal class CollectionPickerViewModel @Inject constructor(
             libraryId = viewState.library.identifier,
             includeItemCounts = false
         )
+        tree.sortNodes()
         updateCollectionTree(tree)
         val removed = mutableSetOf<String>()
         for (key in viewState.selected) {

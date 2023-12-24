@@ -92,7 +92,7 @@ private fun EditingBottomPanel(
                 )
                 if(viewState.isCollectionACollection) {
                     IconWithPadding(
-                        drawableRes = Drawables.unsubscribe_24,
+                        drawableRes = Drawables.remove_from_collection,
                         isEnabled = isRestoreAndDeleteEnabled,
                         tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
                         onClick = {

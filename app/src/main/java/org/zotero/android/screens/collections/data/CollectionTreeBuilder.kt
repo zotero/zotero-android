@@ -77,20 +77,9 @@ class CollectionTreeBuilder {
                     parent = parent,
                     children = children
                 )
-//                val insertionIndex =
-//                    insertionIndex(node = node, nodes, collections = allCollections)
-//                nodes.add(index = insertionIndex, node)
                 nodes.add(node)
             }
             return nodes
-        }
-
-        private fun insertionIndex(node: CollectionTree.Node, array: MutableList<CollectionTree.Node>, collections: Map<CollectionIdentifier, Collection>): Int {
-            return array.sortedWith {lhs, rhs ->
-                val lCollection = collections[lhs.identifier] ?: return@sortedWith 1
-                val rCollection = collections[rhs.identifier] ?: return@sortedWith 1
-                lCollection.name.compareTo(rCollection.name)
-            }.indexOf(node)
         }
 
         private fun collection(

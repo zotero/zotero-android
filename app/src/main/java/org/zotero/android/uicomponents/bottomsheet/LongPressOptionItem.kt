@@ -78,7 +78,7 @@ sealed class LongPressOptionItem(
 
     data class RemoveFromCollection(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_remove_from_collection,
-        resIcon = Drawables.unsubscribe_24
+        resIcon = Drawables.remove_from_collection
     )
 
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
