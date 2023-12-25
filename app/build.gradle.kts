@@ -83,11 +83,8 @@ android {
             applicationIdSuffix = ".debug"
         }
         internal {
-            resValue("string", "app_name", """"Zotero Internal""")
-            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
-        }
-        beta {
             resValue("string", "app_name", """"Zotero Beta""")
+            buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
     }
 

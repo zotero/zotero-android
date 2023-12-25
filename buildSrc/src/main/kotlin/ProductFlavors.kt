@@ -9,9 +9,6 @@ object ProductFlavors {
         ),
         INTERNAL(
             url = "",
-        ),
-        BETA(
-            url = "",
         );
 
         companion object {

@@ -11,9 +11,6 @@ fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
                 dimension = ProductFlavors.Environment.dimension
             }
         }
-        create(ProductFlavors.Environment.BETA.envName()) {
-            dimension = ProductFlavors.Environment.dimension
-        }
     }
 }
 
@@ -23,10 +20,6 @@ fun <T> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
 
 fun <T> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.INTERNAL.envName()).block()
-}
-
-fun <T> NamedDomainObjectContainer<T>.beta(block: T.() -> Unit) {
-    getByName(ProductFlavors.Environment.BETA.envName()).block()
 }
 
 private val ignoreSet = setOf("devRelease", "internalDebug", "betaDebug")

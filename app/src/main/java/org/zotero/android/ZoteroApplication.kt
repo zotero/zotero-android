@@ -1,11 +1,9 @@
 package org.zotero.android
 
 import android.app.Application
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.work.Configuration
 import com.google.gson.Gson
 import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
@@ -21,10 +19,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @HiltAndroidApp
-open class ZoteroApplication : Configuration.Provider, Application(), DefaultLifecycleObserver {
-
-    @Inject
-    lateinit var workerFactory: HiltWorkerFactory
+open class ZoteroApplication: Application(), DefaultLifecycleObserver {
 
     @Inject
     lateinit var controllers: Controllers
@@ -69,11 +64,6 @@ open class ZoteroApplication : Configuration.Provider, Application(), DefaultLif
             PSPDFKit.initialize(this, BuildConfig.PSPDFKIT_KEY)
         }
     }
-
-    override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
 
     override fun onStart(owner: LifecycleOwner) {
         controllers.willEnterForeground()
