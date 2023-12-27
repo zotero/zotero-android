@@ -5,7 +5,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.gson.Gson
-import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.BuildConfig.EVENT_AND_CRASH_LOGGING_ENABLED
 import org.zotero.android.api.ForGsonWithRoundedDecimals
@@ -56,13 +55,6 @@ open class ZoteroApplication: Application(), DefaultLifecycleObserver {
         controllers.init()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        initializePspdfKit()
-    }
-
-    private fun initializePspdfKit() {
-        if (BuildConfig.PSPDFKIT_KEY.isNotBlank()) {
-            PSPDFKit.initialize(this, BuildConfig.PSPDFKIT_KEY)
-        }
     }
 
     override fun onStart(owner: LifecycleOwner) {

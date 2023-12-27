@@ -32,6 +32,10 @@ android {
         buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
         buildConfigField("String", "PSPDFKIT_KEY", "\"\"")
         manifestPlaceholders["enableCrashReporting"] = false
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
     signingConfigs {
         create("release") {

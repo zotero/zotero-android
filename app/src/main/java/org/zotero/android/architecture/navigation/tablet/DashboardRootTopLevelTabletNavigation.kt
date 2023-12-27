@@ -6,6 +6,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
@@ -31,6 +32,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
 ) {
+    val context = LocalContext.current
     val navController = rememberAnimatedNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -47,7 +49,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel,
-            onShowPdf = navigation::toPdfScreen,
+            onShowPdf = { navigation.toPdfScreen(context) },
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
         )

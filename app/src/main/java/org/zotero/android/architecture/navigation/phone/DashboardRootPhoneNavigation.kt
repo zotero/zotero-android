@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
@@ -71,6 +72,8 @@ internal fun DashboardRootPhoneNavigation(
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+    val context = LocalContext.current
+
     Box{
         Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
             ZoteroNavHost(
@@ -114,7 +117,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
-                    onShowPdf = navigation::toPdfScreen,
+                    onShowPdf = { navigation.toPdfScreen(context) },
                 )
                 itemDetailsScreen(
                     navigateToCreatorEdit = navigation::toCreatorEdit,
@@ -128,7 +131,7 @@ internal fun DashboardRootPhoneNavigation(
                     onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,
                     onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-                    onShowPdf = navigation::toPdfScreen,
+                    onShowPdf = { navigation.toPdfScreen(context) },
                 )
 
                 composable(

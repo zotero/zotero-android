@@ -37,9 +37,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:requestLegacyExternalStorage"
         tools:targetApi="n">
-<!--        <meta-data-->
-<!--            android:name="pspdfkit_automatic_initialize"-->
-<!--            android:value="false" />-->
+        <meta-data
+            android:name="pspdfkit_automatic_initialize"
+            android:value="false" />
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${enableCrashReporting}" />
