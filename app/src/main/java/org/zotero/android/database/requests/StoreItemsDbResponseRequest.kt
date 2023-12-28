@@ -430,7 +430,7 @@ class StoreItemDbRequest(
                     return true
                 }
                 val sortedCoordinates = itemPath.coordinates.sort("sortIndex")
-                for (idy in 0..path.size) {
+                for (idy in path.indices) {
                     if (path[idy]
                         != sortedCoordinates[idy]?.value
                     ) {
