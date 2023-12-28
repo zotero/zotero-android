@@ -126,7 +126,9 @@ internal fun LoginScreen(
                         keyboardActions = KeyboardActions(
                             onDone = { viewModel.onSignInClicked() }
                         ),
-                        onEnterOrTab = { viewModel.onSignInClicked() }
+                        onEnterOrTab = {
+                            viewModel.onSignInClicked()
+                        }
                     )
                     CustomDivider(modifier = Modifier.padding(vertical = 16.dp))
                     Spacer(modifier = Modifier.height(12.dp))

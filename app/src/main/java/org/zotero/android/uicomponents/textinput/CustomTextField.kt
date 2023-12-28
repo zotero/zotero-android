@@ -26,10 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
@@ -185,6 +188,7 @@ fun CustomTextField(
         horizontalAlignment = textStyle.textAlign.asHorizontalAlignment,
     ) {
         val showHint = value.isEmpty()
+        var hasFocus by remember { mutableStateOf(false) }
         BasicTextField(
             value = textFieldValue,
             visualTransformation = visualTransformation,
@@ -199,16 +203,21 @@ fun CustomTextField(
             },
             modifier = Modifier
                 .focusRequester(focusRequester)
-                .then(innerModifier.onKeyEvent {
-                    if (onEnterOrTab != null
-                        && (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
-                                || it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_TAB)
+                .then(innerModifier)
+                .onFocusChanged {
+                    hasFocus = it.hasFocus
+                }
+                .onKeyEvent {
+                    if (
+                        hasFocus && it.type == KeyEventType.KeyDown
+                        && onEnterOrTab != null
+                        && (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER || it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_TAB)
                     ) {
                         onEnterOrTab()
                         return@onKeyEvent true
                     }
                     false
-                })
+                }
                 .placeCenterOfFirstAndLastLine(
                     maxLines = if (singleLine) 1 else maxLines,
                 ),
