@@ -1,11 +1,12 @@
 package org.zotero.android.files
 
 import com.google.gson.JsonElement
+import com.google.gson.JsonNull
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import org.zotero.android.ktx.rounded
 import java.lang.reflect.Type
-import java.text.DecimalFormat
 
 class FormattedDoubleJsonSerializer : JsonSerializer<Double> {
 
@@ -14,7 +15,10 @@ class FormattedDoubleJsonSerializer : JsonSerializer<Double> {
         typeOfSrc: Type?,
         context: JsonSerializationContext?
     ): JsonElement {
-        val df = DecimalFormat("#.###")
-        return JsonPrimitive(df.format(src).toDouble())
+        if (src == null) {
+            return JsonNull.INSTANCE
+        }
+        val roundedResult = src.rounded(3)
+        return JsonPrimitive(roundedResult)
     }
 }
