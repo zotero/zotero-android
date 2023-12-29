@@ -2,6 +2,7 @@ package org.zotero.android.screens.allitems.processor
 
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
+import io.realm.RealmChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -317,13 +318,15 @@ class AllItemsProcessor @Inject constructor(
                 }
             }
         })
-
     }
 
     private fun reactToDbUpdate(
         changeSet: OrderedCollectionChangeSet,
         items: RealmResults<RItem>
     ) {
+        removeChildListeners()
+        addChildListeners(items)
+
         val frozenItems = items.freeze()
 
         val deletions = changeSet.deletions
@@ -349,7 +352,7 @@ class AllItemsProcessor @Inject constructor(
     private fun processResultsReset(results: RealmResults<RItem>) {
         resultsProcessorCoroutineScope?.cancel()
         resultsProcessorCoroutineScope = CoroutineScope(limitedParallelismDispatcher)
-        this.results?.removeAllChangeListeners()
+        removeAllListenersFromResultsList()
         this.results = results
 
         mutableItemCellModels = mutableListOf()
@@ -357,6 +360,52 @@ class AllItemsProcessor @Inject constructor(
 
         startObservingResults()
         processorInterface.updateTagFilter()
+    }
+
+    private fun removeAllListenersFromResultsList() {
+        this.results?.removeAllChangeListeners()
+        removeChildListeners()
+    }
+
+    private fun removeChildListeners() {
+        childListObjectToListen.forEach {
+            it?.removeAllChangeListeners()
+        }
+        childListObjectToListen.clear()
+    }
+
+    private val childListObjectToListen = mutableListOf<RealmResults<RItem>?>()
+
+    private fun addChildListeners(items: RealmResults<RItem>) {
+        items.forEach { item ->
+            val children = item.children
+            childListObjectToListen.add(children)
+            children?.addChangeListener(object : RealmChangeListener<RealmResults<RItem>> {
+                override fun onChange(t: RealmResults<RItem>) {
+                    val parent = item.freeze<RItem>()
+                    resultsProcessorCoroutineScope!!.launch {
+                        val itemAccessory = accessory(parent)
+                        if (itemAccessory != null) {
+                            this@AllItemsProcessor.itemAccessories.put(
+                                parent.key,
+                                itemAccessory
+                            )
+                        }
+                        if (!isActive) {
+                            return@launch
+                        }
+                        generateCellModels(
+                            item = parent,
+                            itemCellModelsToUpdate = mutableItemCellModels,
+                        )
+                        if (!isActive) {
+                            return@launch
+                        }
+                        sendItemCellModelsToUi()
+                    }
+                }
+            })
+        }
     }
 
     private fun sendItemCellModelsToUi() {
@@ -569,7 +618,7 @@ class AllItemsProcessor @Inject constructor(
     }
 
     fun clear() {
-        this.results?.removeAllChangeListeners()
+        removeAllListenersFromResultsList()
         this.results = null
         this.resultsProcessorCoroutineScope?.cancel()
         this.resultsProcessorCoroutineScope = null
