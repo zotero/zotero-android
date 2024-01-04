@@ -3,6 +3,8 @@ package org.zotero.android.api.network
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 object NetworkHelper {
     fun <T> parseNetworkResponse(networkResponse: Response<T>): CustomResult<T> {
@@ -20,6 +22,18 @@ object NetworkHelper {
             stringResponse = errorBody?.string()
         )
     }
+    fun <T> parseNetworkException(e: Exception): CustomResult<T> {
+        val isNoNetworkError = e is UnknownHostException || e is SocketTimeoutException
+        return CustomResult.GeneralError.NetworkError(
+            httpCode = if (isNoNetworkError) {
+                CustomResult.GeneralError.NetworkError.NO_INTERNET_CONNECTION_HTTP_CODE
+            } else {
+                CustomResult.GeneralError.NetworkError.UNKNOWN_NETWORK_EXCEPTION_HTTP_CODE
+            },
+            stringResponse = e.localizedMessage
+        )
+    }
+
 
 }
 
@@ -30,7 +44,7 @@ suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): CustomResult<T>
             val parseNetworkResponse = NetworkHelper.parseNetworkResponse(networkResponse)
             parseNetworkResponse
         } catch (e: Exception) {
-            CustomResult.GeneralError.CodeError(e)
+            NetworkHelper.parseNetworkException(e)
         }
     }
 

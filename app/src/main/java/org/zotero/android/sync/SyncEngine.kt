@@ -1031,6 +1031,9 @@ class SyncUseCase @Inject constructor(
         response: String,
         data: SyncError.ErrorData
     ): SyncError {
+        if (error.isNoNetworkError()) {
+            return SyncError.fatal2(SyncError.Fatal.noInternetConnection)
+        }
         val responseMessage: () -> String = {
             if (response == "No Response") {
                 error.stringResponse ?: "No error to parse"

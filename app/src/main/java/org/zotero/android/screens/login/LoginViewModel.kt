@@ -58,7 +58,9 @@ internal class LoginViewModel @Inject constructor(
                 copy(isLoading = false)
             }
             val error = networkResult as CustomResult.GeneralError.NetworkError
-            if (error.httpCode == 403) {
+            if (error.isNoNetworkError()) {
+                showErrorRes(Strings.errors_sync_toolbar_internet_connection)
+            } else if (error.httpCode == 403) {
                 showErrorRes(Strings.errors_login_invalid_credentials)
             } else {
                 showError(error.stringResponse)
