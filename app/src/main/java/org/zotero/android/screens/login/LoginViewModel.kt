@@ -94,7 +94,7 @@ internal class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun dismissSnackbar() {
+    fun dismissSnackbar() {
         updateState { copy(snackbarMessage = null) }
     }
 

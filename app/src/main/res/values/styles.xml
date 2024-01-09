@@ -168,4 +168,24 @@
         <item name="colorControlNormal">#9D9CA2</item>
     </style>
 
+    <style name="defaultTextStyle">
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">@font/suisse_intl_regular</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+    <style name="h2">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">@font/suisse_intl_semibold</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <style name="loading_indicator_style">
+
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:indeterminateTint">@color/white</item>
+        <item name="android:indeterminateTintMode">src_in</item>
+        <item name="android:indeterminate">true</item>
+    </style>
+
 </resources>

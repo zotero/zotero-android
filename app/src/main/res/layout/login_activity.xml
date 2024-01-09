@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/background_image"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="centerCrop"
+            android:src="@color/surface"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:gravity="center"
+            app:layout_constraintWidth_percent="0.9">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cancel"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                style="@style/defaultTextStyle"
+                android:textColor="@color/zoteroDefaultBlue" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/user_details_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintWidth_max="430dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <EditText
+                android:id="@+id/username_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/login.username"
+                android:textColorHint="@color/cool_grey"
+                style="@style/defaultTextStyle"
+                android:inputType="text"
+                android:maxLines="1"
+                app:backgroundTint="#FFEEEFF5"
+                android:autofillHints="username"
+                android:paddingBottom="25dp" />
+
+            <EditText
+                android:id="@+id/password_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/login.password"
+                android:autofillHints="password"
+                android:textColorHint="@color/cool_grey"
+                style="@style/defaultTextStyle"
+                android:inputType="textPassword"
+                app:backgroundTint="#FFEEEFF5"
+                android:paddingBottom="25dp"/>
+
+            <FrameLayout
+                android:layout_marginTop="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ProgressBar
+                    android:id="@+id/progress_indicator"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:visibility="gone"
+                    style="@style/loading_indicator_style"
+                    android:translationZ="5dp"
+                    android:layout_gravity="center"/>
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/sign_in_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    style="@style/h2"
+                    android:background="@drawable/round_corners_blue_button"
+                    android:text="@string/onboarding.sign_in"
+                    android:textColor="@color/white"
+                    android:textAllCaps="false"
+                    />
+
+
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/forgot_password_button"
+                android:text="@string/login.forgot_password"
+                android:layout_marginTop="24dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/zoteroBlueWithDarkMode"
+                style="@style/defaultTextStyle"/>
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

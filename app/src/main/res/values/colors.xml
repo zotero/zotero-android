@@ -16,7 +16,9 @@
     <color name="rain_grey">#abacb7</color>
     <color name="onyx">#32333C</color>
     <color name="red">#FF001F</color>
+    <color name="zoteroDefaultBlue">#FF4072E5</color>
     <color name="zoteroBlueWithDarkMode">#FF4071E6</color>
+    <color name="surface">@color/white</color>
 
     <color name="checkbox_light">@color/cool_grey</color>
     <color name="checkbox_dark">@color/white</color>

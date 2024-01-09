@@ -6,6 +6,7 @@
 
     <color name="ui_divider">#4E4E4E</color>
     <color name="primary_text_color">@color/white</color>
+    <color name="surface">@color/black</color>
     <color name="card_background">@color/dark_charcoal</color>
     <color name="text_color_on_primary">@color/charcoal</color>
     <color name="cardview_background">@color/dark_theme_surface</color>
@@ -26,5 +27,6 @@
     <color name="pdf_annotations_divider_background">#1B1B1C</color>
     <color name="pdf_annotations_body_text">#5B5B5E</color>
     <color name="pdf_annotations_topbar_background">#282828</color>
+    <color name="zoteroDefaultBlue">#FF4072E5</color>
     <color name="zoteroBlueWithDarkMode">#FF335BB8</color>
 </resources>
