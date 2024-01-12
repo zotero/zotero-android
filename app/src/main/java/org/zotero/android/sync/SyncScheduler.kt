@@ -2,8 +2,6 @@ package org.zotero.android.sync
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -13,8 +11,10 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import timber.log.Timber
 import java.lang.Integer.min
 import java.util.Date
+import java.util.Timer
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.concurrent.timerTask
 
 @Singleton
 class SyncScheduler @Inject constructor(
@@ -31,8 +31,7 @@ class SyncScheduler @Inject constructor(
 
     var inProgress = MutableStateFlow<Boolean>(false)
 
-    private var coroutineScope = CoroutineScope(dispatcher)
-    private var runningJob: Job? = null
+    private var syncSchedulerCoroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1))
 
     private val syncTimeout = 3_000L
     private val fullSyncTimeout = 3600_000
@@ -48,6 +47,8 @@ class SyncScheduler @Inject constructor(
         get() {
             return Date().time - this.lastFullSyncDate.time > this.fullSyncTimeout
         }
+
+    private var timer: Timer? = null
 
     fun init(retryIntervals: List<Int>) {
         this.retryIntervals = retryIntervals.toMutableList()
@@ -66,9 +67,8 @@ class SyncScheduler @Inject constructor(
                     startNextSync()
                 }
             }
-            .launchIn(coroutineScope)
+            .launchIn(syncSchedulerCoroutineScope)
     }
-
 
     fun request(type: SyncKind, libraries: Libraries) {
         Timber.i("SyncScheduler: requested $type sync for $libraries")
@@ -88,7 +88,7 @@ class SyncScheduler @Inject constructor(
     fun cancelSync() {
         Timber.i("SyncScheduler: cancel sync")
         this.syncController.cancel()
-        this.runningJob?.cancel()
+        resetTimer()
         this.syncInProgress = null
         this.syncQueue = mutableListOf()
     }
@@ -105,7 +105,7 @@ class SyncScheduler @Inject constructor(
             }
             Timber.i("SyncScheduler: clean queue, enqueue full sync")
             this.syncQueue = mutableListOf(sync)
-            runningJob?.cancel()
+            resetTimer()
         } else if (this.syncQueue.isEmpty()) {
             this.syncQueue.add(sync)
         } else if (sync.retryAttempt > 0) {
@@ -132,7 +132,7 @@ class SyncScheduler @Inject constructor(
             return
         }
 
-        runningJob?.cancel()
+        resetTimer()
 
         val delay: Long
         if (nextSync.retryAttempt > 0) {
@@ -156,21 +156,33 @@ class SyncScheduler @Inject constructor(
         Timber.i("SyncScheduler: start ${nextSync.type} sync for ${nextSync.libraries}")
         this.syncQueue.removeFirst()
         this.syncInProgress = nextSync
-        this.syncController.start(
-            type = nextSync.type,
-            libraries = nextSync.libraries,
-            retryAttempt = nextSync.retryAttempt
-        )
+        startSyncController(nextSync)
+    }
+
+    private fun startSyncController(nextSync: Sync) {
+        syncSchedulerCoroutineScope.launch {
+            this@SyncScheduler.syncController.start(
+                type = nextSync.type,
+                libraries = nextSync.libraries,
+                retryAttempt = nextSync.retryAttempt,
+                syncSchedulerCoroutineScope = syncSchedulerCoroutineScope,
+            )
+        }
     }
 
     private fun delayNextSync(timeout: Long) {
         if (this.syncInProgress != null) {
             return
         }
-        runningJob = coroutineScope.launch {
-            delay(timeout)
+
+        timer?.schedule(timerTask {
             startNextSync()
-        }
+        }, timeout)
+    }
+
+    private fun resetTimer() {
+        timer?.cancel()
+        timer = Timer()
     }
 }
 

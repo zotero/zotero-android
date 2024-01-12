@@ -159,7 +159,12 @@ class FileStore @Inject constructor (
     ): File {
         val folderPath = File(getRootDirectory(), "downloads/${libraryId.folderName}/$key")
         folderPath.mkdirs()
-        return File(folderPath, filename)
+        val file = File(folderPath, filename)
+        if (file.exists() && !file.isFile) {
+            //We must ensure attachmentFile points to an actual file, not a folder
+            file.delete()
+        }
+        return file
     }
 
     fun attachmentDirectory(libraryId: LibraryIdentifier, key: String): File {

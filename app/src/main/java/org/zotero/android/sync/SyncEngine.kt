@@ -3,7 +3,6 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
@@ -11,7 +10,6 @@ import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -52,7 +50,6 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncUseCase @Inject constructor(
-    private val dispatchers: Dispatchers,
     private val syncRepository: SyncRepository,
     private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
@@ -69,10 +66,6 @@ class SyncUseCase @Inject constructor(
     private val conflictEventStream: ConflictEventStream,
     private val progressHandler: SyncProgressHandler,
 ) {
-    private val dispatcher = dispatchers.default
-    private var coroutineScope = CoroutineScope(dispatcher)
-    private var runningSyncJob: Job? = null
-
     private var userId: Long = 0L
     private var libraryType: Libraries = Libraries.all
     private var type: SyncKind = SyncKind.normal
@@ -99,6 +92,8 @@ class SyncUseCase @Inject constructor(
         }
 
     private var batchProcessor: SyncBatchProcessor? = null
+    private lateinit var syncSchedulerCoroutineScope: CoroutineScope
+
 
     fun init(userId: Long, syncDelayIntervals: List<Double>, maxRetryCount: Int) {
         this.syncDelayIntervals = syncDelayIntervals
@@ -106,26 +101,28 @@ class SyncUseCase @Inject constructor(
         this.maxRetryCount = maxRetryCount
     }
 
-    fun start(type: SyncKind, libraries: Libraries, retryAttempt: Int) {
-        runningSyncJob = coroutineScope.launch {
-            with(this@SyncUseCase) {
-                if (this.isSyncing) {
-                    return@with
-                }
-                this.type = type
-                this.libraryType = libraries
-                this.retryAttempt = retryAttempt
-                this.progressHandler.reportNewSync()
-                queue.addAll(actionsCreator.createInitialActions(libraries = libraries, syncType = type))
-
-                processNextAction()
+    suspend fun start(type: SyncKind, libraries: Libraries, retryAttempt: Int, syncSchedulerCoroutineScope: CoroutineScope) {
+        with(this@SyncUseCase) {
+            if (this.isSyncing) {
+                return@with
             }
+            this.type = type
+            this.syncSchedulerCoroutineScope = syncSchedulerCoroutineScope
+            this.libraryType = libraries
+            this.retryAttempt = retryAttempt
+            this.progressHandler.reportNewSync()
+            queue.addAll(
+                actionsCreator.createInitialActions(
+                    libraries = libraries,
+                    syncType = type
+                )
+            )
 
+            processNextAction()
         }
-
     }
 
-    private fun processNextAction() {
+    private suspend fun processNextAction() {
         if (queue.isEmpty()) {
             processingAction = null
             finish()
@@ -140,9 +137,7 @@ class SyncUseCase @Inject constructor(
 
         processingAction = action
 
-        runningSyncJob = coroutineScope.launch {
-            process(action = action)
-        }
+        process(action = action)
     }
 
     private suspend fun process(action: Action) {
@@ -308,7 +303,7 @@ class SyncUseCase @Inject constructor(
         finishSettingsSync(result = result, libraryId = libraryId, version = version)
     }
 
-    private fun finishSettingsSync(
+    private suspend fun finishSettingsSync(
         result: CustomResult<Pair<Boolean, Int>>,
         libraryId: LibraryIdentifier,
         version: Int
@@ -356,7 +351,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun restoreDeletions(
+    private suspend fun restoreDeletions(
         libraryId: LibraryIdentifier,
         collections: List<String>,
         items: List<String>
@@ -442,7 +437,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun processBatchesSync(batches: List<DownloadBatch>) {
+    private suspend fun processBatchesSync(batches: List<DownloadBatch>) {
         val batch = batches.firstOrNull()
         if (batch == null) {
             processNextAction()
@@ -464,7 +459,7 @@ class SyncUseCase @Inject constructor(
                 searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
                 dateParser = this.dateParser,
-                dispatcher = this.dispatcher,
+//                dispatcher = this.dispatcher,
                 gson = this.gson,
                 progress = { processed ->
                     this.progressHandler.reportDownloadBatchSynced(
@@ -487,7 +482,7 @@ class SyncUseCase @Inject constructor(
         this.batchProcessor?.start()
     }
 
-    private fun finishBatchesSyncAction(
+    private suspend fun finishBatchesSyncAction(
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
         result: CustomResult<SyncBatchResponse>,
@@ -520,9 +515,7 @@ class SyncUseCase @Inject constructor(
                 if (failedKeys.isEmpty()) {
                     processNextAction()
                 } else {
-                    coroutineScope.launch {
-                        markForResync(keys = failedKeys, libraryId = libraryId, objectS = objectS)
-                    }
+                    markForResync(keys = failedKeys, libraryId = libraryId, objectS = objectS)
                 }
             }
             is CustomResult.GeneralError -> {
@@ -548,7 +541,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun markForResync(
+    private suspend fun markForResync(
         keys: List<String>,
         libraryId: LibraryIdentifier,
         objectS: SyncObject
@@ -617,7 +610,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun finishSyncVersions(
+    private suspend fun finishSyncVersions(
         actions: List<Action>,
         updateCount: Int,
         objectS: SyncObject,
@@ -631,7 +624,7 @@ class SyncUseCase @Inject constructor(
         enqueue(actions = actions, index = 0)
     }
 
-    private fun finishFailedSyncVersions(
+    private suspend fun finishFailedSyncVersions(
         libraryId: LibraryIdentifier,
         objectS: SyncObject,
         customResultError: CustomResult.GeneralError,
@@ -669,7 +662,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun finishCreateLibraryActions(
+    private suspend fun finishCreateLibraryActions(
         exception: Exception? = null,
         pair: Pair<List<LibraryData>, CreateLibraryActionsOptions>? = null
     ) {
@@ -739,12 +732,12 @@ class SyncUseCase @Inject constructor(
         finishSyncGroupVersions(actions = actions, updateCount = toUpdate.size)
     }
 
-    private fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
+    private suspend fun finishSyncGroupVersions(actions: List<Action>, updateCount: Int) {
         this.progressHandler.reportGroupCount(count = updateCount)
         enqueue(actions = actions, index = 0)
     }
 
-    private fun enqueue(
+    private suspend fun enqueue(
         actions: List<Action>,
         index: Int? = null,
     ) {
@@ -780,13 +773,13 @@ class SyncUseCase @Inject constructor(
         cleanup()
     }
 
-    private fun handleNonFatal(
+    private suspend fun handleNonFatal(
         error: NonFatal,
         libraryId: LibraryIdentifier,
         version: Int?,
-        additionalAction: (() -> Boolean)? = null
+        additionalAction:  (suspend () -> Boolean)? = null
     ) {
-        val appendAndContinue: () -> Unit = {
+        val appendAndContinue: suspend () -> Unit = {
             this.nonFatalErrors.add(error)
             val extraAction = additionalAction?.invoke() ?: true
             if (extraAction) {
@@ -827,10 +820,10 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun handleQuotaLimit(
+    private suspend fun handleQuotaLimit(
         libraryId: LibraryIdentifier,
         error: NonFatal.quotaLimit,
-        additionalAction: (() -> Boolean)?
+        additionalAction: (suspend () -> Boolean)?
     ) {
         Timber.i("Sync: received quota limit for $libraryId")
         this.queue.removeAll {action ->
@@ -855,10 +848,10 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun handleUnchangedFailure(
+    private suspend fun handleUnchangedFailure(
         lastVersion: Int,
         libraryId: LibraryIdentifier,
-        additionalAction: (() -> Boolean)?
+        additionalAction: (suspend () -> Boolean)?
     ) {
         Timber.i("Sync: received unchanged error, store version: $lastVersion")
         this.lastReturnedVersion = lastVersion
@@ -920,14 +913,14 @@ class SyncUseCase @Inject constructor(
 
 
     private fun cleanup() {
-        runningSyncJob?.cancel()
+//        runningSyncJob?.cancel()
         processingAction = null
         queue = mutableListOf()
+        nonFatalErrors = mutableListOf()
         type = SyncKind.normal
         lastReturnedVersion = null
         accessPermissions = null
-        nonFatalErrors = mutableListOf()
-        //TODO batch processor reset
+        this.batchProcessor = null
         libraryType = Libraries.all
         didEnqueueWriteActionsToZoteroBackend = false
         enqueuedUploads = 0
@@ -1089,7 +1082,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun finishCompletableAction(errorData: Pair<Throwable, SyncError.ErrorData>?) {
+    private suspend fun finishCompletableAction(errorData: Pair<Throwable, SyncError.ErrorData>?) {
         if (errorData == null) {
             processNextAction()
             return
@@ -1107,7 +1100,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun performDeletions(libraryId: LibraryIdentifier, collections: List<String>,
+    private suspend fun performDeletions(libraryId: LibraryIdentifier, collections: List<String>,
                                          items: List<String>, searches: List<String>, tags: List<String>,
                                          conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode) {
         try {
@@ -1129,7 +1122,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun finishDeletionsSync(
+    private suspend fun finishDeletionsSync(
         result: CustomResult<List<Pair<String, String>>>,
         libraryId: LibraryIdentifier,
         items: List<String>? = null,
@@ -1168,7 +1161,7 @@ class SyncUseCase @Inject constructor(
         conflictEventStream.emitAsync(conflict)
     }
 
-    private fun markChangesAsResolved(libraryId: LibraryIdentifier) {
+    private suspend fun markChangesAsResolved(libraryId: LibraryIdentifier) {
         try {
             MarkChangesAsResolvedSyncAction(libraryId = libraryId).result()
             finishCompletableAction(errorData = null)
@@ -1178,7 +1171,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun markGroupAsLocalOnly(groupId: Int) {
+    private suspend fun markGroupAsLocalOnly(groupId: Int) {
         try {
             MarkGroupAsLocalOnlySyncAction(groupId = groupId).result()
             finishCompletableAction(errorData = null)
@@ -1188,7 +1181,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun deleteGroup(groupId: Int) {
+    private suspend fun deleteGroup(groupId: Int) {
         try {
             DeleteGroupSyncAction(groupId =  groupId).result()
             finishCompletableAction(errorData = null)
@@ -1199,7 +1192,7 @@ class SyncUseCase @Inject constructor(
 
     }
 
-    private fun processCreateUploadActions(
+    private suspend fun processCreateUploadActions(
         libraryId: LibraryIdentifier,
         hadOtherWriteActions: Boolean,
         canWriteFiles: Boolean
@@ -1222,7 +1215,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun process(
+    private suspend fun process(
         uploads: List<AttachmentUpload>,
         hadOtherWriteActions: Boolean,
         libraryId: LibraryIdentifier,
@@ -1268,7 +1261,7 @@ class SyncUseCase @Inject constructor(
         enqueue(actions = uploads.map { Action.uploadAttachment(it) }, index = 0)
     }
 
-    private fun finishSubmission(
+    private suspend fun finishSubmission(
         error: CustomResult.GeneralError?,
         newVersion: Int?,
         keys: List<String>,
@@ -1276,7 +1269,7 @@ class SyncUseCase @Inject constructor(
         objectS: SyncObject,
         failedBeforeReachingApi: Boolean = false,
     ) {
-        val nextAction = {
+        val nextAction = suspend {
             if (newVersion != null) {
                 updateVersionInNextWriteBatch(newVersion)
             }
@@ -1386,6 +1379,7 @@ class SyncUseCase @Inject constructor(
         ), index = 0)
     }
 
+    //Must be called from SyncScheduler worker thread
     fun cancel() {
         if (!this.isSyncing) {
             return
@@ -1492,7 +1486,9 @@ class SyncUseCase @Inject constructor(
     }
 
     fun enqueueResolution(resolution: ConflictResolution) {
-        enqueue(actions = actions(resolution), index = 0)
+        syncSchedulerCoroutineScope.launch {
+            enqueue(actions = actions(resolution), index = 0)
+        }
     }
 
     private fun actions(resolution: ConflictResolution): List<Action> {
@@ -1662,7 +1658,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun markGroupForResync(identifier: Int) {
+    private suspend fun markGroupForResync(identifier: Int) {
         try {
             MarkGroupForResyncSyncAction(
                 identifier = identifier,
@@ -1724,7 +1720,7 @@ class SyncUseCase @Inject constructor(
             key = key,
             libraryId = libraryId,
             userId = this.userId,
-            coroutineScope = coroutineScope,
+            coroutineScope = this.syncSchedulerCoroutineScope,
         )
         try {
             action.result()
@@ -1743,7 +1739,7 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private fun revertGroupFiles(libraryId: LibraryIdentifier) {
+    private suspend fun revertGroupFiles(libraryId: LibraryIdentifier) {
         try {
             RevertLibraryFilesSyncAction(
                 libraryId = libraryId,
@@ -1816,7 +1812,7 @@ class SyncUseCase @Inject constructor(
         this.queue.add(element = Action.performWebDavDeletions(libraryId), index = libraryIndex)
     }
 
-    private fun handleUploadAuthorizationFailure(
+    private suspend fun handleUploadAuthorizationFailure(
         statusCode: Int,
         response: String,
         key: String,

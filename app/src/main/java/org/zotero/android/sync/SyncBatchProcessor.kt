@@ -3,10 +3,6 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
@@ -37,8 +33,7 @@ class SyncBatchProcessor(
     val dateParser: DateParser,
     val gson: Gson,
     val progress: (Int) -> Unit,
-    dispatcher: CoroutineDispatcher,
-    val completion: (CustomResult<SyncBatchResponse>) -> Unit,
+    val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
 
     private var failedIds: MutableList<String> = mutableListOf()
@@ -47,11 +42,7 @@ class SyncBatchProcessor(
     private var isFinished: Boolean = false
     private var processedCount: Int = 0
 
-    private var coroutineScope = CoroutineScope(dispatcher)
-    private var runningBatchJob: Job? = null
-
-    fun start() {
-        runningBatchJob = coroutineScope.launch {
+    suspend fun start() {
             this@SyncBatchProcessor.batches.map { batch ->
                 val keysString = batch.keys.joinToString(separator = ",")
                 val url =
@@ -72,11 +63,10 @@ class SyncBatchProcessor(
 
                 }
                 process(result = networkResult, batch = batch)
-            }
         }
     }
 
-    private fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
+    private suspend fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
         if (isFinished) {
             return
         }
@@ -94,7 +84,7 @@ class SyncBatchProcessor(
         }
     }
 
-    private fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
+    private suspend fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
         if (this.isFinished) {
             return
         }
@@ -119,7 +109,7 @@ class SyncBatchProcessor(
 
     }
 
-    private fun finish(response: Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>) {
+    private suspend fun finish(response: Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>) {
         if (this.isFinished) {
             return
         }
@@ -270,8 +260,8 @@ class SyncBatchProcessor(
         }
     }
 
-    private fun cancel(error: CustomResult.GeneralError) {
-        runningBatchJob?.cancel()
+    private suspend fun cancel(error: CustomResult.GeneralError) {
+//        runningBatchJob?.cancel()
         this.isFinished = true
         completion(error)
     }
