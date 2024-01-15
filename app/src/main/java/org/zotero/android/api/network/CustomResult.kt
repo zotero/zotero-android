@@ -17,6 +17,9 @@ sealed class CustomResult<out T> {
             fun isNoNetworkError(): Boolean {
                 return httpCode == NO_INTERNET_CONNECTION_HTTP_CODE
             }
+            fun isNotFound(): Boolean {
+                return httpCode == 404
+            }
         }
 
         data class CodeError(val throwable: Throwable) : GeneralError() {

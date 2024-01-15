@@ -16,6 +16,7 @@ import timber.log.Timber
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.net.SocketException
 
 class AttachmentDownloadOperation(
     private val file: File,
@@ -213,8 +214,18 @@ class AttachmentDownloadOperation(
 
     private fun processError(error: CustomResult.GeneralError) {
         when (error) {
-            is CustomResult.GeneralError.CodeError -> Timber.e(error.throwable)
-            is CustomResult.GeneralError.NetworkError -> Timber.e(error.stringResponse)
+            is CustomResult.GeneralError.CodeError -> {
+                //Do not error-log SocketException as it's just a network interruption
+                if (error.throwable !is SocketException) {
+                    Timber.e(error.throwable)
+                }
+            }
+            is CustomResult.GeneralError.NetworkError -> {
+                //Do not error-log "Attachment Not Found" network errors, as it's not an error
+                if (!error.isNotFound()) {
+                    Timber.e(error.stringResponse)
+                }
+            }
         }
         if (isOperationNotActive()) {
             return

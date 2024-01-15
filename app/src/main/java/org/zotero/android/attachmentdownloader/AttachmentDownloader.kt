@@ -116,7 +116,7 @@ class AttachmentDownloader @Inject constructor(
                 val linkType = attachmentType.linkType
                 when (linkType) {
                     Attachment.FileLinkType.linkedFile, Attachment.FileLinkType.embeddedImage -> {
-                        Timber.w("AttachmentDownloader: tried opening linkedFile or embeddedImage ${attachment.key}")
+                        Timber.i("AttachmentDownloader: tried opening linkedFile or embeddedImage ${attachment.key}")
 
                         attachmentDownloaderEventStream.emitAsync(
                             Update.init(
@@ -332,12 +332,46 @@ class AttachmentDownloader @Inject constructor(
                     this.errors[download] = result.throwable
                 }
                 if (isCancelError) {
-                    attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.cancelled))
+                    attachmentDownloaderEventStream.emitAsync(
+                        Update.init(
+                            download = download,
+                            parentKey = parentKey,
+                            kind = Update.Kind.cancelled
+                        )
+                    )
                 } else if (hasLocalCopy) {
+                    attachmentDownloaderEventStream.emitAsync(
+                        Update.init(
+                            download = download,
+                            parentKey = parentKey,
+                            kind = Update.Kind.ready
+                        )
+                    )
+                } else {
+                    Timber.e(
+                        result.throwable,
+                        "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}"
+                    )
+                    attachmentDownloaderEventStream.emitAsync(
+                        Update.init(
+                            download = download,
+                            parentKey = parentKey,
+                            kind = Update.Kind.failed(result.throwable)
+                        )
+                    )
+                }
+            }
+            is CustomResult.GeneralError.NetworkError -> {
+                if (hasLocalCopy) {
+                    this.errors.remove(download)
+                } else {
+                    this.errors[download] = Exception(result.stringResponse)
+                }
+                if (hasLocalCopy) {
                     attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.ready))
                 } else {
-                    Timber.e(result.throwable, "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}")
-                    attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.failed(result.throwable)))
+                    Timber.e(result.stringResponse, "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}")
+                    attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.failed(Exception(result.stringResponse))))
                 }
             }
             is CustomResult.GeneralSuccess -> {
