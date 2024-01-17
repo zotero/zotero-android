@@ -305,8 +305,19 @@ fun <T> RealmQuery<T>.changedByUser(
 
 fun <T> RealmQuery<T>.itemUserChanges(
 ): RealmQuery<T> {
-    val changes = beginGroup().changed().or().attachmentChanged().or().deleted(true).endGroup()
-    return changes.and().changedByUser().and().changesNotPaused()
+    val changes =
+        beginGroup()
+            .changed()
+            .or()
+            .attachmentChanged()
+            .or()
+            .deleted(true)
+            .endGroup()
+    return changes
+        .and()
+        .changedByUser()
+        .and()
+        .changesNotPaused()
 }
 
 fun <T> RealmQuery<T>.pageIndexUserChanges(
@@ -316,7 +327,12 @@ fun <T> RealmQuery<T>.pageIndexUserChanges(
 
 fun <T> RealmQuery<T>.userChanges(
 ): RealmQuery<T> {
-    val changed = beginGroup().changed().or().deleted(true).endGroup()
+    val changed =
+        beginGroup()
+            .changed()
+            .or()
+            .deleted(true)
+            .endGroup()
     return changed.and().changedByUser()
 }
 

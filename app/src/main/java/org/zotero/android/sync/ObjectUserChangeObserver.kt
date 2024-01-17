@@ -2,6 +2,7 @@ package org.zotero.android.sync
 
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
+import io.realm.RealmChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
 import kotlinx.coroutines.launch
@@ -9,7 +10,6 @@ import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.database.Database
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.objects.RCollection
@@ -105,12 +105,16 @@ class ObjectUserChangeObserver(
                 }
 
                 OrderedCollectionChangeSet.State.UPDATE -> {
-                    val correctedModifications = Database.correctedModifications(
-                        changeSet.changes,
-                        insertions = changeSet.insertions, deletions = changeSet.deletions
-                    )
+                    when (results) {
+                        RItem::class -> {
+                            removeChildListeners()
+                            addChildListeners(results as RealmResults<RItem>)
+                        }
+                    }
+
+                    val frozenItems = results.freeze()
                     val updated =
-                        (changeSet.insertions + correctedModifications).map { results[it] }
+                        (changeSet.insertions + changeSet.changes).map { frozenItems[it] }
                     reportChangedLibraries(updated)
                 }
 
@@ -137,6 +141,27 @@ class ObjectUserChangeObserver(
             return
         }
         this.observable.emitAsync(libraryIds)
+    }
+
+    private val childListObjectToListen = mutableListOf<RealmResults<RItem>?>()
+
+    private fun addChildListeners(items: RealmResults<RItem>) {
+        items.forEach { item ->
+            val children = item.children
+            children?.addChangeListener(object : RealmChangeListener<RealmResults<RItem>> {
+                override fun onChange(t: RealmResults<RItem>) {
+                    val parent = item.freeze<RItem>()
+                    reportChangedLibraries(listOf(parent))
+                }
+            })
+        }
+    }
+
+    private fun removeChildListeners() {
+        childListObjectToListen.forEach {
+            it?.removeAllChangeListeners()
+        }
+        childListObjectToListen.clear()
     }
 
 }

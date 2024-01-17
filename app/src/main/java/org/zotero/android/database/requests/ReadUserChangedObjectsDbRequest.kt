@@ -15,14 +15,19 @@ class ReadUserChangedObjectsDbRequest<T: RealmModel>(
         get() = false
 
     override fun process(database: Realm): RealmResults<T> {
-        if (clazz == RItem::class) {
-            return database.where(clazz.java).itemUserChanges().findAll()
-        } else if (clazz == RPageIndex::class) {
-            return database.where(clazz.java).pageIndexUserChanges().findAll()
-        } else {
-            return database.where(clazz.java).userChanges().findAll()
+        val queryResult = when (clazz) {
+            RItem::class -> {
+                database.where(clazz.java).itemUserChanges()
+            }
+
+            RPageIndex::class -> {
+                database.where(clazz.java).pageIndexUserChanges()
+            }
+
+            else -> {
+                database.where(clazz.java).userChanges()
+            }
         }
-
+        return queryResult.findAllAsync()
     }
-
 }
