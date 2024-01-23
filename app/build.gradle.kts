@@ -13,6 +13,10 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("compose")
+    id("accompanist")
+    id("daggerAndHilt")
+    id("tests")
     id("com.google.dagger.hilt.android")
 }
 
@@ -92,7 +96,6 @@ android {
         }
     }
 
-
     compileOptions {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
@@ -100,12 +103,8 @@ android {
     kotlinOptions {
         jvmTarget = javaVersion.toString()
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
-    }
     buildFeatures {
         viewBinding = true
-        compose = true
         buildConfig = true
     }
 
@@ -152,30 +151,6 @@ dependencies {
     //Material design
     implementation("com.google.android.material:material:1.10.0")
 
-    //Compose
-    implementation("androidx.compose.ui:ui-viewbinding:1.5.4")
-    implementation("androidx.compose.ui:ui-util:1.5.4")
-    implementation("androidx.compose.ui:ui-tooling:1.5.4")
-    implementation("androidx.compose.ui:ui:1.5.4")
-    implementation("androidx.navigation:navigation-compose:2.7.5")
-    implementation("androidx.compose.material:material:1.5.4")
-    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.compose.foundation:foundation:1.5.4")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
-    implementation("androidx.activity:activity-compose:1.8.1")
-    implementation("androidx.compose.material3:material3:1.1.2")
-    implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
-
-    //Accompanist
-    implementation("com.google.accompanist:accompanist-insets:0.31.5-beta")
-    implementation("com.google.accompanist:accompanist-placeholder:0.32.0")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
-    implementation("com.google.accompanist:accompanist-pager:0.32.0")
-    implementation("com.google.accompanist:accompanist-navigation-animation:0.32.0")
-    implementation("com.google.accompanist:accompanist-swiperefresh:0.32.0")
-    implementation("com.google.accompanist:accompanist-flowlayout:0.32.0")
-
     //Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.20")
@@ -184,28 +159,17 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-    //Dagger + Hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-//    implementation("com.google.dagger:dagger:2.44")
-//    kapt("com.google.dagger:dagger-compiler:2.44")
-    kapt("com.google.dagger:hilt-compiler:2.47")
-    annotationProcessor("com.google.dagger:hilt-android-compiler:2.47")
-
-    implementation("androidx.hilt:hilt-work:1.1.0")
-    kapt("androidx.hilt:hilt-compiler:1.1.0")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
-
-    //Crash & Analytics
+    //Crash
     implementation("com.google.firebase:firebase-crashlytics-ktx:18.5.1")
 
     //PSPDFKIT
     implementation("com.pspdfkit:pspdfkit:8.10.0")
 
     //Retrofit 2
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+    implementation(Libs.Retrofit.kotlinSerialization)
+    implementation(Libs.Retrofit.core)
+    implementation(Libs.Retrofit.converterGson)
+    implementation(Libs.Retrofit.converterScalars)
 
     //Ok HTTP
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
@@ -219,7 +183,7 @@ dependencies {
     implementation("androidx.media3:media3-ui:1.2.0")
 
     //Coil
-    implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation(Libs.Coil.compose)
 
     //Other
     implementation("com.jakewharton.timber:timber:4.7.1")
@@ -230,23 +194,6 @@ dependencies {
     implementation("commons-codec:commons-codec:1.13")
     implementation("commons-validator:commons-validator:1.7")
     implementation("net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3")
-
-    //Unit Tests
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
-
-    testImplementation("org.mockito:mockito-core:3.11.0")
-    testImplementation("org.mockito:mockito-inline:3.11.0")
-
-    testImplementation("io.mockk:mockk:1.11.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1")
-    testImplementation("org.amshove.kluent:kluent-android:1.72")
-
-    //Instrumented Tests
-    androidTestImplementation("androidx.test:rules:1.5.0")
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
 }
 
 kapt {

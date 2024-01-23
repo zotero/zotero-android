@@ -17,3 +17,23 @@ dependencies {
     implementation("com.squareup:javapoet:1.13.0")
 }
 
+gradlePlugin {
+    plugins {
+        register("ComposePlugin") {
+            id = "compose"
+            implementationClass = "ComposePlugin"
+        }
+        register("AccompanistPlugin") {
+            id = "accompanist"
+            implementationClass = "AccompanistPlugin"
+        }
+        register("DaggerAndHiltPlugin") {
+            id = "daggerAndHilt"
+            implementationClass = "DaggerAndHiltPlugin"
+        }
+        register("TestsPlugin") {
+            id = "tests"
+            implementationClass = "TestsPlugin"
+        }
+    }
+}
