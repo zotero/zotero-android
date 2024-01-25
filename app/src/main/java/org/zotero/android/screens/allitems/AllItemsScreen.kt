@@ -159,7 +159,15 @@ internal fun AllItemsScreen(
                                 NewDivider()
                             }
                         }
-                        AllItemsTable(viewState, layoutType, viewModel)
+                        AllItemsTable(
+                            layoutType = layoutType,
+                            itemCellModels = viewState.itemCellModels,
+                            isEditing = viewState.isEditing,
+                            isItemSelected = viewState::isSelected,
+                            onItemTapped = viewModel::onItemTapped,
+                            onAccessoryTapped = viewModel::onAccessoryTapped,
+                            onItemLongTapped = viewModel::onItemLongTapped
+                        )
                     }
                 }
 

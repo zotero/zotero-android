@@ -1,5 +1,7 @@
 package org.zotero.android.screens.allitems.data
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.Color
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.uicomponents.attachmentprogress.State
@@ -11,9 +13,8 @@ data class ItemCellModel(
     val title: String,
     val subtitle: String,
     val hasNote: Boolean,
-    var accessory: Accessory?,
-    val tagColors: List<Color>,
-    var isSelected: Boolean = false,
+    val accessory: Accessory?,
+    val tagColors: SnapshotStateList<Color>,
 ) {
 
     sealed class Accessory {
@@ -34,12 +35,12 @@ data class ItemCellModel(
                 subtitle = dbRow.subtitle,
                 hasNote = hasNote,
                 accessory = accessory,
-                tagColors = listOf()
+                tagColors = mutableStateListOf()
             )
         }
 
     }
-    fun updateAccessory(cellAccessory: Accessory?) {
-        this.accessory = cellAccessory
+    fun updateAccessory(cellAccessory: Accessory?): ItemCellModel {
+        return copy(accessory = cellAccessory)
     }
 }

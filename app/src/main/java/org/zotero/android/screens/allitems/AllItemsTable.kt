@@ -21,6 +21,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -39,23 +40,30 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun AllItemsTable(
-    viewState: AllItemsViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    viewModel: AllItemsViewModel
+    itemCellModels: SnapshotStateList<ItemCellModel>,
+    isItemSelected: (key: String) -> Boolean,
+    isEditing: Boolean,
+    onItemTapped: (item: ItemCellModel) -> Unit,
+    onItemLongTapped: (key: String) -> Unit,
+    onAccessoryTapped: (key: String) -> Unit,
 ) {
     LazyColumn(
         state = rememberLazyListState(),
     ) {
         itemsIndexed(
-            items = viewState.itemCellModels
+            items = itemCellModels, key = { _, item -> item.hashCode() }
         ) { index, item ->
             Box(modifier = Modifier.animateItemPlacement()) {
                 ItemRow(
                     cellModel = item,
                     layoutType = layoutType,
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    showBottomDivider = index != viewState.itemCellModels.size - 1
+                    showBottomDivider = index != itemCellModels.size - 1,
+                    isEditing = isEditing,
+                    onItemTapped = onItemTapped,
+                    onItemLongTapped = onItemLongTapped,
+                    onAccessoryTapped = onAccessoryTapped,
+                    isItemSelected = isItemSelected,
                 )
             }
         }
@@ -64,14 +72,17 @@ internal fun AllItemsTable(
 
 @Composable
 private fun ItemRow(
-    viewModel: AllItemsViewModel,
-    viewState: AllItemsViewState,
     cellModel: ItemCellModel,
+    isItemSelected: (key: String) -> Boolean,
     layoutType: CustomLayoutSize.LayoutType,
-    showBottomDivider: Boolean = false
+    showBottomDivider: Boolean = false,
+    isEditing: Boolean,
+    onItemTapped: (item: ItemCellModel) -> Unit,
+    onItemLongTapped: (key: String) -> Unit,
+    onAccessoryTapped: (key: String) -> Unit,
 ) {
     var rowModifier: Modifier = Modifier.height(64.dp)
-    if (cellModel.isSelected) {
+    if (isItemSelected(cellModel.key)) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
     }
     Box {
@@ -80,21 +91,22 @@ private fun ItemRow(
             modifier = rowModifier
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = if (viewState.isEditing) null else rememberRipple(),
-                    onClick = { viewModel.onItemTapped(cellModel) },
-                    onLongClick = { viewModel.onItemLongTapped(cellModel.key) }
+                    indication = if (isEditing) null else rememberRipple(),
+                    onClick = { onItemTapped(cellModel) },
+                    onLongClick = { onItemLongTapped(cellModel.key) }
                 )
         ) {
             ItemRowLeftPart(
-                viewState = viewState,
                 layoutType = layoutType,
-                model = cellModel
+                model = cellModel,
+                isEditing = isEditing,
+                isItemSelected = isItemSelected,
             )
             Spacer(modifier = Modifier.width(16.dp))
             ItemRowCentralPart(
                 model = cellModel,
-                viewState = viewState,
-                viewModel = viewModel,
+                isEditing = isEditing,
+                onAccessoryTapped = onAccessoryTapped,
             )
         }
         if (showBottomDivider) {
@@ -107,16 +119,17 @@ private fun ItemRow(
 
 @Composable
 private fun ItemRowLeftPart(
-    viewState: AllItemsViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    model: ItemCellModel
+    model: ItemCellModel,
+    isItemSelected: (key: String) -> Boolean,
+    isEditing: Boolean,
 ) {
-    AnimatedContent(targetState = viewState.isEditing, label = "") { isEditing ->
+    AnimatedContent(targetState = isEditing, label = "") { isEditing ->
         if (isEditing) {
             Row {
                 Spacer(modifier = Modifier.width(16.dp))
                 CircleCheckBox(
-                    isChecked = model.isSelected,
+                    isChecked = isItemSelected(model.key),
                     layoutType = layoutType
                 )
             }
@@ -133,8 +146,8 @@ private fun ItemRowLeftPart(
 @Composable
 private fun ItemRowCentralPart(
     model: ItemCellModel,
-    viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel,
+    isEditing: Boolean,
+    onAccessoryTapped: (key: String) -> Unit,
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -181,8 +194,8 @@ private fun ItemRowCentralPart(
             Spacer(modifier = Modifier.width(8.dp))
             ItemRowRightPart(
                 model = model,
-                viewState = viewState,
-                viewModel = viewModel,
+                isEditing = isEditing,
+                onAccessoryTapped = onAccessoryTapped,
             )
         }
     }
@@ -191,22 +204,22 @@ private fun ItemRowCentralPart(
 @Composable
 private fun RowScope.ItemRowRightPart(
     model: ItemCellModel,
-    viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel,
+    isEditing: Boolean,
+    onAccessoryTapped: (key: String) -> Unit,
 ) {
     SetAccessory(
         accessory = model.accessory,
     )
     AnimatedContent(
         modifier = Modifier.align(Alignment.CenterVertically),
-        targetState = viewState.isEditing,
+        targetState = isEditing,
         label = ""
     ) { isEditing ->
         if (!isEditing) {
             Row {
                 IconWithPadding(
                     onClick = {
-                        viewModel.onAccessoryTapped(model.key)
+                        onAccessoryTapped(model.key)
                     },
                     drawableRes = Drawables.info_24px
                 )

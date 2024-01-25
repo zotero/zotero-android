@@ -1,8 +1,9 @@
 package org.zotero.android.screens.allitems.processor
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.toMutableStateList
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
-import io.realm.RealmChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -18,6 +19,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
@@ -37,6 +39,7 @@ import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.sortpicker.data.SortDirectionResult
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.AttachmentFileCleanupController
+import org.zotero.android.sync.AttachmentFileDeletedNotification
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -108,6 +111,11 @@ class AllItemsProcessor @Inject constructor(
         } else if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItemsSortPicker) {
             onSortFieldChanged(singlePickerResult.id)
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(attachmentFileDeleted: EventBusConstants.AttachmentFileDeleted) {
+        updateDeletedAttachmentFiles(attachmentFileDeleted.notification)
     }
 
     fun init(viewModelScope: CoroutineScope, allItemsProcessorInterface: AllItemsProcessorInterface, searchTerm: String?) {
@@ -267,11 +275,17 @@ class AllItemsProcessor @Inject constructor(
 
             }
         }
+        updateCellAccessoryForItem(updateKey)
+        sendItemCellModelsToUi()
+    }
+
+    private fun updateCellAccessoryForItem(updateKey: String) {
         val cellAccessory = cellAccessory(itemAccessories[updateKey])
-        val cellModel = mutableItemCellModels.firstOrNull { it.key == updateKey }
-        cellModel?.updateAccessory(cellAccessory)
-//        sendItemCellModelsToUi()
-        processorInterface.triggerScreenRefresh()
+        val index = mutableItemCellModels.indexOfFirst { it.key == updateKey }
+        if (index != -1) {
+            mutableItemCellModels[index] =
+                mutableItemCellModels[index].updateAccessory(cellAccessory)
+        }
     }
 
     private fun CoroutineScope.generateCellModels(
@@ -324,9 +338,6 @@ class AllItemsProcessor @Inject constructor(
         changeSet: OrderedCollectionChangeSet,
         items: RealmResults<RItem>
     ) {
-        removeChildListeners()
-        addChildListeners(items)
-
         val frozenItems = items.freeze()
 
         val deletions = changeSet.deletions
@@ -355,7 +366,7 @@ class AllItemsProcessor @Inject constructor(
         removeAllListenersFromResultsList()
         this.results = results
 
-        mutableItemCellModels = mutableListOf()
+        mutableItemCellModels = mutableStateListOf()
         sendItemCellModelsToUi()
 
         startObservingResults()
@@ -364,52 +375,10 @@ class AllItemsProcessor @Inject constructor(
 
     private fun removeAllListenersFromResultsList() {
         this.results?.removeAllChangeListeners()
-        removeChildListeners()
-    }
-
-    private fun removeChildListeners() {
-        childListObjectToListen.forEach {
-            it?.removeAllChangeListeners()
-        }
-        childListObjectToListen.clear()
-    }
-
-    private val childListObjectToListen = mutableListOf<RealmResults<RItem>?>()
-
-    private fun addChildListeners(items: RealmResults<RItem>) {
-        items.forEach { item ->
-            val children = item.children
-            childListObjectToListen.add(children)
-            children?.addChangeListener(object : RealmChangeListener<RealmResults<RItem>> {
-                override fun onChange(t: RealmResults<RItem>) {
-                    val parent = item.freeze<RItem>()
-                    resultsProcessorCoroutineScope!!.launch {
-                        val itemAccessory = accessory(parent)
-                        if (itemAccessory != null) {
-                            this@AllItemsProcessor.itemAccessories.put(
-                                parent.key,
-                                itemAccessory
-                            )
-                        }
-                        if (!isActive) {
-                            return@launch
-                        }
-                        generateCellModels(
-                            item = parent,
-                            itemCellModelsToUpdate = mutableItemCellModels,
-                        )
-                        if (!isActive) {
-                            return@launch
-                        }
-                        sendItemCellModelsToUi()
-                    }
-                }
-            })
-        }
     }
 
     private fun sendItemCellModelsToUi() {
-        processorInterface.updateItemCellModels(mutableItemCellModels.toList())
+        processorInterface.updateItemCellModels(mutableItemCellModels.toMutableStateList())
     }
 
     internal fun filter(
@@ -615,6 +584,33 @@ class AllItemsProcessor @Inject constructor(
 
     fun onSearch(text: String) {
         onSearchStateFlow.tryEmit(text)
+    }
+
+    private fun updateDeletedAttachmentFiles(notification: AttachmentFileDeletedNotification) {
+        when (notification) {
+            is AttachmentFileDeletedNotification.allForItems -> {
+                notification.keys.forEach {
+                    updateAttachmentOnNotification(it)
+                }
+            }
+            is AttachmentFileDeletedNotification.individual -> {
+                val key = notification.parentKey ?: notification.key
+                updateAttachmentOnNotification(key)
+            }
+
+            else -> {
+                //no-op
+            }
+        }
+    }
+
+    private fun updateAttachmentOnNotification(key: String) {
+        val itemAccessory = accessory(getResultByKey(key))
+        if (itemAccessory != null) {
+            this@AllItemsProcessor.itemAccessories.put(key, itemAccessory)
+        }
+        updateCellAccessoryForItem(key)
+        sendItemCellModelsToUi()
     }
 
     fun clear() {

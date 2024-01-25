@@ -2,10 +2,15 @@ package org.zotero.android.screens.allitems
 
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -196,12 +201,6 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    override fun triggerScreenRefresh() {
-        viewModelScope.launch {
-            triggerEffect(AllItemsViewEffect.ScreenRefresh)
-        }
-    }
-
     override fun show(attachment: Attachment, library: Library) {
         viewModelScope.launch {
             val attachmentType = attachment.type
@@ -324,7 +323,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    override fun updateItemCellModels(itemCellModels: List<ItemCellModel>) {
+    override fun updateItemCellModels(itemCellModels: SnapshotStateList<ItemCellModel>) {
         viewModelScope.launch {
             updateState {
                 copy(itemCellModels = itemCellModels)
@@ -534,12 +533,17 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onItemTapped(item: ItemCellModel) {
         if (viewState.isEditing) {
-            if (item.isSelected) {
-                item.isSelected = false
-            } else{
-                item.isSelected = true
+            val selectedKeys = viewState.selectedKeys!!
+            val isCurrentlySelected = selectedKeys.contains(item.key)
+            updateState {
+                copy(
+                    selectedKeys = if (isCurrentlySelected) {
+                        selectedKeys.remove(item.key)
+                    } else {
+                        selectedKeys.add(item.key)
+                    }
+                )
             }
-            triggerScreenRefresh()
             return
         }
 
@@ -829,21 +833,17 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun startEditing() {
-//        allItemsProcessor.startEditing()
         updateState {
             copy(
-                isEditing = true,
+                selectedKeys = persistentSetOf(),
             )
         }
     }
 
     private fun stopEditing() {
-        viewState.itemCellModels.forEach {
-            it.isSelected = false
-        }
         updateState {
             copy(
-                isEditing = false,
+                selectedKeys = null,
             )
         }
     }
@@ -857,32 +857,32 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun toggleSelectionState() {
-        if (viewState.getSelectedKeys().size != viewState.itemCellModels.size) {
-            viewState.itemCellModels.forEach {
-                it.isSelected = true
+        if (!viewState.areAllSelected) {
+            val allItemsKeys = viewState.itemCellModels.map { it.key }.toPersistentSet()
+            updateState {
+                copy(selectedKeys = allItemsKeys)
             }
         } else{
-            viewState.itemCellModels.forEach {
-                it.isSelected = false
+            updateState {
+                copy(selectedKeys = persistentSetOf())
             }
         }
-        triggerScreenRefresh()
     }
 
     fun onTrash() {
         viewModelScope.launch {
-            trashItems(viewState.getSelectedKeys())
+            trashItems(getSelectedKeys())
         }
     }
 
     fun onRestore() {
         viewModelScope.launch {
-            set(trashed = false, keys = viewState.getSelectedKeys())
+            set(trashed = false, keys = getSelectedKeys())
         }
     }
 
     fun onDelete() {
-        showDeleteItemsConfirmation(viewState.getSelectedKeys())
+        showDeleteItemsConfirmation(getSelectedKeys())
     }
 
     fun onEmptyTrash() {
@@ -959,7 +959,11 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAddToCollection() {
-       showCollectionPicker(viewState.getSelectedKeys())
+       showCollectionPicker(getSelectedKeys())
+    }
+
+    fun showRemoveFromCollectionQuestion() {
+        showRemoveFromCollectionQuestion(getSelectedKeys())
     }
 
     fun showRemoveFromCollectionQuestion(itemsKeys: Set<String>) {
@@ -1011,13 +1015,17 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
     }
+    private fun getSelectedKeys(): Set<String> {
+        return viewState.selectedKeys ?: emptySet()
+    }
+
 }
 
 internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Content,
     val snackbarMessage: SnackbarMessage? = null,
-    val itemCellModels: List<ItemCellModel> = emptyList(),
-    val isEditing: Boolean = false,
+    val itemCellModels: SnapshotStateList<ItemCellModel> = mutableStateListOf(),
+    val selectedKeys: PersistentSet<String>? = null,
     val error: ItemsError? = null,
     val shouldShowAddBottomSheet: Boolean = false,
     val searchTerm: String? = null,
@@ -1038,7 +1046,20 @@ internal data class AllItemsViewState(
             }
             return tagFilter.tags
         }
-    fun getSelectedKeys() = itemCellModels.filter { it.isSelected }.map { it.key }.toSet()
+    val isEditing : Boolean get() {
+        return selectedKeys != null
+    }
+    fun isSelected(key: String): Boolean {
+        return selectedKeys?.contains(key) == true
+    }
+
+    fun isAnythingSelected(): Boolean {
+        return selectedKeys?.isNotEmpty() == true
+    }
+    val areAllSelected get(): Boolean {
+        val size = itemCellModels.size
+        return (selectedKeys?.size ?: 0) == size
+    }
 }
 
 internal sealed class AllItemsViewEffect : ViewEffect {

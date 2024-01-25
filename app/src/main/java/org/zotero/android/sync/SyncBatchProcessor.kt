@@ -3,6 +3,11 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
@@ -17,6 +22,9 @@ import org.zotero.android.database.requests.StoreSearchesDbRequest
 import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.FileWriter
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
@@ -36,38 +44,48 @@ class SyncBatchProcessor(
     val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
 ) {
 
-    private var failedIds: MutableList<String> = mutableListOf()
-    private var parsingErrors: MutableList<Throwable> = mutableListOf()
-    private var itemConflicts: MutableList<StoreItemsResponse.Error> = mutableListOf()
-    private var isFinished: Boolean = false
-    private var processedCount: Int = 0
+    private var failedIds = Collections.synchronizedList(mutableListOf<String>())
+    private var parsingErrors = Collections.synchronizedList(mutableListOf<Throwable>())
+    private var itemConflicts= Collections.synchronizedList(mutableListOf<StoreItemsResponse.Error>())
+    private var isFinished: AtomicBoolean = AtomicBoolean(false)
+    private var processedCount: AtomicInteger = AtomicInteger(0)
+
+    private val limitedParallelismDispatcher = Dispatchers.IO.limitedParallelism(4)
+    private val resultsProcessorCoroutineScope = CoroutineScope(limitedParallelismDispatcher)
 
     suspend fun start() {
-            this@SyncBatchProcessor.batches.map { batch ->
-                val keysString = batch.keys.joinToString(separator = ",")
-                val url =
-                    BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
+        this.batches.map { batch ->
+            val keysString = batch.keys.joinToString(separator = ",")
+            val url =
+                BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this.userId) + "/" + batch.objectS.apiPath
 
+            resultsProcessorCoroutineScope.launch {
                 val networkResult = safeApiCall {
                     val parameters = mutableMapOf<String, String>()
                     when (batch.objectS) {
                         SyncObject.collection ->
                             parameters["collectionKey"] = keysString
+
                         SyncObject.item, SyncObject.trash ->
                             parameters["itemKey"] = keysString
+
                         SyncObject.search ->
                             parameters["searchKey"] = keysString
+
                         SyncObject.settings -> {}
                     }
                     syncApi.objects(url = url, queryMap = parameters)
-
+                }
+                if (!isActive) {
+                    return@launch
                 }
                 process(result = networkResult, batch = batch)
+            }
         }
     }
 
     private suspend fun process(result: CustomResult<JsonArray>, batch: DownloadBatch) {
-        if (isFinished) {
+        if (isFinished.get()) {
             return
         }
 
@@ -85,7 +103,7 @@ class SyncBatchProcessor(
     }
 
     private suspend fun process(data: JsonArray, lastModifiedVersion: Int, batch: DownloadBatch) {
-        if (this.isFinished) {
+        if (this.isFinished.get()) {
             return
         }
 
@@ -110,7 +128,7 @@ class SyncBatchProcessor(
     }
 
     private suspend fun finish(response: Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>) {
-        if (this.isFinished) {
+        if (this.isFinished.get()) {
             return
         }
         response.first.forEach {
@@ -124,11 +142,11 @@ class SyncBatchProcessor(
         response.third.forEach {
             this.itemConflicts.add(it)
         }
-        this.processedCount += 1
+        this.processedCount.incrementAndGet()
 
-        if (this.processedCount == this.batches.size) {
+        if (this.processedCount.get() == this.batches.size) {
             completion(CustomResult.GeneralSuccess(SyncBatchResponse(this.failedIds, this.parsingErrors, this.itemConflicts)))
-            this.isFinished = true
+            this.isFinished.set(true)
         }
 
     }
@@ -261,9 +279,14 @@ class SyncBatchProcessor(
     }
 
     private suspend fun cancel(error: CustomResult.GeneralError) {
-//        runningBatchJob?.cancel()
-        this.isFinished = true
+        cancelAllOperations()
+        this.isFinished.set(true)
         completion(error)
+    }
+
+    fun cancelAllOperations() {
+        resultsProcessorCoroutineScope.cancel()
+        limitedParallelismDispatcher.cancel()
     }
 
 }

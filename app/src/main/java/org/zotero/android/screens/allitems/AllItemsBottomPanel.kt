@@ -29,7 +29,7 @@ internal fun BoxScope.AllItemsBottomPanel(
         .fillMaxWidth()
         .height(layoutType.calculateAllItemsBottomPanelHeight())
         .align(Alignment.BottomStart)
-    if (viewState.isEditing) {
+    if (viewState.selectedKeys != null) {
         EditingBottomPanel(
             modifier = commonModifier,
             viewState = viewState,
@@ -57,7 +57,7 @@ private fun EditingBottomPanel(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val isRestoreAndDeleteEnabled = viewState.getSelectedKeys().isNotEmpty()
+            val isRestoreAndDeleteEnabled = viewState.isAnythingSelected()
             if (viewState.isCollectionTrash) {
                 IconWithPadding(
                     drawableRes = Drawables.restore_trash,
@@ -96,7 +96,7 @@ private fun EditingBottomPanel(
                         isEnabled = isRestoreAndDeleteEnabled,
                         tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
                         onClick = {
-                            viewModel.showRemoveFromCollectionQuestion(viewState.getSelectedKeys().toSet())
+                            viewModel.showRemoveFromCollectionQuestion()
                         }
                     )
                 }

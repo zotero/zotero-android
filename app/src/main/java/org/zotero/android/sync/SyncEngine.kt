@@ -459,24 +459,30 @@ class SyncUseCase @Inject constructor(
                 searchResponseMapper = searchResponseMapper,
                 schemaController = schemaController,
                 dateParser = this.dateParser,
-//                dispatcher = this.dispatcher,
                 gson = this.gson,
                 progress = { processed ->
-                    this.progressHandler.reportDownloadBatchSynced(
-                        size = processed,
-                        objectS = objectS,
-                        libraryId = libraryId
-                    )
+                    syncSchedulerCoroutineScope.launch {
+                        this@SyncUseCase.progressHandler.reportDownloadBatchSynced(
+                            size = processed,
+                            objectS = objectS,
+                            libraryId = libraryId
+                        )
+                    }
+
                 },
                 completion = { result ->
-                    this.batchProcessor = null
-                    val keys = batches.flatMap { it.keys }
-                    finishBatchesSyncAction(
-                        libraryId = libraryId,
-                        objectS = objectS,
-                        result = result,
-                        keys = keys
-                    )
+                    syncSchedulerCoroutineScope.launch {
+                        this@SyncUseCase.batchProcessor?.cancelAllOperations()
+                        this@SyncUseCase.batchProcessor = null
+                        val keys = batches.flatMap { it.keys }
+                        finishBatchesSyncAction(
+                            libraryId = libraryId,
+                            objectS = objectS,
+                            result = result,
+                            keys = keys
+                        )
+                    }
+
                 }
             )
         this.batchProcessor?.start()
@@ -920,6 +926,7 @@ class SyncUseCase @Inject constructor(
         type = SyncKind.normal
         lastReturnedVersion = null
         accessPermissions = null
+        this.batchProcessor?.cancelAllOperations()
         this.batchProcessor = null
         libraryType = Libraries.all
         didEnqueueWriteActionsToZoteroBackend = false

@@ -5,18 +5,18 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import org.zotero.android.ZoteroApplication
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.api.repositories.AccountRepository
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.screens.login.LoginViewEffect.NavigateToDashboard
-import org.zotero.android.screens.login.usecase.LoginUseCase
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import javax.inject.Inject
 
 @HiltViewModel
 internal class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase
+    private val accountRepository: AccountRepository
 ) : BaseViewModel2<LoginViewState, LoginViewEffect>(LoginViewState()) {
 
     fun init() = initOnce {
@@ -51,7 +51,7 @@ internal class LoginViewModel @Inject constructor(
         }
 
         val networkResult =
-            loginUseCase.execute(username = viewState.username, password = viewState.password)
+            accountRepository.login(username = viewState.username, password = viewState.password)
 
         if (networkResult !is CustomResult.GeneralSuccess) {
             updateState {

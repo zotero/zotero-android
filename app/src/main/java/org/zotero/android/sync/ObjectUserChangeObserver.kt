@@ -2,7 +2,6 @@ package org.zotero.android.sync
 
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
-import io.realm.RealmChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
 import kotlinx.coroutines.launch
@@ -105,13 +104,6 @@ class ObjectUserChangeObserver(
                 }
 
                 OrderedCollectionChangeSet.State.UPDATE -> {
-                    when (results) {
-                        RItem::class -> {
-                            removeChildListeners()
-                            addChildListeners(results as RealmResults<RItem>)
-                        }
-                    }
-
                     val frozenItems = results.freeze()
                     val updated =
                         (changeSet.insertions + changeSet.changes).map { frozenItems[it] }
@@ -141,27 +133,6 @@ class ObjectUserChangeObserver(
             return
         }
         this.observable.emitAsync(libraryIds)
-    }
-
-    private val childListObjectToListen = mutableListOf<RealmResults<RItem>?>()
-
-    private fun addChildListeners(items: RealmResults<RItem>) {
-        items.forEach { item ->
-            val children = item.children
-            children?.addChangeListener(object : RealmChangeListener<RealmResults<RItem>> {
-                override fun onChange(t: RealmResults<RItem>) {
-                    val parent = item.freeze<RItem>()
-                    reportChangedLibraries(listOf(parent))
-                }
-            })
-        }
-    }
-
-    private fun removeChildListeners() {
-        childListObjectToListen.forEach {
-            it?.removeAllChangeListeners()
-        }
-        childListObjectToListen.clear()
     }
 
 }
