@@ -1,16 +1,16 @@
-import com.android.build.gradle.TestedExtension
+package dependencyplugins
+
+import Libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.getByType
 
 class DaggerAndHiltPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val extension = project.extensions.getByType<TestedExtension>()
-        extension.configure(project)
+        configure(project)
     }
 }
 
-private fun TestedExtension.configure(project: Project) {
+private fun configure(project: Project) {
     project.dependencies.apply {
         add("implementation", Libs.Dagger.hiltAndroid)
         add("kapt", Libs.Dagger.hiltCompiler)

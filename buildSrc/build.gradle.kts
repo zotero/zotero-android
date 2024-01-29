@@ -9,9 +9,7 @@ plugins {
 
 dependencies {
     // This constant is duplicated in root/build.gradle.kts. Make sure to also update there
-    implementation("com.android.tools.build:gradle:8.2.0")
-    // Without this dependency the compiler has problems with inline Composables
-    // This constant is duplicated in buildSrc/src/main/kotlin/Libs. Make sure to also update there
+    implementation("com.android.tools.build:gradle:8.2.1")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20")
     // Without this Hilts aggregate dependencies task is unable to run.
     implementation("com.squareup:javapoet:1.13.0")
@@ -20,20 +18,32 @@ dependencies {
 gradlePlugin {
     plugins {
         register("ComposePlugin") {
-            id = "compose"
-            implementationClass = "ComposePlugin"
+            id = "composeDependencies"
+            implementationClass = "dependencyplugins.ComposePlugin"
         }
         register("AccompanistPlugin") {
-            id = "accompanist"
-            implementationClass = "AccompanistPlugin"
+            id = "accompanistDependencies"
+            implementationClass = "dependencyplugins.AccompanistPlugin"
         }
         register("DaggerAndHiltPlugin") {
-            id = "daggerAndHilt"
-            implementationClass = "DaggerAndHiltPlugin"
+            id = "daggerAndHiltDependencies"
+            implementationClass = "dependencyplugins.DaggerAndHiltPlugin"
         }
         register("TestsPlugin") {
-            id = "tests"
-            implementationClass = "TestsPlugin"
+            id = "testDependencies"
+            implementationClass = "dependencyplugins.TestsPlugin"
+        }
+        register("NetworkPlugin") {
+            id = "networkDependencies"
+            implementationClass = "dependencyplugins.NetworkPlugin"
+        }
+        register("KotlinPlugin") {
+            id = "kotlinDependencies"
+            implementationClass = "dependencyplugins.KotlinPlugin"
+        }
+        register("AndroidXPlugin") {
+            id = "androidXDependencies"
+            implementationClass = "dependencyplugins.AndroidXPlugin"
         }
     }
 }

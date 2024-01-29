@@ -1,3 +1,6 @@
+package dependencyplugins
+
+import Libs
 import com.android.build.gradle.TestedExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project

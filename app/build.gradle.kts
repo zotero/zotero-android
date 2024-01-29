@@ -1,5 +1,3 @@
-
-import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -13,10 +11,17 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("compose")
-    id("accompanist")
-    id("daggerAndHilt")
-    id("tests")
+
+    //----Dependency plugins start----
+    id("kotlinDependencies")
+    id("androidXDependencies")
+    id("composeDependencies")
+    id("accompanistDependencies")
+    id("daggerAndHiltDependencies")
+    id("networkDependencies")
+    id("testDependencies")
+    //----Dependency plugins end----
+
     id("com.google.dagger.hilt.android")
 }
 
@@ -30,7 +35,7 @@ android {
         targetSdk = BuildConfig.targetSdk
         versionCode = BuildConfig.versionCode
         versionName = BuildConfig.version.name
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = Libs.androidJUnitRunner
 
         buildConfigField("String", "BASE_API_URL", "\"https://api.zotero.org\"")
         buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
@@ -60,8 +65,9 @@ android {
         abortOnError = false
     }
     androidResources {
-        noCompress ("ttf", "mov", "avi", "json", "html", "csv", "obb")
+        noCompress += listOf("ttf", "mov", "avi", "json", "html", "csv", "obb")
     }
+
     buildTypes {
         getByName("debug") {
             isDebuggable = true
@@ -108,7 +114,7 @@ android {
         buildConfig = true
     }
 
-    packagingOptions {
+    packaging {
         resources.pickFirsts.add("META-INF/kotlinx-coroutines-core.kotlin_module")
     }
 
@@ -131,70 +137,36 @@ play {
 
 dependencies {
 
-    //AndroidX
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-common-java8:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-process:2.6.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-    implementation("androidx.activity:activity-ktx:1.8.1")
-    implementation("androidx.vectordrawable:vectordrawable:1.1.0")
-    implementation("androidx.preference:preference-ktx:1.2.1")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.constraintlayout:constraintlayout-solver:2.0.4")
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-
     //Material design
-    implementation("com.google.android.material:material:1.10.0")
-
-    //Kotlin
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.20")
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.9.20")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+    implementation(Libs.materialDesign)
 
     //Crash
-    implementation("com.google.firebase:firebase-crashlytics-ktx:18.5.1")
+    implementation(Libs.Firebase.Crashlytics.crashlytics)
 
     //PSPDFKIT
-    implementation("com.pspdfkit:pspdfkit:8.10.0")
-
-    //Retrofit 2
-    implementation(Libs.Retrofit.kotlinSerialization)
-    implementation(Libs.Retrofit.core)
-    implementation(Libs.Retrofit.converterGson)
-    implementation(Libs.Retrofit.converterScalars)
-
-    //Ok HTTP
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+    implementation(Libs.pspdfkit)
 
     //GSON
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation(Libs.gson)
 
     //ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.2.0")
-    implementation("androidx.media3:media3-ui:1.2.0")
+    implementation(Libs.ExoPlayer.exoPlayer)
+    implementation(Libs.ExoPlayer.mediaUi)
 
     //Coil
     implementation(Libs.Coil.compose)
 
-    //Other
-    implementation("com.jakewharton.timber:timber:4.7.1")
-    implementation("joda-time:joda-time:2.10.9")
-    implementation("org.greenrobot:eventbus:3.2.0")
+    //Commons
+    implementation(Libs.Commons.io)
+    implementation(Libs.Commons.codec)
+    implementation(Libs.Commons.validator)
 
-    implementation("commons-io:commons-io:2.4")
-    implementation("commons-codec:commons-codec:1.13")
-    implementation("commons-validator:commons-validator:1.7")
-    implementation("net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3")
+    //Other
+    implementation(Libs.timber)
+    implementation(Libs.jodaTime)
+    implementation(Libs.eventBus)
+    implementation(Libs.keyboardVisibility)
+
 }
 
 kapt {
