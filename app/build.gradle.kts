@@ -1,3 +1,4 @@
+import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import java.io.ByteArrayOutputStream
 
 plugins {
