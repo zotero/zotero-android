@@ -1,6 +1,7 @@
 package org.zotero.android.screens.allitems.processor
 
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.screens.allitems.data.ItemCellModel
@@ -21,8 +22,11 @@ interface AllItemsProcessorInterface {
     fun updateTagFilter()
     fun isEditing(): Boolean
     fun showItemDetailWithDelay(creation: DetailType.creation)
-    fun updateItemCellModels(itemCellModels: SnapshotStateList<ItemCellModel>)
 
     fun updateLCE(lce: LCE2)
     fun showError(error: ItemsError)
+    fun sendChangesToUi(
+        updatedItemCellModels: SnapshotStateList<ItemCellModel>?,
+        updatedDownloadingAccessories: SnapshotStateMap<String, ItemCellModel.Accessory?>?
+    )
 }

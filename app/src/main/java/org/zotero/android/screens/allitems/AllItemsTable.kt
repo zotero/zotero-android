@@ -43,6 +43,7 @@ internal fun AllItemsTable(
     layoutType: CustomLayoutSize.LayoutType,
     itemCellModels: SnapshotStateList<ItemCellModel>,
     isItemSelected: (key: String) -> Boolean,
+    getItemAccessory: (itemKey: String) -> ItemCellModel.Accessory?,
     isEditing: Boolean,
     onItemTapped: (item: ItemCellModel) -> Unit,
     onItemLongTapped: (key: String) -> Unit,
@@ -57,6 +58,7 @@ internal fun AllItemsTable(
             Box(modifier = Modifier.animateItemPlacement()) {
                 ItemRow(
                     cellModel = item,
+                    itemAccessory = getItemAccessory(item.key),
                     layoutType = layoutType,
                     showBottomDivider = index != itemCellModels.size - 1,
                     isEditing = isEditing,
@@ -73,6 +75,7 @@ internal fun AllItemsTable(
 @Composable
 private fun ItemRow(
     cellModel: ItemCellModel,
+    itemAccessory: ItemCellModel.Accessory?,
     isItemSelected: (key: String) -> Boolean,
     layoutType: CustomLayoutSize.LayoutType,
     showBottomDivider: Boolean = false,
@@ -106,6 +109,7 @@ private fun ItemRow(
             ItemRowCentralPart(
                 model = cellModel,
                 isEditing = isEditing,
+                itemAccessory = itemAccessory,
                 onAccessoryTapped = onAccessoryTapped,
             )
         }
@@ -146,6 +150,7 @@ private fun ItemRowLeftPart(
 @Composable
 private fun ItemRowCentralPart(
     model: ItemCellModel,
+    itemAccessory: ItemCellModel.Accessory?,
     isEditing: Boolean,
     onAccessoryTapped: (key: String) -> Unit,
 ) {
@@ -194,6 +199,7 @@ private fun ItemRowCentralPart(
             Spacer(modifier = Modifier.width(8.dp))
             ItemRowRightPart(
                 model = model,
+                itemAccessory = itemAccessory,
                 isEditing = isEditing,
                 onAccessoryTapped = onAccessoryTapped,
             )
@@ -204,11 +210,12 @@ private fun ItemRowCentralPart(
 @Composable
 private fun RowScope.ItemRowRightPart(
     model: ItemCellModel,
+    itemAccessory: ItemCellModel.Accessory?,
     isEditing: Boolean,
     onAccessoryTapped: (key: String) -> Unit,
 ) {
     SetAccessory(
-        accessory = model.accessory,
+        accessory = itemAccessory,
     )
     AnimatedContent(
         modifier = Modifier.align(Alignment.CenterVertically),

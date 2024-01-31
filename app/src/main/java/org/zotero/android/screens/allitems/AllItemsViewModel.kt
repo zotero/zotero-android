@@ -3,7 +3,9 @@ package org.zotero.android.screens.allitems
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
@@ -323,12 +325,20 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    override fun updateItemCellModels(itemCellModels: SnapshotStateList<ItemCellModel>) {
+    override fun sendChangesToUi(
+        updatedItemCellModels: SnapshotStateList<ItemCellModel>?,
+        updatedDownloadingAccessories: SnapshotStateMap<String, ItemCellModel.Accessory?>?
+    ) {
         viewModelScope.launch {
             updateState {
-                copy(itemCellModels = itemCellModels)
+                copy(
+                    itemCellModels = updatedItemCellModels ?: viewState.itemCellModels,
+                    accessoryBeingDownloaded = updatedDownloadingAccessories
+                        ?: viewState.accessoryBeingDownloaded
+                )
             }
         }
+
     }
 
     override fun updateLCE(lce: LCE2) {
@@ -1025,6 +1035,7 @@ internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Content,
     val snackbarMessage: SnackbarMessage? = null,
     val itemCellModels: SnapshotStateList<ItemCellModel> = mutableStateListOf(),
+    val accessoryBeingDownloaded: SnapshotStateMap<String, ItemCellModel.Accessory?> = mutableStateMapOf(),
     val selectedKeys: PersistentSet<String>? = null,
     val error: ItemsError? = null,
     val shouldShowAddBottomSheet: Boolean = false,
@@ -1059,6 +1070,14 @@ internal data class AllItemsViewState(
     val areAllSelected get(): Boolean {
         val size = itemCellModels.size
         return (selectedKeys?.size ?: 0) == size
+    }
+
+    fun getAccessoryForItem(itemKey: String): ItemCellModel.Accessory? {
+        val beingDownloadedAccessory = accessoryBeingDownloaded[itemKey]
+        if (beingDownloadedAccessory != null) {
+            return beingDownloadedAccessory
+        }
+        return itemCellModels.firstOrNull { it.key == itemKey }?.accessory
     }
 }
 

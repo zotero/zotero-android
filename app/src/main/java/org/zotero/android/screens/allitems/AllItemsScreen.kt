@@ -164,6 +164,7 @@ internal fun AllItemsScreen(
                             itemCellModels = viewState.itemCellModels,
                             isEditing = viewState.isEditing,
                             isItemSelected = viewState::isSelected,
+                            getItemAccessory = viewState::getAccessoryForItem,
                             onItemTapped = viewModel::onItemTapped,
                             onAccessoryTapped = viewModel::onAccessoryTapped,
                             onItemLongTapped = viewModel::onItemLongTapped

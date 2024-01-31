@@ -1,6 +1,6 @@
 package org.zotero.android.screens.allitems.processor
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.toMutableStateList
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
@@ -60,7 +60,7 @@ class AllItemsProcessor @Inject constructor(
 ) {
     private lateinit var processorInterface: AllItemsProcessorInterface
 
-    private var listenersCoroutineScope: CoroutineScope = CoroutineScope(dispatchers.default)
+    private var listenersCoroutineScope: CoroutineScope = CoroutineScope(dispatchers.io)
 
     private val limitedParallelismDispatcher =
         kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
@@ -74,6 +74,7 @@ class AllItemsProcessor @Inject constructor(
     private var attachmentToOpen: String? = null
     private var sortType: ItemsSortType = ItemsSortType.default
     private var mutableItemCellModels: MutableList<ItemCellModel> = mutableListOf()
+    private var mutableDownloadingAcessories: MutableMap<String, ItemCellModel.Accessory?> = mutableMapOf()
 
     private val library: Library get() {
         return processorInterface.currentLibrary()
@@ -273,11 +274,23 @@ class AllItemsProcessor @Inject constructor(
                     this.downloadBatchData = batchData
                 }
 
+
             }
         }
-        updateCellAccessoryForItem(updateKey)
-        sendItemCellModelsToUi()
+        when (update.kind) {
+            is AttachmentDownloader.Update.Kind.progress -> {
+                mutableDownloadingAcessories[updateKey] = cellAccessory(itemAccessories[updateKey])
+                sendChangedToUi(includeAccessories = true)
+            }
+            else -> {
+                mutableDownloadingAcessories.remove(updateKey)
+                updateCellAccessoryForItem(updateKey)
+                sendChangedToUi(includeItemCellModels = true, includeAccessories = true)
+            }
+        }
     }
+
+
 
     private fun updateCellAccessoryForItem(updateKey: String) {
         val cellAccessory = cellAccessory(itemAccessories[updateKey])
@@ -366,8 +379,8 @@ class AllItemsProcessor @Inject constructor(
         removeAllListenersFromResultsList()
         this.results = results
 
-        mutableItemCellModels = mutableStateListOf()
-        sendItemCellModelsToUi()
+        mutableItemCellModels = mutableListOf()
+        sendChangedToUi(includeItemCellModels = true)
 
         startObservingResults()
         processorInterface.updateTagFilter()
@@ -377,10 +390,29 @@ class AllItemsProcessor @Inject constructor(
         this.results?.removeAllChangeListeners()
     }
 
-    private fun sendItemCellModelsToUi() {
-        processorInterface.updateItemCellModels(mutableItemCellModels.toMutableStateList())
-    }
+    private fun sendChangedToUi(includeItemCellModels: Boolean = false, includeAccessories: Boolean = false) {
+        val updatedItemCellModels =
+            if (includeItemCellModels) {
+                val copyOfItemCellModels = mutableItemCellModels.toList()
+                copyOfItemCellModels.toMutableStateList()
+            } else {
+                null
+            }
 
+        val updatedDownloadingAccessories = if (includeAccessories) {
+            val copyOfDownloadingAccessories = mutableDownloadingAcessories.toMap()
+           mutableStateMapOf<String, ItemCellModel.Accessory?>().apply {
+               putAll(copyOfDownloadingAccessories)
+           }
+        } else {
+            null
+        }
+
+        processorInterface.sendChangesToUi(
+            updatedItemCellModels = updatedItemCellModels,
+            updatedDownloadingAccessories = updatedDownloadingAccessories
+        )
+    }
     internal fun filter(
         searchTerm: String?,
         filters: List<ItemsFilter>,
@@ -451,7 +483,7 @@ class AllItemsProcessor @Inject constructor(
                 }
                 currentProcessingCount++
                 if (currentProcessingCount % updateThreshold == 0) {
-                    sendItemCellModelsToUi()
+                    sendChangedToUi(includeItemCellModels = true)
                 }
             }
             modifications.forEach { idx ->
@@ -472,14 +504,14 @@ class AllItemsProcessor @Inject constructor(
                 }
                 currentProcessingCount++
                 if (currentProcessingCount % updateThreshold == 0) {
-                    sendItemCellModelsToUi()
+                    sendChangedToUi(includeItemCellModels = true)
                 }
             }
             if (!isActive) {
                 return@launch
             }
 //            mutableItemCellModels = itemCellModelsToUpdate
-            sendItemCellModelsToUi()
+            sendChangedToUi(includeItemCellModels = true)
         }
 
     }
@@ -610,7 +642,7 @@ class AllItemsProcessor @Inject constructor(
             this@AllItemsProcessor.itemAccessories.put(key, itemAccessory)
         }
         updateCellAccessoryForItem(key)
-        sendItemCellModelsToUi()
+        sendChangedToUi(includeItemCellModels = true)
     }
 
     fun clear() {

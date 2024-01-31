@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.ClientInfoNetworkInterceptor
@@ -13,7 +15,9 @@ import org.zotero.android.ktx.setNetworkTimeout
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+
 
 @Module
 @DisableInstallInCheck
@@ -26,7 +30,17 @@ object BaseApiModule {
         clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
         configuration: NetworkConfiguration
     ): OkHttpClient {
+        val connectionPool = ConnectionPool(
+            maxIdleConnections = 10,
+            keepAliveDuration = 5,
+            timeUnit = TimeUnit.MINUTES
+        )
+        val dispatcher = Dispatcher()
+        dispatcher.maxRequests = 30
+        dispatcher.maxRequestsPerHost = 30
         return OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .connectionPool(connectionPool)
             .setNetworkTimeout(configuration.networkTimeout)
             .addInterceptor(clientInfoNetworkInterceptor)
             .build()
