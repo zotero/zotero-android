@@ -380,7 +380,7 @@ class AttachmentCreator {
             val rPriority = priority(rData.first)
 
             if(lPriority != rPriority) {
-                return rPriority.compareTo(lPriority)
+                return lPriority.compareTo(rPriority)
             }
 
             if( lData.second != rData.second) {
