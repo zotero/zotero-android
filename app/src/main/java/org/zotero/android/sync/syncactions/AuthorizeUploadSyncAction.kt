@@ -36,7 +36,6 @@ class AuthorizeUploadSyncAction(
                     val url =
                         BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) +
                                 "/items/" + this.key + "/file"
-                    println(url)
                     syncApi.authorizeUpload(
                         url = url,
                         headers = headers,

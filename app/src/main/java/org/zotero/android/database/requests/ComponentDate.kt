@@ -18,10 +18,13 @@ class ComponentDate(
     val date: Date?
         get() {
             if (this.year > 0) {
-                return DateTime().withYear(year).withMonthOfYear(max(1, month))
-                    .withDayOfMonth(max(1, day)).toDate()
-            } else {
-                return null
+                val withMonthOfYear = DateTime().withYear(year).withMonthOfYear(max(1, month))
+                val maxDayInThisMonth = withMonthOfYear.dayOfMonth().maximumValue
+                if (day <= maxDayInThisMonth) {
+                    return withMonthOfYear
+                        .withDayOfMonth(max(1, day)).toDate()
+                }
             }
+            return null
         }
 }

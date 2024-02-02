@@ -217,7 +217,6 @@ class SyncBatchProcessor(
                     }
                 }
                 //Set a breakpoint here
-                println(items)
 
                 storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
 
