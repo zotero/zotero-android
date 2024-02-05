@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -159,13 +160,16 @@ fun ListOfFieldRows(
 private fun Title(
     viewState: ItemDetailsViewState,
 ) {
-    Text(
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
-        text = viewState.data.title,
-        color = CustomTheme.colors.primaryContent,
-        style = CustomTheme.typography.newTitleOne,
-    )
+    SelectionContainer {
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 16.dp),
+            text = viewState.data.title,
+            color = CustomTheme.colors.primaryContent,
+            style = CustomTheme.typography.newTitleOne,
+        )
+    }
+
 }
 
 @Composable
