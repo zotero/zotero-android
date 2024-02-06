@@ -8,8 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import com.google.accompanist.navigation.animation.composable
-import com.pspdfkit.PSPDFKit
-import org.zotero.android.BuildConfig
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogFixedDimens
@@ -25,7 +23,6 @@ import org.zotero.android.pdf.settings.PdfSettingsScreen
 import org.zotero.android.pdffilter.PdfFilterNavigation
 import org.zotero.android.pdffilter.pdfFilterNavScreens
 import org.zotero.android.pdffilter.toPdfFilterScreen
-import timber.log.Timber
 
 internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
     navigation: ZoteroNavigation,
@@ -155,25 +152,12 @@ private object PdfReaderDestinations {
     const val PDF_ANNOTATION_MORE_NAVIGATION = "pdfAnnotationMoreNavigation"
 }
 
-fun ZoteroNavigation.toPdfScreen(context: Context) {
-    if (initializePspdfKit(context)) {
+fun ZoteroNavigation.toPdfScreen(context: Context, wasPspdfkitInitialized: Boolean) {
+    if (wasPspdfkitInitialized) {
         navController.navigate(PdfReaderDestinations.PDF_SCREEN)
+    } else {
+        context.longToast("Unable to open a PDF. PSPDFKIT was not initialized")
     }
-}
-
-private fun initializePspdfKit(context: Context): Boolean {
-    try {
-        if (BuildConfig.PSPDFKIT_KEY.isNotBlank()) {
-            PSPDFKit.initialize(context, BuildConfig.PSPDFKIT_KEY)
-        } else {
-            PSPDFKit.initialize(context, null)
-        }
-    } catch (e: Exception) {
-        Timber.e(e, "Unable to initialize PSPDFKIT")
-        context.longToast("Unable to initialize PSPDFKIT")
-        return false
-    }
-    return true
 }
 
 private fun ZoteroNavigation.toPdfFilterNavigation() {

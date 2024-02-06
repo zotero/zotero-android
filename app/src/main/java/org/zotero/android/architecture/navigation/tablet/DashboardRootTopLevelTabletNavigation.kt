@@ -31,6 +31,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
+    wasPspdfkitInitialized: Boolean,
 ) {
     val context = LocalContext.current
     val navController = rememberAnimatedNavController()
@@ -49,7 +50,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel,
-            onShowPdf = { navigation.toPdfScreen(context) },
+            onShowPdf = { navigation.toPdfScreen(context, wasPspdfkitInitialized) },
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
         )

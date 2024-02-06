@@ -31,6 +31,7 @@ open class Defaults @Inject constructor(
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
     private val tagPickerDisplayAllTags = "tagPickerDisplayAllTags"
     private val isDebugLogEnabled = "isDebugLogEnabled"
+    private val wasPspdfkitInitialized = "wasPspdfkitInitialized"
     private val pdfSettings = "pdfSettings"
     private val highlightColorHex = "highlightColorHex"
     private val noteColorHex = "noteColorHex"
@@ -231,6 +232,14 @@ open class Defaults @Inject constructor(
 
     fun isDebugLogEnabled(): Boolean {
         return sharedPreferences.getBoolean(isDebugLogEnabled, false)
+    }
+
+    fun setPspdfkitInitialized(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(wasPspdfkitInitialized, newValue) }
+    }
+
+    fun wasPspdfkitInitialized(): Boolean {
+        return sharedPreferences.getBoolean(wasPspdfkitInitialized, false)
     }
 
     fun reset() {

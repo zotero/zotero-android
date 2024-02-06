@@ -61,6 +61,7 @@ internal fun DashboardRootPhoneNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: DashboardViewModel,
+    wasPspdfkitInitialized: Boolean,
 ) {
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
     LaunchedEffect(key1 = viewModel) {
@@ -117,7 +118,10 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
-                    onShowPdf = { navigation.toPdfScreen(context) },
+                    onShowPdf = { navigation.toPdfScreen(
+                        context = context,
+                        wasPspdfkitInitialized = wasPspdfkitInitialized
+                    ) },
                 )
                 itemDetailsScreen(
                     navigateToCreatorEdit = navigation::toCreatorEdit,
@@ -131,7 +135,7 @@ internal fun DashboardRootPhoneNavigation(
                     onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,
                     onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-                    onShowPdf = { navigation.toPdfScreen(context) },
+                    onShowPdf = { navigation.toPdfScreen(context, wasPspdfkitInitialized) },
                 )
 
                 composable(

@@ -1,13 +1,17 @@
 package org.zotero.android
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.gson.Gson
+import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.BuildConfig.EVENT_AND_CRASH_LOGGING_ENABLED
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.api.ForGsonWithRoundedDecimals
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.crashreporting.FirebaseCrashReportingTree
 import org.zotero.android.architecture.logging.crash.CrashFileWriter
@@ -39,6 +43,9 @@ open class ZoteroApplication: Application(), DefaultLifecycleObserver {
     lateinit var crashFileWriter: CrashFileWriter
 
     @Inject
+    lateinit var defaults: Defaults
+
+    @Inject
     @ForGsonWithRoundedDecimals
     lateinit var gsonWithRoundedDecimals: Gson
 
@@ -48,13 +55,34 @@ open class ZoteroApplication: Application(), DefaultLifecycleObserver {
 
     override fun onCreate() {
         super<Application>.onCreate()
-
         instance = this
         setUpLogging()
 
         controllers.init()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        initializePspdfKit()
+    }
+
+    private fun initializePspdfKit() {
+        val initializationResult = attemptToInitializePspdfKit(this)
+        defaults.setPspdfkitInitialized(initializationResult)
+
+    }
+
+    private fun attemptToInitializePspdfKit(context: Context): Boolean {
+        try {
+            if (BuildConfig.PSPDFKIT_KEY.isNotBlank()) {
+                PSPDFKit.initialize(context, BuildConfig.PSPDFKIT_KEY)
+            } else {
+                PSPDFKit.initialize(context, null)
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Unable to initialize PSPDFKIT")
+            context.longToast("Unable to initialize PSPDFKIT")
+            return false
+        }
+        return true
     }
 
     override fun onStart(owner: LifecycleOwner) {

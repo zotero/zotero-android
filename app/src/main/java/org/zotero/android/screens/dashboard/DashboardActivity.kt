@@ -19,6 +19,7 @@ import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventList
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
 import org.zotero.android.architecture.BaseActivity
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
@@ -27,6 +28,7 @@ import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTa
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
+import javax.inject.Inject
 
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
@@ -36,6 +38,9 @@ internal class DashboardActivity : BaseActivity() {
     private val viewModel: DashboardViewModel by viewModels()
 
     private var pickFileCallPoint: CallPoint = AllItems
+
+    @Inject
+    lateinit var defaults: Defaults
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +83,7 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
+        val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
 
         setContent {
             CustomTheme {
@@ -88,6 +94,7 @@ internal class DashboardActivity : BaseActivity() {
                         viewModel = viewModel,
                         onOpenFile = onOpenFile,
                         onOpenWebpage = onOpenWebpage,
+                        wasPspdfkitInitialized = wasPspdfkitInitialized,
                     )
                 } else {
                     DashboardRootPhoneNavigation(
@@ -95,6 +102,7 @@ internal class DashboardActivity : BaseActivity() {
                         viewModel = viewModel,
                         onOpenFile = onOpenFile,
                         onOpenWebpage = onOpenWebpage,
+                        wasPspdfkitInitialized = wasPspdfkitInitialized,
                     )
                 }
 
