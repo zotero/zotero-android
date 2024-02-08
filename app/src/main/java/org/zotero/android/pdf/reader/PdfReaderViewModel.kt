@@ -5,6 +5,8 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.net.Uri
 import android.os.Handler
+import android.view.MotionEvent
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.viewModelScope
@@ -31,6 +33,7 @@ import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.listeners.DocumentListener
 import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
+import com.pspdfkit.ui.PdfThumbnailBar
 import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -155,6 +158,7 @@ class PdfReaderViewModel @Inject constructor(
     private val onSearchStateFlow = MutableStateFlow("")
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private lateinit var fragmentManager: FragmentManager
+    private lateinit var pdfThumbnailBar: PdfThumbnailBar
     private var isTablet: Boolean = false
 
     private val handler = Handler(context.mainLooper)
@@ -284,9 +288,11 @@ class PdfReaderViewModel @Inject constructor(
         containerId: Int,
         fragmentManager: FragmentManager,
         isTablet: Boolean,
+        pdfThumbnailBar: PdfThumbnailBar,
     ) {
         this.isTablet = isTablet
         this.fragmentManager = fragmentManager
+        this.pdfThumbnailBar = pdfThumbnailBar
         this.containerId = containerId
         this.annotationMaxSideSize = annotationMaxSideSize
 
@@ -311,7 +317,20 @@ class PdfReaderViewModel @Inject constructor(
             override fun onDocumentLoaded(document: PdfDocument) {
                 this@PdfReaderViewModel.onDocumentLoaded(document)
             }
+
+            override fun onPageClick(
+                document: PdfDocument,
+                pageIndex: Int,
+                event: MotionEvent?,
+                pagePosition: PointF?,
+                clickedAnnotation: Annotation?
+            ): Boolean {
+                pdfThumbnailBar.isVisible = !pdfThumbnailBar.isVisible
+                return false
+            }
         })
+
+        this@PdfReaderViewModel.fragment.addDocumentListener(pdfThumbnailBar.documentListener)
         this.fragment.addOnAnnotationCreationModeChangeListener(object:
             AnnotationManager.OnAnnotationCreationModeChangeListener {
             override fun onEnterAnnotationCreationMode(p0: AnnotationCreationController) {
@@ -420,6 +439,8 @@ class PdfReaderViewModel @Inject constructor(
         fragment.addOnAnnotationDeselectedListener { annotation, _ ->
             deselectSelectedAnnotation(annotation)
         }
+        pdfThumbnailBar.setOnPageChangedListener { _, pageIndex: Int -> fragment.pageIndex = pageIndex }
+        pdfThumbnailBar.setDocument(document, fragment.configuration)
     }
 
     private fun initState() {
@@ -1559,7 +1580,6 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun generatePdfConfiguration(pdfSettings: PDFSettings): PdfConfiguration {
-
         if (!PSPDFKitPreferences.get(context).isAnnotationCreatorSet) {
             PSPDFKitPreferences.get(context).setAnnotationCreator(viewState.displayName)
         }
@@ -1598,6 +1618,7 @@ class PdfReaderViewModel @Inject constructor(
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
             .autosaveEnabled(false)
+            .scrollbarsEnabled(true)
             .build()
     }
 
@@ -1873,7 +1894,18 @@ class PdfReaderViewModel @Inject constructor(
                 }
 
             }
+            override fun onPageClick(
+                document: PdfDocument,
+                pageIndex: Int,
+                event: MotionEvent?,
+                pagePosition: PointF?,
+                clickedAnnotation: Annotation?
+            ): Boolean {
+                pdfThumbnailBar.isVisible = !pdfThumbnailBar.isVisible
+                return false
+            }
         })
+        this@PdfReaderViewModel.fragment.addDocumentListener(pdfThumbnailBar.documentListener)
         this.fragment.addOnAnnotationCreationModeChangeListener(object:
             AnnotationManager.OnAnnotationCreationModeChangeListener {
             override fun onEnterAnnotationCreationMode(p0: AnnotationCreationController) {

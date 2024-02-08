@@ -62,4 +62,6 @@
     <color name="pdf_annotations_divider_background">#E4E4E7</color>
     <color name="pdf_annotations_body_text">#77767B</color>
     <color name="pdf_annotations_topbar_background">#FAFAFD</color>
+    <color name="pdf_scrubber_background">#FFE8E8ED</color>
+    <color name="pdf_view_background_color">#FFF2F2F7</color>
 </resources>

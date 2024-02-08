@@ -11,5 +11,11 @@
         <item name="checkboxColor">@color/checkbox_dark</item>
         <item name="chatTextColor">@color/white</item>
         <item name="elevationOverlayEnabled">false</item>
+
+        <item name="pspdf__documentViewStyle">@style/CustomPspdfDocumentViewStyleDark</item>
+        <item name="pspdf__thumbnailBarStyle">@style/CustomPspdfThumbnailBarStyle</item>
+        <item name="pspdf__backgroundColor">@color/pdf_view_background_color</item>
+    </style>
+    <style name="CustomPspdfDocumentViewStyleDark" parent="@style/PSPDFKit.DocumentView.Dark">
     </style>
 </resources>

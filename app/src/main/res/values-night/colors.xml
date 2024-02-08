@@ -29,4 +29,6 @@
     <color name="pdf_annotations_topbar_background">#282828</color>
     <color name="zoteroDefaultBlue">#FF4072E5</color>
     <color name="zoteroBlueWithDarkMode">#FF335BB8</color>
+    <color name="pdf_scrubber_background">#FF2D2D2D</color>
+    <color name="pdf_view_background_color">#FF1C1C1E</color>
 </resources>

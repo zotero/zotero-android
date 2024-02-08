@@ -33,6 +33,17 @@
 
     <style name="AppTheme" parent="BaseTheme">
         <!-- Customize your theme here. -->
+        <item name="pspdf__documentViewStyle">@style/CustomPspdfDocumentViewStyle</item>
+        <item name="pspdf__thumbnailBarStyle">@style/CustomPspdfThumbnailBarStyle</item>
+        <item name="pspdf__backgroundColor">@color/pdf_view_background_color</item>
+    </style>
+
+    <style name="CustomPspdfThumbnailBarStyle" parent="@style/PSPDFKit.ThumbnailBar">
+        <item name="pspdf__thumbnailSelectedBorderColor">#FF0A84FF</item>
+        <item name="pspdf__backgroundColor">@color/pdf_scrubber_background</item>
+    </style>
+
+    <style name="CustomPspdfDocumentViewStyle" parent="@style/PSPDFKit.DocumentView">
     </style>
 
     <style name="ShapeAppearance.Custom.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
