@@ -5,7 +5,12 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.net.Uri
 import android.os.Handler
+import android.transition.Fade
+import android.transition.Transition
+import android.transition.TransitionManager
 import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
@@ -325,7 +330,7 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
-                pdfThumbnailBar.isVisible = !pdfThumbnailBar.isVisible
+                toggleTopAndBottomBarVisibility()
                 return false
             }
         })
@@ -441,6 +446,7 @@ class PdfReaderViewModel @Inject constructor(
         }
         pdfThumbnailBar.setOnPageChangedListener { _, pageIndex: Int -> fragment.pageIndex = pageIndex }
         pdfThumbnailBar.setDocument(document, fragment.configuration)
+        pdfThumbnailBar.isVisible = viewState.isTopBarVisible
     }
 
     private fun initState() {
@@ -1901,7 +1907,7 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
-                pdfThumbnailBar.isVisible = !pdfThumbnailBar.isVisible
+                toggleTopAndBottomBarVisibility()
                 return false
             }
         })
@@ -1926,6 +1932,19 @@ class PdfReaderViewModel @Inject constructor(
             replace(containerId, this@PdfReaderViewModel.fragment)
         }
         updateVisibilityOfAnnotations()
+    }
+
+    private fun toggleTopAndBottomBarVisibility() {
+        val isVisibleNewState = !pdfThumbnailBar.isVisible
+        updateState {
+            copy(isTopBarVisible = isVisibleNewState)
+        }
+        val transition: Transition = Fade()
+        transition.setDuration(200)
+        transition.addTarget(pdfThumbnailBar)
+
+        TransitionManager.beginDelayedTransition(pdfThumbnailBar.parent as ViewGroup, transition)
+        pdfThumbnailBar.visibility = if (isVisibleNewState) View.VISIBLE else View.GONE
     }
 
     private fun updateVisibilityOfAnnotations() {
@@ -2534,7 +2553,8 @@ data class PdfReaderViewState(
     val showCreationToolbar: Boolean = false,
     val isColorPickerButtonVisible: Boolean = false,
     val commentFocusKey: String? = null,
-    val commentFocusText: String = ""
+    val commentFocusText: String = "",
+    val isTopBarVisible: Boolean = true,
 ): ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey?.key == annotationKey

@@ -124,14 +124,19 @@ internal fun PdfReaderScreen(
         CustomScaffold(
             backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
             topBar = {
-                PdfReaderTopBar(
-                    onBack = onBack,
-                    onShowHideSideBar = viewModel::toggleSideBar,
-                    toPdfSettings = viewModel::navigateToPdfSettings,
-                    toggleToolbarButton = viewModel::toggleToolbarButton,
-                    isToolbarButtonSelected = viewState.showCreationToolbar,
-                    showSideBar = viewState.showSideBar,
-                )
+                AnimatedContent(targetState = viewState.isTopBarVisible, label = "") { isTopBarVisible ->
+                    if (isTopBarVisible) {
+                        PdfReaderTopBar(
+                            onBack = onBack,
+                            onShowHideSideBar = viewModel::toggleSideBar,
+                            toPdfSettings = viewModel::navigateToPdfSettings,
+                            toggleToolbarButton = viewModel::toggleToolbarButton,
+                            isToolbarButtonSelected = viewState.showCreationToolbar,
+                            showSideBar = viewState.showSideBar,
+                        )
+                    }
+                }
+
             },
         ) {
             if (layoutType.isTablet()) {
