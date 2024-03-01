@@ -42,4 +42,17 @@ interface NoAuthenticationApi {
         @Field("errorData") errorData: String,
         @Field("diagnostic") diagnostic: String,
     ): retrofit2.Response<String?>
+
+    @GET
+    suspend fun sendWebViewGet(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>,
+    ): retrofit2.Response<ResponseBody>
+
+    @POST
+    suspend fun sendWebViewPost(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>,
+        @Body textBody: String?,
+    ): retrofit2.Response<ResponseBody>
 }
