@@ -879,26 +879,23 @@ class PdfReaderViewModel @Inject constructor(
         databaseAnnotations: RealmResults<RItem>,
         documentAnnotations: Map<String, DocumentAnnotation>
     ): List<AnnotationKey> {
-        val keys = mutableListOf<Pair<AnnotationKey, String>>()
+        val sortMap = mapOf<String, AnnotationKey>().toSortedMap()
         for (item in databaseAnnotations) {
             if (!validate(databaseAnnotation = DatabaseAnnotation(item = item))) {
                 continue
             }
-            keys.add(
-                AnnotationKey(
-                    key = item.key,
-                    type = AnnotationKey.Kind.database
-                ) to item.annotationSortIndex
+            sortMap[item.annotationSortIndex] = AnnotationKey(
+                key = item.key,
+                type = AnnotationKey.Kind.database
             )
         }
         for (annotation in documentAnnotations.values) {
             val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
-            val index = keys.index(key to annotation.sortIndex, sortedBy = { lData, rData ->
-                lData.second.compareTo(rData.second) == 1
-            })
-            keys.add(element = key to annotation.sortIndex, index = index)
+            val sortIndex = annotation.sortIndex
+            sortMap[sortIndex] = key
         }
-        return keys.map { it.first }
+        val result = sortMap.map { it.value }
+        return result
     }
 
     private fun validate(databaseAnnotation: DatabaseAnnotation): Boolean {
