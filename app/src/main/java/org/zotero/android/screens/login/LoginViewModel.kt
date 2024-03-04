@@ -36,12 +36,15 @@ internal class LoginViewModel @Inject constructor(
     }
 
     fun onSignInClicked() = viewModelScope.launch {
-        if (viewState.username.isEmpty()) {
+        val trimmedUsername = viewState.username.trim()
+        val trimmedPassword = viewState.password.trim()
+
+        if (trimmedUsername.isEmpty()) {
             showErrorRes(Strings.errors_login_invalid_username)
             return@launch
         }
 
-        if (viewState.password.isEmpty()) {
+        if (trimmedPassword.isEmpty()) {
             showErrorRes(Strings.errors_login_invalid_password)
             return@launch
         }
@@ -51,7 +54,7 @@ internal class LoginViewModel @Inject constructor(
         }
 
         val networkResult =
-            accountRepository.login(username = viewState.username, password = viewState.password)
+            accountRepository.login(username = trimmedUsername, password = trimmedPassword)
 
         if (networkResult !is CustomResult.GeneralSuccess) {
             updateState {
