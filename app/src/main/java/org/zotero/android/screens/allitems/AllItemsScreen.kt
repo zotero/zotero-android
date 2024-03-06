@@ -46,7 +46,7 @@ internal fun AllItemsScreen(
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
 ) {
     CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -89,7 +89,7 @@ internal fun AllItemsScreen(
 
                 is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.uri)
                 is AllItemsViewEffect.NavigateToPdfScreen -> {
-                    onShowPdf()
+                    onShowPdf(consumedEffect.params)
                 }
 
                 is AllItemsViewEffect.ShowVideoPlayer -> {

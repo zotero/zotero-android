@@ -2,8 +2,11 @@ package org.zotero.android.api.module
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Uri
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
+import com.google.gson.TypeAdapterFactory
 import com.google.gson.reflect.TypeToken
 import dagger.Module
 import dagger.Provides
@@ -12,9 +15,12 @@ import kotlinx.serialization.json.Json
 import org.zotero.android.api.ForGsonWithRoundedDecimals
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
+import org.zotero.android.architecture.serialization.SealedClassTypeAdapter
+import org.zotero.android.architecture.serialization.UriTypeAdapter
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FormattedDoubleJsonSerializer
 import javax.inject.Singleton
+import kotlin.jvm.internal.Reflection
 
 @Module
 @DisableInstallInCheck
@@ -43,6 +49,17 @@ object GeneralModule {
         val gsonBuilder = GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
             .setLenient()
+            .registerTypeAdapterFactory(
+                object : TypeAdapterFactory {
+                    override fun <T : Any> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T> {
+                        val kclass = Reflection.getOrCreateKotlinClass(type.rawType)
+                        return if (kclass.sealedSubclasses.any()) {
+                            SealedClassTypeAdapter<T>(kclass, gson)
+                        } else
+                            gson.getDelegateAdapter(this, type)
+                    }
+                })
+            .registerTypeAdapter(Uri::class.java, UriTypeAdapter)
         return gsonBuilder
     }
 

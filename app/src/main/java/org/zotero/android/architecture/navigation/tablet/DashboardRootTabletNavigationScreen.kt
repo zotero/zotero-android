@@ -33,7 +33,7 @@ internal fun DashboardRootTabletNavigationScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     viewModel: DashboardViewModel,

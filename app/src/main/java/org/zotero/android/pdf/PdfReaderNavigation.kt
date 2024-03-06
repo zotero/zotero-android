@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -23,6 +25,8 @@ import org.zotero.android.pdf.settings.PdfSettingsScreen
 import org.zotero.android.pdffilter.PdfFilterNavigation
 import org.zotero.android.pdffilter.pdfFilterNavScreens
 import org.zotero.android.pdffilter.toPdfFilterScreen
+
+internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
 
 internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
     navigation: ZoteroNavigation,
@@ -129,7 +133,10 @@ private fun NavGraphBuilder.pdfScreen(
     navigateToTagPicker: () -> Unit,
 ) {
     composable(
-        route = PdfReaderDestinations.PDF_SCREEN,
+        route = "${PdfReaderDestinations.PDF_SCREEN}/{$ARG_PDF_SCREEN}",
+        arguments = listOf(
+            navArgument(ARG_PDF_SCREEN) { type = NavType.StringType },
+        ),
     ) {
         PdfReaderScreen(
             onBack = onBack,
@@ -152,9 +159,13 @@ private object PdfReaderDestinations {
     const val PDF_ANNOTATION_MORE_NAVIGATION = "pdfAnnotationMoreNavigation"
 }
 
-fun ZoteroNavigation.toPdfScreen(context: Context, wasPspdfkitInitialized: Boolean) {
+fun ZoteroNavigation.toPdfScreen(
+    context: Context,
+    wasPspdfkitInitialized: Boolean,
+    pdfScreenParams: String,
+) {
     if (wasPspdfkitInitialized) {
-        navController.navigate(PdfReaderDestinations.PDF_SCREEN)
+        navController.navigate("${PdfReaderDestinations.PDF_SCREEN}/$pdfScreenParams")
     } else {
         context.longToast("Unable to open a PDF. PSPDFKIT was not initialized")
     }

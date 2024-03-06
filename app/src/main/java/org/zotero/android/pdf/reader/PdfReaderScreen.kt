@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebar
@@ -65,7 +64,7 @@ internal fun PdfReaderScreen(
         }
     }
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
-        val params = ScreenArguments.pdfReaderArgs
+        val params = viewModel.screenArgs
         val uri = params.uri
         val lazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()

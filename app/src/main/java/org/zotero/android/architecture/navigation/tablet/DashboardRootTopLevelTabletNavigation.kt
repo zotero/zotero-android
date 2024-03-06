@@ -50,7 +50,13 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             viewModel = viewModel,
-            onShowPdf = { navigation.toPdfScreen(context, wasPspdfkitInitialized) },
+            onShowPdf = { pdfScreenParams ->
+                navigation.toPdfScreen(
+                    context = context,
+                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                    pdfScreenParams = pdfScreenParams
+                )
+            },
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
         )
@@ -71,7 +77,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
 private fun NavGraphBuilder.dashboardScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,

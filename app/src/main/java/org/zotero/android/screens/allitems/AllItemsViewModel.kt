@@ -27,6 +27,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
@@ -101,6 +102,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val syncScheduler: SyncScheduler,
     private val allItemsProcessor: AllItemsProcessor,
     private val dispatchers: Dispatchers,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
 
@@ -252,14 +254,15 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showPdf(file: File, key: String, library: Library) {
         val uri = Uri.fromFile(file)
-        ScreenArguments.pdfReaderArgs = PdfReaderArgs(
+        val pdfReaderArgs = PdfReaderArgs(
             key = key,
             library = library,
             page = null,
             preselectedAnnotationKey = null,
             uri = uri,
         )
-        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs)
+        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1094,6 +1097,6 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    object NavigateToPdfScreen : AllItemsViewEffect()
+    data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
 }

@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.AnnotationFlags
@@ -67,6 +68,8 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.require
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -88,6 +91,7 @@ import org.zotero.android.ktx.index
 import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.ARG_PDF_SCREEN
 import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
@@ -112,6 +116,7 @@ import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PdfAnnotationChanges
+import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
@@ -149,6 +154,8 @@ class PdfReaderViewModel @Inject constructor(
     val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -179,6 +186,11 @@ class PdfReaderViewModel @Inject constructor(
     var activeEraserSize: Float = 0.0f
 
     private var toolHistory = mutableListOf<AnnotationTool>()
+
+    val screenArgs: PdfReaderArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationMoreSaveResult) {
@@ -450,7 +462,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun initState() {
-        val params = ScreenArguments.pdfReaderArgs
+        val params = this.screenArgs
         val username = defaults.getUsername()
         val userId = sessionDataEventStream.currentValue()!!.userId
         val displayName = defaults.getDisplayName()

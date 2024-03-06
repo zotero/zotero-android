@@ -31,7 +31,7 @@ import java.io.File
 internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,

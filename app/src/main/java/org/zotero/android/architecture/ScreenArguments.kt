@@ -4,7 +4,6 @@ import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
 import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageArgs
 import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
-import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdffilter.data.PdfFilterArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
@@ -35,7 +34,6 @@ object ScreenArguments {
     lateinit var videoPlayerArgs: VideoPlayerArgs
     lateinit var imageViewerArgs: ImageViewerArgs
     lateinit var collectionPickerArgs: CollectionPickerArgs
-    lateinit var pdfReaderArgs: PdfReaderArgs
     lateinit var pdfFilterArgs: PdfFilterArgs
     lateinit var pdfSettingsArgs: PdfSettingsArgs
     lateinit var pdfAnnotationArgs: PdfAnnotationArgs

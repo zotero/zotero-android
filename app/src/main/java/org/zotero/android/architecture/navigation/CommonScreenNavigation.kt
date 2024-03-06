@@ -32,7 +32,7 @@ fun NavGraphBuilder.allItemsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
 ) {
     composable(
         route = CommonScreenDestinations.ALL_ITEMS,
@@ -69,7 +69,7 @@ fun NavGraphBuilder.itemDetailsScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
-    onShowPdf: () -> Unit,
+    onShowPdf: (String) -> Unit,
 ) {
     composable(
         route = CommonScreenDestinations.ITEM_DETAILS,

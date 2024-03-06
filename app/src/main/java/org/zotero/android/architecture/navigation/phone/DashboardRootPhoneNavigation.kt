@@ -118,8 +118,10 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
-                    onShowPdf = { navigation.toPdfScreen(
+                    onShowPdf = { pdfScreenParams ->
+                        navigation.toPdfScreen(
                         context = context,
+                        pdfScreenParams = pdfScreenParams,
                         wasPspdfkitInitialized = wasPspdfkitInitialized
                     ) },
                 )
@@ -135,7 +137,13 @@ internal fun DashboardRootPhoneNavigation(
                     onOpenFile = onOpenFile,
                     onOpenWebpage = onOpenWebpage,
                     onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-                    onShowPdf = { navigation.toPdfScreen(context, wasPspdfkitInitialized) },
+                    onShowPdf = { pdfScreenParams ->
+                        navigation.toPdfScreen(
+                            context = context,
+                            wasPspdfkitInitialized = wasPspdfkitInitialized,
+                            pdfScreenParams = pdfScreenParams
+                        )
+                    },
                 )
 
                 composable(

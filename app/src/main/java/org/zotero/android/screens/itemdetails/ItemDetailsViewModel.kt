@@ -27,6 +27,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
 import org.zotero.android.database.DbRequest
@@ -134,6 +135,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val dateParser: DateParser,
     private val context: Context,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -1590,15 +1592,15 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun showPdf(file: File, attachment: Attachment) {
         val uri = Uri.fromFile(file)
-        ScreenArguments.pdfReaderArgs = PdfReaderArgs(
+        val pdfReaderArgs = PdfReaderArgs(
             key = attachment.key,
             library = viewState.library!!,
             page = null,
             preselectedAnnotationKey = null,
             uri = uri,
         )
-
-        triggerEffect(NavigateToPdfScreen)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs)
+        triggerEffect(NavigateToPdfScreen(params))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -2004,7 +2006,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
-    object NavigateToPdfScreen : ItemDetailsViewEffect()
+    data class NavigateToPdfScreen(val params: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
     data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
