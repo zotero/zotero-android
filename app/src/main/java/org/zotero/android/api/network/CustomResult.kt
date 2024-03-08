@@ -1,10 +1,15 @@
 package org.zotero.android.api.network
 
 import okhttp3.Headers
+import okhttp3.HttpUrl
 
 sealed class CustomResult<out T> {
     sealed class GeneralError : CustomResult<Nothing>() {
-        data class NetworkError(val httpCode: Int, val stringResponse: String?) : GeneralError() {
+        data class NetworkError(
+            val httpCode: Int,
+            val stringResponse: String?,
+            val httpUrl: HttpUrl?
+        ) : GeneralError() {
             companion object {
                 const val NO_INTERNET_CONNECTION_HTTP_CODE = -1
                 const val UNKNOWN_NETWORK_EXCEPTION_HTTP_CODE = -999

@@ -9,6 +9,7 @@ import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.Screen
 import org.zotero.android.screens.dashboard.DashboardActivity
 import org.zotero.android.screens.onboarding.OnboardingActivity
+import org.zotero.android.screens.share.ShareActivity
 
 @AndroidEntryPoint
 class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
@@ -26,6 +27,7 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
     override fun trigger(effect: RootViewEffect) = when (effect) {
         RootViewEffect.NavigateToSignIn -> navigateToOnboarding()
         RootViewEffect.NavigateToDashboard -> navigateToDashboard()
+        RootViewEffect.NavigateToShare -> navigateToShare()
     }
 
     private fun navigateToOnboarding() {
@@ -36,6 +38,15 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
 
     private fun navigateToDashboard() {
         val intent: Intent = DashboardActivity.getIntent(this)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToShare() {
+        val intent: Intent = ShareActivity.getIntent(
+            extraIntent = this.intent,
+            context = this
+        )
         startActivity(intent)
         finish()
     }

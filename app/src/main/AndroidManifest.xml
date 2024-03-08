@@ -53,8 +53,21 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
 
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+
+<!--                &lt;!&ndash;                <data android:scheme="http" />&ndash;&gt;-->
+<!--                <data android:scheme="https" android:host="*"/>-->
+<!--            </intent-filter>-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.SEND" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <data android:mimeType="*/*" />-->
+<!--            </intent-filter>-->
+        </activity>
 
         <activity
             android:name=".screens.onboarding.OnboardingActivity"
@@ -66,6 +79,12 @@
             android:exported="false"
             android:name=".screens.dashboard.DashboardActivity"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".screens.share.ShareActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
 
         <activity
             android:exported="false"

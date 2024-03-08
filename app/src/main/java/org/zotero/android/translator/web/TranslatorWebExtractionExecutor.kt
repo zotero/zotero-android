@@ -2,7 +2,7 @@ package org.zotero.android.translator.web
 
 import android.content.Context
 import org.zotero.android.translator.data.RawAttachment
-import org.zotero.android.translator.data.SchemaError
+import org.zotero.android.translator.data.TranslationWebViewError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
@@ -55,7 +55,7 @@ class TranslatorWebExtractionExecutor @Inject constructor(
         } catch (e: Exception) {
             Timber.e("WebViewHandler: extracted data missing response")
             Timber.e(payload.toString())
-            throw SchemaError.webExtractionMissingData
+            throw TranslationWebViewError.webExtractionMissingData
         }
         val contentType = payload["contentType"]?.asString
         val title = payload["title"]?.asString
@@ -85,7 +85,7 @@ class TranslatorWebExtractionExecutor @Inject constructor(
         } else {
             Timber.e("WebViewHandler: extracted data incompatible")
             Timber.e(payload.toString())
-            throw SchemaError.webExtractionMissingData
+            throw TranslationWebViewError.webExtractionMissingData
         }
     }
 }
