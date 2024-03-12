@@ -4,7 +4,7 @@ import org.zotero.android.architecture.Result
 import javax.inject.Inject
 
 class SelectMediaUseCase @Inject constructor(
-    private val getMimeType: GetMimeTypeUseCase,
+    private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val saveFileToInternalStorage: SaveFileToInternalStorageUseCase
 ) {
     suspend fun execute(
@@ -14,7 +14,7 @@ class SelectMediaUseCase @Inject constructor(
         return if (uri == null) {
             MediaSelectionResult.NullMedia
         } else {
-            val mimeType: MimeType? = getMimeType.execute(uri)
+            val mimeType: MimeType? = getUriDetailsUseCase.getMimeType(uri)
             val validMimeType = mimeType != null && isValidMimeType(mimeType)
             if (validMimeType) {
                 when (val saveResult = saveFileToInternalStorage.execute(uri)) {

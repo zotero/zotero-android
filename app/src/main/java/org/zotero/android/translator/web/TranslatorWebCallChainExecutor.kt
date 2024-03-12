@@ -2,15 +2,20 @@ package org.zotero.android.translator.web
 
 import android.content.Context
 import android.webkit.WebMessage
-import org.zotero.android.translator.data.WebPortResponse
-import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.loader.TranslatorsLoader
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.translator.data.TranslationWebViewError
+import org.zotero.android.translator.data.TranslatorAction
+import org.zotero.android.translator.data.TranslatorActionEventStream
+import org.zotero.android.translator.data.WebPortResponse
+import org.zotero.android.translator.helper.TranslatorHelper
+import org.zotero.android.translator.loader.TranslatorsLoader
+import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -21,6 +26,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
     private val gson: Gson,
     private val translatorWebViewHandler: TranslatorWebViewHandler,
     private val translatorsLoader: TranslatorsLoader,
+    private val translatorActionEventStream: TranslatorActionEventStream,
 ) {
     private val ioCoroutineScope = CoroutineScope(dispatchers.io)
 
@@ -65,9 +71,9 @@ class TranslatorWebCallChainExecutor @Inject constructor(
             val mapType = object : TypeToken<WebPortResponse>() {}.type
             val decodedBody: WebPortResponse = gson.fromJson(data, mapType)
             val handlerName = decodedBody.handlerName
+            val bodyElement = decodedBody.message
             when (handlerName) {
                 "requestHandler" -> {
-                    val bodyElement = decodedBody.message
                     if (!bodyElement.isJsonObject || !bodyElement.asJsonObject.has("messageId")) {
                         Timber.e("TranslationWebViewHandler: request missing body - $bodyElement")
                         return@launch
@@ -91,7 +97,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
                         )
                     } catch (e: Exception) {
                         Timber.e(e, "TranslationWebViewHandler: send request error")
-                        //TODO display noSuccessfulTranslators error
+                        translatorActionEventStream.emitAsync(Result.Failure(TranslationWebViewError.noSuccessfulTranslators))
                     }
                 }
 
@@ -99,9 +105,50 @@ class TranslatorWebCallChainExecutor @Inject constructor(
                     val itemResponseMessage = decodedBody.message
                     println(itemResponseMessage)
                 }
+
+                "translationProgressHandler" -> {
+                    val progress = bodyElement.asString
+                    if (progress == "item_selection") {
+                        translatorActionEventStream.emitAsync(
+                            Result.Success(
+                                TranslatorAction.reportProgress(
+                                    context.getString(Strings.shareext_translation_item_selection)
+                                )
+                            )
+                        )
+
+                    } else if (progress.contains("translating_with_")) {
+                        val name = progress.substring(17)
+                        translatorActionEventStream.emitAsync(
+                            Result.Success(
+                                TranslatorAction.reportProgress(
+                                    context.getString(
+                                        Strings.shareext_translation_translating_with,
+                                        name
+                                    )
+                                )
+                            )
+                        )
+                    } else {
+                        translatorActionEventStream.emitAsync(
+                            Result.Success(
+                                TranslatorAction.reportProgress(
+                                    progress
+                                )
+                            )
+                        )
+                    }
+                }
+
+                "saveAsWebHandler" -> {
+                    translatorActionEventStream.emitAsync(Result.Failure(TranslationWebViewError.noSuccessfulTranslators))
+                }
+
+                "logHandler" -> {
+                    Timber.i("JSLOG: ${bodyElement.asString}")
+                }
             }
         }
-
     }
 
     private fun loadBundleFiles(): Pair<String, String> {

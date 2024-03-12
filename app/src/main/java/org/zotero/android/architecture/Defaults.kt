@@ -40,7 +40,7 @@ open class Defaults @Inject constructor(
     private val activeLineWidth = "activeLineWidth"
     private val activeEraserSize = "activeEraserSize"
 
-    val sharedPreferences: SharedPreferences by lazy {
+    private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
             Context.MODE_PRIVATE

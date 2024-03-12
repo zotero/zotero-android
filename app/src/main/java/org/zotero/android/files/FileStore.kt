@@ -26,6 +26,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -182,7 +183,11 @@ class FileStore @Inject constructor (
     }
 
     fun generateTempFile(): File {
-        return File(getRootDirectory(), System.currentTimeMillis().toString())
+        return File(cachesDirectory, System.currentTimeMillis().toString())
+    }
+
+    fun temporaryFile(ext: String): File {
+        return File(cachesDirectory, UUID.randomUUID().toString() + "." + ext)
     }
 
     fun annotationPreviews(pdfKey: String, libraryId: LibraryIdentifier): File {

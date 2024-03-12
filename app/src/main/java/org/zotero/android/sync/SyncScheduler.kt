@@ -184,6 +184,17 @@ class SyncScheduler @Inject constructor(
         timer?.cancel()
         timer = Timer()
     }
+
+    fun startSyncController(type: SyncKind, libraries: Libraries, retryAttempt: Int,) {
+        syncSchedulerCoroutineScope.launch {
+            this@SyncScheduler.syncController.start(
+                type = type,
+                libraries = libraries,
+                retryAttempt = retryAttempt,
+                syncSchedulerCoroutineScope = syncSchedulerCoroutineScope,
+            )
+        }
+    }
 }
 
 @Singleton

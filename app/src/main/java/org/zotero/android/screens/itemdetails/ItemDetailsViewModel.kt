@@ -55,7 +55,7 @@ import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.RemoveItemFromParentDbRequest
 import org.zotero.android.database.requests.ReorderCreatorsItemDetailDbRequest
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.GetMimeTypeUseCase
+import org.zotero.android.helpers.GetUriDetailsUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.helpers.formatter.dateFormatItemDetails
@@ -130,7 +130,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val selectMedia: SelectMediaUseCase,
     private val fileDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-    private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val fileCleanupController: AttachmentFileCleanupController,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val dateParser: DateParser,
@@ -1583,7 +1583,7 @@ class ItemDetailsViewModel @Inject constructor(
     private suspend fun showUrl(url: String) {
         val uri = Uri.parse(url)
         if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
-            val mimeType = getMimeTypeUseCase.execute(url)!!
+            val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(OpenFile(uri.toFile(), mimeType))
         } else {
             triggerEffect(OpenWebpage(uri))

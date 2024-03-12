@@ -8,7 +8,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.CustomResult.GeneralError.CodeError
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.GetMimeTypeUseCase
+import org.zotero.android.helpers.GetUriDetailsUseCase
 import timber.log.Timber
 import java.io.BufferedInputStream
 import java.io.File
@@ -17,7 +17,7 @@ import java.io.FileOutputStream
 class RemoteAttachmentDownloadOperation constructor(
     private val noAuthenticationApi: NoAuthenticationApi,
     private val fileStorage: FileStore,
-    private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val url: String,
     private val file: File,
 ) {
@@ -133,7 +133,7 @@ class RemoteAttachmentDownloadOperation constructor(
     }
 
     private suspend fun checkFileResponse(file: File): Exception? {
-        val mimeType = getMimeTypeUseCase.execute(file.absolutePath)
+        val mimeType = getUriDetailsUseCase.getMimeType(file.absolutePath)
         if (mimeType == "application/pdf" && !fileStorage.isPdf(file = file)) {
             return Error.downloadNotPdf
         }

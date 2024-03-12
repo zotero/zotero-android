@@ -44,7 +44,7 @@ import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.GetMimeTypeUseCase
+import org.zotero.android.helpers.GetUriDetailsUseCase
 import org.zotero.android.helpers.MediaSelectionResult
 import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.pdf.data.PdfReaderArgs
@@ -97,7 +97,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
-    private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val schemaController: SchemaController,
     private val syncScheduler: SyncScheduler,
     private val allItemsProcessor: AllItemsProcessor,
@@ -590,7 +590,7 @@ internal class AllItemsViewModel @Inject constructor(
     private suspend fun showUrl(url: String) {
         val uri = Uri.parse(url)
         if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
-            val mimeType = getMimeTypeUseCase.execute(url)!!
+            val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(AllItemsViewEffect.OpenFile(uri.toFile(), mimeType))
         } else {
             triggerEffect(AllItemsViewEffect.OpenWebpage(uri))

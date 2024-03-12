@@ -7,7 +7,7 @@ import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.GetMimeTypeUseCase
+import org.zotero.android.helpers.GetUriDetailsUseCase
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
@@ -19,7 +19,7 @@ class RemoteAttachmentDownloader @Inject constructor(
     private val fileStorage: FileStore,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
     private val noAuthenticationApi: NoAuthenticationApi,
-    private val getMimeTypeUseCase: GetMimeTypeUseCase,
+    private val getUriDetailsUseCase: GetUriDetailsUseCase,
     val dispatcher: CoroutineDispatcher,
 ) {
     data class Download(
@@ -90,7 +90,7 @@ class RemoteAttachmentDownloader @Inject constructor(
         val operation = RemoteAttachmentDownloadOperation(
             url = url,
             file = file,
-            getMimeTypeUseCase = getMimeTypeUseCase,
+            getUriDetailsUseCase = getUriDetailsUseCase,
             noAuthenticationApi = this.noAuthenticationApi,
             fileStorage = this.fileStorage
         )
