@@ -38,9 +38,9 @@ class TranslatorWebViewHandler @Inject constructor(
     private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
 
-    private var cookies: String? = null
-    private var userAgent: String? = null
-    private var referrer: String? = null
+    var cookies: String? = null
+    var userAgent: String? = null
+    var referrer: String? = null
 
     fun set(cookies: String, userAgent: String, referrer: String) {
         this.cookies = cookies

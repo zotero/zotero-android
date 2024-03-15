@@ -39,6 +39,7 @@ open class Defaults @Inject constructor(
     private val inkColorHex = "inkColorHex"
     private val activeLineWidth = "activeLineWidth"
     private val activeEraserSize = "activeEraserSize"
+    private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -208,6 +209,14 @@ open class Defaults @Inject constructor(
 
     fun setDidPerformFullSyncFix(newValue: Boolean) {
         sharedPreferences.edit { putBoolean(didPerformFullSyncFix, newValue) }
+    }
+
+    fun isShareExtensionIncludeAttachment(): Boolean {
+        return sharedPreferences.getBoolean(shareExtensionIncludeTags, true)
+    }
+
+    fun setShareExtensionIncludeAttachment(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(shareExtensionIncludeTags, newValue) }
     }
 
     fun setTagPickerShowAutomaticTags(newValue: Boolean) {

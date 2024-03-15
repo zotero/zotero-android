@@ -147,7 +147,7 @@ internal class CollectionEditViewModel @Inject constructor(
 
         ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
             mode = CollectionPickerMode.single(title = context.getString(Strings.collections_picker_title)),
-            library = viewState.library,
+            libraryId = viewState.library.identifier,
             excludedKeys = excludedKeys,
             selected = setOf(selected)
         )

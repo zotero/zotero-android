@@ -21,7 +21,6 @@ import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
-import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
@@ -43,7 +42,7 @@ internal class CollectionPickerViewModel @Inject constructor(
         val args = ScreenArguments.collectionPickerArgs
         updateState {
             copy(
-                library = args.library,
+                libraryId = args.libraryId,
                 excludedKeys = args.excludedKeys,
                 selected = args.selected
             )
@@ -78,7 +77,7 @@ internal class CollectionPickerViewModel @Inject constructor(
 
     private fun loadData() {
         try {
-            val libraryId = viewState.library.identifier
+            val libraryId = viewState.libraryId
             val collectionsRequest = ReadCollectionsDbRequest(
                 libraryId = libraryId,
                 excludedKeys = viewState.excludedKeys
@@ -119,7 +118,7 @@ internal class CollectionPickerViewModel @Inject constructor(
     private fun update(results: RealmResults<RCollection>) {
         val tree = CollectionTreeBuilder.collections(
             results,
-            libraryId = viewState.library.identifier,
+            libraryId = viewState.libraryId,
             includeItemCounts = false
         )
         tree.sortNodes()
@@ -209,12 +208,7 @@ internal class CollectionPickerViewModel @Inject constructor(
 }
 
 internal data class CollectionPickerViewState(
-    val library: Library = Library(
-        identifier = LibraryIdentifier.group(0),
-        name = "",
-        metadataEditable = false,
-        filesEditable = false
-    ),
+    val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
     val excludedKeys: Set<String> = emptySet(),
     val collectionTree: CollectionTree = CollectionTree(
         nodes = mutableListOf(),

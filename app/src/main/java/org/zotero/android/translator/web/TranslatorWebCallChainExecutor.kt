@@ -34,6 +34,8 @@ class TranslatorWebCallChainExecutor @Inject constructor(
     private lateinit var html: String
     private lateinit var frames: List<String>
 
+    private var itemSelectionMessageId: Long? = null
+
     fun translate(
         url: String,
         html: String,
@@ -73,6 +75,40 @@ class TranslatorWebCallChainExecutor @Inject constructor(
             val handlerName = decodedBody.handlerName
             val bodyElement = decodedBody.message
             when (handlerName) {
+                "itemSelectionHandler" -> {
+                    if (!bodyElement.isJsonObject || !bodyElement.asJsonObject.has("messageId")) {
+                        Timber.e("item selection missing body - $bodyElement")
+                        return@launch
+                    }
+                    val body = bodyElement.asJsonObject
+                    val messageId = body["messageId"].asLong
+                    if (!body.has("payload") || !body["payload"].isJsonArray) {
+                        Timber.e("item selection missing payload - $body")
+                        translatorWebViewHandler.sendMessaging(
+                            error = "Item selection missing payload",
+                            messageId = messageId
+                        )
+                        return@launch
+                    }
+
+                    val payload = body["payload"].asJsonArray
+                    this@TranslatorWebCallChainExecutor.itemSelectionMessageId = messageId
+                    var sortedDictionary: MutableList<Pair<String, String>> = mutableListOf()
+                    for (data in payload) {
+                        val dataAsArray = data.asJsonArray
+                        if (dataAsArray.size() != 2) {
+                            continue
+                        }
+                        sortedDictionary.add(Pair(dataAsArray[0].asString, dataAsArray[1].asString))
+                    }
+                    translatorActionEventStream.emitAsync(
+                        Result.Success(
+                            TranslatorAction.selectItem(
+                                sortedDictionary
+                            )
+                        )
+                    )
+                }
                 "requestHandler" -> {
                     if (!bodyElement.isJsonObject || !bodyElement.asJsonObject.has("messageId")) {
                         Timber.e("TranslationWebViewHandler: request missing body - $bodyElement")
@@ -102,8 +138,23 @@ class TranslatorWebCallChainExecutor @Inject constructor(
                 }
 
                 "itemResponseHandler" -> {
-                    val itemResponseMessage = decodedBody.message
-                    println(itemResponseMessage)
+                    if (!bodyElement.isJsonArray) {
+                        Timber.e("TranslationWebViewHandler: got incompatible body - $bodyElement")
+                        translatorActionEventStream.emitAsync(Result.Failure(TranslationWebViewError.incompatibleItem))
+                        return@launch
+                    }
+
+                    val info = bodyElement.asJsonArray
+                    translatorActionEventStream.emitAsync(
+                        Result.Success(
+                            TranslatorAction.loadedItems(
+                                data = info,
+                                cookies = translatorWebViewHandler.cookies,
+                                userAgent =  translatorWebViewHandler.userAgent,
+                                referrer = translatorWebViewHandler.referrer,
+                            )
+                        )
+                    )
                 }
 
                 "translationProgressHandler" -> {

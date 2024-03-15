@@ -15,6 +15,7 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.ktx.convertFromBooleanOrIntToBoolean
 import org.zotero.android.ktx.unmarshalList
+import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.SchemaController
@@ -32,6 +33,70 @@ class ItemResponseMapper @Inject constructor(
     @ForGsonWithRoundedDecimals
     private val gsonWithRoundedDecimals: Gson
 ) {
+
+    fun fromTranslatorResponse(
+        response: JsonObject,
+        schemaController: SchemaController,
+        tagResponseMapper: TagResponseMapper,
+        creatorResponseMapper: CreatorResponseMapper,
+    ): ItemResponse {
+        val key = KeyGenerator.newKey()
+        val rawType = response["itemType"].asString
+        val accessDate =
+            response["accessDate"]?.asString?.let { iso8601DateFormatV2.parse(it) } ?: Date()
+        val tags = response["tags"]?.asJsonArray ?: JsonArray()
+        val creators = response["creators"]?.asJsonArray ?: JsonArray()
+
+        val version = 0
+        val collectionKeys = emptySet<String>()
+        val parentKey: String? = null
+        val dateAdded = accessDate
+        val dateModified = accessDate
+        val parsedDate = response["date"]?.asString
+        val isTrash = false
+        val library = LibraryResponse(id = 0, name = "", type = "", links = null)
+        val links: LinksResponse? = null
+        val tagsParsed = tags.map { tagResponseMapper.fromJson(it.asJsonObject) }
+        val creatorsParsed = creators.map { creatorResponseMapper.fromJson(it.asJsonObject) }
+        val relations = JsonObject()
+        val inPublications = false
+        val fields = ItemResponse.parseFields(
+            response,
+            rawType = rawType,
+            key = key,
+            schemaController = schemaController,
+            ignoreUnknownFields = true,
+            gson = gson,
+            gsonWithRoundedDecimals = gsonWithRoundedDecimals
+        ).first
+        val createdBy: UserResponse? = null
+        val lastModifiedBy: UserResponse? = null
+        val rects: List<List<Double>>? = null
+        val paths: List<List<Double>>? = null
+        return ItemResponse(
+            version = version,
+            collectionKeys = collectionKeys,
+            parentKey = parentKey,
+            dateAdded = dateAdded,
+            dateModified = dateModified,
+            parsedDate = parsedDate,
+            isTrash = isTrash,
+            library = library,
+            links = links,
+            tags = tagsParsed,
+            creators = creatorsParsed,
+            relations = relations,
+            inPublications = inPublications,
+            fields = fields,
+            createdBy = createdBy,
+            lastModifiedBy = lastModifiedBy,
+            rects = rects,
+            paths = paths,
+            rawType = rawType,
+            key = key
+        )
+    }
+
     fun fromJson(json: JsonObject, schemaController: SchemaController): ItemResponse {
         val data = json["data"].asJsonObject
         val key: String = json["key"].asString

@@ -696,7 +696,7 @@ internal class AllItemsViewModel @Inject constructor(
         preSelectedItemKeysToAddToCollection = selectedItemKeys
         ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
             mode = CollectionPickerMode.multiple,
-            library = this.library,
+            libraryId = this.library.identifier,
             excludedKeys = emptySet(),
             selected = emptySet()
         )

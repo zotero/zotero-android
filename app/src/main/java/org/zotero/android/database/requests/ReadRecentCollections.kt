@@ -26,7 +26,7 @@ class ReadRecentCollections(val excluding: Pair<String, LibraryIdentifier>?) :
         val recent = mutableListOf<RecentData>()
         for (rCollection in collections) {
             val libraryId = rCollection.libraryId
-            if (rCollection.lastUsed.time <= 0 || libraryId == null) {
+            if (libraryId == null) {
                 break
             }
 

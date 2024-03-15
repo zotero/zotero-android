@@ -312,6 +312,32 @@ data class ItemResponse(
 
 
     }
+
+    val copyWithAutomaticTags: ItemResponse
+        get() {
+            return ItemResponse(
+                rawType = this.rawType,
+                key = this.key,
+                library = this.library,
+                parentKey = this.parentKey,
+                collectionKeys = this.collectionKeys,
+                links = this.links,
+                parsedDate = this.parsedDate,
+                isTrash = this.isTrash,
+                version = this.version,
+                dateModified = this.dateModified,
+                dateAdded = this.dateAdded,
+                fields = this.fields,
+                tags = this.tags.map { it.automaticCopy },
+                creators = this.creators,
+                relations = this.relations,
+                createdBy = this.createdBy,
+                lastModifiedBy = this.lastModifiedBy,
+                rects = this.rects,
+                paths = this.paths,
+                inPublications = false,
+            )
+    }
 }
 
 

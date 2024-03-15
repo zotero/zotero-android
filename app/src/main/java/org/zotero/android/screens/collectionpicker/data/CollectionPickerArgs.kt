@@ -1,9 +1,9 @@
 package org.zotero.android.screens.collectionpicker.data
 
-import org.zotero.android.sync.Library
+import org.zotero.android.sync.LibraryIdentifier
 
 data class CollectionPickerArgs(
-    val library: Library,
+    val libraryId: LibraryIdentifier,
     val excludedKeys: Set<String>,
     val selected: Set<String>,
     val mode: CollectionPickerMode
