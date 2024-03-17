@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.ScreenArguments
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -34,6 +35,7 @@ fun SinglePickerScreen(
     CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
         val pickerArgs = ScreenArguments.singlePickerArgs
         val singlePickerState = pickerArgs.singlePickerState
+        val layoutType = CustomLayoutSize.calculateLayoutType()
         CustomScaffold(
             topBar = {
                 SinglePickerTopBar(
@@ -55,7 +57,9 @@ fun SinglePickerScreen(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = {
-                                    onCloseClicked()
+                                    if (!layoutType.isTablet() || pickerArgs.callPoint != SinglePickerResult.CallPoint.AllItemsShowItem) {
+                                        onCloseClicked()
+                                    }
                                     EventBus
                                         .getDefault()
                                         .post(SinglePickerResult(option.id, pickerArgs.callPoint))
