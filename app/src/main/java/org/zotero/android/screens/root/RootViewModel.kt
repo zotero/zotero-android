@@ -20,8 +20,8 @@ class RootViewModel @Inject constructor(
     fun init() {
         if (!sessionController.isLoggedIn) {
             triggerEffect(RootViewEffect.NavigateToSignIn)
-        } else if (stateHandle.keys().isNotEmpty()) {
-            triggerEffect(RootViewEffect.NavigateToShare)
+//        } else if (stateHandle.keys().isNotEmpty()) {
+//            triggerEffect(RootViewEffect.NavigateToShare)
         } else {
             triggerEffect(RootViewEffect.NavigateToDashboard)
         }
