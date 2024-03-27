@@ -30,6 +30,11 @@ data class CollectionTree(
             set(false, identifier)
         }
     }
+    fun collapseAllCollections() {
+        for (identifier in this.collections.keys()) {
+            set(true, identifier)
+        }
+    }
 
     fun append(collection: Collection, collapsed: Boolean = true) {
         this.collections[collection.identifier] = collection

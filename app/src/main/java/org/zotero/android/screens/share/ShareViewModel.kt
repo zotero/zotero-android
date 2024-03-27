@@ -39,6 +39,7 @@ import org.zotero.android.screens.share.data.CollectionPickerState
 import org.zotero.android.screens.share.data.ItemPickerState
 import org.zotero.android.screens.share.data.ProcessedAttachment
 import org.zotero.android.screens.share.data.RecentData
+import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.Collection
@@ -544,14 +545,11 @@ internal class ShareViewModel @Inject constructor(
     }
 
     fun navigateToCollectionPicker() {
-        context.longToast("Not Implemented Yet")
-//        ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
-//            mode = CollectionPickerMode.single(title = ""),
-//            libraryId = this.selectedLibraryId,
-//            excludedKeys = emptySet(),
-//            selected = emptySet()
-//        )
-//        triggerEffect(ShareViewEffect.NavigateToCollectionPickerScreen)
+        ScreenArguments.shareCollectionPickerArgs = ShareCollectionPickerArgs(
+            selectedCollectionId = this.selectedCollectionId,
+            selectedLibraryId = this.selectedLibraryId,
+        )
+        triggerEffect(ShareViewEffect.NavigateToCollectionPickerScreen)
     }
 
     override fun onCleared() {

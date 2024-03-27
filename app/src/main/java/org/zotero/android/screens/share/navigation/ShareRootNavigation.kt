@@ -18,8 +18,8 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.share.ShareScreen
+import org.zotero.android.screens.share.sharecollectionpicker.ShareCollectionPickerScreen
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
@@ -64,7 +64,7 @@ private fun ShareRootNavHost(
     ) {
         shareScreen(onBack = navigation::onBack, navigateToTagPicker = navigation::toTagPicker, navigateToCollectionPicker = navigation::toCollectionPicker)
         tagPickerScreen(onBack = navigation::onBack)
-        collectionPickerScreen(onBack = navigation::onBack)
+        shareCollectionPickerScreen(onBack = navigation::onBack)
     }
 }
 
@@ -85,12 +85,12 @@ private fun NavGraphBuilder.shareScreen(
     }
 }
 
-private fun NavGraphBuilder.collectionPickerScreen(onBack: () -> Unit) {
+private fun NavGraphBuilder.shareCollectionPickerScreen(onBack: () -> Unit) {
     composable(
-        route = ShareRootDestinations.COLLECTION_PICKER_SCREEN,
+        route = ShareRootDestinations.SHARE_COLLECTION_PICKER_SCREEN,
         arguments = listOf(),
     ) {
-        CollectionPickerScreen(onBack = onBack)
+        ShareCollectionPickerScreen(onBack = onBack)
     }
 }
 
@@ -109,12 +109,12 @@ private fun ZoteroNavigation.toTagPicker() {
 }
 
 private fun ZoteroNavigation.toCollectionPicker() {
-    navController.navigate(ShareRootDestinations.COLLECTION_PICKER_SCREEN)
+    navController.navigate(ShareRootDestinations.SHARE_COLLECTION_PICKER_SCREEN)
 }
 
 private object ShareRootDestinations {
     const val SHARE_SCREEN = "shareScreen"
-    const val COLLECTION_PICKER_SCREEN = "collectionPickerScreen"
+    const val SHARE_COLLECTION_PICKER_SCREEN = "shareCollectionPickerScreen"
     const val TAG_PICKER_SCREEN = "shareTagPickerScreen"
 }
 

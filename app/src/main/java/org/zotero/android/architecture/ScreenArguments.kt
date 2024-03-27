@@ -16,6 +16,7 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
@@ -40,4 +41,5 @@ object ScreenArguments {
     lateinit var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs
     lateinit var pdfAnnotationEditPageArgs: PdfAnnotationEditPageArgs
     lateinit var pdfReaderColorPickerArgs: PdfReaderColorPickerArgs
+    lateinit var shareCollectionPickerArgs: ShareCollectionPickerArgs
 }
