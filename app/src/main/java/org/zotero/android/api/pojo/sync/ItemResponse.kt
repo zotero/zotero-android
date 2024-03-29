@@ -9,6 +9,7 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.helpers.formatter.iso8601DateFormat
 import org.zotero.android.ktx.rounded
 import org.zotero.android.ktx.unmarshalList
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SchemaError
@@ -309,8 +310,35 @@ data class ItemResponse(
 
             return rects to paths
         }
+    }
 
-
+    fun copy(
+        libraryId: LibraryIdentifier,
+        collectionKeys: Set<String>,
+        tags: List<TagResponse>
+    ): ItemResponse {
+        return ItemResponse(
+            rawType = this.rawType,
+            key = this.key,
+            library = LibraryResponse.init(libraryId = libraryId),
+            parentKey = this.parentKey,
+            collectionKeys = collectionKeys,
+            links = this.links,
+            parsedDate = this.parsedDate,
+            isTrash = this.isTrash,
+            version = this.version,
+            dateModified = this.dateModified,
+            dateAdded = this.dateAdded,
+            fields = this.fields,
+            tags = tags,
+            creators = this.creators,
+            relations = this.relations,
+            createdBy = this.createdBy,
+            lastModifiedBy = this.lastModifiedBy,
+            rects = this.rects,
+            paths = this.paths,
+            inPublications = false,
+        )
     }
 
     val copyWithAutomaticTags: ItemResponse

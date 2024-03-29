@@ -21,6 +21,8 @@ import org.zotero.android.api.mappers.TagResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
+import org.zotero.android.api.pojo.sync.LibraryResponse
+import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.Result
@@ -29,21 +31,30 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.requests.CreateAttachmentDbRequest
+import org.zotero.android.database.requests.CreateBackendItemDbRequest
 import org.zotero.android.database.requests.ReadCollectionAndLibraryDbRequest
 import org.zotero.android.database.requests.ReadRecentCollections
+import org.zotero.android.database.requests.UpdateCollectionLastUsedDbRequest
+import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
-import org.zotero.android.screens.collectionpicker.data.CollectionPickerSingleResult
+import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.screens.share.data.CollectionPickerState
 import org.zotero.android.screens.share.data.ItemPickerState
 import org.zotero.android.screens.share.data.ProcessedAttachment
 import org.zotero.android.screens.share.data.RecentData
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
+import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerResults
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
@@ -52,9 +63,11 @@ import org.zotero.android.sync.Parsing
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SchemaError
 import org.zotero.android.sync.SyncKind
+import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncObservableEventStream
 import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
+import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.translator.data.RawAttachment
 import org.zotero.android.translator.data.TranslationWebViewError
@@ -64,6 +77,7 @@ import org.zotero.android.translator.web.TranslatorWebCallChainExecutor
 import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
 import timber.log.Timber
 import java.io.File
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -84,6 +98,7 @@ internal class ShareViewModel @Inject constructor(
     private val creatorResponseMapper: CreatorResponseMapper,
     private val defaults: Defaults,
     private val context: Context,
+    private val dateParser: DateParser
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -107,8 +122,8 @@ internal class ShareViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(result: CollectionPickerSingleResult) {
-       //TODO
+    fun onEvent(result: ShareCollectionPickerResults) {
+       set(collection = result.collection, library = result.library)
     }
 
     fun init() = initOnce {
@@ -557,9 +572,297 @@ internal class ShareViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun set(collection: Collection?) {
-
+    private fun set(collection: Collection?, library: Library) {
+        updateSelected(collection = collection, library = library)
+        val new =
+            viewState.recents.firstOrNull { it.collection?.identifier == collection?.identifier && it.library.identifier == library.identifier }
+        if (new != null) {
+            if (new.isRecent && !viewState.recents[0].isRecent) {
+                val mutableRecents = viewState.recents.toMutableList()
+                mutableRecents.removeFirst()
+                updateState {
+                    copy(recents = mutableRecents)
+                }
+            }
+        } else {
+            val mutableRecents = viewState.recents.toMutableList()
+            if (!viewState.recents[0].isRecent) {
+                mutableRecents[0] =
+                    RecentData(collection = collection, library = library, isRecent = false)
+            } else {
+                mutableRecents.add(
+                    0,
+                    RecentData(collection = collection, library = library, isRecent = false)
+                )
+            }
+            updateState {
+                copy(recents = mutableRecents)
+            }
+        }
     }
+
+
+    fun submit() {
+        if (!viewState.attachmentState.isSubmittable) {
+            Timber.e("Tried to submit unsubmittable state")
+            return
+        }
+
+        updateState {
+            copy(isSubmitting = true)
+        }
+
+        val tags = viewState.tags.map { TagResponse(tag = it.name, type = it.type) }
+        val libraryId: LibraryIdentifier
+        val collectionKeys: Set<String>
+        val userId = defaults.getUserId()
+        val collectionPickerState = viewState.collectionPickerState
+        when (collectionPickerState) {
+            is CollectionPickerState.picked -> {
+                libraryId = collectionPickerState.library.identifier
+                collectionKeys =
+                    collectionPickerState.collection?.identifier?.keyGet?.let { setOf(it) }
+                        ?: emptySet()
+            }
+
+            else -> {
+                libraryId = this.defaultLibraryId
+                collectionKeys = emptySet()
+            }
+        }
+        var attachment = viewState.processedAttachment
+
+        if (attachment != null) {
+            when (attachment) {
+                is ProcessedAttachment.item -> {
+                    attachment = ProcessedAttachment.item(
+                        attachment.item.copy(
+                            libraryId = libraryId,
+                            collectionKeys = collectionKeys,
+                            tags = if (defaults.isShareExtensionIncludeAttachment()) {
+                                attachment.item.tags + tags
+                            } else {
+                                tags
+                            }
+                        )
+                    )
+                }
+
+                is ProcessedAttachment.itemWithAttachment -> {
+                    val item = attachment.item
+                    val attachmentData = attachment.attachment
+                    val attachmentFile = attachment.attachmentFile
+                    val newTags = if (defaults.isShareExtensionIncludeAttachment()) {
+                        item.tags + tags
+                    } else {
+                        tags
+                    }
+                    attachment = ProcessedAttachment.itemWithAttachment(
+                        item = item.copy(
+                            libraryId = libraryId,
+                            collectionKeys = collectionKeys,
+                            tags = newTags
+                        ),
+                        attachment = attachmentData,
+                        attachmentFile = attachmentFile
+                    )
+
+                }
+
+                is ProcessedAttachment.file -> {
+                    //no-op
+                }
+            }
+            when (attachment) {
+                is ProcessedAttachment.item -> {
+                    val item = attachment.item
+                    Timber.i("submit item")
+                    submit(item = item, libraryId = libraryId, userId = userId)
+                }
+
+                is ProcessedAttachment.itemWithAttachment -> {
+                    val item = attachment.item
+                    val attachmentData = attachment.attachment
+                    val attachmentFile = attachment.attachmentFile
+                    Timber.i("Submit item with attachment")
+                    //TODO upload attachment
+                }
+
+                is ProcessedAttachment.file -> {
+                    val file = attachment.file
+                    val filename = attachment.fileName
+                    Timber.i("Upload local file")
+                    //TODO upload attachment
+                }
+            }
+
+        } else if (viewState.url != null) {
+            val url = viewState.url!!
+            Timber.i("Submit webpage")
+
+            val date = Date()
+            val fields: Map<KeyBaseKeyPair, String> =
+                mapOf(
+                    KeyBaseKeyPair(key = FieldKeys.Item.Attachment.url, baseKey = null) to url,
+                    KeyBaseKeyPair(key = FieldKeys.Item.title, baseKey = null) to (viewState.title
+                        ?: "Unknown"),
+                    KeyBaseKeyPair(
+                        key = FieldKeys.Item.accessDate,
+                        baseKey = null
+                    ) to iso8601DateFormatV2.format(date)
+                )
+
+            val webItem = ItemResponse(
+                rawType = ItemTypes.webpage,
+                key = KeyGenerator.newKey(),
+                library = LibraryResponse.init(libraryId = libraryId),
+                parentKey = null,
+                collectionKeys = collectionKeys,
+                links = null,
+                parsedDate = null,
+                isTrash = false,
+                version = 0,
+                dateModified = date,
+                dateAdded = date,
+                fields = fields,
+                tags = tags,
+                creators = emptyList(),
+                relations = JsonObject(),
+                createdBy = null,
+                lastModifiedBy = null,
+                rects = null,
+                paths = null,
+                inPublications = false
+            )
+
+            submit(item = webItem, libraryId = libraryId, userId = userId)
+        } else {
+            Timber.i("Nothing to submit")
+        }
+    }
+
+
+    private fun submit(
+        item: ItemResponse,
+        libraryId: LibraryIdentifier,
+        userId: Long,
+    ) {
+        try {
+            val (parameters, changeUuids) = createItem(
+                item,
+                libraryId = libraryId,
+                schemaController = schemaController,
+                dateParser = dateParser
+            )
+            SubmitUpdateSyncAction(
+                parameters = listOf(parameters),
+                changeUuids = changeUuids,
+                sinceVersion = null,
+                objectS = SyncObject.item,
+                libraryId = libraryId,
+                userId = userId,
+                updateLibraryVersion = false
+            )
+            triggerEffect(ShareViewEffect.NavigateBack)
+        } catch (e: Exception) {
+            Timber.e(e, "ShareViewModel: could not submit standalone item")
+            updateState {
+                copy(
+                    attachmentState = AttachmentState.failed(
+                        attachmentError(
+                            generalError = CustomResult.GeneralError.CodeError(e),
+                            libraryId = libraryId
+                        )
+                    ),
+                    isSubmitting = false
+
+                )
+            }
+        }
+    }
+
+    private fun createItem(item: ItemResponse, libraryId: LibraryIdentifier, schemaController: SchemaController, dateParser: DateParser): Pair<Map<String, Any>, Map<String, List<String>>> {
+        var changeUuids: MutableMap<String, List<String>> = mutableMapOf()
+        var parameters: MutableMap<String, Any> = mutableMapOf()
+        dbWrapper.realmDbStorage.perform { coordinator ->
+            val collectionKey = item.collectionKeys.firstOrNull()
+            if (collectionKey != null) {
+                coordinator.perform(
+                    request = UpdateCollectionLastUsedDbRequest(
+                        key = collectionKey,
+                        libraryId = libraryId
+                    )
+                )
+            }
+
+            val request = CreateBackendItemDbRequest(item = item, schemaController = schemaController, dateParser = dateParser)
+            val item = coordinator.perform(request = request)
+            parameters = item.updateParameters?.toMutableMap() ?: mutableMapOf()
+            changeUuids = mutableMapOf(item.key to item.changes.map{ it.identifier })
+
+            coordinator.invalidate()
+        }
+
+        return parameters to changeUuids
+    }
+
+    private fun create(
+        attachment: Attachment,
+        collections: Set<String>,
+        tags: List<TagResponse>
+    ): CreateResult {
+        Timber.i("Create attachment db item")
+
+        val localizedType =
+            this.schemaController.localizedItemType(itemType = ItemTypes.attachment) ?: ""
+
+        var updateParameters: Map<String, Any>? = null
+        var changeUuids: Map<String, List<String>>? = null
+        var md5: String? = null
+        var mtime: Int? = null
+
+        dbWrapper.realmDbStorage.perform { coordinator ->
+            val collectionKey = collections.firstOrNull()
+            if (collectionKey != null) {
+                coordinator.perform(
+                    request = UpdateCollectionLastUsedDbRequest(
+                        key = collectionKey,
+                        libraryId = attachment.libraryId
+                    )
+                )
+            }
+
+            val request = CreateAttachmentDbRequest(
+                attachment = attachment,
+                parentKey = null,
+                localizedType = localizedType,
+                includeAccessDate = attachment.hasUrl,
+                collections = collections,
+                tags = tags,
+                fileStore = fileStore
+            )
+            val attachment = coordinator.perform(request = request)
+
+            updateParameters = attachment.updateParameters?.toMutableMap()
+            changeUuids = mutableMapOf(attachment.key to attachment.changes.map { it.identifier })
+            mtime = attachment.fields.where().key(FieldKeys.Item.Attachment.mtime)
+                .findFirst()?.value?.toInt()
+            md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
+
+            coordinator.invalidate()
+        }
+
+        mtime ?: throw AttachmentState.Error.mtimeMissing
+        md5 ?: throw AttachmentState.Error.md5Missing
+        return CreateResult(
+            updateParameters = updateParameters ?: emptyMap(),
+            changeUuids = changeUuids ?: emptyMap(),
+            md5 = md5!!,
+            mtime = mtime!!
+        )
+    }
+
+    private data class CreateResult(val updateParameters: Map<String, Any>, val changeUuids: Map<String, List<String>>, val md5: String, val mtime: Int)
 
 }
 
@@ -574,6 +877,7 @@ internal data class ShareViewState(
     val recents: List<RecentData> = emptyList(),
     val itemPickerState: ItemPickerState? = null,
     val tags: List<Tag> = emptyList(),
+    val isSubmitting: Boolean = false,
 ) : ViewState
 
 internal sealed class ShareViewEffect : ViewEffect {

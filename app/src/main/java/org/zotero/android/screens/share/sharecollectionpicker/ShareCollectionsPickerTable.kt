@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
-import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
@@ -58,7 +58,7 @@ internal fun ShareCollectionsPickerTable(
                             library.identifier,
                         )
                     },
-                    onRowTapped = { viewModel.onItemTapped(library.identifier, null) }
+                    onRowTapped = { viewModel.onItemTapped(library, null) }
                 )
             }
 
@@ -67,7 +67,7 @@ internal fun ShareCollectionsPickerTable(
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType,
-                    libraryIdentifier = library.identifier,
+                    library = library,
                     collectionItems = listOfCollectionsWithChildren,
                     levelPadding = levelPaddingConst + levelPaddingConst
                 )
@@ -81,7 +81,7 @@ private fun LazyListScope.recursiveCollectionItem(
     viewState: ShareCollectionPickerViewState,
     viewModel: ShareCollectionPickerViewModel,
     layoutType: CustomLayoutSize.LayoutType,
-    libraryIdentifier: LibraryIdentifier,
+    library: Library,
     collectionItems: List<CollectionItemWithChildren>,
     levelPadding: Dp = 8.dp
 ) {
@@ -92,23 +92,23 @@ private fun LazyListScope.recursiveCollectionItem(
                 iconRes = item.collection.iconName,
                 title = item.collection.name,
                 hasChildren = item.children.isNotEmpty(),
-                isCollapsed = viewState.isCollapsed(libraryIdentifier, item),
+                isCollapsed = viewState.isCollapsed(library.identifier, item),
                 onItemChevronTapped = {
                     viewModel.onCollectionChevronTapped(
-                        libraryIdentifier,
+                        library.identifier,
                         item.collection
                     )
                 },
-                onRowTapped = { viewModel.onItemTapped(libraryIdentifier, item.collection) }
+                onRowTapped = { viewModel.onItemTapped(library, item.collection) }
             )
         }
 
-        if (!viewState.isCollapsed(libraryIdentifier, item)) {
+        if (!viewState.isCollapsed(library.identifier, item)) {
             recursiveCollectionItem(
                 viewState = viewState,
                 viewModel = viewModel,
                 layoutType = layoutType,
-                libraryIdentifier = libraryIdentifier,
+                library = library,
                 collectionItems = item.children,
                 levelPadding = levelPadding + levelPaddingConst
             )

@@ -1,6 +1,7 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
@@ -12,6 +13,7 @@ import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
 import org.zotero.android.screens.collections.data.CollectionTreeBuilder
+import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerResults
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -76,10 +78,9 @@ internal class ShareCollectionPickerViewModel @Inject constructor(
     }
 
 
-    fun onItemTapped(libraryIdentifier: LibraryIdentifier, collection: Collection?) {
-//        EventBus.getDefault().post(CollectionPickerSingleResult(collection))
-//        triggerEffect(ShareCollectionPickerViewEffect.OnBack)
-
+    fun onItemTapped(library: Library, collection: Collection?) {
+        EventBus.getDefault().post(ShareCollectionPickerResults(collection, library))
+        triggerEffect(ShareCollectionPickerViewEffect.OnBack)
     }
 
     private fun updateTreesToDisplay(trees: Map<LibraryIdentifier, CollectionTree>) {

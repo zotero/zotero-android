@@ -10,6 +10,29 @@ data class LibraryResponse(
     val links: LinksResponse?
 ) {
 
+    companion object {
+        fun init(libraryId: LibraryIdentifier): LibraryResponse {
+            val id: Int
+            val type: String
+            when (libraryId) {
+                is LibraryIdentifier.custom -> {
+                    id = 0
+                    type = "user"
+                }
+                is LibraryIdentifier.group -> {
+                    id = libraryId.groupId
+                    type = "group"
+                }
+            }
+            return LibraryResponse(
+                name = "",
+                links = null,
+                id = id,
+                type = type,
+            )
+        }
+    }
+
     val libraryId: LibraryIdentifier?
         get() {
             return when (this.type) {
