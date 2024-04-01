@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentContainerView
 import com.pspdfkit.ui.PdfThumbnailBar
 import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import timber.log.Timber
 
 @Composable
 fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
@@ -23,6 +24,7 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
     val annotationMaxSideSize = annotationMaxSideSize()
     val fragmentManager = activity.supportFragmentManager
     val layoutType = CustomLayoutSize.calculateLayoutType()
+    viewModel.annotationMaxSideSize = annotationMaxSideSize
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -60,10 +62,24 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
 
 @Composable
 private fun annotationMaxSideSize(): Int {
+    val layoutType = CustomLayoutSize.calculateLayoutType()
     val context = LocalContext.current
     val outValue = TypedValue()
     context.resources.getValue(R.dimen.pdf_sidebar_width_percent, outValue, true)
     val sidebarWidthPercentage = outValue.float
-    val annotationSize = Resources.getSystem().displayMetrics.widthPixels * sidebarWidthPercentage
-    return annotationSize.toInt()
+    val metricsWidthPixels = Resources.getSystem().displayMetrics.widthPixels
+    val annotationSize = metricsWidthPixels * sidebarWidthPercentage
+    val result = annotationSize.toInt()
+    if (result <= 0) {
+        val errorMessage = "PdfReaderPspdfKitView annotationMaxSideSize is $result" +
+                ".sidebarWidthPercentage = $sidebarWidthPercentage" +
+                ".metricsWidthPixels = $metricsWidthPixels"
+        Timber.e(errorMessage)
+        return if (layoutType.isTablet()) {
+            480
+        } else {
+            1080
+        }
+    }
+    return result
 }
