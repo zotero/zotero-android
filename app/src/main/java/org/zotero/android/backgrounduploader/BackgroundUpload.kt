@@ -8,7 +8,7 @@ data class BackgroundUpload(
     val type: Kind,
     val key: String,
     val libraryId: LibraryIdentifier,
-    val userId: Int,
+    val userId: Long,
     val remoteUrl: URL,
     val fileUrl: URL,
     val md5: String,
@@ -18,7 +18,7 @@ data class BackgroundUpload(
 ) {
     sealed class Kind {
         data class zotero(val uploadKey: String): Kind()
-        data class webdav(val mtime: Int): Kind()
+        data class webdav(val mtime: Long): Kind()
     }
 
 }

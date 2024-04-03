@@ -424,6 +424,12 @@ class FileStore @Inject constructor (
         return item
     }
 
+    fun shareExtensionDownload(key: String, ext: String): File {
+        val folderPath = File(cachesDirectory, "shareext/downloads")
+        folderPath.mkdirs()
+        return File(folderPath, "item_$key.$ext")
+    }
+
     fun reset() {
         setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
         setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))

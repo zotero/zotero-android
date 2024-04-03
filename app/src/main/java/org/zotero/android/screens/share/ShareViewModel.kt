@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +15,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.BuildConfig
-import org.zotero.android.androidx.content.longToast
 import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
@@ -30,6 +30,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
@@ -37,9 +38,13 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.CreateAttachmentDbRequest
 import org.zotero.android.database.requests.CreateBackendItemDbRequest
+import org.zotero.android.database.requests.CreateItemWithAttachmentDbRequest
+import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.ReadCollectionAndLibraryDbRequest
 import org.zotero.android.database.requests.ReadRecentCollections
 import org.zotero.android.database.requests.UpdateCollectionLastUsedDbRequest
+import org.zotero.android.database.requests.UpdateVersionType
+import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
@@ -48,8 +53,10 @@ import org.zotero.android.screens.share.data.CollectionPickerState
 import org.zotero.android.screens.share.data.ItemPickerState
 import org.zotero.android.screens.share.data.ProcessedAttachment
 import org.zotero.android.screens.share.data.RecentData
+import org.zotero.android.screens.share.data.UploadData
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerResults
+import org.zotero.android.screens.share.sharecollectionpicker.data.ShareSubmissionData
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.Collection
@@ -67,7 +74,9 @@ import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncObservableEventStream
 import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
+import org.zotero.android.sync.syncactions.AuthorizeUploadSyncAction
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
+import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.translator.data.RawAttachment
 import org.zotero.android.translator.data.TranslationWebViewError
@@ -77,6 +86,7 @@ import org.zotero.android.translator.web.TranslatorWebCallChainExecutor
 import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
 import timber.log.Timber
 import java.io.File
+import java.net.URL
 import java.util.Date
 import javax.inject.Inject
 
@@ -253,7 +263,7 @@ internal class ShareViewModel @Inject constructor(
             item = _item
             attachment = _attachment
         } catch (error: Exception) {
-            Timber.e(error, "ExtensionViewModel: could not process item ")
+            Timber.e(error, "ShareViewModel: could not process item ")
             updateState {
                 copy(
                     attachmentState = AttachmentState.failed(
@@ -278,8 +288,33 @@ internal class ShareViewModel @Inject constructor(
             }
             return
         }
-           //TODO download
-        context.longToast("Download of an attachment not implemented yet")
+        val url = attachment["url"]
+        Timber.i("ShareViewModel: parsed item with attachment, download attachment")
+
+        val file =
+            fileStore.shareExtensionDownload(key = this.attachmentKey, ext = this.defaultExtension)
+        download(
+            item = item,
+            attachment = attachment,
+            attachmentUrl = url,
+            file = file,
+            cookies = cookies,
+            userAgent = userAgent,
+            referrer = referrer
+        )
+    }
+
+    private fun download(
+        item: ItemResponse,
+        attachment: JsonObject,
+        attachmentUrl: JsonElement?,
+        file: File,
+        cookies: String?,
+        userAgent: String?,
+        referrer: String?
+    ) {
+
+        //TODO implement download
     }
 
     private fun finishSync(successful: Boolean) {
@@ -602,7 +637,7 @@ internal class ShareViewModel @Inject constructor(
     }
 
 
-    fun submit() {
+    suspend fun submit() {
         if (!viewState.attachmentState.isSubmittable) {
             Timber.e("Tried to submit unsubmittable state")
             return
@@ -685,14 +720,38 @@ internal class ShareViewModel @Inject constructor(
                     val attachmentData = attachment.attachment
                     val attachmentFile = attachment.attachmentFile
                     Timber.i("Submit item with attachment")
-                    //TODO upload attachment
+                    val data = UploadData.init(
+                        item = item,
+                        attachmentKey = this.attachmentKey,
+                        attachmentData = attachmentData,
+                        attachmentFile = attachmentFile,
+                        linkType = Attachment.FileLinkType.importedUrl,
+                        defaultTitle = (viewState.title ?: "Unknown"),
+                        libraryId = libraryId,
+                        userId = userId,
+                        dateParser = this.dateParser,
+                        fileStore = this.fileStore
+                    )
+                    upload(data = data)
                 }
 
                 is ProcessedAttachment.file -> {
                     val file = attachment.file
                     val filename = attachment.fileName
                     Timber.i("Upload local file")
-                    //TODO upload attachment
+                    val data = UploadData.init(
+                        file = file,
+                        filename = filename,
+                        attachmentKey = this.attachmentKey,
+                        linkType = if (viewState.url == null) Attachment.FileLinkType.importedFile else Attachment.FileLinkType.importedUrl,
+                        remoteUrl = viewState.url,
+                        collections = collectionKeys,
+                        tags = tags,
+                        libraryId = libraryId,
+                        userId = userId,
+                        fileStore = this.fileStore
+                    )
+                    upload(data = data)
                 }
             }
 
@@ -806,6 +865,56 @@ internal class ShareViewModel @Inject constructor(
         return parameters to changeUuids
     }
 
+    private fun createItems(item: ItemResponse, attachment: Attachment): CreateItemsResult {
+        Timber.i("ShareViewModel: create item and attachment db items")
+        val parameters: MutableList<Map<String, Any>> = mutableListOf()
+        var changeUuids: MutableMap<String, List<String>> = mutableMapOf()
+        var mtime: Long? = null
+        var md5: String? = null
+        dbWrapper.realmDbStorage.perform {coordinator ->
+            val collectionKey = item.collectionKeys.firstOrNull()
+            if (collectionKey != null) {
+                coordinator.perform(
+                    request = UpdateCollectionLastUsedDbRequest(
+                        key = collectionKey,
+                        libraryId = attachment.libraryId
+                    )
+                )
+            }
+            val request = CreateItemWithAttachmentDbRequest(
+                item = item,
+                attachment = attachment,
+                schemaController = this.schemaController,
+                dateParser = this.dateParser,
+                fileStore = this.fileStore
+            )
+            val(item, attachment) = coordinator.perform(request=  request)
+            val itemUpdateParameters = item.updateParameters
+            if (itemUpdateParameters != null) {
+                parameters.add(itemUpdateParameters)
+            }
+            val updateParameters = attachment.updateParameters
+            if (updateParameters != null){
+                parameters.add(updateParameters)
+            }
+            changeUuids = mutableMapOf(item.key to item.changes.map{ it.identifier }, attachment.key to attachment.changes.map{ it.identifier })
+
+            mtime = attachment.fields.where().key(FieldKeys.Item.Attachment.mtime).findFirst()?.value?.toLongOrNull()
+            md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
+
+            coordinator.invalidate()
+        }
+        if (mtime == null) {
+            throw AttachmentState.Error.mtimeMissing
+        }
+        if (md5 == null) {
+            throw AttachmentState.Error.md5Missing
+        }
+        return CreateItemsResult(parameters, changeUuids, md5!!, mtime!!)
+    }
+
+
+
     private fun create(
         attachment: Attachment,
         collections: Set<String>,
@@ -819,7 +928,7 @@ internal class ShareViewModel @Inject constructor(
         var updateParameters: Map<String, Any>? = null
         var changeUuids: Map<String, List<String>>? = null
         var md5: String? = null
-        var mtime: Int? = null
+        var mtime: Long? = null
 
         dbWrapper.realmDbStorage.perform { coordinator ->
             val collectionKey = collections.firstOrNull()
@@ -846,7 +955,7 @@ internal class ShareViewModel @Inject constructor(
             updateParameters = attachment.updateParameters?.toMutableMap()
             changeUuids = mutableMapOf(attachment.key to attachment.changes.map { it.identifier })
             mtime = attachment.fields.where().key(FieldKeys.Item.Attachment.mtime)
-                .findFirst()?.value?.toInt()
+                .findFirst()?.value?.toLongOrNull()
             md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
 
             coordinator.invalidate()
@@ -862,7 +971,203 @@ internal class ShareViewModel @Inject constructor(
         )
     }
 
-    private data class CreateResult(val updateParameters: Map<String, Any>, val changeUuids: Map<String, List<String>>, val md5: String, val mtime: Int)
+    private data class CreateResult(val updateParameters: Map<String, Any>, val changeUuids: Map<String, List<String>>, val md5: String, val mtime: Long)
+    private data class CreateItemsResult(val parameters: List<Map<String, Any>>, val changeUuids: Map<String, List<String>>, val md5: String, val mtime: Long)
+
+    private fun moveFile(fromFile: File, toFile: File): Long {
+        Timber.i("ShareViewModel: move file to attachment folder")
+
+        try {
+            val size = fromFile.length()
+            if (size == 0L) {
+                throw AttachmentState.Error.fileMissing
+            }
+            if (fromFile.renameTo(toFile)) {
+                return size
+            } else {
+                throw AttachmentState.Error.fileMissing
+            }
+        } catch (error: Exception) {
+            Timber.e(error, "ShareViewModel: can't move file")
+            fromFile.delete()
+            throw error
+        }
+    }
+
+    private suspend fun prepareAndSubmit(
+        attachment: Attachment,
+        collections: Set<String>,
+        tags: List<TagResponse>,
+        file: File,
+        tmpFile: File,
+        libraryId: LibraryIdentifier,
+        userId: Long,
+    ): ShareSubmissionData {
+        val filesize = moveFile(tmpFile, file)
+        val data: ShareSubmissionData
+        val parameters: Map<String, Any>
+        val changeUuids: Map<String, List<String>>
+        try {
+            val (params, uuids, md5, mtime) = create(
+                attachment = attachment,
+                collections = collections,
+                tags = tags
+            )
+            parameters = params
+            changeUuids = uuids
+            data = ShareSubmissionData(filesize = filesize, md5 = md5, mtime = mtime)
+        } catch (e: Exception) {
+            file.delete()
+            throw e
+        }
+        SubmitUpdateSyncAction(
+            parameters = listOf(parameters),
+            changeUuids = changeUuids,
+            sinceVersion = null,
+            objectS = SyncObject.item,
+            libraryId = libraryId,
+            userId = userId,
+            updateLibraryVersion = false
+        ).result()
+        return data
+    }
+
+    private suspend fun prepareAndSubmit(
+        item: ItemResponse,
+        attachment: Attachment,
+        file: File,
+        tmpFile: File,
+        libraryId: LibraryIdentifier,
+        userId: Long,
+    ): ShareSubmissionData {
+        val filesize = moveFile(tmpFile, file)
+        val data: ShareSubmissionData
+        val parameters: List<Map<String, Any>>
+        val changeUuids: Map<String, List<String>>
+        try {
+            val (params, uuids, md5, mtime) = createItems(item = item, attachment = attachment)
+            parameters = params
+            changeUuids = uuids
+            data = ShareSubmissionData(filesize = filesize, md5 = md5, mtime = mtime)
+        } catch (e: Exception) {
+            file.delete()
+            throw e
+        }
+
+        SubmitUpdateSyncAction(
+            parameters = parameters,
+            changeUuids = changeUuids,
+            sinceVersion = null,
+            objectS = SyncObject.item,
+            libraryId = libraryId,
+            userId = userId,
+            updateLibraryVersion = false
+        ).result()
+        return data
+    }
+
+    private suspend fun submit(data: UploadData): ShareSubmissionData {
+        when (val type = data.type) {
+            is UploadData.Kind.file -> {
+                val location = type.location
+                val collections = type.collections
+                val tags = type.tags
+                Timber.i("ShareViewModel: prepare upload for local file")
+                return prepareAndSubmit(
+                    attachment = data.attachment,
+                    collections = collections,
+                    tags = tags,
+                    file = data.file,
+                    tmpFile = location,
+                    libraryId = data.libraryId,
+                    userId = data.userId,
+                )
+            }
+
+            is UploadData.Kind.translated -> {
+                val item = type.item
+                val location = type.location
+                Timber.i("ShareViewModel: prepare upload for local file")
+                return prepareAndSubmit(
+                    item = item,
+                    attachment = data.attachment,
+                    file = data.file,
+                    tmpFile = location,
+                    libraryId = data.libraryId,
+                    userId = data.userId
+                )
+            }
+        }
+    }
+
+    private suspend fun upload(data: UploadData) {
+        //TODO implement Upload to WebDav Support
+        uploadToZotero(data = data)
+    }
+
+    private suspend fun uploadToZotero(data: UploadData) {
+        try {
+            val submissionData = submit(data = data)
+            val uploadSyncResult = AuthorizeUploadSyncAction(key = data.attachment.key, filename = data.filename, filesize = submissionData.filesize, md5=  submissionData.md5,
+            mtime = submissionData.mtime, libraryId = data.libraryId, userId = data.userId, oldMd5 = null).result()
+            if (uploadSyncResult is CustomResult.GeneralError) {
+                processUploadToZoteroException(uploadSyncResult, data)
+                return
+            }
+            uploadSyncResult as CustomResult.GeneralSuccess
+            val response = uploadSyncResult.value!!
+            val md5 = submissionData.md5
+            when (response) {
+                is AuthorizeUploadResponse.exists -> {
+                    Timber.i("ShareViewModel: file exists remotely")
+                    val request = MarkAttachmentUploadedDbRequest(libraryId = data.libraryId, key = data.attachment.key, version = response.version)
+                    val request2 = UpdateVersionsDbRequest(version = response.version, libraryId = data.libraryId, type = UpdateVersionType.objectS(SyncObject.item))
+                    dbWrapper.realmDbStorage.perform(listOf(request, request2))
+                }
+                is AuthorizeUploadResponse.new ->  {
+                    val response = response.authorizeNewUploadResponse
+                    Timber.i("ShareViewModel: upload authorized")
+
+                    val upload = BackgroundUpload(
+                        type = BackgroundUpload.Kind.zotero(uploadKey = response.uploadKey),
+                        key = this.attachmentKey,
+                        libraryId = data.libraryId,
+                        userId = data.userId,
+                        remoteUrl = URL(response.url),
+                        fileUrl = data.file.toURL(),
+                        md5 = md5,
+                        date = Date()
+                    )
+                    //TODO implement BackgroundUploader
+
+                    triggerEffect(ShareViewEffect.NavigateBack)
+                }
+            }
+
+        } catch (e: Exception) {
+            Timber.e(e, "Could not submit item or attachment")
+            processUploadToZoteroException(CustomResult.GeneralError.CodeError(e), data)
+        }
+    }
+
+    private fun processUploadToZoteroException(
+        error : CustomResult.GeneralError,
+        data: UploadData
+    ) {
+
+        updateState {
+            copy(
+                attachmentState = AttachmentState.failed(
+                    attachmentError(
+                        error, libraryId = data.libraryId
+                    )
+                ),
+                isSubmitting = false
+
+            )
+        }
+    }
+
 
 }
 

@@ -16,7 +16,7 @@ data class UploadData(
     val file: File,
     val filename: String,
     val libraryId: LibraryIdentifier,
-    val userId: Int,
+    val userId: Long,
 ) {
         sealed interface Kind {
             data class file(val location: File, val collections: Set<String>, val tags: List<TagResponse>): Kind
@@ -32,7 +32,7 @@ data class UploadData(
                 linkType: Attachment.FileLinkType,
                 defaultTitle: String,
                 libraryId: LibraryIdentifier,
-                userId: Int,
+                userId: Long,
                 dateParser: DateParser,
                 fileStore: FileStore,
             ): UploadData {
@@ -78,7 +78,7 @@ data class UploadData(
                 collections: Set<String>,
                 tags: List<TagResponse>,
                 libraryId: LibraryIdentifier,
-                userId: Int,
+                userId: Long,
                 fileStore: FileStore,
             ): UploadData {
                 val newFile =
