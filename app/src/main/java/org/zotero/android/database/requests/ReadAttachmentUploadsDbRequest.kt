@@ -91,12 +91,12 @@ class ReadAttachmentUploadsDbRequest(
                     filename = attachmentType.filename
                 }
             }
-            if (md5Field.value == "<null>") {
+            if (md5Field.value == "null") {
                 val newMd5 = fileStorage.md5(file)
                 md5Field.value = newMd5
             }
             var backendMd5: String? = if (item.backendMd5.isEmpty()) null else item.backendMd5
-            if (backendMd5 == "<null>") {
+            if (backendMd5 == "null") {
                 // Don't need to update item here, it'll get updated in `MarkAttachmentUploadedDbRequest`.
                 backendMd5 = null
             }

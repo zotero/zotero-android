@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.androidx.content.longToast
 import org.zotero.android.screens.share.ShareViewEffect.NavigateBack
 import org.zotero.android.screens.share.ShareViewEffect.NavigateToCollectionPickerScreen
 import org.zotero.android.screens.share.ShareViewEffect.NavigateToTagPickerScreen
@@ -59,8 +58,11 @@ internal fun ShareScreen(
                 ShareScreenTopBar(
                     onCancelClicked = onBack,
                     onSave = {
-                        context.longToast("Not Implemented Yet")
+                        viewModel.submitAsync()
                     },
+                    isLeftButtonEnabled = !viewState.isSubmitting,
+                    isRightButtonEnabled = !viewState.isSubmitting && viewState.attachmentState.isSubmittable,
+                    attachmentError = viewState.attachmentState.error,
                 )
             },
         ) {

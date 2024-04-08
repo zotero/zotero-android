@@ -1,7 +1,7 @@
 package org.zotero.android.backgrounduploader
 
 import org.zotero.android.sync.LibraryIdentifier
-import java.net.URL
+import java.io.File
 import java.util.Date
 
 data class BackgroundUpload(
@@ -9,8 +9,8 @@ data class BackgroundUpload(
     val key: String,
     val libraryId: LibraryIdentifier,
     val userId: Long,
-    val remoteUrl: URL,
-    val fileUrl: URL,
+    val remoteUrl: String,
+    val fileUrl: File,
     val md5: String,
     val sessionId: String = "",
     val date: Date,

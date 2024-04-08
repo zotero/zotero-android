@@ -44,17 +44,12 @@ class SubmitUpdateSyncAction(
 
     suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
         return withContext(dispatcher) {
-            try {
-                when (this@SubmitUpdateSyncAction.objectS) {
-                    SyncObject.settings ->
-                        return@withContext submitSettings()
+            when (this@SubmitUpdateSyncAction.objectS) {
+                SyncObject.settings ->
+                    return@withContext submitSettings()
 
-                    SyncObject.collection, SyncObject.item, SyncObject.search, SyncObject.trash ->
-                        return@withContext submitOther()
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "SubmitUpdateSyncAction: can't parse updates response")
-                return@withContext CustomResult.GeneralError.CodeError(e)
+                SyncObject.collection, SyncObject.item, SyncObject.search, SyncObject.trash ->
+                    return@withContext submitOther()
             }
         }
     }
@@ -154,10 +149,18 @@ class SubmitUpdateSyncAction(
             return networkResult as CustomResult.GeneralError
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        val newVersion = networkResult.lastModifiedVersion
-        val json = networkResult.value!!
-        val keys = this.parameters.map { it["key"]?.toString() }
-        val updatesResponse = updatesResponseMapper.fromJson(dictionary = json, keys = keys)
+        val updatesResponse: UpdatesResponse
+        val newVersion: Int
+        try {
+            newVersion = networkResult.lastModifiedVersion
+            val json = networkResult.value!!
+            val keys = this.parameters.map { it["key"]?.toString() }
+            updatesResponse = updatesResponseMapper.fromJson(dictionary = json, keys = keys)
+        } catch (e: Exception) {
+            Timber.e(e, "SubmitUpdateSyncAction: can't parse updates response")
+            return CustomResult.GeneralError.CodeError(e)
+        }
+
         return process(response = updatesResponse, newVersion = newVersion)
     }
 

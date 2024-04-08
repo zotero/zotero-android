@@ -17,5 +17,7 @@
     <string name="no_tags">No Tags</string>
     <string name="no_comments">No Comments</string>
     <string name="select_collection">Select a Collection</string>
+    <string name="share_upload_channel_name">Share File Upload Notification</string>
+    <string name="share_upload_notification_title">Uploading Attachments</string>
 
 </resources>

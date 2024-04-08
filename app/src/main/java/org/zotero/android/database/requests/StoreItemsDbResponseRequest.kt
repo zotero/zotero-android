@@ -283,7 +283,7 @@ class StoreItemDbRequest(
                     if (keyCount == 1 && existing.baseKey == null) {
                         existing.baseKey = keyPair.baseKey
                     }
-                    if (value != "<null>" || existing.value.isEmpty()) {
+                    if (value != "null" || existing.value.isEmpty()) {
                         existing.value = value
                     }
                     field = existing
@@ -322,7 +322,7 @@ class StoreItemDbRequest(
                         sortIndex = value
                     }
                     field.key == FieldKeys.Item.Attachment.md5 -> {
-                        if (value != "<null>") {
+                        if (value != "null") {
                             md5 = value
                         }
                     }

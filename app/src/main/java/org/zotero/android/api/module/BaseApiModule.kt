@@ -38,11 +38,16 @@ object BaseApiModule {
         val dispatcher = Dispatcher()
         dispatcher.maxRequests = 30
         dispatcher.maxRequestsPerHost = 30
+
+//        val interceptor = HttpLoggingInterceptor()
+//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
+
         return OkHttpClient.Builder()
             .dispatcher(dispatcher)
             .connectionPool(connectionPool)
             .setNetworkTimeout(configuration.networkTimeout)
             .addInterceptor(clientInfoNetworkInterceptor)
+//            .addInterceptor(interceptor)
             .build()
     }
 

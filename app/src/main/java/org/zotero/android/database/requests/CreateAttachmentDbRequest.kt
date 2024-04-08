@@ -99,7 +99,7 @@ class CreateAttachmentDbRequest(
                                 filename = this.attachment.type.filename,
                             )
                             val md5Value = fileStore.md5(file)
-                            if (md5Value == "<null>") {
+                            if (md5Value == "null") {
                                 Timber.e("CreateAttachmentDbRequest: incorrect md5 value " +
                                         "for attachment ${this.attachment.key}")
                                 throw Error.incorrectMd5Value

@@ -41,6 +41,7 @@ import org.zotero.android.database.requests.CreateBackendItemDbRequest
 import org.zotero.android.database.requests.CreateItemWithAttachmentDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.ReadCollectionAndLibraryDbRequest
+import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.database.requests.ReadRecentCollections
 import org.zotero.android.database.requests.UpdateCollectionLastUsedDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
@@ -49,6 +50,7 @@ import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
+import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.screens.share.data.CollectionPickerState
 import org.zotero.android.screens.share.data.ItemPickerState
 import org.zotero.android.screens.share.data.ProcessedAttachment
@@ -84,9 +86,9 @@ import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
 import org.zotero.android.translator.web.TranslatorWebCallChainExecutor
 import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
+import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
-import java.net.URL
 import java.util.Date
 import javax.inject.Inject
 
@@ -108,7 +110,8 @@ internal class ShareViewModel @Inject constructor(
     private val creatorResponseMapper: CreatorResponseMapper,
     private val defaults: Defaults,
     private val context: Context,
-    private val dateParser: DateParser
+    private val dateParser: DateParser,
+    private val backgroundUploadProcessor: BackgroundUploadProcessor,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -538,7 +541,7 @@ internal class ShareViewModel @Inject constructor(
             is CustomResult.GeneralError.NetworkError -> {
                 return networkErrorRequiresAbort(
                     error = generalError,
-                    url = generalError.httpUrl?.toUrl()?.toString(),
+                    url = BuildConfig.BASE_API_URL,
                     libraryId = libraryId
                 )
             }
@@ -636,8 +639,13 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
+    fun submitAsync() {
+        viewModelScope.launch {
+            submit()
+        }
+    }
 
-    suspend fun submit() {
+    private suspend fun submit() {
         if (!viewState.attachmentState.isSubmittable) {
             Timber.e("Tried to submit unsubmittable state")
             return
@@ -801,7 +809,7 @@ internal class ShareViewModel @Inject constructor(
     }
 
 
-    private fun submit(
+    private suspend fun submit(
         item: ItemResponse,
         libraryId: LibraryIdentifier,
         userId: Long,
@@ -813,7 +821,7 @@ internal class ShareViewModel @Inject constructor(
                 schemaController = schemaController,
                 dateParser = dateParser
             )
-            SubmitUpdateSyncAction(
+            val result = SubmitUpdateSyncAction(
                 parameters = listOf(parameters),
                 changeUuids = changeUuids,
                 sinceVersion = null,
@@ -821,8 +829,24 @@ internal class ShareViewModel @Inject constructor(
                 libraryId = libraryId,
                 userId = userId,
                 updateLibraryVersion = false
-            )
-            triggerEffect(ShareViewEffect.NavigateBack)
+            ).result()
+            if (result is CustomResult.GeneralSuccess) {
+                triggerEffect(ShareViewEffect.NavigateBack)
+            } else {
+                result as CustomResult.GeneralError
+                Timber.e("ShareViewModel: could not submit standalone item")
+                updateState {
+                    copy(
+                        attachmentState = AttachmentState.failed(
+                            attachmentError(
+                                generalError = result,
+                                libraryId = libraryId
+                            )
+                        ),
+                        isSubmitting = false
+                    )
+                }
+            }
         } catch (e: Exception) {
             Timber.e(e, "ShareViewModel: could not submit standalone item")
             updateState {
@@ -834,7 +858,6 @@ internal class ShareViewModel @Inject constructor(
                         )
                     ),
                     isSubmitting = false
-
                 )
             }
         }
@@ -1002,7 +1025,7 @@ internal class ShareViewModel @Inject constructor(
         tmpFile: File,
         libraryId: LibraryIdentifier,
         userId: Long,
-    ): ShareSubmissionData {
+    ): CustomResult<ShareSubmissionData> {
         val filesize = moveFile(tmpFile, file)
         val data: ShareSubmissionData
         val parameters: Map<String, Any>
@@ -1018,9 +1041,9 @@ internal class ShareViewModel @Inject constructor(
             data = ShareSubmissionData(filesize = filesize, md5 = md5, mtime = mtime)
         } catch (e: Exception) {
             file.delete()
-            throw e
+            return CustomResult.GeneralError.CodeError(e)
         }
-        SubmitUpdateSyncAction(
+        val result = SubmitUpdateSyncAction(
             parameters = listOf(parameters),
             changeUuids = changeUuids,
             sinceVersion = null,
@@ -1029,7 +1052,10 @@ internal class ShareViewModel @Inject constructor(
             userId = userId,
             updateLibraryVersion = false
         ).result()
-        return data
+        if (result is CustomResult.GeneralSuccess) {
+            return CustomResult.GeneralSuccess(data)
+        }
+        return result as CustomResult.GeneralError
     }
 
     private suspend fun prepareAndSubmit(
@@ -1039,7 +1065,7 @@ internal class ShareViewModel @Inject constructor(
         tmpFile: File,
         libraryId: LibraryIdentifier,
         userId: Long,
-    ): ShareSubmissionData {
+    ): CustomResult<ShareSubmissionData> {
         val filesize = moveFile(tmpFile, file)
         val data: ShareSubmissionData
         val parameters: List<Map<String, Any>>
@@ -1051,10 +1077,10 @@ internal class ShareViewModel @Inject constructor(
             data = ShareSubmissionData(filesize = filesize, md5 = md5, mtime = mtime)
         } catch (e: Exception) {
             file.delete()
-            throw e
+            return CustomResult.GeneralError.CodeError(e)
         }
 
-        SubmitUpdateSyncAction(
+        val result = SubmitUpdateSyncAction(
             parameters = parameters,
             changeUuids = changeUuids,
             sinceVersion = null,
@@ -1063,10 +1089,13 @@ internal class ShareViewModel @Inject constructor(
             userId = userId,
             updateLibraryVersion = false
         ).result()
-        return data
+        if (result is CustomResult.GeneralSuccess) {
+            return CustomResult.GeneralSuccess(data)
+        }
+        return result as CustomResult.GeneralError
     }
 
-    private suspend fun submit(data: UploadData): ShareSubmissionData {
+    private suspend fun submit(data: UploadData): CustomResult<ShareSubmissionData> {
         when (val type = data.type) {
             is UploadData.Kind.file -> {
                 val location = type.location
@@ -1107,9 +1136,22 @@ internal class ShareViewModel @Inject constructor(
 
     private suspend fun uploadToZotero(data: UploadData) {
         try {
-            val submissionData = submit(data = data)
-            val uploadSyncResult = AuthorizeUploadSyncAction(key = data.attachment.key, filename = data.filename, filesize = submissionData.filesize, md5=  submissionData.md5,
-            mtime = submissionData.mtime, libraryId = data.libraryId, userId = data.userId, oldMd5 = null).result()
+            val submissionDataResult = submit(data = data)
+            if (submissionDataResult is CustomResult.GeneralError) {
+                processUploadToZoteroException(submissionDataResult, data)
+                return
+            }
+            val submissionData = (submissionDataResult as CustomResult.GeneralSuccess).value!!
+            val uploadSyncResult = AuthorizeUploadSyncAction(
+                key = data.attachment.key,
+                filename = data.filename,
+                filesize = submissionData.filesize,
+                md5 = submissionData.md5,
+                mtime = submissionData.mtime,
+                libraryId = data.libraryId,
+                userId = data.userId,
+                oldMd5 = null
+            ).result()
             if (uploadSyncResult is CustomResult.GeneralError) {
                 processUploadToZoteroException(uploadSyncResult, data)
                 return
@@ -1120,11 +1162,20 @@ internal class ShareViewModel @Inject constructor(
             when (response) {
                 is AuthorizeUploadResponse.exists -> {
                     Timber.i("ShareViewModel: file exists remotely")
-                    val request = MarkAttachmentUploadedDbRequest(libraryId = data.libraryId, key = data.attachment.key, version = response.version)
-                    val request2 = UpdateVersionsDbRequest(version = response.version, libraryId = data.libraryId, type = UpdateVersionType.objectS(SyncObject.item))
+                    val request = MarkAttachmentUploadedDbRequest(
+                        libraryId = data.libraryId,
+                        key = data.attachment.key,
+                        version = response.version
+                    )
+                    val request2 = UpdateVersionsDbRequest(
+                        version = response.version,
+                        libraryId = data.libraryId,
+                        type = UpdateVersionType.objectS(SyncObject.item)
+                    )
                     dbWrapper.realmDbStorage.perform(listOf(request, request2))
                 }
-                is AuthorizeUploadResponse.new ->  {
+
+                is AuthorizeUploadResponse.new -> {
                     val response = response.authorizeNewUploadResponse
                     Timber.i("ShareViewModel: upload authorized")
 
@@ -1133,17 +1184,22 @@ internal class ShareViewModel @Inject constructor(
                         key = this.attachmentKey,
                         libraryId = data.libraryId,
                         userId = data.userId,
-                        remoteUrl = URL(response.url),
-                        fileUrl = data.file.toURL(),
+                        remoteUrl = response.url,
+                        fileUrl = data.file,
                         md5 = md5,
                         date = Date()
                     )
-                    //TODO implement BackgroundUploader
+                    backgroundUploadProcessor.startAsync(
+                        upload = upload,
+                        filename = data.filename,
+                        mimeType = this.defaultMimetype,
+                        parameters = response.params,
+                        headers = mapOf("If-None-Match" to "*")
+                    )
 
-                    triggerEffect(ShareViewEffect.NavigateBack)
                 }
             }
-
+            triggerEffect(ShareViewEffect.NavigateBack)
         } catch (e: Exception) {
             Timber.e(e, "Could not submit item or attachment")
             processUploadToZoteroException(CustomResult.GeneralError.CodeError(e), data)
@@ -1168,7 +1224,95 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
+    fun errorMessage(error: AttachmentState.Error): String? {
+        return when (error) {
+            AttachmentState.Error.apiFailure -> {
+                context.getString(Strings.errors_shareext_api_error)
+            }
+            AttachmentState.Error.cantLoadSchema -> {
+                context.getString(Strings.errors_shareext_cant_load_schema)
+            }
+            AttachmentState.Error.cantLoadWebData -> {
+                context.getString(Strings.errors_shareext_cant_load_data)
+            }
+            AttachmentState.Error.downloadFailed -> {
+                context.getString(Strings.errors_shareext_download_failed)
+            }
+            AttachmentState.Error.downloadedFileNotPdf -> {
+                null
+            }
+            AttachmentState.Error.expired -> {
+                context.getString(Strings.errors_shareext_unknown)
+            }
+            AttachmentState.Error.fileMissing -> {
+                context.getString(Strings.errors_shareext_missing_file)
+            }
+            AttachmentState.Error.itemsNotFound -> {
+                context.getString(Strings.errors_shareext_items_not_found)
+            }
+            AttachmentState.Error.md5Missing -> {
+                null
+            }
+            AttachmentState.Error.mtimeMissing -> {
+                null
+            }
+            is AttachmentState.Error.parseError -> {
+                context.getString(Strings.errors_shareext_parsing_error)
+            }
+            is AttachmentState.Error.quotaLimit -> {
+                when (error.libraryIdentifier) {
+                    is LibraryIdentifier.custom -> {
+                        context.getString(Strings.errors_shareext_personal_quota_reached)
+                    }
+                    is LibraryIdentifier.group -> {
+                        val groupId = error.libraryIdentifier.groupId
+                        val group =
+                            dbWrapper.realmDbStorage.perform(ReadGroupDbRequest(identifier = groupId))
+                        val groupName = group?.name ?: "$groupId"
+                        return context.getString(
+                            Strings.errors_shareext_group_quota_reached,
+                            groupName
+                        )
+                    }
+                }
+            }
 
+            is AttachmentState.Error.schemaError -> {
+                context.getString(Strings.errors_shareext_schema_error)
+            }
+            AttachmentState.Error.unknown -> {
+                context.getString(Strings.errors_shareext_unknown)
+            }
+            AttachmentState.Error.webDavFailure -> {
+                context.getString(Strings.errors_shareext_webdav_error)
+            }
+            AttachmentState.Error.webDavNotVerified -> {
+                context.getString(Strings.errors_shareext_webdav_not_verified)
+            }
+            is AttachmentState.Error.webViewError -> {
+                return when (error.error) {
+                    TranslationWebViewError.cantFindFile -> {
+                        context.getString(Strings.errors_shareext_missing_base_files)
+                    }
+                    TranslationWebViewError.incompatibleItem -> {
+                        context.getString(Strings.errors_shareext_incompatible_item)
+                    }
+                    TranslationWebViewError.javascriptCallMissingResult -> {
+                        context.getString(Strings.errors_shareext_javascript_failed)
+                    }
+                    TranslationWebViewError.noSuccessfulTranslators -> {
+                        null
+                    }
+                    TranslationWebViewError.webExtractionMissingData -> {
+                        context.getString(Strings.errors_shareext_response_missing_data)
+                    }
+                    TranslationWebViewError.webExtractionMissingJs -> {
+                        context.getString(Strings.errors_shareext_missing_base_files)
+                    }
+                }
+            }
+        }
+    }
 }
 
 internal data class ShareViewState(

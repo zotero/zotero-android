@@ -13,6 +13,7 @@ import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
+import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,6 +30,7 @@ class Controllers @Inject constructor(
     private val sessionController: SessionController,
     private val userControllers: UserControllers,
     private val fileDownloader: AttachmentDownloader,
+    private val backgroundUploadProcessor: BackgroundUploadProcessor,
     private val debugLogging: DebugLogging,
     private val crashReporter: CrashReporter,
     ) {
@@ -120,7 +122,8 @@ class Controllers @Inject constructor(
         val controllers = this.userControllers
         controllers.disableSync(apiKey = this.apiKey)
         fileDownloader.stop()
-        // TODO Cancel all background uploads
+        backgroundUploadProcessor.cancelAllUploads()
+        // TODO Cancel all background downloads
 
         FileUtils.deleteDirectory(fileStore.cache())
         FileUtils.deleteDirectory(fileStore.jsonCache)
