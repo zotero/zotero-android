@@ -28,8 +28,14 @@ internal fun ParsedShareItemSection(
     itemTitle: (item: ItemResponse, defaultValue: String) -> String,
 ) {
     if (item == null && attachment == null) {
-        if(attachmentState.translationInProgress || title == null) {
-            ShareProgressItem(title = "Parsing Shared Item")
+        if (attachmentState.translationInProgress || title == null) {
+            val progress =
+                if (attachmentState is AttachmentState.downloading) {
+                    attachmentState.progress
+                } else {
+                    0
+                }
+            ShareProgressItem(title = "Parsing Shared Item", progress = progress)
             return
         }
         SetItem(title = title, type = ItemTypes.webpage)
@@ -80,7 +86,10 @@ internal fun CollectionSection(
             }
 
             CollectionPickerState.loading -> {
-                ShareProgressItem(title = stringResource(id = Strings.shareext_loading_collections))
+                ShareProgressItem(
+                    title = stringResource(id = Strings.shareext_loading_collections),
+                    progress = 0
+                )
             }
 
             is CollectionPickerState.picked -> {

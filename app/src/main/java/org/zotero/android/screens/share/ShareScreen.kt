@@ -63,6 +63,8 @@ internal fun ShareScreen(
                     isLeftButtonEnabled = !viewState.isSubmitting,
                     isRightButtonEnabled = !viewState.isSubmitting && viewState.attachmentState.isSubmittable,
                     attachmentError = viewState.attachmentState.error,
+                    isSubmitting = viewState.isSubmitting,
+                    state = viewState.attachmentState,
                 )
             },
         ) {
@@ -98,6 +100,17 @@ internal fun ShareScreen(
                     TagsSection(
                         navigateToTagPicker = viewModel::navigateToTagPicker,
                         tags = viewState.tags
+                    )
+                }
+                item {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    val hasItem = viewState.processedAttachment != null
+                    ShareFailureBottomPanel(
+                        viewModel = viewModel,
+                        state = viewState.attachmentState,
+                        itemState = viewState.itemPickerState,
+                        hasItem = hasItem,
+                        isSubmitting = viewState.isSubmitting
                     )
                 }
             }

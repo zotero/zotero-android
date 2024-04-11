@@ -32,6 +32,7 @@ object CustomPalette {
     val zoteroItemDetailSectionTitle = Color(0xFF6C6C73)
 
     val SystemGray = Color(0xFF8E8E93)
+    val DarkGrayColor = Color(0xFF434343)
 }
 
 /**

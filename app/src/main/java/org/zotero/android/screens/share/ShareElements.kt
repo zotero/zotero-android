@@ -176,6 +176,7 @@ internal fun ShareErrorItem(
 @Composable
 internal fun ShareProgressItem(
     title: String,
+    progress: Int,
 ) {
     Row(
         modifier = Modifier
@@ -194,11 +195,21 @@ internal fun ShareProgressItem(
             color = CustomPalette.CoolGray,
         )
         Spacer(modifier = Modifier.weight(1f))
-        CircularProgressIndicator(
-            color = CustomTheme.colors.zoteroDefaultBlue,
-            modifier = Modifier
-                .size(24.dp)
-        )
+        if (progress == 0) {
+            CircularProgressIndicator(
+                color = CustomTheme.colors.zoteroDefaultBlue,
+                modifier = Modifier
+                    .size(24.dp)
+            )
+        } else {
+            CircularProgressIndicator(
+                progress = progress.toFloat(),
+                color = CustomTheme.colors.zoteroDefaultBlue,
+                modifier = Modifier
+                    .size(24.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.width(16.dp))
     }
 }

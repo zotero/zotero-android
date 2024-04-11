@@ -14,6 +14,8 @@ internal fun ShareScreenTopBar(
     onSave: () -> Unit,
     isLeftButtonEnabled: Boolean,
     isRightButtonEnabled: Boolean,
+    isSubmitting: Boolean,
+    state: AttachmentState,
     attachmentError: AttachmentState.Error?,
     ) {
     when (attachmentError) {
@@ -40,10 +42,12 @@ internal fun ShareScreenTopBar(
                     )
                 },
                 rightContainerContent = listOf {
+                    val isLoading = isSubmitting
                     NewHeadingTextButton(
                         style = CustomTheme.typography.defaultBold,
                         text = stringResource(id = Strings.shareext_save),
                         isEnabled = isRightButtonEnabled,
+                        isLoading = isLoading,
                         onClick = onSave
                     )
                 }

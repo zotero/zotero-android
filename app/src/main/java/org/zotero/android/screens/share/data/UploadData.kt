@@ -1,6 +1,7 @@
 package org.zotero.android.screens.share.data
 
 import android.webkit.MimeTypeMap
+import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.database.objects.Attachment
@@ -27,7 +28,7 @@ data class UploadData(
             fun init(
                 item: ItemResponse,
                 attachmentKey: String,
-                attachmentData: Map<String, Any>,
+                attachmentData: JsonObject,
                 attachmentFile: File,
                 linkType: Attachment.FileLinkType,
                 defaultTitle: String,
@@ -36,7 +37,7 @@ data class UploadData(
                 dateParser: DateParser,
                 fileStore: FileStore,
             ): UploadData {
-                val url = attachmentData[FieldKeys.Item.url] as? String
+                val url = attachmentData[FieldKeys.Item.url]?.asString
                 val filename = FilenameFormatter.filename(
                     item,
                     defaultTitle = defaultTitle,

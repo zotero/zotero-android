@@ -55,4 +55,11 @@ interface NoAuthenticationApi {
         @HeaderMap headers: Map<String, String>,
         @Body textBody: String?,
     ): retrofit2.Response<ResponseBody>
+
+    @Streaming
+    @GET
+    suspend fun downloadFileStreaming(
+        @Url url: String,
+        @HeaderMap headers: Map<String, String>,
+    ): retrofit2.Response<ResponseBody>
 }

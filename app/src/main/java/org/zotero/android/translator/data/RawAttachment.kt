@@ -17,9 +17,9 @@ sealed interface RawAttachment {
     data class fileUrl(val uri: Uri) : RawAttachment
     data class remoteFileUrl(
         val url: String,
-        val contentType: String,
-        val cookies: String,
-        val userAgent: String,
-        val referrer: String
+        val contentType: String?,
+        val cookies: String?,
+        val userAgent: String?,
+        val referrer: String?
     ) : RawAttachment
 }

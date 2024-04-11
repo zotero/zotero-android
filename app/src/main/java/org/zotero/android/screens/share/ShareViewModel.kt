@@ -2,12 +2,17 @@ package org.zotero.android.screens.share
 
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
+import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
+import com.google.common.io.ByteProcessor
+import com.google.common.io.ByteStreams
+import com.google.common.io.Closeables
 import com.google.gson.JsonArray
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -15,10 +20,12 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
@@ -89,8 +96,11 @@ import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.Date
 import javax.inject.Inject
+
 
 @HiltViewModel
 internal class ShareViewModel @Inject constructor(
@@ -112,6 +122,7 @@ internal class ShareViewModel @Inject constructor(
     private val context: Context,
     private val dateParser: DateParser,
     private val backgroundUploadProcessor: BackgroundUploadProcessor,
+    private val noAuthenticationApi: NoAuthenticationApi,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -147,7 +158,11 @@ internal class ShareViewModel @Inject constructor(
         setupObservers()
         ioCoroutineScope.launch {
             try {
-                syncScheduler.startSyncController(type = SyncKind.collectionsOnly, libraries = Libraries.all, retryAttempt = 0)
+                syncScheduler.startSyncController(
+                    type = SyncKind.collectionsOnly,
+                    libraries = Libraries.all,
+                    retryAttempt = 0
+                )
                 val attachment = shareRawAttachmentLoader.getLoadedAttachmentResult()
                 process(attachment)
             } catch (e: Exception) {
@@ -258,7 +273,7 @@ internal class ShareViewModel @Inject constructor(
     ) {
 
         val item: ItemResponse
-        var attachment: JsonObject? = null
+        val attachment: JsonObject?
 
         try {
             Timber.i("parse zotero items")
@@ -291,7 +306,7 @@ internal class ShareViewModel @Inject constructor(
             }
             return
         }
-        val url = attachment["url"]
+        val url = attachment["url"].asString
         Timber.i("ShareViewModel: parsed item with attachment, download attachment")
 
         val file =
@@ -299,7 +314,7 @@ internal class ShareViewModel @Inject constructor(
         download(
             item = item,
             attachment = attachment,
-            attachmentUrl = url,
+            url = url,
             file = file,
             cookies = cookies,
             userAgent = userAgent,
@@ -310,14 +325,88 @@ internal class ShareViewModel @Inject constructor(
     private fun download(
         item: ItemResponse,
         attachment: JsonObject,
-        attachmentUrl: JsonElement?,
+        url: String,
         file: File,
         cookies: String?,
         userAgent: String?,
         referrer: String?
     ) {
+        val attachmentTitle = ((attachment["title"]?.asString) ?: viewState.title) ?: ""
+
+        updateState {
+            copy(
+                attachmentState = AttachmentState.downloading(0),
+                expectedItem = item,
+                expectedAttachment = attachmentTitle to file,
+                processedAttachment = ProcessedAttachment.item(item)
+            )
+        }
+
+        ioCoroutineScope.launch {
+            try {
+                download(
+                    url = url,
+                    file = file,
+                    cookies = cookies,
+                    userAgent = userAgent,
+                    referrer = referrer
+                )
+                processDownload(
+                    attachment = attachment,
+                    url = url,
+                    file = file,
+                    item = item,
+                    cookies = cookies,
+                    userAgent = userAgent,
+                    referrer = referrer
+                )
+            } catch (e: Exception) {
+                Timber.e("ShareViewModel: could not download translated file - $url")
+                viewModelScope.launch {
+                    updateState {
+                        copy(attachmentState = AttachmentState.failed(AttachmentState.Error.downloadFailed))
+                    }
+                }
+            }
+        }
 
         //TODO implement download
+    }
+
+    private fun processDownload(
+        attachment: JsonObject,
+        url: String,
+        file: File,
+        item: ItemResponse,
+        cookies: String?,
+        userAgent: String?,
+        referrer: String?
+    ) {
+        if (fileStore.isPdf(file = file)) {
+            Timber.i("ShareViewModel: downloaded pdf")
+            viewModelScope.launch {
+                updateState {
+                    copy(
+                        attachmentState = AttachmentState.processed,
+                        processedAttachment = ProcessedAttachment.itemWithAttachment(
+                            item = item,
+                            attachment = attachment,
+                            attachmentFile = file
+                        )
+                    )
+                }
+            }
+            return
+        }
+        Timber.i("ShareViewModel: downloaded unsupported attachment")
+
+        file.delete()
+        viewModelScope.launch {
+            updateState {
+                copy(attachmentState = AttachmentState.failed(AttachmentState.Error.downloadedFileNotPdf))
+            }
+        }
+
     }
 
     private fun finishSync(successful: Boolean) {
@@ -434,10 +523,165 @@ internal class ShareViewModel @Inject constructor(
             is RawAttachment.fileUrl -> {
                 process(uri = attachment.uri)
             }
-            else -> {
 
+            is RawAttachment.remoteFileUrl -> {
+                process(
+                    url = attachment.url,
+                    contentType = attachment.contentType,
+                    cookies = attachment.cookies,
+                    userAgent = attachment.userAgent,
+                    referrer = attachment.referrer
+                )
             }
         }
+    }
+
+    private suspend fun process(
+        url: String,
+        contentType: String?,
+        cookies: String?,
+        userAgent: String?,
+        referrer: String?
+    ) {
+        val filename = url.toUri().lastPathSegment!!
+        val ext = MimeTypeMap.getFileExtensionFromUrl(filename)
+        val file = fileStore.shareExtensionDownload(key = this.attachmentKey, ext = ext)
+
+        viewModelScope.launch {
+            updateState {
+                copy(
+                    url = url,
+                    title = url,
+                    attachmentState = AttachmentState.downloading(0),
+                    expectedAttachment = filename to file
+                )
+            }
+
+        }
+        try {
+            download(
+                url = url,
+                file = file,
+                cookies = cookies,
+                userAgent = userAgent,
+                referrer = referrer
+            )
+            viewModelScope.launch {
+
+                if (fileStore.isPdf(file)) {
+                    Timber.i("ShareViewModel: downloaded pdf")
+
+                    updateState {
+                        copy(
+                            processedAttachment = ProcessedAttachment.file(
+                                file = file,
+                                fileName = filename
+                            ),
+                            attachmentState = AttachmentState.processed
+                        )
+                    }
+                } else {
+                    Timber.i("ShareViewModel: downloaded unsupported file")
+                    updateState {
+                        copy(
+                            processedAttachment = null,
+                            attachmentState = AttachmentState.failed(
+                                AttachmentState.Error.downloadedFileNotPdf
+                            )
+                        )
+                    }
+                    file.delete()
+                }
+            }
+
+        } catch (e: Exception) {
+            Timber.e(e, "Could not download shared file - $url")
+            viewModelScope.launch {
+                updateState {
+                    copy(attachmentState = AttachmentState.failed(AttachmentState.Error.downloadFailed))
+                }
+            }
+
+            file.delete()
+        }
+    }
+
+    private suspend fun download(
+        url: String,
+        file: File,
+        cookies: String?,
+        userAgent: String?,
+        referrer: String?
+    ) {
+        val headers: MutableMap<String, String> = LinkedHashMap()
+        if (userAgent != null) {
+            headers["User-Agent"] = userAgent
+        }
+        if (referrer != null) {
+            headers["Referer"] = referrer
+        }
+        if (cookies != null) {
+            headers["Cookie"] = cookies
+        }
+        val networkResult = safeApiCall {
+            noAuthenticationApi.downloadFileStreaming(url = url, headers = headers)
+        }
+        when (networkResult) {
+            is CustomResult.GeneralSuccess -> {
+                val byteStream = networkResult.value!!.byteStream()
+                val total = networkResult.value!!.contentLength()
+                var progress = 0L
+                val out = FileOutputStream(file);
+                try {
+                    ByteStreams.readBytes(byteStream,
+                        object : ByteProcessor<Void?> {
+                            @Throws(IOException::class)
+                            override fun processBytes(
+                                buffer: ByteArray,
+                                offset: Int,
+                                length: Int
+                            ): Boolean {
+                                out.write(buffer, offset, length)
+                                progress += length
+                                val progressResult = (progress / total.toDouble() * 100).toInt()
+                                if (progressResult > 0) {
+                                    println()
+                                }
+                                updateProgressBar(progressResult)
+                                return true
+                            }
+
+                            override fun getResult(): Void? {
+                                return null
+                            }
+                        })
+                } catch (e: Exception) {
+                    Timber.e(e, "Could not download $url")
+                    throw e
+                } finally {
+                    Closeables.close(out, true)
+                }
+            }
+
+            is CustomResult.GeneralError.CodeError -> {
+                throw networkResult.throwable
+            }
+
+            is CustomResult.GeneralError.NetworkError -> {
+                throw Exception(networkResult.stringResponse)
+            }
+        }
+    }
+
+    private fun updateProgressBar(progress: Int) {
+        viewModelScope.launch {
+            if (viewState.attachmentState is AttachmentState.downloading) {
+                updateState {
+                    copy(attachmentState = AttachmentState.downloading(progress))
+                }
+            }
+        }
+
     }
 
     private suspend fun process(uri: Uri) {
@@ -607,6 +851,7 @@ internal class ShareViewModel @Inject constructor(
 
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
+        ioCoroutineScope.cancel()
         super.onCleared()
     }
 

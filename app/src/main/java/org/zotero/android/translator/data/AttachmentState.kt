@@ -43,8 +43,8 @@ sealed class AttachmentState {
     }
 
     object decoding : AttachmentState()
-    data class translating(val p: String) : AttachmentState()
-    data class downloading(val p: Double) : AttachmentState()
+    data class translating(val message: String) : AttachmentState()
+    data class downloading(val progress: Int) : AttachmentState()
     object processed : AttachmentState()
     data class failed(val e: Error) : AttachmentState()
 

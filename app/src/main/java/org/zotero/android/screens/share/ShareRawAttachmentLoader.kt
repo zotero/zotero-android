@@ -3,6 +3,7 @@ package org.zotero.android.screens.share
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.core.net.toUri
 import com.pspdfkit.utils.getSupportParcelable
 import org.zotero.android.architecture.Result
 import org.zotero.android.translator.data.AttachmentState
@@ -18,7 +19,19 @@ class ShareRawAttachmentLoader @Inject constructor() {
     fun loadAttachment(bundleExtras: Bundle) {
         val urlPath = bundleExtras.getString(Intent.EXTRA_TEXT)
         if (urlPath != null) {
-            loadedAttachment = Result.Success(RawAttachment.remoteUrl(urlPath))
+            val lastPathSegment = urlPath.toUri().lastPathSegment
+            if (lastPathSegment?.contains(".") == true) {
+                loadedAttachment =
+                    Result.Success(RawAttachment.remoteFileUrl(
+                        url = urlPath,
+                        contentType = "",
+                        cookies = "",
+                        userAgent = "",
+                        referrer = ""
+                    ))
+            } else {
+                loadedAttachment = Result.Success(RawAttachment.remoteUrl(urlPath))
+            }
             return
         }
         val fileContentUri = bundleExtras.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)
