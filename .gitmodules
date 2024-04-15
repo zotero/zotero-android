@@ -1,0 +1,3 @@
+[submodule "translators"]
+	path = translators
+	url = https://github.com/zotero/translators.git
