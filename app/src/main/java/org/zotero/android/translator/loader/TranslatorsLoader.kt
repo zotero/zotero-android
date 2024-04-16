@@ -3,9 +3,16 @@ package org.zotero.android.translator.loader
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.apache.commons.io.IOUtils
+import org.apache.commons.io.FileUtils
+import org.zotero.android.architecture.Defaults
+import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.requests.SyncTranslatorsDbRequest
+import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.Unzipper
+import org.zotero.android.screens.share.data.TranslatorMetadata
 import timber.log.Timber
-import java.io.InputStream
+import java.io.File
+import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -14,7 +21,12 @@ import javax.inject.Singleton
 @Singleton
 class TranslatorsLoader @Inject constructor(
     private val context: Context,
-    private val gson: Gson
+    private val gson: Gson,
+    private val defaults: Defaults,
+    private val unzipper: Unzipper,
+    private val itemsUnzipper: TranslatorItemsUnzipper,
+    private val fileStore: FileStore,
+    private val dbWrapper: DbWrapper,
 ) {
     private val uuidExpression: Pattern?
         get() {
@@ -35,7 +47,7 @@ class TranslatorsLoader @Inject constructor(
     private fun loadTranslators(url: String?): List<Map<String, Any>> {
         try {
             val loadedUuids = mutableSetOf<String>()
-            val allUuids = context.assets.list("translator/translator_items")!!
+            val allUuids = fileStore.translatorItemsDirectory().listFiles()?.map { it.name } ?: emptyList()
             val translators =
                 loadTranslatorsWithDependencies(allUuids.toSet(), url, loadedUuids = loadedUuids)
             return translators
@@ -62,7 +74,8 @@ class TranslatorsLoader @Inject constructor(
                 continue
             }
             val translator =
-                loadRawTranslator(context.assets.open("translator/translator_items/$uuid"), url) ?: continue
+                loadRawTranslator(fileStore.translator(uuid), url)
+                    ?: continue
             val id = translator["translatorID"] as? String ?: continue
 
             loadedUuids.add(id)
@@ -98,12 +111,12 @@ class TranslatorsLoader @Inject constructor(
     }
 
     private fun loadRawTranslator(
-        fileInputStream: InputStream,
+        file: File,
         url: String? = null
     ): Map<String, Any>? {
         val rawString: String
         try {
-            rawString = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8)
+            rawString = FileUtils.readFileToString(file, StandardCharsets.UTF_8)
         } catch (e: Exception) {
             Timber.e(e, " can't create string from data")
             return null
@@ -177,5 +190,44 @@ class TranslatorsLoader @Inject constructor(
             }
         }
         return null
+    }
+
+    fun updateTranslatorIfNeeded() {
+        if (defaults.shouldUpdateTranslator()) {
+            unzipper.unzipStream(
+                zipInputStream = context.assets.open("translator.zip"),
+                location = fileStore.translatorDirectory().absolutePath
+            )
+            defaults.setShouldUpdateTranslator(false)
+        }
+    }
+
+    private fun loadIndex(): List<TranslatorMetadata> {
+        val inputStream = context.assets.open("translators/index.json")
+        val type =
+            TypeToken.getParameterized(MutableList::class.java, TranslatorMetadata::class.java).type
+        return gson.fromJson(InputStreamReader(inputStream), type)
+    }
+
+    private fun syncTranslatorsWithBundledData(deleteIndices: List<String>, forceUpdate: Boolean) {
+        Timber.i("TranslatorsLoader: load index")
+        val metadata = loadIndex()
+        Timber.i("TranslatorsLoader: sync translators to database")
+        val request = SyncTranslatorsDbRequest(
+            updateMetadata = metadata,
+            deleteIndices = deleteIndices,
+            forceUpdate = forceUpdate,
+            fileStore = this.fileStore
+        )
+        var updated = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+        Timber.i("TranslatorsLoader: updated $updated.size translators")
+        deleteIndices.forEach { id ->
+            fileStore.translator(id).delete()
+        }
+        // Unzip updated translators
+        Timber.i("TranslatorsAndStylesController: unzip translators")
+        itemsUnzipper.unzip(translators = updated)
+        Timber.i("TranslatorsAndStylesController: unzipped translators")
+
     }
 }

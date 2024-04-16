@@ -226,15 +226,15 @@ class FileStore @Inject constructor (
         return result
     }
 
-//    private fun split(filename: String): Pair<String, String> {
-//        val index = filename.lastIndexOf(".")
-//        if (index != -1) {
-//            val name = filename.substring(0, index)
-//            val ext = filename.substring(index + 1, filename.length)
-//            return name to ext
-//        }
-//        return filename to ""
-//    }
+    private fun split(filename: String): Pair<String, String> {
+        val index = filename.lastIndexOf(".")
+        if (index != -1) {
+            val name = filename.substring(0, index)
+            val ext = filename.substring(index + 1, filename.length)
+            return name to ext
+        }
+        return filename to ""
+    }
 
     fun md5(file: File): String {
         val inputStream = FileInputStream(file)
@@ -430,10 +430,26 @@ class FileStore @Inject constructor (
         return File(folderPath, "item_$key.$ext")
     }
 
+    fun translatorDirectory(): File {
+        val folderPath = File(getRootDirectory(), "translator")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun translatorItemsDirectory(): File {
+        val folderPath = File(translatorDirectory(), "translator_items")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun translator(filename: String): File {
+        val name = split(filename = filename).first
+        return File(translatorItemsDirectory(), name)
+    }
+
     fun reset() {
         setSelectedCollectionId(CollectionIdentifier.custom(CollectionIdentifier.CustomType.all))
         setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
-
     }
 
 }

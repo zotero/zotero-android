@@ -1,21 +1,22 @@
 package org.zotero.android.translator.web
 
-import android.content.Context
 import org.zotero.android.translator.data.RawAttachment
 import org.zotero.android.translator.data.TranslationWebViewError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.apache.commons.io.IOUtils
+import org.apache.commons.io.FileUtils
+import org.zotero.android.files.FileStore
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
 class TranslatorWebExtractionExecutor @Inject constructor(
-    private val context: Context,
     private val gson: Gson,
     private val translatorWebViewHandler: TranslatorWebViewHandler,
+    private val fileStore: FileStore,
 ) {
 
     suspend fun execute(url: String): RawAttachment {
@@ -30,7 +31,12 @@ class TranslatorWebExtractionExecutor @Inject constructor(
                 url = url,
                 onWebViewLoadPage = {
                     val extractionJsContent =
-                        IOUtils.toString(context.assets.open("translator/webview_extraction.js"))
+                        FileUtils.readFileToString(
+                            File(
+                                fileStore.translatorDirectory(),
+                                "webview_extraction.js"
+                            )
+                        )
                     translatorWebViewHandler.evaluateJavascript(extractionJsContent) { javascriptResponse ->
                         val mapType = object : TypeToken<JsonObject>() {}.type
                         val jsonObject: JsonObject = gson.fromJson(javascriptResponse, mapType)

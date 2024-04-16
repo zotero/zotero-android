@@ -14,6 +14,7 @@ import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
+import org.zotero.android.translator.loader.TranslatorsLoader
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +34,7 @@ class Controllers @Inject constructor(
     private val backgroundUploadProcessor: BackgroundUploadProcessor,
     private val debugLogging: DebugLogging,
     private val crashReporter: CrashReporter,
+    private val translatorsLoader: TranslatorsLoader,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -49,6 +51,11 @@ class Controllers @Inject constructor(
     }
 
     private fun startApp() {
+        try {
+            translatorsLoader.updateTranslatorIfNeeded()
+        }catch (e: Exception) {
+            Timber.e(e, "Failed to update Translator or translation items")
+        }
         val controllers = this.userControllers
         val session = this.sessionDataEventStream.currentValue()
         if (session != null && controllers.isControllerInitialized) {

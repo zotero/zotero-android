@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.files.FileStore
 import org.zotero.android.translator.data.TranslationWebViewError
 import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
@@ -17,6 +18,7 @@ import org.zotero.android.translator.helper.TranslatorHelper
 import org.zotero.android.translator.loader.TranslatorsLoader
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -27,6 +29,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
     private val translatorWebViewHandler: TranslatorWebViewHandler,
     private val translatorsLoader: TranslatorsLoader,
     private val translatorActionEventStream: TranslatorActionEventStream,
+    private val fileStore: FileStore,
 ) {
     private val ioCoroutineScope = CoroutineScope(dispatchers.io)
 
@@ -206,7 +209,12 @@ class TranslatorWebCallChainExecutor @Inject constructor(
         val encodedSchemaData =
             TranslatorHelper.encodeFileToBase64Binary(context.assets.open("schema.json"))
         val encodedDateFormatData =
-            TranslatorHelper.encodeFileToBase64Binary(context.assets.open("translator/translate/modules/utilities/resource/dateFormats.json"))
+            TranslatorHelper.encodeFileToBase64Binary(
+                File(
+                    fileStore.translatorDirectory(),
+                    "translate/modules/utilities/resource/dateFormats.json"
+                )
+            )
         return encodedSchemaData to encodedDateFormatData
     }
 

@@ -40,6 +40,7 @@ open class Defaults @Inject constructor(
     private val activeLineWidth = "activeLineWidth"
     private val activeEraserSize = "activeEraserSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
+    private val shouldUpdateTranslator = "shouldUpdateTranslator"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -249,6 +250,14 @@ open class Defaults @Inject constructor(
 
     fun wasPspdfkitInitialized(): Boolean {
         return sharedPreferences.getBoolean(wasPspdfkitInitialized, false)
+    }
+
+    fun setShouldUpdateTranslator(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(shouldUpdateTranslator, newValue) }
+    }
+
+    fun shouldUpdateTranslator(): Boolean {
+        return sharedPreferences.getBoolean(shouldUpdateTranslator, true)
     }
 
     fun reset() {
