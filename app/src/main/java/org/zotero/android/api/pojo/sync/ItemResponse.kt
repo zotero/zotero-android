@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
-import org.zotero.android.helpers.formatter.iso8601DateFormat
+import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.ktx.rounded
 import org.zotero.android.ktx.unmarshalList
 import org.zotero.android.sync.LibraryIdentifier
@@ -98,7 +98,7 @@ data class ItemResponse(
 
                     FieldKeys.Item.accessDate -> {
                         if (value == "CURRENT_TIMESTAMP") {
-                            value = iso8601DateFormat.format(Date())
+                            value = iso8601DateFormatV2.format(Date())
                         }
                         fields[KeyBaseKeyPair(key = objectS.key, baseKey = null)] = value
 

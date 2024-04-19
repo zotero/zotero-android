@@ -51,8 +51,11 @@ class TranslatorWebCallChainExecutor @Inject constructor(
         this.url = url
         this.html = html
         this.frames = frames
+
+        val file = File(fileStore.translatorDirectory(), "index.html")
+        val filePath = "file://" + file.absolutePath
         loadWebPage(
-            url = "file:///android_asset/translator/index.html",
+            url = filePath,
             onWebViewLoadPage = ::onTranslatorIndexHtmlLoaded,
             processWebViewResponses = ::receiveMessage
         )

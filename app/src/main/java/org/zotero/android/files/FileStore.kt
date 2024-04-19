@@ -70,6 +70,12 @@ class FileStore @Inject constructor (
         return File(dbDir, "maindb_$userId.realm")
     }
 
+    fun bundledDataDbFile(): File {
+        val dbDir = File(getRootDirectory(), "database")
+        dbDir.mkdirs()
+        return File(dbDir, "translators.realm")
+    }
+
     private fun initializeDirectories() {
         val filesDir = context.filesDir
         rootDirectory = filesDir

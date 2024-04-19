@@ -1,13 +1,19 @@
 package org.zotero.android.sync
 
+import android.content.Context
+import io.realm.Realm
 import io.realm.exceptions.RealmError
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
+import org.zotero.android.api.BundleDataDb
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.logging.crash.CrashReporter
 import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
@@ -23,10 +29,13 @@ import javax.inject.Singleton
 class IsUserInitializedEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<Boolean>(applicationScope)
 class Controllers @Inject constructor(
+    dispatchers: Dispatchers,
     private val sessionDataEventStream: SessionDataEventStream,
     private val applicationScope: ApplicationScope,
     private val fileStore: FileStore,
     private val dbWrapper: DbWrapper,
+    @BundleDataDb
+    private val bundleDataDbWrapper: DbWrapper,
     private val isUserInitializedEventStream: IsUserInitializedEventStream,
     private val sessionController: SessionController,
     private val userControllers: UserControllers,
@@ -35,15 +44,19 @@ class Controllers @Inject constructor(
     private val debugLogging: DebugLogging,
     private val crashReporter: CrashReporter,
     private val translatorsLoader: TranslatorsLoader,
+    private val context: Context,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
     private var didInitialize: Boolean = false
 
+    private var coroutineScope = CoroutineScope(dispatchers.io)
+
     fun init() {
+        Realm.init(context)
         fileStore.init()
         debugLogging.startLoggingOnLaunchIfNeeded()
-
+        createBundleDataDbStorage()
         crashReporter.processPendingReports()
         initializeSessionIfPossible()
         startApp()
@@ -51,15 +64,22 @@ class Controllers @Inject constructor(
     }
 
     private fun startApp() {
-        try {
-            translatorsLoader.updateTranslatorIfNeeded()
-        }catch (e: Exception) {
-            Timber.e(e, "Failed to update Translator or translation items")
-        }
+        updateTranslatorAndTranslatorItems()
         val controllers = this.userControllers
         val session = this.sessionDataEventStream.currentValue()
         if (session != null && controllers.isControllerInitialized) {
             controllers.enableSync(apiKey = session.apiToken)
+        }
+    }
+
+    private fun updateTranslatorAndTranslatorItems() {
+        coroutineScope.launch {
+            try {
+                translatorsLoader.updateTranslatorIfNeeded()
+                translatorsLoader.updateTranslatorItemsIfNeeded()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to update Translator or translation items")
+            }
         }
     }
 
@@ -162,4 +182,7 @@ class Controllers @Inject constructor(
 //        }
     }
 
+    private fun createBundleDataDbStorage() {
+        bundleDataDbWrapper.initBundleDataConfiguration(this.fileStore)
+    }
 }

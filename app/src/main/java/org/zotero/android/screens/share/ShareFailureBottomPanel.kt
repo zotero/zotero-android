@@ -88,7 +88,7 @@ private fun BoxScope.ShareBottomProgressContainer(message: String, showActivityI
         if (showActivityIndicator) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = CustomPalette.DarkGrayColor,
+                color = CustomTheme.colors.secondaryContent,
                 strokeWidth = 2.dp,
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -98,7 +98,7 @@ private fun BoxScope.ShareBottomProgressContainer(message: String, showActivityI
             modifier = Modifier,
             text = message,
             style = CustomTheme.typography.newBody,
-            color = CustomPalette.DarkGrayColor,
+            color = CustomTheme.colors.secondaryContent,
         )
     }
 
@@ -122,9 +122,11 @@ private fun ShareFailureLabel(
             AttachmentState.Error.downloadedFileNotPdf, AttachmentState.Error.apiFailure -> {
                 textAlignment = TextAlign.Center
             }
+
             is AttachmentState.Error.quotaLimit -> {
                 textAlignment = TextAlign.Left
             }
+
             else -> {
                 if (!hasItem) {
                     message += "\n" + stringResource(id = Strings.errors_shareext_failed_additional)
@@ -132,7 +134,7 @@ private fun ShareFailureLabel(
                 textAlignment = TextAlign.Center
             }
         }
-        textColor = CustomPalette.DarkGrayColor
+        textColor = CustomTheme.colors.secondaryContent
     }
 
     Text(

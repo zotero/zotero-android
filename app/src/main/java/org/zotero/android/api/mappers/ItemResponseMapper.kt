@@ -43,7 +43,13 @@ class ItemResponseMapper @Inject constructor(
         val key = KeyGenerator.newKey()
         val rawType = response["itemType"].asString
         val accessDate =
-            response["accessDate"]?.asString?.let { iso8601DateFormatV2.parse(it) } ?: Date()
+            response["accessDate"]?.asString?.let {
+                try {
+                    iso8601DateFormatV2.parse(it)
+                } catch (e: Exception) {
+                    Date()
+                }
+            } ?: Date()
         val tags = response["tags"]?.asJsonArray ?: JsonArray()
         val creators = response["creators"]?.asJsonArray ?: JsonArray()
 

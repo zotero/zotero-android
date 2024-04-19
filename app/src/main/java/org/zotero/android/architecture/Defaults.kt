@@ -42,6 +42,11 @@ open class Defaults @Inject constructor(
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
     private val shouldUpdateTranslator = "shouldUpdateTranslator"
 
+    private val lastTimestamp = "lastTimestamp"
+    private val lastTranslatorCommitHash = "lastTranslatorCommitHash"
+    private val lastTranslatorDeleted = "lastTranslatorDeleted"
+    private val lastStylesCommitHash = "lastStylesCommitHash"
+
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
@@ -258,6 +263,38 @@ open class Defaults @Inject constructor(
 
     fun shouldUpdateTranslator(): Boolean {
         return sharedPreferences.getBoolean(shouldUpdateTranslator, true)
+    }
+
+    fun setLastTimestamp(newValue: Long) {
+        sharedPreferences.edit { putLong(lastTimestamp, newValue) }
+    }
+
+    fun getLastTimestamp(): Long {
+        return sharedPreferences.getLong(lastTimestamp, 0L)
+    }
+
+    fun setLastTranslatorCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastTranslatorCommitHash, newValue) }
+    }
+
+    fun getLastTranslatorCommitHash(): String {
+        return sharedPreferences.getString(lastTranslatorCommitHash, "") ?: ""
+    }
+
+    fun getLastTranslatorDeleted(): Long {
+        return sharedPreferences.getLong(lastTranslatorDeleted, 0L)
+    }
+
+    fun setLastTranslatorDeleted(newValue: Long) {
+        sharedPreferences.edit { putLong(lastTranslatorDeleted, newValue) }
+    }
+
+    fun setLastStylesCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastStylesCommitHash, newValue) }
+    }
+
+    fun getLastStylesCommitHash(): String {
+        return sharedPreferences.getString(lastStylesCommitHash, "") ?: ""
     }
 
     fun reset() {

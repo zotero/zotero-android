@@ -53,6 +53,10 @@ class TranslatorWebViewHandler @Inject constructor(
         uiMainCoroutineScope.launch {
             webView = WebView(context)
             webView.settings.javaScriptEnabled = true
+            webView.settings.allowFileAccess = true
+            webView.settings.allowFileAccessFromFileURLs = true
+            webView.settings.allowUniversalAccessFromFileURLs = true
+            webView.settings.allowContentAccess = true
             webView.webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
                     Log.d(

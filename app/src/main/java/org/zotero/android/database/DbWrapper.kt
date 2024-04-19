@@ -1,8 +1,8 @@
 package org.zotero.android.database
 
-import android.content.Context
 import io.realm.Realm
 import io.realm.RealmConfiguration
+import org.zotero.android.files.FileStore
 import java.io.File
 
 class DbWrapper constructor() {
@@ -11,8 +11,14 @@ class DbWrapper constructor() {
     lateinit var config: RealmConfiguration
     var isInitialized = false
 
-    fun initWithMainConfiguration(context: Context, dbFile: File) {
-        config = Database.mainConfiguration(dbFile = dbFile, context = context)
+    fun initWithMainConfiguration(dbFile: File) {
+        config = Database.mainConfiguration(dbFile = dbFile)
+        realmDbStorage = RealmDbStorage(config = config)
+        isInitialized = true
+    }
+
+    fun initBundleDataConfiguration(fileStorage: FileStore) {
+        config = Database.bundledDataConfiguration(fileStorage)
         realmDbStorage = RealmDbStorage(config = config)
         isInitialized = true
     }

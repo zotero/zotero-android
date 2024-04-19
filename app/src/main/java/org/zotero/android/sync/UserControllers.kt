@@ -114,6 +114,6 @@ class UserControllers @Inject constructor(
 
     private fun createDbStorage(userId: Long) {
         val file = fileStore.dbFile(userId)
-        dbWrapper.initWithMainConfiguration(context = context, dbFile = file)
+        dbWrapper.initWithMainConfiguration(dbFile = file)
     }
 }

@@ -3,14 +3,10 @@ package org.zotero.android.screens.share.navigation
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.insets.navigationBarsPadding
@@ -31,15 +27,14 @@ internal fun ShareRootNavigation(
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
-    val context = LocalContext.current
     val layoutType = CustomLayoutSize.calculateLayoutType()
     if (layoutType.isTablet()) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .fillMaxHeight(0.6f)
-                    .align(Alignment.Center)
+//                    .fillMaxWidth(0.7f)
+//                    .fillMaxHeight(0.6f)
+//                    .align(Alignment.Center)
             ) {
                 ShareRootNavHost(navController, navigation)
             }

@@ -369,8 +369,6 @@ internal class ShareViewModel @Inject constructor(
                 }
             }
         }
-
-        //TODO implement download
     }
 
     private fun processDownload(
