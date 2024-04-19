@@ -49,4 +49,13 @@ class ShareRawAttachmentLoader @Inject constructor() {
         }
     }
 
+    fun doesBundleContainShareData(bundleExtras: Bundle?): Boolean {
+        if (bundleExtras == null) {
+            return false
+        }
+        val urlPath = bundleExtras.getString(Intent.EXTRA_TEXT)
+        val fileContentUri = bundleExtras.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)
+        return urlPath != null || fileContentUri != null
+    }
+
 }
