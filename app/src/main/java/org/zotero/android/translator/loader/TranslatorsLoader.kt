@@ -150,8 +150,8 @@ class TranslatorsLoader @Inject constructor(
                 m.group("uuid")!!
             } else {
                 val str = m.group()
-                val firstQuotaIndex = str.indexOfFirst { it == '\'' }
-                val lastQuotaIndex = str.indexOfLast { it == '\'' }
+                val firstQuotaIndex = str.indexOfFirst { it == '\'' || it == '"' }
+                val lastQuotaIndex = str.indexOfLast { it == '\'' || it == '"' }
                 if (firstQuotaIndex == lastQuotaIndex) {
                     str
                 } else {
