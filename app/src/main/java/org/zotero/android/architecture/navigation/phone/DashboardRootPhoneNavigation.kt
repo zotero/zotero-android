@@ -50,6 +50,7 @@ import org.zotero.android.screens.settings.toSettingsScreen
 import org.zotero.android.screens.sortpicker.sortPickerNavScreens
 import org.zotero.android.screens.sortpicker.toSortPicker
 import org.zotero.android.screens.tagpicker.TagPickerScreen
+import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -117,6 +118,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToImageViewerScreen = navigation::toImageViewerScreen,
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
                     navigateToTagFilter = navigation::toTagFilter,
+                    navigateToAddByIdentifier = navigation::toAddByIdentifier,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
                     onShowPdf = { pdfScreenParams ->
                         navigation.toPdfScreen(
@@ -170,6 +172,15 @@ internal fun DashboardRootPhoneNavigation(
                 }
 
                 composable(
+                    route = DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER,
+                    arguments = listOf(),
+                ) {
+                    AddByIdentifierScreen(
+                        onCancel = navigation::onBack,
+                    )
+                }
+
+                composable(
                     route = DashboardRootPhoneDestinations.COLLECTION_PICKER,
                     arguments = listOf(),
                 ) {
@@ -203,6 +214,7 @@ internal fun DashboardRootPhoneNavigation(
 
 private object DashboardRootPhoneDestinations {
     const val SINGLE_PICKER = "singlePicker"
+    const val ADD_BY_IDENTIFIER = "addByIdentifier"
     const val TAG_PICKER = "tagPicker"
     const val TAG_FILTER = "tagFilter"
     const val COLLECTION_PICKER = "collectionPicker"
@@ -221,6 +233,10 @@ private fun ZoteroNavigation.toTagPicker() {
 
 private fun ZoteroNavigation.toSinglePicker() {
     navController.navigate(DashboardRootPhoneDestinations.SINGLE_PICKER)
+}
+
+private fun ZoteroNavigation.toAddByIdentifier() {
+    navController.navigate(DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER)
 }
 
 private fun ZoteroNavigation.toCollectionPicker() {

@@ -79,7 +79,7 @@ class TranslatorsLoader @Inject constructor(
 
     private var uiScope = CoroutineScope(dispatchers.main)
 
-    fun translators(url: String): String {
+    fun translators(url: String?): String {
         val translators = loadTranslators(url)
         val translatorsJson = gson.toJson(translators)
         return translatorsJson

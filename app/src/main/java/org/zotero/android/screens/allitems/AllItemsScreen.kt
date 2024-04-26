@@ -38,6 +38,7 @@ internal fun AllItemsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateToCollectionsScreen: () -> Unit,
     navigateToSinglePicker: () -> Unit,
+    navigateToAddByIdentifier: () -> Unit,
     navigateToAllItemsSort: () -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToItemDetails: () -> Unit,
@@ -69,6 +70,10 @@ internal fun AllItemsScreen(
 
                 AllItemsViewEffect.ShowItemTypePickerEffect -> {
                     navigateToSinglePicker()
+                }
+
+                AllItemsViewEffect.ShowAddByIdentifierEffect -> {
+                    navigateToAddByIdentifier()
                 }
 
                 AllItemsViewEffect.ShowSortPickerEffect -> {
@@ -187,6 +192,7 @@ internal fun AllItemsScreen(
                     onAddFile = onPickFile,
                     onAddNote = viewModel::onAddNote,
                     onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
+                    onAddByIdentifier = viewModel::onAddByIdentifier,
                     onClose = viewModel::onAddBottomSheetCollapse,
                     showBottomSheet = viewState.shouldShowAddBottomSheet
                 )

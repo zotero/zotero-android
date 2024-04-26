@@ -19,9 +19,10 @@ import org.zotero.android.uicomponents.row.RowItemWithArrow
 
 @Composable
 internal fun AllItemsAddBottomSheet(
-    onAddFile:() -> Unit,
-    onAddNote:() -> Unit,
-    onAddManually:() -> Unit,
+    onAddFile: () -> Unit,
+    onAddNote: () -> Unit,
+    onAddManually: () -> Unit,
+    onAddByIdentifier: () -> Unit,
     onClose: () -> Unit,
     showBottomSheet: Boolean,
 ) {
@@ -36,17 +37,23 @@ internal fun AllItemsAddBottomSheet(
         CustomModalBottomSheet(
             shouldCollapse = !showBottomSheet,
             sheetContent = {
-                AddBottomSheetContent(onAddFile = {
-                    onClose()
-                    onAddFile()
-                }, onAddNote = {
-                    onClose()
-                    onAddNote()
-                },
+                AddBottomSheetContent(
+                    onAddFile = {
+                        onClose()
+                        onAddFile()
+                    }, onAddNote = {
+                        onClose()
+                        onAddNote()
+                    },
                     onAddManually = {
                         onClose()
                         onAddManually()
-                    })
+                    },
+                    onAddByIdentifier = {
+                        onClose()
+                        onAddByIdentifier()
+                    }
+                )
             },
             onCollapse = {
                 shouldShow = false
@@ -61,11 +68,17 @@ private fun AddBottomSheetContent(
     onAddFile: () -> Unit,
     onAddNote: () -> Unit,
     onAddManually: () -> Unit,
+    onAddByIdentifier: () -> Unit,
 ) {
     Box {
         Column(
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
+            RowItemWithArrow(
+                title = stringResource(id = Strings.items_lookup),
+                onClick = { onAddByIdentifier() }
+            )
+            CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
                 title = stringResource(id = Strings.items_new),
                 onClick = { onAddManually() }

@@ -48,6 +48,13 @@ data class CustomTypography(
         letterSpacing = 0.sp,
         lineHeight = 32.sp,
     ),
+    val subhead: TextStyle = TextStyle(
+        fontSize = 15.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.sp,
+        lineHeight = 20.sp,
+        fontFamily = FontFamily(Font(Fonts.reckless_neue_book)),
+    ),
     val subheadLight: TextStyle = TextStyle(
         fontSize = 28.sp,
         fontWeight = FontWeight.Light,

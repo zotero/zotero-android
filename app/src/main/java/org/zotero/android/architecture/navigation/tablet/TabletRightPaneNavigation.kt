@@ -23,6 +23,7 @@ import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
+import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -54,6 +55,7 @@ internal fun TabletRightPaneNavigation(
             navigateToAddOrEditNote = toAddOrEditNote,
             navigateToSinglePicker = navigation::toSinglePickerDialog,
             navigateToAllItemsSort = navigation::toAllItemsSortDialog,
+            navigateToAddByIdentifier = navigation::toAddByIdentifierDialog,
             navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
             navigateToImageViewerScreen = navigation::toImageViewerScreen,
             navigateToZoterWebViewScreen = toZoteroWebViewScreen,
@@ -103,7 +105,17 @@ internal fun TabletRightPaneNavigation(
             route = TabletRightPaneDestinations.SINGLE_PICKER_DIALOG,
         ) {
             SinglePickerScreen(
-                onCloseClicked = navigation::onBack,
+                onCloseClicked = { navController.popBackStack() }
+            )
+        }
+
+        dialogFixedMaxHeight(
+            route = TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG,
+        ) {
+            AddByIdentifierScreen(
+                onCancel = {
+                    navController.popBackStack()
+                },
             )
         }
     }
@@ -113,6 +125,7 @@ private object TabletRightPaneDestinations {
     const val ALL_ITEMS_SORT_DIALOG = "allItemsSortDialog"
     const val CREATOR_EDIT_DIALOG = "creatorEditDialog"
     const val SINGLE_PICKER_DIALOG = "singlePickerDialog"
+    const val ADD_BY_IDENTIFIER_DIALOG = "addByIdentifierDialog"
     const val TAG_PICKER_DIALOG = "tagPickerDialog"
     const val COLLECTION_PICKER_DIALOG = "collectionPickerDialog"
 
@@ -132,6 +145,10 @@ private fun ZoteroNavigation.toTagPickerDialog() {
 
 private fun ZoteroNavigation.toSinglePickerDialog() {
     navController.navigate(TabletRightPaneDestinations.SINGLE_PICKER_DIALOG)
+}
+
+private fun ZoteroNavigation.toAddByIdentifierDialog() {
+    navController.navigate(TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG)
 }
 
 private fun ZoteroNavigation.toCollectionPickerDialog() {

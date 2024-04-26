@@ -50,6 +50,7 @@ import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowAddByIdentifierEffect
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowItemTypePickerEffect
 import org.zotero.android.screens.allitems.data.ItemAccessory
 import org.zotero.android.screens.allitems.data.ItemCellModel
@@ -1032,6 +1033,10 @@ internal class AllItemsViewModel @Inject constructor(
         return viewState.selectedKeys ?: emptySet()
     }
 
+    fun onAddByIdentifier() {
+        triggerEffect(ShowAddByIdentifierEffect)
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1089,6 +1094,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowItemDetailEffect: AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
+    object ShowAddByIdentifierEffect : AllItemsViewEffect()
     object ShowSortPickerEffect : AllItemsViewEffect()
     object ShowCollectionPickerEffect: AllItemsViewEffect()
     object ShowFilterEffect : AllItemsViewEffect()
