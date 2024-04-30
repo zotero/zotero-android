@@ -12,9 +12,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class RemoteAttachmentDownloader @Inject constructor(
     private val fileStorage: FileStore,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
@@ -43,6 +41,16 @@ class RemoteAttachmentDownloader @Inject constructor(
     private var operations = mutableMapOf<Download, RemoteAttachmentDownloadOperation>()
     private var errors = mutableMapOf<Download, Throwable>()
     private var coroutineScope = CoroutineScope(dispatcher)
+    private var batchProgress: AttachmentBatchProgress = AttachmentBatchProgress()
+    private var totalBatchCount: Int = 0
+
+    val batchData: Triple<Int?, Int, Int>
+        get() {
+            val progress = this.batchProgress.currentProgress
+            val remainingBatchCount = this.operations.size
+            val totalBatchCount = this.totalBatchCount
+            return Triple(progress, remainingBatchCount, totalBatchCount)
+        }
 
     fun data(key: String, parentKey: String, libraryId: LibraryIdentifier): Pair<Int?, Throwable?> {
         val download = Download(key = key, parentKey = parentKey, libraryId = libraryId)
@@ -97,6 +105,7 @@ class RemoteAttachmentDownloader @Inject constructor(
 
         operation.onDownloadProgressUpdated = object : OnDownloadProgressUpdated {
             override fun onProgressUpdated(progressInHundreds: Int) {
+                batchProgress.updateProgress(attachment.key, progressInHundreds)
                 attachmentDownloaderEventStream.emitAsync(
                     Update(
                         download = download, kind = Update.Kind.progress(
@@ -113,7 +122,10 @@ class RemoteAttachmentDownloader @Inject constructor(
                 result = result
             )
         }
+        this.errors.remove(download)
         this.operations[download] = operation
+        this.totalBatchCount += 1
+
         return operation
     }
 
@@ -140,6 +152,7 @@ class RemoteAttachmentDownloader @Inject constructor(
         result: CustomResult<Unit>
     ) {
         this.operations.remove(download)
+        resetBatchDataIfNeeded()
         when (result) {
             is CustomResult.GeneralError.CodeError -> {
                 Timber.e(
@@ -179,6 +192,13 @@ class RemoteAttachmentDownloader @Inject constructor(
                 this.errors.remove(download)
             }
             else -> {}
+        }
+    }
+
+    private fun resetBatchDataIfNeeded() {
+        if (this.operations.isEmpty()) {
+            this.batchProgress = AttachmentBatchProgress()
+            this.totalBatchCount = 0
         }
     }
 

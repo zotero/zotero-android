@@ -7,7 +7,10 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.zotero.android.ZoteroApplication
+import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.architecture.Result
+import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
 import org.zotero.android.translator.data.WebPortResponse
@@ -15,33 +18,38 @@ import org.zotero.android.translator.helper.TranslatorHelper
 import org.zotero.android.translator.loader.TranslatorsLoader
 import org.zotero.android.uicomponents.addbyidentifier.data.InitializationResult
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupData
-import org.zotero.android.uicomponents.addbyidentifier.data.LookupDataEventStream
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupError
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupSettings
 import timber.log.Timber
 import java.io.File
-import javax.inject.Inject
 import kotlin.coroutines.resume
 
-class LookupWebCallChainExecutor @Inject constructor(
+class LookupWebCallChainExecutor(
+    val lookupSettings: LookupSettings,
     private val context: Context,
     dispatchers: Dispatchers,
     private val gson: Gson,
-    private val lookupWebViewHandler: LookupWebViewHandler,
     private val translatorsLoader: TranslatorsLoader,
-    private val lookupDataEventStream: LookupDataEventStream,
     private val fileStore: FileStore,
+    private val noAuthenticationApi: NoAuthenticationApi
 ) {
-    private val ioCoroutineScope = CoroutineScope(dispatchers.io)
 
-    private lateinit var lookupSettings: LookupSettings
+    private lateinit var lookupWebViewHandler: LookupWebViewHandler
+
+    private val ioCoroutineScope = CoroutineScope(dispatchers.io)
 
     private var isLoading: InitializationResult = InitializationResult.inProgress
 
-    fun init(lookupSettings: LookupSettings) {
-        this.lookupSettings = lookupSettings
+    val observable = EventStream<Result<LookupData>>(ZoteroApplication.instance.applicationScope)
 
+    init {
         try {
+            lookupWebViewHandler = LookupWebViewHandler(
+                dispatchers = dispatchers,
+                context = context,
+                gson = gson,
+                noAuthenticationApi = noAuthenticationApi
+            )
             initialize()
             Timber.i("LookupWebCallChainExecutor: initialization succeeded")
             isLoading = InitializationResult.initialized
@@ -75,19 +83,19 @@ class LookupWebCallChainExecutor @Inject constructor(
                     val errorNumber = bodyElement.asString.toIntOrNull() ?: return@launch
                     when (errorNumber) {
                         0 -> {
-                            lookupDataEventStream.emitAsync(
+                            observable.emitAsync(
                                 Result.Failure(LookupError.invalidIdentifiers)
                             )
                         }
 
                         1 -> {
-                            lookupDataEventStream.emitAsync(
+                            observable.emitAsync(
                                 Result.Failure(LookupError.noSuccessfulTranslators)
                             )
                         }
 
                         else -> {
-                            lookupDataEventStream.emitAsync(
+                            observable.emitAsync(
                                 Result.Failure(LookupError.lookupFailed)
                             )
                         }
@@ -99,7 +107,7 @@ class LookupWebCallChainExecutor @Inject constructor(
                         return@launch
                     }
                     val rawData = bodyElement.asJsonObject
-                    lookupDataEventStream.emitAsync(Result.Success(LookupData.item(rawData)))
+                    observable.emitAsync(Result.Success(LookupData.item(rawData)))
                 }
 
                 "identifiersHandler" -> {
@@ -108,7 +116,7 @@ class LookupWebCallChainExecutor @Inject constructor(
                     }
 
                     val rawData = bodyElement.asJsonArray
-                    lookupDataEventStream.emitAsync(Result.Success(LookupData.identifiers(rawData)))
+                    observable.emitAsync(Result.Success(LookupData.identifiers(rawData)))
                 }
 
                 "logHandler" -> {
@@ -209,7 +217,7 @@ class LookupWebCallChainExecutor @Inject constructor(
         val s = isLoading
         when (s) {
             is InitializationResult.failed -> {
-                lookupDataEventStream.emitAsync(
+                observable.emitAsync(
                     Result.Failure(s.error)
                 )
             }
