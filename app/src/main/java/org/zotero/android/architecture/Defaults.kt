@@ -40,9 +40,9 @@ open class Defaults @Inject constructor(
     private val activeLineWidth = "activeLineWidth"
     private val activeEraserSize = "activeEraserSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
-    private val shouldUpdateTranslator = "shouldUpdateTranslator"
 
     private val lastTimestamp = "lastTimestamp"
+    private val lastTranslationCommitHash = "lastTranslationCommitHash"
     private val lastTranslatorCommitHash = "lastTranslatorCommitHash"
     private val lastTranslatorDeleted = "lastTranslatorDeleted"
     private val lastStylesCommitHash = "lastStylesCommitHash"
@@ -257,14 +257,6 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getBoolean(wasPspdfkitInitialized, false)
     }
 
-    fun setShouldUpdateTranslator(newValue: Boolean) {
-        sharedPreferences.edit { putBoolean(shouldUpdateTranslator, newValue) }
-    }
-
-    fun shouldUpdateTranslator(): Boolean {
-        return sharedPreferences.getBoolean(shouldUpdateTranslator, true)
-    }
-
     fun setLastTimestamp(newValue: Long) {
         sharedPreferences.edit { putLong(lastTimestamp, newValue) }
     }
@@ -279,6 +271,14 @@ open class Defaults @Inject constructor(
 
     fun getLastTranslatorCommitHash(): String {
         return sharedPreferences.getString(lastTranslatorCommitHash, "") ?: ""
+    }
+
+    fun setLastTranslationCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastTranslationCommitHash, newValue) }
+    }
+
+    fun getLastTranslationCommitHash(): String {
+        return sharedPreferences.getString(lastTranslationCommitHash, "") ?: ""
     }
 
     fun getLastTranslatorDeleted(): Long {

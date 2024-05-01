@@ -14,7 +14,6 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
-import org.zotero.android.helpers.Unzipper
 import org.zotero.android.screens.share.data.TranslatorMetadata
 import timber.log.Timber
 import java.io.File
@@ -30,7 +29,6 @@ class TranslatorsLoader @Inject constructor(
     private val context: Context,
     private val gson: Gson,
     private val defaults: Defaults,
-    private val unzipper: Unzipper,
     private val itemsUnzipper: TranslatorItemsUnzipper,
     private val fileStore: FileStore,
     @BundleDataDb
@@ -243,16 +241,6 @@ class TranslatorsLoader @Inject constructor(
             }
         }
         return null
-    }
-
-    fun updateTranslatorIfNeeded() {
-        if (defaults.shouldUpdateTranslator()) {
-            unzipper.unzipStream(
-                zipInputStream = context.assets.open("translator.zip"),
-                location = fileStore.translatorDirectory().absolutePath
-            )
-            defaults.setShouldUpdateTranslator(false)
-        }
     }
 
     private fun loadIndex(): List<TranslatorMetadata> {

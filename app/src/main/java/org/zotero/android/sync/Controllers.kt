@@ -20,6 +20,7 @@ import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
+import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsLoader
 import timber.log.Timber
 import javax.inject.Inject
@@ -44,6 +45,7 @@ class Controllers @Inject constructor(
     private val debugLogging: DebugLogging,
     private val crashReporter: CrashReporter,
     private val translatorsLoader: TranslatorsLoader,
+    private val translationLoader: TranslationLoader,
     private val context: Context,
     ) {
     private var sessionCancellable: Job? = null
@@ -75,7 +77,7 @@ class Controllers @Inject constructor(
     private fun updateTranslatorAndTranslatorItems() {
         coroutineScope.launch {
             try {
-                translatorsLoader.updateTranslatorIfNeeded()
+                translationLoader.updateTranslationIfNeeded()
                 translatorsLoader.updateTranslatorItemsIfNeeded()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
