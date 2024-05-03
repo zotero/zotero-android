@@ -68,12 +68,12 @@ internal fun AddByIdentifierScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(30.dp))
-                    IsbnTitle()
+                    IdentifierTitle()
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    IsbnEditField(
-                        isbnText = viewState.isbnText,
-                        onIsbnTextChange = viewModel::onIsbnTextChange,
+                    IdentifierEditField(
+                        identifierText = viewState.identifierText,
+                        onIdentifierTextChange = viewModel::onIdentifierTextChange,
                     )
                 }
             }
@@ -82,7 +82,7 @@ internal fun AddByIdentifierScreen(
 }
 
 @Composable
-fun IsbnTitle() {
+internal fun IdentifierTitle() {
     Text(
         text = stringResource(id = Strings.lookup_title),
         color = CustomPalette.DarkGrayColor,
@@ -91,9 +91,9 @@ fun IsbnTitle() {
 }
 
 @Composable
-internal fun IsbnEditField(
-    isbnText: String,
-    onIsbnTextChange: (String) -> Unit,
+internal fun IdentifierEditField(
+    identifierText: String,
+    onIdentifierTextChange: (String) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -112,14 +112,14 @@ internal fun IsbnEditField(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            value = isbnText,
+            value = identifierText,
             hint = "",
             minLines = 4,
             maxLines = 4,
             ignoreTabsAndCaretReturns = false,
             focusRequester = focusRequester,
             textColor = CustomTheme.colors.primaryContent,
-            onValueChange = onIsbnTextChange,
+            onValueChange = onIdentifierTextChange,
             textStyle = CustomTheme.typography.newBody,
         )
     }

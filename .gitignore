@@ -51,3 +51,8 @@ pspdfkit-key.txt
 .externalNativeBuild
 app/prod/release/
 buildSrc/gradle/
+
+#translaton and translator items generated files:
+app/src/main/assets/translators/
+app/src/main/assets/translation_commit_hash.txt
+app/src/main/assets/translator.zip

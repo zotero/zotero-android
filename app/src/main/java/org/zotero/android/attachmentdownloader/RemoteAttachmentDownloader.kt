@@ -202,4 +202,10 @@ class RemoteAttachmentDownloader @Inject constructor(
         }
     }
 
+    fun stop() {
+        operations.forEach {
+            it.value.cancel()
+        }
+    }
+
 }

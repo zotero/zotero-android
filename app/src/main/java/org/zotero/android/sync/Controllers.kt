@@ -22,6 +22,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsLoader
+import org.zotero.android.uicomponents.addbyidentifier.IdentifierLookupController
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,6 +48,7 @@ class Controllers @Inject constructor(
     private val translatorsLoader: TranslatorsLoader,
     private val translationLoader: TranslationLoader,
     private val context: Context,
+    private val identifierLookupController: IdentifierLookupController,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -151,6 +153,7 @@ class Controllers @Inject constructor(
         val controllers = this.userControllers
         controllers.disableSync(apiKey = this.apiKey)
         fileDownloader.stop()
+        identifierLookupController.cancelAllLookups()
         backgroundUploadProcessor.cancelAllUploads()
         // TODO Cancel all background downloads
 
