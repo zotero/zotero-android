@@ -1,4 +1,4 @@
-package org.zotero.android.uicomponents.addbyidentifier
+package org.zotero.android.uicomponents.addbyidentifier.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource

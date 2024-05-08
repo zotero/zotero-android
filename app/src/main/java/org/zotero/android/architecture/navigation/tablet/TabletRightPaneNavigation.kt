@@ -23,7 +23,7 @@ import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
-import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierScreen
+import org.zotero.android.uicomponents.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -113,7 +113,7 @@ internal fun TabletRightPaneNavigation(
             route = TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG,
         ) {
             AddByIdentifierScreen(
-                onCancel = {
+                onClose = {
                     navController.popBackStack()
                 },
             )

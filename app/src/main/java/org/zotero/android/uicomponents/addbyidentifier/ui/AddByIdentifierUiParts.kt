@@ -1,83 +1,68 @@
-package org.zotero.android.uicomponents.addbyidentifier
+package org.zotero.android.uicomponents.addbyidentifier.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierViewModel
+import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierViewState
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
-@Composable
-internal fun AddByIdentifierScreen(
-    viewModel: AddByIdentifierViewModel = hiltViewModel(),
-    onCancel: () -> Unit,
+internal fun LazyListScope.addByIdentifierTitleEditFieldAndError(
+    viewState: AddByIdentifierViewState,
+    viewModel: AddByIdentifierViewModel,
+    failedState: AddByIdentifierViewModel.State.failed?
 ) {
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    ) {
-        val viewState by viewModel.viewStates.observeAsState(AddByIdentifierViewState())
-        val viewEffect by viewModel.viewEffects.observeAsState()
-        LaunchedEffect(key1 = viewModel) {
-            viewModel.init()
-        }
-        LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
-                is AddByIdentifierViewEffect.NavigateBack -> {
-                    onCancel()
+    item {
+        Spacer(modifier = Modifier.height(20.dp))
+        IdentifierTitle()
+
+        Spacer(modifier = Modifier.height(12.dp))
+        IdentifierEditField(
+            identifierText = viewState.identifierText,
+            onIdentifierTextChange = viewModel::onIdentifierTextChange,
+        )
+        if (failedState != null) {
+            val errorText = when (failedState.error) {
+                is AddByIdentifierViewModel.Error.noIdentifiersDetectedAndNoLookupData -> {
+                    stringResource(id = Strings.errors_lookup)
                 }
 
-                else -> {}
-            }
-        }
-        CustomScaffold(
-            topBar = {
-                AddByIdentifierTopBar(
-                    title = null,
-                    onCancel = onCancel,
-                    onLookup = viewModel::onLookup
-                )
-            },
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                    .padding(horizontal = 16.dp)
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
-                    IdentifierTitle()
+                is AddByIdentifierViewModel.Error.noIdentifiersDetectedWithLookupData -> {
+                    stringResource(id = Strings.errors_lookup_no_identifiers_with_lookup_data)
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    IdentifierEditField(
-                        identifierText = viewState.identifierText,
-                        onIdentifierTextChange = viewModel::onIdentifierTextChange,
-                    )
+                else -> {
+                    stringResource(id = Strings.errors_unknown)
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = errorText,
+                style = CustomTheme.typography.newBody,
+                color = CustomPalette.ErrorRed,
+            )
         }
+
     }
 }
 
@@ -97,7 +82,6 @@ internal fun IdentifierEditField(
 ) {
     Row(
         modifier = Modifier
-//            .height(44.dp)
             .background(
                 color = CustomTheme.colors.zoteroEditFieldBackground,
                 shape = RoundedCornerShape(size = 10.dp)
@@ -122,5 +106,18 @@ internal fun IdentifierEditField(
             onValueChange = onIdentifierTextChange,
             textStyle = CustomTheme.typography.newBody,
         )
+    }
+}
+
+internal fun LazyListScope.addByIdentifierLoadingIndicator() {
+    item {
+        Spacer(modifier = Modifier.height(30.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            CircularProgressIndicator(
+                color = CustomTheme.colors.zoteroDefaultBlue,
+                modifier = Modifier
+                    .size(48.dp)
+            )
+        }
     }
 }

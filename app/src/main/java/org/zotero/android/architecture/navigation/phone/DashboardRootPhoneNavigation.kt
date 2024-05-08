@@ -50,7 +50,7 @@ import org.zotero.android.screens.settings.toSettingsScreen
 import org.zotero.android.screens.sortpicker.sortPickerNavScreens
 import org.zotero.android.screens.sortpicker.toSortPicker
 import org.zotero.android.screens.tagpicker.TagPickerScreen
-import org.zotero.android.uicomponents.addbyidentifier.AddByIdentifierScreen
+import org.zotero.android.uicomponents.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -176,7 +176,7 @@ internal fun DashboardRootPhoneNavigation(
                     arguments = listOf(),
                 ) {
                     AddByIdentifierScreen(
-                        onCancel = navigation::onBack,
+                        onClose = navigation::onBack,
                     )
                 }
 

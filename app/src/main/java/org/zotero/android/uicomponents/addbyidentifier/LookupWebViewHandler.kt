@@ -196,7 +196,7 @@ class LookupWebViewHandler constructor(
             val error = networkResult.stringResponse
             sendHttpResponse(
                 data = error,
-                statusCode = -1,
+                statusCode = networkResult.httpCode,
                 url = null,
                 successCodes = successCodes,
                 headers = mapOf(),

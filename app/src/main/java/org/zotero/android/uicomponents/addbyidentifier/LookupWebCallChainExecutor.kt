@@ -36,7 +36,9 @@ class LookupWebCallChainExecutor(
 
     private lateinit var lookupWebViewHandler: LookupWebViewHandler
 
-    private val ioCoroutineScope = CoroutineScope(dispatchers.io)
+    private val limitedParallelismDispatcher =
+        kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
+    private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
     private var isLoading: InitializationResult = InitializationResult.inProgress
 
@@ -71,7 +73,7 @@ class LookupWebCallChainExecutor(
     }
 
     private fun receiveMessage(message: WebMessage) {
-        ioCoroutineScope.launch {
+        webViewExecutorScope.launch {
             val data = message.data
 
             val mapType = object : TypeToken<WebPortResponse>() {}.type
@@ -158,7 +160,7 @@ class LookupWebCallChainExecutor(
     }
 
     private fun onLookupHtmlLoaded() {
-        ioCoroutineScope.launch {
+        webViewExecutorScope.launch {
             val loadBundleResult = loadBundleFiles()
             sendInitSchemaAndDateFormatsMessage(loadBundleResult.first, loadBundleResult.second)
             val translatorsResult =

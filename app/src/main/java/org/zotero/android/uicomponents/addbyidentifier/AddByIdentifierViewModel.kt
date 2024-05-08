@@ -5,12 +5,19 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
+import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
+import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
+import org.zotero.android.uicomponents.addbyidentifier.data.LookupRow
+import org.zotero.android.uicomponents.addbyidentifier.data.LookupRowItem
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -18,9 +25,13 @@ import javax.inject.Inject
 internal class AddByIdentifierViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val identifierLookupController: IdentifierLookupController,
+    private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
+    private val schemaController: SchemaController,
+    private val remoteFileDownloader: RemoteAttachmentDownloader,
 ) : BaseViewModel2<AddByIdentifierViewState, AddByIdentifierViewEffect>(AddByIdentifierViewState()) {
 
     fun init() = initOnce {
+        setupAttachmentObserving()
         val collectionKeys =
             fileStore.getSelectedCollectionId().keyGet?.let { setOf(it) } ?: emptySet()
         val libraryId = fileStore.getSelectedLibrary()
@@ -46,9 +57,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
             }
             if (viewState.restoreLookupState && lookupData.isNotEmpty()) {
                 Timber.i("AddByIdentifierVIewModel: restoring lookup state")
-                updateState {
-                    copy(lookupState = State.lookup(lookupData))
-                }
+                updateLookupState(State.lookup(lookupData))
             }
             identifierLookupController.observable
                 .flow()
@@ -64,28 +73,20 @@ internal class AddByIdentifierViewModel @Inject constructor(
                     }
                     when (update.kind) {
                         is IdentifierLookupController.Update.Kind.lookupError -> {
-                            updateState {
-                                copy(lookupState = State.failed(update.kind.error))
-                            }
+                            updateLookupState(State.failed(update.kind.error))
                         }
 
                         is IdentifierLookupController.Update.Kind.identifiersDetected -> {
                             val identifiers = update.kind.identifiers
                             if (identifiers.isEmpty()) {
                                 if (update.lookupData.isEmpty()) {
-                                    updateState {
-                                        copy(lookupState = State.failed(Error.noIdentifiersDetectedAndNoLookupData))
-                                    }
+                                    updateLookupState(State.failed(Error.noIdentifiersDetectedAndNoLookupData))
                                 } else {
-                                    updateState {
-                                        copy(lookupState = State.failed(Error.noIdentifiersDetectedWithLookupData))
-                                    }
+                                    updateLookupState(State.failed(Error.noIdentifiersDetectedWithLookupData))
                                 }
                                 return@onEach
                             }
-                            updateState {
-                                copy(lookupState = State.lookup(update.lookupData))
-                            }
+                            updateLookupState(State.lookup(update.lookupData))
                         }
 
                         is IdentifierLookupController.Update.Kind.lookupInProgress,
@@ -94,9 +95,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
                         is IdentifierLookupController.Update.Kind.itemCreationFailed,
                         is IdentifierLookupController.Update.Kind.itemStored,
                         is IdentifierLookupController.Update.Kind.pendingAttachments -> {
-                            updateState {
-                                copy(lookupState = State.lookup(update.lookupData))
-                            }
+                            updateLookupState(State.lookup(update.lookupData))
                         }
 
                         IdentifierLookupController.Update.Kind.finishedAllLookups -> {//no-op}
@@ -120,10 +119,10 @@ internal class AddByIdentifierViewModel @Inject constructor(
                 restoreLookupState = restoreLookupState,
                 collectionKeys = collectionKeys,
                 libraryId = libraryId,
-                lookupState = AddByIdentifierViewModel.State.waitingInput,
                 hasDarkBackground = hasDarkBackground,
             )
         }
+        updateLookupState(State.waitingInput)
     }
 
     fun onLookup() {
@@ -139,9 +138,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
         }
         when (viewState.lookupState) {
             State.waitingInput, is State.failed -> {
-                updateState {
-                    copy(lookupState = AddByIdentifierViewModel.State.loadingIdentifiers)
-                }
+                updateLookupState(AddByIdentifierViewModel.State.loadingIdentifiers)
             }
 
             State.loadingIdentifiers, is State.lookup -> {
@@ -167,6 +164,188 @@ internal class AddByIdentifierViewModel @Inject constructor(
         }
     }
 
+    fun cancelAllLookups() {
+        identifierLookupController.cancelAllLookups()
+        updateLookupState(State.waitingInput)
+    }
+
+    override fun onCleared() {
+        identifierLookupController.cancelAllLookups()
+        super.onCleared()
+    }
+
+    private fun setupAttachmentObserving() {
+        attachmentDownloaderEventStream.flow()
+            .onEach { update ->
+                process(update = update)
+                closeAfterUpdateIfNeeded()
+
+            }.launchIn(viewModelScope)
+    }
+
+    private fun updateLookupState(lookupState: AddByIdentifierViewModel.State) {
+        updateState {
+            copy(lookupState = lookupState)
+        }
+        val rowsList = mutableListOf<LookupRow>()
+        if (lookupState is AddByIdentifierViewModel.State.lookup) {
+            val data = lookupState.data
+            for (lookup in data) {
+                when (lookup.state) {
+                    IdentifierLookupController.LookupData.State.enqueued -> {
+                        rowsList.add(
+                            LookupRow.identifier(
+                                identifier = lookup.identifier,
+                                state = LookupRow.IdentifierState.enqueued
+                            )
+                        )
+                    }
+
+                    IdentifierLookupController.LookupData.State.failed -> {
+                        rowsList.add(
+                            LookupRow.identifier(
+                                identifier = lookup.identifier,
+                                state = LookupRow.IdentifierState.failed
+                            )
+                        )
+                    }
+
+                    IdentifierLookupController.LookupData.State.inProgress -> {
+                        rowsList.add(
+                            LookupRow.identifier(
+                                identifier = lookup.identifier,
+                                state = LookupRow.IdentifierState.inProgress
+                            )
+                        )
+                    }
+
+                    is IdentifierLookupController.LookupData.State.translated -> {
+                        val translationData = lookup.state.translatedLookupData
+                        val title: String
+                        val _title = translationData.response.fields[KeyBaseKeyPair(
+                            key = FieldKeys.Item.title,
+                            baseKey = null
+                        )]
+                        if (_title != null) {
+                            title = _title
+                        } else {
+                            val _title = translationData.response.fields.entries.firstOrNull {
+                                this.schemaController.baseKey(
+                                    type = translationData.response.rawType,
+                                    field = it.key.key
+                                ) == FieldKeys.Item.title
+                            }?.value
+                            title = _title ?: ""
+                        }
+                        val itemData =
+                            LookupRowItem(type = translationData.response.rawType, title = title)
+
+                        rowsList.add(LookupRow.item(itemData))
+
+                        val attachments = translationData.attachments.map { attachment ->
+                            val (progress, error) = this.remoteFileDownloader.data(
+                                attachment.first.key,
+                                parentKey = translationData.response.key,
+                                libraryId = attachment.first.libraryId
+                            )
+                            val updateKind: RemoteAttachmentDownloader.Update.Kind
+                            if (error != null) {
+                                updateKind = RemoteAttachmentDownloader.Update.Kind.failed
+                            } else if (progress != null) {
+                                updateKind =
+                                    RemoteAttachmentDownloader.Update.Kind.progress(progress)
+                            } else {
+                                updateKind =
+                                    RemoteAttachmentDownloader.Update.Kind.ready(attachment.first)
+                            }
+                            return@map LookupRow.attachment(
+                                attachment = attachment.first,
+                                updateKind = updateKind
+                            )
+                        }
+                        rowsList.addAll(attachments)
+                    }
+                }
+            }
+        }
+        updateState {
+            copy(lookupRows = rowsList)
+        }
+        closeAfterUpdateIfNeeded()
+
+    }
+
+    private fun closeAfterUpdateIfNeeded() {
+        val itemIdentifiers = viewState.lookupRows
+        if (itemIdentifiers.isEmpty()) {
+            return
+        }
+        val hasActiveDownload = itemIdentifiers.any { row ->
+            when (row) {
+                is LookupRow.attachment -> {
+                    when (row.updateKind) {
+                        is RemoteAttachmentDownloader.Update.Kind.progress, RemoteAttachmentDownloader.Update.Kind.failed -> {
+                            return@any true
+                        }
+
+                        else -> {
+                            return@any false
+                        }
+                    }
+                }
+
+                is LookupRow.identifier -> {
+                    return@any true
+                }
+
+                is LookupRow.item -> {
+                    return@any false
+                }
+            }
+        }
+        if (!hasActiveDownload) {
+            triggerEffect(AddByIdentifierViewEffect.NavigateBack)
+        }
+    }
+
+    private fun process(update: RemoteAttachmentDownloader.Update) {
+        if (update.download.libraryId != viewState.libraryId) {
+            return
+        }
+        if (viewState.lookupRows.isEmpty()) {
+            return
+        }
+
+        val rows = viewState.lookupRows.toMutableList()
+        val index = rows.indexOfFirst {
+            it.isAttachment(
+                update.download.key,
+                libraryId = update.download.libraryId
+            )
+        }
+        if (index == -1) {
+            return
+        }
+
+        val row = rows[index]
+        when (row) {
+            is LookupRow.attachment -> {
+                rows[index] = LookupRow.attachment(
+                    attachment = row.attachment,
+                    updateKind = update.kind
+                )
+            }
+
+            is LookupRow.item, is LookupRow.identifier -> {
+                //no-op
+            }
+        }
+        updateState {
+            copy(lookupRows = rows)
+        }
+    }
+
+
     sealed interface State {
         data class failed(val error: Exception) : State
         object waitingInput : State
@@ -188,10 +367,9 @@ internal data class AddByIdentifierViewState(
     val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
     val restoreLookupState: Boolean = false,
     val hasDarkBackground: Boolean = false,
-    var lookupState: AddByIdentifierViewModel.State = AddByIdentifierViewModel.State.waitingInput
-) : ViewState {
-
-}
+    val lookupState: AddByIdentifierViewModel.State = AddByIdentifierViewModel.State.waitingInput,
+    val lookupRows: List<LookupRow> = emptyList(),
+) : ViewState
 
 internal sealed class AddByIdentifierViewEffect : ViewEffect {
     object NavigateBack : AddByIdentifierViewEffect()

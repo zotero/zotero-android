@@ -19,5 +19,8 @@
     <string name="select_collection">Select a Collection</string>
     <string name="share_upload_channel_name">Share File Upload Notification</string>
     <string name="share_upload_notification_title">Uploading Attachments</string>
-
+    <string name="cancel_all">Cancel All</string>
+    <string name="errors_lookup_no_identifiers_with_lookup_data">Zotero could not find any new identifiers in your input, or they are already being added. Please verify your input and try again.</string>
+    <string name="queued">Queued…</string>
+    <string name="failed">Failed</string>
 </resources>
