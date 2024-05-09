@@ -185,6 +185,20 @@ class RemoteAttachmentDownloader @Inject constructor(
                     )
                 }
             }
+            is CustomResult.GeneralError.NetworkError -> {
+                this.errors[download] = Exception(result.stringResponse)
+                Timber.e(
+                    result.stringResponse,
+                    "RemoteAttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}"
+                )
+                attachmentDownloaderEventStream.emitAsync(
+                    Update(
+                        download = download,
+                        kind = Update.Kind.failed
+                    )
+                )
+            }
+
             is CustomResult.GeneralSuccess -> {
                 Timber.i("RemoteAttachmentDownloader: finished downloading ${download.key}")
 

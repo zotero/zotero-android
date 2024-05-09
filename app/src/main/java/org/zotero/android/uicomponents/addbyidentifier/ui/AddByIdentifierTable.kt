@@ -97,6 +97,7 @@ internal fun LookupItemRow(
                     title,
                     HtmlCompat.FROM_HTML_MODE_LEGACY
                 ).toString(),
+                color = CustomTheme.colors.primaryContent,
                 style = CustomTheme.typography.newBody,
             )
             NewDivider(modifier = Modifier.padding(top = 8.dp))
@@ -163,6 +164,7 @@ internal fun LookupAttachmentRow(
                     title,
                     HtmlCompat.FROM_HTML_MODE_LEGACY
                 ).toString(),
+                color = CustomTheme.colors.primaryContent,
                 style = CustomTheme.typography.newBody,
             )
             NewDivider(modifier = Modifier.padding(top = 8.dp))
@@ -187,6 +189,7 @@ internal fun LookupIdentifierRow(
                 modifier = Modifier.weight(1f),
                 text = title,
                 maxLines = 1,
+                color = CustomTheme.colors.primaryContent,
                 overflow = TextOverflow.Ellipsis,
                 style = CustomTheme.typography.newBody,
             )

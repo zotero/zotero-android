@@ -634,12 +634,14 @@ class IdentifierLookupController @Inject constructor(
         remoteFileDownloader.stop()
         val lookupData = this.lookupData
         cleanupLookupIfNeeded(force = true) {
-            this.observable.emitAsync(
-                Update(
-                    kind = Update.Kind.finishedAllLookups,
-                    lookupData = emptyList()
+            if (this::observable.isInitialized) {
+                this.observable.emitAsync(
+                    Update(
+                        kind = Update.Kind.finishedAllLookups,
+                        lookupData = emptyList()
+                    )
                 )
-            )
+            }
         }
         val storedItemResponses = lookupData.values.mapNotNull {
             when (it.state) {
