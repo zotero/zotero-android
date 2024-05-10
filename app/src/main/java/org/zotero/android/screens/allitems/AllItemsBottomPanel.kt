@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.downloadedfiles.DownloadedFilesPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
@@ -134,20 +135,30 @@ private fun BottomPanel(
                 viewModel.showSortPicker()
             }
         )
-        val filterDrawable =
-            if (viewState.filters.isEmpty()) {
-                Drawables.filter_list_off_24px
-            } else {
-                Drawables.filter_list_24px
+        Box {
+            if (viewState.showDownloadedFilesPopup) {
+                DownloadedFilesPopup(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                )
             }
-        IconWithPadding(
-            modifier = Modifier
-                .padding(start = 20.dp)
-                .align(Alignment.CenterStart),
-            drawableRes = filterDrawable,
-            onClick = {
-                viewModel.showFilters()
-            }
-        )
+
+            val filterDrawable =
+                if (viewState.filters.isEmpty()) {
+                    Drawables.filter_list_off_24px
+                } else {
+                    Drawables.filter_list_24px
+                }
+            IconWithPadding(
+                modifier = Modifier
+                    .padding(start = 20.dp)
+                    .align(Alignment.CenterStart),
+                drawableRes = filterDrawable,
+                onClick = {
+                    viewModel.showFilters()
+                }
+            )
+        }
+
     }
 }
