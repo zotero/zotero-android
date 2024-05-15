@@ -1,6 +1,8 @@
 package org.zotero.android.uicomponents.addbyidentifier
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -16,6 +18,7 @@ import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.uicomponents.addbyidentifier.data.ISBNParser
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRow
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRowItem
 import timber.log.Timber
@@ -28,7 +31,11 @@ internal class AddByIdentifierViewModel @Inject constructor(
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
     private val schemaController: SchemaController,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
+    private val context: Context,
 ) : BaseViewModel2<AddByIdentifierViewState, AddByIdentifierViewEffect>(AddByIdentifierViewState()) {
+
+    private val scannerPatternRegex =
+        "10.\\d{4,9}\\/[-._;()\\/:a-zA-Z0-9]+"
 
     fun init() = initOnce {
         setupAttachmentObserving()
@@ -123,6 +130,45 @@ internal class AddByIdentifierViewModel @Inject constructor(
             )
         }
         updateLookupState(State.waitingInput)
+    }
+
+    fun process(scannedText: String) {
+        val identifiers = Regex(scannerPatternRegex).findAll(scannedText).map { it.value }.toMutableList()
+        val isbns = ISBNParser.isbns(scannedText)
+        if (isbns.isNotEmpty()) {
+            identifiers.addAll(isbns)
+        }
+
+        if (identifiers.isEmpty()) {
+            return
+        }
+
+        val scannedText = identifiers.joinToString(", ")
+
+        var newText = viewState.identifierText
+        if (newText.isEmpty()) {
+            newText = scannedText
+        } else {
+            newText += ", " + scannedText
+        }
+        updateState {
+            copy(identifierText = newText)
+        }
+    }
+
+    fun onScanText() {
+        val scanner = GmsBarcodeScanning.getClient(context)
+        scanner.startScan()
+            .addOnSuccessListener { barcode ->
+                val scannedString = barcode.rawValue ?: ""
+                process(scannedString)
+            }
+            .addOnCanceledListener {
+                // Task canceled
+            }
+            .addOnFailureListener { e ->
+               Timber.e(e, "Barcode scanning failed")
+            }
     }
 
     fun onLookup() {

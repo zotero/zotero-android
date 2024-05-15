@@ -167,6 +167,7 @@ dependencies {
     implementation(Libs.jodaTime)
     implementation(Libs.eventBus)
     implementation(Libs.keyboardVisibility)
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
 }
 
