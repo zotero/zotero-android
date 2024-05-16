@@ -85,6 +85,8 @@ class AllItemsProcessor @Inject constructor(
 
     private val onSearchStateFlow = MutableStateFlow("")
 
+    private val quotationExpression = "(\"[^\"]+\"?)"
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(sortDirectionResult: SortDirectionResult) {
         setSortOrder(sortDirectionResult.isAscending)
@@ -218,7 +220,7 @@ class AllItemsProcessor @Inject constructor(
         var searchComponents = listOf<String>()
         val text = searchText
         if (!text.isNullOrEmpty()) {
-            searchComponents = listOf(text)
+            searchComponents = createComponents(text)
         }
         val request = ReadItemsDbRequest(
             collectionId = this.collection.identifier,
@@ -230,6 +232,57 @@ class AllItemsProcessor @Inject constructor(
             isAsync = true
         )
         return dbWrapper.realmDbStorage.perform(request = request)
+    }
+
+    private fun createComponents(searchTerm: String): List<String> {
+        val normalizedSearchTerm = searchTerm
+            .replace("“", "\"")
+            .replace("”", "\"")
+
+        val matches =
+            Regex(quotationExpression).findAll(normalizedSearchTerm).map { it }.toMutableList()
+
+        if (matches.isEmpty()) {
+            return separateComponents(normalizedSearchTerm)
+        }
+
+        val components = mutableListOf<String>()
+        for ((idx, match) in matches.withIndex()) {
+            if (match.range.start > 0) {
+                val lowerBound = if (idx == 0) 0 else matches[idx - 1].range.endInclusive
+                val precedingComponents = separateComponents(
+                    normalizedSearchTerm.substring(
+                        lowerBound,
+                        match.range.start
+                    )
+                )
+                components.addAll(precedingComponents)
+            }
+            val upperBound =
+                if (normalizedSearchTerm.substring(match.range.endInclusive - 1) == "\"") {
+                    match.range.endInclusive - 1
+                } else {
+                    match.range.endInclusive
+                }
+            components.add(normalizedSearchTerm.substring(match.range.start + 1, upperBound))
+        }
+
+        val match = matches.lastOrNull()
+        if (match != null && match.range.endInclusive != normalizedSearchTerm.length - 1) {
+            val lastComponents = separateComponents(
+                normalizedSearchTerm.substring(
+                    match.range.endInclusive,
+                    normalizedSearchTerm.length
+                )
+            )
+            components.addAll(lastComponents)
+        }
+
+        return components
+    }
+
+    private fun separateComponents(string: String): List<String> {
+        return string.split(" ").filter{ it.isNotEmpty() }
     }
 
     fun attachment(key: String, parentKey: String?): Pair<Attachment, Library>? {
