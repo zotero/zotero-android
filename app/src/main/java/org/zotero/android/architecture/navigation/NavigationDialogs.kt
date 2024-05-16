@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.dialog
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -28,10 +29,12 @@ fun NavGraphBuilder.dialogFixedDimens(
 
 fun NavGraphBuilder.dialogFixedMaxHeight(
     route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
     content: @Composable () -> Unit,
 ) {
     customDialog(
         route = route,
+        arguments = arguments,
         dialogModifier = Modifier.requiredHeightIn(max = 400.dp),
         content = content
     )
@@ -51,10 +54,12 @@ fun NavGraphBuilder.dialogDynamicHeight(
 private fun NavGraphBuilder.customDialog(
     route: String,
     dialogModifier: Modifier,
+    arguments: List<NamedNavArgument> = emptyList(),
     content: @Composable () -> Unit,
 ) {
     dialog(
         route = route,
+        arguments = arguments,
         dialogProperties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true,

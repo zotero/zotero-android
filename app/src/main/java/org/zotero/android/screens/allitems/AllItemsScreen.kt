@@ -38,7 +38,7 @@ internal fun AllItemsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateToCollectionsScreen: () -> Unit,
     navigateToSinglePicker: () -> Unit,
-    navigateToAddByIdentifier: () -> Unit,
+    navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
     navigateToAllItemsSort: () -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToItemDetails: () -> Unit,
@@ -72,8 +72,8 @@ internal fun AllItemsScreen(
                     navigateToSinglePicker()
                 }
 
-                AllItemsViewEffect.ShowAddByIdentifierEffect -> {
-                    navigateToAddByIdentifier()
+                is AllItemsViewEffect.ShowAddByIdentifierEffect -> {
+                    navigateToAddByIdentifier(consumedEffect.params)
                 }
 
                 AllItemsViewEffect.ShowSortPickerEffect -> {

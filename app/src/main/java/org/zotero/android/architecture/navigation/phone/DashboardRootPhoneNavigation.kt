@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -55,6 +57,8 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
+
+internal const val ARG_ADD_BY_IDENTIFIER = "addByIdentifierArg"
 
 @Composable
 internal fun DashboardRootPhoneNavigation(
@@ -172,8 +176,10 @@ internal fun DashboardRootPhoneNavigation(
                 }
 
                 composable(
-                    route = DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER,
-                    arguments = listOf(),
+                    route = "${DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER}/{$ARG_ADD_BY_IDENTIFIER}",
+                    arguments = listOf(
+                        navArgument(ARG_ADD_BY_IDENTIFIER) { type = NavType.StringType },
+                    ),
                 ) {
                     AddByIdentifierScreen(
                         onClose = navigation::onBack,
@@ -235,8 +241,8 @@ private fun ZoteroNavigation.toSinglePicker() {
     navController.navigate(DashboardRootPhoneDestinations.SINGLE_PICKER)
 }
 
-private fun ZoteroNavigation.toAddByIdentifier() {
-    navController.navigate(DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER)
+private fun ZoteroNavigation.toAddByIdentifier(params: String) {
+    navController.navigate("${DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER}/$params")
 }
 
 private fun ZoteroNavigation.toCollectionPicker() {

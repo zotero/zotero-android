@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.google.accompanist.insets.navigationBarsPadding
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
@@ -15,6 +17,7 @@ import org.zotero.android.architecture.navigation.dialogFixedMaxHeight
 import org.zotero.android.architecture.navigation.imageViewerScreen
 import org.zotero.android.architecture.navigation.itemDetailsScreen
 import org.zotero.android.architecture.navigation.loadingScreen
+import org.zotero.android.architecture.navigation.phone.ARG_ADD_BY_IDENTIFIER
 import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
@@ -110,7 +113,10 @@ internal fun TabletRightPaneNavigation(
         }
 
         dialogFixedMaxHeight(
-            route = TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG,
+            route = "${TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG}/{$ARG_ADD_BY_IDENTIFIER}",
+            arguments = listOf(
+                navArgument(ARG_ADD_BY_IDENTIFIER) { type = NavType.StringType },
+            ),
         ) {
             AddByIdentifierScreen(
                 onClose = {
@@ -147,8 +153,8 @@ private fun ZoteroNavigation.toSinglePickerDialog() {
     navController.navigate(TabletRightPaneDestinations.SINGLE_PICKER_DIALOG)
 }
 
-private fun ZoteroNavigation.toAddByIdentifierDialog() {
-    navController.navigate(TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG)
+private fun ZoteroNavigation.toAddByIdentifierDialog(params: String) {
+    navController.navigate("${TabletRightPaneDestinations.ADD_BY_IDENTIFIER_DIALOG}/$params")
 }
 
 private fun ZoteroNavigation.toCollectionPickerDialog() {

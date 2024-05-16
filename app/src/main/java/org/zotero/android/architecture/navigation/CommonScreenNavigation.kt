@@ -24,7 +24,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToAddOrEditNote: () -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAllItemsSort: () -> Unit,
-    navigateToAddByIdentifier: () -> Unit,
+    navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,

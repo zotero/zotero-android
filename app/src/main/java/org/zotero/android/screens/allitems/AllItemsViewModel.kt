@@ -1043,9 +1043,10 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAddByIdentifier() {
-        ScreenArguments.addByIdentifierPickerArgs =
+        val addByIdentifierPickerArgs =
             AddByIdentifierPickerArgs(restoreLookupState = false)
-        triggerEffect(ShowAddByIdentifierEffect)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(addByIdentifierPickerArgs)
+        triggerEffect(ShowAddByIdentifierEffect(params))
     }
 
     fun dismissDownloadedFilesPopup() {
@@ -1135,7 +1136,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowItemDetailEffect: AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
-    object ShowAddByIdentifierEffect : AllItemsViewEffect()
+    data class ShowAddByIdentifierEffect(val params: String) : AllItemsViewEffect()
     object ShowSortPickerEffect : AllItemsViewEffect()
     object ShowCollectionPickerEffect: AllItemsViewEffect()
     object ShowFilterEffect : AllItemsViewEffect()

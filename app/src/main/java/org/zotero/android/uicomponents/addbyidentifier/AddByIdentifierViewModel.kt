@@ -1,6 +1,7 @@
 package org.zotero.android.uicomponents.addbyidentifier
 
 import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,15 +10,18 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.navigation.phone.ARG_ADD_BY_IDENTIFIER
+import org.zotero.android.architecture.require
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.uicomponents.addbyidentifier.data.AddByIdentifierPickerArgs
 import org.zotero.android.uicomponents.addbyidentifier.data.ISBNParser
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRow
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRowItem
@@ -32,7 +36,14 @@ internal class AddByIdentifierViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
     private val context: Context,
+    stateHandle: SavedStateHandle,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<AddByIdentifierViewState, AddByIdentifierViewEffect>(AddByIdentifierViewState()) {
+
+    private val screenArgs: AddByIdentifierPickerArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_ADD_BY_IDENTIFIER).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    }
 
     private val scannerPatternRegex =
         "10.\\d{4,9}\\/[-._;()\\/:a-zA-Z0-9]+"
@@ -42,7 +53,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
         val collectionKeys =
             fileStore.getSelectedCollectionId().keyGet?.let { setOf(it) } ?: emptySet()
         val libraryId = fileStore.getSelectedLibrary()
-        val restoreLookupState = ScreenArguments.addByIdentifierPickerArgs.restoreLookupState
+        val restoreLookupState = screenArgs.restoreLookupState
         initState(
             restoreLookupState = restoreLookupState,
             hasDarkBackground = false,
