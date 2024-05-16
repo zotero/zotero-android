@@ -13,7 +13,7 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 
-    //----Dependency plugins start----
+    // Dependency plugins
     id("kotlinDependencies")
     id("androidXDependencies")
     id("composeDependencies")
@@ -21,9 +21,6 @@ plugins {
     id("daggerAndHiltDependencies")
     id("networkDependencies")
     id("testDependencies")
-    //----Dependency plugins end----
-
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -47,58 +44,56 @@ android {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
     }
+
     signingConfigs {
         create("release") {
             storeFile = rootProject.file("zotero.release.keystore")
-
             if (rootProject.file("keystore-secrets.txt").exists()) {
-                val secrets: List<String> = rootProject
-                    .file("keystore-secrets.txt")
-                    .readLines()
+                val secrets = rootProject.file("keystore-secrets.txt").readLines()
                 keyAlias = secrets[0]
                 storePassword = secrets[1]
                 keyPassword = secrets[2]
             }
         }
     }
+
     lint {
         checkReleaseBuilds = false
         abortOnError = false
     }
+
     androidResources {
         noCompress += listOf("ttf", "mov", "avi", "json", "html", "csv", "obb")
     }
 
     buildTypes {
-        getByName("debug") {
+        debug {
             isDebuggable = true
             isMinifyEnabled = false
-            signingConfigs
-                .findByName("debug")
-                ?.storeFile = rootProject.file("debug.keystore")
-
+            signingConfig = signingConfigs.findByName("debug")
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
             manifestPlaceholders["enableCrashReporting"] = false
-            extra.set("enableCrashlytics", false)
+            extra["enableCrashlytics"] = false
         }
-        getByName("release") {
+        release {
             isDebuggable = false
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getAt("release")
-
+            signingConfig = signingConfigs["release"]
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "true")
             manifestPlaceholders["enableCrashReporting"] = true
         }
     }
+
     setDefaultProductFlavors()
+
     productFlavors {
-        dev {
-            resValue("string", "app_name", """"Zotero Debug""")
+        create("dev") {
+            resValue("string", "app_name", "Zotero Debug")
             buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
             applicationIdSuffix = ".debug"
         }
-        internal {
-            resValue("string", "app_name", """"Zotero Beta""")
+        create("internal") {
+            resValue("string", "app_name", "Zotero Beta")
             buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
     }
@@ -107,9 +102,11 @@ android {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
+
     kotlinOptions {
         jvmTarget = javaVersion.toString()
     }
+
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -120,13 +117,9 @@ android {
     }
 
     androidComponents {
-        beforeVariants { it.ignoreUnusedVariants() }
-//        onVariants {
-//            it.outputs.forEach { output ->
-//                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
-//                output.versionName.set(newVersionName)
-//            }
-//        }
+        beforeVariants { variantBuilder ->
+            variantBuilder.enable = !variantBuilder.buildType == "release"
+        }
     }
 }
 
@@ -137,38 +130,21 @@ play {
 }
 
 dependencies {
-
-    //Material design
     implementation(Libs.materialDesign)
-
-    //Crash
     implementation(Libs.Firebase.Crashlytics.crashlytics)
-
-    //PSPDFKIT
     implementation(Libs.pspdfkit)
-
-    //GSON
     implementation(Libs.gson)
-
-    //ExoPlayer
     implementation(Libs.ExoPlayer.exoPlayer)
     implementation(Libs.ExoPlayer.mediaUi)
-
-    //Coil
     implementation(Libs.Coil.compose)
-
-    //Commons
     implementation(Libs.Commons.io)
     implementation(Libs.Commons.codec)
     implementation(Libs.Commons.validator)
-
-    //Other
     implementation(Libs.timber)
     implementation(Libs.jodaTime)
     implementation(Libs.eventBus)
     implementation(Libs.keyboardVisibility)
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
-
 }
 
 kapt {
@@ -182,24 +158,18 @@ fun gitLastCommitHash(): String {
             commandLine = "git rev-parse --verify --short HEAD".split(" ")
             standardOutput = byteOut
         }
-        String(byteOut.toByteArray()).trim().also {
-            if (it == "HEAD")
-                logger.warn("Unable to determine current branch: Project is checked out with detached head!")
-        }
+        String(byteOut.toByteArray()).trim().takeIf { it.isNotBlank() } ?: "Unknown Branch"
     } catch (e: Exception) {
         logger.warn("Unable to determine current branch: ${e.message}")
         "Unknown Branch"
     }
 }
 
-fun readPspdfkitKey() : String {
-    val file = rootProject
-        .file("pspdfkit-key.txt")
+fun readPspdfkitKey(): String {
+    val file = rootProject.file("pspdfkit-key.txt")
     if (!file.exists()) {
         logger.warn("pspdfkit-key.txt file not found. Using PSPDFKit without a key")
         return "\"\""
     }
-    val keys: List<String> = file
-        .readLines()
-    return "\"${keys[0]}\""
+    return "\"${file.readLines().first()}\""
 }
