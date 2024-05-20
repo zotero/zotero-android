@@ -3,7 +3,6 @@ package org.zotero.android.uicomponents.addbyidentifier
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -167,20 +166,20 @@ internal class AddByIdentifierViewModel @Inject constructor(
         }
     }
 
-    fun onScanText() {
-        val scanner = GmsBarcodeScanning.getClient(context)
-        scanner.startScan()
-            .addOnSuccessListener { barcode ->
-                val scannedString = barcode.rawValue ?: ""
-                process(scannedString)
-            }
-            .addOnCanceledListener {
-                // Task canceled
-            }
-            .addOnFailureListener { e ->
-               Timber.e(e, "Barcode scanning failed")
-            }
-    }
+//    fun onScanText() {
+//        val scanner = GmsBarcodeScanning.getClient(context)
+//        scanner.startScan()
+//            .addOnSuccessListener { barcode ->
+//                val scannedString = barcode.rawValue ?: ""
+//                process(scannedString)
+//            }
+//            .addOnCanceledListener {
+//                // Task canceled
+//            }
+//            .addOnFailureListener { e ->
+//               Timber.e(e, "Barcode scanning failed")
+//            }
+//    }
 
     fun onLookup() {
         val identifier = viewState.identifierText.trim()
