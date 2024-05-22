@@ -47,6 +47,7 @@ import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.filter.FilterScreenPhone
+import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.settings.settingsNavScreens
 import org.zotero.android.screens.settings.toSettingsScreen
 import org.zotero.android.screens.sortpicker.sortPickerNavScreens
@@ -124,6 +125,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToTagFilter = navigation::toTagFilter,
                     navigateToAddByIdentifier = navigation::toAddByIdentifier,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
+                    navigateToScanBarcode = navigation::toScanBarcode,
                     onShowPdf = { pdfScreenParams ->
                         navigation.toPdfScreen(
                         context = context,
@@ -187,6 +189,15 @@ internal fun DashboardRootPhoneNavigation(
                 }
 
                 composable(
+                    route = DashboardRootPhoneDestinations.SCAN_BARCODE,
+                    arguments = listOf(),
+                ) {
+                    ScanBarcodeScreen(
+                        onClose = navigation::onBack,
+                    )
+                }
+
+                composable(
                     route = DashboardRootPhoneDestinations.COLLECTION_PICKER,
                     arguments = listOf(),
                 ) {
@@ -224,6 +235,7 @@ private object DashboardRootPhoneDestinations {
     const val TAG_PICKER = "tagPicker"
     const val TAG_FILTER = "tagFilter"
     const val COLLECTION_PICKER = "collectionPicker"
+    const val SCAN_BARCODE = "scanBarcode"
 
 }
 
@@ -259,5 +271,9 @@ private fun toAllItems(
     navController.popBackStack(navController.graph.id, inclusive = true)
     navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
     navController.navigate(CommonScreenDestinations.ALL_ITEMS)
+}
+
+private fun ZoteroNavigation.toScanBarcode() {
+    navController.navigate(DashboardRootPhoneDestinations.SCAN_BARCODE)
 }
 

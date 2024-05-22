@@ -52,6 +52,7 @@ import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowAddByIdentifierEffect
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowItemTypePickerEffect
+import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowScanBarcode
 import org.zotero.android.screens.allitems.data.ItemAccessory
 import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.screens.allitems.data.ItemsError
@@ -1074,6 +1075,10 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
+    fun onScanBarcode() {
+        triggerEffect(ShowScanBarcode)
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1147,4 +1152,5 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowImageViewer : AllItemsViewEffect()
     data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
+    object ShowScanBarcode: AllItemsViewEffect()
 }

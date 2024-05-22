@@ -80,11 +80,15 @@ class IdentifierLookupController @Inject constructor(
         setupObservers()
     }
 
+    private var shouldSkipLookupsCleaning = false
+
     fun initialize(
         libraryId: LibraryIdentifier,
         collectionKeys: Set<String>,
+        shouldSkipLookupsCleaning: Boolean = false,
         completion: (List<LookupData>?) -> Unit
     ) {
+        this.shouldSkipLookupsCleaning = shouldSkipLookupsCleaning
         observable = EventStream<Update>(
             ZoteroApplication.instance.applicationScope
         )
@@ -158,6 +162,9 @@ class IdentifierLookupController @Inject constructor(
                     }
                 }
                 if (!cleanupLookupIfNeeded) {
+                    return@onEach
+                }
+                if (shouldSkipLookupsCleaning) {
                     return@onEach
                 }
                 cleanupLookupIfNeeded(force = false) {
@@ -290,7 +297,9 @@ class IdentifierLookupController @Inject constructor(
                         )
                     }
 
-
+                    if (shouldSkipLookupsCleaning) {
+                        return@changeLookup
+                    }
                     cleanupLookupIfNeeded(force = false) { cleaned ->
                         if (!cleaned) {
                             observable.emitAsync(
@@ -328,6 +337,9 @@ class IdentifierLookupController @Inject constructor(
                             ), lookupData = lookupData.values.toList()
                         )
                     )
+                    if (shouldSkipLookupsCleaning) {
+                        return@changeLookup
+                    }
                     cleanupLookupIfNeeded(force = false) { cleaned ->
                         if (!cleaned) {
                             return@cleanupLookupIfNeeded
@@ -357,6 +369,9 @@ class IdentifierLookupController @Inject constructor(
                             lookupData = lookupData.values.toList()
                         )
                     )
+                    if (shouldSkipLookupsCleaning) {
+                        return@changeLookup
+                    }
                     cleanupLookupIfNeeded(force = false) { cleaned ->
                         if (!cleaned) {
                             return@cleanupLookupIfNeeded
@@ -380,7 +395,7 @@ class IdentifierLookupController @Inject constructor(
                             identifier(map)
                         }
                         enqueueLookup(enqueuedIdentifiers) { validIdentifiers ->
-                            if (validIdentifiers.isEmpty()) {
+                            if (validIdentifiers.isEmpty() && !shouldSkipLookupsCleaning) {
                                 cleanupLookupIfNeeded(force = false) {
                                     observable.emitAsync(
                                         Update(
@@ -453,6 +468,9 @@ class IdentifierLookupController @Inject constructor(
                                         ), lookupData = lookupData.values.toList()
                                     )
                                 )
+                                if (shouldSkipLookupsCleaning) {
+                                    return@changeLookup
+                                }
                                 cleanupLookupIfNeeded(force = false) { cleaned ->
                                     if (!cleaned) {
                                         return@cleanupLookupIfNeeded

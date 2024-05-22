@@ -47,6 +47,7 @@ internal fun AllItemsScreen(
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
+    navigateToScanBarcode: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
     CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
@@ -107,6 +108,9 @@ internal fun AllItemsScreen(
 
                 is AllItemsViewEffect.ShowZoteroWebView -> {
                     navigateToZoterWebViewScreen(consumedEffect.url)
+                }
+                is AllItemsViewEffect.ShowScanBarcode -> {
+                    navigateToScanBarcode()
                 }
             }
         }
@@ -189,6 +193,7 @@ internal fun AllItemsScreen(
                 }
                 val bottomSheetTitle = stringResource(id = Strings.item_type)
                 AllItemsAddBottomSheet(
+                    onScanBarcode = viewModel::onScanBarcode,
                     onAddFile = onPickFile,
                     onAddNote = viewModel::onAddNote,
                     onAddManually = { viewModel.onAddManually(bottomSheetTitle) },

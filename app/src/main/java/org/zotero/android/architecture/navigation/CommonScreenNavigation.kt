@@ -30,6 +30,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: () -> Unit,
     navigateToCollectionPicker: () -> Unit,
+    navigateToScanBarcode: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -55,6 +56,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToImageViewerScreen = navigateToImageViewerScreen,
             navigateToTagFilter = navigateToTagFilter,
             navigateToCollectionPicker = navigateToCollectionPicker,
+            navigateToScanBarcode = navigateToScanBarcode,
         )
     }
 }

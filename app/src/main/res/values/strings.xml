@@ -23,4 +23,5 @@
     <string name="errors_lookup_no_identifiers_with_lookup_data">Zotero could not find any new identifiers in your input, or they are already being added. Please verify your input and try again.</string>
     <string name="queued">Queued…</string>
     <string name="failed">Failed</string>
+    <string name="scan">Scan</string>
 </resources>

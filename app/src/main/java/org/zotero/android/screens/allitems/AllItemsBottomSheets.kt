@@ -19,6 +19,7 @@ import org.zotero.android.uicomponents.row.RowItemWithArrow
 
 @Composable
 internal fun AllItemsAddBottomSheet(
+    onScanBarcode: () -> Unit,
     onAddFile: () -> Unit,
     onAddNote: () -> Unit,
     onAddManually: () -> Unit,
@@ -38,6 +39,10 @@ internal fun AllItemsAddBottomSheet(
             shouldCollapse = !showBottomSheet,
             sheetContent = {
                 AddBottomSheetContent(
+                    onScanBarcode = {
+                        onClose()
+                        onScanBarcode()
+                    },
                     onAddFile = {
                         onClose()
                         onAddFile()
@@ -65,6 +70,7 @@ internal fun AllItemsAddBottomSheet(
 
 @Composable
 private fun AddBottomSheetContent(
+    onScanBarcode: () -> Unit,
     onAddFile: () -> Unit,
     onAddNote: () -> Unit,
     onAddManually: () -> Unit,
@@ -77,6 +83,11 @@ private fun AddBottomSheetContent(
             RowItemWithArrow(
                 title = stringResource(id = Strings.items_lookup),
                 onClick = { onAddByIdentifier() }
+            )
+            CustomDivider(modifier = Modifier.padding(2.dp))
+            RowItemWithArrow(
+                title = stringResource(id = Strings.items_barcode),
+                onClick = { onScanBarcode() }
             )
             CustomDivider(modifier = Modifier.padding(2.dp))
             RowItemWithArrow(
