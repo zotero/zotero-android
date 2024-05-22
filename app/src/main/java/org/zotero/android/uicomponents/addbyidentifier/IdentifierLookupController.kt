@@ -643,7 +643,7 @@ class IdentifierLookupController @Inject constructor(
         lookupWebViewHandler.lookUp(identifier = identifier)
     }
 
-    fun cancelAllLookups() {
+    fun cancelAllLookups(shouldTrashItems: Boolean = true) {
         Timber.i("IdentifierLookupController: cancel all lookups")
         val keys = lookupWebViewHandlersByLookupSettings.keys
         for (key in keys) {
@@ -660,6 +660,9 @@ class IdentifierLookupController @Inject constructor(
                     )
                 )
             }
+        }
+        if (!shouldTrashItems) {
+            return
         }
         val storedItemResponses = lookupData.values.mapNotNull {
             when (it.state) {

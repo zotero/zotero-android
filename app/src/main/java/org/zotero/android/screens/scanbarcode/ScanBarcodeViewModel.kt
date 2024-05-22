@@ -318,6 +318,11 @@ internal class ScanBarcodeViewModel @Inject constructor(
         }
     }
 
+    override fun onCleared() {
+        identifierLookupController.cancelAllLookups(shouldTrashItems = false)
+        super.onCleared()
+    }
+
 
     sealed interface State {
         data class failed(val error: Exception) : State
