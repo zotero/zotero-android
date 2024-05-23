@@ -14,14 +14,7 @@ object Libs {
         "net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3"
 
     object Accompanist {
-        private const val version = "0.31.5-beta"
-        const val flowlayout = "com.google.accompanist:accompanist-flowlayout:$version"
-        const val insets = "com.google.accompanist:accompanist-insets:$version"
-        const val navigationAnimation =
-            "com.google.accompanist:accompanist-navigation-animation:$version"
-        const val pager = "com.google.accompanist:accompanist-pager:$version"
-        const val placeholder = "com.google.accompanist:accompanist-placeholder:$version"
-        const val swipeToRefresh = "com.google.accompanist:accompanist-swiperefresh:$version"
+        private const val version = "0.34.0"
         const val systemuicontroller =
             "com.google.accompanist:accompanist-systemuicontroller:$version"
     }

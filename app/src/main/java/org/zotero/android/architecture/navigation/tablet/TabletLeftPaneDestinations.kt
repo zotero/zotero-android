@@ -3,11 +3,11 @@ package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.google.accompanist.insets.navigationBarsPadding
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.collectionsScreen
@@ -23,7 +23,7 @@ internal fun TabletLeftPaneNavigation(
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateAndPopAllItemsScreen: () -> Unit,
 ) {
-    val navController = rememberAnimatedNavController()
+    val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)

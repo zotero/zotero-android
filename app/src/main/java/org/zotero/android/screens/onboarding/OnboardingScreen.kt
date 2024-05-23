@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -32,8 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.rememberPagerState
 import org.zotero.android.androidx.text.StyledTextHelper
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
@@ -76,11 +76,10 @@ internal fun OnboardingScreen(
                     .padding(horizontal = 16.dp),
             ) {
                 val uriHandler = LocalUriHandler.current
-                val pagerState = rememberPagerState()
+                val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
                 Spacer(modifier = Modifier.weight(1f))
                 HorizontalPager(
                     state = pagerState,
-                    count = onboardingPages.size,
                 ) { pageIndex ->
                     val onboardingPage = onboardingPages[pageIndex]
 

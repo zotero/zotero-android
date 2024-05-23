@@ -2,12 +2,12 @@
 package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.google.accompanist.insets.navigationBarsPadding
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -93,7 +93,7 @@ internal fun TabletRightPaneNavigation(
         dialogDynamicHeight(
             route = TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG,
         ) {
-            CollectionPickerScreen(onBack = { navController.popBackStack()})
+            CollectionPickerScreen(onBack = { navController.popBackStack() })
         }
 
         dialogFixedMaxHeight(

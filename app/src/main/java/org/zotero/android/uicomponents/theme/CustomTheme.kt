@@ -11,7 +11,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import org.zotero.android.uicomponents.CustomUriHandler
 
@@ -53,9 +52,7 @@ fun CustomTheme(
         LocalCustomShapes provides CustomShapes(),
         LocalUriHandler provides CustomUriHandler(LocalContext.current),
     ) {
-        ProvideWindowInsets {
-            content()
-        }
+        content()
     }
 }
 
@@ -82,16 +79,20 @@ fun CustomThemeWithStatusAndNavBars(
         LocalCustomShapes provides CustomShapes(),
         LocalUriHandler provides CustomUriHandler(LocalContext.current),
     ) {
-        ProvideWindowInsets {
-            val isLight = CustomTheme.colors.isLight
-            val systemUiController = rememberSystemUiController()
-            SideEffect {
-                systemUiController.setStatusBarColor(color = statusBarBackgroundColor, darkIcons = isLight)
-                systemUiController.setNavigationBarColor(color = navBarBackgroundColor, darkIcons = isLight)
-            }
-
-            content()
+        val isLight = CustomTheme.colors.isLight
+        val systemUiController = rememberSystemUiController()
+        SideEffect {
+            systemUiController.setStatusBarColor(
+                color = statusBarBackgroundColor,
+                darkIcons = isLight
+            )
+            systemUiController.setNavigationBarColor(
+                color = navBarBackgroundColor,
+                darkIcons = isLight
+            )
         }
+
+        content()
     }
 
 }

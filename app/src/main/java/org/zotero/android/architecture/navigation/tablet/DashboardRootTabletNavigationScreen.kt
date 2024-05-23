@@ -16,7 +16,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
@@ -43,7 +43,7 @@ internal fun DashboardRootTabletNavigationScreen(
         viewModel.init()
     }
 
-    val rightPaneNavController = rememberAnimatedNavController()
+    val rightPaneNavController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val rightPaneNavigation = remember(rightPaneNavController) {
         ZoteroNavigation(rightPaneNavController, dispatcher)

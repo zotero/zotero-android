@@ -4,14 +4,14 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.insets.navigationBarsPadding
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.share.ShareScreen
@@ -22,7 +22,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 @Composable
 internal fun ShareRootNavigation(
 ) {
-    val navController = rememberAnimatedNavController()
+    val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
@@ -57,7 +57,11 @@ private fun ShareRootNavHost(
         startDestination = ShareRootDestinations.SHARE_SCREEN,
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
-        shareScreen(onBack = navigation::onBack, navigateToTagPicker = navigation::toTagPicker, navigateToCollectionPicker = navigation::toCollectionPicker)
+        shareScreen(
+            onBack = navigation::onBack,
+            navigateToTagPicker = navigation::toTagPicker,
+            navigateToCollectionPicker = navigation::toCollectionPicker
+        )
         tagPickerScreen(onBack = navigation::onBack)
         shareCollectionPickerScreen(onBack = navigation::onBack)
     }

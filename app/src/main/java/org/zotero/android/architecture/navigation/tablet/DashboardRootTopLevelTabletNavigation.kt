@@ -3,14 +3,14 @@ package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
-import com.google.accompanist.insets.navigationBarsPadding
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.addNoteScreen
@@ -34,7 +34,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     wasPspdfkitInitialized: Boolean,
 ) {
     val context = LocalContext.current
-    val navController = rememberAnimatedNavController()
+    val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)

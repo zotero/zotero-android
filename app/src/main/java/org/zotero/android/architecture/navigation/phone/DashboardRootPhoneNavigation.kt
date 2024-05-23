@@ -5,6 +5,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,10 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.accompanist.insets.navigationBarsPadding
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
@@ -74,14 +74,14 @@ internal fun DashboardRootPhoneNavigation(
         viewModel.init()
     }
 
-    val navController = rememberAnimatedNavController()
+    val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
     val context = LocalContext.current
 
-    Box{
+    Box {
         Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
             ZoteroNavHost(
                 navController = navController,
@@ -128,10 +128,11 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToScanBarcode = navigation::toScanBarcode,
                     onShowPdf = { pdfScreenParams ->
                         navigation.toPdfScreen(
-                        context = context,
-                        pdfScreenParams = pdfScreenParams,
-                        wasPspdfkitInitialized = wasPspdfkitInitialized
-                    ) },
+                            context = context,
+                            pdfScreenParams = pdfScreenParams,
+                            wasPspdfkitInitialized = wasPspdfkitInitialized
+                        )
+                    },
                 )
                 itemDetailsScreen(
                     navigateToCreatorEdit = navigation::toCreatorEdit,
