@@ -179,11 +179,6 @@ internal class ScanBarcodeViewModel @Inject constructor(
         }
     }
 
-    fun cancelAllLookups() {
-        identifierLookupController.cancelAllLookups()
-        updateLookupState(State.waitingInput)
-    }
-
     private fun setupAttachmentObserving() {
         attachmentDownloaderEventStream.flow()
             .onEach { update ->

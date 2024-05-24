@@ -8,9 +8,8 @@ import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
-internal fun ScanBarcodeCloseScanCancelTopBar(
+internal fun ScanBarcodeCloseScanAnotherTopBar(
     onClose: () -> Unit,
-    onCancelAll: () -> Unit,
     onScan: () -> Unit,
 ) {
     NewCustomTopBar(
@@ -19,15 +18,11 @@ internal fun ScanBarcodeCloseScanCancelTopBar(
                 text = stringResource(id = Strings.close),
                 onClick = onClose
             )
-            NewHeadingTextButton(
-                text = stringResource(id = Strings.cancel_all),
-                onClick = onCancelAll
-            )
         },
         rightContainerContent = listOf {
             NewHeadingTextButton(
                 style = CustomTheme.typography.defaultBold,
-                text = stringResource(id = Strings.scan),
+                text = stringResource(id = Strings.scan_another),
                 onClick = onScan
             )
         }

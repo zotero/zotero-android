@@ -57,13 +57,9 @@ internal fun ScanBarcodeScreen(
         }
         CustomScaffold(
             topBar = {
-                ScanBarcodeCloseScanCancelTopBar(
+                ScanBarcodeCloseScanAnotherTopBar(
                     onClose = onClose,
-                    onScan = viewModel::launchBarcodeScanner,
-                    onCancelAll = {
-                        viewModel.cancelAllLookups()
-                        onClose()
-                    }
+                    onScan = viewModel::launchBarcodeScanner
                 )
             },
         ) {
