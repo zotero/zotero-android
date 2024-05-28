@@ -46,10 +46,10 @@ internal fun CollectionPickerScreen(
             backgroundColor = backgroundColor,
             topBar = {
                 CollectionPickerTopBar(
+                    title = viewState.title,
+                    multipleSelectionAllowed = viewModel.multipleSelectionAllowed,
                     onCancelClicked = onBack,
                     onAdd = viewModel::confirmSelection,
-                    viewState = viewState,
-                    viewModel = viewModel,
                 )
             },
         ) {

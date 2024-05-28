@@ -61,8 +61,9 @@ internal fun CollectionsScreen(
         CustomScaffold(
             topBar = {
                 CollectionsTopBar(
-                    viewState = viewState,
-                    viewModel = viewModel,
+                    libraryName = viewState.libraryName,
+                    navigateToLibraries = viewModel::navigateToLibraries,
+                    onAdd = viewModel::onAdd,
                 )
             },
         ) {

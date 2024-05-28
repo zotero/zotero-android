@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collections.data
 
+import kotlinx.collections.immutable.toImmutableList
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import java.util.concurrent.ConcurrentHashMap
@@ -132,7 +133,7 @@ data class CollectionTree(
         for (n in currentNode.children) {
             children.add(add(currentNode = n, allCollections = allCollections))
         }
-        return CollectionItemWithChildren(collection = currentCollection, children = children)
+        return CollectionItemWithChildren(collection = currentCollection, children = children.toImmutableList())
     }
     fun parent(identifier: CollectionIdentifier): CollectionIdentifier? {
         return firstNode(matching ={ node -> node.children.any{it.identifier == identifier } }, array = this.nodes)?.identifier

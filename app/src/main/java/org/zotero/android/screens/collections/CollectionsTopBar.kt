@@ -10,19 +10,20 @@ import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun CollectionsTopBar(
-    viewState: CollectionsViewState,
-    viewModel: CollectionsViewModel
+    libraryName: String,
+    navigateToLibraries: () -> Unit,
+    onAdd: () -> Unit,
 ) {
     NewCustomTopBar(
-        title = viewState.library.name,
+        title = libraryName,
         leftContainerContent = listOf {
             NewHeadingTextButton(
-                onClick = viewModel::navigateToLibraries,
+                onClick = navigateToLibraries,
                 text = stringResource(id = Strings.libs)
             )
         },
         rightContainerContent = listOf {
-            IconWithPadding(drawableRes = Drawables.add_24px, onClick = viewModel::onAdd)
+            IconWithPadding(drawableRes = Drawables.add_24px, onClick = onAdd)
         }
     )
 }

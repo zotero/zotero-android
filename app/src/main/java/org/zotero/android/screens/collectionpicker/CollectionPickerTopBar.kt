@@ -8,13 +8,14 @@ import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun CollectionPickerTopBar(
+    title: String,
+    multipleSelectionAllowed: Boolean,
     onCancelClicked: () -> Unit,
     onAdd: () -> Unit,
-    viewState: CollectionPickerViewState,
-    viewModel: CollectionPickerViewModel
+
 ) {
     NewCustomTopBar(
-        title = viewState.title,
+        title = title,
         leftContainerContent = listOf {
             NewHeadingTextButton(
                 text = stringResource(id = Strings.cancel),
@@ -22,7 +23,7 @@ internal fun CollectionPickerTopBar(
             )
         },
         rightContainerContent = listOf {
-            if (viewModel.multipleSelectionAllowed) {
+            if (multipleSelectionAllowed) {
                 NewHeadingTextButton(
                     text = stringResource(id = Strings.add),
                     onClick = onAdd

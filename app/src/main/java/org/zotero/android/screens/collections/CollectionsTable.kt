@@ -24,8 +24,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
+import org.zotero.android.sync.Collection
+import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.badge.RoundBadgeIcon
 import org.zotero.android.uicomponents.icon.IconWithPadding
@@ -44,40 +47,57 @@ internal fun CollectionsTable(
         state = rememberLazyListState(),
     ) {
         recursiveCollectionItem(
-            viewState = viewState,
-            viewModel = viewModel,
             layoutType = layoutType,
-            collectionItems = viewState.collectionItemsToDisplay
+            collectionItems = viewState.collectionItemsToDisplay,
+            selectedCollectionId = viewState.selectedCollectionId,
+            isCollapsed = { viewModel.isCollapsed(it) },
+            onItemTapped = { viewModel.onItemTapped(it.collection) },
+            onItemLongTapped = { viewModel.onItemLongTapped(it.collection) },
+            onItemChevronTapped = { viewModel.onItemChevronTapped(it.collection) },
+            showCollectionItemCounts = viewModel.showCollectionItemCounts()
         )
     }
 }
 
 
 private fun LazyListScope.recursiveCollectionItem(
-    viewState: CollectionsViewState,
-    viewModel: CollectionsViewModel,
     layoutType: CustomLayoutSize.LayoutType,
-    collectionItems: List<CollectionItemWithChildren>,
-    levelPadding: Dp = 8.dp
+    levelPadding: Dp = 8.dp,
+    collectionItems: ImmutableList<CollectionItemWithChildren>,
+    selectedCollectionId: CollectionIdentifier,
+    showCollectionItemCounts: Boolean,
+    isCollapsed: (item: CollectionItemWithChildren) -> Boolean,
+    onItemTapped: (item: CollectionItemWithChildren) -> Unit,
+    onItemLongTapped: (item: CollectionItemWithChildren) -> Unit,
+    onItemChevronTapped: (item: CollectionItemWithChildren) -> Unit,
 ) {
     for (item in collectionItems) {
         item {
             CollectionItem(
-                item = item,
                 layoutType = layoutType,
-                viewState = viewState,
-                viewModel = viewModel,
                 levelPadding = levelPadding,
+                selectedCollectionId = selectedCollectionId,
+                collection = item.collection,
+                hasChildren = item.children.isNotEmpty(),
+                showCollectionItemCounts = showCollectionItemCounts,
+                isCollapsed = isCollapsed(item),
+                onItemTapped = { onItemTapped(item) },
+                onItemLongTapped = { onItemLongTapped(item) },
+                onItemChevronTapped = { onItemChevronTapped(item) }
             )
         }
 
-        if (!viewState.isCollapsed(item)) {
+        if (!isCollapsed(item)) {
             recursiveCollectionItem(
-                viewState = viewState,
-                viewModel = viewModel,
                 layoutType = layoutType,
+                levelPadding = levelPadding + levelPaddingConst,
                 collectionItems = item.children,
-                levelPadding = levelPadding + levelPaddingConst
+                selectedCollectionId = selectedCollectionId,
+                showCollectionItemCounts = showCollectionItemCounts,
+                isCollapsed = isCollapsed,
+                onItemTapped = onItemTapped,
+                onItemLongTapped = onItemLongTapped,
+                onItemChevronTapped = onItemChevronTapped
             )
         }
     }
@@ -85,14 +105,19 @@ private fun LazyListScope.recursiveCollectionItem(
 
 @Composable
 private fun CollectionItem(
-    viewState: CollectionsViewState,
-    viewModel: CollectionsViewModel,
-    item: CollectionItemWithChildren,
     layoutType: CustomLayoutSize.LayoutType,
-    levelPadding: Dp
+    levelPadding: Dp,
+    collection: Collection,
+    selectedCollectionId: CollectionIdentifier,
+    showCollectionItemCounts: Boolean,
+    hasChildren: Boolean,
+    isCollapsed: Boolean,
+    onItemTapped: () -> Unit,
+    onItemLongTapped: () -> Unit,
+    onItemChevronTapped: () -> Unit,
 ) {
     var rowModifier: Modifier = Modifier.height(44.dp)
-    if (layoutType.isTablet() && viewState.selectedCollectionId == item.collection.identifier) {
+    if (layoutType.isTablet() && selectedCollectionId == collection.identifier) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
     }
     val arrowIconAreaSize = 32.dp
@@ -107,29 +132,28 @@ private fun CollectionItem(
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(),
-                    onClick = { viewModel.onItemTapped(item.collection) },
-                    onLongClick = { viewModel.onItemLongTapped(item.collection) }
+                    onClick = onItemTapped,
+                    onLongClick = onItemLongTapped
                 )
         ) {
-            val hasChildren = item.children.isNotEmpty()
             if (!hasChildren) {
                 Spacer(modifier = Modifier.width(levelPaddingWithArrowIconAreaSize))
             } else {
                 Spacer(modifier = Modifier.width(levelPadding))
                 IconWithPadding(
-                    drawableRes = if (viewState.isCollapsed(item)) {
+                    drawableRes = if (isCollapsed) {
                         Drawables.chevron_right_24px
                     } else {
                         Drawables.expand_more_24px
                     },
-                    onClick = { viewModel.onItemChevronTapped(item.collection) },
+                    onClick = { onItemChevronTapped() },
                     areaSize = arrowIconAreaSize,
                     shouldShowRipple = false
                 )
             }
             Icon(
                 modifier = Modifier.size(mainIconSize),
-                painter = painterResource(id = item.collection.iconName),
+                painter = painterResource(id = collection.iconName),
                 contentDescription = null,
                 tint = CustomTheme.colors.zoteroDefaultBlue
             )
@@ -137,15 +161,15 @@ private fun CollectionItem(
 
             Text(
                 modifier = Modifier.weight(1f),
-                text = item.collection.name,
+                text = collection.name,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = CustomTheme.typography.newBody,
                 color = CustomTheme.colors.allItemsRowTitleColor,
             )
             Spacer(modifier = Modifier.width(16.dp))
-            if ((!item.collection.isCollection || viewModel.defaults.showCollectionItemCounts()) && item.collection.itemCount != 0) {
-                RoundBadgeIcon(count = item.collection.itemCount)
+            if ((!collection.isCollection || showCollectionItemCounts) && collection.itemCount != 0) {
+                RoundBadgeIcon(count = collection.itemCount)
                 Spacer(modifier = Modifier.width(16.dp))
             }
         }

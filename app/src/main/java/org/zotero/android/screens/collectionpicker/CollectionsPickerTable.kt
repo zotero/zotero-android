@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collectionpicker
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.ImmutableList
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.uicomponents.checkbox.CircleCheckBox
@@ -42,51 +44,52 @@ internal fun CollectionsPickerTable(
         state = rememberLazyListState(),
     ) {
         recursiveCollectionItem(
-            viewState = viewState,
-            viewModel = viewModel,
             layoutType = layoutType,
-            collectionItems = viewState.collectionItemsToDisplay
+            collectionItems = viewState.collectionItemsToDisplay,
+            isChecked = { viewState.selected.contains(it.collection.identifier.keyGet) },
+            onClick = { viewModel.selectOrDeselect(it.collection) },
         )
     }
 }
 
 private fun LazyListScope.recursiveCollectionItem(
-    viewState: CollectionPickerViewState,
-    viewModel: CollectionPickerViewModel,
     layoutType: CustomLayoutSize.LayoutType,
-    collectionItems: List<CollectionItemWithChildren>,
-    levelPadding: Dp = 12.dp
+    levelPadding: Dp = 12.dp,
+    collectionItems: ImmutableList<CollectionItemWithChildren>,
+    isChecked: (item: CollectionItemWithChildren) -> Boolean,
+    onClick: (item: CollectionItemWithChildren) -> Unit
 ) {
     for (item in collectionItems) {
         item {
             CollectionItem(
-                item = item,
+                iconName = item.collection.iconName,
+                collectionName = item.collection.name,
                 layoutType = layoutType,
-                viewState = viewState,
-                viewModel = viewModel,
                 levelPadding = levelPadding,
+                isChecked = isChecked(item),
+                onClick = { onClick(item) },
             )
         }
 
         recursiveCollectionItem(
-            viewState = viewState,
-            viewModel = viewModel,
             layoutType = layoutType,
+            levelPadding = levelPadding + levelPaddingConst,
             collectionItems = item.children,
-            levelPadding = levelPadding + levelPaddingConst
+            isChecked = isChecked,
+            onClick = onClick,
         )
     }
 }
 
 @Composable
 private fun CollectionItem(
-    viewState: CollectionPickerViewState,
-    viewModel: CollectionPickerViewModel,
-    item: CollectionItemWithChildren,
+    @DrawableRes iconName: Int,
+    collectionName: String,
     layoutType: CustomLayoutSize.LayoutType,
-    levelPadding: Dp
+    levelPadding: Dp,
+    isChecked: Boolean,
+    onClick: () -> Unit,
 ) {
-    val isChecked = viewState.selected.contains(item.collection.identifier.keyGet)
     var rowModifier: Modifier = Modifier
     if (isChecked) {
         rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
@@ -98,7 +101,7 @@ private fun CollectionItem(
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
-                onClick = { viewModel.selectOrDeselect(item.collection) },
+                onClick = onClick,
             )
     ) {
         Spacer(modifier = Modifier.width(levelPadding))
@@ -109,7 +112,7 @@ private fun CollectionItem(
         Spacer(modifier = Modifier.width(16.dp))
         Icon(
             modifier = Modifier.size(layoutType.calculateItemsRowMainIconSize()),
-            painter = painterResource(id = item.collection.iconName),
+            painter = painterResource(id = iconName),
             contentDescription = null,
             tint = CustomTheme.colors.zoteroDefaultBlue
         )
@@ -121,7 +124,7 @@ private fun CollectionItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = item.collection.name,
+                        text = collectionName,
                         fontSize = 14.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

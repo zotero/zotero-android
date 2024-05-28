@@ -5,11 +5,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.emptyImmutableSet
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
@@ -25,7 +31,6 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,13 +43,16 @@ internal class CollectionPickerViewModel @Inject constructor(
     var multipleSelectionAllowed: Boolean = false
     private lateinit var results: RealmResults<RCollection>
 
+    private var excludedKeys: Set<String> = emptySet()
+    var libraryId: LibraryIdentifier = LibraryIdentifier.group(0)
+
     fun init() = initOnce {
         val args = ScreenArguments.collectionPickerArgs
+        this.excludedKeys = args.excludedKeys
+        this.libraryId = args.libraryId
         updateState {
             copy(
-                libraryId = args.libraryId,
-                excludedKeys = args.excludedKeys,
-                selected = args.selected
+                selected = args.selected.toImmutableSet()
             )
         }
 
@@ -77,10 +85,10 @@ internal class CollectionPickerViewModel @Inject constructor(
 
     private fun loadData() {
         try {
-            val libraryId = viewState.libraryId
+            val libraryId = this.libraryId
             val collectionsRequest = ReadCollectionsDbRequest(
                 libraryId = libraryId,
-                excludedKeys = viewState.excludedKeys
+                excludedKeys = this.excludedKeys
             )
             this.results = dbWrapper.realmDbStorage.perform(request = collectionsRequest)
             val collectionTree = CollectionTreeBuilder.collections(
@@ -118,7 +126,7 @@ internal class CollectionPickerViewModel @Inject constructor(
     private fun update(results: RealmResults<RCollection>) {
         val tree = CollectionTreeBuilder.collections(
             results,
-            libraryId = viewState.libraryId,
+            libraryId = this.libraryId,
             includeItemCounts = false
         )
         tree.sortNodes()
@@ -131,9 +139,9 @@ internal class CollectionPickerViewModel @Inject constructor(
             removed.add(key)
         }
 
-        if (!removed.isEmpty()) {
+        if (removed.isNotEmpty()) {
             updateState {
-                copy(selected = viewState.selected.subtract(removed))
+                copy(selected = viewState.selected.subtract(removed).toImmutableSet())
             }
             updateTitle(viewState.selected.size)
         }
@@ -173,23 +181,21 @@ internal class CollectionPickerViewModel @Inject constructor(
 
     private fun select(key: String) {
         updateState {
-            copy(selected = selected + key)
+            copy(selected = (selected + key).toImmutableSet())
         }
     }
 
     private fun deselect(key: String) {
         updateState {
-            copy(selected = selected - key)
+            copy(selected = (selected - key).toImmutableSet())
         }
     }
 
     private fun updateCollectionTree(collectionTree: CollectionTree) {
         collectionTree.expandAllCollections()
-
         updateState {
             copy(
-                collectionTree = collectionTree,
-                collectionItemsToDisplay = collectionTree.createSnapshot()
+                collectionItemsToDisplay = collectionTree.createSnapshot().toImmutableList()
             )
         }
         triggerEffect(CollectionPickerViewEffect.ScreenRefresh)
@@ -208,15 +214,8 @@ internal class CollectionPickerViewModel @Inject constructor(
 }
 
 internal data class CollectionPickerViewState(
-    val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
-    val excludedKeys: Set<String> = emptySet(),
-    val collectionTree: CollectionTree = CollectionTree(
-        nodes = mutableListOf(),
-        collections = ConcurrentHashMap(),
-        collapsed = ConcurrentHashMap()
-    ),
-    val collectionItemsToDisplay: List<CollectionItemWithChildren> = emptyList(),
-    val selected: Set<String> = emptySet(),
+    val collectionItemsToDisplay: ImmutableList<CollectionItemWithChildren> = persistentListOf(),
+    val selected: ImmutableSet<String> = emptyImmutableSet(),
     val title: String = ""
 ) : ViewState
 

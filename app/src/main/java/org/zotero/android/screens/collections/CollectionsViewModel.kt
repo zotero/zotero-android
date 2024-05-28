@@ -6,6 +6,9 @@ import io.realm.OrderedCollectionChangeSet
 import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -51,10 +54,10 @@ import kotlin.reflect.KClass
 
 @HiltViewModel
 internal class CollectionsViewModel @Inject constructor(
-    val defaults: Defaults,
+    private val defaults: Defaults,
     private val dbWrapper: DbWrapper,
     private val fileStore: FileStore,
-    private val dispatchers: Dispatchers,
+    dispatchers: Dispatchers,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
 
     var allItems: RealmResults<RItem>? = null
@@ -66,6 +69,21 @@ internal class CollectionsViewModel @Inject constructor(
 
     private var coroutineScope = CoroutineScope(dispatchers.default)
     private var loadJob: Job? = null
+
+    private var collectionTree: CollectionTree = CollectionTree(
+        mutableListOf(),
+        ConcurrentHashMap(),
+        ConcurrentHashMap()
+    )
+
+    private var libraryId: LibraryIdentifier = LibraryIdentifier.group(0)
+    private var library: Library = Library(
+        identifier = LibraryIdentifier.group(0),
+        name = "",
+        metadataEditable = false,
+        filesEditable = false
+    )
+
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: LongPressOptionItem) {
@@ -84,48 +102,48 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun maybeRecreateItemsScreen(shouldRecreateItemsScreen: Boolean) {
         if (shouldRecreateItemsScreen) {
-            val collectionTree = viewState.collectionTree
+            val collectionTree = this.collectionTree
             onItemTapped(collectionTree.collections[viewState.selectedCollectionId]!!)
         }
     }
 
     private fun initViewState(args: CollectionsArgs) {
+        this.collectionTree = CollectionTree(
+            nodes = mutableListOf(),
+            collections = ConcurrentHashMap(),
+            collapsed = ConcurrentHashMap()
+        )
+        this.libraryId = args.libraryId
+        this.library = Library(
+            identifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary),
+            name = "",
+            metadataEditable = false,
+            filesEditable = false
+        )
+
         updateState {
             copy(
-                libraryId = args.libraryId,
-                library = Library(
-                    identifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary),
-                    name = "",
-                    metadataEditable = false,
-                    filesEditable = false
-                ),
                 selectedCollectionId = args.selectedCollectionId,
-                collectionTree = CollectionTree(
-                    nodes = mutableListOf(),
-                    collections = ConcurrentHashMap(),
-                    collapsed = ConcurrentHashMap()
-                )
             )
         }
 
     }
 
     private fun loadData() {
-        val libraryId = viewState.libraryId
+        val libraryId = this.libraryId
         val includeItemCounts = defaults.showCollectionItemCounts()
 
         try {
             dbWrapper.realmDbStorage.perform { coordinator ->
-                val library =
+                this.library =
                     coordinator.perform(request = ReadLibraryDbRequest(libraryId = libraryId))
                 collections =
                     coordinator.perform(request = ReadCollectionsDbRequest(libraryId = libraryId))
-
                 viewModelScope.launch {
                     updateState {
                         copy(
-                            library = library,
-                            lce = org.zotero.android.architecture.LCE2.Content
+                            libraryName = this@CollectionsViewModel.library.name,
+                            lce = LCE2.Content
                         )
                     }
                 }
@@ -250,11 +268,14 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
-    private fun updateCollectionTree(collectionTree: CollectionTree, snapshot: List<CollectionItemWithChildren>) {
+    private fun updateCollectionTree(
+        collectionTree: CollectionTree,
+        snapshot: List<CollectionItemWithChildren>
+    ) {
+        this.collectionTree = collectionTree
         updateState {
             copy(
-                collectionTree = collectionTree,
-                collectionItemsToDisplay = snapshot
+                collectionItemsToDisplay = snapshot.toImmutableList()
             )
         }
         expandCollectionsIfNeeded()
@@ -270,7 +291,7 @@ internal class CollectionsViewModel @Inject constructor(
             listOfParents = listOf()
         )
         for (parent in listOfParentsToExpand.second) {
-            viewState.collectionTree.set(false, parent)
+            this.collectionTree.set(false, parent)
         }
     }
 
@@ -319,7 +340,7 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     private fun update(itemsCount: Int, customType: CollectionIdentifier.CustomType) {
-        val collectionTree = viewState.collectionTree
+        val collectionTree = this.collectionTree
         collectionTree.update(
             collection = Collection.initWithCustomType(
                 type = customType,
@@ -332,15 +353,15 @@ internal class CollectionsViewModel @Inject constructor(
     private fun update(collections: RealmResults<RCollection>, includeItemCounts: Boolean) {
         val tree = CollectionTreeBuilder.collections(
             collections,
-            libraryId = viewState.libraryId,
+            libraryId = this.libraryId,
             includeItemCounts = includeItemCounts
         )
         tree.sortNodes()
-        val collectionTree = viewState.collectionTree
+        val collectionTree = this.collectionTree
         collectionTree.replace(matching = { it.isCollection }, tree = tree)
         updateCollectionTree(collectionTree, collectionTree.createSnapshot())
 
-        if (viewState.collectionTree.collection(viewState.selectedCollectionId) == null) {
+        if (this.collectionTree.collection(viewState.selectedCollectionId) == null) {
             val collection =
                 collectionTree.collections[CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)]!!
             onItemTapped(collection)
@@ -355,7 +376,7 @@ internal class CollectionsViewModel @Inject constructor(
         fileStore.setSelectedCollectionId(collection.identifier)
         ScreenArguments.allItemsArgs = AllItemsArgs(
             collection = collection,
-            library = viewState.library,
+            library = this.library,
             searchTerm = null,
             error = null
         )
@@ -363,15 +384,14 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun onItemChevronTapped(collection: Collection) {
-        val tree = viewState.collectionTree
-        val libraryId = viewState.libraryId
+        val tree = this.collectionTree
+        val libraryId = this.libraryId
         val collapsed = tree.collapsed[collection.identifier] ?: return
         tree.set(
             collapsed = !collapsed, collection.identifier
         )
-        updateState {
-            copy(collectionTree = tree)
-        }
+        this.collectionTree = tree
+
         val request = SetCollectionCollapsedDbRequest(
             collapsed = !collapsed,
             identifier = collection.identifier,
@@ -399,7 +419,7 @@ internal class CollectionsViewModel @Inject constructor(
 
     fun onAdd() {
         ScreenArguments.collectionEditArgs = CollectionEditArgs(
-            library = viewState.library,
+            library = this.library,
             key = null,
             name = "",
             parent = null,
@@ -408,7 +428,7 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(collection: Collection) {
-        if (!viewState.library.metadataEditable) {
+        if (!this.library.metadataEditable) {
             return
         }
         val actions = mutableListOf<LongPressOptionItem>()
@@ -467,7 +487,7 @@ internal class CollectionsViewModel @Inject constructor(
         val request = MarkObjectsAsDeletedDbRequest(
             clazz = clazz,
             keys = keys,
-            libraryId = viewState.library.identifier
+            libraryId = this.library.identifier
         )
         perform(
             dbWrapper = dbWrapper,
@@ -482,18 +502,18 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     private fun onEdit(collection: Collection) {
-        val parentKey = viewState.collectionTree.parent(collection.identifier)?.keyGet
+        val parentKey = this.collectionTree.parent(collection.identifier)?.keyGet
         val parent: Collection?
         if (parentKey != null) {
             val request =
-                ReadCollectionDbRequest(libraryId = viewState.library.identifier, key = parentKey)
+                ReadCollectionDbRequest(libraryId = this.library.identifier, key = parentKey)
             val rCollection = dbWrapper.realmDbStorage.perform(request = request)
             parent = Collection.initWithCollection(objectS = rCollection, itemCount = 0)
         } else {
             parent = null
         }
         ScreenArguments.collectionEditArgs = CollectionEditArgs(
-            library = viewState.library,
+            library = this.library,
             key = collection.identifier.keyGet,
             name = collection.name,
             parent = parent,
@@ -503,7 +523,7 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun onAddSubcollection(collection: Collection) {
         ScreenArguments.collectionEditArgs = CollectionEditArgs(
-            library = viewState.library,
+            library = this.library,
             key = null,
             name = "",
             parent = collection,
@@ -519,22 +539,19 @@ internal class CollectionsViewModel @Inject constructor(
         triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen)
     }
 
+    fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {
+        return collectionTree.collapsed[snapshot.collection.identifier]!!
+    }
+
+    fun showCollectionItemCounts(): Boolean {
+        return defaults.showCollectionItemCounts()
+    }
+
 }
 
 internal data class CollectionsViewState(
-    val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
-    val library: Library = Library(
-        identifier = LibraryIdentifier.group(0),
-        name = "",
-        metadataEditable = false,
-        filesEditable = false
-    ),
-    val collectionTree: CollectionTree = CollectionTree(
-        mutableListOf(),
-        ConcurrentHashMap(),
-        ConcurrentHashMap()
-    ),
-    val collectionItemsToDisplay: List<CollectionItemWithChildren> = emptyList(),
+    val libraryName: String = "",
+    val collectionItemsToDisplay: ImmutableList<CollectionItemWithChildren> = persistentListOf(),
     val selectedCollectionId: CollectionIdentifier = CollectionIdentifier.custom(
         CollectionIdentifier.CustomType.all
     ),
@@ -542,9 +559,6 @@ internal data class CollectionsViewState(
     val error: CollectionsError? = null,
     val lce: LCE2 = LCE2.Loading,
 ) : ViewState {
-    fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {
-        return collectionTree.collapsed[snapshot.collection.identifier]!!
-    }
 }
 
 internal sealed class CollectionsViewEffect : ViewEffect {
