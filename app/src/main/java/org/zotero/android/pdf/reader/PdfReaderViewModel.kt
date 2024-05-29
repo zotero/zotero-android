@@ -59,6 +59,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import org.zotero.android.ZoteroApplication
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
@@ -84,6 +85,7 @@ import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
+import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
@@ -623,6 +625,8 @@ class PdfReaderViewModel @Inject constructor(
                         initialPage = null,
                     )
                 }
+
+                this.fragment.pageIndex = page
 
                 if (selectedData != null) {
                     val (key, location) = selectedData
@@ -1591,6 +1595,7 @@ class PdfReaderViewModel @Inject constructor(
             .forEach {
                 this.document.annotationProvider.removeAnnotationFromPage(it)
             }
+        submitPendingPage(fragment.pageIndex)
         super.onCleared()
     }
 
@@ -2526,6 +2531,27 @@ class PdfReaderViewModel @Inject constructor(
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel:  can't update annotation $key")
+                return@launch
+            }
+        }
+    }
+
+    private fun submitPendingPage(page: Int) {
+        store(page = page)
+    }
+
+    private fun store(page: Int) {
+        val request = StorePageForItemDbRequest(
+            key = viewState.key,
+            libraryId = viewState.library.identifier,
+            page = "$page"
+        )
+        ZoteroApplication.instance.applicationScope.launch {
+            perform(
+                dbWrapper = dbWrapper,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "PDFReaderViewModel: can't store page")
                 return@launch
             }
         }
