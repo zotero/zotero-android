@@ -54,6 +54,7 @@ class IdentifierLookupController @Inject constructor(
     private val schemaController: SchemaController,
     private val dbWrapper: DbWrapper,
     private val defaults: Defaults,
+    private val translatorLoadedEventStream: TranslatorLoadedEventStream,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
 ) {
 
@@ -109,6 +110,7 @@ class IdentifierLookupController @Inject constructor(
             translatorsLoader = translatorsLoader,
             fileStore = fileStore,
             noAuthenticationApi = noAuthenticationApi,
+            translatorLoadedEventStream = translatorLoadedEventStream,
         )
         lookupWebViewHandlersByLookupSettings[lookupSettings] = lookupWebViewHandler
         setupObserver(lookupWebViewHandler)

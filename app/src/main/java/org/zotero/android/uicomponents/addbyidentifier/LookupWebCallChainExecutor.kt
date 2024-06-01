@@ -31,7 +31,8 @@ class LookupWebCallChainExecutor(
     private val gson: Gson,
     private val translatorsLoader: TranslatorsLoader,
     private val fileStore: FileStore,
-    private val noAuthenticationApi: NoAuthenticationApi
+    private val noAuthenticationApi: NoAuthenticationApi,
+    private val translatorLoadedEventStream: TranslatorLoadedEventStream,
 ) {
 
     private lateinit var lookupWebViewHandler: LookupWebViewHandler
@@ -166,6 +167,7 @@ class LookupWebCallChainExecutor(
             val translatorsResult =
                 translatorsLoader.translators(null)
             sendInitTranslatorsMessage(translatorsResult)
+            translatorLoadedEventStream.emitAsync(true)
         }
     }
 

@@ -24,4 +24,5 @@
     <string name="queued">Queued…</string>
     <string name="failed">Failed</string>
     <string name="scan_another">Scan Another</string>
+    <string name="loading_translators">Loading translators… Please wait.</string>
 </resources>

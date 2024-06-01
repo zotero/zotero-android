@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -22,9 +23,11 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.addbyidentifier.IdentifierLookupController
+import org.zotero.android.uicomponents.addbyidentifier.TranslatorLoadedEventStream
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRow
 import org.zotero.android.uicomponents.addbyidentifier.data.LookupRowItem
 import timber.log.Timber
+import java.util.LinkedList
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,12 +35,16 @@ internal class ScanBarcodeViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val identifierLookupController: IdentifierLookupController,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
+    private val translatorLoadedEventStream: TranslatorLoadedEventStream,
     private val schemaController: SchemaController,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
     private val context: Context,
 ) : BaseViewModel2<ScanBarcodeViewState, ScanBarcodeViewEffect>(ScanBarcodeViewState()) {
 
+    private val queueOfScannedBarcodes = LinkedList<String>()
+
     fun init() = initOnce {
+        setupTranslatorLoadedObserving()
         setupAttachmentObserving()
         val collectionKeys =
             fileStore.getSelectedCollectionId().keyGet?.let { setOf(it) } ?: emptySet()
@@ -58,7 +65,11 @@ internal class ScanBarcodeViewModel @Inject constructor(
         scanner.startScan()
             .addOnSuccessListener { barcode ->
                 val scannedString = barcode.rawValue ?: ""
-                onLookup(scannedString)
+                if (translatorLoadedEventStream.currentValue() == true) {
+                    onLookup(scannedString)
+                } else {
+                   queueOfScannedBarcodes.add(scannedString)
+                }
             }
             .addOnCanceledListener {
                 triggerEffect(NavigateBack)
@@ -183,6 +194,16 @@ internal class ScanBarcodeViewModel @Inject constructor(
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
                 process(update = update)
+            }.launchIn(viewModelScope)
+    }
+
+    private fun setupTranslatorLoadedObserving() {
+        translatorLoadedEventStream.flow()
+            .filter { it == true }
+            .onEach { _ ->
+                queueOfScannedBarcodes.forEach {
+                    onLookup(it)
+                }
             }.launchIn(viewModelScope)
     }
 

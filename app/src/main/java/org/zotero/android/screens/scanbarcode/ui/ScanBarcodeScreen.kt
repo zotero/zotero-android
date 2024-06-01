@@ -69,13 +69,30 @@ internal fun ScanBarcodeScreen(
                     .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
-                scanBarcodeTable(rows = viewState.lookupRows)
-                if (viewState.lookupState == State.loadingIdentifiers ) {
+                if (viewState.lookupState == State.waitingInput) {
                     scanBarcodeLoadingIndicator()
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = stringResource(id = Strings.loading_translators),
+                                style = CustomTheme.typography.newBody,
+                                color = CustomTheme.colors.primaryContent,
+                            )
+                        }
+                    }
+                } else {
+                    scanBarcodeTable(rows = viewState.lookupRows)
+                    if (viewState.lookupState == State.loadingIdentifiers ) {
+                        scanBarcodeLoadingIndicator()
+                    }
+                    scanBarcodeError(
+                        failedState = viewState.lookupState as? State.failed
+                    )
                 }
-                scanBarcodeError(
-                    failedState = viewState.lookupState as? State.failed
-                )
             }
         }
     }
