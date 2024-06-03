@@ -294,7 +294,12 @@ internal class AddByIdentifierViewModel @Inject constructor(
                             title = _title ?: ""
                         }
                         val itemData =
-                            LookupRowItem(type = translationData.response.rawType, title = title)
+                            LookupRowItem(
+                                identifier = lookup.identifier,
+                                key = translationData.response.key,
+                                type = translationData.response.rawType,
+                                title = title
+                            )
 
                         rowsList.add(LookupRow.item(itemData))
 

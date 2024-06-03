@@ -33,8 +33,9 @@ import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
-internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>) {
+internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>, onDelete: (row: LookupRow.item) -> Unit) {
     rows.forEach { row ->
         item {
             when (row) {
@@ -42,7 +43,8 @@ internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>) {
                     val data = row.item
                     LookupItemRow(
                         title = data.title,
-                        type = data.type
+                        type = data.type,
+                        onDelete = { onDelete(row) }
                     )
                 }
 
@@ -71,37 +73,50 @@ internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>) {
 
 @Composable
 internal fun LookupItemRow(
-    title: String, type: String
+    title: String, type: String,
+    onDelete: () -> Unit,
 ) {
     val iconSize = 28.dp
 
     val modifier = Modifier.size(iconSize)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            modifier = modifier,
-            painter = painterResource(id = ItemTypes.iconName(type, null)),
-            contentDescription = null,
-        )
-        Column(
+    Box {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(start = 16.dp, top = 8.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = HtmlCompat.fromHtml(
-                    title,
-                    HtmlCompat.FROM_HTML_MODE_LEGACY
-                ).toString(),
-                color = CustomTheme.colors.primaryContent,
-                style = CustomTheme.typography.newBody,
+            Image(
+                modifier = modifier,
+                painter = painterResource(id = ItemTypes.iconName(type, null)),
+                contentDescription = null,
             )
-            NewDivider(modifier = Modifier.padding(top = 8.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp)
+                    .padding(vertical = 4.dp)
+            ) {
+                Text(
+                    text = HtmlCompat.fromHtml(
+                        title,
+                        HtmlCompat.FROM_HTML_MODE_LEGACY
+                    ).toString(),
+                    color = CustomTheme.colors.primaryContent,
+                    style = CustomTheme.typography.newBody,
+                )
+            }
+
+            HeadingTextButton(
+                text = stringResource(id = Strings.delete),
+                contentColor = CustomPalette.ErrorRed,
+                onClick = onDelete
+            )
         }
+
+        NewDivider(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+        )
     }
 }
 

@@ -262,7 +262,12 @@ internal class ScanBarcodeViewModel @Inject constructor(
                             title = _title ?: ""
                         }
                         val itemData =
-                            LookupRowItem(type = translationData.response.rawType, title = title)
+                            LookupRowItem(
+                                identifier = lookup.identifier,
+                                key = translationData.response.key,
+                                type = translationData.response.rawType,
+                                title = title
+                            )
 
                         rowsList.add(LookupRow.item(itemData))
 
@@ -337,6 +342,40 @@ internal class ScanBarcodeViewModel @Inject constructor(
     override fun onCleared() {
         identifierLookupController.cancelAllLookups(shouldTrashItems = false)
         super.onCleared()
+    }
+
+    fun onItemDelete(lookupRow: LookupRow.item) {
+        val state = viewState.lookupState as State.lookup
+        val item = state.data.find {
+            val translatedItem = it.state as IdentifierLookupController.LookupData.State.translated
+            translatedItem.translatedLookupData.response.key == lookupRow.item.key
+        }!!
+        val translatedItem = item.state as IdentifierLookupController.LookupData.State.translated
+
+        identifierLookupController.trashItem(
+            identifier = lookupRow.item.identifier,
+            itemKey = translatedItem.translatedLookupData.response.key,
+            libraryId = translatedItem.translatedLookupData.libraryId
+        )
+
+        val itemIndex = viewState.lookupRows.indexOf(lookupRow)
+        val lookupRowsMutable = viewState.lookupRows.toMutableList()
+        lookupRowsMutable.remove(lookupRow)
+        if (lookupRowsMutable.isNotEmpty() && itemIndex < lookupRowsMutable.size && lookupRowsMutable[itemIndex] is LookupRow.attachment) {
+            lookupRowsMutable.removeAt(itemIndex)
+        }
+
+        val mutableStateData = state.data.toMutableList()
+        mutableStateData.remove(item)
+        val updatedLookupState = State.lookup(mutableStateData)
+
+        updateState {
+            copy(
+                lookupRows = lookupRowsMutable,
+                lookupState = updatedLookupState
+            )
+        }
+
     }
 
 

@@ -85,8 +85,10 @@ internal fun ScanBarcodeScreen(
                         }
                     }
                 } else {
-                    scanBarcodeTable(rows = viewState.lookupRows)
-                    if (viewState.lookupState == State.loadingIdentifiers ) {
+                    scanBarcodeTable(
+                        rows = viewState.lookupRows,
+                        onDelete = { viewModel.onItemDelete(it) })
+                    if (viewState.lookupState == State.loadingIdentifiers) {
                         scanBarcodeLoadingIndicator()
                     }
                     scanBarcodeError(

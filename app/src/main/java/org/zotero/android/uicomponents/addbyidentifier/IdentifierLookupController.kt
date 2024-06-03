@@ -630,6 +630,16 @@ class IdentifierLookupController @Inject constructor(
         cleanupLookup(force = force, completion = completion)
     }
 
+    fun trashItem(identifier: String, itemKey: String, libraryId: LibraryIdentifier) {
+        lookupData.remove(identifier)
+        val request = MarkItemsAsTrashedDbRequest(
+            keys = listOf(itemKey),
+            libraryId = libraryId,
+            trashed = true
+        )
+        dbWrapper.realmDbStorage.perform(request)
+    }
+
     suspend fun lookUp(
         libraryId: LibraryIdentifier,
         collectionKeys: Set<String>,

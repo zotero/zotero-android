@@ -5,6 +5,8 @@ import org.zotero.android.database.objects.Attachment
 import org.zotero.android.sync.LibraryIdentifier
 
 data class LookupRowItem(
+    val identifier: String,
+    val key: String,
     val type: String,
     val title: String
 )
