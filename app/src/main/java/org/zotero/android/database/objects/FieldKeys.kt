@@ -6,7 +6,8 @@ import timber.log.Timber
 class FieldKeys {
     class Collection {
         companion object {
-            val knownDataKeys = listOf("key", "version", "name", "parentCollection", "relations")
+            val knownDataKeys =
+                listOf("key", "version", "name", "parentCollection", "relations", "deleted")
         }
     }
 
@@ -224,7 +225,7 @@ class FieldKeys {
 
     class Search {
         companion object {
-            val knownDataKeys = listOf("key", "version", "name", "conditions")
+            val knownDataKeys = listOf("key", "version", "name", "conditions", "deleted")
         }
 
     }

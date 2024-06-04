@@ -21,6 +21,8 @@ class ReadCollectionsDbRequest(
             .and()
             .deleted(false)
             .and()
+            .isTrash(false)
+            .and()
             .keyNotIn(this.excludedKeys)
             .findAll()
     }
