@@ -53,11 +53,9 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
-import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
-import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncObservableEventStream
 import org.zotero.android.sync.SyncScheduler
@@ -129,13 +127,17 @@ internal class ShareViewModel @Inject constructor(
         selectedLibraryId = fileStore.getSelectedLibrary()
         attachmentKey = KeyGenerator.newKey()
         setupObservers()
+        finishSync(true)
         ioCoroutineScope.launch {
             try {
-                syncScheduler.startSyncController(
-                    type = SyncKind.collectionsOnly,
-                    libraries = Libraries.all,
-                    retryAttempt = 0
-                )
+                // There should not be a need to do a dedicated collections sync here
+                // and wait for it's completion as for large number of collections it could take a lot of time,
+                // let's use already synced collections for selection.
+//                syncScheduler.startSyncController(
+//                    type = SyncKind.collectionsOnly,
+//                    libraries = Libraries.all,
+//                    retryAttempt = 0
+//                )
                 val attachment = shareRawAttachmentLoader.getLoadedAttachmentResult()
                 process(attachment)
             } catch (e: Exception) {
@@ -153,11 +155,11 @@ internal class ShareViewModel @Inject constructor(
     }
 
     private fun setupObservers() {
-        syncObservableEventStream.flow()
-            .onEach { data ->
-                finishSync(successful = (data == null))
-            }
-            .launchIn(viewModelScope)
+//        syncObservableEventStream.flow()
+//            .onEach { data ->
+//                finishSync(successful = (data == null))
+//            }
+//            .launchIn(viewModelScope)
 
         translatorActionEventStream.flow()
             .onEach { event ->
