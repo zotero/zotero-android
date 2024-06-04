@@ -198,6 +198,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
     }
 
     private fun setupTranslatorLoadedObserving() {
+        translatorLoadedEventStream.emit(false) //reset the translator loaded indicator before initializing the translator
         translatorLoadedEventStream.flow()
             .filter { it == true }
             .onEach { _ ->
