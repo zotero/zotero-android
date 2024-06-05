@@ -53,9 +53,11 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.SyncObservableEventStream
 import org.zotero.android.sync.SyncScheduler
@@ -127,21 +129,18 @@ internal class ShareViewModel @Inject constructor(
         selectedLibraryId = fileStore.getSelectedLibrary()
         attachmentKey = KeyGenerator.newKey()
         setupObservers()
-        finishSync(true)
         ioCoroutineScope.launch {
             try {
-                // There should not be a need to do a dedicated collections sync here
-                // and wait for it's completion as for large number of collections it could take a lot of time,
-                // let's use already synced collections for selection.
-//                syncScheduler.startSyncController(
-//                    type = SyncKind.collectionsOnly,
-//                    libraries = Libraries.all,
-//                    retryAttempt = 0
-//                )
+                Timber.i("ShareViewModel: start async collections sync")
+                syncScheduler.startSyncController(
+                    type = SyncKind.collectionsOnly,
+                    libraries = Libraries.all,
+                    retryAttempt = 0
+                )
                 val attachment = shareRawAttachmentLoader.getLoadedAttachmentResult()
                 process(attachment)
             } catch (e: Exception) {
-                Timber.e(e, "ExtensionViewModel: could not load attachment")
+                Timber.e(e, "ShareViewModel: could not load attachment")
                 updateAttachmentState(
                     AttachmentState.failed(
                         shareErrorProcessor.attachmentError(
@@ -155,11 +154,11 @@ internal class ShareViewModel @Inject constructor(
     }
 
     private fun setupObservers() {
-//        syncObservableEventStream.flow()
-//            .onEach { data ->
-//                finishSync(successful = (data == null))
-//            }
-//            .launchIn(viewModelScope)
+        syncObservableEventStream.flow()
+            .onEach { data ->
+                finishSync(successful = (data == null))
+            }
+            .launchIn(viewModelScope)
 
         translatorActionEventStream.flow()
             .onEach { event ->
@@ -384,6 +383,7 @@ internal class ShareViewModel @Inject constructor(
     }
 
     private fun finishSync(successful: Boolean) {
+        Timber.i("ShareViewModel: finishSync success = $successful")
         if (!successful) {
             updateState {
                 copy(collectionPickerState = CollectionPickerState.failed)
@@ -396,6 +396,7 @@ internal class ShareViewModel @Inject constructor(
             var library: Library? = null
             var collection: Collection? = null
             var recents = mutableListOf<RecentData>()
+            Timber.i("ShareViewModel: ReadCollectionAndLibraryDbRequest closure before")
             dbWrapper.realmDbStorage.perform { coordinator ->
                 val request = ReadCollectionAndLibraryDbRequest(
                     collectionId = this.selectedCollectionId,
@@ -417,7 +418,9 @@ internal class ShareViewModel @Inject constructor(
                         //no-op
                     }
                 }
+                Timber.i("ShareViewModel: ReadCollectionAndLibraryDbRequest closure exec finish. recents = ${recents.size}, collection = ${collection}, library = $_library")
             }
+            Timber.i("ShareViewModel: ReadCollectionAndLibraryDbRequest closure after. recents = ${recents.size}, collection = ${collection}, library = $library")
             if (library == null) {
                 return
             }
@@ -443,7 +446,7 @@ internal class ShareViewModel @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Timber.e(e, "can't load collections")
+            Timber.e(e, "ShareViewModel: can't load collections")
             val library = Library(
                 identifier = this.defaultLibraryId,
                 name = RCustomLibraryType.myLibrary.libraryName,

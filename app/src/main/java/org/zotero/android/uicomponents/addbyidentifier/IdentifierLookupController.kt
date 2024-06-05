@@ -673,7 +673,7 @@ class IdentifierLookupController @Inject constructor(
                 )
             }
         }
-        if (!shouldTrashItems) {
+        if (!shouldTrashItems || !this::observable.isInitialized) {
             return
         }
         val storedItemResponses = lookupData.values.mapNotNull {

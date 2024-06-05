@@ -102,8 +102,10 @@ class SyncUseCase @Inject constructor(
     }
 
     suspend fun start(type: SyncKind, libraries: Libraries, retryAttempt: Int, syncSchedulerCoroutineScope: CoroutineScope) {
+        Timber.i("SyncEngine: start with syncKind = $type")
         with(this@SyncUseCase) {
             if (this.isSyncing) {
+                Timber.i("SyncEngine: already syncing. Not proceeding with this sync request")
                 return@with
             }
             this.type = type
