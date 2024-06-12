@@ -14,10 +14,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
+import org.zotero.android.androidx.content.getDrawableByItemType
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
@@ -140,7 +142,12 @@ private fun SetAttachment(title: String, file: File, state: AttachmentState, sho
 private fun SetItem(title: String, type: String) {
     ParsedShareItem(
         title = title,
-        iconInt = ItemTypes.iconName(type, null)
+        iconInt = LocalContext.current.getDrawableByItemType(
+            ItemTypes.iconName(
+                type,
+                null
+            )
+        )
     )
 }
 

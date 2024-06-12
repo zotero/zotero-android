@@ -24,9 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import org.zotero.android.androidx.content.getDrawableByItemType
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.uicomponents.Drawables
@@ -142,7 +144,7 @@ private fun ItemRowLeftPart(
     Spacer(modifier = Modifier.width(16.dp))
     Image(
         modifier = Modifier.size(28.dp),
-        painter = painterResource(id = model.typeIconName),
+        painter = painterResource(id = LocalContext.current.getDrawableByItemType(model.typeIconName)),
         contentDescription = null,
     )
 }

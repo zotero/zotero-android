@@ -9,11 +9,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.androidx.content.getDrawableByItemType
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -31,10 +32,10 @@ internal fun AddNoteTopBar(
                 modifier = modifier.padding(start = 40.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val iconInt = titleData?.type?.let { ItemTypes.iconName(it, null) }
-                if (iconInt != null) {
+                val type = titleData?.type
+                if (type != null) {
                     Image(
-                        painter = painterResource(id = iconInt),
+                        painter = painterResource(id = LocalContext.current.getDrawableByItemType(type)),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))

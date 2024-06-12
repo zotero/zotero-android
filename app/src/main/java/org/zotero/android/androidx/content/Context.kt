@@ -15,6 +15,7 @@ import androidx.annotation.AttrRes
 import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.core.content.ContextCompat
 import timber.log.Timber
@@ -95,6 +96,18 @@ fun Context.getFileSize(uri: Uri): Long? {
         Timber.e(e, "Failed to get file size")
         return null
     }
+}
+
+@Composable
+fun Context.getDrawableByItemType(typeIconString: String): Int {
+    val drawableId = remember(typeIconString) {
+        resources.getIdentifier(
+            typeIconString,
+            "drawable",
+            packageName
+        )
+    }
+    return drawableId
 }
 
 @Composable

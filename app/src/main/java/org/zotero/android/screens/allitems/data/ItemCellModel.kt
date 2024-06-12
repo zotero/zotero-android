@@ -8,7 +8,7 @@ import org.zotero.android.uicomponents.attachmentprogress.State
 
 data class ItemCellModel(
     val key: String,
-    val typeIconName: Int,
+    val typeIconName: String,
     val typeName: String,
     val title: String,
     val subtitle: String,
