@@ -55,9 +55,12 @@ fun <T> RealmQuery<T>.changesWithoutDeletions(libraryId: LibraryIdentifier): Rea
 }
 
 fun <T> RealmQuery<T>.itemChangesWithoutDeletions(libraryId: LibraryIdentifier): RealmQuery<T> {
-    val changePredicate = changed()
-        .or()
-        .attachmentChanged()
+    val changePredicate =
+        beginGroup()
+            .changed()
+            .or()
+            .attachmentChanged()
+            .endGroup()
     return changePredicate
         .and()
         .library(libraryId)

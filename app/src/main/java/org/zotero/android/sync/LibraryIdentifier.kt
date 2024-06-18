@@ -53,7 +53,7 @@ sealed class LibraryIdentifier: java.io.Serializable  {
             if (apiPath.contains("groups") && lastSeparator != -1) {
                 val groupId = apiPath.substring(startIndex = lastSeparator + 1).toIntOrNull()
                 if (groupId != null) {
-                    LibraryIdentifier.group(groupId)
+                    return LibraryIdentifier.group(groupId)
                 }
             }
 
