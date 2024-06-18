@@ -25,6 +25,11 @@ val iso8601DateFormatV2: SimpleDateFormat
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
+val fullDateWithDashesUtc: SimpleDateFormat
+    get() = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }
+
 val deadlineTimeFormat: SimpleDateFormat
     get() = SimpleDateFormat("EEEE MMM d, h:mm a", Locale.getDefault())
 
