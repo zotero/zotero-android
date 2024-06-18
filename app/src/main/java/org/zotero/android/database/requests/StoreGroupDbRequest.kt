@@ -42,33 +42,30 @@ class StoreGroupDbRequest(
         val canEditMetadata: Boolean
         val canEditFiles: Boolean
 
-        if (this.userId == response.data.owner) {
-            canEditMetadata = true
-            canEditFiles = true
+        if (response.data.libraryEditing == "admins") {
+            canEditMetadata = (response.data.admins ?: emptyList()).contains(userId)
         } else {
-            if (response.data.libraryEditing == "admins") {
-                canEditMetadata = (response.data.admins ?: emptyList()).contains(this.userId)
-            } else {
-                canEditMetadata = true
+            canEditMetadata = true
+        }
+
+        when (response.data.fileEditing) {
+            "none" -> {
+                canEditFiles = false
             }
-            when (response.data.fileEditing) {
-                "none" -> {
-                    canEditFiles = false
-                }
 
-                "admins" -> {
-                    canEditFiles = (response.data.admins ?: emptyList()).contains(this.userId)
-                }
+            "admins" -> {
+                canEditFiles = (response.data.admins ?: emptyList()).contains(userId)
+            }
 
-                "members" -> {
-                    canEditFiles = true
-                }
+            "members" -> {
+                canEditFiles = true
+            }
 
-                else -> {
-                    canEditFiles = false
-                }
+            else -> {
+                canEditFiles = false
             }
         }
+
         group.name = response.data.name
         group.desc = response.data.description
         group.owner = response.data.owner
