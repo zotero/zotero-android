@@ -1,7 +1,6 @@
 package org.zotero.android.screens.share.backgroundprocessor
 
 import android.content.Context
-import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -14,6 +13,7 @@ import org.zotero.android.api.NoAuthenticationApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
@@ -149,9 +149,7 @@ class BackgroundUploadProcessor @Inject constructor(
 //        headersWithExtra["Content-Type"] = contentType
         headersWithExtra["Zotero-API-Version"] = 3.toString()
         headersWithExtra["Zotero-Schema-Version"] = schemaController.version.toString()
-        headersWithExtra["User-Agent"] = "zotero" +
-                "android/${Build.VERSION.SDK_INT} " +
-                "(${Build.MANUFACTURER} ${Build.DEVICE})"
+        headersWithExtra["User-Agent"] = DeviceInfoProvider.userAgentString
         return headersWithExtra
 
     }

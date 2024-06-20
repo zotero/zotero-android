@@ -32,4 +32,7 @@ object DeviceInfoProvider {
         return "Android "+ Build.VERSION.SDK_INT
     }
 
+    val userAgentString: String get() {
+        return "Zotero/${BuildConfig.VERSION_NAME} (Android ${Build.VERSION.SDK_INT})"
+    }
 }
