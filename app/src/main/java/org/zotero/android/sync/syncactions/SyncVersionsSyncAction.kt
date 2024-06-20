@@ -168,7 +168,7 @@ class SyncVersionsSyncAction(
             )
             identifiers = coordinator.perform(request = request).toMutableList()
 
-            coordinator.invalidate()
+            coordinator.refresh()
         })
         return Pair(newVersion, identifiers)
     }

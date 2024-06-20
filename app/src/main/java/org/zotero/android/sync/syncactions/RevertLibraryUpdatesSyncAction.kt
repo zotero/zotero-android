@@ -120,7 +120,7 @@ class RevertLibraryUpdatesSyncAction(
                 failedCollections = collections.second.toMutableList()
                 failedSearches = searches.second.toMutableList()
                 failedItems = items.second.toMutableList()
-                coordinator.invalidate()
+                coordinator.refresh()
             }
 
             renameExistingFiles(changes = changes, libraryId = this.libraryId)

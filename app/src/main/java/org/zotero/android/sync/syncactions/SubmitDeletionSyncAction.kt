@@ -112,7 +112,7 @@ class SubmitDeletionSyncAction(
                     }
                 }
                 coordinator.perform(requests)
-                coordinator.invalidate()
+                coordinator.refresh()
             }
             return didCreateDeletions
         } catch (error: Exception) {

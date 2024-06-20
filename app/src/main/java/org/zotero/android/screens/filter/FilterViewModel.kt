@@ -328,7 +328,7 @@ internal class FilterViewModel @Inject constructor(
 //                    }
                 }
 
-                coordinator.invalidate()
+                coordinator.refresh()
                 if (!viewState.searchTerm.isEmpty()) {
                     // Perform search filter if needed
                     snapshot = sorted

@@ -73,7 +73,7 @@ class ShareItemSubmitter @Inject constructor(
             parameters = item.updateParameters?.toMutableMap() ?: mutableMapOf()
             changeUuids = mutableMapOf(item.key to item.changes.map { it.identifier })
 
-            coordinator.invalidate()
+            coordinator.refresh()
         }
 
         return parameters to changeUuids
@@ -118,7 +118,7 @@ class ShareItemSubmitter @Inject constructor(
                 .findFirst()?.value?.toLongOrNull()
             md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
 
-            coordinator.invalidate()
+            coordinator.refresh()
         }
         if (mtime == null) {
             throw AttachmentState.Error.mtimeMissing
@@ -172,7 +172,7 @@ class ShareItemSubmitter @Inject constructor(
                 .findFirst()?.value?.toLongOrNull()
             md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
 
-            coordinator.invalidate()
+            coordinator.refresh()
         }
 
         mtime ?: throw AttachmentState.Error.mtimeMissing

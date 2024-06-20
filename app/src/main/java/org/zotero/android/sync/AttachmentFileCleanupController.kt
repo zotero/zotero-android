@@ -138,7 +138,7 @@ class AttachmentFileCleanupController @Inject constructor(
                 }
 
                 coordinator.perform(request = MarkAllFilesAsNotDownloadedDbRequest())
-                coordinator.invalidate()
+                coordinator.refresh()
             }
 
             val deletedIndividually = delete(libraryIds, forUpload = forUpload)
@@ -203,7 +203,7 @@ class AttachmentFileCleanupController @Inject constructor(
                     )
                 )
 
-                coordinator.invalidate()
+                coordinator.refresh()
             }
 
             for (key in toDelete) {
@@ -246,7 +246,7 @@ class AttachmentFileCleanupController @Inject constructor(
                         downloaded = false
                     )
                 )
-                coordinator.invalidate()
+                coordinator.refresh()
                 canDelete = true
             }
             if (canDelete) {
@@ -270,7 +270,7 @@ class AttachmentFileCleanupController @Inject constructor(
 
                 coordinator.perform(request = MarkLibraryFilesAsNotDownloadedDbRequest(libraryId = libraryId))
 
-                coordinator.invalidate()
+                coordinator.refresh()
             }
 
             val deletedIndividually =

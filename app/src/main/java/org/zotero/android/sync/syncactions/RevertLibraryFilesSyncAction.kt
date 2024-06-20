@@ -72,7 +72,7 @@ class RevertLibraryFilesSyncAction(
             )
             changedFilenames =
                 coordinator.perform(request = request).changedFilenames.toMutableList()
-            coordinator.invalidate()
+            coordinator.refresh()
         }
 
         Timber.e("RevertLibraryFilesSyncAction: rename local files to match file names")
