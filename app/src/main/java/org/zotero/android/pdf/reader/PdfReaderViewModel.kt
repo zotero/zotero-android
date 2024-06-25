@@ -217,6 +217,13 @@ class PdfReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(pdfAnnotationCommentResult: PdfAnnotationCommentResult) {
         setComment(pdfAnnotationCommentResult.annotationKey, pdfAnnotationCommentResult.comment)
+        if (isTablet) {
+            // Fix for a bug where selecting an already selected annotation again didn't trigger Annotation Edit Popup/Screen.
+            // Unfortunately PSPDFKIT's onAnnotationSelected method is not triggered when user is selecting the same annotation again. Because technically the same annotation just stays selected.
+            // That's why after finishing annotation editing we have to make PSPDFKIT to deselect the currently selected annotation.
+            // Drawback to this is that of course visually annotation gets deselected as well.
+            this.fragment.clearSelectedAnnotations()
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -432,7 +439,7 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun loadRawDocument() {
         this.rawDocument =
-            PdfDocumentLoader.openDocument(context, this.document.documentSource.fileUri)
+            PdfDocumentLoader.openDocument(context, this.document.documentSource.fileUri!!)
     }
 
     private fun setupInteractionListeners() {
@@ -1204,9 +1211,6 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun _select(key: AnnotationKey?, didSelectInDocument: Boolean) {
-        if (key == viewState.selectedAnnotationKey) {
-            return
-        }
         val existing = viewState.selectedAnnotationKey
         if (existing != null) {
             if (viewState.sortedKeys.contains(existing)) {
@@ -1557,7 +1561,7 @@ class PdfReaderViewModel @Inject constructor(
 
 
     fun selectAnnotationFromDocument(key: AnnotationKey) {
-        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
+        if (!viewState.sidebarEditingEnabled) {
             _select(key = key, didSelectInDocument = true)
         }
     }
@@ -1634,6 +1638,7 @@ class PdfReaderViewModel @Inject constructor(
             .invertColors(isCalculatedThemeDark)
             .themeMode(themeMode)
             .showNoteEditorForNewNoteAnnotations(false)
+            .textSelectionPopupToolbarEnabled(false)
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
@@ -1898,7 +1903,7 @@ class PdfReaderViewModel @Inject constructor(
                     val pdfAnnotation =
                         document.annotation(annotationToReselect.page, annotationToReselect.key)
                     if (pdfAnnotation != null) {
-                        fragment.setSelectedAnnotation(pdfAnnotation)
+//                        fragment.setSelectedAnnotation(pdfAnnotation)
                     }
                 }
                 setupInteractionListeners()
