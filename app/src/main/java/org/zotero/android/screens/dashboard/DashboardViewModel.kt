@@ -15,6 +15,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.logging.crash.CrashReportIdDialogData
 import org.zotero.android.architecture.logging.crash.CrashShareDataEventStream
 import org.zotero.android.architecture.logging.debug.DebugLogging
@@ -23,6 +24,7 @@ import org.zotero.android.architecture.logging.debug.DebugLoggingDialogDataEvent
 import org.zotero.android.architecture.logging.debug.DebugLoggingInterface
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.requests.DeleteGroupDbRequest
 import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.ReadSearchDbRequest
@@ -31,6 +33,7 @@ import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.screens.libraries.data.DeleteGroupDialogData
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -59,6 +62,13 @@ class DashboardViewModel @Inject constructor(
     private val sessionController: SessionController
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
     DebugLoggingInterface {
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(deleteGroupDialogData: DeleteGroupDialogData) {
+        updateState {
+            copy(deleteGroupDialogData = deleteGroupDialogData)
+        }
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: AskUserToResolveChangedDeletedItem) {
@@ -291,6 +301,14 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun onDismissDeleteGroupDialog() {
+        updateState {
+            copy(
+                deleteGroupDialogData = null,
+            )
+        }
+    }
+
     fun dismissBottomSheet() {
         updateState {
             copy(longPressOptionsHolder = null)
@@ -336,6 +354,17 @@ class DashboardViewModel @Inject constructor(
         debugLogging.stop()
     }
 
+    fun deleteNonLocalGroup(groupId: Int) {
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapper,
+                DeleteGroupDbRequest(groupId = groupId)
+            ).ifFailure {
+                Timber.e(it, "DashboardViewModel: can't delete group")
+                return@launch
+            }
+        }
+    }
 }
 
 data class DashboardViewState(
@@ -343,6 +372,7 @@ data class DashboardViewState(
     val conflictDialog: ConflictDialogData? = null,
     val debugLoggingDialogData: DebugLoggingDialogData? = null,
     val crashReportIdDialogData: CrashReportIdDialogData? = null,
+    val deleteGroupDialogData: DeleteGroupDialogData? = null,
     val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val showDebugWindow: Boolean = false,

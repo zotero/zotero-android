@@ -48,7 +48,10 @@ internal fun LibrariesTable(
             LibrariesItem(
                 item = item,
                 isLastItem = index == viewState.customLibraries.size - 1,
-                onItemTapped = { viewModel.onCustomLibraryTapped(index) }
+                onItemTapped = { viewModel.onCustomLibraryTapped(index) },
+                onItemLongTapped = {
+                    //no-op
+                }
             )
         }
         item {
@@ -71,11 +74,21 @@ internal fun LibrariesTable(
                 NewDivider()
             }
             itemsIndexed(viewState.groupLibraries) { index, item ->
-                LibrariesItem(
-                    item = item,
-                    isLastItem = index == viewState.groupLibraries.size - 1,
-                    onItemTapped = { viewModel.onGroupLibraryTapped(index) }
-                )
+                Box {
+                    if (viewState.groupIdForDeletePopup == item.id) {
+                        DeleteGroupPopup(
+                            onDeleteGroup = { viewModel.showDeleteGroupQuestion(item.id, item.name) },
+                            dismissDeleteGroupPopup = { viewModel.dismissDeleteGroupPopup() },
+                        )
+                    }
+                    LibrariesItem(
+                        item = item,
+                        isLastItem = index == viewState.groupLibraries.size - 1,
+                        onItemTapped = { viewModel.onGroupLibraryTapped(index) },
+                        onItemLongTapped = { viewModel.showDeleteGroupPopup(item) }
+                    )
+                }
+
             }
             item {
                 NewDivider()
@@ -88,7 +101,8 @@ internal fun LibrariesTable(
 private fun LibrariesItem(
     item: LibraryRowData,
     isLastItem: Boolean,
-    onItemTapped: () -> Unit
+    onItemTapped: () -> Unit,
+    onItemLongTapped: () -> Unit,
 ) {
     Box {
         Row(
@@ -100,7 +114,8 @@ private fun LibrariesItem(
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = rememberRipple(),
-                    onClick = { onItemTapped() },
+                    onClick = onItemTapped,
+                    onLongClick = onItemLongTapped,
                 )
         ) {
             Spacer(modifier = Modifier.width(16.dp))

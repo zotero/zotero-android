@@ -5,6 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
@@ -18,6 +19,7 @@ import org.zotero.android.database.requests.ReadAllCustomLibrariesDbRequest
 import org.zotero.android.database.requests.ReadAllGroupsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.collections.data.CollectionsArgs
+import org.zotero.android.screens.libraries.data.DeleteGroupDialogData
 import org.zotero.android.screens.libraries.data.LibraryRowData
 import org.zotero.android.screens.libraries.data.LibraryState
 import org.zotero.android.sync.CollectionIdentifier
@@ -56,8 +58,8 @@ internal class LibrariesViewModel @Inject constructor(
 
                     OrderedCollectionChangeSet.State.UPDATE -> {
                         val deletions = changeSet.deletions
-                        if (!deletions.isEmpty()) {
-                            //TODO process group deletion
+                        if (deletions.isNotEmpty()) {
+                            showDefaultLibraryIfNeeded()
                         }
                         generateLibraryRows()
                     }
@@ -76,6 +78,10 @@ internal class LibrariesViewModel @Inject constructor(
         }
     }
 
+    private fun showDefaultLibraryIfNeeded() {
+        showCollections(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
+    }
+
     private fun generateLibraryRows() {
         updateState {
             copy(
@@ -92,6 +98,7 @@ internal class LibrariesViewModel @Inject constructor(
 
     private fun createCustomLibraryRowData(library: RCustomLibrary): LibraryRowData {
         return LibraryRowData(
+            id = -1,
             name = RCustomLibraryType.valueOf(library.type).libraryName,
             state = LibraryState.normal
         )
@@ -105,7 +112,7 @@ internal class LibrariesViewModel @Inject constructor(
         } else {
             state = LibraryState.normal
         }
-        return LibraryRowData(name = library.name, state = state)
+        return LibraryRowData(id = library.identifier ,name = library.name, state = state)
     }
 
     private fun libraryForCustomLibrary(index: Int): Library? {
@@ -163,11 +170,37 @@ internal class LibrariesViewModel @Inject constructor(
 
     }
 
+    fun showDeleteGroupQuestion(id: Int, name: String) {
+        dismissDeleteGroupPopup()
+        EventBus.getDefault().post(DeleteGroupDialogData(id = id, name = name))
+    }
+
+    fun dismissDeleteGroupPopup() {
+        updateState {
+            copy(
+                groupIdForDeletePopup = null,
+            )
+        }
+    }
+
+    fun showDeleteGroupPopup(item: LibraryRowData) {
+        val group = this.groupLibraries!!.find { it.identifier == item.id } ?: return
+        if (!group.isLocalOnly) {
+            return
+        }
+        updateState {
+            copy(
+                groupIdForDeletePopup = group.identifier,
+            )
+        }
+    }
+
 }
 
 internal data class  LibrariesViewState(
     val str: String = "",
     val lce: LCE2 = LCE2.Loading,
+    val groupIdForDeletePopup: Int? = null,
     val customLibraries: List<LibraryRowData> = emptyList(),
     val groupLibraries: List<LibraryRowData> = emptyList(),
 ) : ViewState {

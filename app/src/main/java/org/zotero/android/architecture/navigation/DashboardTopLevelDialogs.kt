@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.ChangedItemsDeletedAlert
@@ -18,8 +19,11 @@ import org.zotero.android.screens.dashboard.CrashLoggingDialogs
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.dashboard.DebugLoggingDialogs
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -68,6 +72,26 @@ fun BoxScope.DashboardTopLevelDialogs(
             dialogData = crashReportIdDialogData,
             onDismissDialog = viewModel::onDismissCrashLoggingDialog,
             onShareCopy = viewModel::onShareCopy
+        )
+    }
+
+    val deleteGroupDialogData = viewState.deleteGroupDialogData
+    if (deleteGroupDialogData != null) {
+        CustomAlertDialog(
+            title = stringResource(id = Strings.delete),
+            description = stringResource(
+                id = Strings.libraries_delete_question, deleteGroupDialogData.name
+            ),
+            primaryAction = CustomAlertDialog.ActionConfig(
+                text = stringResource(id = Strings.no),
+            ),
+            secondaryAction = CustomAlertDialog.ActionConfig(
+                text = stringResource(id = Strings.yes),
+                textColor = CustomPalette.ErrorRed,
+                onClick = { viewModel.deleteNonLocalGroup(deleteGroupDialogData.id) }
+            ),
+            dismissOnClickOutside = false,
+            onDismiss = viewModel::onDismissDeleteGroupDialog
         )
     }
 
