@@ -5,6 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.OrderedCollectionChangeSet
+import io.realm.RealmResults
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -24,10 +26,13 @@ import org.zotero.android.architecture.logging.debug.DebugLoggingDialogDataEvent
 import org.zotero.android.architecture.logging.debug.DebugLoggingInterface
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.objects.RGroup
 import org.zotero.android.database.requests.DeleteGroupDbRequest
+import org.zotero.android.database.requests.ReadAllGroupsDbRequest
 import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.ReadSearchDbRequest
+import org.zotero.android.database.requests.groupId
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.allitems.data.InitialLoadData
@@ -62,6 +67,9 @@ class DashboardViewModel @Inject constructor(
     private val sessionController: SessionController
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
     DebugLoggingInterface {
+
+    var isTablet: Boolean = false
+    var groupLibraries: RealmResults<RGroup>? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(deleteGroupDialogData: DeleteGroupDialogData) {
@@ -127,13 +135,15 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun init() = initOnce {
+    fun init(isTablet: Boolean) = initOnce {
+        this.isTablet = isTablet
         EventBus.getDefault().register(this)
         ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
 
         debugLogging.debugLoggingInterface = this
         setupDebugLoggingDialogDataEventStream()
         setupCrashShareDataEventStream()
+        listenToGroupDeletionEvents()
 
         if (sessionController.isInitialized && debugLogging.isEnabled) {
             setDebugWindow(true)
@@ -365,6 +375,77 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
+
+    private fun listenToGroupDeletionEvents() {
+        dbWrapper.realmDbStorage.perform { coordinator ->
+            this.groupLibraries = coordinator.perform(request = ReadAllGroupsDbRequest())
+
+            this.groupLibraries?.addChangeListener { _, changeSet ->
+                when (changeSet.state) {
+                    OrderedCollectionChangeSet.State.INITIAL -> {
+                        //no-op
+                    }
+
+                    OrderedCollectionChangeSet.State.UPDATE -> {
+                        val deletions = changeSet.deletions
+                        if (deletions.isNotEmpty()) {
+                            showDefaultLibraryIfNeeded()
+                        }
+                    }
+
+                    OrderedCollectionChangeSet.State.ERROR -> {
+                        Timber.e(changeSet.error, "DashboardViewModel: could not listen to Group Events")
+                    }
+                    else -> {
+                        //no-op
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showDefaultLibraryIfNeeded() {
+        when (val visibleLibraryId = fileStore.getSelectedLibrary()) {
+            is LibraryIdentifier.custom -> {
+                //no-op
+            }
+
+            is LibraryIdentifier.group -> {
+                val groupId = visibleLibraryId.groupId
+
+                if (this.groupLibraries?.where()?.groupId(groupId)?.findFirst() == null) {
+                    showCollections(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
+                }
+            }
+        }
+    }
+
+    fun showCollections(libraryId: LibraryIdentifier) {
+        val collectionId = storeIfNeeded(libraryId = libraryId)
+
+        ScreenArguments.collectionsArgs = CollectionsArgs(
+            libraryId = libraryId,
+            selectedCollectionId = collectionId,
+            shouldRecreateItemsScreen = this.isTablet
+        )
+        triggerEffect(DashboardViewEffect.NavigateToCollectionsScreen)
+    }
+
+    private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
+        if (fileStore.getSelectedLibrary() == libraryId) {
+            if (collectionId != null) {
+                fileStore.setSelectedCollectionId(collectionId)
+                return collectionId
+            }
+            return fileStore.getSelectedCollectionId()
+        }
+
+        val collectionId = collectionId ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
+        fileStore.setSelectedLibrary(libraryId)
+        fileStore.setSelectedCollectionId(collectionId)
+        return collectionId
+
+    }
 }
 
 data class DashboardViewState(
@@ -379,6 +460,7 @@ data class DashboardViewState(
     ) : ViewState
 
 sealed class DashboardViewEffect : ViewEffect {
+    object NavigateToCollectionsScreen : DashboardViewEffect()
 }
 
 sealed class ConflictDialogData  {

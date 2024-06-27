@@ -22,6 +22,7 @@ import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.uicomponents.misc.NewDivider
@@ -39,8 +40,9 @@ internal fun DashboardRootTabletNavigationScreen(
     viewModel: DashboardViewModel,
 ) {
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
+        viewModel.init(isTablet)
     }
 
     val rightPaneNavController = rememberNavController()
@@ -61,6 +63,7 @@ internal fun DashboardRootTabletNavigationScreen(
             Row(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.weight(0.35f)) {
                     TabletLeftPaneNavigation(
+                        viewModel = viewModel,
                         navigateAndPopAllItemsScreen = navigateAndPopAllItemsScreen,
                         onOpenWebpage = onOpenWebpage
                     )

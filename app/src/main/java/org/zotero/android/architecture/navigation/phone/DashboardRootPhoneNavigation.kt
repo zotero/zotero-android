@@ -37,6 +37,7 @@ import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
@@ -44,6 +45,7 @@ import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
+import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.filter.FilterScreenPhone
@@ -70,8 +72,9 @@ internal fun DashboardRootPhoneNavigation(
     wasPspdfkitInitialized: Boolean,
 ) {
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
+        viewModel.init(isTablet = isTablet)
     }
 
     val navController = rememberNavController()
@@ -79,6 +82,17 @@ internal fun DashboardRootPhoneNavigation(
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+
+    val viewEffect by viewModel.viewEffects.observeAsState()
+    LaunchedEffect(key1 = viewEffect) {
+        when (viewEffect?.consume()) {
+            null -> Unit
+            DashboardViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(
+                navController
+            )
+        }
+    }
+
     val context = LocalContext.current
 
     Box {
@@ -102,9 +116,7 @@ internal fun DashboardRootPhoneNavigation(
                 )
                 librariesScreen(
                     navigateToCollectionsScreen = {
-                        navController.popBackStack(navController.graph.id, inclusive = true)
-                        navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
-                        navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
+                        navigateToCollectionsScreen(navController)
                     },
                     onSettingsTapped = { navigation.toSettingsScreen() }
                 )
@@ -228,6 +240,12 @@ internal fun DashboardRootPhoneNavigation(
         SyncToolbarScreen()
 
     }
+}
+
+private fun navigateToCollectionsScreen(navController: NavHostController) {
+    navController.popBackStack(navController.graph.id, inclusive = true)
+    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
+    navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
 }
 
 private object DashboardRootPhoneDestinations {

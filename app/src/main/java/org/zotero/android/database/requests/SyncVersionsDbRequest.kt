@@ -129,9 +129,11 @@ class SyncGroupVersionsDbRequest(private val versions: Map<Int, Int>) :
         database: Realm,
     ): ResultSyncVersions {
         val allKeys = versions.keys.toMutableList()
+
         val toRemove: List<RGroup> =
             database
                 .where<RGroup>()
+                .rawPredicate("isLocalOnly == false")
                 .findAll()
                 .filter { !allKeys.contains(it.identifier) }
 

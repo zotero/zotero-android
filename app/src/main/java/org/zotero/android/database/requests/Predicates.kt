@@ -151,6 +151,10 @@ fun <T> RealmQuery<T>.name(name: String): RealmQuery<T> {
     return rawPredicate("name = $0", name)
 }
 
+fun <T> RealmQuery<T>.groupId(identifier: Int): RealmQuery<T> {
+    return rawPredicate("identifier == $0", identifier)
+}
+
 fun <T> RealmQuery<T>.name(name: String, libraryId: LibraryIdentifier): RealmQuery<T> {
     return name(name)
         .and()

@@ -16,7 +16,7 @@ class ChangeWsResponseMapper @Inject constructor(private val gson: Gson) {
         }
         val libraryId = LibraryIdentifier.from(topic)
         if (libraryId != null) {
-            val version = json["version"].asInt
+            val version = json["version"]?.asString?.toIntOrNull()
             return ChangeWsResponse(type = ChangeWsResponse.Kind.library(libraryId, version))
         }
         throw ChangeWsResponse.Error.unknownChange(topic)

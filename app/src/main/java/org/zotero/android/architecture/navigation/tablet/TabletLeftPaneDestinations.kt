@@ -5,8 +5,12 @@ import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -15,11 +19,14 @@ import org.zotero.android.architecture.navigation.dialogDynamicHeight
 import org.zotero.android.architecture.navigation.dialogFixedMaxHeight
 import org.zotero.android.architecture.navigation.librariesScreen
 import org.zotero.android.screens.collectionedit.CollectionEditNavigation
+import org.zotero.android.screens.dashboard.DashboardViewEffect
+import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.settings.SettingsNavigation
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 @Composable
 internal fun TabletLeftPaneNavigation(
+    viewModel: DashboardViewModel,
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateAndPopAllItemsScreen: () -> Unit,
 ) {
@@ -27,6 +34,13 @@ internal fun TabletLeftPaneNavigation(
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
+    }
+    val viewEffect by viewModel.viewEffects.observeAsState()
+    LaunchedEffect(key1 = viewEffect) {
+        when (viewEffect?.consume()) {
+            null -> Unit
+            DashboardViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(navController)
+        }
     }
     ZoteroNavHost(
         navController = navController,
@@ -44,9 +58,7 @@ internal fun TabletLeftPaneNavigation(
 
         librariesScreen(
             navigateToCollectionsScreen = {
-                navController.popBackStack(navController.graph.id, inclusive = true)
-                navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
-                navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
+                navigateToCollectionsScreen(navController)
             },
             onSettingsTapped = navigation::toSettingsNavigation
         )
@@ -62,6 +74,12 @@ internal fun TabletLeftPaneNavigation(
             SettingsNavigation(onOpenWebpage = onOpenWebpage)
         }
     }
+}
+
+private fun navigateToCollectionsScreen(navController: NavHostController) {
+    navController.popBackStack(navController.graph.id, inclusive = true)
+    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
+    navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
 }
 
 private object TabletLeftPaneDestinations {

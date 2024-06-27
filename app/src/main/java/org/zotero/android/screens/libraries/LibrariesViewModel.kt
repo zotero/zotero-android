@@ -57,10 +57,6 @@ internal class LibrariesViewModel @Inject constructor(
                     }
 
                     OrderedCollectionChangeSet.State.UPDATE -> {
-                        val deletions = changeSet.deletions
-                        if (deletions.isNotEmpty()) {
-                            showDefaultLibraryIfNeeded()
-                        }
                         generateLibraryRows()
                     }
 
@@ -76,10 +72,6 @@ internal class LibrariesViewModel @Inject constructor(
             this.customLibraries = libraries
             generateLibraryRows()
         }
-    }
-
-    private fun showDefaultLibraryIfNeeded() {
-        showCollections(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
     }
 
     private fun generateLibraryRows() {
