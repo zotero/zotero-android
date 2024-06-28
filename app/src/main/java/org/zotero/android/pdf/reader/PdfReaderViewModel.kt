@@ -357,23 +357,35 @@ class PdfReaderViewModel @Inject constructor(
         })
 
         this@PdfReaderViewModel.fragment.addDocumentListener(pdfThumbnailBar.documentListener)
-        this.fragment.addOnAnnotationCreationModeChangeListener(object:
-            AnnotationManager.OnAnnotationCreationModeChangeListener {
-            override fun onEnterAnnotationCreationMode(p0: AnnotationCreationController) {
-                set(true)
-            }
-
-            override fun onChangeAnnotationCreationMode(p0: AnnotationCreationController) {
-                set(true)
-            }
-
-            override fun onExitAnnotationCreationMode(p0: AnnotationCreationController) {
-                set(false)
-            }
-
-        })
+        addOnAnnotationCreationModeChangeListener()
+        setOnPreparePopupToolbarListener()
         fragmentManager.commit {
             add(containerId, this@PdfReaderViewModel.fragment)
+        }
+    }
+
+    private fun setOnPreparePopupToolbarListener() {
+        this.fragment.setOnPreparePopupToolbarListener { toolbar ->
+            val sourceItems = toolbar.menuItems
+            val menuItems = sourceItems.listIterator()
+
+            while (menuItems.hasNext()) {
+                val item = menuItems.next()
+                when (item.id) {
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_underline,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_strikeout,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_speak,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_search,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_redact,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_paste_annotation,
+                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_link,
+                    -> {
+                        menuItems.remove()
+                    }
+                }
+            }
+
+            toolbar.menuItems = sourceItems
         }
     }
 
@@ -1638,7 +1650,6 @@ class PdfReaderViewModel @Inject constructor(
             .invertColors(isCalculatedThemeDark)
             .themeMode(themeMode)
             .showNoteEditorForNewNoteAnnotations(false)
-            .textSelectionPopupToolbarEnabled(false)
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
@@ -1931,7 +1942,17 @@ class PdfReaderViewModel @Inject constructor(
             }
         })
         this@PdfReaderViewModel.fragment.addDocumentListener(pdfThumbnailBar.documentListener)
-        this.fragment.addOnAnnotationCreationModeChangeListener(object:
+        setOnPreparePopupToolbarListener()
+        addOnAnnotationCreationModeChangeListener()
+
+        fragmentManager.commit {
+            replace(containerId, this@PdfReaderViewModel.fragment)
+        }
+        updateVisibilityOfAnnotations()
+    }
+
+    private fun addOnAnnotationCreationModeChangeListener() {
+        this.fragment.addOnAnnotationCreationModeChangeListener(object :
             AnnotationManager.OnAnnotationCreationModeChangeListener {
             override fun onEnterAnnotationCreationMode(p0: AnnotationCreationController) {
                 set(true)
@@ -1946,11 +1967,6 @@ class PdfReaderViewModel @Inject constructor(
             }
 
         })
-
-        fragmentManager.commit {
-            replace(containerId, this@PdfReaderViewModel.fragment)
-        }
-        updateVisibilityOfAnnotations()
     }
 
     private fun toggleTopAndBottomBarVisibility() {
