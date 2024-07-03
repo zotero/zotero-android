@@ -9,18 +9,28 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.screens.root.RootActivity
 import org.zotero.android.sync.SessionController
+import org.zotero.android.webdav.WebDavSessionStorage
+import org.zotero.android.webdav.data.FileSyncType
 import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsAccountViewModel @Inject constructor(
     private val defaults: Defaults,
     private val sessionController: SessionController,
+    private val sessionStorage: WebDavSessionStorage,
     private val context: Context
 ) : BaseViewModel2<SettingsAccountViewState, SettingsAccountViewEffect>(SettingsAccountViewState()) {
 
     fun init() = initOnce {
         updateState {
-            copy(username = defaults.getUsername())
+            copy(
+                account = defaults.getUsername(),
+                fileSyncType = if (sessionStorage.isEnabled) {
+                    FileSyncType.webDav
+                } else {
+                    FileSyncType.zotero
+                }
+            )
         }
     }
 
@@ -43,10 +53,36 @@ internal class SettingsAccountViewModel @Inject constructor(
         sessionController.reset()
         context.startActivity(RootActivity.getIntentClearTask(context))
     }
+
+    fun dismissWebDavOptionsPopup() {
+        updateState {
+            copy(
+                showWebDavOptionsPopup = false
+            )
+        }
+    }
+    fun showWebDavOptionsPopup() {
+        updateState {
+            copy(
+                showWebDavOptionsPopup = true
+            )
+        }
+    }
+
+    fun onZoteroOptionSelected() {
+        dismissWebDavOptionsPopup()
+    }
+
+    fun onWebDavOptionSelected() {
+        dismissWebDavOptionsPopup()
+    }
 }
 
 internal data class SettingsAccountViewState(
-    val username: String = "",
+    val account: String = "",
+    val showWebDavOptionsPopup: Boolean = false,
+    var fileSyncType: FileSyncType = FileSyncType.zotero,
+    var markingForReupload: Boolean = false,
 ) : ViewState
 
 internal sealed class SettingsAccountViewEffect : ViewEffect {

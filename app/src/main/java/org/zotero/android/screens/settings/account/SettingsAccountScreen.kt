@@ -12,16 +12,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.screens.settings.SettingsDivider
-import org.zotero.android.screens.settings.SettingsItem
-import org.zotero.android.screens.settings.SettingsSection
-import org.zotero.android.screens.settings.SettingsSectionTitle
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -68,37 +61,16 @@ internal fun SettingsAccountScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
-                SettingsSectionTitle(titleId = Strings.settings_data_sync)
-                SettingsSection {
-                    SettingsItem(
-                        title = viewState.username,
-                        onItemTapped = {}
-                    )
-                    SettingsDivider()
-                    SettingsItem(
-                        textColor = CustomPalette.ErrorRed,
-                        title = stringResource(id = Strings.settings_logout),
-                        onItemTapped = viewModel::onSignOut
-                    )
-                }
+                SettingsAccountDataSyncSection(viewState, viewModel)
+
+                //TODO uncomment for File Syncing functionality
+//                Spacer(modifier = Modifier.height(30.dp))
+//                SettingsAccountFileSyncingSection(viewState, viewModel)
+
                 Spacer(modifier = Modifier.height(30.dp))
-                SettingsSectionTitle(
-                    titleId = Strings.settings_account_caps
-                )
-                SettingsSection {
-                    SettingsItem(
-                        textColor = CustomTheme.colors.zoteroDefaultBlue,
-                        title = stringResource(id = Strings.settings_sync_manage_account),
-                        onItemTapped = viewModel::openManageAccount
-                    )
-                    SettingsDivider()
-                    SettingsItem(
-                        textColor = CustomPalette.ErrorRed,
-                        title = stringResource(id = Strings.settings_sync_delete_account),
-                        onItemTapped = viewModel::openDeleteAccount
-                    )
-                }
+                SettingsAccountAccountSection(viewModel)
             }
         }
     }
 }
+

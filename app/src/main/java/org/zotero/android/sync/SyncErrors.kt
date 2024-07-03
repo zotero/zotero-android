@@ -1,6 +1,6 @@
 package org.zotero.android.sync
 
-import org.zotero.android.webdav.WebDavError
+import org.zotero.android.webdav.data.WebDavError
 
 sealed class SyncError {
     class ErrorData(

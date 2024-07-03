@@ -5,7 +5,7 @@ import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.zotero.android.api.ForWebSocket
+import org.zotero.android.api.annotations.ForWebSocket
 import org.zotero.android.api.NetworkConfiguration
 import org.zotero.android.ktx.setNetworkTimeout
 import timber.log.Timber

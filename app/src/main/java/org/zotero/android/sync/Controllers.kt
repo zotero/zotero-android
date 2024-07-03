@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
-import org.zotero.android.api.BundleDataDb
+import org.zotero.android.api.annotations.BundleDataDb
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers

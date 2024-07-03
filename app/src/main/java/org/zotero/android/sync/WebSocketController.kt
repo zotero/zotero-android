@@ -9,7 +9,7 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import org.zotero.android.api.ForWebSocket
+import org.zotero.android.api.annotations.ForWebSocket
 import org.zotero.android.api.mappers.ChangeWsResponseMapper
 import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.architecture.core.EventStream

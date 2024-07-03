@@ -3,7 +3,7 @@ package org.zotero.android.api.mappers
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import org.zotero.android.api.ForGsonWithRoundedDecimals
+import org.zotero.android.api.annotations.ForGsonWithRoundedDecimals
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse

@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
-import org.zotero.android.api.BundleDataDb
+import org.zotero.android.api.annotations.BundleDataDb
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapper

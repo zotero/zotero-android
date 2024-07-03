@@ -13,6 +13,7 @@
     <string name="libraries">Libraries</string>
     <string name="settings_account_caps">ACCOUNT</string>
     <string name="settings_data_sync">DATA SYNC</string>
+    <string name="settings_file_syncing">FILE SYNCING</string>
     <string name="tags_label">Tags:</string>
     <string name="no_tags">No Tags</string>
     <string name="no_comments">No Comments</string>
@@ -25,4 +26,6 @@
     <string name="failed">Failed</string>
     <string name="scan_another">Scan Another</string>
     <string name="loading_translators">Loading translators… Please wait.</string>
+    <string name="zotero_option">Zotero</string>
+    <string name="webdav_option">WebDAV</string>
 </resources>

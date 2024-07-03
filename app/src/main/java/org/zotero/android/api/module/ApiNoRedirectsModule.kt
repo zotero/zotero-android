@@ -6,8 +6,8 @@ import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.AuthNetworkInterceptor
-import org.zotero.android.api.ForApiWithNoRedirects
-import org.zotero.android.api.ForBaseApi
+import org.zotero.android.api.annotations.ForApiWithNoRedirects
+import org.zotero.android.api.annotations.ForBaseApi
 import retrofit2.Retrofit
 import javax.inject.Singleton
 

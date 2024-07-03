@@ -1,4 +1,4 @@
-package org.zotero.android.api;
+package org.zotero.android.api.annotations;
 
 import static java.lang.annotation.RetentionPolicy.CLASS;
 

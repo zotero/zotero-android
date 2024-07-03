@@ -1,4 +1,4 @@
-package org.zotero.android.api;
+package org.zotero.android.api.annotations;
 
 import static java.lang.annotation.RetentionPolicy.CLASS;
 
@@ -8,5 +8,5 @@ import javax.inject.Qualifier;
 
 @Qualifier
 @Retention(CLASS)
-public @interface ForApiWithNoRedirects {
+public @interface ForWebDav {
 }

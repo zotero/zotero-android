@@ -12,8 +12,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import kotlinx.serialization.json.Json
-import org.zotero.android.api.BundleDataDb
-import org.zotero.android.api.ForGsonWithRoundedDecimals
+import org.zotero.android.api.annotations.BundleDataDb
+import org.zotero.android.api.annotations.ForGsonWithRoundedDecimals
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
 import org.zotero.android.architecture.serialization.SealedClassTypeAdapter

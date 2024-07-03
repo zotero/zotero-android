@@ -10,7 +10,7 @@ import com.pspdfkit.PSPDFKit
 import dagger.hilt.android.HiltAndroidApp
 import org.zotero.android.BuildConfig.EVENT_AND_CRASH_LOGGING_ENABLED
 import org.zotero.android.androidx.content.longToast
-import org.zotero.android.api.ForGsonWithRoundedDecimals
+import org.zotero.android.api.annotations.ForGsonWithRoundedDecimals
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.crashreporting.FirebaseCrashReportingTree

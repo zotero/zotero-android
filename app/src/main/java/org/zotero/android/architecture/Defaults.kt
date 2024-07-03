@@ -8,6 +8,7 @@ import org.zotero.android.files.DataMarshaller
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +23,6 @@ open class Defaults @Inject constructor(
     private val username = "username"
     private val displayName = "displayName"
     private val apiToken = "apiToken"
-    private val webDavPassword = "webDavPassword"
     private val showSubcollectionItems = "showSubcollectionItems"
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
@@ -46,6 +46,14 @@ open class Defaults @Inject constructor(
     private val lastTranslatorCommitHash = "lastTranslatorCommitHash"
     private val lastTranslatorDeleted = "lastTranslatorDeleted"
     private val lastStylesCommitHash = "lastStylesCommitHash"
+
+    private val isWebDavEnabled = "isWebDavEnabled"
+    private val webDavVerified = "webDavVerified"
+    private val webDavUsername = "webDavUsername"
+    private val webDavUrl = "webDavUrl"
+    private val webDavScheme = "webDavScheme"
+    private val webDavPassword = "webDavPassword"
+
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -132,14 +140,6 @@ open class Defaults @Inject constructor(
 
     fun getApiToken(): String? {
         return sharedPreferences.getString(apiToken, null )
-    }
-
-    fun setWebDavPassword(str: String?) {
-        sharedPreferences.edit { putString(webDavPassword, str) }
-    }
-
-    fun getWebDavPassword(): String? {
-        return sharedPreferences.getString(webDavPassword, null )
     }
 
     fun isUserLoggedIn() :Boolean {
@@ -297,13 +297,70 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getString(lastStylesCommitHash, "") ?: ""
     }
 
+    fun setWebDavEnabled(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(isWebDavEnabled, newValue) }
+    }
+
+    fun isWebDavEnabled(): Boolean {
+        return sharedPreferences.getBoolean(isWebDavEnabled, false)
+    }
+
+    fun setWebDavVerified(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(webDavVerified, newValue) }
+    }
+
+    fun isWebDavVerified(): Boolean {
+        return sharedPreferences.getBoolean(webDavVerified, false)
+    }
+
+    fun setWebDavUsername(str: String?) {
+        sharedPreferences.edit { putString(webDavUsername, str) }
+    }
+
+    fun getWebDavUsername(): String? {
+        return sharedPreferences.getString(webDavUsername, null )
+    }
+
+    fun setWebDavPassword(str: String?) {
+        sharedPreferences.edit { putString(webDavPassword, str) }
+    }
+
+    fun getWebDavPassword(): String? {
+        return sharedPreferences.getString(webDavPassword, null )
+    }
+
+    fun setWebDavUrl(str: String?) {
+        sharedPreferences.edit { putString(webDavUrl, str) }
+    }
+
+    fun getWebDavUrl(): String? {
+        return sharedPreferences.getString(webDavUrl, null )
+    }
+
+
+    fun setWebDavScheme(scheme: WebDavScheme) {
+        val json = dataMarshaller.marshal(scheme)
+        sharedPreferences.edit { putString(webDavScheme, json) }
+    }
+
+    fun getWebDavScheme(): WebDavScheme {
+        val json: String = sharedPreferences.getString(
+            webDavScheme,
+            null
+        )
+            ?: return WebDavScheme.https
+        return dataMarshaller.unmarshal(json)
+    }
+
+
+
+
     fun reset() {
         setUsername("")
         setDisplayName("")
         setUserId(0L)
         setShowSubcollectionItems(false)
         setApiToken(null)
-        setWebDavPassword(null)
         setItemsSortType(ItemsSortType.default)
 
         setActiveLineWidth(1f)
@@ -312,6 +369,13 @@ open class Defaults @Inject constructor(
         setNoteColorHex(AnnotationsConfig.defaultActiveColor)
         setHighlightColorHex(AnnotationsConfig.defaultActiveColor)
         setPDFSettings(pdfSettings = PDFSettings.default())
+
+        setWebDavUrl(null)
+        setWebDavScheme(WebDavScheme.https)
+        setWebDavEnabled(false)
+        setWebDavUsername(null)
+        setWebDavPassword(null)
+        setWebDavVerified(false)
     }
 
 }
