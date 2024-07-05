@@ -12,13 +12,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.BuildInfo
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -35,7 +32,6 @@ internal fun SettingsScreen(
     CustomThemeWithStatusAndNavBars(
         navBarBackgroundColor = backgroundColor,
     ) {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init()
@@ -68,35 +64,13 @@ internal fun SettingsScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
-                SettingsSection {
-                    SettingsItem(
-                        title = stringResource(id = Strings.settings_sync_account),
-                        onItemTapped = toAccountScreen,
-                        addNewScreenNavigationIndicator = true,
-                    )
-                }
-                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSyncAccountSection(toAccountScreen)
 
-                SettingsSection {
-                    SettingsItem(
-                        title = stringResource(id = Strings.settings_debug),
-                        onItemTapped = toDebugScreen,
-                        addNewScreenNavigationIndicator = true,
-                    )
-                }
                 Spacer(modifier = Modifier.height(30.dp))
+                SettingsDebugSection(toDebugScreen)
 
-                SettingsSection {
-                    SettingsItem(
-                        title = stringResource(id = Strings.support_feedback),
-                        onItemTapped = viewModel::openSupportAndFeedback
-                    )
-                    SettingsDivider()
-                    SettingsItem(
-                        title = stringResource(id = Strings.privacy_policy),
-                        onItemTapped = viewModel::openPrivacyPolicy
-                    )
-                }
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSupportAndPrivacySection(viewModel)
                 BuildInfo()
             }
         }

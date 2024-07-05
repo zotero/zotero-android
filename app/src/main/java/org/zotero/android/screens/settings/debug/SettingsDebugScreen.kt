@@ -11,16 +11,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.settings.SettingsDivider
-import org.zotero.android.screens.settings.SettingsItem
 import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Plurals
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.quantityStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -65,67 +60,32 @@ internal fun SettingsDebugScreen(
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSection {
                     if (viewState.isLogging) {
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_cancel_logging),
-                            onItemTapped = viewModel::cancelLogging
-                        )
+                        SettingsDebugCancelLoggingSection(viewModel)
                         SettingsDivider()
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_stop_logging),
-                            onItemTapped = viewModel::stopLogging
-                        )
+                        SettingsDebugStopLoggingSection(viewModel)
                         SettingsDivider()
-                        SettingsItem(
-                            title = stringResource(id = Strings.settings_logging_desc1),
-                            onItemTapped = {}
-                        )
-                        SettingsDivider()
-                        SettingsItem(
-                            title = stringResource(id = Strings.settings_logging_desc2),
-                            onItemTapped = {}
-                        )
+                        SettingsDebugLoggingDescriptionSection()
                     } else {
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_start_logging),
-                            onItemTapped = viewModel::startLogging
-                        )
+                        SettingsDebugStartLoggingSection(viewModel)
                         SettingsDivider()
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_start_logging_on_launch),
-                            onItemTapped = viewModel::startLoggingOnNextAppLaunch
-                        )
+                        SettingsDebugStartLoggingOnLaunchSection(viewModel)
                     }
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 if (viewState.isLogging) {
                     SettingsSection {
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_view_output),
-                            onItemTapped = toDebugLogScreen,
-                            addNewScreenNavigationIndicator = true,
-                        )
+                        SettingsDebugViewOutputSection(toDebugLogScreen)
                         SettingsDivider()
-                        SettingsItem(
-                            textColor = CustomTheme.colors.zoteroDefaultBlue,
-                            title = stringResource(id = Strings.settings_clear_output),
-                            onItemTapped = viewModel::clearLogs
-                        )
+                        SettingsDebugClearOutputSection(viewModel)
                         SettingsDivider()
-                        SettingsItem(
-                            title = quantityStringResource(
-                                id = Plurals.settings_lines_logged,
-                                viewState.numberOfLines
-                            ),
-                            onItemTapped = {},
-                        )
+                        SettingsDebugLinesLoggedSection(viewState)
                     }
                 }
             }
         }
     }
 }
+
+
+
+
