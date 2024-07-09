@@ -7,9 +7,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
@@ -21,6 +26,9 @@ import org.zotero.android.database.requests.DeleteAllWebDavDeletionsDbRequest
 import org.zotero.android.database.requests.MarkAttachmentsNotUploadedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.root.RootActivity
+import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.NavigateToSinglePickerScreen
+import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.OnBack
+import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.OpenWebpage
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LibraryIdentifier
@@ -28,6 +36,10 @@ import org.zotero.android.sync.SessionController
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncScheduler
+import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
+import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
+import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
+import org.zotero.android.uicomponents.singlepicker.SinglePickerState
 import org.zotero.android.webdav.WebDavController
 import org.zotero.android.webdav.WebDavSessionStorage
 import org.zotero.android.webdav.data.FileSyncType
@@ -49,7 +61,18 @@ internal class SettingsAccountViewModel @Inject constructor(
     private val syncProgressEventStream: SyncProgressEventStream,
 ) : BaseViewModel2<SettingsAccountViewState, SettingsAccountViewEffect>(SettingsAccountViewState()) {
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(singlePickerResult: SinglePickerResult) {
+        if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.SettingsWebDav) {
+            viewModelScope.launch {
+                val scheme = WebDavScheme.valueOf(singlePickerResult.id)
+                setScheme(scheme = scheme)
+            }
+        }
+    }
+
     fun init() = initOnce {
+        EventBus.getDefault().register(this)
         val isVerified = sessionStorage.isVerified
 
         updateState {
@@ -74,17 +97,17 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     fun onBack() {
-        triggerEffect(SettingsAccountViewEffect.OnBack)
+        triggerEffect(OnBack)
     }
 
     fun openDeleteAccount() {
         val uri = Uri.parse("https://www.zotero.org/settings/deleteaccount")
-        triggerEffect(SettingsAccountViewEffect.OpenWebpage(uri))
+        triggerEffect(OpenWebpage(uri))
     }
 
     fun openManageAccount() {
         val uri = Uri.parse("https://www.zotero.org/settings/account")
-        triggerEffect(SettingsAccountViewEffect.OpenWebpage(uri))
+        triggerEffect(OpenWebpage(uri))
 
     }
 
@@ -109,15 +132,8 @@ internal class SettingsAccountViewModel @Inject constructor(
         }
     }
 
-    fun onZoteroOptionSelected() {
+    fun setFileSyncType(type: FileSyncType) {
         dismissWebDavOptionsPopup()
-    }
-
-    fun onWebDavOptionSelected() {
-        dismissWebDavOptionsPopup()
-    }
-
-    private fun set(type: FileSyncType) {
         if (viewState.fileSyncType == type) {
             return
         }
@@ -155,7 +171,7 @@ internal class SettingsAccountViewModel @Inject constructor(
         }
     }
 
-    private fun set(url: String) {
+    fun setUrl(url: String) {
         if (viewState.url == url) {
             return
         }
@@ -273,7 +289,7 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     fun recheckKeys() {
-        if(syncScheduler.inProgress.value) {
+        if (syncScheduler.inProgress.value) {
             syncScheduler.cancelSync()
         }
         observeSyncIssues()
@@ -297,10 +313,43 @@ internal class SettingsAccountViewModel @Inject constructor(
                 }
 
             }
+
             else -> {
                 //no-op
             }
         }
+    }
+
+    fun showSchemaChooserScreen() {
+        val pickerState = createSinglePickerState()
+        ScreenArguments.singlePickerArgs =
+            SinglePickerArgs(
+                singlePickerState = pickerState,
+                callPoint = SinglePickerResult.CallPoint.SettingsWebDav,
+            )
+        triggerEffect(NavigateToSinglePickerScreen)
+    }
+
+    fun verify() {
+        verify(tryCreatingZoteroDir = false)
+    }
+
+    private fun verify(tryCreatingZoteroDir: Boolean) {
+    }
+
+    private fun createSinglePickerState(
+    ): SinglePickerState {
+        val items = listOf(
+            SinglePickerItem(id = WebDavScheme.https.name, name = WebDavScheme.https.name),
+            SinglePickerItem(id = WebDavScheme.http.name, name = WebDavScheme.http.name),
+        )
+        val state = SinglePickerState(objects = items, selectedRow = viewState.scheme.name)
+        return state
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
     }
 }
 
@@ -315,9 +364,14 @@ internal data class SettingsAccountViewState(
     var password: String = "",
     var isVerifyingWebDav: Boolean = false,
     var webDavVerificationResult: CustomResult<Unit>? = null,
-) : ViewState
+) : ViewState {
+    val canVerifyServer: Boolean get() {
+        return !url.isEmpty() && !username.isEmpty() && !password.isEmpty()
+    }
+}
 
 internal sealed class SettingsAccountViewEffect : ViewEffect {
     object OnBack : SettingsAccountViewEffect()
+    object NavigateToSinglePickerScreen : SettingsAccountViewEffect()
     data class OpenWebpage(val uri: Uri) : SettingsAccountViewEffect()
 }

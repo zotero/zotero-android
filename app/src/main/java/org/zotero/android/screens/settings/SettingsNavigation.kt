@@ -14,6 +14,7 @@ import org.zotero.android.screens.settings.account.SettingsAccountScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
+import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
 @Composable
 internal fun SettingsNavigation(onOpenWebpage: (uri: Uri) -> Unit) {
@@ -41,9 +42,17 @@ internal fun NavGraphBuilder.settingsNavScreens(
         toAccountScreen = navigation::toAccountScreen,
         toDebugScreen = navigation::toDebugScreen,
     )
-    accountScreen(onBack = navigation::onBack, onOpenWebpage = onOpenWebpage)
-    debugScreen(onBack = navigation::onBack, toDebugLogScreen = navigation::toDebugLogScreen)
+    accountScreen(
+        onBack = navigation::onBack,
+        onOpenWebpage = onOpenWebpage,
+        navigateToSinglePickerScreen = navigation::toSinglePickerScreen
+    )
+    debugScreen(
+        onBack = navigation::onBack,
+        toDebugLogScreen = navigation::toDebugLogScreen
+    )
     debugLogScreen(onBack = navigation::onBack)
+    singlePickerScreen(onBack = navigation::onBack)
 }
 
 fun NavGraphBuilder.settingsScreen(
@@ -66,12 +75,17 @@ fun NavGraphBuilder.settingsScreen(
 
 private fun NavGraphBuilder.accountScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
+    navigateToSinglePickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
         route = SettingsDestinations.ACCOUNT,
     ) {
-        SettingsAccountScreen(onBack = onBack, onOpenWebpage = onOpenWebpage)
+        SettingsAccountScreen(
+            onBack = onBack,
+            onOpenWebpage = onOpenWebpage,
+            navigateToSinglePickerScreen = navigateToSinglePickerScreen
+        )
     }
 }
 
@@ -96,11 +110,23 @@ private fun NavGraphBuilder.debugLogScreen(
     }
 }
 
+private fun NavGraphBuilder.singlePickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.SINGLE_PICKER_SCREEN,
+        arguments = listOf(),
+    ) {
+        SinglePickerScreen(onCloseClicked = onBack)
+    }
+}
+
 private object SettingsDestinations {
     const val SETTINGS = "settings"
     const val ACCOUNT = "account"
     const val DEBUG = "debug"
     const val DEBUG_LOG = "debugLog"
+    const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
 }
 
 fun ZoteroNavigation.toSettingsScreen() {
@@ -117,4 +143,8 @@ fun ZoteroNavigation.toDebugScreen() {
 
 fun ZoteroNavigation.toDebugLogScreen() {
     navController.navigate(SettingsDestinations.DEBUG_LOG)
+}
+
+fun ZoteroNavigation.toSinglePickerScreen() {
+    navController.navigate(SettingsDestinations.SINGLE_PICKER_SCREEN)
 }

@@ -38,9 +38,11 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.PopupDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.webdav.data.FileSyncType
 
 @Composable
 internal fun WebDavOptionsPopup(
+    fileSyncType: FileSyncType,
     onZoteroOptionSelected: () -> Unit,
     onWebDavOptionSelected: () -> Unit,
     dismissWebDavOptionsPopup: () -> Unit,
@@ -62,7 +64,7 @@ internal fun WebDavOptionsPopup(
                 )
                 .background(color = CustomTheme.colors.popupBackgroundColor)
         ) {
-            if (true) {
+            if (fileSyncType == FileSyncType.zotero) {
                 PopupOptionRow(
                     text = stringResource(id = Strings.zotero_option),
                     resIcon = Drawables.check_24px,
@@ -75,7 +77,7 @@ internal fun WebDavOptionsPopup(
                 )
             }
             PopupDivider()
-            if (true) {
+            if (fileSyncType == FileSyncType.webDav) {
                 PopupOptionRow(
                     text = stringResource(id = Strings.webdav_option),
                     resIcon = Drawables.check_24px,

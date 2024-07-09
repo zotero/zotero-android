@@ -3,6 +3,7 @@ package org.zotero.android.screens.settings.account
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -26,66 +27,10 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.webdav.data.FileSyncType
 
-@Composable
-internal fun SettingsAccountFileSyncingSection(
-    viewState: SettingsAccountViewState,
-    viewModel: SettingsAccountViewModel
-) {
-    SettingsSectionTitle(titleId = Strings.settings_file_syncing)
-    SettingsSection {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.dp)
-                .background(CustomTheme.colors.surface)
-                .safeClickable(
-                    onClick = viewModel::showWebDavOptionsPopup,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
-                ),
-        ) {
-            Text(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 16.dp, end = 120.dp),
-                text = stringResource(id = Strings.settings_sync_file_syncing_type_message),
-                style = CustomTheme.typography.newBody,
-                color = CustomTheme.colors.primaryContent,
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 16.dp)
-            ) {
-                if (viewState.showWebDavOptionsPopup) {
-                    WebDavOptionsPopup(
-                        onZoteroOptionSelected = viewModel::onZoteroOptionSelected,
-                        onWebDavOptionSelected = viewModel::onWebDavOptionSelected,
-                        dismissWebDavOptionsPopup = viewModel::dismissWebDavOptionsPopup
-                    )
-                }
-                Row(
-                    modifier = Modifier,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        modifier = Modifier,
-                        text = stringResource(id = Strings.webdav_option),
-                        style = CustomTheme.typography.newBody,
-                        color = CustomTheme.colors.secondaryContent,
-                    )
-                    Icon(
-                        modifier = Modifier,
-                        painter = painterResource(id = Drawables.baseline_arrow_drop_down_24),
-                        contentDescription = null,
-                        tint = CustomTheme.colors.secondaryContent
-                    )
-                }
-            }
-        }
-    }
-}
+
+
 
 @Composable
 internal fun SettingsAccountDataSyncSection(

@@ -72,6 +72,6 @@ fun ZoteroNavigation.toSortPicker() {
     navController.navigate(SortPickerDestinations.SORT_PICKER)
 }
 
-fun ZoteroNavigation.toSinglePickerScreen() {
+private fun ZoteroNavigation.toSinglePickerScreen() {
     navController.navigate(SortPickerDestinations.SINGLE_PICKER_SCREEN)
 }

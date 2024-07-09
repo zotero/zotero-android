@@ -28,4 +28,5 @@
     <string name="loading_translators">Loading translators… Please wait.</string>
     <string name="zotero_option">Zotero</string>
     <string name="webdav_option">WebDAV</string>
+    <string name="enter_url">URL</string>
 </resources>
