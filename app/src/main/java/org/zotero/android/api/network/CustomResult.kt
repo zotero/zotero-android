@@ -1,14 +1,12 @@
 package org.zotero.android.api.network
 
 import okhttp3.Headers
-import okhttp3.HttpUrl
 
 sealed class CustomResult<out T> {
     sealed class GeneralError : CustomResult<Nothing>() {
-        data class NetworkError(
-            val httpCode: Int,
-            val stringResponse: String?,
-            val httpUrl: HttpUrl?
+        open class NetworkError(
+            open val httpCode: Int,
+            open val stringResponse: String?,
         ) : GeneralError() {
             companion object {
                 const val NO_INTERNET_CONNECTION_HTTP_CODE = -1
@@ -26,6 +24,11 @@ sealed class CustomResult<out T> {
                 return httpCode == 404
             }
         }
+
+        data class UnacceptableStatusCode(
+            override val httpCode: Int,
+            override val stringResponse: String?,
+        ) : NetworkError(httpCode, stringResponse)
 
         data class CodeError(val throwable: Throwable) : GeneralError() {
 

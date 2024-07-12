@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressEventStream
 import org.zotero.android.database.DbRequest
@@ -29,6 +32,7 @@ import org.zotero.android.screens.root.RootActivity
 import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.NavigateToSinglePickerScreen
 import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.OnBack
 import org.zotero.android.screens.settings.account.SettingsAccountViewEffect.OpenWebpage
+import org.zotero.android.screens.settings.account.data.CreateWebDavDirectoryDialogData
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LibraryIdentifier
@@ -43,6 +47,7 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerState
 import org.zotero.android.webdav.WebDavController
 import org.zotero.android.webdav.WebDavSessionStorage
 import org.zotero.android.webdav.data.FileSyncType
+import org.zotero.android.webdav.data.WebDavError
 import org.zotero.android.webdav.data.WebDavScheme
 import timber.log.Timber
 import java.io.File
@@ -59,7 +64,10 @@ internal class SettingsAccountViewModel @Inject constructor(
     private val dbWrapper: DbWrapper,
     private val syncScheduler: SyncScheduler,
     private val syncProgressEventStream: SyncProgressEventStream,
+    private val dispatchers: Dispatchers,
 ) : BaseViewModel2<SettingsAccountViewState, SettingsAccountViewEffect>(SettingsAccountViewState()) {
+
+    private var coroutineScope = CoroutineScope(dispatchers.io)
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
@@ -282,7 +290,8 @@ internal class SettingsAccountViewModel @Inject constructor(
         webDavController.resetVerification()
     }
 
-    private fun cancelVerification() {
+    fun cancelVerification() {
+        cancelProcessing()
         updateState {
             copy(isVerifyingWebDav = false)
         }
@@ -311,7 +320,11 @@ internal class SettingsAccountViewModel @Inject constructor(
                 if (fatalError is SyncError.Fatal.forbidden) {
                     sessionController.reset()
                 }
+                cancelProcessing()
 
+            }
+            is SyncProgress.finished -> {
+                cancelProcessing()
             }
 
             else -> {
@@ -335,6 +348,67 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     private fun verify(tryCreatingZoteroDir: Boolean) {
+        if (!viewState.isVerifyingWebDav) {
+            updateState {
+                copy(isVerifyingWebDav = true)
+            }
+        }
+        coroutineScope.launch {
+            if (tryCreatingZoteroDir) {
+                val createZoteroDirectoryResult = webDavController.createZoteroDirectory()
+                if (createZoteroDirectoryResult is CustomResult.GeneralError) {
+                    handleVerification(error = createZoteroDirectoryResult)
+                    return@launch
+                }
+            }
+
+            val checkServerResult = webDavController.checkServer()
+            if (checkServerResult is CustomResult.GeneralError) {
+                handleVerification(error = checkServerResult)
+                return@launch
+            }
+            viewModelScope.launch {
+                updateState {
+                    copy(
+                        isVerifyingWebDav = false,
+                        webDavVerificationResult = CustomResult.GeneralSuccess(Unit)
+                    )
+                }
+            }
+
+            if (syncScheduler.inProgress.value) {
+                syncScheduler.cancelSync()
+            }
+            syncScheduler.request(type = SyncKind.normal, libraries = Libraries.all)
+
+        }
+
+    }
+
+    private fun handleVerification(error: CustomResult.GeneralError) {
+        viewModelScope.launch {
+            val zoteroDirNotFoundError =
+                (error as? CustomResult.GeneralError.CodeError)?.throwable as? WebDavError.Verification.zoteroDirNotFound
+            if (zoteroDirNotFoundError != null) {
+                updateState {
+                    copy(
+                        createWebDavDirectoryDialogData = CreateWebDavDirectoryDialogData(
+                            url = zoteroDirNotFoundError.url,
+                            error = error
+                        )
+                    )
+                }
+                return@launch
+            }
+
+            updateState {
+                copy(
+                    webDavVerificationResult = error,
+                    isVerifyingWebDav = false
+                )
+            }
+        }
+
     }
 
     private fun createSinglePickerState(
@@ -351,19 +425,39 @@ internal class SettingsAccountViewModel @Inject constructor(
         EventBus.getDefault().unregister(this)
         super.onCleared()
     }
+
+    private fun cancelProcessing() {
+        this.coroutineScope.cancel()
+        this.coroutineScope  = CoroutineScope(dispatchers.io)
+    }
+
+    fun onDismissCreateDirectoryDialog(error: CustomResult.GeneralError) {
+        updateState {
+            copy(
+                createWebDavDirectoryDialogData = null,
+                webDavVerificationResult = error,
+                isVerifyingWebDav = false,
+            )
+        }
+    }
+
+    fun onCreateWebDavDirectory() {
+        verify(tryCreatingZoteroDir = true)
+    }
 }
 
 internal data class SettingsAccountViewState(
     val account: String = "",
     val showWebDavOptionsPopup: Boolean = false,
-    var fileSyncType: FileSyncType = FileSyncType.zotero,
-    var markingForReupload: Boolean = false,
-    var scheme: WebDavScheme = WebDavScheme.https,
-    var url: String = "",
-    var username: String = "",
-    var password: String = "",
-    var isVerifyingWebDav: Boolean = false,
-    var webDavVerificationResult: CustomResult<Unit>? = null,
+    val fileSyncType: FileSyncType = FileSyncType.zotero,
+    val markingForReupload: Boolean = false,
+    val scheme: WebDavScheme = WebDavScheme.https,
+    val url: String = "",
+    val username: String = "",
+    val password: String = "",
+    val isVerifyingWebDav: Boolean = false,
+    val webDavVerificationResult: CustomResult<Unit>? = null,
+    val createWebDavDirectoryDialogData: CreateWebDavDirectoryDialogData? = null,
 ) : ViewState {
     val canVerifyServer: Boolean get() {
         return !url.isEmpty() && !username.isEmpty() && !password.isEmpty()

@@ -16,12 +16,10 @@ class WebDavAuthNetworkInterceptor @Inject constructor(
 
         var authenticatedRequest = request.newBuilder()
 
-        if (webDavSessionStorage.isVerified) {
-            val credentials =
-                Credentials.basic(webDavSessionStorage.username, webDavSessionStorage.password)
-            authenticatedRequest = authenticatedRequest
-                .header("Authorization", credentials)
-        }
+        val credentials =
+            Credentials.basic(webDavSessionStorage.username, webDavSessionStorage.password)
+        authenticatedRequest = authenticatedRequest
+            .header("Authorization", credentials)
         return chain.proceed(
             authenticatedRequest
                 .build()

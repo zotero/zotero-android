@@ -13,7 +13,7 @@ sealed class WebDavError {
         object invalidUrl: Verification()
         object notDav: Verification()
         object parentDirNotFound: Verification()
-        data class zoteroDirNotFound(val str: String): Verification()
+        data class zoteroDirNotFound(val url: String): Verification()
         object nonExistentFileNotMissing: Verification()
         object fileMissingAfterUpload: Verification()
 
@@ -91,15 +91,23 @@ sealed class WebDavError {
             }
         }
 
-        private fun errorMessage(context: Context, error: CustomResult.GeneralError.NetworkError): String? {
-            when(error.httpCode) {
-                401 -> {
-                    return context.getString(Strings.errors_settings_webdav_unauthorized)
+        private fun errorMessage(
+            context: Context,
+            error: CustomResult.GeneralError.NetworkError
+        ): String? {
+                when (error.httpCode) {
+                    401 -> {
+                        return context.getString(Strings.errors_settings_webdav_unauthorized)
+                    }
+                    403 -> {
+                        return context.getString(Strings.errors_settings_webdav_forbidden)
+                    }
+
                 }
-                403 -> {
-                    return context.getString(Strings.errors_settings_webdav_forbidden)
-                }
+            if (error.isNoNetworkError()) {
+                return context.getString(Strings.errors_settings_webdav_internet_connection)
             }
+
             return context.getString(Strings.errors_settings_webdav_host_not_found)
         }
 

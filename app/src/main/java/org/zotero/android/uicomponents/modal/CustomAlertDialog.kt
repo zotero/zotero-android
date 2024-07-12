@@ -34,6 +34,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 fun CustomAlertDialog(
     title: String,
     description: String? = null,
+    descriptionTextColor: Color = CustomTheme.colors.secondaryContent,
     primaryAction: CustomAlertDialog.ActionConfig,
     secondaryAction: CustomAlertDialog.ActionConfig? = null,
     onDismiss: () -> Unit,
@@ -50,6 +51,7 @@ fun CustomAlertDialog(
         DialogContent(
             title = title,
             description = description,
+            descriptionTextColor = descriptionTextColor,
             primaryAction = primaryAction,
             secondaryAction = secondaryAction,
             onDismiss = onDismiss,
@@ -68,6 +70,7 @@ private fun DialogPreview() {
                 description = "Are you sure you want to delete this item?",
                 primaryAction = CustomAlertDialog.ActionConfig(text = "Delete"),
                 secondaryAction = CustomAlertDialog.ActionConfig(text = "Cancel"),
+                descriptionTextColor = CustomTheme.colors.secondaryContent,
             )
             Spacer(modifier = Modifier.height(16.dp))
             DialogContent(
@@ -76,6 +79,7 @@ private fun DialogPreview() {
                 primaryAction = CustomAlertDialog.ActionConfig(text = "Delete"),
                 secondaryAction = CustomAlertDialog.ActionConfig(text = "Cancel"),
                 buttonsStyle = FULL,
+                descriptionTextColor = CustomTheme.colors.secondaryContent,
             )
         }
     }
@@ -85,6 +89,7 @@ private fun DialogPreview() {
 private fun DialogContent(
     title: String,
     description: String? = null,
+    descriptionTextColor: Color,
     primaryAction: CustomAlertDialog.ActionConfig,
     secondaryAction: CustomAlertDialog.ActionConfig? = null,
     onDismiss: () -> Unit = {},
@@ -110,7 +115,8 @@ private fun DialogContent(
     ) {
         TextSection(
             title = title,
-            description = description
+            description = description,
+            descriptionTextColor = descriptionTextColor,
         )
         CustomDivider(Modifier.padding(horizontal = 16.dp))
         when (buttonsStyle) {
@@ -136,6 +142,7 @@ private fun DialogContent(
 private fun TextSection(
     title: String,
     description: String? = null,
+    descriptionTextColor: Color,
 ) {
     Column(
         modifier = Modifier.padding(16.dp),
@@ -148,7 +155,7 @@ private fun TextSection(
             Text(
                 text = description,
                 modifier = Modifier.padding(top = 8.dp),
-                color = CustomTheme.colors.secondaryContent
+                color = descriptionTextColor
             )
         }
     }

@@ -18,7 +18,6 @@ object NetworkHelper {
         val errorBody = networkResponse.errorBody()
 
         return CustomResult.GeneralError.NetworkError(
-            httpUrl = networkResponse.raw().request.url,
             httpCode = networkResponse.code(),
             stringResponse = errorBody?.string()
         )
@@ -32,7 +31,6 @@ object NetworkHelper {
                 CustomResult.GeneralError.NetworkError.UNKNOWN_NETWORK_EXCEPTION_HTTP_CODE
             },
             stringResponse = e.localizedMessage,
-            httpUrl = null,
         )
     }
 

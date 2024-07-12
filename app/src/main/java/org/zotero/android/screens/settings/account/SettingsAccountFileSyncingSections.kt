@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.screens.settings.SettingsDivider
 import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.screens.settings.SettingsSectionTitle
@@ -33,8 +37,10 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
+import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.webdav.data.FileSyncType
+import org.zotero.android.webdav.data.WebDavError
 
 @Composable
 internal fun SettingsAccountFileSyncingSection(
@@ -62,7 +68,17 @@ private fun SettingsAccountFileSyncingWebDavItems(
     SettingsDivider()
     SettingsAccountFileSyncingPasswordItem(viewModel = viewModel, viewState = viewState)
     SettingsDivider()
-    SettingsAccountFileSyncingVerifyServerItem(viewModel = viewModel, viewState = viewState)
+    if (viewState.isVerifyingWebDav) {
+        SettingsAccountFileSyncingVerificationInProgressItem(viewModel = viewModel, viewState = viewState)
+    } else {
+        SettingsAccountFileSyncingVerifyServerItem(viewModel = viewModel, viewState = viewState)
+    }
+
+    val webDavVerificationResult = viewState.webDavVerificationResult
+    if (webDavVerificationResult is CustomResult.GeneralError) {
+        SettingsDivider()
+        SettingsAccountFileSyncingErrorMessageItem(webDavVerificationResult)
+    }
 }
 
 @Composable
@@ -268,10 +284,10 @@ private fun SettingsAccountFileSyncingVerifyServerItem(
     viewModel: SettingsAccountViewModel,
     viewState: SettingsAccountViewState
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 44.dp)
+            .height(44.dp)
             .background(CustomTheme.colors.surface)
             .safeClickable(
                 onClick = viewModel::verify,
@@ -287,12 +303,91 @@ private fun SettingsAccountFileSyncingVerifyServerItem(
         }
         Text(
             modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .fillMaxWidth()
-                .padding(start = 16.dp),
+                .padding(start = 16.dp)
+                .align(Alignment.CenterStart),
             text = stringResource(id = Strings.settings_sync_verify),
             style = CustomTheme.typography.newBody,
             color = textColor,
+        )
+        if (viewState.webDavVerificationResult is CustomResult.GeneralSuccess) {
+            Row(
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .align(Alignment.CenterEnd),
+            ) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically),
+                    text = stringResource(id = Strings.settings_sync_verified),
+                    style = CustomTheme.typography.newBody,
+                    color = CustomTheme.colors.primaryContent,
+                )
+                Icon(
+                    modifier = Modifier
+                        .align(Alignment.CenterVertically),
+                    painter = painterResource(Drawables.check_24px),
+                    contentDescription = null,
+                    tint = CustomPalette.Green,
+                )
+            }
+
+        }
+    }
+}
+
+@Composable
+private fun SettingsAccountFileSyncingErrorMessageItem(
+    generalError: CustomResult.GeneralError,
+) {
+    val errorMessage = WebDavError.message(generalError)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
+            .background(CustomTheme.colors.surface)
+    ) {
+        Text(
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            text = errorMessage,
+            style = CustomTheme.typography.newBody,
+            color = CustomPalette.ErrorRed,
+        )
+    }
+}
+
+@Composable
+private fun SettingsAccountFileSyncingVerificationInProgressItem(
+    viewModel: SettingsAccountViewModel,
+    viewState: SettingsAccountViewState
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .background(CustomTheme.colors.surface)
+    ) {
+        CircularProgressIndicator(
+            color = CustomTheme.colors.zoteroDefaultBlue,
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .align(Alignment.CenterStart)
+                .size(24.dp)
+        )
+        Text(
+            modifier = Modifier
+                .padding(end = 16.dp)
+                .align(Alignment.CenterEnd)
+                .safeClickable(
+                    onClick = viewModel::cancelVerification,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = rememberRipple(),
+                ),
+            text = stringResource(id = Strings.cancel),
+            style = CustomTheme.typography.newBody,
+            color = CustomTheme.colors.zoteroBlueWithDarkMode,
         )
     }
 }

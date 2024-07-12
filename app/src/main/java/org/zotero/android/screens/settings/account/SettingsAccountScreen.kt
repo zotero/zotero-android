@@ -12,9 +12,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -79,6 +82,40 @@ internal fun SettingsAccountScreen(
                     SettingsAccountAccountSection(viewModel)
                 }
             }
+            val createWebDavDirectoryDialogData = viewState.createWebDavDirectoryDialogData
+            if (createWebDavDirectoryDialogData != null) {
+                DirectoryNotFoundDialog(url = createWebDavDirectoryDialogData.url,
+                    onCancel = {
+                        viewModel.onDismissCreateDirectoryDialog(createWebDavDirectoryDialogData.error)
+                    },
+                    onCreate = viewModel::onCreateWebDavDirectory
+                )
+            }
+
         }
     }
+}
+
+@Composable
+private fun DirectoryNotFoundDialog (
+    url: String,
+    onCreate: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    CustomAlertDialog(
+        title = stringResource(id = Strings.settings_sync_directory_not_found_title),
+        description = stringResource(
+            id = Strings.settings_sync_directory_not_found_message, url
+        ),
+        descriptionTextColor = CustomTheme.colors.primaryContent,
+        primaryAction = CustomAlertDialog.ActionConfig(
+            text = stringResource(id = Strings.cancel),
+        ),
+        secondaryAction = CustomAlertDialog.ActionConfig(
+            text = stringResource(id = Strings.create),
+            onClick = onCreate
+        ),
+        dismissOnClickOutside = false,
+        onDismiss = onCancel
+    )
 }
