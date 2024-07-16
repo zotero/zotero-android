@@ -12,6 +12,8 @@ import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.Unzipper
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.webdav.WebDavController
+import org.zotero.android.webdav.WebDavSessionStorage
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -26,6 +28,8 @@ class AttachmentDownloader @Inject constructor(
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val dispatcher: CoroutineDispatcher,
     private val unzipper: Unzipper,
+    private val webDavController: WebDavController,
+    private val sessionStorage: WebDavSessionStorage,
 ) {
     sealed class Error : Exception() {
         object incompatibleAttachment : Error()
@@ -255,6 +259,8 @@ class AttachmentDownloader @Inject constructor(
             syncApi = syncApi,
             noRedirectApi = this.noRedirectApi,
             unzipper = this.unzipper,
+            webDavController = webDavController,
+            sessionStorage = sessionStorage
         )
         operation.onDownloadProgressUpdated = object : OnDownloadProgressUpdated {
             override fun onProgressUpdated(progressInHundreds: Int) {

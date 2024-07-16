@@ -51,6 +51,7 @@ import org.zotero.android.sync.conflictresolution.ShowSimpleConflictResolutionDi
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
+import org.zotero.android.webdav.WebDavSessionStorage
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -64,7 +65,8 @@ class DashboardViewModel @Inject constructor(
     private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
     private val crashShareDataEventStream: CrashShareDataEventStream,
     private val context: Context,
-    private val sessionController: SessionController
+    private val sessionController: SessionController,
+    private val sessionStorage: WebDavSessionStorage,
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
     DebugLoggingInterface {
 
@@ -117,8 +119,12 @@ class DashboardViewModel @Inject constructor(
                     }
 
                     is Conflict.groupFileWriteDenied -> {
-                        //TODO check for WebDav variable
-                        val domainName = "zotero.org"
+                        val domainName: String
+                        domainName = if (!sessionStorage.isEnabled) {
+                            "zotero.org"
+                        } else {
+                            sessionStorage.url
+                        }
 
                         ConflictDialogData.groupFileWriteDenied(
                             groupId = conflict.groupId,

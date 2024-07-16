@@ -19,6 +19,7 @@ import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
+import org.zotero.android.webdav.data.WebDavUploadResult
 import timber.log.Timber
 import java.io.File
 
@@ -38,12 +39,16 @@ class UploadAttachmentSyncAction(
         try {
             when (this.libraryId) {
                 is LibraryIdentifier.custom ->
-                    //TODO implement WebDav
-                   return zoteroResult()
+                    return if (sessionStorage.isEnabled) {
+                        webDavResult()
+                    } else {
+                        zoteroResult()
+                    }
+
                 is LibraryIdentifier.group ->
                     return zoteroResult()
             }
-        } catch (e :Exception) {
+        } catch (e: Exception) {
             return CustomResult.GeneralError.CodeError(e)
         }
 
@@ -160,15 +165,28 @@ class UploadAttachmentSyncAction(
 
     }
 
-    private suspend fun markAttachmentAsUploaded(version: Int?) {
+    private fun markAttachmentAsUploaded(version: Int?) {
         try {
-            var requests: MutableList<DbRequest> = mutableListOf( MarkAttachmentUploadedDbRequest(libraryId = this.libraryId, key = this.key, version = version))
+            val requests: MutableList<DbRequest> = mutableListOf(
+                MarkAttachmentUploadedDbRequest(
+                    libraryId = this.libraryId,
+                    key = this.key,
+                    version = version
+                )
+            )
             if (version != null) {
-                requests.add(UpdateVersionsDbRequest(version = version, libraryId =this.libraryId, type=  UpdateVersionType.objectS(
-                    SyncObject.item)))
+                requests.add(
+                    UpdateVersionsDbRequest(
+                        version = version,
+                        libraryId = this.libraryId,
+                        type = UpdateVersionType.objectS(
+                            SyncObject.item
+                        )
+                    )
+                )
             }
             dbWrapper.realmDbStorage.perform(requests)
-        }catch (error: Exception) {
+        } catch (error: Exception) {
             Timber.e("UploadAttachmentSyncAction: can't mark attachment as uploaded - $error")
             throw error
         }
@@ -215,6 +233,60 @@ class UploadAttachmentSyncAction(
             libraryId = this.libraryId,
             title = title
         )
-
     }
+
+    private suspend fun webDavResult(): CustomResult<Unit> {
+        var file: File? = null
+        var tUrl: String = ""
+        try {
+            checkDatabase()
+            validateFile()
+            val prepareForUploadResult = webDavController.prepareForUpload(
+                key = this.key,
+                mtime = this.mtime,
+                hash = this.md5,
+                file = this.file
+            )
+            when (prepareForUploadResult) {
+                WebDavUploadResult.exists -> {
+                    Timber.d("UploadAttachmentSyncAction: file exists remotely")
+                    markAttachmentAsUploaded(version = null)
+                    throw SyncActionError.attachmentAlreadyUploaded
+                }
+
+                is WebDavUploadResult.new -> {
+                    val url = prepareForUploadResult.url
+                    val newFile = prepareForUploadResult.file
+                    Timber.i("UploadAttachmentSyncAction: file needs upload")
+                    file = newFile
+                    webDavController.upload(url = url, file = file, key = this.key)
+                    tUrl = url
+                }
+            }
+        } catch (error: Exception) {
+            val generalError = CustomResult.GeneralError.CodeError(error)
+            if (file != null) {
+                webDavController.finishUpload(key = this.key, result = generalError, file = file)
+            }
+            processError(generalError)
+            return generalError
+        }
+
+        try {
+            webDavController.finishUpload(
+                key = this.key,
+                result = CustomResult.GeneralSuccess(Triple(this.mtime, this.md5, tUrl)),
+                file = file
+            )
+            val version: Int? = null //TODO
+            markAttachmentAsUploaded(version)
+        } catch (error: Exception) {
+            val generalError = CustomResult.GeneralError.CodeError(error)
+            processError(generalError)
+            return generalError
+        }
+
+        return CustomResult.GeneralSuccess(Unit)
+    }
+
 }

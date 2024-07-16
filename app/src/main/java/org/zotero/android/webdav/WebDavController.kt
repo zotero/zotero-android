@@ -1,8 +1,11 @@
 package org.zotero.android.webdav
 
-import com.google.gson.Gson
+import android.webkit.MimeTypeMap
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import org.zotero.android.api.WebDavApi
@@ -11,8 +14,12 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.StoreMtimeForAttachmentDbRequest
+import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.Zipper
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.webdav.data.MetadataResult
 import org.zotero.android.webdav.data.WebDavError
+import org.zotero.android.webdav.data.WebDavUploadResult
 import timber.log.Timber
 import java.io.File
 import java.net.URL
@@ -25,10 +32,10 @@ class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
     private val dbWrapper: DbWrapper,
     private val webDavApi: WebDavApi,
-    private val gson: Gson,
+    private val fileStore: FileStore,
 ) {
 
-    private fun update(mtime: Long, key: String) {
+    private fun update(mtime: Long, key: String): CustomResult<Unit> {
         try {
             dbWrapper.realmDbStorage.perform(
                 StoreMtimeForAttachmentDbRequest(
@@ -39,9 +46,10 @@ class WebDavController @Inject constructor(
                     )
                 )
             )
+            return CustomResult.GeneralSuccess(Unit)
         } catch (error: Exception) {
             Timber.e(error, "WebDavController: can't update mtime")
-            throw error
+            return CustomResult.GeneralError.CodeError(error)
         }
     }
 
@@ -350,5 +358,285 @@ class WebDavController @Inject constructor(
         return propFindResult
     }
 
+    suspend fun download(key: String): CustomResult<ResponseBody> {
+        val checkServerIfNeededResult = checkServerIfNeeded()
+        if (checkServerIfNeededResult is CustomResult.GeneralError) {
+            return checkServerIfNeededResult
+        }
+        checkServerIfNeededResult as CustomResult.GeneralSuccess
+        val newUrl = "${checkServerIfNeededResult.value}$key.zip"
+        return safeApiCall {
+            webDavApi.downloadFile(newUrl)
+        }
+    }
+
+    private suspend fun checkServerIfNeeded(): CustomResult<String> {
+        if (sessionStorage.isVerified) {
+            return createUrl()
+        }
+        val checkServerResult = checkServer()
+        if (checkServerResult is CustomResult.GeneralError) {
+            if ((checkServerResult as? CustomResult.GeneralError.CodeError)?.throwable as? WebDavError.Verification is WebDavError.Verification.fileMissingAfterUpload) {
+                //no-op
+            } else {
+                return checkServerResult
+            }
+
+            val createUrlResult = _createUrl()
+            if (createUrlResult is CustomResult.GeneralError) {
+                return createUrlResult
+            }
+            createUrlResult as CustomResult.GeneralSuccess
+            val url = createUrlResult.value!!
+            CustomResult.GeneralSuccess(url)
+        }
+        return checkServerResult
+    }
+
+    private suspend fun checkMetadata(key: String, mtime: Long, hash: String, url: String): CustomResult<MetadataResult> {
+        Timber.i("WebDavController: check metadata for $key")
+        val metadataResult = metadata(key = key, url = url)
+        if (metadataResult is CustomResult.GeneralError) {
+            return metadataResult
+        }
+        metadataResult as CustomResult.GeneralSuccess
+        val metadataResultValue = metadataResult.value
+        if (metadataResultValue == null) {
+            return CustomResult.GeneralSuccess(MetadataResult.new(url))
+        }
+        val (remoteMtime, remoteHash) = metadataResultValue
+        if (hash == remoteHash) {
+            return CustomResult.GeneralSuccess(
+                if (mtime == remoteMtime) {
+                    MetadataResult.unchanged
+                } else {
+                    MetadataResult.mtimeChanged(remoteMtime)
+                }
+            )
+        } else {
+            return CustomResult.GeneralSuccess(MetadataResult.changed(url))
+        }
+    }
+
+    private suspend fun metadata(key: String, url: String): CustomResult<Pair<Long, String>?> {
+        val newUrl = "${url}${key}.prop"
+        val networkResult = safeApiCall {
+            webDavApi.get(url = newUrl)
+        }
+        if (networkResult is CustomResult.GeneralError.NetworkError) {
+            if (networkResult.httpCode == 404) {
+                return CustomResult.GeneralSuccess(null)
+            }
+            Timber.e("WebDavController: $key item prop file error: ${networkResult.stringResponse}")
+            return networkResult
+        }
+        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
+        if (!listOf(200, 404).contains(networkResult.httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
+        }
+        val propContents = networkResult.value!!.string()
+        try {
+            val (mtime, hash) = MTimeAndHashXmlParser.readMtimeAndHash(propContents)
+            return CustomResult.GeneralSuccess(mtime to hash)
+        } catch (e: Exception) {
+            Timber.e(e, "WebDavController: $key item prop invalid. input = $propContents")
+            return CustomResult.GeneralError.CodeError(
+                WebDavError.Download.itemPropInvalid(
+                    propContents
+                ))
+        }
+    }
+
+    private suspend fun removeExistingMetadata(
+        key: String,
+        url: String
+    ): CustomResult<ResponseBody> {
+        Timber.i("WebDavController: remove metadata for $key")
+
+        val newUrl = "${url}${key}.prop"
+
+        val networkResult = safeApiCall {
+            webDavApi.delete(url = newUrl)
+        }
+        if (networkResult is CustomResult.GeneralError.NetworkError) {
+            return networkResult
+        }
+        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
+        if (!listOf(200, 204, 404).contains(networkResult.httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
+        }
+        return networkResult
+    }
+
+    private fun zip(file: File, key: String): CustomResult<File> {
+        Timber.i("WebDavController: ZIP file for upload")
+        try {
+            val tmpFile = fileStore.temporaryZipUploadFile(key = key)
+            tmpFile.delete()
+            Zipper.zip(files = listOf(file), zipFile = tmpFile)
+            return CustomResult.GeneralSuccess(tmpFile)
+        } catch (error: Exception) {
+            Timber.e(error, "WebDavController: can't zip file")
+            return CustomResult.GeneralError.CodeError(error)
+        }
+    }
+
+    suspend fun prepareForUpload(
+        key: String,
+        mtime: Long,
+        hash: String,
+        file: File
+    ): WebDavUploadResult {
+        Timber.i("WebDavController: prepare for upload")
+
+        val checkServerIfNeededResult = checkServerIfNeeded()
+        if (checkServerIfNeededResult is CustomResult.GeneralError) {
+            handlePrepareForUploadError(checkServerIfNeededResult)
+        }
+        checkServerIfNeededResult as CustomResult.GeneralSuccess
+        val url = checkServerIfNeededResult.value!!
+
+        val checkMetadataResult = checkMetadata(key = key, mtime = mtime, hash = hash, url = url)
+        if (checkMetadataResult is CustomResult.GeneralError) {
+            handlePrepareForUploadError(checkMetadataResult)
+        }
+        checkMetadataResult as CustomResult.GeneralSuccess
+        val result = checkMetadataResult.value!!
+        when (result) {
+            MetadataResult.unchanged -> {
+                return WebDavUploadResult.exists
+            }
+
+            is MetadataResult.new -> {
+                val url = result.url
+
+                val zipResult = zip(file = file, key = key)
+                if (zipResult is CustomResult.GeneralError) {
+                    handlePrepareForUploadError(zipResult)
+                }
+                zipResult as CustomResult.GeneralSuccess
+                return WebDavUploadResult.new(url, zipResult.value!!)
+            }
+
+            is MetadataResult.mtimeChanged -> {
+                val mtime = result.mtime
+                val updateResult = update(mtime = mtime, key = key)
+                if (updateResult is CustomResult.GeneralError) {
+                    handlePrepareForUploadError(updateResult)
+                }
+                return WebDavUploadResult.exists
+            }
+
+            is MetadataResult.changed -> {
+                val url = result.url
+                val removeExistingMetadataResult = removeExistingMetadata(key = key, url = url)
+                if (removeExistingMetadataResult is CustomResult.GeneralError) {
+                    handlePrepareForUploadError(removeExistingMetadataResult)
+                }
+                val zipResult = zip(file = file, key = key)
+                if (zipResult is CustomResult.GeneralError) {
+                    handlePrepareForUploadError(zipResult)
+                }
+                zipResult as CustomResult.GeneralSuccess
+                return WebDavUploadResult.new(url, zipResult.value!!)
+            }
+        }
+    }
+
+    private fun handlePrepareForUploadError(error: CustomResult.GeneralError) {
+        when (error) {
+            is CustomResult.GeneralError.CodeError -> {
+                throw error.throwable
+            }
+
+            is CustomResult.GeneralError.NetworkError -> {
+                throw WebDavError.Upload.apiError(error = error, httpMethod = null)
+            }
+        }
+
+    }
+
+    suspend fun finishUpload(
+        key: String,
+        result: CustomResult<Triple<Long, String, String>>,
+        file: File?
+    ) {
+        when (result) {
+            is CustomResult.GeneralSuccess -> {
+                val mtime = result.value!!.first
+                val hash = result.value!!.second
+                val url = result.value!!.third
+                uploadMetadata(key = key, mtime = mtime, hash = hash, url = url)
+                if (file != null) {
+                    remove(file)
+                }
+            }
+
+            is CustomResult.GeneralError -> {
+                when (result) {
+                    is CustomResult.GeneralError.CodeError -> {
+                        Timber.e(result.throwable, "WebDavController: finish failed upload")
+                    }
+
+                    is CustomResult.GeneralError.NetworkError -> {
+                        Timber.e("WebDavController: finish failed upload - ${result.stringResponse}")
+                    }
+                }
+                if (file != null) {
+                    remove(file)
+                }
+            }
+        }
+    }
+
+    private suspend fun uploadMetadata(key: String, mtime: Long, hash: String, url: String) {
+        Timber.i("WebDavController: upload metadata for $key")
+        val metadataProp = "<properties version=\"1\"><mtime>$mtime</mtime><hash>$hash</hash></properties>"
+        val data = metadataProp.toRequestBody()
+        val newUrl = "${url}${key}.prop"
+
+        val networkResult = safeApiCall {
+            webDavApi.uploadProp(url = newUrl, body = data)
+        }
+
+        if (networkResult is CustomResult.GeneralError.NetworkError) {
+            throw WebDavError.Upload.apiError(error = networkResult, httpMethod = "PUT")
+        }
+        if (networkResult is CustomResult.GeneralError.CodeError) {
+            throw networkResult.throwable
+        }
+    }
+
+    suspend fun upload(key: String, url: String, file: File) {
+        val newUrl = "${url}${key}.zip"
+
+        val requestBody = createRequestBody(file)
+        val part = createPart(file, requestBody)
+
+        val networkResult = safeApiCall {
+            webDavApi.uploadAttachment(url = newUrl, file = part)
+        }
+
+        if (networkResult is CustomResult.GeneralError.NetworkError) {
+            throw WebDavError.Upload.apiError(error = networkResult, httpMethod = "PUT")
+        }
+        if (networkResult is CustomResult.GeneralError.CodeError) {
+            throw networkResult.throwable
+        }
+
+    }
+
+    private fun createRequestBody(file: File): RequestBody {
+        val mediaType =
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
+                ?.toMediaTypeOrNull()
+
+        val requestBody = file.asRequestBody(mediaType)
+        return requestBody
+    }
+
+    private fun createPart(file: File, requestBody: RequestBody): MultipartBody.Part {
+        return MultipartBody.Part.createFormData("file", file.name, requestBody)
+    }
 
 }

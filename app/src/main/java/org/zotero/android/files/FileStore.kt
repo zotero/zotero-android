@@ -458,4 +458,10 @@ class FileStore @Inject constructor (
         setSelectedLibrary(LibraryIdentifier.custom(RCustomLibraryType.myLibrary))
     }
 
+    fun temporaryZipUploadFile(key: String): File {
+        val uploadsDir = File(getRootDirectory(), "uploads")
+        uploadsDir.mkdirs()
+        return File(uploadsDir, "${key}.zip")
+    }
+
 }

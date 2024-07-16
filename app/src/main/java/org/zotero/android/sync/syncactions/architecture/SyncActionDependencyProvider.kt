@@ -20,6 +20,8 @@ import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FileStore
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.SchemaController
+import org.zotero.android.webdav.WebDavController
+import org.zotero.android.webdav.WebDavSessionStorage
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -41,5 +43,7 @@ interface SyncActionDependencyProvider {
     fun noAuthenticationApi(): NoAuthenticationApi
     fun updatesResponseMapper(): UpdatesResponseMapper
     fun pageIndexResponseMapper(): PageIndexResponseMapper
+    fun webDavController(): WebDavController
+    fun webDavSessionStorage(): WebDavSessionStorage
 
 }

@@ -2,11 +2,13 @@ package org.zotero.android.architecture.navigation.toolbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import org.zotero.android.api.network.CustomResult
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncError
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.quantityStringResource
+import org.zotero.android.webdav.data.WebDavError
 
 @Composable
 fun syncToolbarAlertMessage(
@@ -162,7 +164,48 @@ fun syncToolbarAlertMessage(
             }
 
             is SyncError.NonFatal.webDavUpload -> {
-                return "" to null //TODO
+                val error = nonFatalError.error
+                when (error) {
+                    WebDavError.Upload.cantCreatePropData -> {
+                        //no-op
+                    }
+
+                    is WebDavError.Upload.apiError -> {
+                        val apiError = error.error
+                        val httpMethod = error.httpMethod
+                        val statusCode =
+                            apiError as? CustomResult.GeneralError.UnacceptableStatusCode
+                        if (statusCode != null) {
+                            return stringResource(
+                                id = Strings.errors_sync_toolbar_webdav_request_failed,
+                                statusCode,
+                                httpMethod ?: "Unknown"
+                            ) to null
+                        }
+                        return WebDavError.message(apiError) to null
+                    }
+                }
+            }
+            is SyncError.NonFatal.webDavDownload -> {
+                val error = nonFatalError.error
+                when (error) {
+                    is WebDavError.Download.itemPropInvalid -> {
+                        return stringResource(
+                            id = Strings.errors_sync_toolbar_webdav_item_prop,
+                            error.str
+                        ) to null
+                    }
+                    WebDavError.Download.notChanged -> {
+                        //no-op
+                    }
+                }
+            }
+            is SyncError.NonFatal.webDavVerification -> {
+                val error = nonFatalError.error
+                return stringResource(
+                    id = Strings.errors_sync_toolbar_webdav_item_prop,
+                    error.message
+                ) to null
             }
         }
     }

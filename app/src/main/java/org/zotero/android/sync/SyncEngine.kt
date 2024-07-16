@@ -44,6 +44,8 @@ import org.zotero.android.sync.syncactions.SyncVersionsSyncAction
 import org.zotero.android.sync.syncactions.UploadAttachmentSyncAction
 import org.zotero.android.sync.syncactions.UploadFixSyncAction
 import org.zotero.android.sync.syncactions.data.AccessPermissions
+import org.zotero.android.sync.syncactions.data.ZoteroApiError
+import org.zotero.android.webdav.data.WebDavError
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -989,6 +991,30 @@ class SyncUseCase @Inject constructor(
                     }
                 }
 
+                if (error is WebDavError.Verification) {
+                    return SyncError.nonFatal2(NonFatal.webDavVerification(error))
+                }
+
+                if (error is WebDavError.Download) {
+                    return SyncError.nonFatal2(NonFatal.webDavDownload(error))
+                }
+
+                if (error is WebDavError.Upload) {
+                    return SyncError.nonFatal2(NonFatal.webDavUpload(error))
+                }
+
+                if (error is ZoteroApiError) {
+                    when (error) {
+                        ZoteroApiError.unchanged -> {
+                            return SyncError.nonFatal2(NonFatal.unchanged)
+                        }
+                        is ZoteroApiError.responseMissing -> {
+                            return SyncError.nonFatal2(NonFatal.unknown(messageS = "missing response", data = data))
+                        }
+                    }
+                }
+
+
                 // Check realm errors, every "core" error is bad. Can't create new Realm instance, can't continue with sync
                 if (error is RealmError) {
                     Timber.e("received realm error - $error")
@@ -1011,14 +1037,9 @@ class SyncUseCase @Inject constructor(
 
             }
             is CustomResult.GeneralError.NetworkError -> {
-                // TODO handle web dav errors
-
-                //TODO handle reportMissing
                 if (customResultError.isUnchanged()) {
                     return SyncError.nonFatal2(NonFatal.unchanged)
                 }
-
-
                 return convertNetworkToSyncError(
                     customResultError,
                     response = customResultError.stringResponse ?: "No Response",
@@ -1475,10 +1496,10 @@ class SyncUseCase @Inject constructor(
                         retryLibraries.add(error.libraryId)
                     }
                 }
-                //TODO handle webDavVerification && webDavDownload
                 is NonFatal.unknown, is NonFatal.schema, is NonFatal.parsing, is NonFatal.apiError,
                 is NonFatal.unchanged, is NonFatal.quotaLimit, is NonFatal.attachmentMissing,
-                is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed, is NonFatal.webDavUpload ->
+                is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed,
+                is NonFatal.webDavUpload, is NonFatal.webDavDownload, is NonFatal.webDavVerification ->
                 reportErrors.add(error)
             }
         }

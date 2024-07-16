@@ -75,4 +75,12 @@ abstract class SyncAction {
     val pageIndexResponseMapper by lazy {
         bindings.pageIndexResponseMapper()
     }
+
+    val webDavController by lazy {
+        bindings.webDavController()
+    }
+
+    val sessionStorage by lazy {
+        bindings.webDavSessionStorage()
+    }
 }

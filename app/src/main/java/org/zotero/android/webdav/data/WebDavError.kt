@@ -59,8 +59,7 @@ sealed class WebDavError {
     sealed class Upload : Exception() {
         object cantCreatePropData : Upload()
 
-        // TODO network error
-        data class apiError(val error: Exception, val httpMethod: String?) : Upload()
+        data class apiError(val error: CustomResult.GeneralError.NetworkError, val httpMethod: String?) : Upload()
     }
 
     companion object {
