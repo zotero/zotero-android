@@ -237,7 +237,7 @@ class UploadAttachmentSyncAction(
 
     private suspend fun webDavResult(): CustomResult<Unit> {
         var file: File? = null
-        var tUrl: String = ""
+        var tUrl = ""
         try {
             checkDatabase()
             validateFile()
@@ -278,7 +278,7 @@ class UploadAttachmentSyncAction(
                 result = CustomResult.GeneralSuccess(Triple(this.mtime, this.md5, tUrl)),
                 file = file
             )
-            val version: Int? = null //TODO
+            val version: Int = submitItemWithHashAndMtime()
             markAttachmentAsUploaded(version)
         } catch (error: Exception) {
             val generalError = CustomResult.GeneralError.CodeError(error)
@@ -287,6 +287,51 @@ class UploadAttachmentSyncAction(
         }
 
         return CustomResult.GeneralSuccess(Unit)
+    }
+
+    private suspend fun submitItemWithHashAndMtime(): Int {
+        Timber.i("UploadAttachmentSyncAction: submit mtime and md5")
+        val loadParameters: Map<String, Any>
+        try {
+            val item = dbWrapper.realmDbStorage.perform(
+                request = ReadItemDbRequest(
+                    libraryId = this.libraryId,
+                    key = this.key
+                )
+            )
+            val parameters = item.mtimeAndHashParameters
+            item.realm?.refresh()
+            loadParameters = parameters
+        } catch (e: Exception) {
+            Timber.e(e, "UploadAttachmentSyncAction: can't load params")
+            throw e
+        }
+        this.failedBeforeZoteroApiRequest = false
+        val submitUpdateSyncActionResult = SubmitUpdateSyncAction(
+            parameters = listOf(loadParameters),
+            changeUuids = emptyMap(),
+            sinceVersion = null,
+            objectS = SyncObject.item,
+            libraryId = this.libraryId,
+            userId = this.userId,
+            updateLibraryVersion = false,
+        ).result()
+        when (submitUpdateSyncActionResult) {
+            is CustomResult.GeneralSuccess -> {
+                val err = submitUpdateSyncActionResult.value?.second
+                if (err != null) {
+                    throw err.throwable
+                }
+                return submitUpdateSyncActionResult.value!!.first
+            }
+            is CustomResult.GeneralError.CodeError ->  {
+                throw submitUpdateSyncActionResult.throwable
+            }
+
+            is CustomResult.GeneralError.NetworkError -> {
+                throw Exception("Network Error. ${submitUpdateSyncActionResult.httpCode}, ${submitUpdateSyncActionResult.stringResponse}")
+            }
+        }
     }
 
 }

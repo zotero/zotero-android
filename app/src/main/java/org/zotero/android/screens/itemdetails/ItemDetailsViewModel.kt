@@ -341,7 +341,9 @@ class ItemDetailsViewModel @Inject constructor(
                         fileStorage = this.fileStore,
                         urlDetector = this.urlDetector,
                         dateParser = this.dateParser,
-                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
+                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
+                        defaults = this.defaults
+                    )
                 }
                 is DetailType.preview -> {
                     reloadData(isEditing = viewState.isEditing)
@@ -357,15 +359,18 @@ class ItemDetailsViewModel @Inject constructor(
                             key = itemKey
                         )
                     )
-                    data = ItemDetailDataCreator.createData(ItemDetailDataCreator.Kind.existing(
-                        item = item,
-                        ignoreChildren = true
-                    ),
+                    data = ItemDetailDataCreator.createData(
+                        ItemDetailDataCreator.Kind.existing(
+                            item = item,
+                            ignoreChildren = true
+                        ),
                         schemaController = this.schemaController,
                         fileStorage = this.fileStore,
                         urlDetector = this.urlDetector,
                         dateParser = this.dateParser,
-                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
+                        doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
+                        defaults = this.defaults
+                    )
                 }
                 else -> {}
             }
@@ -432,7 +437,9 @@ class ItemDetailsViewModel @Inject constructor(
                 dateParser = this@ItemDetailsViewModel.dateParser,
                 fileStorage = this@ItemDetailsViewModel.fileStore,
                 urlDetector = this@ItemDetailsViewModel.urlDetector,
-                doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) })
+                doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
+                defaults = this@ItemDetailsViewModel.defaults
+            )
 
             if (!isEditing) {
                 data.fieldIds =

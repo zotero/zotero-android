@@ -2,6 +2,7 @@ package org.zotero.android.api.network
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.Call
 import retrofit2.Response
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -47,4 +48,13 @@ suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): CustomResult<T>
             NetworkHelper.parseNetworkException(e)
         }
     }
+
+fun <T> safeApiCallSync(apiCall: () -> Call<T>): CustomResult<T> =
+        try {
+            val networkResponse = apiCall.invoke().execute()
+            val parseNetworkResponse = NetworkHelper.parseNetworkResponse(networkResponse)
+            parseNetworkResponse
+        } catch (e: Exception) {
+            NetworkHelper.parseNetworkException(e)
+        }
 

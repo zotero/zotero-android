@@ -968,16 +968,27 @@ internal class ShareViewModel @Inject constructor(
 
 
     private suspend fun upload(data: UploadData) {
-        //TODO implement Upload to WebDav Support
-        shareItemSubmitter.uploadToZotero(
-            data = data,
-            attachmentKey = this.attachmentKey,
-            defaultMimetype = this.defaultMimetype,
-            processUploadToZoteroException = ::processUploadToZoteroException,
-            onBack = {
-                triggerEffect(ShareViewEffect.NavigateBack)
-            }
-        )
+        if (defaults.isWebDavEnabled()) {
+            shareItemSubmitter.uploadToWebDav(
+                data = data,
+                attachmentKey = this.attachmentKey,
+                zipMimetype = this.zipMimetype,
+                processUploadToZoteroException = ::processUploadToZoteroException,
+                onBack = {
+                    triggerEffect(ShareViewEffect.NavigateBack)
+                })
+        } else {
+            shareItemSubmitter.uploadToZotero(
+                data = data,
+                attachmentKey = this.attachmentKey,
+                defaultMimetype = this.defaultMimetype,
+                processUploadToZoteroException = ::processUploadToZoteroException,
+                onBack = {
+                    triggerEffect(ShareViewEffect.NavigateBack)
+                }
+            )
+        }
+
     }
 
 

@@ -16,7 +16,11 @@ class LoadUploadDataSyncAction constructor(
     }
 
     private fun loadUploads(libraryId: LibraryIdentifier): List<AttachmentUpload> {
-        val request = ReadAttachmentUploadsDbRequest(libraryId = libraryId, fileStorage = fileStore)
+        val request = ReadAttachmentUploadsDbRequest(
+            libraryId = libraryId,
+            fileStorage = this.fileStore,
+            defaults = this.defaults
+        )
         return dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
     }
 }

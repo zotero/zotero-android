@@ -570,7 +570,11 @@ class AllItemsProcessor @Inject constructor(
     }
 
     private fun accessory(item: RItem): ItemAccessory? {
-        val attachment = AttachmentCreator.mainAttachment(item, fileStorage = fileStore)
+        val attachment = AttachmentCreator.mainAttachment(
+            item = item,
+            fileStorage = this.fileStore,
+            defaults = this.defaults
+        )
         if (attachment != null) {
             return ItemAccessory.attachment(attachment)
         }

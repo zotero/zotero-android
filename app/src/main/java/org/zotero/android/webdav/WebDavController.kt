@@ -1,9 +1,9 @@
 package org.zotero.android.webdav
 
 import android.webkit.MimeTypeMap
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -11,6 +11,7 @@ import okhttp3.ResponseBody
 import org.zotero.android.api.WebDavApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallSync
 import org.zotero.android.database.DbWrapper
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.StoreMtimeForAttachmentDbRequest
@@ -18,6 +19,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.Zipper
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.webdav.data.MetadataResult
+import org.zotero.android.webdav.data.WebDavDeletionResult
 import org.zotero.android.webdav.data.WebDavError
 import org.zotero.android.webdav.data.WebDavUploadResult
 import timber.log.Timber
@@ -25,6 +27,7 @@ import java.io.File
 import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 
 
 @Singleton
@@ -611,10 +614,9 @@ class WebDavController @Inject constructor(
         val newUrl = "${url}${key}.zip"
 
         val requestBody = createRequestBody(file)
-        val part = createPart(file, requestBody)
 
         val networkResult = safeApiCall {
-            webDavApi.uploadAttachment(url = newUrl, file = part)
+            webDavApi.uploadAttachment(url = newUrl, body = requestBody)
         }
 
         if (networkResult is CustomResult.GeneralError.NetworkError) {
@@ -635,8 +637,107 @@ class WebDavController @Inject constructor(
         return requestBody
     }
 
-    private fun createPart(file: File, requestBody: RequestBody): MultipartBody.Part {
-        return MultipartBody.Part.createFormData("file", file.name, requestBody)
+    suspend fun delete(keys: List<String>): CustomResult<WebDavDeletionResult> {
+        val checkServerIfNeededResult = checkServerIfNeeded()
+        if (checkServerIfNeededResult is CustomResult.GeneralError) {
+            return checkServerIfNeededResult
+        }
+        checkServerIfNeededResult as CustomResult.GeneralSuccess
+        val url = checkServerIfNeededResult.value!!
+        return performDeletions(url = url, keys = keys)
     }
+
+    private suspend fun performDeletions(
+        url: String,
+        keys: List<String>
+    ): CustomResult<WebDavDeletionResult> {
+        return suspendCancellableCoroutine { cont ->
+
+            var count = keys.size * 2
+            val succeeded = mutableSetOf<String>()
+            val missing= mutableSetOf<String>()
+            val failed= mutableSetOf<String>()
+
+            val processResult: (String, CustomResult<ResponseBody>) -> Unit = { key, result ->
+                when(result) {
+                    is CustomResult.GeneralSuccess -> {
+                        if (!failed.contains(key) && !missing.contains(key)) {
+                            succeeded.add(key)
+                        }
+                    }
+
+                    is CustomResult.GeneralError -> {
+                        succeeded.remove(key)
+                        missing.remove(key)
+                        failed.add(key)
+                    }
+                }
+
+
+                count -= 1
+
+                if (count == 0) {
+                    cont.resume(
+                        CustomResult.GeneralSuccess(
+                            WebDavDeletionResult(
+                                succeeded = succeeded,
+                                missing = missing,
+                                failed = failed
+                            )
+                        )
+                    )
+                }
+            }
+
+            for (key in keys) {
+                performDeletionsProp(url, key, processResult)
+                performDeletionsZip(url, key, processResult)
+            }
+        }
+    }
+
+    private fun performDeletionsZip(
+        url: String,
+        key: String,
+        processResult: (String, CustomResult<ResponseBody>) -> Unit
+    ) {
+
+        val zipUrl = "${url}${key}.zip"
+        val deleteZipResult = safeApiCallSync {
+            webDavApi.deleteSync(url = zipUrl)
+        }
+        if (deleteZipResult is CustomResult.GeneralError) {
+            processResult(key, deleteZipResult)
+            return
+        }
+        deleteZipResult as CustomResult.GeneralSuccess.NetworkSuccess
+        if (!listOf(200, 204, 404).contains(deleteZipResult.httpCode)) {
+            processResult(key, deleteZipResult)
+            return
+        }
+        processResult(key, deleteZipResult)
+    }
+
+    private fun performDeletionsProp(
+        url: String,
+        key: String,
+        processResult: (String, CustomResult<ResponseBody>) -> Unit
+    ) {
+        val propUrl = "${url}${key}.prop"
+        val deletePropResult = safeApiCallSync {
+            webDavApi.deleteSync(url = propUrl)
+        }
+        if (deletePropResult is CustomResult.GeneralError) {
+            processResult(key, deletePropResult)
+            return
+        }
+        deletePropResult as CustomResult.GeneralSuccess.NetworkSuccess
+        if (!listOf(200, 204, 404).contains(deletePropResult.httpCode)) {
+            processResult(key, deletePropResult)
+            return
+        }
+        processResult(key, deletePropResult)
+    }
+
 
 }

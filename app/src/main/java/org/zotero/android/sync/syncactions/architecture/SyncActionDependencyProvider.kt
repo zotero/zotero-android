@@ -13,6 +13,7 @@ import org.zotero.android.api.mappers.PageIndexResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.mappers.SettingsResponseMapper
 import org.zotero.android.api.mappers.UpdatesResponseMapper
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
 import org.zotero.android.backgrounduploader.BackgroundUploaderContext
@@ -45,5 +46,6 @@ interface SyncActionDependencyProvider {
     fun pageIndexResponseMapper(): PageIndexResponseMapper
     fun webDavController(): WebDavController
     fun webDavSessionStorage(): WebDavSessionStorage
+    fun defaults(): Defaults
 
 }

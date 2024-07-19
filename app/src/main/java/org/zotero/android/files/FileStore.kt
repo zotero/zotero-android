@@ -47,12 +47,12 @@ class FileStore @Inject constructor (
 
 
     companion object {
-        private const val file_store_version = 1
+        private const val file_store_version = 2
 
 
         private const val BUNDLED_SCHEMA_FILE = "schema.json"
 
-        private const val ACTIVE_KEY_FILE = "uploads"
+        private const val ACTIVE_KEY_FILE = "backgroundUploadsFile"
         private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
 

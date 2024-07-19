@@ -1,6 +1,8 @@
 package org.zotero.android.sync
 
 import android.webkit.MimeTypeMap
+import org.zotero.android.androidx.file.copyWithExt
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -26,13 +28,14 @@ class AttachmentCreator {
     companion object {
         private val mainAttachmentContentTypes = setOf("text/html", "application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain")
 
-        fun mainAttachment(item: RItem, fileStorage: FileStore): Attachment? {
+        fun mainAttachment(item: RItem, fileStorage: FileStore, defaults: Defaults): Attachment? {
             if (item.rawType == ItemTypes.attachment) {
                 val attachment = attachment(
                     item = item,
                     fileStorage = fileStorage,
                     urlDetector = null,
-                    isForceRemote = false
+                    isForceRemote = false,
+                    defaults = defaults,
                 )
                 if (attachment != null) {
                     when {
@@ -85,12 +88,13 @@ class AttachmentCreator {
             val libraryId = rAttachment?.libraryId
             if (libraryId != null) {
                 val type = importedType(
-                    rAttachment,
+                    item = rAttachment,
                     contentType = contentType,
                     libraryId = libraryId,
                     fileStorage = fileStorage,
                     isForceRemote = false,
-                    linkType = linkType
+                    linkType = linkType,
+                    defaults = defaults,
                 )
                 if (type != null) {
                     return Attachment.initWithItemAndKind(item = rAttachment, type = type)
@@ -132,14 +136,16 @@ class AttachmentCreator {
             options: Options = Options.light,
             fileStorage: FileStore,
             isForceRemote: Boolean,
-            urlDetector: UrlDetector?
+            urlDetector: UrlDetector?,
+            defaults: Defaults,
         ): Attachment? {
             return attachmentType(
                 item,
                 options = options,
                 fileStorage = fileStorage,
                 urlDetector = urlDetector,
-                isForceRemote = isForceRemote
+                isForceRemote = isForceRemote,
+                defaults = defaults,
             )?.let { Attachment.initWithItemAndKind(item = item, type = it) }
         }
 
@@ -148,7 +154,8 @@ class AttachmentCreator {
             options: Options = Options.light,
             fileStorage: FileStore,
             isForceRemote: Boolean,
-            urlDetector: UrlDetector?
+            urlDetector: UrlDetector?,
+            defaults: Defaults,
         ): Attachment.Kind? {
             val linkMode = item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }
                 ?.let { LinkMode.from(it.value) }
@@ -164,11 +171,12 @@ class AttachmentCreator {
             when (linkMode) {
                 LinkMode.importedFile -> {
                     return importedType(
-                        item,
+                        item = item,
                         libraryId = libraryId,
                         fileStorage = fileStorage,
                         isForceRemote = isForceRemote,
-                        linkType = Attachment.FileLinkType.importedFile
+                        linkType = Attachment.FileLinkType.importedFile,
+                        defaults = defaults,
                     )
                 }
                 LinkMode.embeddedImage -> {
@@ -177,16 +185,18 @@ class AttachmentCreator {
                         libraryId = libraryId,
                         options = options,
                         isForceRemote = isForceRemote,
-                        fileStorage = fileStorage
+                        fileStorage = fileStorage,
+                        defaults = defaults,
                     )
                 }
                 LinkMode.importedUrl -> {
                     return importedType(
-                        item,
+                        item = item,
                         libraryId = libraryId,
                         fileStorage = fileStorage,
                         isForceRemote = isForceRemote,
-                        linkType = Attachment.FileLinkType.importedUrl
+                        linkType = Attachment.FileLinkType.importedUrl,
+                        defaults = defaults,
                     )
                 }
 
@@ -208,16 +218,18 @@ class AttachmentCreator {
             libraryId: LibraryIdentifier,
             fileStorage: FileStore,
             isForceRemote: Boolean,
-            linkType: Attachment.FileLinkType
+            linkType: Attachment.FileLinkType,
+            defaults: Defaults,
         ): Attachment.Kind? {
             val contentType = contentType(item) ?: return null
             return importedType(
-                item,
+                item = item,
                 contentType = contentType,
                 libraryId = libraryId,
                 fileStorage = fileStorage,
                 isForceRemote = isForceRemote,
-                linkType = linkType
+                linkType = linkType,
+                defaults = defaults,
             )
         }
 
@@ -227,18 +239,25 @@ class AttachmentCreator {
             libraryId: LibraryIdentifier,
             fileStorage: FileStore,
             isForceRemote: Boolean,
-            linkType: Attachment.FileLinkType
+            linkType: Attachment.FileLinkType,
+            defaults: Defaults,
         ): Attachment.Kind {
             val filename = filename(
                 item,
                 ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(contentType)
             )
             val file = fileStorage.attachmentFile(
-                libraryId,
+                libraryId = libraryId,
                 key = item.key,
                 filename = filename,
             )
-            val location = location(item, file = file, fileStorage = fileStorage, isForceRemote = isForceRemote)
+            val location = location(
+                item = item,
+                file = file,
+                fileStorage = fileStorage,
+                isForceRemote = isForceRemote,
+                defaults = defaults
+            )
             return Attachment.Kind.file(
                 filename = filename,
                 contentType = contentType,
@@ -303,20 +322,21 @@ class AttachmentCreator {
             item: RItem,
             file: File,
             fileStorage: FileStore,
-            isForceRemote: Boolean
+            isForceRemote: Boolean,
+            defaults: Defaults,
         ): Attachment.FileLocation {
             if (isForceRemote) {
                 return Attachment.FileLocation.remote
             }
-            if (file.exists()) {
+            val webDavEnabled = defaults.isWebDavEnabled()
+            if (file.exists()|| (webDavEnabled && file.copyWithExt("zip").exists())) {
                 val md5 = fileStorage.md5(file)
                 if (!item.backendMd5.isEmpty() && md5 != item.backendMd5) {
                     return Attachment.FileLocation.localAndChangedRemotely
                 } else {
                     return Attachment.FileLocation.local
                 }
-                //TODO check if webdav enabled
-            } else if (item.links.firstOrNull { it.type == LinkType.enclosure.name } != null) {
+            } else if (webDavEnabled || item.links.firstOrNull { it.type == LinkType.enclosure.name } != null) {
                 return Attachment.FileLocation.remote
             } else {
                 return Attachment.FileLocation.remoteMissing
@@ -329,6 +349,7 @@ class AttachmentCreator {
             options: Options,
             fileStorage: FileStore,
             isForceRemote: Boolean,
+            defaults: Defaults,
         ): Attachment.Kind? {
             val parent = item.parent
             if (parent == null) {
@@ -351,7 +372,13 @@ class AttachmentCreator {
                 libraryId = libraryId,
                 isDark = options == Options.dark
             )
-            val location = location(item, file = file, fileStorage = fileStorage, isForceRemote)
+            val location = location(
+                item = item,
+                file = file,
+                fileStorage = fileStorage,
+                isForceRemote = isForceRemote,
+                defaults = defaults
+            )
             val filename = filename(item, ext = "png")
             return Attachment.Kind.file(
                 filename = filename,

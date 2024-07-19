@@ -83,4 +83,8 @@ abstract class SyncAction {
     val sessionStorage by lazy {
         bindings.webDavSessionStorage()
     }
+
+    val defaults by lazy {
+        bindings.defaults()
+    }
 }

@@ -489,7 +489,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             options = AttachmentCreator.Options.light,
             fileStorage = fileStorage,
             urlDetector = null,
-            isForceRemote = true
+            isForceRemote = true,
+            defaults = ZoteroApplication.instance.defaults,
         )
         if (type == null) {
             return
@@ -580,6 +581,26 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         }
         return value
     }
+
+    val mtimeAndHashParameters: Map<String, Any>
+        get() {
+            val parameters: MutableMap<String, Any> = mutableMapOf(
+                "key" to this.key,
+                "version" to this.version,
+                "dateModified" to sqlFormat.format(this.dateModified),
+                "dateAdded" to sqlFormat.format(this.dateAdded)
+            )
+            val md5 = this.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
+            if (md5 != null) {
+                parameters[FieldKeys.Item.Attachment.md5] = md5
+            }
+            val mtime = this.fields.where().key(FieldKeys.Item.Attachment.mtime)
+                .findFirst()?.value?.toLongOrNull()
+            if (mtime != null) {
+                parameters[FieldKeys.Item.Attachment.mtime] = mtime
+            }
+            return parameters
+        }
 
 }
 

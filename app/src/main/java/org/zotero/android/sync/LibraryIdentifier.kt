@@ -43,6 +43,22 @@ sealed class LibraryIdentifier: java.io.Serializable  {
         }
     }
 
+    val debugName: String get() {
+        when (this) {
+            is group -> {
+                return "Group ($groupId)"
+            }
+
+            is custom -> {
+                when (this.type) {
+                    RCustomLibraryType.myLibrary -> {
+                        return "My Library"
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         fun from(apiPath: String): LibraryIdentifier? {
             if (apiPath.contains("users")) {

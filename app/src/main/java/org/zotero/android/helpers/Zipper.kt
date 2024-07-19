@@ -31,6 +31,7 @@ object Zipper {
                         out.write(data, 0, count)
                     }
                 } finally {
+                    out.flush()
                     origin.close()
                 }
             }

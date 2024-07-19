@@ -1,15 +1,13 @@
 package org.zotero.android.api
 
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
+import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.HeaderMap
-import retrofit2.http.Multipart
 import retrofit2.http.PUT
-import retrofit2.http.Part
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
@@ -45,16 +43,18 @@ interface WebDavApi {
     @HTTP(method = "DELETE")
     suspend fun delete(@Url url: String): retrofit2.Response<ResponseBody>
 
+    @HTTP(method = "DELETE")
+    fun deleteSync(@Url url: String): Call<ResponseBody>
+
     @HTTP(method = "PUT", hasBody = true)
     suspend fun uploadProp(
         @Url url: String,
         @Body body: RequestBody,
     ): retrofit2.Response<ResponseBody>
 
-    @HTTP(method = "PUT", hasBody = true)
-    @Multipart
+    @PUT
     suspend fun uploadAttachment(
         @Url url: String,
-        @Part file: MultipartBody.Part,
+        @Body body: RequestBody,
     ): retrofit2.Response<Unit>
 }

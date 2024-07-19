@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.kotlin.where
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
@@ -17,7 +18,8 @@ import java.io.File
 
 class ReadAttachmentUploadsDbRequest(
     val libraryId: LibraryIdentifier,
-    val fileStorage: FileStore
+    val fileStorage: FileStore,
+    private val defaults: Defaults,
 ) : DbResponseRequest<List<AttachmentUpload>> {
     override val needsWrite: Boolean
         get() = true
@@ -65,7 +67,8 @@ class ReadAttachmentUploadsDbRequest(
             val attachmentType = AttachmentCreator.attachmentType(
                 item,
                 options = AttachmentCreator.Options.light,
-                fileStorage = fileStorage,
+                fileStorage = this.fileStorage,
+                defaults = this.defaults,
                 isForceRemote = true,
                 urlDetector = null
             )

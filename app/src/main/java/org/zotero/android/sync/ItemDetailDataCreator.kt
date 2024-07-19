@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -28,6 +29,7 @@ object ItemDetailDataCreator {
     fun createData(
         type: Kind,
         schemaController: SchemaController,
+        defaults: Defaults,
         dateParser: DateParser,
         fileStorage: FileStore,
         urlDetector: UrlDetector,
@@ -48,6 +50,7 @@ object ItemDetailDataCreator {
                 item = type.item,
                 ignoreChildren = type.ignoreChildren,
                 schemaController = schemaController,
+                defaults = defaults,
                 fileStorage = fileStorage,
                 urlDetector = urlDetector,
                 doiDetector = doiDetector,
@@ -63,7 +66,8 @@ object ItemDetailDataCreator {
         dateParser: DateParser,
         fileStorage: FileStore,
         urlDetector: UrlDetector,
-        doiDetector: (String) -> Boolean
+        doiDetector: (String) -> Boolean,
+        defaults: Defaults,
     )
             : ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(item.rawType)
@@ -136,7 +140,8 @@ object ItemDetailDataCreator {
                 item,
                 fileStorage = fileStorage,
                 urlDetector = urlDetector,
-                isForceRemote = false
+                isForceRemote = false,
+                defaults = defaults,
             )
             attachments = attachment?.let { listOf(it) } ?: emptyList()
         } else {
@@ -151,7 +156,8 @@ object ItemDetailDataCreator {
                         item = item,
                         fileStorage = fileStorage,
                         isForceRemote = false,
-                        urlDetector = urlDetector
+                        urlDetector = urlDetector,
+                        defaults = defaults,
                     )
                 }
             attachments = mappedAttachments

@@ -128,7 +128,8 @@ class UploadFixSyncAction(
                 options = AttachmentCreator.Options.light,
                 fileStorage = this.fileStore,
                 urlDetector = null,
-                isForceRemote = false
+                isForceRemote = false,
+                defaults = this.defaults,
             )
             if (attachment == null) {
                 Timber.e("UploadFixSyncAction: item not attachment - ${item.rawType}")
