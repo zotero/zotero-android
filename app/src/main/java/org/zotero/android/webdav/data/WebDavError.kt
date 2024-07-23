@@ -98,6 +98,9 @@ sealed class WebDavError {
                     401 -> {
                         return context.getString(Strings.errors_settings_webdav_unauthorized)
                     }
+                    400 -> {
+                        return error.stringResponse
+                    }
                     403 -> {
                         return context.getString(Strings.errors_settings_webdav_forbidden)
                     }
@@ -105,6 +108,9 @@ sealed class WebDavError {
                 }
             if (error.isNoNetworkError()) {
                 return context.getString(Strings.errors_settings_webdav_internet_connection)
+            }
+            if (error.isNoCertificateFound()) {
+                return context.getString(Strings.errors_settings_webdav_no_https_certificate)
             }
 
             return context.getString(Strings.errors_settings_webdav_host_not_found)

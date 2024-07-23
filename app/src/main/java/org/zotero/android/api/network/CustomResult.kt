@@ -10,6 +10,7 @@ sealed class CustomResult<out T> {
         ) : GeneralError() {
             companion object {
                 const val NO_INTERNET_CONNECTION_HTTP_CODE = -1
+                const val NO_HTTPS_CERTIFICATE_FOUND = -2
                 const val UNKNOWN_NETWORK_EXCEPTION_HTTP_CODE = -999
             }
 
@@ -19,6 +20,9 @@ sealed class CustomResult<out T> {
             }
             fun isNoNetworkError(): Boolean {
                 return httpCode == NO_INTERNET_CONNECTION_HTTP_CODE
+            }
+            fun isNoCertificateFound(): Boolean {
+                return httpCode == NO_HTTPS_CERTIFICATE_FOUND
             }
             fun isNotFound(): Boolean {
                 return httpCode == 404

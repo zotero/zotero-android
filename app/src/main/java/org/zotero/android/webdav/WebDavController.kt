@@ -102,7 +102,11 @@ class WebDavController @Inject constructor(
         }
 
         try {
-            val components = URL(sessionStorage.scheme.name, host, port!!, path)
+            val components = if (port != null) {
+                URL(sessionStorage.scheme.name, host, port, path)
+            } else {
+                URL(sessionStorage.scheme.name, host, path)
+            }
             return CustomResult.GeneralSuccess(components.toExternalForm())
         } catch (e: Exception) {
             Timber.e("WebDavController: could not create url from components. url=$url; host=${host ?: "missing"}; path=$path; port=${port?.toString() ?: "missing"}")

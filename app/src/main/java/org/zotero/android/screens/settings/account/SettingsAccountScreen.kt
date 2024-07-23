@@ -72,11 +72,10 @@ internal fun SettingsAccountScreen(
                     Spacer(modifier = Modifier.height(30.dp))
                     SettingsAccountDataSyncSection(viewState, viewModel)
                 }
-                //TODO uncomment for File Syncing functionality
-//                item {
-//                    Spacer(modifier = Modifier.height(30.dp))
-//                    SettingsAccountFileSyncingSection(viewState, viewModel)
-//                }
+                item {
+                    Spacer(modifier = Modifier.height(30.dp))
+                    SettingsAccountFileSyncingSection(viewState, viewModel)
+                }
                 item {
                     Spacer(modifier = Modifier.height(30.dp))
                     SettingsAccountAccountSection(viewModel)

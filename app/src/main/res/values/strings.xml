@@ -29,4 +29,5 @@
     <string name="zotero_option">Zotero</string>
     <string name="webdav_option">WebDAV</string>
     <string name="enter_url">URL</string>
+    <string name="errors.settings.webdav.no_https_certificate">HTTPS error: Trust anchor for certification path not found</string>
 </resources>
