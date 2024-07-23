@@ -60,7 +60,6 @@ object Libs {
     object Hilt {
         private const val version = "1.1.0"
 
-        const val worker = "androidx.hilt:hilt-work:$version"
         const val compiler = "androidx.hilt:hilt-compiler:$version"
         const val navigationCompose = "androidx.hilt:hilt-navigation-compose:$version"
     }
@@ -148,10 +147,6 @@ object Libs {
             const val coreTesting = "androidx.arch.core:core-testing:2.1.0"
         }
 
-        object Work {
-            private const val version = "2.9.0"
-            const val runtime = "androidx.work:work-runtime-ktx:$version"
-        }
     }
     object Commons {
         const val io = "commons-io:commons-io:2.4"

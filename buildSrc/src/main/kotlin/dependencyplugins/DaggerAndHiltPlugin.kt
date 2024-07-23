@@ -17,7 +17,6 @@ private fun configure(project: Project) {
 
         add("annotationProcessor", Libs.Dagger.hiltAndroidAndroidCompilerProcessor)
 
-        add("implementation", Libs.Hilt.worker)
         add("kapt", Libs.Hilt.compiler)
         add("implementation", Libs.Hilt.navigationCompose)
 

@@ -1,5 +1,6 @@
 package dependencyplugins
 
+import Libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -25,8 +26,6 @@ private fun configure(project: Project) {
         add("implementation", Libs.AndroidX.Lifecycle.commonJava8)
         add("implementation", Libs.AndroidX.Lifecycle.liveData)
         add("implementation", Libs.AndroidX.Lifecycle.process)
-
-        add("implementation", Libs.AndroidX.Work.runtime)
 
     }
 }
