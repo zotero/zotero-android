@@ -2,9 +2,9 @@ object BuildConfig {
     const val appId = "org.zotero.android"
     const val minSdkVersion = 23
     const val compileSdkVersion = 34
-    const val targetSdk = 33
+    const val targetSdk = 34
 
-    val versionCode = 80 // Must be updated on every build
+    val versionCode = 81 // Must be updated on every build
     val version = Version(
         major = 1,
         minor = 0,
