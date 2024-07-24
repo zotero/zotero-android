@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.androidx.content.getDrawableByItemType
+import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -35,7 +36,14 @@ internal fun AddNoteTopBar(
                 val type = titleData?.type
                 if (type != null) {
                     Image(
-                        painter = painterResource(id = LocalContext.current.getDrawableByItemType(type)),
+                        painter = painterResource(
+                            id = LocalContext.current.getDrawableByItemType(
+                                ItemTypes.iconName(
+                                    type,
+                                    null
+                                )
+                            )
+                        ),
                         contentDescription = null,
                     )
                     Spacer(modifier = Modifier.width(10.dp))
