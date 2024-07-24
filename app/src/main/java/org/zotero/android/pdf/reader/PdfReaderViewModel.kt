@@ -11,6 +11,8 @@ import android.transition.TransitionManager
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
@@ -1612,6 +1614,12 @@ class PdfReaderViewModel @Inject constructor(
                 this.document.annotationProvider.removeAnnotationFromPage(it)
             }
         submitPendingPage(fragment.pageIndex)
+        val activity = fragment.activity
+        if (activity != null) {
+            WindowCompat.getInsetsController(activity.window, activity.window.decorView).show(
+                WindowInsetsCompat.Type.systemBars()
+            )
+        }
         super.onCleared()
     }
 

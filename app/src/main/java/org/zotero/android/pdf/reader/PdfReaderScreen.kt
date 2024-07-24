@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -64,6 +66,16 @@ internal fun PdfReaderScreen(
         }
     }
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+        val window = activity.window
+        val decorView = window.decorView
+        val systemBars = WindowInsetsCompat.Type.systemBars()
+        val insetsController = WindowCompat.getInsetsController(window, decorView)
+        if (viewState.isTopBarVisible) {
+            insetsController.show(systemBars)
+        } else {
+            insetsController.hide(systemBars)
+        }
+
         val params = viewModel.screenArgs
         val uri = params.uri
         val lazyListState = rememberLazyListState()
