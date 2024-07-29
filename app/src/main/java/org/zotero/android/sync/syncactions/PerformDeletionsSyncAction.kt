@@ -22,7 +22,7 @@ class PerformDeletionsSyncAction constructor(
             tags = this.tags,
             conflictMode = this.conflictMode
         )
-        val conflicts = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+        val conflicts = dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
         return conflicts
     }
 }

@@ -1,6 +1,5 @@
 package org.zotero.android.screens.filter
 
-import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +18,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.DeleteAutomaticTagsDbRequest
 import org.zotero.android.database.requests.ReadAutomaticTagsDbRequest
 import org.zotero.android.database.requests.ReadColoredTagsDbRequest
@@ -38,9 +37,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class FilterViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val defaults: Defaults,
-    private val context: Context,
     private val dispatchers: Dispatchers,
 ) : BaseViewModel2<FilterViewState, FilterViewEffect>(FilterViewState()) {
 
@@ -249,7 +247,7 @@ internal class FilterViewModel @Inject constructor(
                     ignoreCase = true
                 )
             }
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val filtered = coordinator.perform(
                     request = ReadFilteredTagsDbRequest(
                         collectionId = collectionId,
@@ -328,7 +326,7 @@ internal class FilterViewModel @Inject constructor(
 //                    }
                 }
 
-                coordinator.refresh()
+                coordinator.invalidate()
                 if (!viewState.searchTerm.isEmpty()) {
                     // Perform search filter if needed
                     snapshot = sorted
@@ -392,7 +390,7 @@ internal class FilterViewModel @Inject constructor(
             copy(showFilterOptionsPopup = false)
         }
         val request = ReadAutomaticTagsDbRequest(libraryId = ScreenArguments.filterArgs.libraryId)
-        val count = dbWrapper.realmDbStorage.perform(request = request).size
+        val count = dbWrapperMain.realmDbStorage.perform(request = request).size
         confirmDeletion(count)
     }
 
@@ -406,7 +404,7 @@ internal class FilterViewModel @Inject constructor(
     fun deleteAutomaticTags() {
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = DeleteAutomaticTagsDbRequest(libraryId = ScreenArguments.filterArgs.libraryId)
             )
         }

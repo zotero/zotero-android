@@ -12,13 +12,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import kotlinx.serialization.json.Json
-import org.zotero.android.api.annotations.BundleDataDb
 import org.zotero.android.api.annotations.ForGsonWithRoundedDecimals
 import org.zotero.android.api.network.InternetConnectionStatusManager
 import org.zotero.android.api.network.internetConnectionStatus
 import org.zotero.android.architecture.serialization.SealedClassTypeAdapter
 import org.zotero.android.architecture.serialization.UriTypeAdapter
-import org.zotero.android.database.DbWrapper
 import org.zotero.android.files.FormattedDoubleJsonSerializer
 import javax.inject.Singleton
 import kotlin.jvm.internal.Reflection
@@ -77,20 +75,5 @@ object GeneralModule {
         val type = object : TypeToken<Double>() {}.type
         gsonBuilder.registerTypeAdapter(type, FormattedDoubleJsonSerializer())
         return gsonBuilder.create()
-    }
-
-    @Provides
-    @Singleton
-    fun provideDbWrapper(
-    ): DbWrapper {
-        return DbWrapper()
-    }
-
-    @Provides
-    @Singleton
-    @BundleDataDb
-    fun provideBundleDataDbWrapper(
-    ): DbWrapper {
-        return DbWrapper()
     }
 }

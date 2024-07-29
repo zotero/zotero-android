@@ -1,6 +1,5 @@
 package org.zotero.android.sync.syncactions
 
-import org.zotero.android.database.RealmDbStorage
 import org.zotero.android.database.requests.ReadLibrariesDataDbRequest
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LibraryData
@@ -12,7 +11,6 @@ class LoadLibraryDataSyncAction(
     val fetchUpdates: Boolean,
     val loadVersions: Boolean,
     val webDavEnabled: Boolean,
-    val dbStorage: RealmDbStorage,
 ) : SyncAction() {
 
     fun result(): List<LibraryData> {
@@ -39,7 +37,7 @@ class LoadLibraryDataSyncAction(
                 }
             }
 
-        return dbStorage.perform(request = request, invalidateRealm = true)
+        return dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
     }
 
 }

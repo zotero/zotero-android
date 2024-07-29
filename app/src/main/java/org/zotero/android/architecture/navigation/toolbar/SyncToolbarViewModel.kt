@@ -10,7 +10,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressEventStream
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.sync.SyncError
 import java.util.Timer
@@ -19,7 +19,7 @@ import kotlin.concurrent.timerTask
 
 @HiltViewModel
 class SyncToolbarViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val syncProgressEventStream: SyncProgressEventStream,
 ) : BaseViewModel2<SyncToolbarViewState, SyncToolbarViewEffect>(SyncToolbarViewState()) {
 
@@ -127,7 +127,7 @@ class SyncToolbarViewModel @Inject constructor(
 
     fun getGroupNameById(groupId: Int): String {
         val group =
-            dbWrapper.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = groupId))
+            dbWrapperMain.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = groupId))
         val groupName = group.name ?: "${groupId}"
         return groupName
     }

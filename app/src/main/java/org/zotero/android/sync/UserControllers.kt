@@ -13,7 +13,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.CleanupUnusedTags
 import org.zotero.android.files.FileStore
 import org.zotero.android.websocket.ChangeWsResponse
@@ -23,9 +23,7 @@ import javax.inject.Singleton
 @Singleton
 class UserControllers @Inject constructor(
     dispatcher: CoroutineDispatcher,
-    private val fileStore: FileStore,
-    private val dbWrapper: DbWrapper,
-    private val context: Context,
+    private val dbWrapperMain: DbWrapperMain,
     private val syncController: SyncUseCase,
     private val syncScheduler: SyncScheduler,
     private val objectUserChangeEventStream: ObjectUserChangeEventStream,
@@ -34,7 +32,6 @@ class UserControllers @Inject constructor(
     private val webSocketController: WebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
-    private val defaults: Defaults,
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -55,9 +52,10 @@ class UserControllers @Inject constructor(
         fileDownloader.init(userId = userId)
         var isFirstLaunch = false
         coroutineScope.launch {
-            dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+            dbWrapperMain.realmDbStorage.perform(coordinatorAction = { coordinator ->
                 isFirstLaunch = coordinator.perform(InitializeCustomLibrariesDbRequest())
                 coordinator.perform(CleanupUnusedTags())
+                coordinator.invalidate()
             })
         }
 
@@ -65,7 +63,8 @@ class UserControllers @Inject constructor(
         this.isFirstLaunch = isFirstLaunch
         syncScheduler.init(DelayIntervals.retry)
         this.changeObserver = ObjectUserChangeObserver(
-            dbWrapper = dbWrapper, observable = objectUserChangeEventStream,
+            dbWrapperMain = dbWrapperMain,
+            observable = objectUserChangeEventStream,
             applicationScope = applicationScope,
             dispatchers = dispatchers
         )
@@ -113,7 +112,6 @@ class UserControllers @Inject constructor(
     }
 
     private fun createDbStorage(userId: Long) {
-        val file = fileStore.dbFile(userId)
-        dbWrapper.initWithMainConfiguration(dbFile = file)
+        dbWrapperMain.initWithMainConfiguration(userId)
     }
 }

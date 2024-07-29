@@ -29,7 +29,7 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.database.DbError
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
@@ -97,7 +97,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class AllItemsViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
@@ -428,7 +428,7 @@ internal class AllItemsViewModel @Inject constructor(
         val type = schemaController.localizedItemType(ItemTypes.attachment) ?: ""
         val request = CreateAttachmentsDbRequest(attachments = attachments, parentKey = null, localizedType = type, collections = collections, fileStore = fileStore)
 
-        val result = perform(dbWrapper, invalidateRealm = true, request = request).ifFailure {
+        val result = perform(dbWrapperMain, invalidateRealm = true, request = request).ifFailure {
             Timber.e(it,"ItemsActionHandler: can't add attachment")
             updateState {
                 copy(error = ItemsError.attachmentAdding(ItemsError.AttachmentLoading.couldNotSave))
@@ -521,7 +521,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
 
         try {
-            dbWrapper.realmDbStorage.perform(
+            dbWrapperMain.realmDbStorage.perform(
                 EditNoteDbRequest(
                     note = note,
                     libraryId = libraryId
@@ -538,7 +538,7 @@ internal class AllItemsViewModel @Inject constructor(
                     collectionKey = collectionKey,
                     parentKey = null
                 )
-                dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+                dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
             } else {
                 Timber.e(e)
             }
@@ -803,7 +803,7 @@ internal class AllItemsViewModel @Inject constructor(
     fun delete(keys: Set<String>) {
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = MarkObjectsAsDeletedDbRequest(
                     clazz = RItem::class,
                     keys = keys.toList(),
@@ -830,7 +830,7 @@ internal class AllItemsViewModel @Inject constructor(
             libraryId = this.library.identifier,
             trashed = trashed
         )
-        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+        perform(dbWrapper = dbWrapperMain, request = request).ifFailure { error ->
             Timber.e(error, "ItemsStore: can't trash items")
             updateState {
                 copy(
@@ -845,7 +845,7 @@ internal class AllItemsViewModel @Inject constructor(
         val request = ReadItemDbRequest(libraryId = this.library.identifier, key = key)
 
         try {
-            val item = dbWrapper.realmDbStorage.perform(request = request)
+            val item = dbWrapperMain.realmDbStorage.perform(request = request)
             stopEditing()
             showItemDetail(DetailType.duplication(itemKey = item.key, collectionKey = this.collection.identifier.keyGet), library = this.library)
         } catch (error: Exception) {
@@ -941,7 +941,7 @@ internal class AllItemsViewModel @Inject constructor(
     fun emptyTrash() {
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = EmptyTrashDbRequest(libraryId = this@AllItemsViewModel.library.identifier)
             ).ifFailure {
                 Timber.e(it, "AllItemsViewModel: can't empty trash")
@@ -1012,7 +1012,7 @@ internal class AllItemsViewModel @Inject constructor(
             libraryId = this.library.identifier
         )
         viewModelScope.launch {
-            perform(dbWrapper, request = request).ifFailure {
+            perform(dbWrapperMain, request = request).ifFailure {
                 Timber.e(it, "ItemsStore: can't delete items")
                 updateState {
                     copy(error = ItemsError.deletionFromCollection)
@@ -1030,7 +1030,7 @@ internal class AllItemsViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            perform(dbWrapper, request = request).ifFailure {
+            perform(dbWrapperMain, request = request).ifFailure {
                 Timber.e(it, "ItemsStore: can't assign collections to items")
                 updateState {
                     copy(error = ItemsError.collectionAssignment)

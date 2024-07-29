@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -27,7 +27,7 @@ class ObjectUserChangeEventStream @Inject constructor(applicationScope: Applicat
     EventStream<List<LibraryIdentifier>>(applicationScope)
 
 class ObjectUserChangeObserver(
-    val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     val observable: ObjectUserChangeEventStream,
     val applicationScope: ApplicationScope,
     val dispatchers: Dispatchers
@@ -48,7 +48,7 @@ class ObjectUserChangeObserver(
 
     private fun setupObserving() {
         try {
-            this.dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+            this.dbWrapperMain.realmDbStorage.perform(coordinatorAction = { coordinator ->
                 this@ObjectUserChangeObserver.collectionsToken =
                     registerObserver(coordinator = coordinator)
                 this@ObjectUserChangeObserver.itemsToken =

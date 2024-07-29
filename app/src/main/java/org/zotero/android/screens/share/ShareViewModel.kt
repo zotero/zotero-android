@@ -30,7 +30,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -86,7 +86,7 @@ internal class ShareViewModel @Inject constructor(
     private val syncScheduler: SyncScheduler,
     private val syncObservableEventStream: SyncObservableEventStream,
     private val translatorActionEventStream: TranslatorActionEventStream,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val itemResponseMapper: ItemResponseMapper,
     private val schemaController: SchemaController,
     private val tagResponseMapper: TagResponseMapper,
@@ -397,7 +397,7 @@ internal class ShareViewModel @Inject constructor(
             var collection: Collection? = null
             var recents = mutableListOf<RecentData>()
             Timber.i("ShareViewModel: ReadCollectionAndLibraryDbRequest closure before")
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val request = ReadCollectionAndLibraryDbRequest(
                     collectionId = this.selectedCollectionId,
                     libraryId = this.selectedLibraryId

@@ -24,7 +24,7 @@ import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.architecture.logging.debug.DebugLoggingDialogData
 import org.zotero.android.architecture.logging.debug.DebugLoggingDialogDataEventStream
 import org.zotero.android.architecture.logging.debug.DebugLoggingInterface
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RGroup
 import org.zotero.android.database.requests.DeleteGroupDbRequest
@@ -58,7 +58,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val debugLogging: DebugLogging,
@@ -192,7 +192,7 @@ class DashboardViewModel @Inject constructor(
         var library: Library? = null
 
         try {
-            dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+            dbWrapperMain.realmDbStorage.perform(coordinatorAction = { coordinator ->
                 when (collectionId) {
                     is CollectionIdentifier.collection -> {
                         val rCollection = coordinator.perform(
@@ -373,7 +373,7 @@ class DashboardViewModel @Inject constructor(
     fun deleteNonLocalGroup(groupId: Int) {
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 DeleteGroupDbRequest(groupId = groupId)
             ).ifFailure {
                 Timber.e(it, "DashboardViewModel: can't delete group")
@@ -383,7 +383,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun listenToGroupDeletionEvents() {
-        dbWrapper.realmDbStorage.perform { coordinator ->
+        dbWrapperMain.realmDbStorage.perform { coordinator ->
             this.groupLibraries = coordinator.perform(request = ReadAllGroupsDbRequest())
 
             this.groupLibraries?.addChangeListener { _, changeSet ->

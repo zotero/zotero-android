@@ -4,7 +4,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.backgrounduploader.BackgroundUpload
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -38,7 +38,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ShareItemSubmitter @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
     private val fileStore: FileStore,
@@ -54,7 +54,7 @@ class ShareItemSubmitter @Inject constructor(
     ): Pair<Map<String, Any>, Map<String, List<String>>> {
         var changeUuids: MutableMap<String, List<String>> = mutableMapOf()
         var parameters: MutableMap<String, Any> = mutableMapOf()
-        dbWrapper.realmDbStorage.perform { coordinator ->
+        dbWrapperMain.realmDbStorage.perform { coordinator ->
             val collectionKey = item.collectionKeys.firstOrNull()
             if (collectionKey != null) {
                 coordinator.perform(
@@ -74,7 +74,7 @@ class ShareItemSubmitter @Inject constructor(
             parameters = item.updateParameters?.toMutableMap() ?: mutableMapOf()
             changeUuids = mutableMapOf(item.key to item.changes.map { it.identifier })
 
-            coordinator.refresh()
+            coordinator.invalidate()
         }
 
         return parameters to changeUuids
@@ -86,7 +86,7 @@ class ShareItemSubmitter @Inject constructor(
         var changeUuids: MutableMap<String, List<String>> = mutableMapOf()
         var mtime: Long? = null
         var md5: String? = null
-        dbWrapper.realmDbStorage.perform { coordinator ->
+        dbWrapperMain.realmDbStorage.perform { coordinator ->
             val collectionKey = item.collectionKeys.firstOrNull()
             if (collectionKey != null) {
                 coordinator.perform(
@@ -119,7 +119,7 @@ class ShareItemSubmitter @Inject constructor(
                 .findFirst()?.value?.toLongOrNull()
             md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
 
-            coordinator.refresh()
+            coordinator.invalidate()
         }
         if (mtime == null) {
             throw AttachmentState.Error.mtimeMissing
@@ -145,7 +145,7 @@ class ShareItemSubmitter @Inject constructor(
         var md5: String? = null
         var mtime: Long? = null
 
-        dbWrapper.realmDbStorage.perform { coordinator ->
+        dbWrapperMain.realmDbStorage.perform { coordinator ->
             val collectionKey = collections.firstOrNull()
             if (collectionKey != null) {
                 coordinator.perform(
@@ -173,7 +173,7 @@ class ShareItemSubmitter @Inject constructor(
                 .findFirst()?.value?.toLongOrNull()
             md5 = attachment.fields.where().key(FieldKeys.Item.Attachment.md5).findFirst()?.value
 
-            coordinator.refresh()
+            coordinator.invalidate()
         }
 
         mtime ?: throw AttachmentState.Error.mtimeMissing
@@ -360,7 +360,7 @@ class ShareItemSubmitter @Inject constructor(
                         key = data.attachment.key,
                         version = response.version
                     )
-                    dbWrapper.realmDbStorage.perform(request)
+                    dbWrapperMain.realmDbStorage.perform(request)
                 }
 
                 is AuthorizeUploadResponse.new -> {
@@ -426,7 +426,7 @@ class ShareItemSubmitter @Inject constructor(
                         key = data.attachment.key,
                         version = null
                     )
-                    dbWrapper.realmDbStorage.perform(request)
+                    dbWrapperMain.realmDbStorage.perform(request)
                 }
 
                 is WebDavUploadResult.new -> {

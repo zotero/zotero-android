@@ -14,7 +14,7 @@ import org.zotero.android.api.mappers.ChangeWsResponseMapper
 import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadVersionDbRequest
 import org.zotero.android.websocket.ChangeWsResponse
 import org.zotero.android.websocket.Command
@@ -54,7 +54,7 @@ private data class Response(
 
 @Singleton
 class WebSocketController @Inject constructor(
-    val dbWrapper: DbWrapper,
+    val dbWrapperMain: DbWrapperMain,
     val observable: ChangeWsResponseKindEventStream,
     val dispatcher: CoroutineDispatcher,
     @ForWebSocket
@@ -370,7 +370,7 @@ class WebSocketController @Inject constructor(
                 }
 
                 try {
-                    val localVersion = dbWrapper.realmDbStorage.perform(
+                    val localVersion = dbWrapperMain.realmDbStorage.perform(
                         ReadVersionDbRequest(libraryId = responseType.libraryIdentifier),
                         invalidateRealm = true
                     )

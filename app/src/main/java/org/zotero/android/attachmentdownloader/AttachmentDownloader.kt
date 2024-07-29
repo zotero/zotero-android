@@ -6,7 +6,7 @@ import kotlinx.coroutines.async
 import org.zotero.android.api.NoRedirectApi
 import org.zotero.android.api.SyncApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
 import org.zotero.android.files.FileStore
@@ -24,7 +24,7 @@ class AttachmentDownloader @Inject constructor(
     private val syncApi: SyncApi,
     private val noRedirectApi: NoRedirectApi,
     private val fileStorage: FileStore,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val dispatcher: CoroutineDispatcher,
     private val unzipper: Unzipper,
@@ -287,7 +287,7 @@ class AttachmentDownloader @Inject constructor(
                     )
                 }
                 is CustomResult.GeneralSuccess -> {
-                    dbWrapper.realmDbStorage.perform(
+                    dbWrapperMain.realmDbStorage.perform(
                         request = MarkFileAsDownloadedDbRequest(
                             key = download.key,
                             libraryId = download.libraryId,

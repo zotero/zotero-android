@@ -15,7 +15,7 @@ import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
 import org.zotero.android.database.requests.StoreSearchesDbRequest
@@ -32,7 +32,7 @@ class SyncBatchProcessor(
     val batches: List<DownloadBatch>,
     val userId: Long,
     val syncApi: SyncApi,
-    val dbWrapper: DbWrapper,
+    val dbWrapperMain: DbWrapperMain,
     val fileStore: FileStore,
     val itemResponseMapper: ItemResponseMapper,
     val collectionResponseMapper: CollectionResponseMapper,
@@ -173,7 +173,7 @@ class SyncBatchProcessor(
                 }
 
                 storeIndividualObjects(objects, type = SyncObject.collection, libraryId = libraryId)
-                dbWrapper.realmDbStorage.perform(request = StoreCollectionsDbRequest(response = collections))
+                dbWrapperMain.realmDbStorage.perform(request = StoreCollectionsDbRequest(response = collections))
 
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = collections.map { it.key })
@@ -196,7 +196,7 @@ class SyncBatchProcessor(
                 }
                 storeIndividualObjects(objects, SyncObject.search, libraryId = libraryId)
 
-                dbWrapper.realmDbStorage.perform(request = StoreSearchesDbRequest(response = searches))
+                dbWrapperMain.realmDbStorage.perform(request = StoreSearchesDbRequest(response = searches))
 
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = searches.map { it.key })
@@ -227,7 +227,7 @@ class SyncBatchProcessor(
                     preferResponseData = true,
                     denyIncorrectCreator = true,
                 )
-                val response = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+                val response = dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
 

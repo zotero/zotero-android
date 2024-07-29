@@ -9,7 +9,7 @@ class MarkGroupAsLocalOnlySyncAction(
 ) : SyncAction() {
     fun result() {
         val request = MarkGroupAsLocalOnlyDbRequest(groupId = this.groupId)
-        dbWrapper.realmDbStorage.perform(request = request)
+        dbWrapperMain.realmDbStorage.perform(request = request)
     }
 
 }

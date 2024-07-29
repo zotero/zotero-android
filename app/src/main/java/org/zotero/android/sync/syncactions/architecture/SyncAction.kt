@@ -17,8 +17,8 @@ abstract class SyncAction {
         bindings.settingsResponseMapper()
     }
 
-    val dbWrapper by lazy {
-        bindings.dbWrapper()
+    val dbWrapperMain by lazy {
+        bindings.dbWrapperMain()
     }
 
     val gson by lazy {

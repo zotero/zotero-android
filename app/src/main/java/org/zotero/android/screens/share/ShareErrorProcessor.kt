@@ -3,7 +3,7 @@ package org.zotero.android.screens.share
 import android.content.Context
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Parsing
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class ShareErrorProcessor @Inject constructor(
     private val context: Context,
-    private val dbWrapper: DbWrapper
+    private val dbWrapperMain: DbWrapperMain,
 ) {
     fun errorMessage(error: AttachmentState.Error): String? {
         return when (error) {
@@ -75,7 +75,7 @@ class ShareErrorProcessor @Inject constructor(
                     is LibraryIdentifier.group -> {
                         val groupId = error.libraryIdentifier.groupId
                         val group =
-                            dbWrapper.realmDbStorage.perform(ReadGroupDbRequest(identifier = groupId))
+                            dbWrapperMain.realmDbStorage.perform(ReadGroupDbRequest(identifier = groupId))
                         val groupName = group?.name ?: "$groupId"
                         return context.getString(
                             Strings.errors_shareext_group_quota_reached,

@@ -88,8 +88,7 @@ class Database {
 
         }
 
-        fun bundledDataConfiguration(fileStorage: FileStore): RealmConfiguration {
-            val dbFile = fileStorage.bundledDataDbFile()
+        fun bundledDataConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()
                 .directory(dbFile.parentFile!!)
                 .name(dbFile.name)

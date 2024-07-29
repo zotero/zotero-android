@@ -22,7 +22,7 @@ class RevertLibraryFilesSyncAction(
     fun result() {
         Timber.i("RevertLibraryFilesSyncAction: revert files to upload")
         val toUpload =
-            this.dbWrapper.realmDbStorage.perform(request = ReadAllAttachmentUploadsDbRequest(libraryId = this.libraryId))
+            this.dbWrapperMain.realmDbStorage.perform(request = ReadAllAttachmentUploadsDbRequest(libraryId = this.libraryId))
         val cachedResponses = mutableListOf<ItemResponse>()
         val failedKeys = mutableListOf<String>()
         for (item in toUpload) {
@@ -53,7 +53,7 @@ class RevertLibraryFilesSyncAction(
             file.delete()
         }
         var changedFilenames = mutableListOf<StoreItemsResponse.FilenameChange>()
-        this.dbWrapper.realmDbStorage.perform { coordinator ->
+        this.dbWrapperMain.realmDbStorage.perform { coordinator ->
             Timber.e("RevertLibraryFilesSyncAction: delete failed keys")
             coordinator.perform(
                 request = DeleteObjectsDbRequest(
@@ -72,7 +72,7 @@ class RevertLibraryFilesSyncAction(
             )
             changedFilenames =
                 coordinator.perform(request = request).changedFilenames.toMutableList()
-            coordinator.refresh()
+            coordinator.invalidate()
         }
 
         Timber.e("RevertLibraryFilesSyncAction: rename local files to match file names")

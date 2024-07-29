@@ -19,7 +19,7 @@ import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.requests.CreateAttachmentDbRequest
@@ -52,7 +52,7 @@ class IdentifierLookupController @Inject constructor(
     private val creatorResponseMapper: CreatorResponseMapper,
     private val dateParser: DateParser,
     private val schemaController: SchemaController,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val defaults: Defaults,
     private val translatorLoadedEventStream: TranslatorLoadedEventStream,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
@@ -133,7 +133,7 @@ class IdentifierLookupController @Inject constructor(
                     tags = emptyList(),
                     fileStore = this.fileStore,
                 )
-                dbWrapper.realmDbStorage.perform(request = request)
+                dbWrapperMain.realmDbStorage.perform(request = request)
             } catch (error: Exception) {
                 Timber.e(error, "IdentifierLookupController: can't store attachment after download")
                 val (filename) = attachment.type as? Attachment.Kind.file ?: return
@@ -260,7 +260,7 @@ class IdentifierLookupController @Inject constructor(
                     schemaController = schemaController,
                     dateParser = dateParser
                 )
-                dbWrapper.realmDbStorage.perform(request = request)
+                dbWrapperMain.realmDbStorage.perform(request = request)
                 changeLookup(
                     identifier = identifier,
                     state = LookupData.State.translated(
@@ -637,7 +637,7 @@ class IdentifierLookupController @Inject constructor(
             libraryId = libraryId,
             trashed = true
         )
-        dbWrapper.realmDbStorage.perform(request)
+        dbWrapperMain.realmDbStorage.perform(request)
     }
 
     suspend fun lookUp(
@@ -696,7 +696,7 @@ class IdentifierLookupController @Inject constructor(
                     trashed = true
                 )
             }
-            dbWrapper.realmDbStorage.perform(requests = requests)
+            dbWrapperMain.realmDbStorage.perform(requests = requests)
         } catch (error: Exception) {
             Timber.e(error, "IdentifierLookupController: can't trash item(s)")
         }

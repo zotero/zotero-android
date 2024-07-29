@@ -16,7 +16,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.emptyImmutableSet
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
@@ -35,7 +35,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class CollectionPickerViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val context: Context,
 ) : BaseViewModel2<CollectionPickerViewState, CollectionPickerViewEffect>(CollectionPickerViewState()) {
 
@@ -90,7 +90,7 @@ internal class CollectionPickerViewModel @Inject constructor(
                 libraryId = libraryId,
                 excludedKeys = this.excludedKeys
             )
-            this.results = dbWrapper.realmDbStorage.perform(request = collectionsRequest)
+            this.results = dbWrapperMain.realmDbStorage.perform(request = collectionsRequest)
             val collectionTree = CollectionTreeBuilder.collections(
                 this.results,
                 libraryId = libraryId,

@@ -28,6 +28,6 @@ class MarkForResyncSyncAction(
             SyncObject.settings ->
                 request = MarkForResyncDbAction(libraryId = this.libraryId, keys = this.keys, clazz = RPageIndex::class)
         }
-        dbWrapper.realmDbStorage.perform(request = request)
+        dbWrapperMain.realmDbStorage.perform(request = request)
     }
 }

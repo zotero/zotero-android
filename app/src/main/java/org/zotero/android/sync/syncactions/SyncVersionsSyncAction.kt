@@ -1,6 +1,5 @@
 package org.zotero.android.sync.syncactions
 
-import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -25,54 +24,54 @@ class SyncVersionsSyncAction(
 ) : SyncAction() {
 
     suspend fun result(): Pair<Int, List<String>> {
-        return withContext(dispatcher) {
-            when (this@SyncVersionsSyncAction.objectS) {
-                SyncObject.collection ->
-                    return@withContext synchronizeVersions(
-                        libraryId = this@SyncVersionsSyncAction.libraryId,
-                        userId = this@SyncVersionsSyncAction.userId, objectS = this@SyncVersionsSyncAction.objectS,
-                        sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
-                        currentVersion = this@SyncVersionsSyncAction.currentVersion, syncType = this@SyncVersionsSyncAction.syncType
-                    )
-                SyncObject.item -> {
-                    return@withContext synchronizeVersions(
-                        libraryId = this@SyncVersionsSyncAction.libraryId,
-                        userId = this@SyncVersionsSyncAction.userId,
-                        objectS = this@SyncVersionsSyncAction.objectS,
-                        sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
-                        currentVersion = this@SyncVersionsSyncAction.currentVersion,
-                        syncType = this@SyncVersionsSyncAction.syncType
-                    )
-                }
+        when (this@SyncVersionsSyncAction.objectS) {
+            SyncObject.collection ->
+                return synchronizeVersions(
+                    libraryId = this@SyncVersionsSyncAction.libraryId,
+                    userId = this@SyncVersionsSyncAction.userId,
+                    objectS = this@SyncVersionsSyncAction.objectS,
+                    sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
+                    currentVersion = this@SyncVersionsSyncAction.currentVersion,
+                    syncType = this@SyncVersionsSyncAction.syncType
+                )
 
-                SyncObject.trash -> {
-                    return@withContext synchronizeVersions(
-                        libraryId = this@SyncVersionsSyncAction.libraryId,
-                        userId = this@SyncVersionsSyncAction.userId,
-                        objectS = this@SyncVersionsSyncAction.objectS,
-                        sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
-                        currentVersion = this@SyncVersionsSyncAction.currentVersion,
-                        syncType = this@SyncVersionsSyncAction.syncType
-                    )
-                }
+            SyncObject.item -> {
+                return synchronizeVersions(
+                    libraryId = this@SyncVersionsSyncAction.libraryId,
+                    userId = this@SyncVersionsSyncAction.userId,
+                    objectS = this@SyncVersionsSyncAction.objectS,
+                    sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
+                    currentVersion = this@SyncVersionsSyncAction.currentVersion,
+                    syncType = this@SyncVersionsSyncAction.syncType
+                )
+            }
 
-                SyncObject.search -> {
-                    return@withContext synchronizeVersions(
-                        libraryId = this@SyncVersionsSyncAction.libraryId,
-                        userId = this@SyncVersionsSyncAction.userId,
-                        objectS = this@SyncVersionsSyncAction.objectS,
-                        sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
-                        currentVersion = this@SyncVersionsSyncAction.currentVersion,
-                        syncType = this@SyncVersionsSyncAction.syncType
-                    )
-                }
+            SyncObject.trash -> {
+                return synchronizeVersions(
+                    libraryId = this@SyncVersionsSyncAction.libraryId,
+                    userId = this@SyncVersionsSyncAction.userId,
+                    objectS = this@SyncVersionsSyncAction.objectS,
+                    sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
+                    currentVersion = this@SyncVersionsSyncAction.currentVersion,
+                    syncType = this@SyncVersionsSyncAction.syncType
+                )
+            }
 
-                SyncObject.settings -> {
-                    return@withContext Pair(0, listOf())
-                }
+            SyncObject.search -> {
+                return synchronizeVersions(
+                    libraryId = this@SyncVersionsSyncAction.libraryId,
+                    userId = this@SyncVersionsSyncAction.userId,
+                    objectS = this@SyncVersionsSyncAction.objectS,
+                    sinceVersion = this@SyncVersionsSyncAction.sinceVersion,
+                    currentVersion = this@SyncVersionsSyncAction.currentVersion,
+                    syncType = this@SyncVersionsSyncAction.syncType
+                )
+            }
+
+            SyncObject.settings -> {
+                return Pair(0, listOf())
             }
         }
-
     }
 
     private suspend fun synchronizeVersions(
@@ -143,7 +142,7 @@ class SyncVersionsSyncAction(
         delayIntervals: List<Double>
     ): Pair<Int, List<String>> {
         var identifiers = mutableListOf<String>()
-        dbWrapper.realmDbStorage.perform(coordinatorAction = { coordinator ->
+        dbWrapperMain.realmDbStorage.perform(coordinatorAction = { coordinator ->
             when (syncType) {
                 SyncKind.full -> {
                     coordinator.perform(
@@ -168,7 +167,7 @@ class SyncVersionsSyncAction(
             )
             identifiers = coordinator.perform(request = request).toMutableList()
 
-            coordinator.refresh()
+            coordinator.invalidate()
         })
         return Pair(newVersion, identifiers)
     }

@@ -23,7 +23,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
@@ -55,7 +55,7 @@ import kotlin.reflect.KClass
 @HiltViewModel
 internal class CollectionsViewModel @Inject constructor(
     private val defaults: Defaults,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     dispatchers: Dispatchers,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
@@ -134,7 +134,7 @@ internal class CollectionsViewModel @Inject constructor(
         val includeItemCounts = defaults.showCollectionItemCounts()
 
         try {
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 this.library =
                     coordinator.perform(request = ReadLibraryDbRequest(libraryId = libraryId))
                 collections =
@@ -398,7 +398,7 @@ internal class CollectionsViewModel @Inject constructor(
             libraryId = libraryId
         )
         viewModelScope.launch {
-            perform(dbWrapper, request)
+            perform(dbWrapperMain, request)
                 .ifFailure {
                     Timber.e(it, "CollectionsActionHandler: can't change collapsed")
                     return@launch
@@ -490,7 +490,7 @@ internal class CollectionsViewModel @Inject constructor(
             libraryId = this.library.identifier
         )
         perform(
-            dbWrapper = dbWrapper,
+            dbWrapper = dbWrapperMain,
             request = request
         ).ifFailure {
             Timber.e(it, "CollectionsActionHandler: can't delete object")
@@ -507,7 +507,7 @@ internal class CollectionsViewModel @Inject constructor(
         if (parentKey != null) {
             val request =
                 ReadCollectionDbRequest(libraryId = this.library.identifier, key = parentKey)
-            val rCollection = dbWrapper.realmDbStorage.perform(request = request)
+            val rCollection = dbWrapperMain.realmDbStorage.perform(request = request)
             parent = Collection.initWithCollection(objectS = rCollection, itemCount = 0)
         } else {
             parent = null

@@ -19,7 +19,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.backgrounduploader.BackgroundUpload
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.screens.share.service.ShareUploadService
@@ -39,7 +39,7 @@ class BackgroundUploadProcessor @Inject constructor(
     private val webDavApi: WebDavApi,
     private val syncApi: SyncApi,
     private val schemaController: SchemaController,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val context: Context,
     private val gson: Gson,
     private val updatesResponseMapper: UpdatesResponseMapper,
@@ -195,7 +195,7 @@ class BackgroundUploadProcessor @Inject constructor(
         libraryId: LibraryIdentifier,
     ) {
         try {
-            dbWrapper.realmDbStorage.perform(
+            dbWrapperMain.realmDbStorage.perform(
                 MarkAttachmentUploadedDbRequest(
                     libraryId = libraryId,
                     key = key,
@@ -234,7 +234,7 @@ class BackgroundUploadProcessor @Inject constructor(
 
         val loadParameters: Map<String, Any>
         try {
-            val item = dbWrapper.realmDbStorage.perform(
+            val item = dbWrapperMain.realmDbStorage.perform(
                 request = ReadItemDbRequest(
                     libraryId = libraryId,
                     key = key

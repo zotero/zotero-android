@@ -8,10 +8,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
-import org.zotero.android.api.annotations.BundleDataDb
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.data.TranslatorMetadata
@@ -31,8 +30,7 @@ class TranslatorsLoader @Inject constructor(
     private val defaults: Defaults,
     private val itemsUnzipper: TranslatorItemsUnzipper,
     private val fileStore: FileStore,
-    @BundleDataDb
-    private val bundleDbWrapper: DbWrapper
+    private val bundleDbWrapper: DbWrapperBundle
 ) {
     enum class UpdateType(val i: Int) {
         manual(1),

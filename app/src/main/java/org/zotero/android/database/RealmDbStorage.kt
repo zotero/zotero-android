@@ -50,7 +50,7 @@ class RealmDbStorage(val config: RealmConfiguration) {
         val result = coordinator.perform(request = request)
 
         if (invalidateRealm) {
-            coordinator.refresh()
+            coordinator.invalidate()
         }
 
         return result
@@ -59,13 +59,13 @@ class RealmDbStorage(val config: RealmConfiguration) {
     fun perform(request: DbRequest) {
         val coordinator = RealmDbCoordinator().init(config)
         coordinator.perform(request = request)
-        coordinator.refresh()
+        coordinator.invalidate()
     }
 
     fun perform(requests: List<DbRequest>) {
         val coordinator = RealmDbCoordinator().init(config)
         coordinator.perform(requests)
-        coordinator.refresh()
+        coordinator.invalidate()
     }
 }
 
@@ -138,4 +138,7 @@ class RealmDbCoordinator {
         realm.refresh()
     }
 
+    fun invalidate() {
+        realm.close()
+    }
 }

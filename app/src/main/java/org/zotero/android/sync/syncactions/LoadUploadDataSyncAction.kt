@@ -21,6 +21,6 @@ class LoadUploadDataSyncAction constructor(
             fileStorage = this.fileStore,
             defaults = this.defaults
         )
-        return dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+        return dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
     }
 }

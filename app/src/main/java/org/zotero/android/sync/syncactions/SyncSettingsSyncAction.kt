@@ -38,7 +38,7 @@ class SyncSettingsSyncAction(
         val value = networkResult.value!!
         val response = settingsResponseMapper.fromJson(value)
         val request = StoreSettingsDbRequest(response = response, libraryId = this.libraryId)
-        dbWrapper.realmDbStorage.perform(request = request)
+        dbWrapperMain.realmDbStorage.perform(request = request)
         val settingsChanged = newVersion != this.sinceVersion
         return CustomResult.GeneralSuccess(Pair(settingsChanged, newVersion))
     }

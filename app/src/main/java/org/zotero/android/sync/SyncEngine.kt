@@ -11,7 +11,7 @@ import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
 import org.zotero.android.database.requests.PerformDeletionsDbRequest
@@ -56,7 +56,7 @@ import javax.inject.Singleton
 class SyncUseCase @Inject constructor(
     private val syncRepository: SyncRepository,
     private val defaults: Defaults,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val syncApi: SyncApi,
     private val fileStore: FileStore,
     private val itemResponseMapper: ItemResponseMapper,
@@ -462,7 +462,7 @@ class SyncUseCase @Inject constructor(
                 batches = batches,
                 userId = defaults.getUserId(),
                 syncApi = syncApi,
-                dbWrapper = this.dbWrapper,
+                dbWrapperMain = this.dbWrapperMain,
                 fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,
                 collectionResponseMapper = collectionResponseMapper,
@@ -668,7 +668,6 @@ class SyncUseCase @Inject constructor(
                 fetchUpdates = (options != CreateLibraryActionsOptions.onlyDownloads),
                 loadVersions = (this.type != SyncKind.full),
                 webDavEnabled = sessionStorage.isEnabled,
-                dbStorage = dbWrapper.realmDbStorage,
             ).result()
             finishCreateLibraryActions(pair = result to options)
         } catch (e: Exception) {
@@ -1270,7 +1269,7 @@ class SyncUseCase @Inject constructor(
             when (libraryId) {
                 is LibraryIdentifier.group -> {
                     val name =
-                        dbWrapper.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = libraryId.groupId)).name
+                        dbWrapperMain.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = libraryId.groupId)).name
                     enqueue(
                         actions = listOf(
                             Action.resolveGroupFileWritePermission(
@@ -1877,7 +1876,7 @@ class SyncUseCase @Inject constructor(
                     is LibraryIdentifier.group -> {
                         val groupId = libraryId.groupId
                         val name =
-                            dbWrapper.realmDbStorage.perform(
+                            dbWrapperMain.realmDbStorage.perform(
                                 request = ReadGroupDbRequest
                                     (identifier = groupId)
                             ).name
@@ -1962,7 +1961,7 @@ class SyncUseCase @Inject constructor(
         )
 
         try {
-            dbWrapper.realmDbStorage.perform(request = request)
+            dbWrapperMain.realmDbStorage.perform(request = request)
         } catch (error: Exception) {
             Timber.e(error, "SyncController: can't mark item for upload")
             throw error

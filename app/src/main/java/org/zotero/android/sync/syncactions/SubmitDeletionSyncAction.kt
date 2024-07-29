@@ -60,7 +60,7 @@ class SubmitDeletionSyncAction(
     private fun deleteFromDb(version: Int): Boolean {
         try {
             var didCreateDeletions = false
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val updateVersion = UpdateVersionsDbRequest(
                     version = version,
                     libraryId = this.libraryId,
@@ -112,7 +112,7 @@ class SubmitDeletionSyncAction(
                     }
                 }
                 coordinator.perform(requests)
-                coordinator.refresh()
+                coordinator.invalidate()
             }
             return didCreateDeletions
         } catch (error: Exception) {

@@ -74,7 +74,7 @@ class RevertLibraryUpdatesSyncAction(
             var failedSearches = mutableListOf<String>()
             var failedItems = mutableListOf<String>()
 
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val collections = loadCachedJsonForObject(
                     clazz = RCollection::class,
                     objectType = SyncObject.collection,
@@ -120,7 +120,7 @@ class RevertLibraryUpdatesSyncAction(
                 failedCollections = collections.second.toMutableList()
                 failedSearches = searches.second.toMutableList()
                 failedItems = items.second.toMutableList()
-                coordinator.refresh()
+                coordinator.invalidate()
             }
 
             renameExistingFiles(changes = changes, libraryId = this.libraryId)

@@ -185,7 +185,7 @@ class UploadAttachmentSyncAction(
                     )
                 )
             }
-            dbWrapper.realmDbStorage.perform(requests)
+            dbWrapperMain.realmDbStorage.perform(requests)
         } catch (error: Exception) {
             Timber.e("UploadAttachmentSyncAction: can't mark attachment as uploaded - $error")
             throw error
@@ -196,7 +196,7 @@ class UploadAttachmentSyncAction(
     private fun checkDatabase() {
         try {
             val request = CheckItemIsChangedDbRequest(libraryId = this.libraryId, key = this.key)
-            val isChanged = dbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+            val isChanged = dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
             if (!isChanged) {
                 return
             } else {
@@ -220,7 +220,7 @@ class UploadAttachmentSyncAction(
         }
 
         Timber.e("UploadAttachmentSyncAction: missing attachment - ${this.file.absolutePath}")
-        val item = dbWrapper.realmDbStorage.perform(
+        val item = dbWrapperMain.realmDbStorage.perform(
             ReadItemDbRequest(
                 libraryId = this.libraryId,
                 key = this.key
@@ -293,7 +293,7 @@ class UploadAttachmentSyncAction(
         Timber.i("UploadAttachmentSyncAction: submit mtime and md5")
         val loadParameters: Map<String, Any>
         try {
-            val item = dbWrapper.realmDbStorage.perform(
+            val item = dbWrapperMain.realmDbStorage.perform(
                 request = ReadItemDbRequest(
                     libraryId = this.libraryId,
                     key = this.key

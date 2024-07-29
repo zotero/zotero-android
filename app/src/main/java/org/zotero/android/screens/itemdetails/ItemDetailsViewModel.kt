@@ -31,7 +31,7 @@ import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -123,7 +123,7 @@ val numberOfRowsInLazyColumnBeforeListOfCreatorsStarts = 1
 class ItemDetailsViewModel @Inject constructor(
     dispatcher: CoroutineDispatcher,
     private val defaults: Defaults,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val urlDetector: UrlDetector,
     private val schemaController: SchemaController,
@@ -353,7 +353,7 @@ class ItemDetailsViewModel @Inject constructor(
                     val itemKey = type.itemKey
                     val _collectionKey = type.collectionKey
                     collectionKey = _collectionKey
-                    val item = dbWrapper.realmDbStorage.perform(
+                    val item = dbWrapperMain.realmDbStorage.perform(
                         request = ReadItemDbRequest(
                             libraryId = viewState.library!!.identifier,
                             key = itemKey
@@ -395,7 +395,7 @@ class ItemDetailsViewModel @Inject constructor(
             fileStore = fileStore
         )
         viewModelScope.launch {
-            val result = perform(dbWrapper, request = request, invalidateRealm = true)
+            val result = perform(dbWrapperMain, request = request, invalidateRealm = true)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't create initial item")
                 updateState {
@@ -411,7 +411,7 @@ class ItemDetailsViewModel @Inject constructor(
     private fun reloadData(isEditing: Boolean) = viewModelScope.launch {
         try {
             currentItem?.removeAllChangeListeners()
-            val item = dbWrapper.realmDbStorage.perform(
+            val item = dbWrapperMain.realmDbStorage.perform(
                 request = ReadItemDbRequest(
                     libraryId = viewState.library!!.identifier,
                     key = viewState.key
@@ -613,7 +613,7 @@ class ItemDetailsViewModel @Inject constructor(
                 orderId = orderId
             )
 
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't create creator")
             }
@@ -665,7 +665,7 @@ class ItemDetailsViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't store field")
             }
@@ -697,7 +697,7 @@ class ItemDetailsViewModel @Inject constructor(
             dateParser = this.dateParser
         )
         viewModelScope.launch {
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't store title")
             }
@@ -723,7 +723,7 @@ class ItemDetailsViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't store abstract")
             }
@@ -824,7 +824,7 @@ class ItemDetailsViewModel @Inject constructor(
                 )
             }
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 writeRequests = requests
             ).ifFailure {
                 Timber.e(it)
@@ -944,7 +944,7 @@ class ItemDetailsViewModel @Inject constructor(
             when (type) {
                 is DetailType.duplication -> {
                     perform(
-                        dbWrapper = dbWrapper,
+                        dbWrapper = dbWrapperMain,
                         request = DeleteObjectsDbRequest(
                             clazz = RItem::class,
                             keys = listOf(viewState.key),
@@ -978,7 +978,7 @@ class ItemDetailsViewModel @Inject constructor(
                         )
                     }
                     perform(
-                        dbWrapper = dbWrapper,
+                        dbWrapper = dbWrapperMain,
                         writeRequests = actions
                     ).ifFailure {
                         Timber.e(it, "ItemDetailActionHandler: can't remove created and cancelled item")
@@ -1023,7 +1023,7 @@ class ItemDetailsViewModel @Inject constructor(
                 creatorId = creatorId
             )
 
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e("ItemDetailActionHandler: can't delete creator")
             }
@@ -1095,7 +1095,7 @@ class ItemDetailsViewModel @Inject constructor(
 
         if (oldNote != null) {
             val request = EditNoteDbRequest (note = note, libraryId = viewState.library!!.identifier)
-            perform(dbWrapper = dbWrapper, request = request).ifFailure {
+            perform(dbWrapper = dbWrapperMain, request = request).ifFailure {
                 finishSave(it)
                 return
             }
@@ -1111,7 +1111,7 @@ class ItemDetailsViewModel @Inject constructor(
             parentKey = viewState.key
         )
         perform(
-            dbWrapper = dbWrapper,
+            dbWrapper = dbWrapperMain,
             request = request,
             invalidateRealm = true
         ).ifFailure { error ->
@@ -1420,7 +1420,7 @@ class ItemDetailsViewModel @Inject constructor(
             libraryId = viewState.library!!.identifier,
             tagName = tag.name
         )
-        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+        perform(dbWrapper = dbWrapperMain, request = request).ifFailure { error ->
             Timber.e(error, "ItemDetailActionHandler: can't delete tag ${tag.name}")
             updateState {
                 copy(
@@ -1514,7 +1514,7 @@ class ItemDetailsViewModel @Inject constructor(
             libraryId = viewState.library!!.identifier,
             trashed = true
         )
-        perform(dbWrapper = dbWrapper, request = request).ifFailure { error ->
+        perform(dbWrapper = dbWrapperMain, request = request).ifFailure { error ->
             Timber.e(error, "ItemDetailActionHandler: can't trash item $key")
             updateState {
                 copy(
@@ -1717,7 +1717,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
 
         val request = EditTagsForItemDbRequest(key = viewState.key, libraryId = viewState.library!!.identifier, tags = tags)
-        val result = perform(dbWrapper = dbWrapper, request = request)
+        val result = perform(dbWrapper = dbWrapperMain, request = request)
 
         updateState {
             copy(backgroundProcessedItems = backgroundProcessedItems - tags.map { it.name })
@@ -1781,7 +1781,7 @@ class ItemDetailsViewModel @Inject constructor(
 
             viewModelScope.launch {
                 val result =
-                    perform(dbWrapper, invalidateRealm = true, request = request)
+                    perform(dbWrapperMain, invalidateRealm = true, request = request)
                 for (attachment in attachments) {
                     updateState {
                         copy(backgroundProcessedItems = backgroundProcessedItems - attachment.key)
@@ -1886,7 +1886,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
 
         val result = perform(
-            dbWrapper,
+            dbWrapperMain,
             request = RemoveItemFromParentDbRequest(
                 key = attachment.key,
                 libraryId = attachment.libraryId
@@ -1953,7 +1953,7 @@ class ItemDetailsViewModel @Inject constructor(
                 ids = viewState.data.creatorIds
             )
 
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't reorder creators")
             }
@@ -1974,7 +1974,7 @@ class ItemDetailsViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            val result = perform(dbWrapper = dbWrapper, request = request)
+            val result = perform(dbWrapper = dbWrapperMain, request = request)
             if (result is Result.Failure) {
                 Timber.e(result.exception, "ItemDetailActionHandler: can't change type")
             }

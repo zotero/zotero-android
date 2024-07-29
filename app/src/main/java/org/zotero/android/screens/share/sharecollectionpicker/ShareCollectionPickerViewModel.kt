@@ -6,7 +6,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadAllCustomLibrariesDbRequest
 import org.zotero.android.database.requests.ReadAllWritableGroupsDbRequest
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ShareCollectionPickerViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
 ) : BaseViewModel2<ShareCollectionPickerViewState, ShareCollectionPickerViewEffect>(ShareCollectionPickerViewState()) {
 
     var isTablet: Boolean = true
@@ -41,7 +41,7 @@ internal class ShareCollectionPickerViewModel @Inject constructor(
 
     private fun loadData() {
         try {
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val customLibraries = coordinator.perform(ReadAllCustomLibrariesDbRequest())
                 val groups = coordinator.perform(ReadAllWritableGroupsDbRequest())
                 val libraries = customLibraries.map { Library(it) } + groups.map { Library(it) }
@@ -129,10 +129,6 @@ internal class ShareCollectionPickerViewModel @Inject constructor(
             }
         }
         return false to emptyList()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
     }
 
     fun onCollectionChevronTapped(libraryIdentifier: LibraryIdentifier, collection: Collection) {

@@ -9,7 +9,7 @@ class MarkChangesAsResolvedSyncAction(val libraryId: LibraryIdentifier) : SyncAc
 
     fun result() {
         val request = MarkAllLibraryObjectChangesAsSyncedDbRequest(libraryId = this.libraryId)
-        dbWrapper.realmDbStorage.perform(request = request)
+        dbWrapperMain.realmDbStorage.perform(request = request)
 
     }
 }

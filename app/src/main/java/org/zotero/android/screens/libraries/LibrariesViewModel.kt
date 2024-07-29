@@ -11,7 +11,7 @@ import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibrary
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RGroup
@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class LibrariesViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
 ) : BaseViewModel2<LibrariesViewState, LibrariesViewEffect>(LibrariesViewState()) {
 
@@ -46,7 +46,7 @@ internal class LibrariesViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        dbWrapper.realmDbStorage.perform { coordinator ->
+        dbWrapperMain.realmDbStorage.perform { coordinator ->
             val libraries = coordinator.perform(request = ReadAllCustomLibrariesDbRequest())
             val groups = coordinator.perform(request = ReadAllGroupsDbRequest())
 

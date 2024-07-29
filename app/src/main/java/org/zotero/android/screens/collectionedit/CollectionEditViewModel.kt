@@ -13,7 +13,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.requests.CreateCollectionDbRequest
 import org.zotero.android.database.requests.EditCollectionDbRequest
@@ -35,7 +35,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class CollectionEditViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val context: Context,
     private val conflictResolutionUseCase: ConflictResolutionUseCase
 ) : BaseViewModel2<CollectionEditViewState, CollectionEditViewEffect>(CollectionEditViewState()) {
@@ -109,7 +109,7 @@ internal class CollectionEditViewModel @Inject constructor(
     private fun perform(request: DbRequest) {
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "CollectionEditViewModel: couldn't perform request")

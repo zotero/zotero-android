@@ -74,7 +74,7 @@ import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
@@ -147,7 +147,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PdfReaderViewModel @Inject constructor(
     private val defaults: Defaults,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val sessionDataEventStream: SessionDataEventStream,
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
@@ -526,7 +526,7 @@ class PdfReaderViewModel @Inject constructor(
         try {
             var pageStr = "0"
             var results: RealmResults<RItem>? = null
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 pageStr = coordinator.perform(
                     request = ReadDocumentDataDbRequest(
                         attachmentKey = key,
@@ -804,7 +804,7 @@ class PdfReaderViewModel @Inject constructor(
 
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 writeRequests = requests
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel:  can't update changed annotations")
@@ -2188,7 +2188,7 @@ class PdfReaderViewModel @Inject constructor(
         )
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel: can't add annotations")
@@ -2360,7 +2360,7 @@ class PdfReaderViewModel @Inject constructor(
 
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel: can't remove annotations $keys")
@@ -2496,7 +2496,7 @@ class PdfReaderViewModel @Inject constructor(
         val request = EditTagsForItemDbRequest(key = key, libraryId = viewState.library.identifier, tags = tags)
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel: can't set tags $key")
@@ -2556,7 +2556,7 @@ class PdfReaderViewModel @Inject constructor(
 
         viewModelScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel:  can't update annotation $key")
@@ -2577,7 +2577,7 @@ class PdfReaderViewModel @Inject constructor(
         )
         ZoteroApplication.instance.applicationScope.launch {
             perform(
-                dbWrapper = dbWrapper,
+                dbWrapper = dbWrapperMain,
                 request = request
             ).ifFailure {
                 Timber.e(it, "PDFReaderViewModel: can't store page")

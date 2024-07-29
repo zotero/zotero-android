@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbResponseRequest
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import timber.log.Timber
 
 abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
@@ -111,24 +111,31 @@ abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
         }
     }
 
-    suspend fun perform(dbWrapper: DbWrapper, request: DbRequest):Result<Unit> = withContext(Dispatchers.IO)  {
-        try {
-            dbWrapper.realmDbStorage.perform(request)
-            Result.Success(Unit)
-        }catch (e: Exception) {
-            Result.Failure(e)
-        }
-    }
-    suspend fun perform(dbWrapper: DbWrapper,writeRequests: List<DbRequest>):Result<Unit> = withContext(Dispatchers.IO)  {
-        try {
-            dbWrapper.realmDbStorage.perform(writeRequests)
-            Result.Success(Unit)
+    suspend fun perform(dbWrapper: DbWrapperMain, request: DbRequest): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                dbWrapper.realmDbStorage.perform(request)
+                Result.Success(Unit)
         }catch (e: Exception) {
             Result.Failure(e)
         }
     }
 
-    suspend inline fun<reified T: Any> perform(dbWrapper: DbWrapper, invalidateRealm: Boolean, request: DbResponseRequest<T>): Result<T> = withContext(Dispatchers.IO) {
+    suspend fun perform(dbWrapper: DbWrapperMain, writeRequests: List<DbRequest>): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            try {
+                dbWrapper.realmDbStorage.perform(writeRequests)
+                Result.Success(Unit)
+            } catch (e: Exception) {
+                Result.Failure(e)
+            }
+    }
+
+    suspend inline fun <reified T : Any> perform(
+        dbWrapper: DbWrapperMain,
+        invalidateRealm: Boolean,
+        request: DbResponseRequest<T>
+    ): Result<T> = withContext(Dispatchers.IO) {
         try {
             Result.Success(dbWrapper.realmDbStorage.perform(request, invalidateRealm = invalidateRealm))
         }catch (e: Exception) {

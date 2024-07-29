@@ -6,7 +6,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadTagPickerTagsDbRequest
 import org.zotero.android.ktx.index
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class TagPickerViewModel @Inject constructor(
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
 ) : BaseViewModel2<TagPickerViewState, TagPickerViewEffect>(TagPickerViewState()) {
 
     fun init() = initOnce {
@@ -115,7 +115,7 @@ internal class TagPickerViewModel @Inject constructor(
     private fun load() {
         try {
             val request = ReadTagPickerTagsDbRequest(libraryId = viewState.libraryId!!)
-            val results = dbWrapper.realmDbStorage.perform(request = request)
+            val results = dbWrapperMain.realmDbStorage.perform(request = request)
             val colored = results.where().isNotEmpty("color").sort("name").findAll()
             val others = results.where().isEmpty("color").sort("name").findAll()
             val tags = colored.map { Tag(it) } + others.map { Tag(it) }

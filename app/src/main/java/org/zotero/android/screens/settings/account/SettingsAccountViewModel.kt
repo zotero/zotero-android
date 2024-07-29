@@ -23,7 +23,7 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressEventStream
 import org.zotero.android.database.DbRequest
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.DeleteAllWebDavDeletionsDbRequest
 import org.zotero.android.database.requests.MarkAttachmentsNotUploadedDbRequest
@@ -61,7 +61,7 @@ internal class SettingsAccountViewModel @Inject constructor(
     private val webDavController: WebDavController,
     private val fileStore: FileStore,
     private val context: Context,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val syncScheduler: SyncScheduler,
     private val syncProgressEventStream: SyncProgressEventStream,
     private val dispatchers: Dispatchers,
@@ -229,7 +229,7 @@ internal class SettingsAccountViewModel @Inject constructor(
         if (type == FileSyncType.zotero) {
             requests.add(DeleteAllWebDavDeletionsDbRequest())
         }
-        dbWrapper.realmDbStorage.perform(requests)
+        dbWrapperMain.realmDbStorage.perform(requests)
     }
 
     private fun downloadedAttachmentKeys(): List<String> {

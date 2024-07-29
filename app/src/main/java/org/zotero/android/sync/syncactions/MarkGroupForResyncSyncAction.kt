@@ -8,7 +8,7 @@ class MarkGroupForResyncSyncAction(
     val identifier: Int,
 ) : SyncAction() {
     fun result() {
-        dbWrapper.realmDbStorage.perform(request = MarkGroupForResyncDbAction(identifier = this.identifier))
+        dbWrapperMain.realmDbStorage.perform(request = MarkGroupForResyncDbAction(identifier = this.identifier))
 
     }
 }

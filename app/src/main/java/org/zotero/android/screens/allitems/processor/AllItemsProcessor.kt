@@ -24,7 +24,7 @@ import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.ReadItemsDbRequest
@@ -53,7 +53,7 @@ class AllItemsProcessor @Inject constructor(
     dispatchers: Dispatchers,
     private val defaults: Defaults,
     private val fileStore: FileStore,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val fileDownloader: AttachmentDownloader,
     private val fileCleanupController: AttachmentFileCleanupController,
@@ -231,7 +231,7 @@ class AllItemsProcessor @Inject constructor(
             defaults = this.defaults,
             isAsync = true
         )
-        return dbWrapper.realmDbStorage.perform(request = request)
+        return dbWrapperMain.realmDbStorage.perform(request = request)
     }
 
     private fun createComponents(searchTerm: String): List<String> {

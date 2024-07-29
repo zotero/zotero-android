@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
-import org.zotero.android.api.annotations.BundleDataDb
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.logging.crash.CrashReporter
 import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperBundle
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
@@ -35,9 +35,8 @@ class Controllers @Inject constructor(
     private val sessionDataEventStream: SessionDataEventStream,
     private val applicationScope: ApplicationScope,
     private val fileStore: FileStore,
-    private val dbWrapper: DbWrapper,
-    @BundleDataDb
-    private val bundleDataDbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
+    private val bundleDataDbWrapper: DbWrapperBundle,
     private val isUserInitializedEventStream: IsUserInitializedEventStream,
     private val sessionController: SessionController,
     private val userControllers: UserControllers,
@@ -142,7 +141,7 @@ class Controllers @Inject constructor(
 
             val realmError = error as? RealmError
             if (realmError != null) {
-                dbWrapper.clearDatabaseFiles()
+                dbWrapperMain.clearDatabaseFiles()
             }
 
             isUserInitializedEventStream.emit(false)
@@ -163,8 +162,8 @@ class Controllers @Inject constructor(
         FileUtils.deleteDirectory(fileStore.uploads)
         FileUtils.deleteDirectory(fileStore.downloads)
         isUserInitializedEventStream.emit(false)
-        if (dbWrapper.isInitialized) {
-            dbWrapper.clearDatabaseFiles()
+        if (dbWrapperMain.isInitialized) {
+            dbWrapperMain.clearDatabaseFiles()
         }
     }
 
@@ -188,6 +187,6 @@ class Controllers @Inject constructor(
     }
 
     private fun createBundleDataDbStorage() {
-        bundleDataDbWrapper.initBundleDataConfiguration(this.fileStore)
+        bundleDataDbWrapper.initBundleDataConfiguration()
     }
 }

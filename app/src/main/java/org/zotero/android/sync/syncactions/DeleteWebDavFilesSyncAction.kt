@@ -34,7 +34,7 @@ class DeleteWebDavFilesSyncAction(
     private fun loadDeletions(): CustomResult<List<String>> {
         try {
             val deletions =
-                dbWrapper.realmDbStorage.perform(request = ReadWebDavDeletionsDbRequest(libraryId = this.libraryId))
+                dbWrapperMain.realmDbStorage.perform(request = ReadWebDavDeletionsDbRequest(libraryId = this.libraryId))
             val keys = deletions.map { it.key }
             deletions.firstOrNull()?.realm?.refresh()
             return CustomResult.GeneralSuccess(keys)
@@ -46,7 +46,7 @@ class DeleteWebDavFilesSyncAction(
 
     private fun removeDeletions(keys: Set<String>): CustomResult<Unit> {
         try {
-            dbWrapper.realmDbStorage.perform(
+            dbWrapperMain.realmDbStorage.perform(
                 request = DeleteWebDavDeletionsDbRequest(
                     keys = keys,
                     libraryId = this.libraryId

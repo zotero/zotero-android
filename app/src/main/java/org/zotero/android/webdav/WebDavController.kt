@@ -12,7 +12,7 @@ import org.zotero.android.api.WebDavApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.network.safeApiCallSync
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.StoreMtimeForAttachmentDbRequest
 import org.zotero.android.files.FileStore
@@ -33,14 +33,14 @@ import kotlin.coroutines.resume
 @Singleton
 class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
-    private val dbWrapper: DbWrapper,
+    private val dbWrapperMain: DbWrapperMain,
     private val webDavApi: WebDavApi,
     private val fileStore: FileStore,
 ) {
 
     private fun update(mtime: Long, key: String): CustomResult<Unit> {
         try {
-            dbWrapper.realmDbStorage.perform(
+            dbWrapperMain.realmDbStorage.perform(
                 StoreMtimeForAttachmentDbRequest(
                     mtime = mtime,
                     key = key,

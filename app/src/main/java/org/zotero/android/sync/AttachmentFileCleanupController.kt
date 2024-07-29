@@ -7,7 +7,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.EventBusConstants
-import org.zotero.android.database.DbWrapper
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -30,8 +30,8 @@ import javax.inject.Singleton
 @Singleton
 class AttachmentFileCleanupController @Inject constructor(
     private val fileStorage: FileStore,
-    private val dbWrapper: DbWrapper,
-    private val dispatcher: CoroutineDispatcher,
+    private val dbWrapperMain: DbWrapperMain,
+    dispatcher: CoroutineDispatcher,
 ) {
     sealed class DeletionType {
         data class individual(val attachment: Attachment, val parentKey: String?) : DeletionType()
@@ -115,7 +115,7 @@ class AttachmentFileCleanupController @Inject constructor(
             var libraryIds = listOf<LibraryIdentifier>()
             val forUpload = mutableMapOf<LibraryIdentifier, MutableList<String>>()
 
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val groups = coordinator.perform(request = ReadAllGroupsDbRequest())
                 libraryIds =
                     listOf(LibraryIdentifier.custom(RCustomLibraryType.myLibrary)) + groups.map {
@@ -138,7 +138,7 @@ class AttachmentFileCleanupController @Inject constructor(
                 }
 
                 coordinator.perform(request = MarkAllFilesAsNotDownloadedDbRequest())
-                coordinator.refresh()
+                coordinator.invalidate()
             }
 
             val deletedIndividually = delete(libraryIds, forUpload = forUpload)
@@ -167,7 +167,7 @@ class AttachmentFileCleanupController @Inject constructor(
             val toDelete = mutableSetOf<String>()
             val toReport = mutableSetOf<String>()
 
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val items = coordinator.perform(
                     request = ReadItemsWithKeysDbRequest(
                         keys = keys,
@@ -203,7 +203,7 @@ class AttachmentFileCleanupController @Inject constructor(
                     )
                 )
 
-                coordinator.refresh()
+                coordinator.invalidate()
             }
 
             for (key in toDelete) {
@@ -226,7 +226,7 @@ class AttachmentFileCleanupController @Inject constructor(
 
             var canDelete = false
 
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val item = coordinator.perform(
                     request = ReadItemDbRequest(
                         libraryId = attachment.libraryId,
@@ -246,7 +246,7 @@ class AttachmentFileCleanupController @Inject constructor(
                         downloaded = false
                     )
                 )
-                coordinator.refresh()
+                coordinator.invalidate()
                 canDelete = true
             }
             if (canDelete) {
@@ -263,14 +263,14 @@ class AttachmentFileCleanupController @Inject constructor(
         try {
             var forUpload = listOf<String>()
 
-            dbWrapper.realmDbStorage.perform { coordinator ->
+            dbWrapperMain.realmDbStorage.perform { coordinator ->
                 val items =
                     coordinator.perform(request = ReadItemsForUploadDbRequest(libraryId = libraryId))
                 forUpload = items.map { it.key }
 
                 coordinator.perform(request = MarkLibraryFilesAsNotDownloadedDbRequest(libraryId = libraryId))
 
-                coordinator.refresh()
+                coordinator.invalidate()
             }
 
             val deletedIndividually =

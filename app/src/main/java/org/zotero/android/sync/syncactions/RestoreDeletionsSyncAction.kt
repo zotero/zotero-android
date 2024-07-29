@@ -18,7 +18,7 @@ class RestoreDeletionsSyncAction(
                 collections = this.collections,
                 items = this.items
             )
-            dbWrapper.realmDbStorage.perform(request = request)
+            dbWrapperMain.realmDbStorage.perform(request = request)
             return CustomResult.GeneralSuccess(Unit)
         } catch (error: Throwable) {
             return CustomResult.GeneralError.CodeError(error)
