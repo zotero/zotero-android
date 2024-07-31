@@ -111,6 +111,7 @@ internal fun ItemDetailsScreen(
         CustomScaffold(
             topBar = {
                 ItemDetailsTopBar(
+                    type = viewState.type,
                     onViewOrEditClicked = viewModel::onSaveOrEditClicked,
                     onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
                     isEditing = viewState.isEditing

@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -30,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
-import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -90,7 +90,12 @@ internal fun ItemDetailsEditScreen(
                     CustomDivider()
                 }
 
-                ListOfEditFieldRows(viewState, layoutType, viewModel::setFieldValue)
+                ListOfEditFieldRows(
+                    viewState = viewState,
+                    layoutType = layoutType,
+                    onValueChange = viewModel::onFieldValueTextChange,
+                    onFocusChanges = viewModel::onFieldFocusFieldChange
+                )
                 DatesRows(
                     dateAdded = viewState.data.dateAdded,
                     dateModified = viewState.data.dateModified,
@@ -105,13 +110,6 @@ internal fun ItemDetailsEditScreen(
                 }
             }
         }
-        notesTagsAndAttachmentsBlock(
-            viewState = viewState,
-            viewModel = viewModel,
-            layoutType = layoutType,
-            onNoteClicked = { viewModel.openNoteEditor(it) },
-            onAddNote = { viewModel.onAddNote() },
-        )
     }
 }
 
@@ -184,20 +182,26 @@ private fun ListOfEditFieldRows(
     viewState: ItemDetailsViewState,
     layoutType: CustomLayoutSize.LayoutType,
     onValueChange: (String, String) -> Unit,
+    onFocusChanges: (String) -> Unit,
 ) {
     for (fieldId in viewState.data.fieldIds) {
         val field = viewState.data.fields.get(fieldId) ?: continue
         val title = field.name
-        val value = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.formattedDate)
-            ?: field.value
+        val value = if (field.key == viewState.fieldFocusKey) {
+            viewState.fieldFocusText
+        } else {
+            field.valueOrAdditionalInfo
+        }
         FieldEditableRow(
             key = field.key,
+            fieldId = fieldId,
             detailTitle = title,
             detailValue = value,
             layoutType = layoutType,
             textColor = CustomTheme.colors.primaryContent,
             onValueChange = onValueChange,
-            isMultilineAllowed = field.key == FieldKeys.Item.extra
+            isMultilineAllowed = field.key == FieldKeys.Item.extra,
+            onFocusChanges = onFocusChanges
         )
     }
 }
@@ -205,12 +209,14 @@ private fun ListOfEditFieldRows(
 @Composable
 private fun FieldEditableRow(
     key: String,
+    fieldId: String,
     detailTitle: String,
     detailValue: String,
     layoutType: CustomLayoutSize.LayoutType,
     textColor: Color = CustomTheme.colors.primaryContent,
     isMultilineAllowed: Boolean = false,
     onValueChange: (String, String) -> Unit,
+    onFocusChanges: (String) -> Unit,
 ) {
     Column {
         Spacer(modifier = Modifier.height(8.dp))
@@ -233,7 +239,12 @@ private fun FieldEditableRow(
                 if (isMultilineAllowed) {
                     CustomTextField(
                         modifier = Modifier
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .onFocusChanged {
+                                if (it.hasFocus) {
+                                    onFocusChanges(fieldId)
+                                }
+                            },
                         value = detailValue,
                         hint = "",
                         textColor = textColor,
@@ -248,7 +259,12 @@ private fun FieldEditableRow(
                     }
                     CustomTextField(
                         modifier = Modifier
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .onFocusChanged {
+                                if (it.hasFocus) {
+                                    onFocusChanges(fieldId)
+                                }
+                            },
                         value = detailValue,
                         hint = "",
                         textColor = textColor,

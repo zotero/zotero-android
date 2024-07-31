@@ -11,7 +11,10 @@ import io.realm.ObjectChangeSet
 import io.realm.RealmObjectChangeListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
@@ -204,6 +207,7 @@ class ItemDetailsViewModel @Inject constructor(
     fun init() = initOnce {
         EventBus.getDefault().register(this)
         setupFileObservers()
+        setupOnFieldValueTextChangeFlow()
 
         val args = ScreenArguments.itemDetailsArgs
 
@@ -298,7 +302,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun onSaveOrEditClicked() {
         if (viewState.isEditing) {
-            saveChanges()
+            endEditing()
         } else {
             val updatedStateData = viewState.data.deepCopy()
             val updatedData = viewState.data.deepCopy(
@@ -372,7 +376,6 @@ class ItemDetailsViewModel @Inject constructor(
                         defaults = this.defaults
                     )
                 }
-                else -> {}
             }
         } catch (e: Exception) {
             Timber.e(e, "can't load initial data ")
@@ -381,7 +384,6 @@ class ItemDetailsViewModel @Inject constructor(
             }
             return
         }
-        data!!
         val request = CreateItemFromDetailDbRequest(
             key = key,
             libraryId = libraryId,
@@ -620,7 +622,41 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    fun setFieldValue(id: String, value: String) {
+    private var onFieldValueTextChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
+
+    private fun setupOnFieldValueTextChangeFlow() {
+        onFieldValueTextChangeFlow
+            .debounce(500)
+            .map { data ->
+                if (data != null) {
+                    setFieldValue(data.first, data.second)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onFieldFocusFieldChange(fieldId: String) {
+        val changeFlowValue = onFieldValueTextChangeFlow.value
+        if (changeFlowValue != null) {
+            setFieldValue(changeFlowValue.first, changeFlowValue.second)
+        }
+        val field = viewState.data.fields[fieldId] ?: return
+        updateState {
+            copy(
+                fieldFocusKey = fieldId,
+                fieldFocusText = field.valueOrAdditionalInfo
+            )
+        }
+    }
+
+    fun onFieldValueTextChange(id: String, value: String) {
+        updateState {
+            copy(fieldFocusText = value)
+        }
+        onFieldValueTextChangeFlow.tryEmit(id to value)
+    }
+
+    private fun setFieldValue(id: String, value: String) {
         val field = viewState.data.fields[id]
         if (field == null) {
             return
@@ -764,13 +800,13 @@ class ItemDetailsViewModel @Inject constructor(
         return field
     }
 
-    fun saveChanges() {
+    private fun endEditing() {
         if (viewState.snapshot == viewState.data) {
             return
         }
         try {
             coroutineScope.launch {
-                endEditing()
+                endEditingAsync()
             }
         } catch (error: Exception) {
             Timber.e(error, "ItemDetailStore: can't store changes")
@@ -780,9 +816,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun endEditing() {
-//        updateDateFieldIfNeeded()
-//        updateAccessedFieldIfNeeded()
+    private fun endEditingAsync() {
         viewModelScope.launch {
             val updatedFields: MutableMap<KeyBaseKeyPair, String> = mutableMapOf()
             val updatedFieldsMap = viewState.data.fields.toMutableMap()
@@ -940,8 +974,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun cancelChanges() {
         viewModelScope.launch {
-            val type = viewState.type!!
-            when (type) {
+            when (val type = viewState.type) {
                 is DetailType.duplication -> {
                     perform(
                         dbWrapper = dbWrapperMain,
@@ -1986,7 +2019,7 @@ data class ItemDetailsViewState(
     val key: String = "",
     val library: Library? = null,
     val userId: Long = 0,
-    val type: DetailType? = null,
+    val type: DetailType = DetailType.preview(""),
     val preScrolledChildKey: String? = null,
     val isEditing: Boolean = false,
     var error: ItemDetailError? = null,
@@ -2001,6 +2034,8 @@ data class ItemDetailsViewState(
     var isLoadingData: Boolean = false,
     var backgroundProcessedItems: Set<String> = emptySet(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
+    val fieldFocusKey: String? = null,
+    val fieldFocusText: String = "",
 ) : ViewState
 
 sealed class ItemDetailsViewEffect : ViewEffect {

@@ -56,4 +56,9 @@ class ItemDetailField(
         )
     }
 
+    val valueOrAdditionalInfo: String get() {
+        return additionalInfo?.get(AdditionalInfoKey.formattedDate)
+            ?: value
+    }
+
 }
