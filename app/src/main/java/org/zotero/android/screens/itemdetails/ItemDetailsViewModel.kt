@@ -39,7 +39,6 @@ import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
-import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CancelParentCreationDbRequest
 import org.zotero.android.database.requests.CreateAttachmentsDbRequest
 import org.zotero.android.database.requests.CreateItemFromDetailDbRequest
@@ -208,6 +207,7 @@ class ItemDetailsViewModel @Inject constructor(
         EventBus.getDefault().register(this)
         setupFileObservers()
         setupOnFieldValueTextChangeFlow()
+        setupOnAbstractTextChangeFlow()
 
         val args = ScreenArguments.itemDetailsArgs
 
@@ -292,7 +292,8 @@ class ItemDetailsViewModel @Inject constructor(
                 type = type,
                 userId = userId,
                 library = library,
-                preScrolledChildKey = preScrolledChildKey
+                preScrolledChildKey = preScrolledChildKey,
+                abstractText = viewState.data.abstract ?: ""
             )
         }
         conflictResolutionUseCase.currentlyDisplayedItemLibraryIdentifier = viewState.library?.identifier
@@ -316,6 +317,7 @@ class ItemDetailsViewModel @Inject constructor(
                     snapshot = updatedStateData,
                     data = updatedData,
                     isEditing = true,
+                    abstractText = updatedData.abstract ?: ""
                 )
             }
         }
@@ -471,7 +473,10 @@ class ItemDetailsViewModel @Inject constructor(
         isEditing: Boolean,
     ) {
         updateState {
-            copy(data = data)
+            copy(
+                data = data,
+                abstractText = data.abstract ?: ""
+            )
         }
         if (viewState.snapshot != null || isEditing) {
             val updatedSnapshot = data.deepCopy(
@@ -508,10 +513,17 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
+    private var ignoreScreenRefreshOnNextDbUpdate: Boolean = false
+
     private fun shouldReloadData(item: RItem, changes: Array<String>): Boolean {
         if (changes.contains("version")) {
-            //Use old value?
-            if (changes.contains("changeType") && item.changeType != UpdatableChangeType.user.name) {
+            if (changes.contains("changeType")) {
+                //Unfortunately there is no way on Android's RealmDB to get the previous value of RealmObject's 'changeType' field in it's ChangeListener.
+                // That's why we have to adjust shouldReloadData logic to ignore user's input during DB Refresh with this flag.
+                if (ignoreScreenRefreshOnNextDbUpdate) {
+                    ignoreScreenRefreshOnNextDbUpdate = false
+                    return false
+                }
                 return true
             }
             return false
@@ -622,6 +634,29 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
+    private var onAbstractTextChangeFlow = MutableStateFlow<String?>(null)
+
+    private fun setupOnAbstractTextChangeFlow() {
+        onAbstractTextChangeFlow
+            .debounce(500)
+            .map { data ->
+                if (data != null) {
+                    onAbstractEdit(data)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onAbstractTextChange(newAbstract: String) {
+        updateState {
+            copy(
+                abstractText = newAbstract
+            )
+        }
+        onAbstractTextChangeFlow.tryEmit(newAbstract)
+    }
+
+
     private var onFieldValueTextChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
 
     private fun setupOnFieldValueTextChangeFlow() {
@@ -661,6 +696,7 @@ class ItemDetailsViewModel @Inject constructor(
         if (field == null) {
             return
         }
+        ignoreScreenRefreshOnNextDbUpdate = true
 
         field.value = value
         field.isTappable = ItemDetailDataCreator.isTappable(
@@ -740,7 +776,8 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    fun onAbstractEdit(newAbstract: String) {
+    private fun onAbstractEdit(newAbstract: String) {
+        ignoreScreenRefreshOnNextDbUpdate = true
         val updatedData = viewState.data.deepCopy(abstract = newAbstract)
         updateState {
             copy(data = updatedData)
@@ -801,6 +838,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun endEditing() {
+        ignoreScreenRefreshOnNextDbUpdate = false
         if (viewState.snapshot == viewState.data) {
             return
         }
@@ -878,7 +916,8 @@ class ItemDetailsViewModel @Inject constructor(
                     snapshot = null,
                     isEditing = false,
                     type = DetailType.preview(viewState.key),
-                    data = updatedData
+                    data = updatedData,
+                    abstractText = updatedData.abstract ?: ""
                 )
             }
         }
@@ -2036,6 +2075,7 @@ data class ItemDetailsViewState(
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val fieldFocusKey: String? = null,
     val fieldFocusText: String = "",
+    val abstractText: String = "",
 ) : ViewState
 
 sealed class ItemDetailsViewEffect : ViewEffect {

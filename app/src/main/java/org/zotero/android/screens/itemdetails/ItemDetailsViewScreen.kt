@@ -62,7 +62,7 @@ internal fun ItemDetailsViewScreen(
                     showDivider = false
                 )
 
-                if (!viewState.data.isAttachment) {
+                if (!viewState.data.isAttachment && !viewState.data.abstract.isNullOrBlank()) {
                     CustomDivider(
                         modifier = Modifier
                             .padding(top = 4.dp)

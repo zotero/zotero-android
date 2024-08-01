@@ -104,8 +104,8 @@ internal fun ItemDetailsEditScreen(
                 )
                 if (!viewState.data.isAttachment) {
                     EditAbstractRow(
-                        detailValue = viewState.data.abstract ?: "",
-                        onValueChange = viewModel::onAbstractEdit
+                        detailValue = viewState.abstractText,
+                        onValueChange = viewModel::onAbstractTextChange
                     )
                 }
             }
