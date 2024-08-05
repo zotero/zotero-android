@@ -15,7 +15,14 @@
         <item name="pspdf__documentViewStyle">@style/CustomPspdfDocumentViewStyleDark</item>
         <item name="pspdf__thumbnailBarStyle">@style/CustomPspdfThumbnailBarStyle</item>
         <item name="pspdf__backgroundColor">@color/pdf_view_background_color</item>
+        <item name="pspdf__popupToolbarStyle">@style/CustomPSPDFKitPopupToolbarDark</item>
     </style>
     <style name="CustomPspdfDocumentViewStyleDark" parent="@style/PSPDFKit.DocumentView.Dark">
+    </style>
+
+    <style name="CustomPSPDFKitPopupToolbarDark" parent="@style/PSPDFKit.PopupToolbar.Dark">>
+        <item name="pspdf__backgroundColor">#212121</item>
+        <item name="pspdf__itemTint">@color/white</item>
+        <item name="pspdf__itemTintDisabled">@color/pspdf__popup_toolbar_item_tint_disabled</item>
     </style>
 </resources>
