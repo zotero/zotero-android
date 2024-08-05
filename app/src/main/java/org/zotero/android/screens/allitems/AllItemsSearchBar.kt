@@ -32,7 +32,7 @@ internal fun AllItemsSearchBar(
         viewModel.onSearch(it.text)
     }
     val onSearchAction = {
-        searchBarOnInnerValueChanged.invoke(TextFieldValue())
+//        searchBarOnInnerValueChanged.invoke(TextFieldValue())
     }
 
     SearchBar(
