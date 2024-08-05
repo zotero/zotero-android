@@ -126,6 +126,12 @@ class ItemTypes {
                 "webpage" -> {
                     return "item_type_webpage"
                 }
+                "preprint" -> {
+                    return "item_type_preprint"
+                }
+                "standard" -> {
+                    return "item_type_standard"
+                }
                 else -> {
                     return "item_type_document"
                 }
