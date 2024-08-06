@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.reader.PdfReaderBottomPanel
-import org.zotero.android.pdf.reader.PdfReaderViewModel
+import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.PdfSidebarSearchBar
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -32,11 +32,11 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfReaderSidebar(
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    viewModel: PdfReaderViewModel,
     focusRequester: FocusRequester,
-    lazyListState: LazyListState
+    lazyListState: LazyListState,
 ) {
     Box(
         modifier = Modifier
@@ -49,16 +49,19 @@ internal fun PdfReaderSidebar(
                 .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
         ) {
             Spacer(modifier = Modifier.height(16.dp))
-            PdfSidebarSearchBar(viewState = viewState, viewModel = viewModel)
+            PdfSidebarSearchBar(
+                searchValue = viewState.searchTerm,
+                onSearch = vMInterface::onSearch,
+            )
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(
                 state = lazyListState,
                 verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
             ) {
                 itemsIndexed(
-                    items = viewModel.viewState.sortedKeys
+                    items = viewState.sortedKeys,
                 ) { _, key ->
-                    val annotation = viewModel.annotation(key) ?: return@itemsIndexed
+                    val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
                     val isSelected = viewState.isAnnotationSelected(annotation.key)
                     val horizontalPadding = if (isSelected) 13.dp else 16.dp
                     var rowModifier: Modifier = Modifier
@@ -79,16 +82,16 @@ internal fun PdfReaderSidebar(
                             .safeClickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                                onClick = { viewModel.selectAnnotation(key) },
+                                onClick = { vMInterface.selectAnnotation(key) },
                             )
                     ) {
                         val annotationColor =
                             Color(android.graphics.Color.parseColor(annotation.displayColor))
                         val loadPreview = {
                             val preview =
-                                viewModel.annotationPreviewMemoryCache.getBitmap(annotation.key)
+                                vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)
                             if (preview == null) {
-                                viewModel.loadPreviews(listOf(annotation.key))
+                                vMInterface.loadPreviews(listOf(annotation.key))
                             }
                             preview
                         }
@@ -97,7 +100,7 @@ internal fun PdfReaderSidebar(
                             annotation = annotation,
                             annotationColor = annotationColor,
                             viewState = viewState,
-                            viewModel = viewModel,
+                            vMInterface = vMInterface,
                         )
                         SidebarDivider()
 //                        Spacer(modifier = Modifier.height(8.dp))
@@ -105,7 +108,7 @@ internal fun PdfReaderSidebar(
                         when (annotation.type) {
                             AnnotationType.note -> SidebarNoteRow(
                                 annotation = annotation,
-                                viewModel = viewModel,
+                                vMInterface = vMInterface,
                                 viewState = viewState,
                                 focusRequester = focusRequester,
                             )
@@ -113,24 +116,24 @@ internal fun PdfReaderSidebar(
                             AnnotationType.highlight -> SidebarHighlightRow(
                                 annotation = annotation,
                                 annotationColor = annotationColor,
-                                viewModel = viewModel,
+                                vMInterface = vMInterface,
                                 viewState = viewState,
                                 focusRequester = focusRequester,
                             )
 
                             AnnotationType.ink -> SidebarInkRow(
-                                viewModel = viewModel,
+                                vMInterface = vMInterface,
                                 viewState = viewState,
                                 annotation = annotation,
                                 loadPreview = loadPreview,
                             )
 
                             AnnotationType.image -> SidebarImageRow(
-                                viewModel = viewModel,
-                                viewState = viewState,
                                 annotation = annotation,
                                 loadPreview = loadPreview,
                                 focusRequester = focusRequester,
+                                vMInterface = vMInterface,
+                                viewState = viewState,
                             )
                         }
                     }
@@ -139,7 +142,7 @@ internal fun PdfReaderSidebar(
         }
         PdfReaderBottomPanel(
             layoutType = layoutType,
-            viewModel = viewModel,
+            vMInterface = vMInterface,
             viewState = viewState
         )
     }

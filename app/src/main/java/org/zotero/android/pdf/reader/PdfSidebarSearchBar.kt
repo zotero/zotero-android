@@ -16,10 +16,9 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfSidebarSearchBar(
-    viewState: PdfReaderViewState,
-    viewModel: PdfReaderViewModel
+    searchValue: String,
+    onSearch: (String) -> Unit,
 ) {
-    val searchValue = viewState.searchTerm
     var searchBarTextFieldState by remember {
         mutableStateOf(
             TextFieldValue(
@@ -29,7 +28,7 @@ internal fun PdfSidebarSearchBar(
     }
     val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
         searchBarTextFieldState = it
-        viewModel.onSearch(it.text)
+        onSearch(it.text)
     }
     SearchBar(
         modifier = Modifier.padding(horizontal = 16.dp),

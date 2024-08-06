@@ -19,12 +19,15 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import timber.log.Timber
 
 @Composable
-fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
+fun PdfReaderPspdfKitView(
+    uri: Uri,
+    vMInterface: PdfReaderVMInterface
+) {
     val activity = LocalContext.current as? AppCompatActivity ?: return
     val annotationMaxSideSize = annotationMaxSideSize()
     val fragmentManager = activity.supportFragmentManager
     val layoutType = CustomLayoutSize.calculateLayoutType()
-    viewModel.annotationMaxSideSize = annotationMaxSideSize
+    vMInterface.annotationMaxSideSize = annotationMaxSideSize
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -45,7 +48,7 @@ fun PdfReaderPspdfKitView(uri: Uri, viewModel: PdfReaderViewModel) {
             pdfThumbnailBar.layoutParams = thumbnailBarLayoutParams
             frameLayout.addView(pdfThumbnailBar)
 
-            viewModel.init(
+            vMInterface.init(
                 isTablet = layoutType.isTablet(),
                 uri = uri,
                 containerId = fragmentContainerView.id,

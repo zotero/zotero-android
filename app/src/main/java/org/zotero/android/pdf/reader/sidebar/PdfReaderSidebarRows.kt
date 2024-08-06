@@ -5,26 +5,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import org.zotero.android.pdf.data.Annotation
-import org.zotero.android.pdf.reader.PdfReaderViewModel
+import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 
 @Composable
 internal fun SidebarImageRow(
-    viewModel: PdfReaderViewModel,
     viewState: PdfReaderViewState,
+    vMInterface: PdfReaderVMInterface,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
     focusRequester: FocusRequester,
 ) {
     SidebarImageSection(
         loadPreview = loadPreview,
-        viewModel = viewModel
+        vMInterface = vMInterface,
     )
     SidebarDivider()
     SidebarTagsAndCommentsSection(
-        annotation = annotation,
-        viewModel = viewModel,
+        vMInterface = vMInterface,
         viewState = viewState,
+        annotation = annotation,
         focusRequester = focusRequester,
         shouldAddTopPadding = true,
     )
@@ -32,26 +32,26 @@ internal fun SidebarImageRow(
 
 @Composable
 internal fun SidebarInkRow(
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
 ) {
-    SidebarImageSection(loadPreview, viewModel)
-    SidebarTagsSection(viewModel = viewModel, viewState = viewState, annotation = annotation)
+    SidebarImageSection(loadPreview = loadPreview, vMInterface = vMInterface)
+    SidebarTagsSection(vMInterface = vMInterface, viewState = viewState, annotation = annotation)
 }
 
 @Composable
 internal fun SidebarNoteRow(
     annotation: Annotation,
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     focusRequester: FocusRequester,
 ) {
     SidebarTagsAndCommentsSection(
         annotation = annotation,
-        viewModel = viewModel,
         viewState = viewState,
+        vMInterface = vMInterface,
         focusRequester = focusRequester,
         shouldAddTopPadding = true,
     )
@@ -60,8 +60,8 @@ internal fun SidebarNoteRow(
 @Composable
 internal fun SidebarHighlightRow(
     annotation: Annotation,
-    viewModel: PdfReaderViewModel,
     viewState: PdfReaderViewState,
+    vMInterface: PdfReaderVMInterface,
     annotationColor: Color,
     focusRequester: FocusRequester,
 ) {
@@ -69,8 +69,8 @@ internal fun SidebarHighlightRow(
 
     SidebarTagsAndCommentsSection(
         annotation = annotation,
-        viewModel = viewModel,
         viewState = viewState,
+        vMInterface = vMInterface,
         focusRequester = focusRequester,
         shouldAddTopPadding = false,
     )

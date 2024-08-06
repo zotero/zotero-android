@@ -87,7 +87,7 @@ private val pdfReaderToolsList = listOf(
 @Composable
 internal fun PdfReaderPspdfKitBox(
     uri: Uri,
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState
 ) {
     val density = LocalDensity.current
@@ -133,11 +133,11 @@ internal fun PdfReaderPspdfKitBox(
                 )
             }
     ) {
-        PdfReaderPspdfKitView(uri = uri, viewModel = viewModel)
+        PdfReaderPspdfKitView(uri = uri, vMInterface = vMInterface)
         if (viewState.showCreationToolbar) {
             PdfReaderAnnotationCreationToolbar(
-                viewModel = viewModel,
                 viewState = viewState,
+                vMInterface = vMInterface,
                 state = anchoredDraggableState,
                 onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
                 shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
@@ -153,8 +153,8 @@ enum class DragAnchors(val fraction: Float) {
 
 @Composable
 fun BoxScope.PdfReaderAnnotationCreationToolbar(
-    viewModel: PdfReaderViewModel,
     viewState: PdfReaderViewState,
+    vMInterface: PdfReaderVMInterface,
     state: AnchoredDraggableState<DragAnchors>,
     onShowSnapTargetAreas: () -> Unit,
     shouldShowSnapTargetAreas: Boolean,
@@ -162,7 +162,7 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
     val roundCornerShape = RoundedCornerShape(size = 4.dp)
     val draggableInteractionSource = remember { MutableInteractionSource() }
     val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(key1 = viewModel) {
+    LaunchedEffect(key1 = vMInterface) {
         draggableInteractionSource.interactions.onEach {
             onShowSnapTargetAreas()
         }.launchIn(coroutineScope)
@@ -233,21 +233,21 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
             pdfReaderToolsList.forEach { tool ->
                 if (!tool.isHidden) {
                     AnnotationCreationToggleButton(
-                        viewModel = viewModel,
+                        activeAnnotationTool = vMInterface.activeAnnotationTool,
                         pdfReaderTool = tool,
-                        toggleButton = viewModel::toggle
+                        toggleButton = vMInterface::toggle
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             }
-            val activeAnnotationTool = viewModel.activeAnnotationTool
+            val activeAnnotationTool = vMInterface.activeAnnotationTool
             if (viewState.isColorPickerButtonVisible && activeAnnotationTool != null) {
                 if (activeAnnotationTool == AnnotationTool.ERASER) {
-                    EmptyFilterCircle(onClick = { viewModel.showToolOptions() })
+                    EmptyFilterCircle(onClick = vMInterface::showToolOptions)
                 } else {
-                    val color = viewModel.toolColors[activeAnnotationTool]
+                    val color = vMInterface.toolColors[activeAnnotationTool]
                     if (color != null) {
-                        FilledFilterCircle(hex = color, onClick = { viewModel.showToolOptions() })
+                        FilledFilterCircle(hex = color, onClick = vMInterface::showToolOptions)
                     }
                 }
             }
@@ -257,21 +257,21 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             AnnotationCreationButton(
-                isEnabled = viewModel.canUndo(),
+                isEnabled = vMInterface.canUndo(),
                 iconInt = Drawables.undo_24px,
-                onButtonClick = viewModel::onUndoClick
+                onButtonClick = vMInterface::onUndoClick
             )
             Spacer(modifier = Modifier.height(20.dp))
             AnnotationCreationButton(
-                isEnabled = viewModel.canRedo(),
+                isEnabled = vMInterface.canRedo(),
                 iconInt = Drawables.redo_24px,
-                onButtonClick = viewModel::onRedoClick
+                onButtonClick = vMInterface::onRedoClick
             )
             Spacer(modifier = Modifier.height(20.dp))
             AnnotationCreationButton(
                 isEnabled = true,
                 iconInt = Drawables.cancel_24px,
-                onButtonClick = viewModel::onCloseClick
+                onButtonClick = vMInterface::onCloseClick
             )
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -280,11 +280,11 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
 
 @Composable
 private fun AnnotationCreationToggleButton(
-    viewModel: PdfReaderViewModel,
+    activeAnnotationTool: AnnotationTool?,
     pdfReaderTool: PdfReaderTool,
     toggleButton: (AnnotationTool) -> Unit
 ) {
-    val isSelected = viewModel.activeAnnotationTool == pdfReaderTool.type
+    val isSelected = activeAnnotationTool == pdfReaderTool.type
     val tintColor = if (isSelected) {
         Color.White
     } else {

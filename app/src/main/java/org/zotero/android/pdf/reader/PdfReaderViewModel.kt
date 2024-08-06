@@ -155,12 +155,12 @@ class PdfReaderViewModel @Inject constructor(
     private val fileCache: AnnotationPreviewFileCache,
     private val context: Context,
     private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
-    val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
+    override val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     stateHandle: SavedStateHandle,
-) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()) {
+) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
     private var liveAnnotations: RealmResults<RItem>? = null
     private var databaseAnnotations: RealmResults<RItem>? = null
@@ -182,9 +182,9 @@ class PdfReaderViewModel @Inject constructor(
     //Used to recreate a new fragment preserving viewport state
     private lateinit var pdfDocumentBeforeFragmentDestruction: PdfDocument
 
-    var annotationMaxSideSize = 0
+    override var annotationMaxSideSize = 0
 
-    var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
+    override var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
     var changedColorForTool: AnnotationTool? = null
     var activeLineWidth: Float = 0.0f
     var activeEraserSize: Float = 0.0f
@@ -310,7 +310,7 @@ class PdfReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun init(
+    override fun init(
         uri: Uri,
         annotationMaxSideSize: Int,
         containerId: Int,
@@ -1376,7 +1376,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.Annotation? {
+    override fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.Annotation? {
         when (key.type) {
             AnnotationKey.Kind.database -> {
                 return this.databaseAnnotations!!.where().key(key.key).findFirst()
@@ -1567,7 +1567,7 @@ class PdfReaderViewModel @Inject constructor(
         return oldComment == newComment
     }
 
-    fun selectAnnotation(key: AnnotationKey) {
+    override fun selectAnnotation(key: AnnotationKey) {
         if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
             _select(key = key, didSelectInDocument = false)
         }
@@ -1666,7 +1666,7 @@ class PdfReaderViewModel @Inject constructor(
             .build()
     }
 
-    fun loadPreviews(keys: List<String>) {
+    override fun loadPreviews(keys: List<String>) {
         if (keys.isEmpty()) else {
             return
         }
@@ -1687,7 +1687,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun onSearch(text: String) {
+    override fun onSearch(text: String) {
         updateState {
             copy(searchTerm = text)
         }
@@ -1808,7 +1808,7 @@ class PdfReaderViewModel @Inject constructor(
         return hasTag && hasColor
     }
 
-    fun showFilterPopup() {
+    override fun showFilterPopup() {
         val colors = mutableSetOf<String>()
         val tags = mutableSetOf<Tag>()
 
@@ -1868,7 +1868,7 @@ class PdfReaderViewModel @Inject constructor(
         triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
     }
 
-    fun showToolOptions() {
+    override fun showToolOptions() {
         val tool = this.activeAnnotationTool ?: return
 
         val colorHex = this.toolColors[tool]
@@ -2007,7 +2007,7 @@ class PdfReaderViewModel @Inject constructor(
             fragment.exitCurrentlyActiveMode()
         }
     }
-    fun toggle(tool: AnnotationTool) {
+    override fun toggle(tool: AnnotationTool) {
         val color = this.toolColors[tool]
         toggle(annotationTool = tool, color = color)
     }
@@ -2146,29 +2146,29 @@ class PdfReaderViewModel @Inject constructor(
             )
     }
 
-    val activeAnnotationTool: AnnotationTool? get() {
+    override val activeAnnotationTool: AnnotationTool? get() {
         return this.fragment.activeAnnotationTool
     }
 
-    fun canUndo() : Boolean {
+    override fun canUndo() : Boolean {
         return this.fragment.undoManager.canUndo()
     }
 
-    fun canRedo() : Boolean {
+    override fun canRedo() : Boolean {
         return this.fragment.undoManager.canRedo()
     }
 
-    fun onUndoClick() {
+    override fun onUndoClick() {
         this.fragment.undoManager.undo()
         triggerEffect(PdfReaderViewEffect.ScreenRefresh)
     }
 
-    fun onRedoClick() {
+    override fun onRedoClick() {
         this.fragment.undoManager.redo()
         triggerEffect(PdfReaderViewEffect.ScreenRefresh)
     }
 
-    fun onCloseClick() {
+    override fun onCloseClick() {
         toggleToolbarButton()
     }
 
@@ -2437,7 +2437,7 @@ class PdfReaderViewModel @Inject constructor(
         updateAnnotationToolDrawColorAndSize(tool, drawColor = drawColor)
     }
 
-    fun onCommentTextChange(annotationKey: String, comment: String) {
+    override fun onCommentTextChange(annotationKey: String, comment: String) {
         updateState {
             copy(commentFocusText = comment)
         }
@@ -2458,7 +2458,7 @@ class PdfReaderViewModel @Inject constructor(
         update(annotation = annotation, contents = htmlComment, document = this.document)
     }
 
-    fun onCommentFocusFieldChange(annotationKey: String) {
+    override fun onCommentFocusFieldChange(annotationKey: String) {
         val key = AnnotationKey(key = annotationKey, type = AnnotationKey.Kind.database)
         val annotation =
             annotation(key)
@@ -2473,7 +2473,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun onTagsClicked(annotation: org.zotero.android.pdf.data.Annotation) {
+    override fun onTagsClicked(annotation: org.zotero.android.pdf.data.Annotation) {
 //        if (!annotation.isAuthor(viewState.userId)) {
 //            return
 //        }
@@ -2514,7 +2514,7 @@ class PdfReaderViewModel @Inject constructor(
         update(annotation = annotation, lineWidth = lineWidth, document = this.document)
     }
 
-    fun onMoreOptionsForItemClicked() {
+    override fun onMoreOptionsForItemClicked() {
         ScreenArguments.pdfAnnotationMoreArgs = PdfAnnotationMoreArgs(
             selectedAnnotation = selectedAnnotation,
             userId = viewState.userId,

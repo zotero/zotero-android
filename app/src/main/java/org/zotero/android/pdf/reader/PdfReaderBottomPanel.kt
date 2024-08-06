@@ -19,7 +19,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun BoxScope.PdfReaderBottomPanel(
     layoutType: CustomLayoutSize.LayoutType,
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState
 ) {
     Box(
@@ -41,7 +41,7 @@ internal fun BoxScope.PdfReaderBottomPanel(
                 .padding(start = 24.dp)
                 .align(Alignment.CenterStart),
             drawableRes = filterDrawable,
-            onClick = viewModel::showFilterPopup
+            onClick = vMInterface::showFilterPopup
         )
     }
 }

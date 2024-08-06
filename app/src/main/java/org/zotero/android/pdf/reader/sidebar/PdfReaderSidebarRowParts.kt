@@ -35,7 +35,7 @@ import org.zotero.android.R
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.Annotation
-import org.zotero.android.pdf.reader.PdfReaderViewModel
+import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -45,7 +45,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SidebarHeaderSection(
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
     annotationColor: Color,
@@ -83,7 +83,7 @@ internal fun SidebarHeaderSection(
                 modifier = Modifier
                     .size(22.dp)
                     .safeClickable(
-                        onClick = { viewModel.onMoreOptionsForItemClicked() },
+                        onClick = vMInterface::onMoreOptionsForItemClicked,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(bounded = false)
                     ),
@@ -97,25 +97,29 @@ internal fun SidebarHeaderSection(
 
 @Composable
 internal fun SidebarTagsAndCommentsSection(
-    annotation: Annotation,
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
+    annotation: Annotation,
     focusRequester: FocusRequester,
     shouldAddTopPadding: Boolean,
 ) {
     SidebarCommentSection(
-        viewModel = viewModel,
         annotation = annotation,
-        viewState = viewState,
         focusRequester = focusRequester,
-        shouldAddTopPadding = shouldAddTopPadding
+        shouldAddTopPadding = shouldAddTopPadding,
+        vMInterface = vMInterface,
+        viewState = viewState,
     )
-    SidebarTagsSection(viewModel = viewModel, viewState = viewState, annotation = annotation)
+    SidebarTagsSection(
+        annotation = annotation,
+        vMInterface = vMInterface,
+        viewState = viewState,
+    )
 }
 
 @Composable
 private fun SidebarCommentSection(
-    viewModel: PdfReaderViewModel,
+    vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
     shouldAddTopPadding: Boolean,
@@ -129,7 +133,7 @@ private fun SidebarCommentSection(
                 .padding(top = if (shouldAddTopPadding) 8.dp else 0.dp)
                 .onFocusChanged {
                     if (it.hasFocus) {
-                        viewModel.onCommentFocusFieldChange(annotation.key)
+                        vMInterface.onCommentFocusFieldChange(annotation.key)
                     }
                 },
             value = if (annotation.key == viewState.commentFocusKey) {
@@ -142,7 +146,7 @@ private fun SidebarCommentSection(
             hintColor = CustomTheme.colors.zoteroDefaultBlue,
             focusRequester = focusRequester,
             ignoreTabsAndCaretReturns = false,
-            onValueChange = { viewModel.onCommentTextChange(annotationKey = annotation.key, it) })
+            onValueChange = { vMInterface.onCommentTextChange(annotationKey = annotation.key, it) })
     } else if (annotation.comment.isNotBlank()) {
         Text(
             modifier = Modifier
@@ -158,9 +162,9 @@ private fun SidebarCommentSection(
 
 @Composable
 internal fun SidebarTagsSection(
-    viewModel: PdfReaderViewModel,
-    viewState: PdfReaderViewState,
     annotation: Annotation,
+    vMInterface: PdfReaderVMInterface,
+    viewState: PdfReaderViewState,
 ) {
     val isSelected = viewState.isAnnotationSelected(annotation.key)
     val areTagsPresent = annotation.tags.isNotEmpty()
@@ -173,12 +177,11 @@ internal fun SidebarTagsSection(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = true),
-                onClick = { viewModel.onTagsClicked(annotation) }
+                onClick = { vMInterface.onTagsClicked(annotation) }
             )
             .sectionVerticalPadding()
             .fillMaxWidth()
             .height(22.dp)
-           ,
         ) {
             if (areTagsPresent) {
                 Text(
@@ -230,7 +233,7 @@ internal fun SidebarHighlightedTextSection(
 @Composable
 internal fun SidebarImageSection(
     loadPreview: () -> Bitmap?,
-    viewModel: PdfReaderViewModel
+    vMInterface: PdfReaderVMInterface,
 ) {
     val cachedBitmap = loadPreview()
     if (cachedBitmap != null) {
@@ -239,7 +242,7 @@ internal fun SidebarImageSection(
                 .sectionHorizontalPadding()
                 .sectionVerticalPadding()
                 .fillMaxWidth()
-                .heightIn(max = viewModel.annotationMaxSideSize.pxToDp()),
+                .heightIn(max = vMInterface.annotationMaxSideSize.pxToDp()),
             bitmap = cachedBitmap.asImageBitmap(),
             contentDescription = null,
         )
