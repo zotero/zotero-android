@@ -20,7 +20,6 @@ interface PdfReaderVMInterface {
         containerId: Int,
         fragmentManager: FragmentManager,
         isTablet: Boolean,
-        pdfThumbnailBar: PdfThumbnailBar,
     )
 
     fun onTagsClicked(annotation: Annotation)
