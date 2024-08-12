@@ -98,23 +98,24 @@ open class ZoteroApplication: Application(), DefaultLifecycleObserver {
     }
 
     private fun setUpLogging() {
-        if (!EVENT_AND_CRASH_LOGGING_ENABLED) {
-            Timber.plant(object : Timber.DebugTree() {
-                override fun createStackElementTag(element: StackTraceElement): String {
-                    return "[${Thread.currentThread().name}]" +
-                            "${super.createStackElementTag(element)}"
-                }
-            })
-            return
+        val consoleDebugTree = object : Timber.DebugTree() {
+            override fun createStackElementTag(element: StackTraceElement): String {
+                return "[${Thread.currentThread().name}]" +
+                        "${super.createStackElementTag(element)}"
+            }
         }
-        val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            crashFileWriter.writeCrashToFile(throwable.stackTraceToString())
-            defaultExceptionHandler?.uncaughtException(
-                thread,
-                throwable
-            )
+        val listOfTrees = mutableListOf(consoleDebugTree, debugLoggingTree)
+        if (EVENT_AND_CRASH_LOGGING_ENABLED) {
+            val defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                crashFileWriter.writeCrashToFile(throwable.stackTraceToString())
+                defaultExceptionHandler?.uncaughtException(
+                    thread,
+                    throwable
+                )
+            }
+            listOfTrees.add(FirebaseCrashReportingTree())
         }
-        Timber.plant(FirebaseCrashReportingTree(), this.debugLoggingTree)
+        Timber.plant(*listOfTrees.toTypedArray())
     }
 }

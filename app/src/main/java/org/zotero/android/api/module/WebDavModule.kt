@@ -6,7 +6,8 @@ import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.ConnectionPool
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
-import org.zotero.android.api.NetworkConfiguration
+import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.WebDavAuthNetworkInterceptor
 import org.zotero.android.api.annotations.ForWebDav
 import org.zotero.android.ktx.setNetworkTimeout
@@ -23,7 +24,6 @@ object WebDavModule {
     @Singleton
     @ForWebDav
     fun provideWebDavOkHttpClient(
-        configuration: NetworkConfiguration,
         webDavAuthNetworkInterceptor: WebDavAuthNetworkInterceptor,
     ): OkHttpClient {
         val connectionPool = ConnectionPool(
@@ -35,15 +35,12 @@ object WebDavModule {
         dispatcher.maxRequests = 30
         dispatcher.maxRequestsPerHost = 30
 
-//        val interceptor = HttpLoggingInterceptor()
-//        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-
         return OkHttpClient.Builder()
             .dispatcher(dispatcher)
             .connectionPool(connectionPool)
             .setNetworkTimeout(15L)
             .addInterceptor(webDavAuthNetworkInterceptor)
-//            .addInterceptor(interceptor)
+            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
             .build()
     }
 

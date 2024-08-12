@@ -4,8 +4,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.AuthNetworkInterceptor
+import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.annotations.ForApiWithNoRedirects
 import org.zotero.android.api.annotations.ForBaseApi
 import retrofit2.Retrofit
@@ -22,10 +24,12 @@ object ApiNoRedirectsModule {
         @ForBaseApi baseClient: OkHttpClient,
         authInterceptor: AuthNetworkInterceptor,
     ): OkHttpClient {
-        val clientBuilder = baseClient.newBuilder()
-        clientBuilder.followRedirects(false)
-        clientBuilder.addInterceptor(authInterceptor)
-        return clientBuilder.build()
+        return baseClient
+            .newBuilder()
+            .followRedirects(false)
+            .addInterceptor(authInterceptor)
+            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BASIC))
+            .build()
     }
 
     @Provides

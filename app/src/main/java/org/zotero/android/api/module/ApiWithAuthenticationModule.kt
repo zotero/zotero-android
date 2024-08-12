@@ -4,8 +4,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.AuthNetworkInterceptor
+import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.annotations.ForApiWithAuthentication
 import org.zotero.android.api.annotations.ForBaseApi
 import retrofit2.Retrofit
@@ -45,8 +47,10 @@ object ApiWithAuthenticationModule {
         @ForBaseApi baseClient: OkHttpClient,
         authInterceptor: AuthNetworkInterceptor,
     ): OkHttpClient {
-        val clientBuilder = baseClient.newBuilder()
-        clientBuilder.addInterceptor(authInterceptor)
-        return clientBuilder.build()
+        return baseClient
+            .newBuilder()
+            .addInterceptor(authInterceptor)
+            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BASIC))
+         .build()
     }
 }

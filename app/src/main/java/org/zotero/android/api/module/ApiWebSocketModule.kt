@@ -4,11 +4,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import org.zotero.android.api.annotations.ForWebSocket
+import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.NetworkConfiguration
+import org.zotero.android.api.annotations.ForWebSocket
 import org.zotero.android.ktx.setNetworkTimeout
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -23,13 +23,8 @@ object ApiWebSocketModule {
         configuration: NetworkConfiguration
     ): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor { message ->
-                    Timber.tag("SvcSocket")
-                    Timber.d(message)
-                }
-                    .apply { level = HttpLoggingInterceptor.Level.BODY }
-            ).setNetworkTimeout(configuration.networkTimeout)
+            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
+            .setNetworkTimeout(configuration.networkTimeout)
             .pingInterval(5, TimeUnit.SECONDS)
             .build()
     }
