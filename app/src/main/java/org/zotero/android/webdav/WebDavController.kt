@@ -256,7 +256,7 @@ class WebDavController @Inject constructor(
     }
 
     private suspend fun checkWhetherReturns404ForMissingFile(url: String): CustomResult<Unit> {
-        val appendedUrl = "$url/nonexistent.prop"
+        val appendedUrl = "${url}nonexistent.prop"
         val networkResult = safeApiCall {
             webDavApi.get(url = appendedUrl)
         }
