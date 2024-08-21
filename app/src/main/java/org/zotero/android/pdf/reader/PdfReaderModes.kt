@@ -45,7 +45,8 @@ internal fun PdfReaderTabletMode(
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
+                        .fillMaxWidth(0.35f)
+                        .background(CustomTheme.colors.pdfAnnotationsFormBackground)
                 ) {
                     PdfReaderSidebar(
                         vMInterface = vMInterface,

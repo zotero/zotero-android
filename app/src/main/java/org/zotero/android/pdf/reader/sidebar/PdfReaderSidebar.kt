@@ -1,34 +1,29 @@
 package org.zotero.android.pdf.reader.sidebar
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.database.objects.AnnotationType
-import org.zotero.android.pdf.reader.PdfReaderBottomPanel
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.pdf.reader.PdfSidebarSearchBar
-import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Annotations
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Outline
+import org.zotero.android.uicomponents.selector.MultiSelector
+import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
+
+private val sliderOptions = listOf(
+//    Thumbnails,
+    Annotations,
+    Outline
+)
 
 @Composable
 internal fun PdfReaderSidebar(
@@ -38,112 +33,50 @@ internal fun PdfReaderSidebar(
     focusRequester: FocusRequester,
     lazyListState: LazyListState,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(CustomTheme.colors.pdfAnnotationsFormBackground),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            PdfSidebarSearchBar(
-                searchValue = viewState.searchTerm,
-                onSearch = vMInterface::onSearch,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn(
-                state = lazyListState,
-                verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
-            ) {
-                itemsIndexed(
-                    items = viewState.sortedKeys,
-                ) { _, key ->
-                    val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
-                    val isSelected = viewState.isAnnotationSelected(annotation.key)
-                    val horizontalPadding = if (isSelected) 13.dp else 16.dp
-                    var rowModifier: Modifier = Modifier
-                        .padding(horizontal = horizontalPadding)
-                        .clip(shape = RoundedCornerShape(10.dp))
-                        .background(CustomTheme.colors.pdfAnnotationsItemBackground)
-
-                    if (isSelected) {
-                        rowModifier = rowModifier.border(
-                            width = 3.dp,
-                            color = CustomTheme.colors.zoteroDefaultBlue,
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                    }
-
-                    Column(
-                        modifier = rowModifier
-                            .safeClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { vMInterface.selectAnnotation(key) },
-                            )
-                    ) {
-                        val annotationColor =
-                            Color(android.graphics.Color.parseColor(annotation.displayColor))
-                        val loadPreview = {
-                            val preview =
-                                vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)
-                            if (preview == null) {
-                                vMInterface.loadPreviews(listOf(annotation.key))
-                            }
-                            preview
-                        }
-
-                        SidebarHeaderSection(
-                            annotation = annotation,
-                            annotationColor = annotationColor,
-                            viewState = viewState,
-                            vMInterface = vMInterface,
-                        )
-                        SidebarDivider()
-//                        Spacer(modifier = Modifier.height(8.dp))
-
-                        when (annotation.type) {
-                            AnnotationType.note -> SidebarNoteRow(
-                                annotation = annotation,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                                focusRequester = focusRequester,
-                            )
-
-                            AnnotationType.highlight -> SidebarHighlightRow(
-                                annotation = annotation,
-                                annotationColor = annotationColor,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                                focusRequester = focusRequester,
-                            )
-
-                            AnnotationType.ink -> SidebarInkRow(
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                            )
-
-                            AnnotationType.image -> SidebarImageRow(
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                                focusRequester = focusRequester,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        PdfReaderBottomPanel(
-            layoutType = layoutType,
-            vMInterface = vMInterface,
-            viewState = viewState
+    val selectorOptions = sliderOptions.map {
+        MultiSelectorOption(
+            id = it.ordinal, optionString = stringResource(id = it.optionStringId)
         )
+    }
+
+    val selectorColor = CustomTheme.colors.primaryContent
+    val selectedOption = viewState.sidebarSliderSelectedOption
+    Spacer(modifier = Modifier.height(16.dp))
+    MultiSelector(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(layoutType.calculateSelectorHeight())
+            .padding(horizontal = 16.dp)
+        ,
+        options = selectorOptions,
+        selectedOptionId = selectedOption.ordinal,
+        onOptionSelect = vMInterface::setSidebarSliderSelectedOption,
+        fontSize = layoutType.calculatePdfSettingsOptionTextSize(),
+        selectedColor = selectorColor,
+        unselectedcolor = selectorColor
+    )
+
+    when (selectedOption) {
+        Annotations -> {
+            PdfReaderAnnotationsSidebar(
+                vMInterface = vMInterface,
+                viewState = viewState,
+                lazyListState = lazyListState,
+                layoutType = layoutType,
+                focusRequester = focusRequester,
+            )
+        }
+
+        Outline -> {
+            PdfReaderOutlineSidebar(
+                vMInterface = vMInterface,
+                viewState = viewState,
+                layoutType = layoutType,
+            )
+        }
+
+        else -> {
+            //no-op
+        }
     }
 }

@@ -30,4 +30,7 @@
     <string name="webdav_option">WebDAV</string>
     <string name="enter_url">URL</string>
     <string name="errors.settings.webdav.no_https_certificate">HTTPS error: Trust anchor for certification path not found</string>
+    <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
+    <string name="pdf_reader_slider_annotations">Annotations</string>
+    <string name="pdf_reader_slider_outline">Outline</string>
 </resources>

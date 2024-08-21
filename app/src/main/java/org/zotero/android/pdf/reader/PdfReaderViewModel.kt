@@ -25,6 +25,7 @@ import com.pspdfkit.annotations.HighlightAnnotation
 import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.annotations.NoteAnnotation
 import com.pspdfkit.annotations.SquareAnnotation
+import com.pspdfkit.annotations.actions.GoToAction
 import com.pspdfkit.annotations.configuration.EraserToolConfiguration
 import com.pspdfkit.annotations.configuration.InkAnnotationConfiguration
 import com.pspdfkit.annotations.configuration.MarkupAnnotationConfiguration
@@ -34,6 +35,7 @@ import com.pspdfkit.configuration.activity.PdfActivityConfiguration
 import com.pspdfkit.configuration.page.PageFitMode
 import com.pspdfkit.configuration.page.PageScrollMode
 import com.pspdfkit.configuration.theming.ThemeMode
+import com.pspdfkit.document.OutlineElement
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.listeners.DocumentListener
@@ -51,6 +53,7 @@ import io.realm.RealmResults
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -122,6 +125,9 @@ import org.zotero.android.pdf.data.PdfAnnotationChanges
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.pdf.reader.sidebar.data.Outline
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
 import org.zotero.android.pdffilter.data.PdfFilterArgs
@@ -172,7 +178,8 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var document: PdfDocument
     private lateinit var rawDocument: PdfDocument
     var comments = mutableMapOf<String, String>()
-    private val onSearchStateFlow = MutableStateFlow("")
+    private val onAnnotationSearchStateFlow = MutableStateFlow("")
+    private val onOutlineSearchStateFlow = MutableStateFlow("")
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private lateinit var fragmentManager: FragmentManager
     private var isTablet: Boolean = false
@@ -348,7 +355,8 @@ class PdfReaderViewModel @Inject constructor(
         initState()
         startObservingTheme()
         setupAnnotationCacheUpdateStream()
-        setupSearchStateFlow()
+        setupAnnotationSearchStateFlow()
+        setupOutlineSearchStateFlow()
         setupCommentChangeFlow()
 
         val pdfSettings = defaults.getPDFSettings()
@@ -445,13 +453,19 @@ class PdfReaderViewModel @Inject constructor(
         loadRawDocument()
         loadDocumentData()
         setupInteractionListeners()
+        loadOutlines()
     }
 
-    private fun setupSearchStateFlow() {
-        onSearchStateFlow
+    private fun loadOutlines() {
+        createSnapshot("")
+        updateState { copy(isOutlineEmpty = document.outline.isEmpty()) }
+    }
+
+    private fun setupAnnotationSearchStateFlow() {
+        onAnnotationSearchStateFlow
             .debounce(150)
             .map { text ->
-                search(text)
+                searchAnnotations(text)
             }
             .launchIn(viewModelScope)
     }
@@ -1359,6 +1373,10 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    fun focus(page: Int) {
+        scrollIfNeeded(page, animated = true, completion = {})
+    }
+
     private fun focus(
         annotation: org.zotero.android.pdf.data.Annotation,
         location: Pair<Int, RectF>,
@@ -1732,14 +1750,14 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    override fun onSearch(text: String) {
+    override fun onAnnotationSearch(text: String) {
         updateState {
-            copy(searchTerm = text)
+            copy(annotationSearchTerm = text)
         }
-        onSearchStateFlow.tryEmit(text)
+        onAnnotationSearchStateFlow.tryEmit(text)
     }
 
-    private fun search(term: String) {
+    private fun searchAnnotations(term: String) {
         val trimmedTerm = term.trim().trim { it == '\n' }
         filterAnnotations(term = trimmedTerm, filter = viewState.filter)
     }
@@ -1763,7 +1781,12 @@ class PdfReaderViewModel @Inject constructor(
             }
 
             updateState {
-                copy(snapshotKeys = null, sortedKeys = snapshot, searchTerm = "", filter = null)
+                copy(
+                    snapshotKeys = null,
+                    sortedKeys = snapshot,
+                    annotationSearchTerm = "",
+                    filter = null
+                )
             }
             return
         }
@@ -1795,7 +1818,7 @@ class PdfReaderViewModel @Inject constructor(
             }
         }
         updateState {
-            copy(sortedKeys = filteredKeys, searchTerm = term, filter = filter)
+            copy(sortedKeys = filteredKeys, annotationSearchTerm = term, filter = filter)
         }
     }
 
@@ -1905,7 +1928,7 @@ class PdfReaderViewModel @Inject constructor(
         if (filter == viewState.filter) {
             return
         }
-        filterAnnotations(term = viewState.searchTerm, filter = filter)
+        filterAnnotations(term = viewState.annotationSearchTerm, filter = filter)
     }
 
     fun navigateToPdfSettings() {
@@ -2636,6 +2659,153 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    override fun setSidebarSliderSelectedOption(optionOrdinal: Int) {
+        val option = PdfReaderSliderOptions.entries[optionOrdinal]
+        updateState {
+            copy(sidebarSliderSelectedOption = option)
+        }
+    }
+
+    private fun createSnapshot(search: String) {
+        val snapshot = mutableListOf<PdfReaderOutlineOptionsWithChildren>()
+        append(outlines = document.outline, parent = null, snapshot = snapshot, search = search)
+        if (snapshot.size == 1) {
+            updateState {
+                copy(
+                    outlineSnapshot = snapshot,
+                    outlineExpandedNodes = setOf(snapshot[0].outline.id)
+                )
+            }
+        } else {
+            updateState {
+                copy(
+                    outlineSnapshot = snapshot,
+                    outlineExpandedNodes = emptySet()
+                )
+            }
+        }
+    }
+
+    private fun append(
+        outlines: List<OutlineElement>,
+        parent: PdfReaderOutlineOptionsWithChildren?,
+        snapshot: MutableList<PdfReaderOutlineOptionsWithChildren>,
+        search: String
+    ) {
+        val rows = mutableListOf<PdfReaderOutlineOptionsWithChildren>()
+        for (element in outlines) {
+            if (search.isEmpty()) {
+                val outline = PdfReaderOutlineOptionsWithChildren(Outline(element = element, isActive = true))
+                rows.add(outline)
+                continue
+            }
+
+            val elementContainsSearch = outline(element, search)
+            val childContainsSearch = child(element.children, search)
+
+            if (!elementContainsSearch && !childContainsSearch) { continue }
+
+            val outline = PdfReaderOutlineOptionsWithChildren(Outline(element = element, isActive = elementContainsSearch))
+            rows.add(outline)
+        }
+        if (parent == null) {
+            snapshot.addAll(rows)
+        } else {
+            parent.children.addAll(rows)
+        }
+
+        for ((idx, element) in outlines.withIndex()) {
+            val children = element.children
+
+            if (search.isEmpty()) {
+                append(outlines=  children, parent = rows[idx], snapshot = snapshot, search =  search)
+                continue
+            }
+
+            val index = rows.indexOfFirst { row ->
+                val pageIndex: Int? = (element.action as? GoToAction)?.pageIndex
+                row.outline.title == element.title && row.outline.page == pageIndex
+
+            }
+            if (index == -1) {
+                continue
+            }
+
+            append(outlines = children, parent = rows[index], snapshot = snapshot, search = search)
+        }
+
+    }
+
+    private fun child(children: List<OutlineElement>, string: String): Boolean {
+        if (children.isEmpty()) {
+            return false
+        }
+
+        for (child in children) {
+            if (outline(child, string)) {
+                return true
+            }
+
+            val children = child.children
+
+            if (children != null && child(children, string)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun outline(outline: OutlineElement, string: String): Boolean {
+        val pageIndex: Int? = (outline.action as? GoToAction)?.pageIndex
+        return (outline.title ?: "").contains(string, ignoreCase = true) || string.toIntOrNull() == pageIndex
+    }
+
+    override fun onOutlineSearch(search: String) {
+        if (search == viewState.outlineSearchTerm) {
+            return
+        }
+        updateState {
+            copy(outlineSearchTerm = search)
+        }
+        onOutlineSearchStateFlow.tryEmit(search)
+    }
+
+    private fun setupOutlineSearchStateFlow() {
+        onOutlineSearchStateFlow
+            .drop(1)
+            .debounce(150)
+            .map { text ->
+                searchOutlines(text)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun searchOutlines(search: String) {
+        createSnapshot(search = search)
+    }
+
+    override fun onOutlineItemTapped(outline: Outline) {
+        if (!outline.isActive) {
+            return
+        }
+        focus(page = outline.page)
+        if (!isTablet) {
+            toggleSideBar()
+        }
+    }
+
+    override fun onOutlineItemChevronTapped(outline: Outline) {
+        val expandedNodes = viewState.outlineExpandedNodes
+        val newState = if (expandedNodes.contains(outline.id)) {
+            expandedNodes - outline.id
+        } else {
+            expandedNodes + outline.id
+        }
+        updateState {
+            copy(outlineExpandedNodes = newState)
+        }
+    }
 }
 
 data class PdfReaderViewState(
@@ -2661,7 +2831,7 @@ data class PdfReaderViewState(
     var selectedAnnotationCommentActive: Boolean = false,
     val sidebarEditingEnabled: Boolean = false,
     val updatedAnnotationKeys: List<AnnotationKey>? = null,
-    val searchTerm: String = "",
+    val annotationSearchTerm: String = "",
     val filter: AnnotationsFilter? = null,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
@@ -2669,9 +2839,18 @@ data class PdfReaderViewState(
     val commentFocusKey: String? = null,
     val commentFocusText: String = "",
     val isTopBarVisible: Boolean = true,
-): ViewState {
+    val sidebarSliderSelectedOption: PdfReaderSliderOptions = PdfReaderSliderOptions.Annotations,
+    val outlineExpandedNodes: Set<String> = emptySet(),
+    val outlineSnapshot: List<PdfReaderOutlineOptionsWithChildren> = emptyList(),
+    val outlineSearchTerm: String = "",
+    val isOutlineEmpty: Boolean = false,
+) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey?.key == annotationKey
+    }
+    fun isOutlineSectionCollapsed(id: String): Boolean {
+        val isCollapsed = !outlineExpandedNodes.contains(id)
+        return isCollapsed
     }
 }
 

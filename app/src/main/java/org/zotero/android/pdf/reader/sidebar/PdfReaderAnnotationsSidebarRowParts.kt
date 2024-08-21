@@ -44,7 +44,7 @@ import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-internal fun SidebarHeaderSection(
+internal fun PdfReaderAnnotationsSidebarHeaderSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
@@ -96,21 +96,21 @@ internal fun SidebarHeaderSection(
 }
 
 @Composable
-internal fun SidebarTagsAndCommentsSection(
+internal fun PdfReaderAnnotationsSidebarTagsAndCommentsSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
     focusRequester: FocusRequester,
     shouldAddTopPadding: Boolean,
 ) {
-    SidebarCommentSection(
+    PdfReaderAnnotationsSidebarCommentSection(
         annotation = annotation,
         focusRequester = focusRequester,
         shouldAddTopPadding = shouldAddTopPadding,
         vMInterface = vMInterface,
         viewState = viewState,
     )
-    SidebarTagsSection(
+    PdfReaderAnnotationsSidebarTagsSection(
         annotation = annotation,
         vMInterface = vMInterface,
         viewState = viewState,
@@ -118,7 +118,7 @@ internal fun SidebarTagsAndCommentsSection(
 }
 
 @Composable
-private fun SidebarCommentSection(
+private fun PdfReaderAnnotationsSidebarCommentSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
@@ -161,7 +161,7 @@ private fun SidebarCommentSection(
 }
 
 @Composable
-internal fun SidebarTagsSection(
+internal fun PdfReaderAnnotationsSidebarTagsSection(
     annotation: Annotation,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
@@ -205,7 +205,7 @@ internal fun SidebarTagsSection(
 }
 
 @Composable
-internal fun SidebarHighlightedTextSection(
+internal fun PdfReaderAnnotationsSidebarHighlightedTextSection(
     annotationColor: Color,
     annotation: Annotation,
 ) {
@@ -231,7 +231,7 @@ internal fun SidebarHighlightedTextSection(
 }
 
 @Composable
-internal fun SidebarImageSection(
+internal fun PdfReaderAnnotationsSidebarImageSection(
     loadPreview: () -> Bitmap?,
     vMInterface: PdfReaderVMInterface,
 ) {

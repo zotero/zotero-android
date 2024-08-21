@@ -9,19 +9,19 @@ import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 
 @Composable
-internal fun SidebarImageRow(
+internal fun PdfReaderAnnotationsSidebarImageRow(
     viewState: PdfReaderViewState,
     vMInterface: PdfReaderVMInterface,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
     focusRequester: FocusRequester,
 ) {
-    SidebarImageSection(
+    PdfReaderAnnotationsSidebarImageSection(
         loadPreview = loadPreview,
         vMInterface = vMInterface,
     )
     SidebarDivider()
-    SidebarTagsAndCommentsSection(
+    PdfReaderAnnotationsSidebarTagsAndCommentsSection(
         vMInterface = vMInterface,
         viewState = viewState,
         annotation = annotation,
@@ -31,24 +31,24 @@ internal fun SidebarImageRow(
 }
 
 @Composable
-internal fun SidebarInkRow(
+internal fun PdfReaderAnnotationsSidebarInkRow(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
 ) {
-    SidebarImageSection(loadPreview = loadPreview, vMInterface = vMInterface)
-    SidebarTagsSection(vMInterface = vMInterface, viewState = viewState, annotation = annotation)
+    PdfReaderAnnotationsSidebarImageSection(loadPreview = loadPreview, vMInterface = vMInterface)
+    PdfReaderAnnotationsSidebarTagsSection(vMInterface = vMInterface, viewState = viewState, annotation = annotation)
 }
 
 @Composable
-internal fun SidebarNoteRow(
+internal fun PdfReaderAnnotationsSidebarNoteRow(
     annotation: Annotation,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     focusRequester: FocusRequester,
 ) {
-    SidebarTagsAndCommentsSection(
+    PdfReaderAnnotationsSidebarTagsAndCommentsSection(
         annotation = annotation,
         viewState = viewState,
         vMInterface = vMInterface,
@@ -58,16 +58,16 @@ internal fun SidebarNoteRow(
 }
 
 @Composable
-internal fun SidebarHighlightRow(
+internal fun PdfReaderAnnotationsSidebarHighlightRow(
     annotation: Annotation,
     viewState: PdfReaderViewState,
     vMInterface: PdfReaderVMInterface,
     annotationColor: Color,
     focusRequester: FocusRequester,
 ) {
-    SidebarHighlightedTextSection(annotationColor = annotationColor, annotation = annotation)
+    PdfReaderAnnotationsSidebarHighlightedTextSection(annotationColor = annotationColor, annotation = annotation)
 
-    SidebarTagsAndCommentsSection(
+    PdfReaderAnnotationsSidebarTagsAndCommentsSection(
         annotation = annotation,
         viewState = viewState,
         vMInterface = vMInterface,

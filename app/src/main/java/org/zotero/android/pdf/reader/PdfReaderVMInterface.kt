@@ -2,10 +2,10 @@ package org.zotero.android.pdf.reader
 
 import android.net.Uri
 import androidx.fragment.app.FragmentManager
-import com.pspdfkit.ui.PdfThumbnailBar
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.reader.sidebar.data.Outline
 
 interface PdfReaderVMInterface {
 
@@ -23,7 +23,7 @@ interface PdfReaderVMInterface {
     )
 
     fun onTagsClicked(annotation: Annotation)
-    fun onSearch(text: String)
+    fun onAnnotationSearch(text: String)
     fun onCommentFocusFieldChange(annotationKey: String)
     fun onCommentTextChange(annotationKey: String, comment: String)
     fun onMoreOptionsForItemClicked()
@@ -38,4 +38,8 @@ interface PdfReaderVMInterface {
     fun onUndoClick()
     fun onRedoClick()
     fun onCloseClick()
+    fun setSidebarSliderSelectedOption(optionOrdinal: Int)
+    fun onOutlineSearch(text: String)
+    fun onOutlineItemTapped(outline: Outline)
+    fun onOutlineItemChevronTapped(outline: Outline)
 }
