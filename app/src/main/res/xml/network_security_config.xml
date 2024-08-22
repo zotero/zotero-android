@@ -2,7 +2,8 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">arxiv.org</domain>
-        <domain includeSubdomains="true">webdav.home.arpa</domain>
+        <domain includeSubdomains="true">home.arpa</domain>
+        <domain includeSubdomains="true">local</domain>
     </domain-config>
     <base-config>
         <trust-anchors>
