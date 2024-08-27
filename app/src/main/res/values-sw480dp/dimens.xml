@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="pdf_sidebar_width_percent" format="float" type="dimen">0.3</item>
+    <item name="pdf_sidebar_width_percent" format="float" type="dimen">0.35</item>
 </resources>

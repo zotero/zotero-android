@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -35,8 +34,7 @@ internal fun PdfReaderAnnotationsSidebar(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    focusRequester: FocusRequester,
-    lazyListState: LazyListState,
+    annotationsLazyListState: LazyListState,
 ) {
     Box(
         modifier = Modifier
@@ -55,7 +53,7 @@ internal fun PdfReaderAnnotationsSidebar(
             )
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(
-                state = lazyListState,
+                state = annotationsLazyListState,
                 verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
             ) {
                 itemsIndexed(
@@ -91,7 +89,7 @@ internal fun PdfReaderAnnotationsSidebar(
                             val preview =
                                 vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)
                             if (preview == null) {
-                                vMInterface.loadPreviews(listOf(annotation.key))
+                                vMInterface.loadAnnotationPreviews(listOf(annotation.key))
                             }
                             preview
                         }
@@ -109,7 +107,6 @@ internal fun PdfReaderAnnotationsSidebar(
                                 annotation = annotation,
                                 vMInterface = vMInterface,
                                 viewState = viewState,
-                                focusRequester = focusRequester,
                             )
 
                             AnnotationType.highlight -> PdfReaderAnnotationsSidebarHighlightRow(
@@ -117,7 +114,6 @@ internal fun PdfReaderAnnotationsSidebar(
                                 annotationColor = annotationColor,
                                 vMInterface = vMInterface,
                                 viewState = viewState,
-                                focusRequester = focusRequester,
                             )
 
                             AnnotationType.ink -> PdfReaderAnnotationsSidebarInkRow(
@@ -130,7 +126,6 @@ internal fun PdfReaderAnnotationsSidebar(
                             AnnotationType.image -> PdfReaderAnnotationsSidebarImageRow(
                                 annotation = annotation,
                                 loadPreview = loadPreview,
-                                focusRequester = focusRequester,
                                 vMInterface = vMInterface,
                                 viewState = viewState,
                             )

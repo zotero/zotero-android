@@ -2,7 +2,6 @@ package org.zotero.android.pdf.reader.sidebar
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import org.zotero.android.pdf.data.Annotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -14,7 +13,6 @@ internal fun PdfReaderAnnotationsSidebarImageRow(
     vMInterface: PdfReaderVMInterface,
     annotation: Annotation,
     loadPreview: () -> Bitmap?,
-    focusRequester: FocusRequester,
 ) {
     PdfReaderAnnotationsSidebarImageSection(
         loadPreview = loadPreview,
@@ -25,7 +23,6 @@ internal fun PdfReaderAnnotationsSidebarImageRow(
         vMInterface = vMInterface,
         viewState = viewState,
         annotation = annotation,
-        focusRequester = focusRequester,
         shouldAddTopPadding = true,
     )
 }
@@ -46,13 +43,11 @@ internal fun PdfReaderAnnotationsSidebarNoteRow(
     annotation: Annotation,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    focusRequester: FocusRequester,
 ) {
     PdfReaderAnnotationsSidebarTagsAndCommentsSection(
         annotation = annotation,
         viewState = viewState,
         vMInterface = vMInterface,
-        focusRequester = focusRequester,
         shouldAddTopPadding = true,
     )
 }
@@ -63,7 +58,6 @@ internal fun PdfReaderAnnotationsSidebarHighlightRow(
     viewState: PdfReaderViewState,
     vMInterface: PdfReaderVMInterface,
     annotationColor: Color,
-    focusRequester: FocusRequester,
 ) {
     PdfReaderAnnotationsSidebarHighlightedTextSection(annotationColor = annotationColor, annotation = annotation)
 
@@ -71,7 +65,6 @@ internal fun PdfReaderAnnotationsSidebarHighlightRow(
         annotation = annotation,
         viewState = viewState,
         vMInterface = vMInterface,
-        focusRequester = focusRequester,
         shouldAddTopPadding = false,
     )
 }

@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -100,12 +99,10 @@ internal fun PdfReaderAnnotationsSidebarTagsAndCommentsSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     annotation: Annotation,
-    focusRequester: FocusRequester,
     shouldAddTopPadding: Boolean,
 ) {
     PdfReaderAnnotationsSidebarCommentSection(
         annotation = annotation,
-        focusRequester = focusRequester,
         shouldAddTopPadding = shouldAddTopPadding,
         vMInterface = vMInterface,
         viewState = viewState,
@@ -123,7 +120,6 @@ private fun PdfReaderAnnotationsSidebarCommentSection(
     viewState: PdfReaderViewState,
     annotation: Annotation,
     shouldAddTopPadding: Boolean,
-    focusRequester: FocusRequester
 ) {
     if (viewState.isAnnotationSelected(annotation.key)) {
         CustomTextField(
@@ -144,7 +140,6 @@ private fun PdfReaderAnnotationsSidebarCommentSection(
             textStyle = CustomTheme.typography.newInfo,
             hint = stringResource(id = Strings.pdf_annotations_sidebar_add_comment),
             hintColor = CustomTheme.colors.zoteroDefaultBlue,
-            focusRequester = focusRequester,
             ignoreTabsAndCaretReturns = false,
             onValueChange = { vMInterface.onCommentTextChange(annotationKey = annotation.key, it) })
     } else if (annotation.comment.isNotBlank()) {
@@ -250,9 +245,10 @@ internal fun PdfReaderAnnotationsSidebarImageSection(
 }
 
 
-private fun Modifier.sectionHorizontalPadding(): Modifier {
+internal fun Modifier.sectionHorizontalPadding(): Modifier {
     return this.padding(horizontal = 8.dp)
 }
-private fun Modifier.sectionVerticalPadding(): Modifier {
+
+internal fun Modifier.sectionVerticalPadding(): Modifier {
     return this.padding(vertical = 8.dp)
 }

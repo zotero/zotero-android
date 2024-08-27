@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -32,10 +31,10 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 internal fun PdfReaderTabletMode(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    lazyListState: LazyListState,
+    annotationsLazyListState: LazyListState,
+    thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
     uri: Uri,
-    focusRequester: FocusRequester,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = viewState.showSideBar, transitionSpec = {
@@ -51,9 +50,9 @@ internal fun PdfReaderTabletMode(
                     PdfReaderSidebar(
                         vMInterface = vMInterface,
                         viewState = viewState,
-                        lazyListState = lazyListState,
+                        annotationsLazyListState = annotationsLazyListState,
+                        thumbnailsLazyListState = thumbnailsLazyListState,
                         layoutType = layoutType,
-                        focusRequester = focusRequester,
                     )
                 }
             }
@@ -78,10 +77,10 @@ internal fun PdfReaderTabletMode(
 internal fun PdfReaderPhoneMode(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    lazyListState: LazyListState,
+    annotationsLazyListState: LazyListState,
+    thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
     uri: Uri,
-    focusRequester: FocusRequester,
 ) {
     Box(
         modifier = Modifier
@@ -107,9 +106,9 @@ internal fun PdfReaderPhoneMode(
                     PdfReaderSidebar(
                         viewState = viewState,
                         vMInterface = vMInterface,
-                        lazyListState = lazyListState,
+                        annotationsLazyListState = annotationsLazyListState,
+                        thumbnailsLazyListState = thumbnailsLazyListState,
                         layoutType = layoutType,
-                        focusRequester = focusRequester
                     )
                 }
             }

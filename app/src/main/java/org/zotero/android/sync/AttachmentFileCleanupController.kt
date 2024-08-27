@@ -92,6 +92,7 @@ class AttachmentFileCleanupController @Inject constructor(
     private fun removeFiles(key: String, libraryId: LibraryIdentifier) {
         fileStorage.attachmentDirectory(libraryId = libraryId, key = key).deleteRecursively()
         fileStorage.annotationPreviews(pdfKey = key, libraryId = libraryId).deleteRecursively()
+        fileStorage.pageThumbnails(key = key, libraryId = libraryId).deleteRecursively()
     }
 
     private fun delete(type: DeletionType): List<DeletionType> {
@@ -143,6 +144,7 @@ class AttachmentFileCleanupController @Inject constructor(
 
             val deletedIndividually = delete(libraryIds, forUpload = forUpload)
             fileStorage.annotationPreviews.deleteRecursively()
+            fileStorage.pageThumbnails.deleteRecursively()
             fileStorage.cache().deleteRecursively()
 
             if (deletedIndividually.isEmpty()) {
@@ -277,6 +279,7 @@ class AttachmentFileCleanupController @Inject constructor(
                 delete(listOf(libraryId), forUpload = mapOf(libraryId to forUpload))
 
             fileStorage.annotationPreviews(libraryId).deleteRecursively()
+            fileStorage.pageThumbnails(libraryId).deleteRecursively()
             val keys = deletedIndividually[libraryId]
             if (keys != null && !keys.isEmpty()) {
                 return DeletionType.allForItems(keys, libraryId)

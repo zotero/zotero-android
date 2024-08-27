@@ -8,8 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.view.WindowCompat
@@ -56,9 +54,9 @@ internal fun PdfReaderScreen(
 
         val params = viewModel.screenArgs
         val uri = params.uri
-        val lazyListState = rememberLazyListState()
+        val annotationsLazyListState = rememberLazyListState()
+        val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
-        val focusRequester: FocusRequester = remember { FocusRequester() }
         val focusManager = LocalFocusManager.current
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
@@ -78,9 +76,18 @@ internal fun PdfReaderScreen(
                         navigateToPdfAnnotation()
                     }
                     if (consumedEffect.scrollToIndex != -1) {
-                        lazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
+                        annotationsLazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
                     }
                 }
+
+                is PdfReaderViewEffect.ScrollThumbnailListToIndex -> {
+                    val visibleItemsInfo = thumbnailsLazyListState.layoutInfo.visibleItemsInfo
+                    val scrollToIndex = consumedEffect.scrollToIndex
+                    if (visibleItemsInfo.isNotEmpty() && (scrollToIndex < visibleItemsInfo.first().index || scrollToIndex > visibleItemsInfo.last().index)) {
+                        thumbnailsLazyListState.animateScrollToItem(index = scrollToIndex)
+                    }
+                }
+
                 is PdfReaderViewEffect.ShowPdfAnnotationMore -> {
                     if (!layoutType.isTablet()) {
                         viewModel.removeFragment()
@@ -132,19 +139,19 @@ internal fun PdfReaderScreen(
                 PdfReaderTabletMode(
                     vMInterface = viewModel,
                     viewState = viewState,
-                    lazyListState = lazyListState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
-                    focusRequester = focusRequester,
                     uri = uri,
                 )
             } else {
                 PdfReaderPhoneMode(
                     viewState = viewState,
                     vMInterface = viewModel,
-                    lazyListState = lazyListState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
                     uri = uri,
-                    focusRequester = focusRequester,
                 )
             }
         }

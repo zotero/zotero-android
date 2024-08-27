@@ -214,6 +214,32 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    val pageThumbnails: File get() {
+        val folderPath = File(getRootDirectory(), "thumbnails")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun pageThumbnail(pageIndex: Int, key: String, libraryId: LibraryIdentifier, isDark: Boolean): File {
+        val folderPath = File(getRootDirectory(), "thumbnails/${libraryId.folderName}/$key")
+        folderPath.mkdirs()
+        val name = pageIndex.toString() + (if(isDark) "_dark" else "") + ".png"
+        val result = File(folderPath, name)
+        return result
+    }
+
+    fun pageThumbnails(key: String, libraryId: LibraryIdentifier):File {
+        val folderPath = File(getRootDirectory(), "thumbnails/${libraryId.folderName}/$key")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun pageThumbnails(libraryId: LibraryIdentifier): File {
+        val folderPath = File(getRootDirectory(), "thumbnails/${libraryId.folderName}")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun jsonCacheFile(objectS: SyncObject, libraryId: LibraryIdentifier, key: String): File {
         val objectName: String
         when (objectS) {

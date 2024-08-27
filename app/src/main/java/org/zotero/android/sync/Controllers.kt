@@ -159,6 +159,7 @@ class Controllers @Inject constructor(
         FileUtils.deleteDirectory(fileStore.cache())
         FileUtils.deleteDirectory(fileStore.jsonCache)
         FileUtils.deleteDirectory(fileStore.annotationPreviews)
+        FileUtils.deleteDirectory(fileStore.pageThumbnails)
         FileUtils.deleteDirectory(fileStore.uploads)
         FileUtils.deleteDirectory(fileStore.downloads)
         isUserInitializedEventStream.emit(false)

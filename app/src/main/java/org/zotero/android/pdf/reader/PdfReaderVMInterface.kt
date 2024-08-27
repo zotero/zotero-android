@@ -6,11 +6,14 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import org.zotero.android.pdf.data.Annotation
 import org.zotero.android.pdf.reader.sidebar.data.Outline
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderThumbnailRow
+import org.zotero.android.pdf.reader.sidebar.data.ThumbnailPreviewMemoryCache
 
 interface PdfReaderVMInterface {
 
     var annotationMaxSideSize: Int
     val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache
+    val thumbnailPreviewMemoryCache: ThumbnailPreviewMemoryCache
     val activeAnnotationTool: AnnotationTool?
     var toolColors: MutableMap<AnnotationTool, String>
 
@@ -29,7 +32,7 @@ interface PdfReaderVMInterface {
     fun onMoreOptionsForItemClicked()
     fun annotation(key: AnnotationKey): Annotation?
     fun selectAnnotation(key: AnnotationKey)
-    fun loadPreviews(keys: List<String>)
+    fun loadAnnotationPreviews(keys: List<String>)
     fun showFilterPopup()
     fun toggle(tool: AnnotationTool)
     fun showToolOptions()
@@ -42,4 +45,6 @@ interface PdfReaderVMInterface {
     fun onOutlineSearch(text: String)
     fun onOutlineItemTapped(outline: Outline)
     fun onOutlineItemChevronTapped(outline: Outline)
+    fun selectThumbnail(row: PdfReaderThumbnailRow)
+    fun loadThumbnailPreviews(pageIndex: Int)
 }

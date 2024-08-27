@@ -7,20 +7,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Annotations
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Outline
+import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Thumbnails
 import org.zotero.android.uicomponents.selector.MultiSelector
 import org.zotero.android.uicomponents.selector.MultiSelectorOption
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 private val sliderOptions = listOf(
-//    Thumbnails,
+    Thumbnails,
     Annotations,
     Outline
 )
@@ -30,8 +31,8 @@ internal fun PdfReaderSidebar(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
-    focusRequester: FocusRequester,
-    lazyListState: LazyListState,
+    annotationsLazyListState: LazyListState,
+    thumbnailsLazyListState: LazyListState,
 ) {
     val selectorOptions = sliderOptions.map {
         MultiSelectorOption(
@@ -46,24 +47,29 @@ internal fun PdfReaderSidebar(
         modifier = Modifier
             .fillMaxWidth()
             .height(layoutType.calculateSelectorHeight())
-            .padding(horizontal = 16.dp)
-        ,
+            .padding(horizontal = 16.dp),
         options = selectorOptions,
         selectedOptionId = selectedOption.ordinal,
         onOptionSelect = vMInterface::setSidebarSliderSelectedOption,
-        fontSize = layoutType.calculatePdfSettingsOptionTextSize(),
+        fontSize = 12.sp,
         selectedColor = selectorColor,
         unselectedcolor = selectorColor
     )
 
     when (selectedOption) {
+        Thumbnails -> {
+            PdfReaderThumbnailsSidebar(
+                vMInterface = vMInterface,
+                viewState = viewState,
+                thumbnailsLazyListState = thumbnailsLazyListState,
+            )
+        }
         Annotations -> {
             PdfReaderAnnotationsSidebar(
                 vMInterface = vMInterface,
                 viewState = viewState,
-                lazyListState = lazyListState,
+                annotationsLazyListState = annotationsLazyListState,
                 layoutType = layoutType,
-                focusRequester = focusRequester,
             )
         }
 
