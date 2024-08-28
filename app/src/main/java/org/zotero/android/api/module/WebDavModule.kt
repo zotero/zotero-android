@@ -7,6 +7,7 @@ import okhttp3.ConnectionPool
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.zotero.android.api.ClientInfoNetworkInterceptor
 import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.WebDavAuthNetworkInterceptor
 import org.zotero.android.api.annotations.ForWebDav
@@ -25,6 +26,7 @@ object WebDavModule {
     @ForWebDav
     fun provideWebDavOkHttpClient(
         webDavAuthNetworkInterceptor: WebDavAuthNetworkInterceptor,
+        clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
     ): OkHttpClient {
         val connectionPool = ConnectionPool(
             maxIdleConnections = 10,
@@ -41,6 +43,7 @@ object WebDavModule {
             .setNetworkTimeout(15L)
             .addInterceptor(webDavAuthNetworkInterceptor)
             .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
+            .addInterceptor(clientInfoNetworkInterceptor)
             .build()
     }
 

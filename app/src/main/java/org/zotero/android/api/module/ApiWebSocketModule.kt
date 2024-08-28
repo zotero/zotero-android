@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.zotero.android.api.ClientInfoNetworkInterceptor
 import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.NetworkConfiguration
 import org.zotero.android.api.annotations.ForWebSocket
@@ -20,12 +21,14 @@ object ApiWebSocketModule {
     @Singleton
     @ForWebSocket
     fun provideSocketOkHttpClient(
-        configuration: NetworkConfiguration
+        configuration: NetworkConfiguration,
+        clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
             .setNetworkTimeout(configuration.networkTimeout)
             .pingInterval(5, TimeUnit.SECONDS)
+            .addInterceptor(clientInfoNetworkInterceptor)
             .build()
     }
 }
