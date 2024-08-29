@@ -75,6 +75,7 @@ object Libs {
         const val converterGson = "com.squareup.retrofit2:converter-gson:$version"
         const val converterScalars = "com.squareup.retrofit2:converter-scalars:$version"
 
+        const val digest = "io.github.rburgst:okhttp-digest:3.1.0"
         const val kotlinSerialization =
             "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0"
     }
