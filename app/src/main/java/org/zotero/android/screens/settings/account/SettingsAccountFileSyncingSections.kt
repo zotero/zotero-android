@@ -39,7 +39,6 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.webdav.data.AuthenticationMethod
 import org.zotero.android.webdav.data.FileSyncType
 import org.zotero.android.webdav.data.WebDavError
 
@@ -64,8 +63,6 @@ private fun SettingsAccountFileSyncingWebDavItems(
 ) {
     SettingsDivider()
     SettingsAccountFileSyncingWebDavUrlItem(viewModel = viewModel, viewState = viewState)
-    SettingsDivider()
-    SettingsAccountFileSyncingAuthenticationMethodChooserItem(viewModel = viewModel, viewState = viewState)
     SettingsDivider()
     SettingsAccountFileSyncingUsernameItem(viewModel = viewModel, viewState = viewState)
     SettingsDivider()
@@ -392,69 +389,5 @@ private fun SettingsAccountFileSyncingVerificationInProgressItem(
             style = CustomTheme.typography.newBody,
             color = CustomTheme.colors.zoteroBlueWithDarkMode,
         )
-    }
-}
-
-@Composable
-private fun SettingsAccountFileSyncingAuthenticationMethodChooserItem(
-    viewModel: SettingsAccountViewModel,
-    viewState: SettingsAccountViewState
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .background(CustomTheme.colors.surface)
-            .safeClickable(
-                onClick = viewModel::showWebDavAuthenticationMethodOptionsPopup,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
-            ),
-    ) {
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp, end = 120.dp),
-            text = stringResource(id = Strings.settings_sync_authentication_methods_message),
-            style = CustomTheme.typography.newBody,
-            color = CustomTheme.colors.primaryContent,
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 16.dp)
-        ) {
-            if (viewState.showWebDavAuthenticationMethodOptionsPopup) {
-                AuthenticationMethodOptionsPopup(
-                    authenticationMethod = viewState.authenticationMethod,
-                    onAuthBasicOptionSelected = { viewModel.setAuthenticationMethod(AuthenticationMethod.basic) },
-                    onAuthDigestOptionSelected = { viewModel.setAuthenticationMethod(AuthenticationMethod.digest) },
-                    dismissAuthMethodOptionsPopup = viewModel::dismissWebDavAuthenticationMethodOptionsPopup
-                )
-            }
-            Row(
-                modifier = Modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier,
-                    text = stringResource(
-                        id = if (viewState.authenticationMethod == AuthenticationMethod.basic) {
-                            Strings.auth_basic_option
-                        } else {
-                            Strings.auth_digest_option
-                        }
-                    ),
-                    style = CustomTheme.typography.newBody,
-                    color = CustomTheme.colors.secondaryContent,
-                )
-                Icon(
-                    modifier = Modifier,
-                    painter = painterResource(id = Drawables.baseline_arrow_drop_down_24),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.secondaryContent
-                )
-            }
-        }
     }
 }

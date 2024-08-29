@@ -7,7 +7,7 @@ import okhttp3.Response
 import org.zotero.android.webdav.WebDavSessionStorage
 import javax.inject.Inject
 
-class WebDavBasicAuthNetworkInterceptor @Inject constructor(
+class WebDavAuthNetworkInterceptor @Inject constructor(
     private val webDavSessionStorage: WebDavSessionStorage
 ) : Interceptor {
 

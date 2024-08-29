@@ -1,7 +1,6 @@
 package org.zotero.android.webdav
 
 import org.zotero.android.architecture.Defaults
-import org.zotero.android.webdav.data.AuthenticationMethod
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -56,13 +55,5 @@ class WebDavSessionStorage @Inject constructor(
         }
         set(newValue) {
             defaults.setWebDavPassword(newValue.ifEmpty { null })
-        }
-
-    var authenticationMethod: AuthenticationMethod
-        get() {
-            return defaults.getWebDavAuthenticationMethod()
-        }
-        set(newValue) {
-            defaults.setWebDavAuthenticationMethod(newValue)
         }
 }

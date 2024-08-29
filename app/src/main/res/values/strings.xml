@@ -33,7 +33,4 @@
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
-    <string name="settings.sync.authentication_methods_message">Authentication Method</string>
-    <string name="auth_basic_option">Basic</string>
-    <string name="auth_digest_option">Digest</string>
 </resources>

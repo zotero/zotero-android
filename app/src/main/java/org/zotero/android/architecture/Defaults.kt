@@ -8,7 +8,6 @@ import org.zotero.android.files.DataMarshaller
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
-import org.zotero.android.webdav.data.AuthenticationMethod
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -54,7 +53,6 @@ open class Defaults @Inject constructor(
     private val webDavUrl = "webDavUrl"
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
-    private val webDavAuthenticationMethod = "webDavAuthenticationMethod"
 
 
     private val sharedPreferences: SharedPreferences by lazy {
@@ -339,19 +337,6 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getString(webDavUrl, null )
     }
 
-    fun setWebDavAuthenticationMethod(method: AuthenticationMethod) {
-        val json = dataMarshaller.marshal(method)
-        sharedPreferences.edit { putString(webDavAuthenticationMethod, json) }
-    }
-
-    fun getWebDavAuthenticationMethod(): AuthenticationMethod {
-        val json: String = sharedPreferences.getString(
-            webDavAuthenticationMethod,
-            null
-        )
-            ?: return AuthenticationMethod.basic
-        return dataMarshaller.unmarshal(json)
-    }
 
     fun setWebDavScheme(scheme: WebDavScheme) {
         val json = dataMarshaller.marshal(scheme)

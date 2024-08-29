@@ -36,6 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class BackgroundUploadProcessor @Inject constructor(
     private val noAuthenticationApi: NoAuthenticationApi,
+    private val webDavApi: WebDavApi,
     private val syncApi: SyncApi,
     private val schemaController: SchemaController,
     private val dbWrapperMain: DbWrapperMain,
@@ -119,7 +120,7 @@ class BackgroundUploadProcessor @Inject constructor(
                     val url = upload.remoteUrl
                     val newUrl = "${url}${upload.key}.zip"
                     val requestBody = createRequestBody(upload.fileUrl)
-                    webDavController.uploadAttachment(url = newUrl, body = requestBody)
+                    webDavApi.uploadAttachment(url = newUrl, body = requestBody)
                 }
             }
         }

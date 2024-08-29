@@ -46,7 +46,6 @@ import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerState
 import org.zotero.android.webdav.WebDavController
 import org.zotero.android.webdav.WebDavSessionStorage
-import org.zotero.android.webdav.data.AuthenticationMethod
 import org.zotero.android.webdav.data.FileSyncType
 import org.zotero.android.webdav.data.WebDavError
 import org.zotero.android.webdav.data.WebDavScheme
@@ -96,7 +95,6 @@ internal class SettingsAccountViewModel @Inject constructor(
                 url = sessionStorage.url,
                 username = sessionStorage.username,
                 password = sessionStorage.password,
-                authenticationMethod = sessionStorage.authenticationMethod,
                 webDavVerificationResult = if (isVerified) {
                     CustomResult.GeneralSuccess(Unit)
                 } else {
@@ -139,29 +137,6 @@ internal class SettingsAccountViewModel @Inject constructor(
             copy(
                 showWebDavOptionsPopup = true
             )
-        }
-    }
-
-    fun dismissWebDavAuthenticationMethodOptionsPopup() {
-        updateState {
-            copy(
-                showWebDavAuthenticationMethodOptionsPopup = false
-            )
-        }
-    }
-
-    fun showWebDavAuthenticationMethodOptionsPopup() {
-        updateState {
-            copy(
-                showWebDavAuthenticationMethodOptionsPopup = true
-            )
-        }
-    }
-
-    fun setAuthenticationMethod(authenticationMethod: AuthenticationMethod) {
-        dismissWebDavAuthenticationMethodOptionsPopup()
-        updateState {
-            copy(authenticationMethod = authenticationMethod)
         }
     }
 
@@ -378,8 +353,6 @@ internal class SettingsAccountViewModel @Inject constructor(
                 copy(isVerifyingWebDav = true)
             }
         }
-        webDavController.updateAuthenticationMethod(viewState.authenticationMethod)
-
         coroutineScope.launch {
             if (tryCreatingZoteroDir) {
                 val createZoteroDirectoryResult = webDavController.createZoteroDirectory()
@@ -476,9 +449,7 @@ internal class SettingsAccountViewModel @Inject constructor(
 internal data class SettingsAccountViewState(
     val account: String = "",
     val showWebDavOptionsPopup: Boolean = false,
-    val showWebDavAuthenticationMethodOptionsPopup: Boolean = false,
     val fileSyncType: FileSyncType = FileSyncType.zotero,
-    val authenticationMethod: AuthenticationMethod = AuthenticationMethod.basic,
     val markingForReupload: Boolean = false,
     val scheme: WebDavScheme = WebDavScheme.https,
     val url: String = "",
