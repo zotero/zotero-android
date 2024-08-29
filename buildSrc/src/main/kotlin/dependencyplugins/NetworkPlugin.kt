@@ -16,6 +16,7 @@ private fun configure(project: Project) {
         add("implementation", Libs.Retrofit.core)
         add("implementation", Libs.Retrofit.converterGson)
         add("implementation", Libs.Retrofit.converterScalars)
+        add("implementation", Libs.Retrofit.digest)
 
         add("implementation", Libs.OkHttp.core)
         add("implementation", Libs.OkHttp.loggingInterceptor)

@@ -20,7 +20,6 @@ import org.zotero.android.api.module.ApiWebSocketModule
 import org.zotero.android.api.module.ApiWithAuthenticationModule
 import org.zotero.android.api.module.BaseApiModule
 import org.zotero.android.api.module.GeneralModule
-import org.zotero.android.api.module.WebDavModule
 import org.zotero.android.architecture.SdkInt
 import org.zotero.android.architecture.app.AppConfig
 import org.zotero.android.architecture.app.ApplicationIdProvider
@@ -40,7 +39,6 @@ import javax.inject.Singleton
         ApiInterfacesModule::class,
         ApiWebSocketModule::class,
         ApiWithAuthenticationModule::class,
-        WebDavModule::class,
     ]
 )
 internal class AppModule {

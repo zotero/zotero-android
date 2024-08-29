@@ -1,14 +1,25 @@
 package org.zotero.android.webdav
 
 import android.webkit.MimeTypeMap
+import com.burgstaller.okhttp.AuthenticationCacheInterceptor
+import com.burgstaller.okhttp.digest.CachingAuthenticator
+import com.burgstaller.okhttp.digest.Credentials
+import com.burgstaller.okhttp.digest.DigestAuthenticator
 import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
+import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.zotero.android.api.ClientInfoNetworkInterceptor
+import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.WebDavApi
+import org.zotero.android.api.WebDavBasicAuthNetworkInterceptor
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.network.safeApiCallSync
@@ -17,14 +28,19 @@ import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.StoreMtimeForAttachmentDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.Zipper
+import org.zotero.android.ktx.setNetworkTimeout
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.webdav.data.MetadataResult
 import org.zotero.android.webdav.data.WebDavDeletionResult
 import org.zotero.android.webdav.data.WebDavError
 import org.zotero.android.webdav.data.WebDavUploadResult
+import retrofit2.Response
+import retrofit2.Retrofit
 import timber.log.Timber
 import java.io.File
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -34,8 +50,9 @@ import kotlin.coroutines.resume
 class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
     private val dbWrapperMain: DbWrapperMain,
-    private val webDavApi: WebDavApi,
     private val fileStore: FileStore,
+    private val webDavBasicAuthNetworkInterceptor: WebDavBasicAuthNetworkInterceptor,
+    private val clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
 ) {
 
     private fun update(mtime: Long, key: String): CustomResult<Unit> {
@@ -181,7 +198,7 @@ class WebDavController @Inject constructor(
 
     private suspend fun checkIsDav(url: String): CustomResult<ResponseBody> {
         val networkResult = safeApiCall {
-            webDavApi.options(url)
+            provideWebDavApi().options(url)
         }
         if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
             return networkResult as CustomResult.GeneralError
@@ -204,7 +221,7 @@ class WebDavController @Inject constructor(
         createUrlResult as CustomResult.GeneralSuccess
         val url = createUrlResult.value!!
         val networkResult = safeApiCall {
-            webDavApi.mkcol(url)
+            provideWebDavApi().mkcol(url)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
@@ -244,7 +261,7 @@ class WebDavController @Inject constructor(
 
         val networkResult = safeApiCall {
             val body: RequestBody = bodyText.toRequestBody()
-            webDavApi.propfind(url = url, headers = headers, body = body)
+            provideWebDavApi().propfind(url = url, headers = headers, body = body)
         }
         if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
             return networkResult as CustomResult.GeneralError
@@ -258,7 +275,7 @@ class WebDavController @Inject constructor(
     private suspend fun checkWhetherReturns404ForMissingFile(url: String): CustomResult<Unit> {
         val appendedUrl = "${url}nonexistent.prop"
         val networkResult = safeApiCall {
-            webDavApi.get(url = appendedUrl)
+            provideWebDavApi().get(url = appendedUrl)
         }
         if (networkResult is CustomResult.GeneralError.NetworkError) {
             if (networkResult.httpCode == 404) {
@@ -295,7 +312,7 @@ class WebDavController @Inject constructor(
 
     private suspend fun webDavDeleteRequest(url: String): CustomResult<ResponseBody> {
         val networkResult = safeApiCall {
-            webDavApi.delete(url = url)
+            provideWebDavApi().delete(url = url)
         }
         if (networkResult is CustomResult.GeneralError.NetworkError) {
             return networkResult
@@ -309,7 +326,7 @@ class WebDavController @Inject constructor(
 
     private suspend fun webDavDownloadRequest(url: String): CustomResult<ResponseBody> {
         val networkResult = safeApiCall {
-            webDavApi.get(url = url)
+            provideWebDavApi().get(url = url)
         }
         if (networkResult is CustomResult.GeneralError.NetworkError) {
             if (networkResult.httpCode == 404) {
@@ -329,7 +346,7 @@ class WebDavController @Inject constructor(
 
         val networkResult = safeApiCall {
             val body: RequestBody = RequestBody.create("text/plain".toMediaType(), bodyText);
-            webDavApi.put(url = url, body = body)
+            provideWebDavApi().put(url = url, body = body)
         }
 
         if (networkResult is CustomResult.GeneralError.NetworkError) {
@@ -373,7 +390,7 @@ class WebDavController @Inject constructor(
         checkServerIfNeededResult as CustomResult.GeneralSuccess
         val newUrl = "${checkServerIfNeededResult.value}$key.zip"
         return safeApiCall {
-            webDavApi.downloadFile(newUrl)
+            provideWebDavApi().downloadFile(newUrl)
         }
     }
 
@@ -428,7 +445,7 @@ class WebDavController @Inject constructor(
     private suspend fun metadata(key: String, url: String): CustomResult<Pair<Long, String>?> {
         val newUrl = "${url}${key}.prop"
         val networkResult = safeApiCall {
-            webDavApi.get(url = newUrl)
+            provideWebDavApi().get(url = newUrl)
         }
         if (networkResult is CustomResult.GeneralError.NetworkError) {
             if (networkResult.httpCode == 404) {
@@ -463,7 +480,7 @@ class WebDavController @Inject constructor(
         val newUrl = "${url}${key}.prop"
 
         val networkResult = safeApiCall {
-            webDavApi.delete(url = newUrl)
+            provideWebDavApi().delete(url = newUrl)
         }
         if (networkResult is CustomResult.GeneralError.NetworkError) {
             return networkResult
@@ -603,7 +620,7 @@ class WebDavController @Inject constructor(
         val newUrl = "${url}${key}.prop"
 
         val networkResult = safeApiCall {
-            webDavApi.uploadProp(url = newUrl, body = data)
+            provideWebDavApi().uploadProp(url = newUrl, body = data)
         }
 
         if (networkResult is CustomResult.GeneralError.NetworkError) {
@@ -620,7 +637,7 @@ class WebDavController @Inject constructor(
         val requestBody = createRequestBody(file)
 
         val networkResult = safeApiCall {
-            webDavApi.uploadAttachment(url = newUrl, body = requestBody)
+            provideWebDavApi().uploadAttachment(url = newUrl, body = requestBody)
         }
 
         if (networkResult is CustomResult.GeneralError.NetworkError) {
@@ -708,7 +725,7 @@ class WebDavController @Inject constructor(
 
         val zipUrl = "${url}${key}.zip"
         val deleteZipResult = safeApiCallSync {
-            webDavApi.deleteSync(url = zipUrl)
+            provideWebDavApi().deleteSync(url = zipUrl)
         }
         if (deleteZipResult is CustomResult.GeneralError) {
             processResult(key, deleteZipResult)
@@ -729,7 +746,7 @@ class WebDavController @Inject constructor(
     ) {
         val propUrl = "${url}${key}.prop"
         val deletePropResult = safeApiCallSync {
-            webDavApi.deleteSync(url = propUrl)
+            provideWebDavApi().deleteSync(url = propUrl)
         }
         if (deletePropResult is CustomResult.GeneralError) {
             processResult(key, deletePropResult)
@@ -743,5 +760,51 @@ class WebDavController @Inject constructor(
         processResult(key, deletePropResult)
     }
 
+    suspend fun uploadAttachment(url: String, body: RequestBody): Response<Unit> {
+        return provideWebDavApi().uploadAttachment(url, body)
+    }
+
+    private fun provideWebDavOkHttpClient(
+    ): OkHttpClient {
+        val connectionPool = ConnectionPool(
+            maxIdleConnections = 10,
+            keepAliveDuration = 5,
+            timeUnit = TimeUnit.MINUTES
+        )
+        val dispatcher = Dispatcher()
+        dispatcher.maxRequests = 30
+        dispatcher.maxRequestsPerHost = 30
+
+        val authCache: Map<String, CachingAuthenticator> =
+            ConcurrentHashMap<String, CachingAuthenticator>()
+        val username = sessionStorage.username
+        val password = sessionStorage.password
+
+        return OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .connectionPool(connectionPool)
+            .setNetworkTimeout(15L)
+            .addInterceptor(webDavBasicAuthNetworkInterceptor)
+            .authenticator(DigestAuthenticator(Credentials(username, password)))
+            .addInterceptor(AuthenticationCacheInterceptor(authCache))
+            .addInterceptor(clientInfoNetworkInterceptor)
+            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
+            .build()
+    }
+
+    private fun provideWebDavRetrofit(
+    ): Retrofit {
+        val okHttpClient = provideWebDavOkHttpClient()
+        val retrofitBuilder = Retrofit.Builder()
+        return retrofitBuilder
+            .baseUrl("https://dummyurl.com") //no-op as all URLs for webdav are absolute
+            .client(okHttpClient)
+            .build()
+    }
+
+    private fun provideWebDavApi(): WebDavApi {
+        val retrofit = provideWebDavRetrofit()
+        return retrofit.create(WebDavApi::class.java)
+    }
 
 }
