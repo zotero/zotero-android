@@ -3,6 +3,7 @@ package org.zotero.android.database
 import io.realm.DynamicRealm
 import io.realm.FieldAttribute
 import io.realm.RealmConfiguration
+import io.realm.RealmMigration
 import io.realm.annotations.RealmModule
 import org.zotero.android.database.objects.AllItemsDbRow
 import org.zotero.android.database.objects.FieldKeys
@@ -29,7 +30,6 @@ import org.zotero.android.database.objects.RUser
 import org.zotero.android.database.objects.RVersions
 import org.zotero.android.database.objects.RWebDavDeletion
 import org.zotero.android.database.requests.key
-import org.zotero.android.files.FileStore
 import java.io.File
 
 class Database {
@@ -43,13 +43,31 @@ class Database {
                 .modules(MainConfigurationDbModule())
                 .schemaVersion(schemaVersion)
                 .allowWritesOnUiThread(true)
-                .migration { dynamicRealm, oldVersion, newVersion ->
-                    if (oldVersion < 2) {
-                        migrateAllItemsDbRowTypeIconNameTypeChange(dynamicRealm)
-                    }
-                }
+                .migration(MainDbMigration(fileName = dbFile.name))
 
             return builder.build()
+        }
+
+        internal class MainDbMigration(private val fileName: String): RealmMigration {
+            override fun migrate(dynamicRealm: DynamicRealm, oldVersion: Long, newVersion: Long) {
+                if (oldVersion < 2) {
+                    migrateAllItemsDbRowTypeIconNameTypeChange(dynamicRealm)
+                }
+            }
+
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (javaClass != other?.javaClass) return false
+
+                other as MainDbMigration
+
+                return fileName == other.fileName
+            }
+
+            override fun hashCode(): Int {
+                return fileName.hashCode()
+            }
+
         }
 
         private fun migrateAllItemsDbRowTypeIconNameTypeChange(dynamicRealm: DynamicRealm) {

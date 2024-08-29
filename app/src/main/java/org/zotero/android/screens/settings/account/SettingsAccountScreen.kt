@@ -91,6 +91,14 @@ internal fun SettingsAccountScreen(
                 )
             }
 
+            val shouldShowSignOutDialog = viewState.shouldShowSignOutDialog
+            if (shouldShowSignOutDialog) {
+                SignOutDialog(
+                    onCancel = viewModel::onDismissSignOutDialog,
+                    onSignOut = viewModel::onSignOut
+                )
+            }
+
         }
     }
 }
@@ -115,6 +123,28 @@ private fun DirectoryNotFoundDialog (
             onClick = onCreate
         ),
         dismissOnClickOutside = false,
+        onDismiss = onCancel
+    )
+}
+
+@Composable
+private fun SignOutDialog (
+    onSignOut: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    CustomAlertDialog(
+        title = stringResource(id = Strings.warning),
+        description = stringResource(
+            id = Strings.settings_logout_warning
+        ),
+        descriptionTextColor = CustomTheme.colors.primaryContent,
+        primaryAction = CustomAlertDialog.ActionConfig(
+            text = stringResource(id = Strings.no),
+        ),
+        secondaryAction = CustomAlertDialog.ActionConfig(
+            text = stringResource(id = Strings.yes),
+            onClick = onSignOut
+        ),
         onDismiss = onCancel
     )
 }
