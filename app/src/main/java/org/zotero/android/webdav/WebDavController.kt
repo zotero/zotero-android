@@ -2,6 +2,10 @@ package org.zotero.android.webdav
 
 import android.webkit.MimeTypeMap
 import com.burgstaller.okhttp.AuthenticationCacheInterceptor
+import com.burgstaller.okhttp.CachingAuthenticatorDecorator
+import com.burgstaller.okhttp.DefaultRequestCacheKeyProvider
+import com.burgstaller.okhttp.DispatchingAuthenticator
+import com.burgstaller.okhttp.basic.BasicAuthenticator
 import com.burgstaller.okhttp.digest.CachingAuthenticator
 import com.burgstaller.okhttp.digest.Credentials
 import com.burgstaller.okhttp.digest.DigestAuthenticator
@@ -19,7 +23,6 @@ import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.zotero.android.api.ClientInfoNetworkInterceptor
 import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.WebDavApi
-import org.zotero.android.api.WebDavBasicAuthNetworkInterceptor
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.network.safeApiCallSync
@@ -51,7 +54,6 @@ class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
-    private val webDavBasicAuthNetworkInterceptor: WebDavBasicAuthNetworkInterceptor,
     private val clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
 ) {
 
@@ -764,6 +766,9 @@ class WebDavController @Inject constructor(
         return provideWebDavApi().uploadAttachment(url, body)
     }
 
+    private val authCache: Map<String, CachingAuthenticator> =
+        ConcurrentHashMap<String, CachingAuthenticator>()
+
     private fun provideWebDavOkHttpClient(
     ): OkHttpClient {
         val connectionPool = ConnectionPool(
@@ -775,18 +780,28 @@ class WebDavController @Inject constructor(
         dispatcher.maxRequests = 30
         dispatcher.maxRequestsPerHost = 30
 
-        val authCache: Map<String, CachingAuthenticator> =
-            ConcurrentHashMap<String, CachingAuthenticator>()
         val username = sessionStorage.username
         val password = sessionStorage.password
+
+        val credentials = Credentials(username, password)
+        val basicAuthenticator = BasicAuthenticator(credentials)
+        val digestAuthenticator = DigestAuthenticator(credentials)
+        val authenticator = DispatchingAuthenticator.Builder()
+            .with("digest", digestAuthenticator)
+            .with("basic", basicAuthenticator)
+            .build()
 
         return OkHttpClient.Builder()
             .dispatcher(dispatcher)
             .connectionPool(connectionPool)
             .setNetworkTimeout(15L)
-            .addInterceptor(webDavBasicAuthNetworkInterceptor)
-            .authenticator(DigestAuthenticator(Credentials(username, password)))
-            .addInterceptor(AuthenticationCacheInterceptor(authCache))
+            .authenticator(CachingAuthenticatorDecorator(authenticator, authCache))
+            .addInterceptor(
+                AuthenticationCacheInterceptor(
+                    authCache,
+                    DefaultRequestCacheKeyProvider()
+                )
+            )
             .addInterceptor(clientInfoNetworkInterceptor)
             .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
             .build()
