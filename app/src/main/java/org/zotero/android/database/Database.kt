@@ -8,6 +8,7 @@ import io.realm.annotations.RealmModule
 import org.zotero.android.database.objects.AllItemsDbRow
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCondition
 import org.zotero.android.database.objects.RCreator
@@ -34,7 +35,7 @@ import java.io.File
 
 class Database {
     companion object {
-        private const val schemaVersion = 2L //From now on must only increase by 1 whenever db schema changes
+        private const val schemaVersion = 3L //From now on must only increase by 1 whenever db schema changes
 
         fun mainConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()
@@ -53,6 +54,9 @@ class Database {
                 if (oldVersion < 2) {
                     migrateAllItemsDbRowTypeIconNameTypeChange(dynamicRealm)
                 }
+                if (oldVersion < 3) {
+                    markAllNonLocalGroupsAsOutdatedToTriggerResync(dynamicRealm)
+                }
             }
 
             override fun equals(other: Any?): Boolean {
@@ -68,6 +72,16 @@ class Database {
                 return fileName.hashCode()
             }
 
+        }
+
+        private fun markAllNonLocalGroupsAsOutdatedToTriggerResync(dynamicRealm: DynamicRealm) {
+            val groups = dynamicRealm
+                .where(RGroup::class.java.simpleName)
+                .equalTo("isLocalOnly", false)
+                .findAll()
+            for (group in groups) {
+                group.setString("syncState", ObjectSyncState.outdated.name)
+            }
         }
 
         private fun migrateAllItemsDbRowTypeIconNameTypeChange(dynamicRealm: DynamicRealm) {

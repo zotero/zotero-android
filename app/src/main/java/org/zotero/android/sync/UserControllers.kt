@@ -1,7 +1,6 @@
 package org.zotero.android.sync
 
 import InitializeCustomLibrariesDbRequest
-import android.content.Context
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -15,8 +14,8 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.CleanupUnusedTags
-import org.zotero.android.files.FileStore
 import org.zotero.android.websocket.ChangeWsResponse
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +31,7 @@ class UserControllers @Inject constructor(
     private val webSocketController: WebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
+    private val defaults: Defaults,
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -75,6 +75,15 @@ class UserControllers @Inject constructor(
     }
 
     fun enableSync(apiKey: String) {
+        Timber.i("UserControllers: performFullSyncGuard: ${defaults.performFullSyncGuard()}; currentPerformFullSyncGuard: ${defaults.currentPerformFullSyncGuard}")
+        if (defaults.performFullSyncGuard() < defaults.currentPerformFullSyncGuard) {
+            defaults.setDidPerformFullSyncFix(false)
+            defaults.setPerformFullSyncGuard(defaults.currentPerformFullSyncGuard)
+        } else {
+            defaults.setDidPerformFullSyncFix(true)
+        }
+        Timber.i("UserControllers: didPerformFullSyncFix: ${defaults.didPerformFullSyncFix()}")
+
         objectUserChangeEventStream.flow()
             .debounce(3000)
             .onEach { changedLibraries ->
@@ -99,7 +108,11 @@ class UserControllers @Inject constructor(
 
         this.webSocketController.connect(apiKey = apiKey, completed = {
             //TODO backgroundUploadObserver.updateSessions()
-            val type: SyncKind =  SyncKind.normal
+            val type = if(defaults.didPerformFullSyncFix()) {
+                SyncKind.normal
+            } else {
+                SyncKind.full
+            }
             this.syncScheduler.request(type = type, libraries = Libraries.all)
         })
 

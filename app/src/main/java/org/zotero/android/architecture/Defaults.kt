@@ -27,6 +27,7 @@ open class Defaults @Inject constructor(
     private val lastUsedCreatorNamePresentation = "LastUsedCreatorNamePresentation"
     private val itemsSortType = "ItemsSortType"
     private val showCollectionItemCounts = "showCollectionItemCounts"
+    private val performFullSyncGuardKey = "performFullSyncGuardKey"
     private val didPerformFullSyncFix = "didPerformFullSyncFix"
     private val tagPickerShowAutomaticTags = "tagPickerShowAutomaticTags"
     private val tagPickerDisplayAllTags = "tagPickerDisplayAllTags"
@@ -53,7 +54,6 @@ open class Defaults @Inject constructor(
     private val webDavUrl = "webDavUrl"
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
-
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -352,8 +352,21 @@ open class Defaults @Inject constructor(
         return dataMarshaller.unmarshal(json)
     }
 
+    val currentPerformFullSyncGuard = 1
 
+    fun setPerformFullSyncGuard(newValue: Int) {
+        sharedPreferences.edit { putInt(performFullSyncGuardKey, newValue) }
+    }
 
+    fun performFullSyncGuard(): Int {
+        if (!sharedPreferences.contains(performFullSyncGuardKey)) {
+            if (sharedPreferences.contains(didPerformFullSyncFix)) {
+                return currentPerformFullSyncGuard - 1
+            }
+            return currentPerformFullSyncGuard
+        }
+        return sharedPreferences.getInt(performFullSyncGuardKey, 1)
+    }
 
     fun reset() {
         setUsername("")

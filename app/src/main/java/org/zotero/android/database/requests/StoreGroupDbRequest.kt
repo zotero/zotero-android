@@ -39,11 +39,12 @@ class StoreGroupDbRequest(
             database.createEmbeddedObject(RVersions::class.java, group, "versions")
         }
 
+        val isOwner = response.data.owner == userId
         val canEditMetadata: Boolean
         val canEditFiles: Boolean
 
         if (response.data.libraryEditing == "admins") {
-            canEditMetadata = (response.data.admins ?: emptyList()).contains(userId)
+            canEditMetadata = isOwner || (response.data.admins ?: emptyList()).contains(userId)
         } else {
             canEditMetadata = true
         }
@@ -54,7 +55,7 @@ class StoreGroupDbRequest(
             }
 
             "admins" -> {
-                canEditFiles = (response.data.admins ?: emptyList()).contains(userId)
+                canEditFiles = isOwner || (response.data.admins ?: emptyList()).contains(userId)
             }
 
             "members" -> {
@@ -62,7 +63,7 @@ class StoreGroupDbRequest(
             }
 
             else -> {
-                canEditFiles = false
+                canEditFiles = isOwner
             }
         }
 
