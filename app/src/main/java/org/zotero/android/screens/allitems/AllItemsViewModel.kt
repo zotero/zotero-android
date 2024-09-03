@@ -240,6 +240,8 @@ internal class AllItemsViewModel @Inject constructor(
                                 showImageFile(file)
                             } else if (contentType.contains("video")) {
                                 showVideoFile(file)
+                            } else {
+                                openFile(file, contentType)
                             }
                         }
                     }

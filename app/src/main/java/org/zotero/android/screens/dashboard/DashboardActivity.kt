@@ -18,6 +18,7 @@ import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.BuildConfig
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -76,7 +77,12 @@ internal class DashboardActivity : BaseActivity() {
             intent.setDataAndType(resultUri, mimeType)
             intent.putExtra(MediaStore.EXTRA_OUTPUT, resultUri)
             intent.flags = FLAG_GRANT_READ_URI_PERMISSION
-            startActivity(intent)
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                longToast("No app found to open this file")
+            }
         }
 
         val onOpenWebpage: (uri: Uri) -> Unit = { uri ->
