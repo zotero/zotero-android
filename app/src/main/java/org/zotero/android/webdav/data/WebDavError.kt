@@ -16,6 +16,7 @@ sealed class WebDavError {
         data class zoteroDirNotFound(val url: String): Verification()
         object nonExistentFileNotMissing: Verification()
         object fileMissingAfterUpload: Verification()
+        object localHttpWebdavHostNotAllowed: Verification()
 
         override val message: String get() {
             val context = ZoteroApplication.instance
@@ -46,6 +47,9 @@ sealed class WebDavError {
                 }
                 is zoteroDirNotFound -> {
                     context.getString(Strings.errors_settings_webdav_zotero_dir_not_found)
+                }
+                localHttpWebdavHostNotAllowed -> {
+                    context.getString(Strings.local_http_webdav_host_not_allowed)
                 }
             }
         }

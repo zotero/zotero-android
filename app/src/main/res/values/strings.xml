@@ -33,4 +33,5 @@
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
+    <string name="local_http_webdav_host_not_allowed">Due to Android restrictions, HTTP can only be used when connecting to a .local hostname.</string>
 </resources>

@@ -69,6 +69,8 @@ internal class SettingsAccountViewModel @Inject constructor(
 
     private var coroutineScope = CoroutineScope(dispatchers.io)
 
+    private val localNetworkRegex = "^(?:127\\.|0?10\\.|172\\.0?1[6-9]\\.|172\\.0?2[0-9]\\.|172\\.0?3[01]\\.|192\\.168\\.|169\\.254\\.|::1|[fF][cCdD][0-9a-fA-F]{2}:|[fF][eE][89aAbB][0-9a-fA-F]:)".toRegex()
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
         if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.SettingsWebDav) {
@@ -348,11 +350,25 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     private fun verify(tryCreatingZoteroDir: Boolean) {
+        if (viewState.scheme == WebDavScheme.http && localNetworkRegex.containsMatchIn(
+                sessionStorage.url
+            )
+        ) {
+            updateState {
+                copy(
+                    webDavVerificationResult = CustomResult.GeneralError.CodeError(WebDavError.Verification.localHttpWebdavHostNotAllowed),
+                    isVerifyingWebDav = false
+                )
+            }
+            return
+        }
+
         if (!viewState.isVerifyingWebDav) {
             updateState {
                 copy(isVerifyingWebDav = true)
             }
         }
+
         coroutineScope.launch {
             if (tryCreatingZoteroDir) {
                 val createZoteroDirectoryResult = webDavController.createZoteroDirectory()
