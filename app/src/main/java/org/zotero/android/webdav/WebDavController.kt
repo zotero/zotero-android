@@ -20,9 +20,9 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor.Level
-import org.zotero.android.api.ClientInfoNetworkInterceptor
 import org.zotero.android.api.HttpLoggingInterceptor
 import org.zotero.android.api.WebDavApi
+import org.zotero.android.api.WebDavHeadersNetworkInterceptor
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.network.safeApiCallSync
@@ -54,7 +54,7 @@ class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
-    private val clientInfoNetworkInterceptor: ClientInfoNetworkInterceptor,
+    private val webDavHeadersNetworkInterceptor: WebDavHeadersNetworkInterceptor,
 ) {
 
     private fun update(mtime: Long, key: String): CustomResult<Unit> {
@@ -802,7 +802,7 @@ class WebDavController @Inject constructor(
                     DefaultRequestCacheKeyProvider()
                 )
             )
-            .addInterceptor(clientInfoNetworkInterceptor)
+            .addInterceptor(webDavHeadersNetworkInterceptor)
             .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
             .build()
     }
