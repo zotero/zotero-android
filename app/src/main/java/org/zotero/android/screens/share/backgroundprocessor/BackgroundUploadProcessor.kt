@@ -11,9 +11,8 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.NoAuthenticationApi
-import org.zotero.android.api.SyncApi
-import org.zotero.android.api.WebDavApi
+import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -35,8 +34,8 @@ import javax.inject.Singleton
 
 @Singleton
 class BackgroundUploadProcessor @Inject constructor(
-    private val noAuthenticationApi: NoAuthenticationApi,
-    private val syncApi: SyncApi,
+    private val nonZoteroApi: NonZoteroApi,
+    private val zoteroApi: ZoteroApi,
     private val schemaController: SchemaController,
     private val dbWrapperMain: DbWrapperMain,
     private val context: Context,
@@ -106,7 +105,7 @@ class BackgroundUploadProcessor @Inject constructor(
 
                     val headersWithExtra = setupHeaders(originalHeaders = headers)
 
-                    noAuthenticationApi.uploadAttachment(
+                    nonZoteroApi.uploadAttachment(
                         url = upload.remoteUrl,
                         headers = headersWithExtra,
                         file = part,
@@ -163,7 +162,7 @@ class BackgroundUploadProcessor @Inject constructor(
             val headers = mapOf("If-None-Match" to "*")
             val url =
                 BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/" + key + "/file"
-            syncApi.registerUpload(
+            zoteroApi.registerUpload(
                 url = url,
                 headers = headers,
                 upload = uploadKey
@@ -255,7 +254,7 @@ class BackgroundUploadProcessor @Inject constructor(
             val jsonBody = gson.toJson(listOf(loadParameters))
 
             val headers = mutableMapOf<String, String>()
-            syncApi.updates(url = url, jsonBody = jsonBody, headers = headers)
+            zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {

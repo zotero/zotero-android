@@ -14,8 +14,8 @@ import retrofit2.http.PartMap
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-@JvmSuppressWildcards
-interface NoAuthenticationApi {
+interface NonZoteroApi {
+
     @POST
     @Multipart
     suspend fun uploadAttachment(

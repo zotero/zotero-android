@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.zotero.android.api.SyncApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
@@ -57,7 +57,7 @@ class SyncUseCase @Inject constructor(
     private val syncRepository: SyncRepository,
     private val defaults: Defaults,
     private val dbWrapperMain: DbWrapperMain,
-    private val syncApi: SyncApi,
+    private val zoteroApi: ZoteroApi,
     private val fileStore: FileStore,
     private val itemResponseMapper: ItemResponseMapper,
     private val collectionResponseMapper: CollectionResponseMapper,
@@ -461,7 +461,7 @@ class SyncUseCase @Inject constructor(
             SyncBatchProcessor(
                 batches = batches,
                 userId = defaults.getUserId(),
-                syncApi = syncApi,
+                zoteroApi = zoteroApi,
                 dbWrapperMain = this.dbWrapperMain,
                 fileStore = this.fileStore,
                 itemResponseMapper = itemResponseMapper,

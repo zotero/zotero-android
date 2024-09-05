@@ -6,8 +6,6 @@ import java.util.Locale
 
 fun Int.prettyPrint(): String = String.format(Locale.getDefault(), "%,d", this)
 
-data class SdkInt(val level: Int)
-
 // Copied out from ui-components. Must be used only here. Using one from ui-components
 // would require to add dependency to ui-components library. We should avoid that
 // to streamline dependency graph and improve build time.

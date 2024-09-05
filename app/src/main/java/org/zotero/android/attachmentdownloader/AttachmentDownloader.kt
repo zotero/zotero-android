@@ -3,8 +3,8 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import org.zotero.android.api.NoRedirectApi
-import org.zotero.android.api.SyncApi
+import org.zotero.android.api.ZoteroNoRedirectApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
@@ -21,8 +21,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AttachmentDownloader @Inject constructor(
-    private val syncApi: SyncApi,
-    private val noRedirectApi: NoRedirectApi,
+    private val zoteroApi: ZoteroApi,
+    private val zoteroNoRedirectApi: ZoteroNoRedirectApi,
     private val fileStorage: FileStore,
     private val dbWrapperMain: DbWrapperMain,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
@@ -256,8 +256,8 @@ class AttachmentDownloader @Inject constructor(
             file = file,
             download = download,
             userId = this.userId,
-            syncApi = syncApi,
-            noRedirectApi = this.noRedirectApi,
+            zoteroApi = zoteroApi,
+            zoteroNoRedirectApi = this.zoteroNoRedirectApi,
             unzipper = this.unzipper,
             webDavController = webDavController,
             sessionStorage = sessionStorage

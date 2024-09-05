@@ -5,8 +5,8 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
-import org.zotero.android.api.NoAuthenticationApi
-import org.zotero.android.api.SyncApi
+import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.PageIndexResponseMapper
@@ -27,7 +27,7 @@ import org.zotero.android.webdav.WebDavSessionStorage
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface SyncActionDependencyProvider {
-    fun syncApi(): SyncApi
+    fun zoteroApi(): ZoteroApi
     fun settingsResponseMapper(): SettingsResponseMapper
     fun dbWrapperMain(): DbWrapperMain
     fun gson(): Gson
@@ -41,7 +41,7 @@ interface SyncActionDependencyProvider {
     fun dispatcher(): CoroutineDispatcher
     fun attachmentDownloader(): AttachmentDownloader
     fun attachmentDownloaderEventStream(): AttachmentDownloaderEventStream
-    fun noAuthenticationApi(): NoAuthenticationApi
+    fun nonZoteroApi(): NonZoteroApi
     fun updatesResponseMapper(): UpdatesResponseMapper
     fun pageIndexResponseMapper(): PageIndexResponseMapper
     fun webDavController(): WebDavController

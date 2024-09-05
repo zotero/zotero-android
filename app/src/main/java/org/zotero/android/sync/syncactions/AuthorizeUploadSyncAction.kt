@@ -36,7 +36,7 @@ class AuthorizeUploadSyncAction(
                     val url =
                         BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) +
                                 "/items/" + this.key + "/file"
-                    syncApi.authorizeUpload(
+                    zoteroApi.authorizeUpload(
                         url = url,
                         headers = headers,
                         filename = this.filename,

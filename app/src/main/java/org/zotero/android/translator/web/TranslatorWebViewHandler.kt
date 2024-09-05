@@ -15,7 +15,7 @@ import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -31,7 +31,7 @@ class TranslatorWebViewHandler @Inject constructor(
     dispatchers: Dispatchers,
     private val context: Context,
     private val gson: Gson,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
@@ -193,14 +193,14 @@ class TranslatorWebViewHandler @Inject constructor(
         val networkResult = safeApiCall {
             when (method) {
                 "GET" -> {
-                    noAuthenticationApi.sendWebViewGet(
+                    nonZoteroApi.sendWebViewGet(
                         url = url,
                         headers = headers,
                     )
                 }
 
                 "POST" -> {
-                    noAuthenticationApi.sendWebViewPost(
+                    nonZoteroApi.sendWebViewPost(
                         url = url,
                         headers = headers,
                         textBody = body

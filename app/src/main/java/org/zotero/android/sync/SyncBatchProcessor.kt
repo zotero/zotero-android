@@ -9,7 +9,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.zotero.android.BuildConfig
-import org.zotero.android.api.SyncApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
@@ -31,7 +31,7 @@ typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreIt
 class SyncBatchProcessor(
     val batches: List<DownloadBatch>,
     val userId: Long,
-    val syncApi: SyncApi,
+    val zoteroApi: ZoteroApi,
     val dbWrapperMain: DbWrapperMain,
     val fileStore: FileStore,
     val itemResponseMapper: ItemResponseMapper,
@@ -74,7 +74,7 @@ class SyncBatchProcessor(
 
                         SyncObject.settings -> {}
                     }
-                    syncApi.objects(url = url, queryMap = parameters)
+                    zoteroApi.objects(url = url, queryMap = parameters)
                 }
                 if (!isActive) {
                     return@launch

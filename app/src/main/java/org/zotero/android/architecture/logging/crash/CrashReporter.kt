@@ -4,7 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.logging.DeviceInfoProvider
@@ -19,7 +19,7 @@ class CrashReporter @Inject constructor(
     dispatcher: CoroutineDispatcher,
     private val fileStore: FileStore,
     private val crashShareDataEventStream: CrashShareDataEventStream,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
 ) {
 
     sealed class Error : Exception() {
@@ -53,7 +53,7 @@ class CrashReporter @Inject constructor(
         crashLog: String,
     ): CustomResult<String?> {
         val networkResult = safeApiCall {
-            noAuthenticationApi.crashLogUploadRequest(
+            nonZoteroApi.crashLogUploadRequest(
                 errorData = crashLog,
                 diagnostic = DeviceInfoProvider.crashString
             )

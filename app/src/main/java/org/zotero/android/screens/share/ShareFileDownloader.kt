@@ -3,7 +3,7 @@ package org.zotero.android.screens.share
 import com.google.common.io.ByteProcessor
 import com.google.common.io.ByteStreams
 import com.google.common.io.Closeables
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import timber.log.Timber
@@ -15,7 +15,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ShareFileDownloader @Inject constructor(
-    private val noAuthenticationApi: NoAuthenticationApi
+    private val nonZoteroApi: NonZoteroApi
 ) {
 
     suspend fun download(
@@ -37,7 +37,7 @@ class ShareFileDownloader @Inject constructor(
             headers["Cookie"] = cookies
         }
         val networkResult = safeApiCall {
-            noAuthenticationApi.downloadFileStreaming(url = url, headers = headers)
+            nonZoteroApi.downloadFileStreaming(url = url, headers = headers)
         }
         when (networkResult) {
             is CustomResult.GeneralSuccess -> {

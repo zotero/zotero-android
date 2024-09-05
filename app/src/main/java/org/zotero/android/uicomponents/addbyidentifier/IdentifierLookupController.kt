@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.zotero.android.ZoteroApplication
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
@@ -45,7 +45,7 @@ class IdentifierLookupController @Inject constructor(
     private val gson: Gson,
     private val translatorsLoader: TranslatorsLoader,
     private val fileStore: FileStore,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
     private val itemResponseMapper: ItemResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
@@ -109,7 +109,7 @@ class IdentifierLookupController @Inject constructor(
             gson = gson,
             translatorsLoader = translatorsLoader,
             fileStore = fileStore,
-            noAuthenticationApi = noAuthenticationApi,
+            nonZoteroApi = nonZoteroApi,
             translatorLoadedEventStream = translatorLoadedEventStream,
         )
         lookupWebViewHandlersByLookupSettings[lookupSettings] = lookupWebViewHandler

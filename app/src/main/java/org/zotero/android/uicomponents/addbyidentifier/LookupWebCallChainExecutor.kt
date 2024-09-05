@@ -8,7 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.ZoteroApplication
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -31,7 +31,7 @@ class LookupWebCallChainExecutor(
     private val gson: Gson,
     private val translatorsLoader: TranslatorsLoader,
     private val fileStore: FileStore,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
     private val translatorLoadedEventStream: TranslatorLoadedEventStream,
 ) {
 
@@ -51,7 +51,7 @@ class LookupWebCallChainExecutor(
                 dispatchers = dispatchers,
                 context = context,
                 gson = gson,
-                noAuthenticationApi = noAuthenticationApi
+                nonZoteroApi = nonZoteroApi
             )
             initialize()
             Timber.i("LookupWebCallChainExecutor: initialization succeeded")

@@ -9,7 +9,7 @@ class LoadPermissionsSyncAction : SyncAction() {
 
     suspend fun result(): CustomResult<KeyResponse> {
         val networkResult = safeApiCall {
-            syncApi.getKeys()
+            zoteroApi.getKeys()
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {

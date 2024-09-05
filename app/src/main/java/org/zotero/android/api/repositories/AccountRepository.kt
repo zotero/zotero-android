@@ -1,16 +1,14 @@
 package org.zotero.android.api.repositories
 
-import org.zotero.android.api.AccountApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.login.LoginRequest
-import org.zotero.android.architecture.Defaults
 import org.zotero.android.sync.SessionController
 import javax.inject.Inject
 
 class AccountRepository @Inject constructor(
-    private val accountApi: AccountApi,
-    private val defaults: Defaults,
+    private val zoteroApi: ZoteroApi,
     private val sessionController: SessionController
 ) {
 
@@ -24,7 +22,7 @@ class AccountRepository @Inject constructor(
                 username = username,
                 password = password,
             )
-            accountApi.loginUser(params)
+            zoteroApi.loginUser(params)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {

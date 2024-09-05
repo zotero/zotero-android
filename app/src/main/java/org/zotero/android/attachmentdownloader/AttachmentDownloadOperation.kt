@@ -6,8 +6,8 @@ import kotlinx.coroutines.isActive
 import okhttp3.ResponseBody
 import org.zotero.android.BuildConfig
 import org.zotero.android.androidx.file.copyWithExt
-import org.zotero.android.api.NoRedirectApi
-import org.zotero.android.api.SyncApi
+import org.zotero.android.api.ZoteroNoRedirectApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.helpers.Unzipper
@@ -24,8 +24,8 @@ class AttachmentDownloadOperation(
     private val file: File,
     private val download: AttachmentDownloader.Download,
     private val userId: Long,
-    private val syncApi: SyncApi,
-    private val noRedirectApi: NoRedirectApi,
+    private val zoteroApi: ZoteroApi,
+    private val zoteroNoRedirectApi: ZoteroNoRedirectApi,
     private val unzipper: Unzipper,
     private val webDavController: WebDavController,
     private val sessionStorage: WebDavSessionStorage,
@@ -173,13 +173,13 @@ class AttachmentDownloadOperation(
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/$key/file"
 
-        val headersResponse = noRedirectApi.getRequestHeadersApi(url)
+        val headersResponse = zoteroNoRedirectApi.getRequestHeadersApi(url)
         if (!isCompressed) {
             isCompressed = headersResponse.headers()["Zotero-File-Compressed"] == "Yes"
         }
 
         val networkResult = safeApiCall {
-            syncApi.downloadFile(url)
+            zoteroApi.downloadFile(url)
         }
         if (networkResult is CustomResult.GeneralError) {
             return networkResult

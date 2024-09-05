@@ -3,7 +3,7 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.CustomResult.GeneralError.CodeError
 import org.zotero.android.api.network.safeApiCall
@@ -15,7 +15,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 class RemoteAttachmentDownloadOperation constructor(
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
     private val fileStorage: FileStore,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val url: String,
@@ -55,7 +55,7 @@ class RemoteAttachmentDownloadOperation constructor(
         this.state = State.downloading
 
         val networkResult = safeApiCall {
-            noAuthenticationApi.downloadFile(url)
+            nonZoteroApi.downloadFile(url)
         }
 
         if (networkResult is CustomResult.GeneralError) {

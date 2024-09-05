@@ -1,4 +1,4 @@
-package org.zotero.android.api
+package org.zotero.android.api.interceptors
 
 import okhttp3.Interceptor
 import okhttp3.Interceptor.Chain
@@ -6,7 +6,7 @@ import okhttp3.Response
 import org.zotero.android.architecture.logging.DeviceInfoProvider
 import javax.inject.Inject
 
-class WebDavHeadersNetworkInterceptor @Inject constructor(
+class UserAgentHeaderNetworkInterceptor @Inject constructor(
 ) : Interceptor {
 
     override fun intercept(chain: Chain): Response {

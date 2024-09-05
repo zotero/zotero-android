@@ -73,7 +73,7 @@ class SubmitUpdateSyncAction(
             this.sinceVersion?.let {
                 headers.put("If-Unmodified-Since-Version", it.toString())
             }
-            syncApi.updates(url = url, jsonBody = jsonBody, headers = headers)
+            zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {
@@ -142,7 +142,7 @@ class SubmitUpdateSyncAction(
             this.sinceVersion?.let {
                 headers.put("If-Unmodified-Since-Version", it.toString())
             }
-            syncApi.updates(url = url, jsonBody = jsonBody, headers = headers)
+            zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {

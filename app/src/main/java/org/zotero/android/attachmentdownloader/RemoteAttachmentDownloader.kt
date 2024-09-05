@@ -3,7 +3,7 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.files.FileStore
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 class RemoteAttachmentDownloader @Inject constructor(
     private val fileStorage: FileStore,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
     val dispatcher: CoroutineDispatcher,
 ) {
@@ -101,7 +101,7 @@ class RemoteAttachmentDownloader @Inject constructor(
             url = url,
             file = file,
             getUriDetailsUseCase = getUriDetailsUseCase,
-            noAuthenticationApi = this.noAuthenticationApi,
+            nonZoteroApi = this.nonZoteroApi,
             fileStorage = this.fileStorage
         )
 

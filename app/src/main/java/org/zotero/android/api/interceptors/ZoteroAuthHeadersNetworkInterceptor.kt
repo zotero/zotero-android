@@ -1,4 +1,4 @@
-package org.zotero.android.api
+package org.zotero.android.api.interceptors
 
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -8,7 +8,7 @@ import okhttp3.Response
 import org.zotero.android.architecture.Defaults
 import javax.inject.Inject
 
-class AuthNetworkInterceptor @Inject constructor(
+class ZoteroAuthHeadersNetworkInterceptor @Inject constructor(
     private val defaults: Defaults,
 ) : Interceptor {
 
@@ -25,7 +25,6 @@ class AuthNetworkInterceptor @Inject constructor(
             .header("Authorization", "Bearer $accessToken")
             .build()
 
-    @Suppress("BlockingMethodInNonBlockingContext")
     private fun authenticateRequest(
         request: Request,
         token: String,

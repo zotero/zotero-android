@@ -126,7 +126,7 @@ class SyncVersionsSyncAction(
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/" + objectS.apiPath
 
         val networkResult = safeApiCall {
-            syncApi.versions(url, since = sinceVersion)
+            zoteroApi.versions(url, since = sinceVersion)
         }
 
 

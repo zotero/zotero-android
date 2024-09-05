@@ -20,7 +20,7 @@ class SyncSettingsSyncAction(
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/settings"
 
         val networkResult = safeApiCall {
-            syncApi.settingsRequest(
+            zoteroApi.settingsRequest(
                 url = url,
                 since = sinceVersion,
                 headers = mapOf("If-Modified-Since-Version" to this.sinceVersion.toString())

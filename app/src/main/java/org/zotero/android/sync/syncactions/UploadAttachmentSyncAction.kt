@@ -104,7 +104,7 @@ class UploadAttachmentSyncAction(
                     val requestBody = createRequestBody(file)
                     val part = createPart(file, requestBody)
 
-                    noAuthenticationApi.uploadAttachment(
+                    nonZoteroApi.uploadAttachment(
                         url = authorizedUploadResultValue.authorizeNewUploadResponse.url,
                         headers = headers,
                         file = part,
@@ -132,7 +132,7 @@ class UploadAttachmentSyncAction(
             }
             val url =
                 BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/items/" + this.key + "/file"
-            syncApi.registerUpload(
+            zoteroApi.registerUpload(
                 url = url,
                 headers = headers,
                 upload = uploadKey

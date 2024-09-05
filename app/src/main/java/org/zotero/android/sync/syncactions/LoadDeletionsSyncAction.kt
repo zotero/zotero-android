@@ -28,7 +28,7 @@ class LoadDeletionsSyncAction(
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/deleted"
 
         val networkResult = safeApiCall {
-            syncApi.deletionRequest(
+            zoteroApi.deletionRequest(
                 url = url,
                 since = sinceVersion,
                 headers = mapOf("If-Modified-Since-Version" to this.sinceVersion.toString())

@@ -43,7 +43,7 @@ class SubmitDeletionSyncAction(
 
                 SyncObject.settings -> {}
             }
-            syncApi.submitDeletionsRequest(
+            zoteroApi.submitDeletionsRequest(
                 url = url,
                 queryMap = parameters,
                 headers = mapOf("If-Modified-Since-Version" to this.version.toString())

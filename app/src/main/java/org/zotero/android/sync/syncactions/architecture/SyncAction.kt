@@ -9,8 +9,8 @@ abstract class SyncAction {
         EntryPoints.get(ZoteroApplication.instance, SyncActionDependencyProvider::class.java)
     }
 
-    val syncApi by lazy {
-        bindings.syncApi()
+    val zoteroApi by lazy {
+        bindings.zoteroApi()
     }
 
     val settingsResponseMapper by lazy {
@@ -64,8 +64,8 @@ abstract class SyncAction {
         bindings.attachmentDownloaderEventStream()
     }
 
-    val noAuthenticationApi by lazy {
-        bindings.noAuthenticationApi()
+    val nonZoteroApi by lazy {
+        bindings.nonZoteroApi()
     }
 
     val updatesResponseMapper by lazy {

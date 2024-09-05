@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
-import org.zotero.android.api.NoAuthenticationApi
+import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
@@ -22,7 +22,7 @@ class DebugLogging @Inject constructor(
     private val debugLoggingTree: DebugLoggingTree,
     private val fileStore: FileStore,
     private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
-    private val noAuthenticationApi: NoAuthenticationApi,
+    private val nonZoteroApi: NonZoteroApi,
     private val defaults: Defaults
 ) : DebugLogFormatterInterface {
     enum class LoggingType {
@@ -256,7 +256,7 @@ class DebugLogging @Inject constructor(
         }
 
         val networkResult = safeApiCall {
-            noAuthenticationApi.debugLogUploadRequest(dataToPost)
+            nonZoteroApi.debugLogUploadRequest(dataToPost)
 
         }
 

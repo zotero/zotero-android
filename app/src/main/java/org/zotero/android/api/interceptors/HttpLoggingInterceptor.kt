@@ -1,4 +1,4 @@
-package org.zotero.android.api
+package org.zotero.android.api.interceptors
 
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
