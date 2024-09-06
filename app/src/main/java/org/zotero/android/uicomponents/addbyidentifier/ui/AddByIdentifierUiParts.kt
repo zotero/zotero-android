@@ -52,7 +52,7 @@ internal fun LazyListScope.addByIdentifierTitleEditFieldAndError(
                 }
 
                 is AddByIdentifierViewModel.Error.noIdentifiersDetectedWithLookupData -> {
-                    stringResource(id = Strings.errors_lookup_no_identifiers_with_lookup_data)
+                    stringResource(id = Strings.scar_barcode_error_lookup_no_new_identifiers_found)
                 }
 
                 else -> {

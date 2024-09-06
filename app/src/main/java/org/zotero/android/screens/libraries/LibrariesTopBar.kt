@@ -12,7 +12,7 @@ internal fun LibrariesTopBar(
     onSettingsTapped: () -> Unit,
 ) {
     NewCustomTopBar(
-        title = stringResource(id = Strings.libraries),
+        title = stringResource(id = Strings.toolbar_libraries),
         rightContainerContent = listOf {
             IconWithPadding(drawableRes = Drawables.settings_24px, onClick = onSettingsTapped)
         })

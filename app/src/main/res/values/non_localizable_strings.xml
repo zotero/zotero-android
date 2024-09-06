@@ -1,0 +1,5 @@
+<resources>
+    <string name="file_syncing_zotero_option">Zotero</string>
+    <string name="file_syncing_webdav_option">WebDAV</string>
+    <string name="file_syncing_url">URL</string>
+</resources>

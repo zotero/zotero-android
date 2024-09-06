@@ -1,5 +1,4 @@
 package org.zotero.android.uicomponents.modal
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.zotero.android.R
 import org.zotero.android.architecture.content.AndroidText
 import org.zotero.android.architecture.content.StringId
-import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.androidText
 import org.zotero.android.uicomponents.button.ButtonLoadingIndicator
 import org.zotero.android.uicomponents.button.PrimaryButton
@@ -199,45 +196,6 @@ private fun Buttons(modalDialog: ModalDialog) = when (modalDialog) {
             text = androidText(modalDialog.action.textResId),
             onClick = modalDialog.action.onClick,
             isLoading = modalDialog.action.isLoading,
-        )
-    }
-}
-
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun BottomModalDialogInfoPreview() {
-    CustomTheme {
-        BottomModalDialog(
-            modalDialog = ModalDialog.Info(
-                title = StringId(Strings.delete_item_title),
-                message = StringId(Strings.delete_item_body),
-                onDismiss = {},
-                action = ModalDialog.Action(
-                    textResId = StringId(Strings.yes)
-                )
-            )
-        )
-    }
-}
-
-@Preview(widthDp = 300, heightDp = 400)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun BottomModalDialogModalDialogConfirmationPreview() {
-    CustomTheme {
-        BottomModalDialog(
-            modalDialog = ModalDialog.Confirmation(
-                title = StringId(Strings.delete_item_title),
-                message = StringId(Strings.delete_item_body),
-                onDismiss = {},
-                confirmAction = ModalDialog.Action(
-                    textResId = StringId(Strings.yes)
-                ),
-                cancelAction = ModalDialog.Action(
-                    textResId = StringId(Strings.cancel)
-                )
-            )
         )
     }
 }

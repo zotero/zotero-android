@@ -16,7 +16,7 @@ internal fun SettingsAccountDataSyncSection(
     viewState: SettingsAccountViewState,
     viewModel: SettingsAccountViewModel
 ) {
-    SettingsSectionTitle(titleId = Strings.settings_data_sync)
+    SettingsSectionTitle(titleId = Strings.settings_sync_data_syncing)
     SettingsSection {
         SettingsItem(
             title = viewState.account,
@@ -34,7 +34,7 @@ internal fun SettingsAccountDataSyncSection(
 @Composable
 internal fun SettingsAccountAccountSection(viewModel: SettingsAccountViewModel) {
     SettingsSectionTitle(
-        titleId = Strings.settings_account_caps
+        titleId = Strings.settings_sync_title
     )
     SettingsSection {
         SettingsItem(

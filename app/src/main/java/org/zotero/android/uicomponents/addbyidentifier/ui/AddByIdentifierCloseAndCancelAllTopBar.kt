@@ -18,7 +18,7 @@ internal fun AddByIdentifierCloseAndCancelAllTopBar(
                 onClick = onClose
             )
             NewHeadingTextButton(
-                text = stringResource(id = Strings.cancel_all),
+                text = stringResource(id = Strings.add_by_identifier_cancel_all_button),
                 onClick = onCancelAll
             )
         },

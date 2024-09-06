@@ -25,7 +25,7 @@ internal fun PdfReaderTopBar(
             {
                 NewHeadingTextButton(
                     onClick = onBack,
-                    text = stringResource(Strings.back),
+                    text = stringResource(Strings.back_button),
                 )
             },
             {

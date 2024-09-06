@@ -66,26 +66,26 @@ internal fun WebDavOptionsPopup(
         ) {
             if (fileSyncType == FileSyncType.zotero) {
                 PopupOptionRow(
-                    text = stringResource(id = Strings.zotero_option),
+                    text = stringResource(id = Strings.file_syncing_zotero_option),
                     resIcon = Drawables.check_24px,
                     onOptionClick = onZoteroOptionSelected
                 )
             } else {
                 PopupOptionRow(
-                    text = stringResource(id = Strings.zotero_option),
+                    text = stringResource(id = Strings.file_syncing_zotero_option),
                     onOptionClick = onZoteroOptionSelected
                 )
             }
             PopupDivider()
             if (fileSyncType == FileSyncType.webDav) {
                 PopupOptionRow(
-                    text = stringResource(id = Strings.webdav_option),
+                    text = stringResource(id = Strings.file_syncing_webdav_option),
                     resIcon = Drawables.check_24px,
                     onOptionClick = onWebDavOptionSelected
                 )
             } else {
                 PopupOptionRow(
-                    text = stringResource(id = Strings.webdav_option),
+                    text = stringResource(id = Strings.file_syncing_webdav_option),
                     onOptionClick = onWebDavOptionSelected
                 )
             }

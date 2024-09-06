@@ -22,7 +22,7 @@ internal fun ScanBarcodeCloseScanAnotherTopBar(
         rightContainerContent = listOf {
             NewHeadingTextButton(
                 style = CustomTheme.typography.defaultBold,
-                text = stringResource(id = Strings.scan_another),
+                text = stringResource(id = Strings.scan_barcode_scan_another_button),
                 onClick = onScan
             )
         }

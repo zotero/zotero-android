@@ -58,7 +58,7 @@ internal fun LibrariesScreen(
                 error = { _ ->
                     FullScreenError(
                         modifier = Modifier.align(Alignment.Center),
-                        errorTitle = stringResource(id = Strings.all_items_load_error),
+                        errorTitle = stringResource(id = Strings.error_list_load_check_crash_logs),
                     )
                 },
                 loading = {

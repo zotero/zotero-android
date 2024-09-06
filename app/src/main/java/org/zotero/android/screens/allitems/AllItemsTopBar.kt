@@ -83,7 +83,8 @@ private fun AllItemsPhoneTopBar(
         leftContainerContent = listOf {
             NewHeadingTextButton(
                 onClick = viewModel::navigateToCollections,
-                text = stringResource(id = Strings.collections)
+                text = stringResource(id = Strings.sync_toolbar_object_collections)
+                    .replaceFirstChar(Char::titlecase)
             )
         },
         rightContainerContent = allItemsTopBarActions(viewState, viewModel),
