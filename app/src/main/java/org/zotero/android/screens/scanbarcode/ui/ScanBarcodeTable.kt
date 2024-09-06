@@ -223,7 +223,7 @@ internal fun LookupIdentifierRow(
             when (state) {
                 LookupRow.IdentifierState.enqueued -> {
                     Text(
-                        text = stringResource(id = Strings.queued),
+                        text = stringResource(id = Strings.scan_barcode_item_queued_state),
                         color = CustomPalette.SystemGray,
                         maxLines = 1,
                         style = CustomTheme.typography.newBody,
@@ -240,7 +240,7 @@ internal fun LookupIdentifierRow(
 
                 LookupRow.IdentifierState.failed -> {
                     Text(
-                        text = stringResource(id = Strings.failed),
+                        text = stringResource(id = Strings.scan_barcode_item_failed_state),
                         color = CustomPalette.ErrorRed,
                         maxLines = 1,
                         style = CustomTheme.typography.newBody,

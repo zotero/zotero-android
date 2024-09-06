@@ -19,7 +19,7 @@ internal fun CollectionsTopBar(
         leftContainerContent = listOf {
             NewHeadingTextButton(
                 onClick = navigateToLibraries,
-                text = stringResource(id = Strings.libs)
+                text = stringResource(id = Strings.toolbar_libraries)
             )
         },
         rightContainerContent = listOf {

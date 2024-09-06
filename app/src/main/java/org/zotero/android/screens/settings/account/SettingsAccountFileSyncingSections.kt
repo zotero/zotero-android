@@ -47,7 +47,7 @@ internal fun SettingsAccountFileSyncingSection(
     viewState: SettingsAccountViewState,
     viewModel: SettingsAccountViewModel
 ) {
-    SettingsSectionTitle(titleId = Strings.settings_file_syncing)
+    SettingsSectionTitle(titleId = Strings.settings_sync_file_syncing)
     SettingsSection {
         SettingsAccountFileSyncingSyncMethodChooserItem(viewModel, viewState)
         if (viewState.fileSyncType == FileSyncType.webDav) {
@@ -126,9 +126,9 @@ private fun SettingsAccountFileSyncingSyncMethodChooserItem(
                     modifier = Modifier,
                     text = stringResource(
                         id = if (viewState.fileSyncType == FileSyncType.zotero) {
-                            Strings.zotero_option
+                            Strings.file_syncing_zotero_option
                         } else {
-                            Strings.webdav_option
+                            Strings.file_syncing_webdav_option
                         }
                     ),
                     style = CustomTheme.typography.newBody,
@@ -179,7 +179,7 @@ private fun SettingsAccountFileSyncingWebDavUrlItem(
             CustomTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = viewState.url,
-                hint = stringResource(id = Strings.enter_url),
+                hint = stringResource(id = Strings.file_syncing_url),
                 onValueChange = viewModel::setUrl,
                 textStyle = CustomTheme.typography.newBody,
                 maxLines = 1,

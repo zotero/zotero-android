@@ -59,7 +59,7 @@ private fun ItemDetailsTopBarEditing(
     } else {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val text = if (layoutType.isTablet()) {
-            stringResource(Strings.back)
+            stringResource(Strings.back_button)
         } else {
             stringResource(Strings.collections_all_items)
         }

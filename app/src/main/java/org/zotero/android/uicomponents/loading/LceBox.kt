@@ -20,8 +20,8 @@ fun FullScreenLceBox(
     lce: LCE2,
     modifier: Modifier = Modifier,
     errorTitle: String = "",
-    errorDescription: String = stringResource(Strings.error_load_body),
-    errorButtonText: String = stringResource(Strings.error_refresh),
+    errorDescription: String = stringResource(Strings.error_list_load_body),
+    errorButtonText: String = stringResource(Strings.error_list_load_refresh),
     content: @Composable BoxScope.() -> Unit,
 ) {
     BaseLceBox(
@@ -75,8 +75,8 @@ fun FullScreenAnimatedLceBox(
     lce: LCE2,
     modifier: Modifier = Modifier,
     errorTitle: String = "",
-    errorDescription: String = stringResource(Strings.error_load_body),
-    errorButtonText: String = stringResource(Strings.error_refresh),
+    errorDescription: String = stringResource(Strings.error_list_load_body),
+    errorButtonText: String = stringResource(Strings.error_list_load_refresh),
     content: @Composable BoxScope.() -> Unit,
 ) {
     BaseAnimatedLceBox(

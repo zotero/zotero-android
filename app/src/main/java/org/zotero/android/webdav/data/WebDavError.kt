@@ -49,7 +49,7 @@ sealed class WebDavError {
                     context.getString(Strings.errors_settings_webdav_zotero_dir_not_found)
                 }
                 localHttpWebdavHostNotAllowed -> {
-                    context.getString(Strings.local_http_webdav_host_not_allowed)
+                    context.getString(Strings.errors_settings_webdav_local_http_host_not_allowed)
                 }
             }
         }

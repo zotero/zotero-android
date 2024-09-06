@@ -78,7 +78,7 @@ internal fun ScanBarcodeScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = stringResource(id = Strings.loading_translators),
+                                text = stringResource(id = Strings.scan_barcode_loading_translators),
                                 style = CustomTheme.typography.newBody,
                                 color = CustomTheme.colors.primaryContent,
                             )
@@ -111,7 +111,7 @@ internal fun LazyListScope.scanBarcodeError(
                 }
 
                 is Error.noIdentifiersDetectedWithLookupData -> {
-                    stringResource(id = Strings.errors_lookup_no_identifiers_with_lookup_data)
+                    stringResource(id = Strings.scar_barcode_error_lookup_no_new_identifiers_found)
                 }
 
                 else -> {

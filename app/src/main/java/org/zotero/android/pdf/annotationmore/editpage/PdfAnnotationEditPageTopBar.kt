@@ -14,7 +14,7 @@ internal fun PdfAnnotationEditPageTopBar(viewModel: PdfAnnotationEditPageViewMod
         title = stringResource(id = Strings.pdf_annotation_popover_page_label_title),
         leftContainerContent = listOf {
             NewHeadingTextButton(
-                text = stringResource(id = Strings.back),
+                text = stringResource(id = Strings.back_button),
                 onClick = viewModel::onBack
             )
         }

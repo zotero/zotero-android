@@ -32,8 +32,8 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 fun FullScreenError(
     modifier: Modifier = Modifier,
     errorTitle: String = "",
-    errorDescription: String = stringResource(Strings.error_load_body),
-    errorButtonText: String = stringResource(Strings.error_refresh),
+    errorDescription: String = stringResource(Strings.error_list_load_body),
+    errorButtonText: String = stringResource(Strings.error_list_load_refresh),
     errorAction: (() -> Unit)? = null,
 ) {
     Column(
@@ -73,8 +73,8 @@ fun FullScreenError(
 @Composable
 fun SectionError(
     modifier: Modifier = Modifier,
-    errorDescription: String = stringResource(Strings.error_load_body),
-    errorButtonText: String = stringResource(Strings.error_refresh),
+    errorDescription: String = stringResource(Strings.error_list_load_body),
+    errorButtonText: String = stringResource(Strings.error_list_load_refresh),
     errorAction: (() -> Unit)? = null,
 ) {
     Column(

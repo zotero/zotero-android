@@ -13,7 +13,7 @@ internal fun ShareCollectionPickerTopBar(
     NewCustomTopBar(
         leftContainerContent = listOf {
             NewHeadingTextButton(
-                text = stringResource(id = Strings.back),
+                text = stringResource(id = Strings.back_button),
                 onClick = onBackClicked
             )
         },

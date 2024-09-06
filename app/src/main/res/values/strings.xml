@@ -1,37 +1,34 @@
 <resources>
 
-    <string name="error_load_body">Refresh the app and try again</string>
-    <string name="error_refresh">Refresh</string>
-    <string name="all_items_load_error">Something went wrong, check the crash logs</string>
-    <string name="item_details">Item Details</string>
-    <string name="back">Back</string>
-    <string name="delete_item_title">Item Deletion</string>
-    <string name="delete_item_body">Are you sure you want to delete this item?</string>
-    <string name="collections">Collections</string>
+<!--Shows when loading of any big list fails, shows button to refresh list. i.e. triggers resync.-->
+    <string name="error_list_load_body">Refresh the app and try again</string>
+    <string name="error_list_load_refresh">Refresh</string>
+    <!-- Unrecoverable error when loading list -->
+    <string name="error_list_load_check_crash_logs">Something went wrong, check the crash logs</string>
+
+    <string name="back_button">Back</string>
     <string name="collection_was_deleted">This collection has been deleted. Do you want to revert it?</string>
-    <string name="libs">Libraries</string>
-    <string name="libraries">Libraries</string>
-    <string name="settings_account_caps">ACCOUNT</string>
-    <string name="settings_data_sync">DATA SYNC</string>
-    <string name="settings_file_syncing">FILE SYNCING</string>
-    <string name="tags_label">Tags:</string>
-    <string name="no_tags">No Tags</string>
-    <string name="no_comments">No Comments</string>
-    <string name="select_collection">Select a Collection</string>
+    <string name="toolbar_libraries">Libraries</string>
+
+    <!-- This is shown when user selected 0 collections. Unfortunately "zero" option from items.collections_selected in imported_strings.xml doesn't work. It's a bug of Android -->
+    <string name="collection_picker_select_collection">Select a Collection</string>
+
+    <!-- This is a name of a notification channel used when showing a notification for file upload during Sharing -->
     <string name="share_upload_channel_name">Share File Upload Notification</string>
-    <string name="share_upload_notification_title">Uploading Attachments</string>
-    <string name="cancel_all">Cancel All</string>
-    <string name="errors_lookup_no_identifiers_with_lookup_data">Zotero could not find any new identifiers in your input, or they are already being added. Please verify your input and try again.</string>
-    <string name="queued">Queued…</string>
-    <string name="failed">Failed</string>
-    <string name="scan_another">Scan Another</string>
-    <string name="loading_translators">Loading translators… Please wait.</string>
-    <string name="zotero_option">Zotero</string>
-    <string name="webdav_option">WebDAV</string>
-    <string name="enter_url">URL</string>
-    <string name="errors.settings.webdav.no_https_certificate">HTTPS error: Trust anchor for certification path not found</string>
+
+    <string name="add_by_identifier_cancel_all_button">Cancel All</string>
+
+    <string name="scar_barcode_error_lookup_no_new_identifiers_found">Zotero could not find any new identifiers in your input, or they are already being added. Please verify your input and try again.</string>
+    <string name="scan_barcode_item_queued_state">Queued…</string>
+    <string name="scan_barcode_item_failed_state">Failed</string>
+    <string name="scan_barcode_scan_another_button">Scan Another</string>
+    <string name="scan_barcode_loading_translators">Loading translators… Please wait.</string>
+
+    <string name="errors_settings_webdav_no_https_certificate">HTTPS error: Trust anchor for certification path not found</string>
+    <string name="errors_settings_webdav_local_http_host_not_allowed">Due to Android restrictions, HTTP can only be used when connecting to a .local and .home.arpa hostnames.</string>
+
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
-    <string name="local_http_webdav_host_not_allowed">Due to Android restrictions, HTTP can only be used when connecting to a .local and .home.arpa hostnames.</string>
+
 </resources>

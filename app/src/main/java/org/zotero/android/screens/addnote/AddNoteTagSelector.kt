@@ -43,7 +43,7 @@ internal fun BoxScope.AddNoteTagSelector(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(id = Strings.tags_label),
+            text = stringResource(id = Strings.items_filters_tags) + ":",
             color = CustomPalette.zoteroItemDetailSectionTitle,
             fontSize = layoutType.calculateTextSize(),
         )

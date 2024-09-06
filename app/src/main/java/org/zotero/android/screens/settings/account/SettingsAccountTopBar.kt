@@ -17,7 +17,7 @@ internal fun SettingsAccountTopBar(
         leftContainerContent = listOf {
             NewHeadingTextButton(
                 onClick = onBack,
-                text = stringResource(Strings.back),
+                text = stringResource(Strings.back_button),
             )
         }
     )

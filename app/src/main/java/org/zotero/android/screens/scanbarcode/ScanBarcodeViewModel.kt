@@ -118,7 +118,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
                                 if (update.lookupData.isEmpty()) {
                                     context.longToast(Strings.errors_lookup)
                                 } else {
-                                    context.longToast(Strings.errors_lookup_no_identifiers_with_lookup_data)
+                                    context.longToast(Strings.scar_barcode_error_lookup_no_new_identifiers_found)
                                 }
                             }
                             updateLookupState(State.lookup(update.lookupData))
