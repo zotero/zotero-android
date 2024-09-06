@@ -69,8 +69,6 @@ internal class SettingsAccountViewModel @Inject constructor(
 
     private var coroutineScope = CoroutineScope(dispatchers.io)
 
-    private val localNetworkRegex = "^(?:127\\.|0?10\\.|172\\.0?1[6-9]\\.|172\\.0?2[0-9]\\.|172\\.0?3[01]\\.|192\\.168\\.|169\\.254\\.|::1|[fF][cCdD][0-9a-fA-F]{2}:|[fF][eE][89aAbB][0-9a-fA-F]:)".toRegex()
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(singlePickerResult: SinglePickerResult) {
         if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.SettingsWebDav) {
@@ -350,10 +348,7 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     private fun verify(tryCreatingZoteroDir: Boolean) {
-        if (viewState.scheme == WebDavScheme.http && localNetworkRegex.containsMatchIn(
-                sessionStorage.url
-            )
-        ) {
+        if (viewState.scheme == WebDavScheme.http && !isAllowedHttpHost()) {
             updateState {
                 copy(
                     webDavVerificationResult = CustomResult.GeneralError.CodeError(WebDavError.Verification.localHttpWebdavHostNotAllowed),
@@ -399,6 +394,20 @@ internal class SettingsAccountViewModel @Inject constructor(
 
         }
 
+    }
+
+    private fun isAllowedHttpHost(): Boolean {
+        try {
+            val hostComponentsWithPort = sessionStorage.url.split(":")
+            val hostComponentsWithSlashes = hostComponentsWithPort.firstOrNull()?.split("/")
+            val host = hostComponentsWithSlashes?.firstOrNull()
+            if (host != null && (host.endsWith("local") || host.endsWith("home.arpa"))) {
+                return true
+            }
+        } catch (e: Exception) {
+            //no-op
+        }
+        return false
     }
 
     private fun handleVerification(error: CustomResult.GeneralError) {
