@@ -21,6 +21,7 @@
         android:requestLegacyExternalStorage="false"
         android:supportsRtl="false"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:requestLegacyExternalStorage"
         tools:targetApi="n">
