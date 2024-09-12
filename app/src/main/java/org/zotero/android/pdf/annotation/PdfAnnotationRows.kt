@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
-import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -34,7 +34,7 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
 internal fun PdfAnnotationHeaderRow(
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     annotationColor: Color,
     layoutType: CustomLayoutSize.LayoutType,
     onBack: () -> Unit,
@@ -45,6 +45,8 @@ internal fun PdfAnnotationHeaderRow(
         AnnotationType.highlight -> Drawables.highlighter_large
         AnnotationType.image -> Drawables.area_large
         AnnotationType.ink -> Drawables.ink_large
+        AnnotationType.underline -> Drawables.ink_large // TODO set correct icon
+        AnnotationType.freeText -> Drawables.ink_large// TODO set correct icon
     }
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(

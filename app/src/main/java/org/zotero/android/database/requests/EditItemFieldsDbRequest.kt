@@ -13,6 +13,7 @@ import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
+import java.util.Date
 
 class EditItemFieldsDbRequest(
     private val key: String,
@@ -75,6 +76,7 @@ class EditItemFieldsDbRequest(
         if (didChange) {
             item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.fields)))
             item.changeType = UpdatableChangeType.user.name
+            item.dateModified = Date()
         }
     }
 }

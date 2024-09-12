@@ -235,55 +235,22 @@ data class ItemResponse(
 
             for (objectS in json.entrySet()) {
                 when (objectS.key) {
-                    FieldKeys.Item.Annotation.Position.pageIndex -> {
-                        if (objectS.value?.asInt == null) {
-                            throw SchemaError.invalidValue(
-                                value = "${objectS.value}",
-                                field = FieldKeys.Item.Annotation.Position.pageIndex,
-                                key = key
-                            )
-                        }
-                    }
-
-
-                    FieldKeys.Item.Annotation.Position.lineWidth -> {
-                        if (objectS.value?.asDouble == null) {
-                            throw SchemaError.invalidValue(
-                                value = "${objectS.value}",
-                                field = FieldKeys.Item.Annotation.Position.lineWidth,
-                                key = key
-                            )
-                        }
-                    }
-
-
                     FieldKeys.Item.Annotation.Position.paths -> {
                         val parsedPaths = objectS.value?.unmarshalList<List<Double>>(gson)
-                        if (parsedPaths == null || (parsedPaths.isEmpty() || parsedPaths.firstOrNull { it.size % 2 != 0 } != null)) {
-                            throw SchemaError.invalidValue(
-                                value = "${objectS.value}",
-                                field = FieldKeys.Item.Annotation.Position.paths,
-                                key = key
-                            )
+                        if (parsedPaths != null && (parsedPaths.isNotEmpty() && parsedPaths.firstOrNull { it.size % 2 != 0 } == null)) {
+                            paths = parsedPaths
                         }
-
-                        paths = parsedPaths
                         continue
                     }
 
-                FieldKeys.Item.Annotation.Position.rects -> {
-                    val parsedRects = objectS.value?.unmarshalList<List<Double>>(gson)
-                    if (parsedRects == null || (parsedRects.isEmpty() || parsedRects.firstOrNull { it.size != 4 } != null)) {
-                        throw SchemaError.invalidValue(
-                            value = "${objectS.value}",
-                            field = FieldKeys.Item.Annotation.Position.rects,
-                            key = key
-                        )
+                    FieldKeys.Item.Annotation.Position.rects -> {
+                        val parsedRects = objectS.value?.unmarshalList<List<Double>>(gson)
+                        if (parsedRects != null && (parsedRects.isNotEmpty() && parsedRects.firstOrNull { it.size != 4 } == null)) {
+                            rects = parsedRects
+                        }
+                        continue
                     }
-                    rects = parsedRects
-                    continue
                 }
-            }
 
                 val asStr = objectS.value?.asString
                 val asInt = asStr?.toIntOrNull()

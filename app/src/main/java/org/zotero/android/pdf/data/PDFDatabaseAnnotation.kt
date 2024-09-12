@@ -3,6 +3,7 @@ package org.zotero.android.pdf.data
 import android.graphics.PointF
 import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
@@ -13,10 +14,28 @@ import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
 import timber.log.Timber
+import kotlin.math.roundToInt
 
-data class DatabaseAnnotation(
-    val item: RItem
-): Annotation {
+data class PDFDatabaseAnnotation(
+    val item: RItem,
+    override val type: AnnotationType
+): PDFAnnotation {
+
+    companion object {
+        fun init(item: RItem): PDFDatabaseAnnotation? {
+            val type: AnnotationType
+            try {
+                type = AnnotationType.valueOf(item.annotationType)
+            } catch (e: Exception) {
+                Timber.w("DatabaseAnnotation: ${item.key} unknown annotation type ${item.annotationType}")
+                return null
+            }
+            if (!AnnotationsConfig.supported.contains(type.kind)) {
+                return null
+            }
+            return PDFDatabaseAnnotation(item = item, type = type)
+        }
+    }
 
     override val readerKey: AnnotationKey
         get() {
@@ -44,6 +63,17 @@ data class DatabaseAnnotation(
         get() {
             return this.item.fields.where().key(FieldKeys.Item.Annotation.text).findFirst()?.value
         }
+
+    override val fontSize: Float?
+        get() {
+            return item.fields.where().key(FieldKeys.Item.Annotation.Position.fontSize).findFirst()?.value?.toFloatOrNull()
+        }
+    override val rotation: Int?
+        get() {
+            val rotation = item.fields.where().key(FieldKeys.Item.Annotation.Position.rotation).findFirst()?.value?.toDoubleOrNull() ?: return null
+            return rotation.roundToInt()
+        }
+
     override val sortIndex: String
         get() = this.item.annotationSortIndex
 
@@ -135,10 +165,7 @@ data class DatabaseAnnotation(
         }
         return page
     }
-    override val type: AnnotationType
-        get() {
-            return this._type ?: AnnotationType.note
-        }
+
     override val lineWidth: Float?
         get() {
             return (this.item.fields.where().key(FieldKeys.Item.Annotation.Position.lineWidth)).findFirst()?.value?.toFloatOrNull()

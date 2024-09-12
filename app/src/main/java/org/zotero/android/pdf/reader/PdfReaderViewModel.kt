@@ -84,7 +84,7 @@ import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
-import org.zotero.android.database.requests.CreateAnnotationsDbRequest
+import org.zotero.android.database.requests.CreatePDFAnnotationsDbRequest
 import org.zotero.android.database.requests.EditAnnotationPathsDbRequest
 import org.zotero.android.database.requests.EditAnnotationRectsDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
@@ -118,8 +118,8 @@ import org.zotero.android.pdf.colorpicker.queuedUpPdfReaderColorPickerResult
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.data.AnnotationPreviewManager
 import org.zotero.android.pdf.data.AnnotationsFilter
-import org.zotero.android.pdf.data.DatabaseAnnotation
-import org.zotero.android.pdf.data.DocumentAnnotation
+import org.zotero.android.pdf.data.PDFDatabaseAnnotation
+import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
@@ -662,8 +662,8 @@ class PdfReaderViewModel @Inject constructor(
         document: PdfDocument,
         username: String,
         displayName: String
-    ): Map<String, DocumentAnnotation> {
-        val annotations = mutableMapOf<String, DocumentAnnotation>()
+    ): Map<String, PDFDocumentAnnotation> {
+        val annotations = mutableMapOf<String, PDFDocumentAnnotation>()
         val pdfAnnotations = document.annotationProvider
             .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
             .toList()
@@ -717,7 +717,7 @@ class PdfReaderViewModel @Inject constructor(
                 )
                 val sortedKeys = createSortedKeys(
                     databaseAnnotations = databaseAnnotations!!,
-                    documentAnnotations = documentAnnotations
+                    pdfDocumentAnnotations = documentAnnotations
                 )
 
                 update(
@@ -746,7 +746,7 @@ class PdfReaderViewModel @Inject constructor(
 
                 updateState {
                     copy(
-                        documentAnnotations = documentAnnotations,
+                        pdfDocumentAnnotations = documentAnnotations,
                         sortedKeys = sortedKeys,
                         visiblePage = page,
                         initialPage = null,
@@ -980,11 +980,13 @@ class PdfReaderViewModel @Inject constructor(
         if (key != null) {
             val item = databaseAnnotations.where().key(key.key).findFirst()
             if (item != null) {
-                val annotation = DatabaseAnnotation(item = item)
-                val page = annotation._page ?: storedPage
-                val boundingBox =
-                    annotation.boundingBox(boundingBoxConverter = boundingBoxConverter)
-                return page to (key to (page to boundingBox))
+                val annotation = PDFDatabaseAnnotation.init(item = item)
+                if (annotation != null) {
+                    val page = annotation._page ?: storedPage
+                    val boundingBox =
+                        annotation.boundingBox(boundingBoxConverter = boundingBoxConverter)
+                    return page to (key to (page to boundingBox))
+                }
             }
         }
 
@@ -1027,11 +1029,12 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun createSortedKeys(
         databaseAnnotations: RealmResults<RItem>,
-        documentAnnotations: Map<String, DocumentAnnotation>
+        pdfDocumentAnnotations: Map<String, PDFDocumentAnnotation>
     ): List<AnnotationKey> {
         val sortMap = mapOf<String, AnnotationKey>().toSortedMap()
         for (item in databaseAnnotations) {
-            if (!validate(databaseAnnotation = DatabaseAnnotation(item = item))) {
+            val annotation = PDFDatabaseAnnotation.init(item = item)
+            if (annotation == null || !validate(annotation)) {
                 continue
             }
             sortMap[item.annotationSortIndex] = AnnotationKey(
@@ -1039,7 +1042,7 @@ class PdfReaderViewModel @Inject constructor(
                 type = AnnotationKey.Kind.database
             )
         }
-        for (annotation in documentAnnotations.values) {
+        for (annotation in pdfDocumentAnnotations.values) {
             val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
             val sortIndex = annotation.sortIndex
             sortMap[sortIndex] = key
@@ -1048,7 +1051,7 @@ class PdfReaderViewModel @Inject constructor(
         return result
     }
 
-    private fun validate(databaseAnnotation: DatabaseAnnotation): Boolean {
+    private fun validate(databaseAnnotation: PDFDatabaseAnnotation): Boolean {
         if (databaseAnnotation._page == null) {
             return false
         }
@@ -1062,10 +1065,25 @@ class PdfReaderViewModel @Inject constructor(
 
             org.zotero.android.database.objects.AnnotationType.note,
             org.zotero.android.database.objects.AnnotationType.highlight,
-            org.zotero.android.database.objects.AnnotationType.image
+            org.zotero.android.database.objects.AnnotationType.image,
+            org.zotero.android.database.objects.AnnotationType.underline
             -> {
                 if (databaseAnnotation.item.rects.isEmpty()) {
                     Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing rects")
+                    return false
+                }
+            }
+            org.zotero.android.database.objects.AnnotationType.freeText -> {
+                if (databaseAnnotation.item.rects.isEmpty()) {
+                    Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing rects")
+                    return false
+                }
+                if (databaseAnnotation.fontSize == null) {
+                    Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing fontSize")
+                    return false
+                }
+                if (databaseAnnotation.rotation == null) {
+                    Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing rotation")
                     return false
                 }
             }
@@ -1128,7 +1146,7 @@ class PdfReaderViewModel @Inject constructor(
         var selectionDeleted = false
 
         var updatedKeys = mutableListOf<AnnotationKey>()
-        var updatedPdfAnnotations = mutableMapOf<Annotation, DatabaseAnnotation>()
+        var updatedPdfAnnotations = mutableMapOf<Annotation, PDFDatabaseAnnotation>()
         var deletedPdfAnnotations = mutableListOf<Annotation>()
         var insertedPdfAnnotations = mutableListOf<Annotation>()
 
@@ -1139,7 +1157,7 @@ class PdfReaderViewModel @Inject constructor(
             }
             val key = keys[index]
             val item = objects.where().key(key.key).findFirst() ?: continue
-            val annotation = DatabaseAnnotation(item = item)
+            val annotation = PDFDatabaseAnnotation.init(item = item) ?: continue
 
             if (canUpdate(key = key, item = item, index = index)) {
                 Timber.i("update key $key")
@@ -1178,7 +1196,7 @@ class PdfReaderViewModel @Inject constructor(
                 selectionDeleted = true
             }
 
-            val oldAnnotation = DatabaseAnnotation(item = this.databaseAnnotations!![index]!!)
+            val oldAnnotation = PDFDatabaseAnnotation.init(item = this.databaseAnnotations!![index]!!) ?: continue
             val pdfAnnotation =
                 this.document.annotationProvider.getAnnotations(oldAnnotation.page)
                     .firstOrNull { it.key == oldAnnotation.key } ?: continue
@@ -1203,7 +1221,12 @@ class PdfReaderViewModel @Inject constructor(
             )
             Timber.i("PDFReaderActionHandler: insert key ${item.key}")
 
-            val annotation = DatabaseAnnotation(item = item)
+            val annotation = PDFDatabaseAnnotation.init(item = item)
+            if (annotation == null ){
+                Timber.w("PdfReaderViewModel: tried inserting unsupported annotation (${item.annotationType})! keys.count=${keys.size}; index=${index}; deletions=${deletions}; insertions=${insertions}; modifications=${modifications}")
+                shouldCancelUpdate = true
+                break
+            }
 
             when (item.changeType) {
                 UpdatableChangeType.user.name -> {
@@ -1243,7 +1266,7 @@ class PdfReaderViewModel @Inject constructor(
         val getSortIndex: (AnnotationKey) -> String? = { key ->
             when (key.type) {
                 AnnotationKey.Kind.document -> {
-                    viewState.documentAnnotations[key.key]?.sortIndex
+                    viewState.pdfDocumentAnnotations[key.key]?.sortIndex
                 }
 
                 AnnotationKey.Kind.database -> {
@@ -1251,7 +1274,7 @@ class PdfReaderViewModel @Inject constructor(
                 }
             }
         }
-        for (annotation in viewState.documentAnnotations.values) {
+        for (annotation in viewState.pdfDocumentAnnotations.values) {
             val key = AnnotationKey(key = annotation.key, type = AnnotationKey.Kind.document)
             val index = keys.index(key, sortedBy = { lKey, rKey ->
                 val lSortIndex = getSortIndex(lKey) ?: ""
@@ -1462,7 +1485,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun focus(
-        annotation: org.zotero.android.pdf.data.Annotation,
+        annotation: org.zotero.android.pdf.data.PDFAnnotation,
         location: Pair<Int, RectF>,
         document: PdfDocument
     ) {
@@ -1489,7 +1512,7 @@ class PdfReaderViewModel @Inject constructor(
 
 
     private fun select(
-        annotation: org.zotero.android.pdf.data.Annotation?,
+        annotation: org.zotero.android.pdf.data.PDFAnnotation?,
         pageIndex: Int,
         document: PdfDocument
     ) {
@@ -1518,21 +1541,21 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    override fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.Annotation? {
+    override fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.PDFAnnotation? {
         when (key.type) {
             AnnotationKey.Kind.database -> {
                 return this.databaseAnnotations!!.where().key(key.key).findFirst()
-                    ?.let { DatabaseAnnotation(item = it) }
+                    ?.let { PDFDatabaseAnnotation.init(item = it) }
             }
 
             AnnotationKey.Kind.document -> {
-                return viewState.documentAnnotations[key.key]
+                return viewState.pdfDocumentAnnotations[key.key]
             }
         }
     }
 
     private fun update(
-        annotation: org.zotero.android.pdf.data.Annotation,
+        annotation: org.zotero.android.pdf.data.PDFAnnotation,
         color: Pair<String, Boolean>? = null,
         lineWidth: Float? = null,
         contents: String? = null,
@@ -1586,7 +1609,7 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun update(
         pdfAnnotation: Annotation,
-        annotation: DatabaseAnnotation,
+        annotation: PDFDatabaseAnnotation,
         parentKey: String,
         libraryId: LibraryIdentifier,
         isDarkMode: Boolean
@@ -1610,7 +1633,7 @@ class PdfReaderViewModel @Inject constructor(
         }
 
         when (annotation.type) {
-            org.zotero.android.database.objects.AnnotationType.highlight -> {
+            org.zotero.android.database.objects.AnnotationType.highlight, org.zotero.android.database.objects.AnnotationType.underline -> {
                 val newBoundingBox =
                     annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
                 if (newBoundingBox != pdfAnnotation.boundingBox.rounded(3)) {
@@ -1654,7 +1677,7 @@ class PdfReaderViewModel @Inject constructor(
                 }
             }
 
-            org.zotero.android.database.objects.AnnotationType.image -> {
+            org.zotero.android.database.objects.AnnotationType.image, org.zotero.android.database.objects.AnnotationType.freeText -> {
                 val newBoundingBox =
                     annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
                 if (pdfAnnotation.boundingBox.rounded(3) != newBoundingBox) {
@@ -1728,7 +1751,7 @@ class PdfReaderViewModel @Inject constructor(
 //        }
     }
 
-    val selectedAnnotation: org.zotero.android.pdf.data.Annotation?
+    val selectedAnnotation: org.zotero.android.pdf.data.PDFAnnotation?
         get() {
             return viewState.selectedAnnotationKey?.let { annotation(it) }
         }
@@ -1936,7 +1959,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun filter(
-        annotation: org.zotero.android.pdf.data.Annotation,
+        annotation: org.zotero.android.pdf.data.PDFAnnotation,
         term: String,
         displayName: String,
         username: String
@@ -1953,7 +1976,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun filter(
-        annotation: org.zotero.android.pdf.data.Annotation,
+        annotation: org.zotero.android.pdf.data.PDFAnnotation,
         filter: AnnotationsFilter?
     ): Boolean {
         if (filter == null) {
@@ -1974,7 +1997,7 @@ class PdfReaderViewModel @Inject constructor(
         val colors = mutableSetOf<String>()
         val tags = mutableSetOf<Tag>()
 
-        val processAnnotation: (org.zotero.android.pdf.data.Annotation) -> Unit = { annotation ->
+        val processAnnotation: (org.zotero.android.pdf.data.PDFAnnotation) -> Unit = { annotation ->
             colors.add(annotation.color)
             for (tag in annotation.tags) {
                 tags.add(tag)
@@ -1982,9 +2005,9 @@ class PdfReaderViewModel @Inject constructor(
         }
 
         for (annotation in this.databaseAnnotations!!) {
-            processAnnotation(DatabaseAnnotation(item = annotation))
+            processAnnotation(PDFDatabaseAnnotation.init(item = annotation)!!)
         }
-        for (annotation in this.viewState.documentAnnotations.values) {
+        for (annotation in this.viewState.pdfDocumentAnnotations.values) {
             processAnnotation(annotation)
         }
 
@@ -2355,7 +2378,7 @@ class PdfReaderViewModel @Inject constructor(
                 )
             }
         }
-        val request = CreateAnnotationsDbRequest(
+        val request = CreatePDFAnnotationsDbRequest(
             attachmentKey = viewState.key,
             libraryId = viewState.library.identifier,
             annotations = finalAnnotations,
@@ -2395,10 +2418,10 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    private fun splitIfNeededAndProcess(annotations: List<Annotation>): List<DocumentAnnotation> {
+    private fun splitIfNeededAndProcess(annotations: List<Annotation>): List<PDFDocumentAnnotation> {
         var toRemove = mutableListOf<Annotation>()
         var toAdd = mutableListOf<Annotation>()
-        var documentAnnotations = mutableListOf<DocumentAnnotation>()
+        var pdfDocumentAnnotations = mutableListOf<PDFDocumentAnnotation>()
 
         for (annotation in annotations) {
             val tool = tool(annotation) ?:continue
@@ -2423,7 +2446,7 @@ class PdfReaderViewModel @Inject constructor(
                 toAdd.addAll(splitAnnotations)
             }
 
-            documentAnnotations.addAll(
+            pdfDocumentAnnotations.addAll(
                 splitAnnotations.mapNotNull {
                     AnnotationConverter.annotation(
                         this.document,
@@ -2452,7 +2475,7 @@ class PdfReaderViewModel @Inject constructor(
         toAdd.forEach {
             this.document.annotationProvider.addAnnotationToPage(it)
         }
-        return documentAnnotations
+        return pdfDocumentAnnotations
     }
 
     private fun createAnnotations(
@@ -2650,7 +2673,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    override fun onTagsClicked(annotation: org.zotero.android.pdf.data.Annotation) {
+    override fun onTagsClicked(annotation: org.zotero.android.pdf.data.PDFAnnotation) {
 //        if (!annotation.isAuthor(viewState.userId)) {
 //            return
 //        }
@@ -2968,7 +2991,7 @@ data class PdfReaderViewState(
     val visiblePage: Int = 0,
     val focusSidebarKey: AnnotationKey? = null,
     val focusDocumentLocation: Pair<Int, RectF>? = null,
-    val documentAnnotations: Map<String, DocumentAnnotation> = emptyMap(),
+    val pdfDocumentAnnotations: Map<String, PDFDocumentAnnotation> = emptyMap(),
     val sortedKeys: List<AnnotationKey> = emptyList(),
     val snapshotKeys: List<AnnotationKey>? = null,
     var selectedAnnotationCommentActive: Boolean = false,

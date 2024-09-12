@@ -9,7 +9,7 @@ import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.Tag
 
-interface Annotation {
+interface PDFAnnotation {
     val key: String
     val readerKey: AnnotationKey
     val type: AnnotationType
@@ -19,6 +19,8 @@ interface Annotation {
     val comment: String
     val color: String
     val text: String?
+    val fontSize: Float?
+    val rotation: Int?
     val sortIndex: String
     val tags: List<Tag>
 
@@ -38,7 +40,8 @@ interface Annotation {
                 ).rounded(3)
 
             }
-            AnnotationType.note, AnnotationType.highlight , AnnotationType.image -> {
+
+            AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline, AnnotationType.freeText -> {
                 val rects = rects(boundingBoxConverter = boundingBoxConverter)
                 if (rects.size == 1) {
                     return rects[0].rounded(3)

@@ -6,7 +6,9 @@ enum class PdfAnnotationChanges {
     rects,
     lineWidth,
     paths,
-    contents;
+    contents,
+    rotation,
+    fontSize;
 
     companion object {
         fun stringValues(changes: List<PdfAnnotationChanges>): List<String> {
@@ -28,6 +30,12 @@ enum class PdfAnnotationChanges {
             }
             if (changes.contains(contents)) {
                 rawChanges.add("contents")
+            }
+            if (changes.contains(rotation)) {
+                rawChanges.add("rotation")
+            }
+            if (changes.contains(fontSize)) {
+                rawChanges.add("fontSize")
             }
             return rawChanges
         }

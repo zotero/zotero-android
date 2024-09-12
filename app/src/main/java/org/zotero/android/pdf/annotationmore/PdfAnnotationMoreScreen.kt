@@ -113,6 +113,10 @@ internal fun PdfAnnotationMorePart(
                 null -> {
                     //no-op
                 }
+
+                else -> {
+                    //TODO freeText and underline more rows
+                }
             }
         }
         item {

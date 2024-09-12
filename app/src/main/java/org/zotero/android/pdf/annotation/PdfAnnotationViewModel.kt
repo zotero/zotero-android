@@ -152,7 +152,7 @@ internal class PdfAnnotationViewModel @Inject constructor(
 
 internal data class PdfAnnotationViewState(
     val isDark: Boolean = false,
-    val annotation: org.zotero.android.pdf.data.Annotation? = null,
+    val annotation: org.zotero.android.pdf.data.PDFAnnotation? = null,
     val tags: List<Tag> = emptyList(),
     val commentFocusText: String = "",
     val color: String = "",
