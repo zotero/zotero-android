@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.R
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.database.objects.AnnotationType
-import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.uicomponents.Drawables
@@ -46,7 +46,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 internal fun PdfReaderAnnotationsSidebarHeaderSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     annotationColor: Color,
 ) {
     val title = stringResource(R.string.page) + " " + annotation.pageLabel
@@ -55,6 +55,8 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
         AnnotationType.highlight -> Drawables.highlighter_large
         AnnotationType.image -> Drawables.area_large
         AnnotationType.ink -> Drawables.ink_large
+        AnnotationType.underline -> Drawables.ink_large //TODO correct icon
+        AnnotationType.freeText -> Drawables.ink_large //TODO correct icon
     }
     Row(
         modifier = Modifier
@@ -98,7 +100,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
 internal fun PdfReaderAnnotationsSidebarTagsAndCommentsSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
     PdfReaderAnnotationsSidebarCommentSection(
@@ -118,7 +120,7 @@ internal fun PdfReaderAnnotationsSidebarTagsAndCommentsSection(
 private fun PdfReaderAnnotationsSidebarCommentSection(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
     if (viewState.isAnnotationSelected(annotation.key)) {
@@ -157,7 +159,7 @@ private fun PdfReaderAnnotationsSidebarCommentSection(
 
 @Composable
 internal fun PdfReaderAnnotationsSidebarTagsSection(
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
 ) {
@@ -202,7 +204,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
 @Composable
 internal fun PdfReaderAnnotationsSidebarHighlightedTextSection(
     annotationColor: Color,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
 ) {
     Box(
         modifier = Modifier

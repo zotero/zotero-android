@@ -9,7 +9,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
 import java.util.Date
 
-data class DocumentAnnotation(
+data class PDFDocumentAnnotation(
     override val key: String,
     override val type: AnnotationType,
     override val page: Int,
@@ -22,9 +22,11 @@ data class DocumentAnnotation(
     override val color: String,
     override val comment: String,
     override val text: String?,
+    override val fontSize: Float?,
+    override val rotation: Int?,
     override val sortIndex: String,
     val dateModified: Date,
-): Annotation {
+): PDFAnnotation {
     override fun isAuthor(currentUserId: Long): Boolean {
         return this.isAuthor
     }

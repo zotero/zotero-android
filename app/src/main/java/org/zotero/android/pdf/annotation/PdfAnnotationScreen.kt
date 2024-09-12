@@ -107,7 +107,9 @@ internal fun PdfAnnotationPart(
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType,
-                )
+                ) else -> {
+                    //TODO freeText and underline Rows
+                }
             }
         }
         item {

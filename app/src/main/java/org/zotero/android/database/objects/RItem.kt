@@ -110,6 +110,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     var hasPublisher: Boolean = false
     var publicationTitle: String? = ""
     var hasPublicationTitle: Boolean = false
+    var annotationType: String = ""
 
     @Index
     var annotationSortIndex: String = ""
@@ -297,7 +298,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
                 jsonData[FieldKeys.Item.Annotation.Position.paths] = apiPaths
             }
-            AnnotationType.highlight, AnnotationType.image, AnnotationType.note -> {
+
+            AnnotationType.highlight, AnnotationType.image, AnnotationType.note, AnnotationType.underline, AnnotationType.freeText -> {
                 val rectArray = mutableListOf<List<Double>>()
                 this.rects.forEach { rRect ->
                     rectArray.add(

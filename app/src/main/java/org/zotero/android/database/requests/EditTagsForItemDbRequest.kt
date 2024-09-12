@@ -12,6 +12,7 @@ import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
+import java.util.Date
 
 class EditTagsForItemDbRequest(
     val key: String,
@@ -66,6 +67,7 @@ class EditTagsForItemDbRequest(
             item.rawType = item.rawType
             item.changeType = UpdatableChangeType.user.name
             item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.tags)))
+            item.dateModified = Date()
         }
     }
 }

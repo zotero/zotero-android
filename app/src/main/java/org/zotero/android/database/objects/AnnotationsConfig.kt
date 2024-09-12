@@ -22,7 +22,9 @@ object AnnotationsConfig {
         AnnotationType.NOTE,
         AnnotationType.HIGHLIGHT,
         AnnotationType.SQUARE,
-        AnnotationType.INK
+        AnnotationType.INK,
+        AnnotationType.UNDERLINE,
+        AnnotationType.FREETEXT,
     )
     val keyKey = "Zotero:Key"
     val noteAnnotationSize = Pair(22F, 22F)
@@ -63,7 +65,7 @@ object AnnotationsConfig {
 
     fun colors(type: org.zotero.android.database.objects.AnnotationType): List<String> {
         return when (type) {
-            org.zotero.android.database.objects.AnnotationType.ink -> {
+            org.zotero.android.database.objects.AnnotationType.ink, org.zotero.android.database.objects.AnnotationType.freeText -> {
                 listOf(
                     "#ffd400",
                     "#ff6666",

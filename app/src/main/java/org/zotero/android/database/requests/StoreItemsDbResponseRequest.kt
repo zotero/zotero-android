@@ -309,6 +309,10 @@ class StoreItemDbRequest(
                         item.htmlFreeContent = if(value.isEmpty()) null else value.strippedRichTextTags
                     }
 
+                    field.key == FieldKeys.Item.Annotation.type && item.rawType == ItemTypes.annotation -> {
+                        item.annotationType = value
+                    }
+
                     field.key == FieldKeys.Item.date -> {
                         date = value
                     }

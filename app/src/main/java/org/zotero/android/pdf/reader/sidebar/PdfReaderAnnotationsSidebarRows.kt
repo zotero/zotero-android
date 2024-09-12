@@ -3,7 +3,7 @@ package org.zotero.android.pdf.reader.sidebar
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 
@@ -11,7 +11,7 @@ import org.zotero.android.pdf.reader.PdfReaderViewState
 internal fun PdfReaderAnnotationsSidebarImageRow(
     viewState: PdfReaderViewState,
     vMInterface: PdfReaderVMInterface,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     loadPreview: () -> Bitmap?,
 ) {
     PdfReaderAnnotationsSidebarImageSection(
@@ -31,7 +31,7 @@ internal fun PdfReaderAnnotationsSidebarImageRow(
 internal fun PdfReaderAnnotationsSidebarInkRow(
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     loadPreview: () -> Bitmap?,
 ) {
     PdfReaderAnnotationsSidebarImageSection(loadPreview = loadPreview, vMInterface = vMInterface)
@@ -40,7 +40,7 @@ internal fun PdfReaderAnnotationsSidebarInkRow(
 
 @Composable
 internal fun PdfReaderAnnotationsSidebarNoteRow(
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState,
 ) {
@@ -54,7 +54,7 @@ internal fun PdfReaderAnnotationsSidebarNoteRow(
 
 @Composable
 internal fun PdfReaderAnnotationsSidebarHighlightRow(
-    annotation: Annotation,
+    annotation: PDFAnnotation,
     viewState: PdfReaderViewState,
     vMInterface: PdfReaderVMInterface,
     annotationColor: Color,

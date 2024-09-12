@@ -129,6 +129,10 @@ internal fun PdfReaderAnnotationsSidebar(
                                 vMInterface = vMInterface,
                                 viewState = viewState,
                             )
+
+                           else -> {
+                               //TODO freeText and underline sidebar rows
+                           }
                         }
                     }
                 }

@@ -20,17 +20,17 @@ import org.zotero.android.database.objects.RRect
 import org.zotero.android.database.objects.RUser
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.ktx.rounded
-import org.zotero.android.pdf.data.Annotation
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
-import org.zotero.android.pdf.data.DatabaseAnnotation
-import org.zotero.android.pdf.data.DocumentAnnotation
+import org.zotero.android.pdf.data.PDFAnnotation
+import org.zotero.android.pdf.data.PDFDatabaseAnnotation
+import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
-class CreateAnnotationsDbRequest(
+class CreatePDFAnnotationsDbRequest(
     private val attachmentKey: String,
     private val libraryId: LibraryIdentifier,
-    private val annotations: List<DocumentAnnotation>,
+    private val annotations: List<PDFDocumentAnnotation>,
     private val userId: Long,
     private val schemaController: SchemaController,
     private val boundingBoxConverter: AnnotationBoundingBoxConverter,
@@ -47,7 +47,8 @@ class CreateAnnotationsDbRequest(
         }
     }
 
-    private fun create(annotation: DocumentAnnotation, parent: RItem, database: Realm) {
+    private fun create(annotation: PDFDocumentAnnotation, parent: RItem, database: Realm) {
+        var fromRestore = false
         val item: RItem
         val _item = database.where<RItem>().key(annotation.key, this.libraryId).findFirst()
         if (_item != null) {
@@ -57,6 +58,7 @@ class CreateAnnotationsDbRequest(
 
             item = _item
             item.deleted = false
+            fromRestore = true
         } else {
             // If item didn't exist, create it
             item = database.createObject<RItem>()
@@ -68,6 +70,7 @@ class CreateAnnotationsDbRequest(
             item.dateAdded = annotation.dateModified
         }
 
+        item.annotationType = annotation.type.name
         item.syncState = ObjectSyncState.synced.name
         item.changeType = UpdatableChangeType.user.name
         item.htmlFreeContent = if (annotation.comment.isEmpty()) {
@@ -89,8 +92,20 @@ class CreateAnnotationsDbRequest(
             RItemChanges.tags
         )
         addFields(annotation, item, database = database)
-        addRects(rects = annotation.rects, item, changes = changes, database = database)
-        addPaths(paths = annotation.paths, item, changes = changes, database = database)
+        addRects(
+            rects = annotation.rects,
+            fromRestore = fromRestore,
+            item = item,
+            changes = changes,
+            database = database
+        )
+        addPaths(
+            paths = annotation.paths,
+            fromRestore = fromRestore,
+            item = item,
+            changes = changes,
+            database = database
+        )
         item.changes.add(RObjectChange.create(changes = changes))
     }
 
@@ -98,13 +113,20 @@ class CreateAnnotationsDbRequest(
         rects: List<RectF>,
         item: RItem,
         changes: MutableList<RItemChanges>,
-        database: Realm
+        database: Realm,
+        fromRestore: Boolean
     ) {
+        if (fromRestore) {
+            item.rects.deleteAllFromRealm()
+            changes.add(RItemChanges.rects)
+        }
         if (rects.isEmpty()) {
             return
         }
 
-        val page = DatabaseAnnotation(item = item).page
+        val annotation = PDFDatabaseAnnotation.init(item = item) ?: return
+
+        val page = annotation.page
 
         for (rect in rects) {
             val dbRect = this.boundingBoxConverter.convertToDb(rect = rect, page = page) ?: rect
@@ -122,13 +144,18 @@ class CreateAnnotationsDbRequest(
         paths: List<List<PointF>>,
         item: RItem,
         changes: MutableList<RItemChanges>,
-        database: Realm
+        database: Realm,
+        fromRestore: Boolean
     ) {
+        if (fromRestore) {
+            item.paths.deleteAllFromRealm()
+            changes.add(RItemChanges.paths)
+        }
         if (paths.isEmpty()) {
             return
         }
-
-        val page = DatabaseAnnotation(item = item).page
+        val annotation = PDFDatabaseAnnotation.init(item = item) ?: return
+        val page = annotation.page
 
         paths.forEachIndexed { idx, path ->
             val rPath = database.createEmbeddedObject(RPath::class.java, item, "paths")
@@ -152,8 +179,8 @@ class CreateAnnotationsDbRequest(
         changes.add(RItemChanges.paths)
     }
 
-    private fun addFields(annotation: Annotation, item: RItem, database: Realm) {
-        for (field in FieldKeys.Item.Annotation.allFields(annotation.type)) {
+    private fun addFields(annotation: PDFAnnotation, item: RItem, database: Realm) {
+        for (field in FieldKeys.Item.Annotation.allPDFFields(annotation.type)) {
             val rField = database.createEmbeddedObject(RItemField::class.java, item, "fields")
             rField.key = field.key
             rField.baseKey = field.baseKey
@@ -190,6 +217,14 @@ class CreateAnnotationsDbRequest(
 
                 field.key == FieldKeys.Item.Annotation.text -> {
                     rField.value = annotation.text ?: ""
+                }
+
+                field.key == FieldKeys.Item.Annotation.Position.rotation && field.baseKey == FieldKeys.Item.Annotation.position -> {
+                    rField.value = "${annotation.rotation ?: 0}"
+                }
+
+                field.key == FieldKeys.Item.Annotation.Position.fontSize && field.baseKey == FieldKeys.Item.Annotation.position -> {
+                    rField.value = "${annotation.fontSize ?: 0}"
                 }
             }
         }

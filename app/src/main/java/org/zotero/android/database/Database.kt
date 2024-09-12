@@ -35,7 +35,7 @@ import java.io.File
 
 class Database {
     companion object {
-        private const val schemaVersion = 3L //From now on must only increase by 1 whenever db schema changes
+        private const val schemaVersion = 4L //From now on must only increase by 1 whenever db schema changes
 
         fun mainConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()
@@ -57,6 +57,9 @@ class Database {
                 if (oldVersion < 3) {
                     markAllNonLocalGroupsAsOutdatedToTriggerResync(dynamicRealm)
                 }
+                if (oldVersion < 4) {
+                    extractAnnotationTypeFromItems(dynamicRealm)
+                }
             }
 
             override fun equals(other: Any?): Boolean {
@@ -72,6 +75,36 @@ class Database {
                 return fileName.hashCode()
             }
 
+        }
+
+        private fun extractAnnotationTypeFromItems(dynamicRealm: DynamicRealm) {
+            val realmSchema = dynamicRealm.schema
+
+            val rItemDbSchema = realmSchema.get(RItem::class.java.simpleName)
+            rItemDbSchema?.run {
+                addField("annotationType", String::class.java, FieldAttribute.REQUIRED)
+                transform {
+                    it.set("annotationType", "")
+                }
+            }
+
+            val allItems = dynamicRealm.where(RItem::class.java.simpleName).findAll()
+            for (item in allItems) {
+                val rawType = item.getString("rawType") ?:continue
+                val fields = item.getList("fields") ?: continue
+                println()
+                when (rawType) {
+                    ItemTypes.annotation -> {
+                        val annotationType = fields.where().key(
+                            FieldKeys.Item.Annotation.type
+                        ).findFirst()?.getString("value") ?: continue
+                        if (annotationType.isEmpty()) {
+                            continue
+                        }
+                        item.setString("annotationType", annotationType)
+                    }
+                }
+            }
         }
 
         private fun markAllNonLocalGroupsAsOutdatedToTriggerResync(dynamicRealm: DynamicRealm) {

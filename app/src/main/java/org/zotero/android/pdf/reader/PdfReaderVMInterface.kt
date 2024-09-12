@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.fragment.app.FragmentManager
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
-import org.zotero.android.pdf.data.Annotation
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderThumbnailRow
 import org.zotero.android.pdf.reader.sidebar.data.ThumbnailPreviewMemoryCache
@@ -25,12 +25,12 @@ interface PdfReaderVMInterface {
         isTablet: Boolean,
     )
 
-    fun onTagsClicked(annotation: Annotation)
+    fun onTagsClicked(annotation: PDFAnnotation)
     fun onAnnotationSearch(text: String)
     fun onCommentFocusFieldChange(annotationKey: String)
     fun onCommentTextChange(annotationKey: String, comment: String)
     fun onMoreOptionsForItemClicked()
-    fun annotation(key: AnnotationKey): Annotation?
+    fun annotation(key: AnnotationKey): PDFAnnotation?
     fun selectAnnotation(key: AnnotationKey)
     fun loadAnnotationPreviews(keys: List<String>)
     fun showFilterPopup()

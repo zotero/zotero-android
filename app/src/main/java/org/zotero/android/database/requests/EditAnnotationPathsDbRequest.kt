@@ -11,7 +11,7 @@ import org.zotero.android.database.objects.RPath
 import org.zotero.android.database.objects.RPathCoordinate
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
-import org.zotero.android.pdf.data.DatabaseAnnotation
+import org.zotero.android.pdf.data.PDFDatabaseAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 
 class EditAnnotationPathsDbRequest(
@@ -25,7 +25,8 @@ class EditAnnotationPathsDbRequest(
 
     override fun process(database: Realm) {
         val item = database.where<RItem>().key(this.key, this.libraryId).findFirst() ?: return
-        val page = DatabaseAnnotation(item = item).page
+        val annotation = PDFDatabaseAnnotation.init(item) ?: return
+        val page = annotation.page
         val dbPaths = this.paths.map { path ->
             path.map { this.boundingBoxConverter.convertToDb(point = it, page = page) ?: it }
         }
