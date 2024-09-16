@@ -28,7 +28,7 @@ class ReadAnnotationsDbRequest(
             .parent(this.attachmentKey, this.libraryId)
             .items(type = ItemTypes.annotation, notSyncState = ObjectSyncState.dirty)
             .deleted(false)
-            .rawPredicate("annotationType in %@", supportedTypes)
+            .`in`("annotationType", supportedTypes.toTypedArray())
             .sort("annotationSortIndex", Sort.ASCENDING)
             .findAll()
     }

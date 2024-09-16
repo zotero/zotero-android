@@ -56,7 +56,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
         AnnotationType.image -> Drawables.area_large
         AnnotationType.ink -> Drawables.ink_large
         AnnotationType.underline -> Drawables.ink_large //TODO correct icon
-        AnnotationType.freeText -> Drawables.ink_large //TODO correct icon
+        AnnotationType.text -> Drawables.ink_large //TODO correct icon
     }
     Row(
         modifier = Modifier

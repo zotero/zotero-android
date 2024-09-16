@@ -46,7 +46,7 @@ internal fun PdfAnnotationHeaderRow(
         AnnotationType.image -> Drawables.area_large
         AnnotationType.ink -> Drawables.ink_large
         AnnotationType.underline -> Drawables.ink_large // TODO set correct icon
-        AnnotationType.freeText -> Drawables.ink_large// TODO set correct icon
+        AnnotationType.text -> Drawables.ink_large// TODO set correct icon
     }
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(

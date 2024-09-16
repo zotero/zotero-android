@@ -115,7 +115,7 @@ class AnnotationConverter {
                     alpha = alpha,
                     boundingBoxConverter = boundingBoxConverter
                 )
-                AnnotationType.freeText -> annotation = freeTextAnnotation(
+                AnnotationType.text -> annotation = freeTextAnnotation(
                     zoteroAnnotation,
                     color = color,
                     boundingBoxConverter = boundingBoxConverter
@@ -366,7 +366,7 @@ class AnnotationConverter {
                 text = underlineAnnotation.highlightedText
                 paths = emptyList()
             } else if (freeTextAnnotation != null) {
-                type = AnnotationType.freeText
+                type = AnnotationType.text
                 fontSize = annotation.textSize
                 rotation = annotation.rotation
                 paths = emptyList()

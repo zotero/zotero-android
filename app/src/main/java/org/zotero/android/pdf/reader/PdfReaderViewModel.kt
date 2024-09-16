@@ -1073,7 +1073,7 @@ class PdfReaderViewModel @Inject constructor(
                     return false
                 }
             }
-            org.zotero.android.database.objects.AnnotationType.freeText -> {
+            org.zotero.android.database.objects.AnnotationType.text -> {
                 if (databaseAnnotation.item.rects.isEmpty()) {
                     Timber.i("PDFReaderActionHandler: ${databaseAnnotation.type} annotation ${databaseAnnotation.key} missing rects")
                     return false
@@ -1677,7 +1677,7 @@ class PdfReaderViewModel @Inject constructor(
                 }
             }
 
-            org.zotero.android.database.objects.AnnotationType.image, org.zotero.android.database.objects.AnnotationType.freeText -> {
+            org.zotero.android.database.objects.AnnotationType.image, org.zotero.android.database.objects.AnnotationType.text -> {
                 val newBoundingBox =
                     annotation.boundingBox(boundingBoxConverter = annotationBoundingBoxConverter)
                 if (pdfAnnotation.boundingBox.rounded(3) != newBoundingBox) {

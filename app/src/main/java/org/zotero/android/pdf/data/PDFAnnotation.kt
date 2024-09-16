@@ -41,7 +41,7 @@ interface PDFAnnotation {
 
             }
 
-            AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline, AnnotationType.freeText -> {
+            AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline, AnnotationType.text -> {
                 val rects = rects(boundingBoxConverter = boundingBoxConverter)
                 if (rects.size == 1) {
                     return rects[0].rounded(3)

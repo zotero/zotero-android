@@ -1,12 +1,12 @@
 package org.zotero.android.database.objects
 
-enum class AnnotationType(val str: String) {
-    note(""),
-    highlight(""),
-    image(""),
-    ink(""),
-    underline(""),
-    freeText("text");
+enum class AnnotationType() {
+    note,
+    highlight,
+    image,
+    ink,
+    underline,
+    text;
 
 
     val kind: com.pspdfkit.annotations.AnnotationType
@@ -17,7 +17,7 @@ enum class AnnotationType(val str: String) {
                 image -> com.pspdfkit.annotations.AnnotationType.SQUARE
                 ink -> com.pspdfkit.annotations.AnnotationType.INK
                 underline -> com.pspdfkit.annotations.AnnotationType.UNDERLINE
-                freeText -> com.pspdfkit.annotations.AnnotationType.FREETEXT
+                text -> com.pspdfkit.annotations.AnnotationType.FREETEXT
             }
         }
 }

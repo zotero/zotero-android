@@ -299,7 +299,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 jsonData[FieldKeys.Item.Annotation.Position.paths] = apiPaths
             }
 
-            AnnotationType.highlight, AnnotationType.image, AnnotationType.note, AnnotationType.underline, AnnotationType.freeText -> {
+            AnnotationType.highlight, AnnotationType.image, AnnotationType.note, AnnotationType.underline, AnnotationType.text -> {
                 val rectArray = mutableListOf<List<Double>>()
                 this.rects.forEach { rRect ->
                     rectArray.add(

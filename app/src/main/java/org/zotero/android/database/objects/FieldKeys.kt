@@ -180,7 +180,7 @@ class FieldKeys {
                                 KeyBaseKeyPair(key = sortIndex, baseKey = null),
                             )
                         }
-                        AnnotationType.freeText -> {
+                        AnnotationType.text -> {
                             return listOf(
                                 KeyBaseKeyPair(key = type, baseKey = null),
                                 KeyBaseKeyPair(key = comment, baseKey = null),
@@ -241,7 +241,7 @@ class FieldKeys {
                             )
                         }
 
-                        AnnotationType.freeText -> {
+                        AnnotationType.text -> {
                             return listOf(
                                 KeyBaseKeyPair(key = Companion.type, baseKey = null),
                                 KeyBaseKeyPair(key = comment, baseKey = null),
