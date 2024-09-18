@@ -26,6 +26,12 @@ import org.zotero.android.pdf.reader.PdfReaderBottomPanel
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.PdfSidebarSearchBar
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarFreeTextRow
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarHighlightRow
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarImageRow
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarInkRow
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarNoteRow
+import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarUnderlineRow
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -103,36 +109,57 @@ internal fun PdfReaderAnnotationsSidebar(
                         SidebarDivider()
 
                         when (annotation.type) {
-                            AnnotationType.note -> PdfReaderAnnotationsSidebarNoteRow(
-                                annotation = annotation,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                            )
+                            AnnotationType.note -> {
+                                PdfReaderAnnotationsSidebarNoteRow(
+                                    annotation = annotation,
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                )
+                            }
 
-                            AnnotationType.highlight -> PdfReaderAnnotationsSidebarHighlightRow(
-                                annotation = annotation,
-                                annotationColor = annotationColor,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                            )
+                            AnnotationType.highlight -> {
+                                PdfReaderAnnotationsSidebarHighlightRow(
+                                    annotation = annotation,
+                                    annotationColor = annotationColor,
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                )
+                            }
 
-                            AnnotationType.ink -> PdfReaderAnnotationsSidebarInkRow(
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                            )
+                            AnnotationType.ink -> {
+                                PdfReaderAnnotationsSidebarInkRow(
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                    annotation = annotation,
+                                    loadPreview = loadPreview,
+                                )
+                            }
 
-                            AnnotationType.image -> PdfReaderAnnotationsSidebarImageRow(
-                                annotation = annotation,
-                                loadPreview = loadPreview,
-                                vMInterface = vMInterface,
-                                viewState = viewState,
-                            )
+                            AnnotationType.image -> {
+                                PdfReaderAnnotationsSidebarImageRow(
+                                    annotation = annotation,
+                                    loadPreview = loadPreview,
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                )
+                            }
 
-                           else -> {
-                               //TODO freeText and underline sidebar rows
-                           }
+                            AnnotationType.text -> {
+                                PdfReaderAnnotationsSidebarFreeTextRow(
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                    annotation = annotation,
+                                    loadPreview = loadPreview,
+                                )
+                            }
+                            AnnotationType.underline -> {
+                                PdfReaderAnnotationsSidebarUnderlineRow(
+                                    annotation = annotation,
+                                    annotationColor = annotationColor,
+                                    vMInterface = vMInterface,
+                                    viewState = viewState,
+                                )
+                            }
                         }
                     }
                 }

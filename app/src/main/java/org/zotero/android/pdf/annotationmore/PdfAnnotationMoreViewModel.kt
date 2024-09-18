@@ -58,8 +58,10 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
                 color = annotation.color,
                 colors = colors,
                 lineWidth = annotation.lineWidth ?: 1.0f,
+                fontSize = annotation.fontSize ?: 12f,
                 highlightText = annotation.text ?: "",
                 pageLabel = annotation.pageLabel,
+                underlineText = annotation.text ?: "",
             )
         }
     }
@@ -112,18 +114,43 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
     }
 
     fun onSave() {
+        val text = when(viewState.type) {
+            AnnotationType.highlight -> {
+                viewState.highlightText
+            }
+            AnnotationType.underline -> {
+                viewState.underlineText
+            }
+            else -> {
+                ""
+            }
+        }
         EventBus.getDefault().post(
             PdfAnnotationMoreSaveResult(
                 key = viewState.key!!,
                 color = viewState.color,
                 lineWidth = viewState.lineWidth,
+                fontSize = viewState.fontSize,
                 pageLabel = viewState.pageLabel,
                 updateSubsequentLabels = viewState.updateSubsequentLabels,
-                highlightText = viewState.highlightText
+                text = text
             )
         )
         triggerEffect(PdfAnnotationMoreViewEffect.Back)
 
+    }
+
+    fun onFontSizeDecrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize - 0.5f)
+        }
+
+    }
+
+    fun onFontSizeIncrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize + 0.5f)
+        }
     }
 
 }
@@ -135,9 +162,11 @@ internal data class PdfAnnotationMoreViewState(
     val color: String = "",
     val colors: List<String> = emptyList(),
     val lineWidth: Float = 1.0f,
+    val fontSize: Float = 12f,
     val pageLabel: String = "",
     val updateSubsequentLabels: Boolean = false,
     val highlightText: String = "",
+    val underlineText: String = "",
 ) : ViewState
 
 internal sealed class PdfAnnotationMoreViewEffect : ViewEffect {

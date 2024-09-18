@@ -31,4 +31,7 @@
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
 
+    <string name="pdf.annotation_toolbar.underline">Underline</string>
+    <string name="pdf.annotation_toolbar.text">Text</string>
+
 </resources>

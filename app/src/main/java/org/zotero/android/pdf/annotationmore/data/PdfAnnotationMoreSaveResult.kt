@@ -6,7 +6,8 @@ data class PdfAnnotationMoreSaveResult(
     val key: AnnotationKey,
     val color: String,
     val lineWidth: Float,
+    val fontSize: Float,
     val pageLabel: String,
     val updateSubsequentLabels: Boolean,
-    val highlightText: String
+    val text: String,
 )

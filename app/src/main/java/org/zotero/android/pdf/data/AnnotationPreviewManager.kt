@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import androidx.core.graphics.scale
 import com.pspdfkit.annotations.Annotation
+import com.pspdfkit.annotations.FreeTextAnnotation
 import com.pspdfkit.annotations.InkAnnotation
 import com.pspdfkit.configuration.rendering.PageRenderConfiguration
 import com.pspdfkit.document.PdfDocument
@@ -114,7 +115,7 @@ class AnnotationPreviewManager @Inject constructor(
             maxSide = bitmapSize
         )
 
-        val shouldDrawAnnotation = annotation is InkAnnotation
+        val shouldDrawAnnotation = annotation is InkAnnotation || annotation is FreeTextAnnotation
         if (shouldDrawAnnotation) {
             drawAnnotationOnBitmap(resultBitmap, annotation)
         }

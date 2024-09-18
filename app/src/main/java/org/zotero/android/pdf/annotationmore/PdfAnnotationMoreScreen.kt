@@ -24,6 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreFreeTextRow
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreHighlightRow
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreImageRow
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreInkRow
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreNoteRow
+import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreUnderlineRow
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -88,34 +94,52 @@ internal fun PdfAnnotationMorePart(
     ) {
         item {
             when (viewState.type) {
-                AnnotationType.note -> PdfAnnotationMoreNoteRow(
-                    viewModel = viewModel,
-                    viewState = viewState,
-                )
+                AnnotationType.note -> {
+                    PdfAnnotationMoreNoteRow(
+                        viewModel = viewModel,
+                        viewState = viewState,
+                    )
+                }
 
-                AnnotationType.highlight -> PdfAnnotationMoreHighlightRow(
-                    layoutType = layoutType,
-                    viewState = viewState,
-                    viewModel = viewModel,
-                )
+                AnnotationType.highlight -> {
+                    PdfAnnotationMoreHighlightRow(
+                        layoutType = layoutType,
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
+                }
 
-                AnnotationType.ink -> PdfAnnotationMoreInkRow(
-                    viewModel = viewModel,
-                    viewState = viewState,
-                    layoutType = layoutType,
-                )
+                AnnotationType.ink -> {
+                    PdfAnnotationMoreInkRow(
+                        viewModel = viewModel,
+                        viewState = viewState,
+                        layoutType = layoutType,
+                    )
+                }
 
-                AnnotationType.image -> PdfAnnotationMoreImageRow(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                )
+                AnnotationType.image -> {
+                    PdfAnnotationMoreImageRow(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
+                }
+
+                AnnotationType.text-> {
+                    PdfAnnotationMoreFreeTextRow(
+                        viewModel = viewModel,
+                        viewState = viewState,
+                    )
+                }
+                AnnotationType.underline -> {
+                    PdfAnnotationMoreUnderlineRow(
+                        layoutType = layoutType,
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
+                }
 
                 null -> {
                     //no-op
-                }
-
-                else -> {
-                    //TODO freeText and underline more rows
                 }
             }
         }

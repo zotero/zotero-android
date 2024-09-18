@@ -70,6 +70,8 @@ internal class PdfReaderColorPickerViewModel @Inject constructor(
             AnnotationTool.NOTE -> AnnotationsConfig.colors(AnnotationType.note)
             AnnotationTool.HIGHLIGHT -> AnnotationsConfig.colors(AnnotationType.highlight)
             AnnotationTool.SQUARE -> AnnotationsConfig.colors(AnnotationType.image)
+            AnnotationTool.UNDERLINE -> AnnotationsConfig.colors(AnnotationType.underline)
+            AnnotationTool.FREETEXT -> AnnotationsConfig.colors(AnnotationType.text)
             else -> listOf()
         }
     }

@@ -17,14 +17,20 @@ object AnnotationsConfig {
         "#aaaaaa",
         "#000000"
     )
+    val typesWithColorVariation: List<org.zotero.android.database.objects.AnnotationType?> = listOf(
+        null,
+        org.zotero.android.database.objects.AnnotationType.highlight,
+        org.zotero.android.database.objects.AnnotationType.underline
+    )
+    val userInterfaceStylesWithVarition: List<Boolean> = listOf(false, true)
     val positionSizeLimit = 65000
     val supported = EnumSet.of(
         AnnotationType.NOTE,
         AnnotationType.HIGHLIGHT,
         AnnotationType.SQUARE,
         AnnotationType.INK,
-//        AnnotationType.UNDERLINE,
-//        AnnotationType.FREETEXT,
+        AnnotationType.UNDERLINE,
+        AnnotationType.FREETEXT,
     )
     val keyKey = "Zotero:Key"
     val noteAnnotationSize = Pair(22F, 22F)
@@ -35,30 +41,16 @@ object AnnotationsConfig {
         val map = mutableMapOf<Int, String>()
         for (hexBaseColor in this.allColors) {
             val baseColor = hexBaseColor
-            val color1 = AnnotationColorGenerator.color(
-                colorHex = baseColor,
-                isHighlight = false,
-                isDarkMode = false
-            ).first
-            map[color1] = hexBaseColor
-            val color2 = AnnotationColorGenerator.color(
-                colorHex = baseColor,
-                isHighlight = false,
-                isDarkMode = true
-            ).first
-            map[color2] = hexBaseColor
-            val color3 = AnnotationColorGenerator.color(
-                colorHex = baseColor,
-                isHighlight = true,
-                isDarkMode = false
-            ).first
-            map[color3] = hexBaseColor
-            val color4 = AnnotationColorGenerator.color(
-                colorHex = baseColor,
-                isHighlight = true,
-                isDarkMode = true
-            ).first
-            map[color4] = hexBaseColor
+            for (type in typesWithColorVariation) {
+                for (userInterfaceStyle in userInterfaceStylesWithVarition) {
+                    val variation = AnnotationColorGenerator.color(
+                        baseColor,
+                        type = type,
+                        isDarkMode = userInterfaceStyle
+                    ).first
+                    map[variation] = hexBaseColor
+                }
+            }
         }
         return map
     }

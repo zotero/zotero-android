@@ -38,8 +38,11 @@ open class Defaults @Inject constructor(
     private val noteColorHex = "noteColorHex"
     private val squareColorHex = "squareColorHex"
     private val inkColorHex = "inkColorHex"
+    private val underlineColorHex = "underlineColorHex"
+    private val textColorHex = "textColorHex"
     private val activeLineWidth = "activeLineWidth"
     private val activeEraserSize = "activeEraserSize"
+    private val activeFontSize = "activeFontSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
 
     private val lastTimestamp = "lastTimestamp"
@@ -94,6 +97,22 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getString(inkColorHex, AnnotationsConfig.defaultActiveColor )!!
     }
 
+    fun setTextColorHex(str: String) {
+        sharedPreferences.edit { putString(textColorHex, str) }
+    }
+
+    fun getTextColorHex(): String {
+        return sharedPreferences.getString(textColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
+    fun setUnderlineColorHex(str: String) {
+        sharedPreferences.edit { putString(underlineColorHex, str) }
+    }
+
+    fun getUnderlineColorHex(): String {
+        return sharedPreferences.getString(underlineColorHex, AnnotationsConfig.defaultActiveColor )!!
+    }
+
     fun setActiveLineWidth(width: Float) {
         sharedPreferences.edit { putFloat(activeLineWidth, width) }
     }
@@ -108,6 +127,14 @@ open class Defaults @Inject constructor(
 
     fun getActiveEraserSize(): Float {
         return sharedPreferences.getFloat(activeEraserSize, 10f )
+    }
+
+    fun setActiveFontSize(size: Float) {
+        sharedPreferences.edit { putFloat(activeFontSize, size) }
+    }
+
+    fun getActiveFontSize(): Float {
+        return sharedPreferences.getFloat(activeFontSize, 12f )
     }
 
     fun setUserId(str: Long) {
@@ -381,6 +408,8 @@ open class Defaults @Inject constructor(
         setSquareColorHex(AnnotationsConfig.defaultActiveColor)
         setNoteColorHex(AnnotationsConfig.defaultActiveColor)
         setHighlightColorHex(AnnotationsConfig.defaultActiveColor)
+        setUnderlineColorHex(AnnotationsConfig.defaultActiveColor)
+        setTextColorHex(AnnotationsConfig.defaultActiveColor)
         setPDFSettings(pdfSettings = PDFSettings.default())
 
         setWebDavUrl(null)

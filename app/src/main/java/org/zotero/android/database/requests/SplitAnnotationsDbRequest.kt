@@ -49,7 +49,7 @@ class SplitAnnotationsDbRequest(
         }
 
         when (annotationType) {
-            AnnotationType.highlight -> {
+            AnnotationType.highlight, AnnotationType.underline -> {
                 val rects = item.rects.map {
                     RectF(
                         /* left = */ it.minX.toFloat(),

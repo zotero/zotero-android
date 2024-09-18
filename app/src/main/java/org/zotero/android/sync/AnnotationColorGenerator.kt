@@ -3,6 +3,7 @@ package org.zotero.android.sync
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.pspdfkit.annotations.BlendMode
+import org.zotero.android.database.objects.AnnotationType
 import java.lang.Float.min
 
 
@@ -10,17 +11,47 @@ class AnnotationColorGenerator {
     companion object {
         private val highlightOpacity: Float = 0.5F
         private val highlightDarkOpacity: Float = 0.5F
+        private val underlineOpacity: Float = 1F
+        private val valunderlineDarkOpacity: Float = 1F
+
 
         fun color(
             colorHex: String,
-            isHighlight: Boolean,
+            type: AnnotationType?,
             isDarkMode: Boolean
         ): Triple<Int, Float, BlendMode?> {
             val colorInt = android.graphics.Color.parseColor(colorHex)
-            if (!isHighlight) {
-                return Triple(colorInt, 1F, null)
-            }
 
+            var opacity: Float = 1F
+
+            when (type) {
+                AnnotationType.note,
+                AnnotationType.image,
+                AnnotationType.ink,
+                AnnotationType.text -> {
+                    return Triple(colorInt, 1F, null)
+                }
+
+                AnnotationType.highlight -> {
+                    if (isDarkMode) {
+                        opacity = this.highlightDarkOpacity
+                    } else {
+                        opacity = this.highlightOpacity
+                    }
+                }
+
+                AnnotationType.underline -> {
+                    if (isDarkMode) {
+                        opacity = this.valunderlineDarkOpacity
+                    } else {
+                        opacity = this.underlineOpacity
+                    }
+                }
+
+                null -> {
+                }
+            }
+            val adjustedColor: Int
             if (isDarkMode) {
                 val hsv = getHSVFromColor(colorInt)
                 val hue: Float = hsv[0]
@@ -30,39 +61,48 @@ class AnnotationColorGenerator {
 
                 val adjustedSat = min(1F, (sat * 1.2F))
 
-                val adjustedColor = android.graphics.Color.HSVToColor(
-                    (highlightDarkOpacity * 255).toInt(),
+                adjustedColor = android.graphics.Color.HSVToColor(
+                    (opacity * 255).toInt(),
                     listOf(hue, adjustedSat, brg).toFloatArray()
                 )
-                return Triple(
-                    adjustedColor,
-                    highlightDarkOpacity,
-                    BlendMode.LIGHTEN
-                )
+
             } else {
                 val color = Color(colorInt)
-                val adjustedColor = Color(
+                adjustedColor = Color(
                     color.red,
                     color.green,
                     color.blue,
-                    highlightOpacity
-                )
-                return Triple(
-                    adjustedColor.toArgb(),
-                    highlightOpacity,
-                    BlendMode.MULTIPLY
-                )
+                    opacity
+                ).toArgb()
+            }
+            return Triple(
+                adjustedColor,
+                opacity,
+                blendMode(isDarkMode, type = type)
+            )
+        }
+
+        fun blendMode(isDarkMode: Boolean, type: AnnotationType?): BlendMode? {
+            when (type) {
+                AnnotationType.note,
+                AnnotationType.image,
+                AnnotationType.ink,
+                AnnotationType.text -> {
+                    return null
+                }
+
+                AnnotationType.highlight,
+                AnnotationType.underline -> {
+                    return if (isDarkMode) BlendMode.LIGHTEN else BlendMode.MULTIPLY
+                }
+
+                null -> {
+                    return null
+                }
             }
         }
 
-        fun blendMode(isDarkMode: Boolean, isHighlight: Boolean): BlendMode? {
-            if (!isHighlight) {
-                return null
-            }
-            return if (isDarkMode) BlendMode.LIGHTEN else BlendMode.MULTIPLY
-        }
-
-        fun getHSVFromColor(color: Int): FloatArray {
+        private fun getHSVFromColor(color: Int): FloatArray {
             val hsv = FloatArray(3)
             android.graphics.Color.colorToHSV(color, hsv)
             return hsv

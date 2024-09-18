@@ -51,12 +51,12 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
 ) {
     val title = stringResource(R.string.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
-        AnnotationType.note -> Drawables.note_large
-        AnnotationType.highlight -> Drawables.highlighter_large
-        AnnotationType.image -> Drawables.area_large
-        AnnotationType.ink -> Drawables.ink_large
-        AnnotationType.underline -> Drawables.ink_large //TODO correct icon
-        AnnotationType.text -> Drawables.ink_large //TODO correct icon
+        AnnotationType.note -> Drawables.annotate_note
+        AnnotationType.highlight -> Drawables.annotate_highlight
+        AnnotationType.image -> Drawables.annotate_area
+        AnnotationType.ink -> Drawables.annotate_ink
+        AnnotationType.underline -> Drawables.annotate_underline
+        AnnotationType.text -> Drawables.annotate_text
     }
     Row(
         modifier = Modifier
@@ -242,6 +242,32 @@ internal fun PdfReaderAnnotationsSidebarImageSection(
                 .heightIn(max = vMInterface.annotationMaxSideSize.pxToDp()),
             bitmap = cachedBitmap.asImageBitmap(),
             contentDescription = null,
+        )
+    }
+}
+
+@Composable
+internal fun PdfReaderAnnotationsSidebarUnderlineTextSection(
+    annotationColor: Color,
+    annotation: PDFAnnotation,
+) {
+    Box(
+        modifier = Modifier
+            .sectionHorizontalPadding()
+            .sectionVerticalPadding()
+            .height(IntrinsicSize.Max)
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .fillMaxHeight()
+                .background(annotationColor)
+        )
+        Text(
+            modifier = Modifier.padding(start = 8.dp),
+            text = annotation.text ?: "",
+            color = Color(0xFF6E6D73),
+            style = CustomTheme.typography.newInfo,
         )
     }
 }

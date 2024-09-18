@@ -76,7 +76,7 @@ class AnnotationConverter {
         ): Annotation {
             val (color, alpha, blendMode) = AnnotationColorGenerator.color(
                 zoteroAnnotation.color,
-                isHighlight = (zoteroAnnotation.type == AnnotationType.highlight),
+                type = zoteroAnnotation.type,
                 isDarkMode = isDarkMode
             )
             val annotation: Annotation
@@ -184,12 +184,12 @@ class AnnotationConverter {
             color: Int,
             boundingBoxConverter: AnnotationBoundingBoxConverter
         ): Annotation {
-            val rect = annotation.rects(boundingBoxConverter)[0].rounded(3)
+            val rect = annotation.rects(boundingBoxConverter)[0]
             val text = FreeTextAnnotation(annotation.page, rect, annotation.comment)
             text.color = color
             text.textSize = annotation.fontSize ?: 0.0f
             text.setBoundingBox(annotation.boundingBox(boundingBoxConverter))//transform size
-            text.setRotation(annotation.rotation ?: 0)
+            text.setRotation(360 - (annotation.rotation ?: 0))
             text.adjustBoundsForRotation()
             return text
         }
@@ -419,34 +419,29 @@ class AnnotationConverter {
         }
 
         private fun rects(annotation: FreeTextAnnotation) : List<RectF>  {
-            if (annotation.rotation <= 0) {
-                return listOf(annotation.boundingBox)
-            }
-            val originalRotation = annotation.rotation
-            annotation.setRotation(0)
-            annotation.adjustBoundsForRotation()
-            val boundingBox = annotation.boundingBox.rounded(3)
-            annotation.setRotation(originalRotation)
-            annotation.adjustBoundsForRotation()
-            return listOf(boundingBox)
-        }
-
-        fun rects(annotation: Annotation): List<RectF>? {
-            when(annotation) {
-                is NoteAnnotation -> {
-                    rects(annotation)
-                }
-                is HighlightAnnotation, is UnderlineAnnotation -> {
-                    rectsUnderlineAndHightlight(annotation as TextMarkupAnnotation)
-                }
-                is SquareAnnotation -> {
-                    rects(annotation)
-                }
-                is FreeTextAnnotation -> {
-                    rects(annotation)
-                }
-            }
-            return null
+            return listOf(annotation.boundingBox)
+//            if (annotation.rotation <= 0) {
+//                return listOf(
+//                    annotation.boundingBox
+//                )
+//            }
+//
+//            val tempAnnotation = FreeTextAnnotation(
+//                annotation.pageIndex,
+//                annotation.boundingBox,
+//                annotation.contents
+//            )
+//            tempAnnotation.textSize = annotation.textSize
+//            tempAnnotation.fontName = annotation.fontName
+//            tempAnnotation.setRotation(annotation.rotation)
+//
+//            val originalRotation = tempAnnotation.rotation
+//            val oldBox = tempAnnotation.boundingBox
+//            println(oldBox)
+//            tempAnnotation.setRotation(0)
+//            val boundingBox = tempAnnotation.boundingBox
+////            tempAnnotation.setRotation(originalRotation)
+//            return listOf(boundingBox)
         }
 
         fun paths(annotation: InkAnnotation): List<List<PointF>> {
@@ -458,7 +453,8 @@ class AnnotationConverter {
         }
         fun sortIndex(annotation: Annotation, boundingBoxConverter: AnnotationBoundingBoxConverter?):  String {
             val rect: RectF
-            if (annotation is HighlightAnnotation) {
+            if (annotation is HighlightAnnotation || annotation is UnderlineAnnotation) {
+                annotation as TextMarkupAnnotation
                 rect = annotation.rects.firstOrNull() ?: annotation.boundingBox
             } else {
                 rect = annotation.boundingBox
@@ -486,5 +482,22 @@ class AnnotationConverter {
             return "Unknown"
         }
 
+        fun rects(annotation: Annotation): List<RectF>? {
+            when(annotation) {
+                is NoteAnnotation -> {
+                    rects(annotation)
+                }
+                is HighlightAnnotation, is UnderlineAnnotation -> {
+                    rectsUnderlineAndHightlight(annotation as TextMarkupAnnotation)
+                }
+                is SquareAnnotation -> {
+                    rects(annotation)
+                }
+                is FreeTextAnnotation -> {
+                    return rects(annotation)
+                }
+            }
+            return null
+        }
     }
 }

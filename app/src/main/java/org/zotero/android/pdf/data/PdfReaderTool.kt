@@ -7,5 +7,4 @@ data class PdfReaderTool(
     val title: Int,
     val image: Int,
     val isHidden: Boolean,
-) {
-}
+)

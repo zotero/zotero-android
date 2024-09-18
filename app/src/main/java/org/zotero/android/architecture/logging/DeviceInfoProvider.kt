@@ -12,23 +12,26 @@ object DeviceInfoProvider {
         return "Version: $versionAndBuild\nDevice: $device\nOS: $osVersion"
     }
 
-    val versionAndBuild: String get() {
-        return "$versionString ($buildString)"
+    private val versionAndBuild: String get() {
+        val devBuildIndicator = if (BuildConfig.FLAVOR == "dev") {
+            "dev"
+        } else ""
+        return "$versionString ($buildString) $devBuildIndicator"
     }
 
-    val versionString: String get() {
+    private val versionString: String get() {
         return BuildConfig.VERSION_NAME
     }
 
-    val buildString: String get() {
+    private val buildString: String get() {
         return BuildConfig.VERSION_CODE.toString()
     }
 
-    val device: String get() {
+    private val device: String get() {
         return "${Build.MANUFACTURER} ${Build.DEVICE}"
     }
 
-    val osVersion: String get() {
+    private val osVersion: String get() {
         return "Android "+ Build.VERSION.SDK_INT
     }
 

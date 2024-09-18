@@ -39,10 +39,15 @@ class EditAnnotationRectsDbRequest(
 
         for (rect in rects) {
             val rRect = database.createEmbeddedObject(RRect::class.java, item, "rects")
-            rRect.minX = rect.left.toDouble()
-            rRect.minY = rect.bottom.toDouble()
-            rRect.maxX = rect.right.toDouble()
-            rRect.maxY = rect.top.toDouble()
+            val minX = rect.left.toDouble()
+            val minY = rect.bottom.toDouble()
+            val maxX = rect.right.toDouble()
+            val maxY = rect.top.toDouble()
+
+            rRect.minX = minX
+            rRect.minY = minY
+            rRect.maxX = maxX
+            rRect.maxY = maxY
         }
 
         item.changes.add(RObjectChange.create(changes = listOf(RItemChanges.rects)))

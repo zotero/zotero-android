@@ -55,31 +55,43 @@ private val pdfReaderToolsList = listOf(
     PdfReaderTool(
         type = AnnotationTool.HIGHLIGHT,
         title = Strings.pdf_annotation_toolbar_highlight,
-        image = Drawables.highlighter_large,
+        image = Drawables.annotate_highlight,
+        isHidden = false
+    ),
+    PdfReaderTool(
+        type = AnnotationTool.UNDERLINE,
+        title = Strings.pdf_annotation_toolbar_underline,
+        image = Drawables.annotate_underline,
         isHidden = false
     ),
     PdfReaderTool(
         type = AnnotationTool.NOTE,
         title = Strings.pdf_annotation_toolbar_note,
-        image = Drawables.note_large,
+        image = Drawables.annotate_note,
+        isHidden = false
+    ),
+    PdfReaderTool(
+        type = AnnotationTool.FREETEXT,
+        title = Strings.pdf_annotation_toolbar_text,
+        image = Drawables.annotate_text,
         isHidden = false
     ),
     PdfReaderTool(
         type = AnnotationTool.SQUARE,
         title = Strings.pdf_annotation_toolbar_image,
-        image = Drawables.area_large,
+        image = Drawables.annotate_area,
         isHidden = false
     ),
     PdfReaderTool(
         type = AnnotationTool.INK,
         title = Strings.pdf_annotation_toolbar_ink,
-        image = Drawables.ink_large,
+        image = Drawables.annotate_ink,
         isHidden = false
     ),
     PdfReaderTool(
         type = AnnotationTool.ERASER,
         title = Strings.pdf_annotation_toolbar_eraser,
-        image = Drawables.eraser_large,
+        image = Drawables.annotate_eraser,
         isHidden = false
     )
 )
@@ -219,7 +231,7 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 orientation = Orientation.Horizontal,
                 interactionSource = draggableInteractionSource
             )
-            .height(500.dp)
+            .height(580.dp)
             .padding(start = 20.dp, top = 20.dp)
             .background(
                 color = CustomTheme.colors.pdfToolbarBackgroundColor,
@@ -237,7 +249,7 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
                         pdfReaderTool = tool,
                         toggleButton = vMInterface::toggle
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(15.dp))
                 }
             }
             val activeAnnotationTool = vMInterface.activeAnnotationTool
@@ -261,19 +273,19 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 iconInt = Drawables.undo_24px,
                 onButtonClick = vMInterface::onUndoClick
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(15.dp))
             AnnotationCreationButton(
                 isEnabled = vMInterface.canRedo(),
                 iconInt = Drawables.redo_24px,
                 onButtonClick = vMInterface::onRedoClick
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(15.dp))
             AnnotationCreationButton(
                 isEnabled = true,
                 iconInt = Drawables.cancel_24px,
                 onButtonClick = vMInterface::onCloseClick
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(15.dp))
         }
     }
 }

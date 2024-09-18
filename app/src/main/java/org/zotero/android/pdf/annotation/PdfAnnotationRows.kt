@@ -41,12 +41,12 @@ internal fun PdfAnnotationHeaderRow(
 ) {
     val title = stringResource(R.string.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
-        AnnotationType.note -> Drawables.note_large
-        AnnotationType.highlight -> Drawables.highlighter_large
-        AnnotationType.image -> Drawables.area_large
-        AnnotationType.ink -> Drawables.ink_large
-        AnnotationType.underline -> Drawables.ink_large // TODO set correct icon
-        AnnotationType.text -> Drawables.ink_large// TODO set correct icon
+        AnnotationType.note -> Drawables.annotate_note
+        AnnotationType.highlight -> Drawables.annotate_highlight
+        AnnotationType.image -> Drawables.annotate_area
+        AnnotationType.ink -> Drawables.annotate_ink
+        AnnotationType.underline -> Drawables.annotate_underline
+        AnnotationType.text -> Drawables.annotate_text
     }
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -236,8 +236,38 @@ internal fun PdfAnnotationImageRow(
         )
         Spacer(modifier = Modifier.height(4.dp))
         TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+    }
+}
 
+@Composable
+internal fun PdfAnnotationUnderlineRow(
+    viewState: PdfAnnotationViewState,
+    viewModel: PdfAnnotationViewModel,
+    layoutType: CustomLayoutSize.LayoutType,
+) {
 
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 0.dp, bottom = 8.dp)
+    ) {
+        CommentSection(viewState, layoutType, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        ColorPicker(viewState, viewModel)
+        Spacer(modifier = Modifier.height(4.dp))
+        SidebarDivider(
+            modifier = Modifier
+                .height(1.dp)
+                .fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
     }
 }
 
