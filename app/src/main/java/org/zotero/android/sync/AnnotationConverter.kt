@@ -348,7 +348,7 @@ class AnnotationConverter {
                 paths = emptyList()
             } else if (highlightAnnotation != null) {
                 type = AnnotationType.highlight
-                rects = rects(highlightAnnotation)
+                rects = rectsUnderlineAndHightlight(highlightAnnotation)
                 text = highlightAnnotation.highlightedText
                 paths = emptyList()
             } else if (squareAnnotation != null) {
@@ -362,7 +362,7 @@ class AnnotationConverter {
                 lineWidth = inkAnnotation.lineWidth
             } else if (underlineAnnotation != null) {
                 type = AnnotationType.underline
-                rects = rects(underlineAnnotation)
+                rects = rectsUnderlineAndHightlight(underlineAnnotation)
                 text = underlineAnnotation.highlightedText
                 paths = emptyList()
             } else if (freeTextAnnotation != null) {
@@ -411,7 +411,7 @@ class AnnotationConverter {
                 )
             )
         }
-        private fun rects(highlightAndUnderlineAnnotation: TextMarkupAnnotation) : List<RectF> {
+        private fun rectsUnderlineAndHightlight(highlightAndUnderlineAnnotation: TextMarkupAnnotation) : List<RectF> {
             return (highlightAndUnderlineAnnotation.rects ?: listOf(highlightAndUnderlineAnnotation.boundingBox))
         }
         private fun rects(annotation: SquareAnnotation) : List<RectF>  {
@@ -437,7 +437,7 @@ class AnnotationConverter {
                     rects(annotation)
                 }
                 is HighlightAnnotation, is UnderlineAnnotation -> {
-                    rects(annotation)
+                    rectsUnderlineAndHightlight(annotation as TextMarkupAnnotation)
                 }
                 is SquareAnnotation -> {
                     rects(annotation)
