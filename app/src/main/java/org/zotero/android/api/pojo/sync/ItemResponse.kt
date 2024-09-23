@@ -3,6 +3,7 @@ package org.zotero.android.api.pojo.sync
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
@@ -252,26 +253,28 @@ data class ItemResponse(
                     }
                 }
 
-                val asStr = objectS.value?.asString
-                val asInt = asStr?.toIntOrNull()
-                val asDouble = asStr?.toDoubleOrNull()
-                val asBoolean = asStr?.toBooleanStrictOrNull()
-                val value = if (asInt != null) {
-                    asInt.toString()
-                } else if (asDouble != null) {
-                    asDouble.rounded(3).toString()
-                } else if (asBoolean != null) {
-                    asBoolean.toString()
-                } else {
-                    try {
-                        gsonWithRoundedDecimals.toJson(objectS)
-                    } catch (e: Exception) {
-                        Timber.e(e)
+                val value = if (objectS.value is JsonPrimitive) {
+                    val asStr = objectS.value?.asString
+                    val asInt = asStr?.toIntOrNull()
+                    val asDouble = asStr?.toDoubleOrNull()
+                    val asBoolean = asStr?.toBooleanStrictOrNull()
+                    if (asInt != null) {
+                        asInt.toString()
+                    } else if (asDouble != null) {
+                        asDouble.rounded(3).toString()
+                    } else if (asBoolean != null) {
+                        asBoolean.toString()
+                    } else {
                         asStr ?: "null"
                     }
-
+                } else {
+                    try {
+                        gsonWithRoundedDecimals.toJson(objectS.value)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Unable to parse position fields using GSON: $objectS")
+                        objectS.toString()
+                    }
                 }
-
                 fields[KeyBaseKeyPair(key = objectS.key, baseKey = FieldKeys.Item.Annotation.position)] = value
             }
 
