@@ -189,11 +189,11 @@ class FileStore @Inject constructor (
     }
 
     fun generateTempFile(): File {
-        return File(cachesDirectory, System.currentTimeMillis().toString())
+        return File(cache(), System.currentTimeMillis().toString())
     }
 
     fun temporaryFile(ext: String): File {
-        return File(cachesDirectory, UUID.randomUUID().toString() + "." + ext)
+        return File(cache(), UUID.randomUUID().toString() + "." + ext)
     }
 
     fun annotationPreviews(pdfKey: String, libraryId: LibraryIdentifier): File {
@@ -457,7 +457,7 @@ class FileStore @Inject constructor (
     }
 
     fun shareExtensionDownload(key: String, ext: String): File {
-        val folderPath = File(cachesDirectory, "shareext/downloads")
+        val folderPath = File(cache(), "shareext/downloads")
         folderPath.mkdirs()
         return File(folderPath, "item_$key.$ext")
     }
