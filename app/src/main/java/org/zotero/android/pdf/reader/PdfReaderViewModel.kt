@@ -47,6 +47,7 @@ import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.PdfUiFragment
 import com.pspdfkit.ui.PdfUiFragmentBuilder
+import com.pspdfkit.ui.search.SearchResultHighlighter
 import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -135,6 +136,8 @@ import org.zotero.android.pdf.data.PdfAnnotationChanges
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
+import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
@@ -220,6 +223,8 @@ class PdfReaderViewModel @Inject constructor(
     var activeFontSize: Float = 0.0f
 
     private var toolHistory = mutableListOf<AnnotationTool>()
+
+    private lateinit var searchResultHighlighter: SearchResultHighlighter
 
     val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
@@ -330,8 +335,13 @@ class PdfReaderViewModel @Inject constructor(
                 )
             }
         }
+    }
 
-
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: PdfReaderSearchResultSelected) {
+        searchResultHighlighter.setSearchResults(listOf(result.searchResult))
+        searchResultHighlighter.setSelectedSearchResult(result.searchResult)
+        this.pdfUiFragment.pageIndex = result.searchResult.pageIndex
     }
 
     private fun update(pdfSettings: PDFSettings) {
@@ -386,6 +396,8 @@ class PdfReaderViewModel @Inject constructor(
         this.containerId = containerId
         this.annotationMaxSideSize = annotationMaxSideSize
 
+        searchResultHighlighter = SearchResultHighlighter(context)
+
         if (this::pdfUiFragment.isInitialized) {
             replaceFragment()
             return
@@ -413,6 +425,7 @@ class PdfReaderViewModel @Inject constructor(
         this@PdfReaderViewModel.pdfUiFragment.lifecycle.addObserver(object: DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 this@PdfReaderViewModel.pdfFragment = pdfUiFragment.pdfFragment!!
+                this@PdfReaderViewModel.pdfFragment.addDrawableProvider(searchResultHighlighter)
                 addDocumentListenerOnInit()
                 addOnAnnotationCreationModeChangeListener()
                 setOnPreparePopupToolbarListener()
@@ -2226,6 +2239,7 @@ class PdfReaderViewModel @Inject constructor(
         this@PdfReaderViewModel.pdfUiFragment.lifecycle.addObserver(object: DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 this@PdfReaderViewModel.pdfFragment = pdfUiFragment.pdfFragment!!
+                this@PdfReaderViewModel.pdfFragment.addDrawableProvider(searchResultHighlighter)
                 addDocumentListener2()
                 addOnAnnotationCreationModeChangeListener()
                 setOnPreparePopupToolbarListener()
@@ -3190,6 +3204,25 @@ class PdfReaderViewModel @Inject constructor(
         }
 
     }
+
+    override fun togglePdfSearch() {
+        ScreenArguments.pdfReaderSearchArgs = PdfReaderSearchArgs(
+            pdfDocument = this.document,
+            configuration = pdfFragment.configuration
+        )
+        updateState {
+            copy(showPdfSearch = !showPdfSearch)
+        }
+
+    }
+
+    override fun hidePdfSearch() {
+        updateState {
+            copy(
+                showPdfSearch = false
+            )
+        }
+    }
 }
 
 data class PdfReaderViewState(
@@ -3229,7 +3262,8 @@ data class PdfReaderViewState(
     val outlineSearchTerm: String = "",
     val isOutlineEmpty: Boolean = false,
     val thumbnailRows: ImmutableList<PdfReaderThumbnailRow> = persistentListOf(),
-    val selectedThumbnail: PdfReaderThumbnailRow? = null
+    val selectedThumbnail: PdfReaderThumbnailRow? = null,
+    val showPdfSearch: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

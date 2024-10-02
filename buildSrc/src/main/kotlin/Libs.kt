@@ -20,7 +20,7 @@ object Libs {
     }
 
     object Compose {
-        const val compileVersion = "1.5.4"
+        const val compileVersion = "1.5.7"
 
         private const val version = "1.6.0-rc01"
         const val activity = "androidx.activity:activity-compose:1.8.1"

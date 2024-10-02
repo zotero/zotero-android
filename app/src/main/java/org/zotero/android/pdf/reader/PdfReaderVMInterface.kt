@@ -47,4 +47,6 @@ interface PdfReaderVMInterface {
     fun onOutlineItemChevronTapped(outline: Outline)
     fun selectThumbnail(row: PdfReaderThumbnailRow)
     fun loadThumbnailPreviews(pageIndex: Int)
+    fun hidePdfSearch()
+    fun togglePdfSearch()
 }
