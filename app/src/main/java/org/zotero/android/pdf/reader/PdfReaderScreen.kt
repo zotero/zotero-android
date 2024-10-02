@@ -126,9 +126,12 @@ internal fun PdfReaderScreen(
                             onBack = onBack,
                             onShowHideSideBar = viewModel::toggleSideBar,
                             toPdfSettings = viewModel::navigateToPdfSettings,
+                            showPdfSearch = viewModel::showPdfSearch,
                             toggleToolbarButton = viewModel::toggleToolbarButton,
                             isToolbarButtonSelected = viewState.showCreationToolbar,
                             showSideBar = viewState.showSideBar,
+                            viewModel = viewModel,
+                            viewState = viewState
                         )
                     }
                 }

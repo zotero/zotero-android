@@ -135,6 +135,7 @@ import org.zotero.android.pdf.data.PdfAnnotationChanges
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
@@ -3190,6 +3191,28 @@ class PdfReaderViewModel @Inject constructor(
         }
 
     }
+
+    fun showPdfSearch() {
+        ScreenArguments.pdfReaderSearchArgs = PdfReaderSearchArgs(pdfDocument = this.document)
+        if (isTablet) {
+            updateState {
+                copy(
+                    showPdfSearchPopup = true,
+                )
+            }
+        } else {
+          //TODO
+        }
+
+    }
+
+    override fun dismissPdfSearchPopup() {
+        updateState {
+            copy(
+                showPdfSearchPopup = false
+            )
+        }
+    }
 }
 
 data class PdfReaderViewState(
@@ -3229,7 +3252,8 @@ data class PdfReaderViewState(
     val outlineSearchTerm: String = "",
     val isOutlineEmpty: Boolean = false,
     val thumbnailRows: ImmutableList<PdfReaderThumbnailRow> = persistentListOf(),
-    val selectedThumbnail: PdfReaderThumbnailRow? = null
+    val selectedThumbnail: PdfReaderThumbnailRow? = null,
+    val showPdfSearchPopup: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

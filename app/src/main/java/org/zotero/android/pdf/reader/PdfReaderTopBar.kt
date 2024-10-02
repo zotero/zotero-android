@@ -1,7 +1,9 @@
 package org.zotero.android.pdf.reader
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.icon.IconWithPadding
@@ -15,9 +17,12 @@ internal fun PdfReaderTopBar(
     onBack: () -> Unit,
     onShowHideSideBar: () -> Unit,
     toPdfSettings: () -> Unit,
+    showPdfSearch: () -> Unit,
     toggleToolbarButton:() -> Unit,
     isToolbarButtonSelected: Boolean,
     showSideBar: Boolean,
+    viewState: PdfReaderViewState,
+    viewModel: PdfReaderVMInterface
 ) {
     NewCustomTopBar(
         backgroundColor = CustomTheme.colors.surface,
@@ -47,8 +52,19 @@ internal fun PdfReaderTopBar(
                 )
             },
             {
+                Box {
+                    if (viewState.showPdfSearchPopup) {
+                        PdfReaderSearchPopup(
+                            viewState = viewState,
+                            viewModel = viewModel,
+                        )
+                    }
+                    IconWithPadding(drawableRes = Drawables.search_24px, onClick = showPdfSearch)
+                }
+            },
+            {
                 IconWithPadding(drawableRes = Drawables.settings_24px, onClick = toPdfSettings)
-            }
+            },
         )
     )
 }
