@@ -29,10 +29,12 @@ internal fun PdfReaderSearchPopup(
     Popup(
         properties = PopupProperties(
             dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            dismissOnClickOutside = true,
+            focusable = true
         ),
-        onDismissRequest = viewModel::dismissPdfSearchPopup,
+        onDismissRequest = viewModel::hidePdfSearch,
         popupPositionProvider = createPdfReaderSearchPopupPositionProvider(),
+
     ) {
         CustomScaffold(
             modifier = Modifier
@@ -44,8 +46,7 @@ internal fun PdfReaderSearchPopup(
                 ),
             backgroundColor = backgroundColor,
         ) {
-            PdfReaderSearchScreen(onBack = viewModel::dismissPdfSearchPopup)
-
+            PdfReaderSearchScreen(onBack = viewModel::hidePdfSearch)
         }
     }
 }

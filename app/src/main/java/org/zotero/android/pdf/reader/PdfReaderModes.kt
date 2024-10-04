@@ -7,7 +7,9 @@ import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchScreen
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebar
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -113,6 +116,21 @@ internal fun PdfReaderPhoneMode(
                 }
             }
         }
+        AnimatedContent(targetState = viewState.showPdfSearch, transitionSpec = {
+            createPdfSearchTransitionSpec()
+        }, label = "") { showScreen ->
+            if (showScreen) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(CustomTheme.colors.pdfAnnotationsFormBackground)
+                ) {
+                    PdfReaderSearchScreen(
+                        onBack = vMInterface::hidePdfSearch
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -120,6 +138,18 @@ private fun AnimatedContentTransitionScope<Boolean>.createSidebarTransitionSpec(
     val intOffsetSpec = tween<IntOffset>()
     return (slideInHorizontally(intOffsetSpec) { -it } with
             slideOutHorizontally(intOffsetSpec) { -it }).using(
+        // Disable clipping since the faded slide-in/out should
+        // be displayed out of bounds.
+        SizeTransform(
+            clip = false,
+            sizeAnimationSpec = { _, _ -> tween() }
+        ))
+}
+
+private fun AnimatedContentTransitionScope<Boolean>.createPdfSearchTransitionSpec(): ContentTransform {
+    val intOffsetSpec = tween<IntOffset>()
+    return (slideInVertically(intOffsetSpec) { it } with
+            slideOutVertically(intOffsetSpec) { it }).using(
         // Disable clipping since the faded slide-in/out should
         // be displayed out of bounds.
         SizeTransform(

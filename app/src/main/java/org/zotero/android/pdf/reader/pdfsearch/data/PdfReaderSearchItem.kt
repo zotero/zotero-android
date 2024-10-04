@@ -1,3 +1,5 @@
 package org.zotero.android.pdf.reader.pdfsearch.data
 
-data class PdfReaderSearchItem(val pageNumber: Int, val content: String)
+import androidx.compose.ui.text.AnnotatedString
+
+data class PdfReaderSearchItem(val pageNumber: Int, val annotatedString: AnnotatedString)

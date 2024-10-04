@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
@@ -56,51 +56,51 @@ internal fun PdfReaderSearchScreen(
             }
         }
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            PdfReaderSearchBar(
-                searchValue = viewState.searchTerm,
-                onSearch = viewModel::onSearch,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                PdfReaderSearchBar(
+                    searchValue = viewState.searchTerm,
+                    onSearch = viewModel::onSearch,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             PdfReaderSearchTable(
                 viewModel = viewModel,
                 viewState = viewState,
             )
 
-            if (viewState.searchResults.isNotEmpty()) {
+            item {
+                if (viewState.searchResults.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = quantityStringResource(
+                            id = Plurals.pdf_search_matches, viewState.searchResults.size
+                        ),
+                        style = CustomTheme.typography.newFootnote,
+                        color = CustomPalette.DarkGrayColor
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = quantityStringResource(
-                        id = Plurals.pdf_search_matches, viewState.searchResults.size
-                    ),
-                    style = CustomTheme.typography.newFootnote,
-                    color = CustomPalette.DarkGrayColor
-                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
+
     }
 }
 
-@Composable
-internal fun PdfReaderSearchTable(
+internal fun LazyListScope.PdfReaderSearchTable(
     viewState: PdfReaderSearchViewState,
     viewModel: PdfReaderSearchViewModel,
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
-        state = rememberLazyListState(),
-    ) {
-        items(viewState.searchResults) { item ->
-            PdfReaderSearchRow(searchItem = item, onItemTapped = viewModel::onItemTapped)
-        }
+    items(viewState.searchResults) { item ->
+        PdfReaderSearchRow(searchItem = item, onItemTapped = {viewModel.onItemTapped(item)})
     }
+
 }
 
 @Composable
@@ -110,6 +110,7 @@ private fun PdfReaderSearchRow(
 ) {
     Column(
         modifier = Modifier
+            .padding(horizontal = 16.dp)
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(),
@@ -119,14 +120,14 @@ private fun PdfReaderSearchRow(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier.align(Alignment.End),
-            text = stringResource(Strings.page) + " ${searchItem.pageNumber}",
+            text = stringResource(Strings.page) + " ${searchItem.pageNumber + 1}",
             style = CustomTheme.typography.newCaptionOne,
             color = CustomTheme.colors.zoteroBlueWithDarkMode
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier,
-            text = searchItem.content,
+            text = searchItem.annotatedString,
             style = CustomTheme.typography.newBody,
             color = CustomTheme.colors.defaultTextColor,
         )
