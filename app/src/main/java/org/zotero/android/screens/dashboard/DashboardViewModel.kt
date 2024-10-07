@@ -282,9 +282,6 @@ class DashboardViewModel @Inject constructor(
     fun revertGroupChanges(key: Int) {
         conflictResolutionUseCase.revertGroupChanges(key)
     }
-    fun keepGroupChanges(key: Int) {
-        conflictResolutionUseCase.keepGroupChanges(key)
-    }
 
     fun revertGroupFiles(groupId: Int) {
         conflictResolutionUseCase.revertGroupFiles(LibraryIdentifier.group(groupId))

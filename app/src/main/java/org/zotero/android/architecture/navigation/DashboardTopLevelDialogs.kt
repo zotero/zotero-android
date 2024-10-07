@@ -48,7 +48,6 @@ fun BoxScope.DashboardTopLevelDialogs(
             deleteGroup = viewModel::deleteGroup,
             markGroupAsLocalOnly = viewModel::markGroupAsLocalOnly,
             revertGroupChanges = viewModel::revertGroupChanges,
-            keepGroupChanges = viewModel::keepGroupChanges,
             revertGroupFiles = viewModel::revertGroupFiles,
             skipGroup = viewModel::skipGroup,
         )

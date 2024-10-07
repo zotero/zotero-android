@@ -13,7 +13,6 @@ internal fun ConflictResolutionDialogs(
     deleteGroup: (key: Int) -> Unit,
     markGroupAsLocalOnly: (key: Int) -> Unit,
     revertGroupChanges: (key: Int) -> Unit,
-    keepGroupChanges: (key: Int) -> Unit,
     revertGroupFiles: (groupId: Int) -> Unit,
     skipGroup: (groupId: Int) -> Unit,
 ) {
@@ -50,8 +49,8 @@ internal fun ConflictResolutionDialogs(
                     onClick = { revertGroupChanges(conflictDialogData.groupId) }
                 ),
                 secondaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.errors_sync_keep_changes),
-                    onClick = { keepGroupChanges(conflictDialogData.groupId) }
+                    text = stringResource(id = Strings.errors_sync_skip_group),
+                    onClick = { skipGroup(conflictDialogData.groupId) }
                 ),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog

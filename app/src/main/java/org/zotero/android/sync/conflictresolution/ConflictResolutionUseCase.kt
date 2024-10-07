@@ -169,14 +169,6 @@ class ConflictResolutionUseCase @Inject constructor(
         ))
     }
 
-    fun keepGroupChanges(key: Int) {
-        syncUseCase.enqueueResolution(ConflictResolution.keepGroupChanges(
-            LibraryIdentifier.group(
-                key
-            )
-        ))
-    }
-
     fun revertGroupFiles(id: LibraryIdentifier) {
         syncUseCase.enqueueResolution(ConflictResolution.revertGroupFiles(id))
     }

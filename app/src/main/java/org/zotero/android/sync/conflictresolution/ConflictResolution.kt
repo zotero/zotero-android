@@ -6,7 +6,6 @@ sealed class ConflictResolution {
     data class deleteGroup(val id: Int) : ConflictResolution()
     data class markGroupAsLocalOnly(val id: Int) : ConflictResolution()
     data class revertGroupChanges(val id: LibraryIdentifier) : ConflictResolution()
-    data class keepGroupChanges(val id: LibraryIdentifier) : ConflictResolution()
     data class revertGroupFiles(val id: LibraryIdentifier): ConflictResolution()
     data class skipGroup(val id: LibraryIdentifier): ConflictResolution()
     data class remoteDeletionOfActiveObject(

@@ -1544,13 +1544,6 @@ class SyncUseCase @Inject constructor(
             is ConflictResolution.deleteGroup -> {
                 return listOf(Action.deleteGroup(resolution.id))
             }
-            is ConflictResolution.keepGroupChanges -> {
-                return listOf(
-                    Action.markChangesAsResolved(
-                        resolution.id
-                    )
-                )
-            }
             is ConflictResolution.markGroupAsLocalOnly -> {
                 return listOf(
                     Action.markGroupAsLocalOnly(
