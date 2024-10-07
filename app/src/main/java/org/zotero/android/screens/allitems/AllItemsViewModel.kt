@@ -83,7 +83,7 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
-import org.zotero.android.uicomponents.addbyidentifier.data.AddByIdentifierPickerArgs
+import org.zotero.android.screens.addbyidentifier.data.AddByIdentifierPickerArgs
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult

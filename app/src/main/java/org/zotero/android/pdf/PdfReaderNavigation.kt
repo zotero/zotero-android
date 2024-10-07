@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogFixedDimens
@@ -20,11 +20,11 @@ import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreNavigation
 import org.zotero.android.pdf.annotationmore.pdfAnnotationMoreNavScreens
 import org.zotero.android.pdf.annotationmore.toPdfAnnotationMoreScreen
 import org.zotero.android.pdf.colorpicker.PdfReaderColorPickerScreen
+import org.zotero.android.pdf.pdffilter.PdfFilterNavigation
+import org.zotero.android.pdf.pdffilter.pdfFilterNavScreens
+import org.zotero.android.pdf.pdffilter.toPdfFilterScreen
 import org.zotero.android.pdf.reader.PdfReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
-import org.zotero.android.pdffilter.PdfFilterNavigation
-import org.zotero.android.pdffilter.pdfFilterNavScreens
-import org.zotero.android.pdffilter.toPdfFilterScreen
 
 internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
 

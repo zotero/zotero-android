@@ -22,7 +22,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsLoader
-import org.zotero.android.uicomponents.addbyidentifier.IdentifierLookupController
+import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton

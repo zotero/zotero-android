@@ -148,8 +148,8 @@ import org.zotero.android.pdf.reader.sidebar.data.ThumbnailPreviewMemoryCache
 import org.zotero.android.pdf.reader.sidebar.data.ThumbnailsPreviewFileCache
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
-import org.zotero.android.pdffilter.data.PdfFilterArgs
-import org.zotero.android.pdffilter.data.PdfFilterResult
+import org.zotero.android.pdf.pdffilter.data.PdfFilterArgs
+import org.zotero.android.pdf.pdffilter.data.PdfFilterResult
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator

@@ -6,7 +6,7 @@ import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPage
 import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
-import org.zotero.android.pdffilter.data.PdfFilterArgs
+import org.zotero.android.pdf.pdffilter.data.PdfFilterArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs

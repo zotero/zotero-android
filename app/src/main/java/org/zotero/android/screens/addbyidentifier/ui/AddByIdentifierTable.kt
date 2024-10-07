@@ -1,4 +1,4 @@
-package org.zotero.android.screens.scanbarcode.ui
+package org.zotero.android.screens.addbyidentifier.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -35,9 +35,8 @@ import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
-internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>, onDelete: (row: LookupRow.item) -> Unit) {
+internal fun LazyListScope.addByIdentifierTable(rows: List<LookupRow>) {
     rows.forEach { row ->
         item {
             when (row) {
@@ -45,8 +44,7 @@ internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>, onDelete: (ro
                     val data = row.item
                     LookupItemRow(
                         title = data.title,
-                        type = data.type,
-                        onDelete = { onDelete(row) }
+                        type = data.type
                     )
                 }
 
@@ -75,57 +73,44 @@ internal fun LazyListScope.scanBarcodeTable(rows: List<LookupRow>, onDelete: (ro
 
 @Composable
 internal fun LookupItemRow(
-    title: String, type: String,
-    onDelete: () -> Unit,
+    title: String, type: String
 ) {
     val iconSize = 28.dp
 
     val modifier = Modifier.size(iconSize)
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                modifier = modifier,
-                painter = painterResource(
-                    id = LocalContext.current.getDrawableByItemType(
-                        ItemTypes.iconName(
-                            type,
-                            null
-                        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            modifier = modifier,
+            painter = painterResource(
+                id = LocalContext.current.getDrawableByItemType(
+                    ItemTypes.iconName(
+                        type,
+                        null
                     )
-                ),
-                contentDescription = null,
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp)
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = HtmlCompat.fromHtml(
-                        title,
-                        HtmlCompat.FROM_HTML_MODE_LEGACY
-                    ).toString(),
-                    color = CustomTheme.colors.primaryContent,
-                    style = CustomTheme.typography.newBody,
                 )
-            }
-
-            HeadingTextButton(
-                text = stringResource(id = Strings.delete),
-                contentColor = CustomPalette.ErrorRed,
-                onClick = onDelete
-            )
-        }
-
-        NewDivider(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
+            ),
+            contentDescription = null,
         )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp, top = 8.dp)
+        ) {
+            Text(
+                text = HtmlCompat.fromHtml(
+                    title,
+                    HtmlCompat.FROM_HTML_MODE_LEGACY
+                ).toString(),
+                color = CustomTheme.colors.primaryContent,
+                style = CustomTheme.typography.newBody,
+            )
+            NewDivider(modifier = Modifier.padding(top = 8.dp))
+        }
     }
 }
 
