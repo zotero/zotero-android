@@ -140,6 +140,7 @@ import org.zotero.android.pdf.pdffilter.data.PdfFilterResult
 import org.zotero.android.pdf.reader.AnnotationKey.Kind
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
+import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
@@ -2159,6 +2160,11 @@ class PdfReaderViewModel @Inject constructor(
         triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
     }
 
+    fun navigateToPlainReader() {
+        ScreenArguments.pdfPlainReaderArgs = PdfPlainReaderArgs(this.document)
+        triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader)
+    }
+
     override fun showToolOptions() {
         val tool = this.activeAnnotationTool ?: return
 
@@ -3262,6 +3268,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
+    object ShowPdfPlainReader: PdfReaderViewEffect()
     object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()

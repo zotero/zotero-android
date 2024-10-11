@@ -18,8 +18,9 @@ internal fun PdfReaderTopBar(
     onBack: () -> Unit,
     onShowHideSideBar: () -> Unit,
     toPdfSettings: () -> Unit,
+    toPdfPlainReader: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
-    toggleToolbarButton:() -> Unit,
+    toggleToolbarButton: () -> Unit,
     isToolbarButtonSelected: Boolean,
     showSideBar: Boolean,
     showPdfSearch: Boolean,
@@ -45,7 +46,10 @@ internal fun PdfReaderTopBar(
                     isSelected = showSideBar
 
                 )
-            }
+            },
+            {
+                IconWithPadding(drawableRes = Drawables.pdf_raw_reader, onClick = toPdfPlainReader)
+            },
         ), rightContainerContent = listOf(
             {
                 ToggleIconWithPadding(
