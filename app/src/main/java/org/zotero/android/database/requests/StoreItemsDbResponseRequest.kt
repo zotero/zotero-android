@@ -301,9 +301,19 @@ class StoreItemDbRequest(
                     field.key == FieldKeys.Item.title || field.baseKey == FieldKeys.Item.title -> {
                         item.baseTitle = value
                     }
+
                     field.key == FieldKeys.Item.note && item.rawType == ItemTypes.note -> {
-                        item.baseTitle = NotePreviewGenerator.preview(value) ?: ""
-                        item.htmlFreeContent = if(value.isEmpty()) null else value
+                        try {
+                            item.baseTitle = NotePreviewGenerator.preview(value) ?: ""
+                        } catch (e: Exception) {
+                            Timber.e(
+                                e,
+                                "StoreItemsDbResponseRequest: unable to set baseTitle after value was processed by NotePreviewGenerator. Original value = ${
+                                    value.take(210)
+                                }"
+                            )
+                        }
+                        item.htmlFreeContent = value.ifEmpty { null }
                     }
                     field.key == FieldKeys.Item.Annotation.comment && item.rawType == ItemTypes.annotation -> {
                         item.htmlFreeContent = if(value.isEmpty()) null else value.strippedRichTextTags
