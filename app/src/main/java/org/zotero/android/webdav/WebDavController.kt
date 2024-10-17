@@ -21,7 +21,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.zotero.android.api.WebDavApi
-import org.zotero.android.api.interceptors.HttpLoggingInterceptor
 import org.zotero.android.api.interceptors.UserAgentHeaderNetworkInterceptor
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -803,7 +802,13 @@ class WebDavController @Inject constructor(
                 )
             )
             .addInterceptor(userAgentHeaderNetworkInterceptor)
-            .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BODY))
+            .addInterceptor(okhttp3.logging.HttpLoggingInterceptor { message ->
+                if (message.contains("Authorization")) {
+                    Timber.d("Authorization: redacted")
+                } else {
+                    Timber.d(message)
+                }
+            }.apply { level = Level.BODY })
             .build()
     }
 
