@@ -12,6 +12,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -105,7 +107,11 @@ internal fun PdfReaderPhoneMode(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(CustomTheme.colors.pdfAnnotationsFormBackground)
-                ) {
+                        .pointerInput(Unit) {
+                            detectTapGestures {
+                                //Prevent tap to be propagated to composables behind this screen.
+                            }
+                        }) {
                     PdfReaderSidebar(
                         viewState = viewState,
                         vMInterface = vMInterface,
