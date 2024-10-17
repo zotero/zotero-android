@@ -34,4 +34,6 @@
     <string name="pdf.annotation_toolbar.underline">Underline</string>
     <string name="pdf.annotation_toolbar.text">Text</string>
 
+    <string name="collection_remove_downloads">Remove Downloads</string>
+
 </resources>

@@ -74,12 +74,9 @@ class AttachmentFileCleanupController @Inject constructor(
         coroutineScope.launch {
             val newTypes = delete(type)
 
-            if (newTypes.isEmpty() && completed == null) {
-                return@launch
-            }
-
             for (type in newTypes) {
-                EventBus.getDefault().post(EventBusConstants.AttachmentFileDeleted(type.notification))
+                EventBus.getDefault()
+                    .post(EventBusConstants.AttachmentFileDeleted(type.notification))
             }
             completed?.let { it(!newTypes.isEmpty()) }
         }

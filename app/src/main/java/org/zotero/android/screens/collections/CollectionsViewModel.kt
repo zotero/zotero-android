@@ -42,6 +42,8 @@ import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.sync.AttachmentFileCleanupController
+import org.zotero.android.sync.AttachmentFileCleanupController.DeletionType
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -57,6 +59,7 @@ internal class CollectionsViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
+    private val fileCleanupController: AttachmentFileCleanupController,
     dispatchers: Dispatchers,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
 
@@ -436,6 +439,7 @@ internal class CollectionsViewModel @Inject constructor(
         when (collection.identifier) {
             is CollectionIdentifier.collection -> {
                 actions.add(LongPressOptionItem.CollectionEdit(collection))
+                actions.add(LongPressOptionItem.RemoveDownloads(collection.identifier))
                 actions.add(LongPressOptionItem.CollectionNewSubCollection(collection))
                 actions.add(LongPressOptionItem.CollectionDelete(collection))
             }
@@ -465,6 +469,10 @@ internal class CollectionsViewModel @Inject constructor(
                     onEdit(longPressOptionItem.collection)
                 }
 
+                is LongPressOptionItem.RemoveDownloads -> {
+                    removeDownloads(longPressOptionItem.collectionId)
+                }
+
                 is LongPressOptionItem.CollectionNewSubCollection -> {
                     onAddSubcollection(longPressOptionItem.collection)
                 }
@@ -480,6 +488,26 @@ internal class CollectionsViewModel @Inject constructor(
                     //no-op
                 }
             }
+        }
+    }
+
+    private fun removeDownloads(collectionId: CollectionIdentifier) {
+        try {
+            val items = dbWrapperMain.realmDbStorage.perform(
+                request = ReadItemsDbRequest(
+                    collectionId = collectionId,
+                    libraryId = this.libraryId,
+                    defaults = this.defaults,
+                    isAsync = false
+                )
+            )
+            val keys = items.map { it.key }.toSet()
+            fileCleanupController.delete(
+                type = DeletionType.allForItems(keys, this.libraryId),
+                completed = null
+            )
+        } catch (exception: Exception) {
+            Timber.e(exception, "CollectionsViewModel: remove downloads")
         }
     }
 
