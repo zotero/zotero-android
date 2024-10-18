@@ -166,9 +166,10 @@ import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.EnumSet
+import java.util.Timer
 import javax.inject.Inject
+import kotlin.concurrent.timerTask
 import kotlin.random.Random
-
 
 @HiltViewModel
 class PdfReaderViewModel @Inject constructor(
@@ -226,6 +227,8 @@ class PdfReaderViewModel @Inject constructor(
     private var toolHistory = mutableListOf<AnnotationTool>()
 
     private lateinit var searchResultHighlighter: SearchResultHighlighter
+
+    private var disableForceScreenOnTimer: Timer? = null
 
     val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
@@ -391,6 +394,7 @@ class PdfReaderViewModel @Inject constructor(
         fragmentManager: FragmentManager,
         isTablet: Boolean,
     ) {
+        restartDisableForceScreenOnTimer()
         this.uri = uri
         this.isTablet = isTablet
         this.fragmentManager = fragmentManager
@@ -3207,6 +3211,20 @@ class PdfReaderViewModel @Inject constructor(
             )
         }
     }
+
+    fun restartDisableForceScreenOnTimer() {
+        viewModelScope.launch {
+            triggerEffect(PdfReaderViewEffect.EnableForceScreenOn)
+        }
+        disableForceScreenOnTimer?.cancel()
+        disableForceScreenOnTimer = Timer()
+        disableForceScreenOnTimer?.schedule(timerTask {
+            viewModelScope.launch {
+                triggerEffect(PdfReaderViewEffect.DisableForceScreenOn)
+            }
+        }, 25 * 60 * 1000L)
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -3266,6 +3284,8 @@ data class PdfReaderViewState(
 
 sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateBack : PdfReaderViewEffect()
+    object DisableForceScreenOn : PdfReaderViewEffect()
+    object EnableForceScreenOn : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
     object ShowPdfPlainReader: PdfReaderViewEffect()

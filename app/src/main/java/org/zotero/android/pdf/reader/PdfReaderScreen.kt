@@ -1,5 +1,6 @@
 package org.zotero.android.pdf.reader
 
+import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -8,8 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,10 +63,17 @@ internal fun PdfReaderScreen(
         val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val focusManager = LocalFocusManager.current
+        val currentView = LocalView.current
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 is PdfReaderViewEffect.NavigateBack -> {
                     onBack()
+                }
+                is PdfReaderViewEffect.DisableForceScreenOn -> {
+                    currentView.keepScreenOn = false
+                }
+                is PdfReaderViewEffect.EnableForceScreenOn -> {
+                    currentView.keepScreenOn = true
                 }
 
                 is PdfReaderViewEffect.ShowPdfFilters -> {
@@ -124,9 +135,18 @@ internal fun PdfReaderScreen(
         }
 
         CustomScaffold(
+            modifier = Modifier.pointerInteropFilter {
+                when (it.action) {
+                    MotionEvent.ACTION_DOWN -> viewModel.restartDisableForceScreenOnTimer()
+                }
+                false
+            },
             backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
             topBar = {
-                AnimatedContent(targetState = viewState.isTopBarVisible, label = "") { isTopBarVisible ->
+                AnimatedContent(
+                    targetState = viewState.isTopBarVisible,
+                    label = ""
+                ) { isTopBarVisible ->
                     if (isTopBarVisible) {
                         PdfReaderTopBar(
                             onBack = onBack,
