@@ -12,7 +12,7 @@ class NotePreviewGenerator {
             }
             var stripped = note.strippedHtmlTags.basicUnescape
             stripped = stripped.replace("\t", "")
-            stripped = stripped.split("\\r\\n|\\n|\\r").firstOrNull() ?: stripped
+            stripped = stripped.split("\n").firstOrNull() ?: stripped
             stripped = stripped.trim()
 
             val maxCharacters = 200
