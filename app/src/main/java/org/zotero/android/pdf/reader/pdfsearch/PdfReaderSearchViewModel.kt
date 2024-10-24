@@ -26,6 +26,7 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.pdf.reader.pdfsearch.data.OnPdfReaderSearch
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchItem
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
 import javax.inject.Inject
@@ -102,6 +103,7 @@ internal class PdfReaderSearchViewModel @Inject constructor(
                             annotatedString = annotatedString
                         )
                     }
+                    EventBus.getDefault().post(OnPdfReaderSearch(searchResults))
                     viewModelScope.launch {
                         updateState {
                             copy(searchResults = rows)
@@ -110,9 +112,8 @@ internal class PdfReaderSearchViewModel @Inject constructor(
 
                 }
             }
-
-
         } else {
+            EventBus.getDefault().post(OnPdfReaderSearch(emptyList()))
             updateState {
                 copy(
                     searchResults = emptyList()

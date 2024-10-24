@@ -138,6 +138,7 @@ import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.pdf.pdffilter.data.PdfFilterArgs
 import org.zotero.android.pdf.pdffilter.data.PdfFilterResult
 import org.zotero.android.pdf.reader.AnnotationKey.Kind
+import org.zotero.android.pdf.reader.pdfsearch.data.OnPdfReaderSearch
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
 import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
@@ -343,9 +344,14 @@ class PdfReaderViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfReaderSearchResultSelected) {
-        searchResultHighlighter.setSearchResults(listOf(result.searchResult))
+//        searchResultHighlighter.setSearchResults(listOf(result.searchResult))
         searchResultHighlighter.setSelectedSearchResult(result.searchResult)
         this.pdfUiFragment.pageIndex = result.searchResult.pageIndex
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: OnPdfReaderSearch) {
+        searchResultHighlighter.setSearchResults(result.searchResult)
     }
 
     private fun update(pdfSettings: PDFSettings) {
