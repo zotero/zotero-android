@@ -13,9 +13,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
@@ -41,6 +45,7 @@ fun SearchBar(
     textStyle: TextStyle = CustomTheme.typography.newBody,
     textFieldState: TextFieldValue,
     backgroundColor: Color = CustomTheme.colors.inputBar,
+    focusOnScreenOpen: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -55,10 +60,17 @@ fun SearchBar(
             tint = CustomTheme.colors.secondaryContent
         )
         val keyboardController = LocalSoftwareKeyboardController.current
+        val focusRequester = remember { FocusRequester() }
+        if (focusOnScreenOpen) {
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
+        }
+
         BasicTextField(
             value = textFieldState,
             onValueChange = onInnerValueChanged,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).focusRequester(focusRequester),
             textStyle = textStyle.copy(
                 color = CustomTheme.colors.primaryContent
             ),
