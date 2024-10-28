@@ -444,3 +444,61 @@ fun <T> RealmQuery<T>.typedTagLibrary(
         }
     }
 }
+
+fun <T> RealmQuery<T>.baseAllAttachmentsPredicates(
+    libraryId: LibraryIdentifier
+): RealmQuery<T> {
+    val result = this
+        .beginGroup()
+        .library(libraryId)
+        .and()
+        .notSyncState(ObjectSyncState.dirty)
+        .and()
+        .deleted(false)
+        .and()
+        .isTrash(false)
+        .and()
+        .item(type = ItemTypes.attachment)
+        .endGroup()
+    return result
+}
+
+fun <T> RealmQuery<T>.allAttachments(
+    collectionId: CollectionIdentifier,
+    libraryId: LibraryIdentifier
+): RealmQuery<T> {
+    var predicates = baseAllAttachmentsPredicates(libraryId)
+
+    when (collectionId) {
+        is CollectionIdentifier.collection -> {
+            val key = collectionId.key
+            predicates = predicates
+                .and()
+                .beginGroup()
+                .rawPredicate("any collections.key = \"${key}\"")
+                .or()
+                .rawPredicate("any parent.collections.key = \"${key}\"")
+                .endGroup()
+        }
+
+        else -> {
+            //no-op
+        }
+    }
+
+    return predicates
+}
+
+fun <T> RealmQuery<T>.allAttachments(
+    keys: Set<String>, libraryId: LibraryIdentifier
+): RealmQuery<T> {
+    var predicates = baseAllAttachmentsPredicates(libraryId)
+    predicates = predicates
+        .and()
+        .beginGroup()
+        .`in`("collections.key", keys.toTypedArray())
+        .or()
+        .`in`("parent.collections.key", keys.toTypedArray())
+        .endGroup()
+    return predicates
+}

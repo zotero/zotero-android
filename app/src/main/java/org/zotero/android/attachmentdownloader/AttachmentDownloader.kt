@@ -3,11 +3,14 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import org.zotero.android.api.ZoteroNoRedirectApi
 import org.zotero.android.api.ZoteroApi
+import org.zotero.android.api.ZoteroNoRedirectApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.Attachment.FileLinkType
+import org.zotero.android.database.objects.Attachment.FileLocation
+import org.zotero.android.database.objects.Attachment.Kind
 import org.zotero.android.database.requests.MarkFileAsDownloadedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.Unzipper
@@ -34,7 +37,7 @@ class AttachmentDownloader @Inject constructor(
     sealed class Error : Exception() {
         object incompatibleAttachment : Error()
         object zipDidntContainRequestedFile : Error()
-        object cantUnzipSnapshot: Error()
+        object cantUnzipSnapshot : Error()
     }
 
     data class Download(
@@ -105,16 +108,102 @@ class AttachmentDownloader @Inject constructor(
         batchProgress = AttachmentBatchProgress()
     }
 
+    fun batchDownload(attachments: List<Pair<Attachment, String?>>) {
+        val operations = mutableListOf<Triple<Download, String?, AttachmentDownloadOperation>>()
+        for (attach in attachments) {
+            val attachment = attach.first
+            val parentKey = attach.second
+
+            when (attachment.type) {
+                is Kind.url -> {
+                    //no-op
+                }
+
+                is Kind.file -> {
+                    val filename = attachment.type.filename
+                    val contentType = attachment.type.contentType
+                    val location = attachment.type.location
+                    val linkType = attachment.type.linkType
+                    when (linkType) {
+                        FileLinkType.linkedFile, FileLinkType.embeddedImage -> {
+                            //no-op
+                        }
+
+                        FileLinkType.importedFile, FileLinkType.importedUrl -> {
+                            when (location) {
+                                FileLocation.local -> {
+                                    //no-op
+                                }
+
+                                FileLocation.remote, FileLocation.remoteMissing, FileLocation.localAndChangedRemotely -> {
+                                    Timber.i("AttachmentDownloader: batch download remote${if (location == FileLocation.remoteMissing) "ly missing" else ""} file ${attachment.key}")
+                                    val file = fileStorage.attachmentFile(
+                                        attachment.libraryId,
+                                        key = attachment.key,
+                                        filename = filename
+                                    )
+                                    val createDownloadResult = createDownload(
+                                        file = file,
+                                        key = attachment.key,
+                                        parentKey = parentKey,
+                                        libraryId = attachment.libraryId,
+                                        hasLocalCopy = false
+                                    )
+                                    if (createDownloadResult == null) {
+                                        continue
+                                    }
+                                    operations.add(
+                                        Triple(
+                                            createDownloadResult.first,
+                                            parentKey,
+                                            createDownloadResult.second
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        for (data in operations) {
+            Timber.i("AttachmentDownloader: enqueue ${data.first.key}")
+            attachmentDownloaderEventStream.emitAsync(
+                Update.init(
+                    download = data.first,
+                    parentKey = data.second,
+                    kind = Update.Kind.progress(0)
+                )
+            )
+        }
+
+        val downloadOperations = operations.map { it.third }
+
+        coroutineScope.async {
+            downloadOperations.forEach {
+                it.start(this)
+            }
+        }
+    }
+
     fun downloadIfNeeded(attachment: Attachment, parentKey: String?) {
         val attachmentType = attachment.type
-        when(attachmentType) {
-            is Attachment.Kind.url -> {
+        when (attachmentType) {
+            is Kind.url -> {
                 Timber.i("AttachmentDownloader: open url ${attachment.key}")
                 attachmentDownloaderEventStream.emitAsync(
-                    Update.init(key = attachment.key, parentKey = parentKey, libraryId = attachment.libraryId, kind = Update.Kind.ready)
+                    Update.init(
+                        key = attachment.key,
+                        parentKey = parentKey,
+                        libraryId = attachment.libraryId,
+                        kind = Update.Kind.ready
+                    )
                 )
             }
-            is Attachment.Kind.file -> {
+
+            is Kind.file -> {
                 val filename = attachmentType.filename
                 val location = attachmentType.location
                 val linkType = attachmentType.linkType
@@ -133,9 +222,10 @@ class AttachmentDownloader @Inject constructor(
                             )
                         )
                     }
+
                     Attachment.FileLinkType.importedFile, Attachment.FileLinkType.importedUrl -> {
-                        when(location) {
-                            Attachment.FileLocation.local -> {
+                        when (location) {
+                            FileLocation.local -> {
                                 Timber.i("AttachmentDownloader: open local file ${attachment.key}")
 
                                 attachmentDownloaderEventStream.emitAsync(
@@ -147,8 +237,9 @@ class AttachmentDownloader @Inject constructor(
                                     )
                                 )
                             }
-                            Attachment.FileLocation.remote, Attachment.FileLocation.remoteMissing -> {
-                                Timber.i("AttachmentDownloader: download remote${if (location == Attachment.FileLocation.remoteMissing) "ly missing" else ""} file ${attachment.key}")
+
+                            FileLocation.remote, FileLocation.remoteMissing -> {
+                                Timber.i("AttachmentDownloader: download remote${if (location == FileLocation.remoteMissing) "ly missing" else ""} file ${attachment.key}")
 
                                 val file = fileStorage.attachmentFile(
                                     libraryId = attachment.libraryId,
@@ -163,7 +254,8 @@ class AttachmentDownloader @Inject constructor(
                                     hasLocalCopy = false
                                 )
                             }
-                            Attachment.FileLocation.localAndChangedRemotely -> {
+
+                            FileLocation.localAndChangedRemotely -> {
                                 val file = fileStorage.attachmentFile(
                                     libraryId = attachment.libraryId,
                                     key = attachment.key,
@@ -219,7 +311,13 @@ class AttachmentDownloader @Inject constructor(
         operation.cancel()
     }
 
-    private fun download(file: File, key: String, parentKey: String?, libraryId: LibraryIdentifier, hasLocalCopy: Boolean) {
+    private fun download(
+        file: File,
+        key: String,
+        parentKey: String?,
+        libraryId: LibraryIdentifier,
+        hasLocalCopy: Boolean
+    ) {
         val pairResult = createDownload(
             file = file,
             key = key,
@@ -234,7 +332,11 @@ class AttachmentDownloader @Inject constructor(
         enqueue(operation = operation, download = download, parentKey = parentKey)
     }
 
-    private fun enqueue(operation: AttachmentDownloadOperation, download: Download, parentKey: String?) {
+    private fun enqueue(
+        operation: AttachmentDownloadOperation,
+        download: Download,
+        parentKey: String?
+    ) {
         Timber.i("AttachmentDownloader: enqueue ${download.key}")
 
         attachmentDownloaderEventStream.emitAsync(
@@ -245,8 +347,14 @@ class AttachmentDownloader @Inject constructor(
         }
     }
 
-    private fun createDownload(file: File, key: String, parentKey: String?, libraryId: LibraryIdentifier, hasLocalCopy: Boolean): Pair<Download, AttachmentDownloadOperation>? {
-         val download = Download(key = key, libraryId = libraryId)
+    private fun createDownload(
+        file: File,
+        key: String,
+        parentKey: String?,
+        libraryId: LibraryIdentifier,
+        hasLocalCopy: Boolean
+    ): Pair<Download, AttachmentDownloadOperation>? {
+        val download = Download(key = key, libraryId = libraryId)
 
         if (operations[download] != null) {
             return null
@@ -286,6 +394,7 @@ class AttachmentDownloader @Inject constructor(
                         hasLocalCopy = hasLocalCopy
                     )
                 }
+
                 is CustomResult.GeneralSuccess -> {
                     dbWrapperMain.realmDbStorage.perform(
                         request = MarkFileAsDownloadedDbRequest(
@@ -325,11 +434,16 @@ class AttachmentDownloader @Inject constructor(
         )
     }
 
-    private fun _finish(download: Download, parentKey: String?, result: CustomResult<Unit>, hasLocalCopy: Boolean) {
+    private fun _finish(
+        download: Download,
+        parentKey: String?,
+        result: CustomResult<Unit>,
+        hasLocalCopy: Boolean
+    ) {
         this.operations.remove(download)
         resetBatchDataIfNeeded()
 
-        when(result) {
+        when (result) {
             is CustomResult.GeneralError.CodeError -> {
                 val isCancelError = result.throwable is AttachmentDownloadOperation.Error.cancelled
                 if (isCancelError || hasLocalCopy) {
@@ -367,6 +481,7 @@ class AttachmentDownloader @Inject constructor(
                     )
                 }
             }
+
             is CustomResult.GeneralError.NetworkError -> {
                 if (hasLocalCopy) {
                     this.errors.remove(download)
@@ -374,16 +489,38 @@ class AttachmentDownloader @Inject constructor(
                     this.errors[download] = Exception(result.stringResponse)
                 }
                 if (hasLocalCopy) {
-                    attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.ready))
+                    attachmentDownloaderEventStream.emitAsync(
+                        Update.init(
+                            download = download,
+                            parentKey = parentKey,
+                            kind = Update.Kind.ready
+                        )
+                    )
                 } else {
-                    Timber.e(result.stringResponse, "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}")
-                    attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.failed(Exception(result.stringResponse))))
+                    Timber.e(
+                        result.stringResponse,
+                        "AttachmentDownloader: failed to download attachment ${download.key}, ${download.libraryId}"
+                    )
+                    attachmentDownloaderEventStream.emitAsync(
+                        Update.init(
+                            download = download,
+                            parentKey = parentKey,
+                            kind = Update.Kind.failed(Exception(result.stringResponse))
+                        )
+                    )
                 }
             }
+
             is CustomResult.GeneralSuccess -> {
                 Timber.i("AttachmentDownloader: finished downloading ${download.key}")
                 this.errors.remove(download)
-                attachmentDownloaderEventStream.emitAsync(Update.init(download = download, parentKey = parentKey, kind = Update.Kind.ready))
+                attachmentDownloaderEventStream.emitAsync(
+                    Update.init(
+                        download = download,
+                        parentKey = parentKey,
+                        kind = Update.Kind.ready
+                    )
+                )
             }
 
             else -> {}

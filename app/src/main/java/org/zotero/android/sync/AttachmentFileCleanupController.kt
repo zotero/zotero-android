@@ -35,7 +35,7 @@ class AttachmentFileCleanupController @Inject constructor(
 ) {
     sealed class DeletionType {
         data class individual(val attachment: Attachment, val parentKey: String?) : DeletionType()
-        data class allForItems(val keys: Set<String>, val libraryId: LibraryIdentifier) :
+        data class allForItems(val keys: Set<String>, val libraryId: LibraryIdentifier, val collectionIdentifier: CollectionIdentifier?) :
             DeletionType()
 
         data class library(val libraryId: LibraryIdentifier) : DeletionType()
@@ -48,6 +48,7 @@ class AttachmentFileCleanupController @Inject constructor(
                     is library -> AttachmentFileDeletedNotification.library(this.libraryId)
                     is allForItems -> AttachmentFileDeletedNotification.allForItems(
                         keys = this.keys,
+                        collectionIdentifier = this.collectionIdentifier,
                         libraryId = libraryId
                     )
                     is individual -> AttachmentFileDeletedNotification.individual(
@@ -97,10 +98,16 @@ class AttachmentFileCleanupController @Inject constructor(
             DeletionType.all -> {
                 deleteAll()
             }
+
             is DeletionType.allForItems -> {
-                deleteAttachments(type.keys, libraryId = type.libraryId)?.let { listOf(it) }
+                deleteAttachments(
+                    type.keys,
+                    libraryId = type.libraryId,
+                    collectionIdentifier = type.collectionIdentifier
+                )?.let { listOf(it) }
                     ?: emptyList()
             }
+
             is DeletionType.library -> delete(type.libraryId)?.let { listOf(it) } ?: emptyList()
             is DeletionType.individual -> {
                 return if (delete(attachment = type.attachment)) listOf(type) else emptyList()
@@ -149,7 +156,11 @@ class AttachmentFileCleanupController @Inject constructor(
             }
 
             return deletedIndividually.map { entry ->
-                DeletionType.allForItems(entry.value, entry.key)
+                DeletionType.allForItems(
+                    keys = entry.value,
+                    libraryId = entry.key,
+                    collectionIdentifier = null
+                )
             }
         } catch (error: Exception) {
             Timber.e(error, "AttachmentFileCleanupController: can't remove download directory")
@@ -158,7 +169,11 @@ class AttachmentFileCleanupController @Inject constructor(
     }
 
 
-    private fun deleteAttachments(keys: Set<String>, libraryId: LibraryIdentifier): DeletionType? {
+    private fun deleteAttachments(
+        keys: Set<String>,
+        libraryId: LibraryIdentifier,
+        collectionIdentifier: CollectionIdentifier?
+    ): DeletionType? {
         if (keys.isEmpty()) {
             return null
         }
@@ -209,7 +224,15 @@ class AttachmentFileCleanupController @Inject constructor(
                 removeFiles(key, libraryId = libraryId)
             }
 
-            return if (toReport.isEmpty()) null else DeletionType.allForItems(toReport, libraryId)
+            return if (toReport.isEmpty()) {
+                null
+            } else {
+                DeletionType.allForItems(
+                    keys = toReport,
+                    libraryId = libraryId,
+                    collectionIdentifier = collectionIdentifier
+                )
+            }
         } catch (error: Exception) {
             Timber.e(error, "AttachmentFileCleanupController: can't remove attachments for item")
             return null
@@ -279,7 +302,11 @@ class AttachmentFileCleanupController @Inject constructor(
             fileStorage.pageThumbnails(libraryId).deleteRecursively()
             val keys = deletedIndividually[libraryId]
             if (keys != null && !keys.isEmpty()) {
-                return DeletionType.allForItems(keys, libraryId)
+                return DeletionType.allForItems(
+                    keys = keys,
+                    libraryId = libraryId,
+                    collectionIdentifier = null
+                )
             }
             return DeletionType.library(libraryId)
         } catch (error: Exception) {

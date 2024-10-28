@@ -9,6 +9,7 @@ sealed class AttachmentFileDeletedNotification {
 
     data class allForItems(
         val keys: Set<String>,
+        val collectionIdentifier: CollectionIdentifier?,
         val libraryId: LibraryIdentifier
     ) :
         AttachmentFileDeletedNotification()

@@ -35,5 +35,6 @@
     <string name="pdf.annotation_toolbar.text">Text</string>
 
     <string name="collection_remove_downloads">Remove Downloads</string>
+    <string name="collection_empty_trash">Empty Trash</string>
 
 </resources>

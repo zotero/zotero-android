@@ -116,12 +116,27 @@ class AllItemsProcessor @Inject constructor(
         }
     }
 
+    private val onAttachmentFileDeletedStateFlow = MutableStateFlow<EventBusConstants.AttachmentFileDeleted?>(null)
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(attachmentFileDeleted: EventBusConstants.AttachmentFileDeleted) {
-        updateDeletedAttachmentFiles(attachmentFileDeleted.notification)
+        onAttachmentFileDeletedStateFlow.tryEmit(attachmentFileDeleted)
     }
 
+    private fun setupOnAttachmentFileDeletedStateFlow() {
+        onAttachmentFileDeletedStateFlow
+            .debounce(100)
+            .map {
+                if (it != null) {
+                    updateDeletedAttachmentFiles(it.notification)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    lateinit var viewModelScope:CoroutineScope
     fun init(viewModelScope: CoroutineScope, allItemsProcessorInterface: AllItemsProcessorInterface, searchTerm: String?) {
+        this.viewModelScope = viewModelScope
         this.processorInterface = allItemsProcessorInterface
         EventBus.getDefault().register(this)
         setupFlowListeners(viewModelScope)
@@ -137,6 +152,7 @@ class AllItemsProcessor @Inject constructor(
 
     private fun setupFlowListeners(viewModelScope: CoroutineScope) {
         setupSearchStateFlow(viewModelScope)
+        setupOnAttachmentFileDeletedStateFlow()
         setupFileObservers()
     }
 
@@ -642,10 +658,12 @@ class AllItemsProcessor @Inject constructor(
             )
         }
     }
+
     internal fun removeDownloads(ids: Set<String>) {
         this.fileCleanupController.delete(
             AttachmentFileCleanupController.DeletionType.allForItems(
                 keys = ids,
+                collectionIdentifier = this.collection.identifier,
                 libraryId = this.library.identifier
             ), completed = null
         )
@@ -678,6 +696,9 @@ class AllItemsProcessor @Inject constructor(
     private fun updateDeletedAttachmentFiles(notification: AttachmentFileDeletedNotification) {
         when (notification) {
             is AttachmentFileDeletedNotification.allForItems -> {
+                if (collection.identifier != notification.collectionIdentifier) {
+                    return
+                }
                 notification.keys.forEach {
                     updateAttachmentOnNotification(it)
                 }

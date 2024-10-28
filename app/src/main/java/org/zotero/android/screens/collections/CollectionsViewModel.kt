@@ -23,11 +23,16 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.Attachment.FileLinkType
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.requests.EmptyTrashDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
+import org.zotero.android.database.requests.ReadAllAttachmentsFromCollectionDbRequest
 import org.zotero.android.database.requests.ReadCollectionDbRequest
 import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadItemsDbRequest
@@ -42,10 +47,12 @@ import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileCleanupController.DeletionType
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
@@ -60,6 +67,7 @@ internal class CollectionsViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val fileCleanupController: AttachmentFileCleanupController,
+    private val attachmentDownloader: AttachmentDownloader,
     dispatchers: Dispatchers,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
 
@@ -431,27 +439,52 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(collection: Collection) {
-        if (!this.library.metadataEditable) {
-            return
-        }
         val actions = mutableListOf<LongPressOptionItem>()
 
         when (collection.identifier) {
             is CollectionIdentifier.collection -> {
-                actions.add(LongPressOptionItem.CollectionEdit(collection))
-                actions.add(LongPressOptionItem.RemoveDownloads(collection.identifier))
-                actions.add(LongPressOptionItem.CollectionNewSubCollection(collection))
-                actions.add(LongPressOptionItem.CollectionDelete(collection))
+                if (this.library.metadataEditable) {
+                    actions.add(LongPressOptionItem.CollectionEdit(collection))
+                    actions.add(LongPressOptionItem.CollectionNewSubCollection(collection))
+                    actions.add(LongPressOptionItem.CollectionDelete(collection))
+
+                    if (collection.itemCount > 0) {
+                        actions.addAll(
+                            0,
+                            listOf(
+                                LongPressOptionItem.CollectionDownloadAttachments(collection.identifier),
+                                LongPressOptionItem.CollectionRemoveDownloads(collection.identifier)
+                            )
+                        )
+                    }
+                }
             }
 
-            is CollectionIdentifier.custom -> {
-                //TODO
-                return
+            is CollectionIdentifier.custom -> run {
+                if (collection.itemCount <= 0) {
+                    return@run
+                }
+                actions.add(LongPressOptionItem.CollectionRemoveDownloads(collection.identifier))
+                val type = collection.identifier.type
+                when(type) {
+                    CustomType.trash -> {
+                        if (this.library.metadataEditable) {
+                            actions.add(LongPressOptionItem.CollectionEmptyTrash)
+                        }
+                    }
+
+                    CustomType.publications, CustomType.all, CustomType.unfiled -> {
+                        actions.add(0, LongPressOptionItem.CollectionDownloadAttachments(collection.identifier))
+                    }
+                }
             }
 
             is CollectionIdentifier.search -> {
-                return
+                //no-op
             }
+        }
+        if (actions.isEmpty()) {
+            return
         }
         EventBus.getDefault().post(
             ShowDashboardLongPressBottomSheet(
@@ -459,7 +492,6 @@ internal class CollectionsViewModel @Inject constructor(
                 longPressOptionItems = actions
             )
         )
-
     }
 
     private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
@@ -469,7 +501,7 @@ internal class CollectionsViewModel @Inject constructor(
                     onEdit(longPressOptionItem.collection)
                 }
 
-                is LongPressOptionItem.RemoveDownloads -> {
+                is LongPressOptionItem.CollectionRemoveDownloads -> {
                     removeDownloads(longPressOptionItem.collectionId)
                 }
 
@@ -484,10 +516,78 @@ internal class CollectionsViewModel @Inject constructor(
                     )
                 }
 
+                is LongPressOptionItem.CollectionEmptyTrash -> {
+                    emptyTrash()
+                }
+
+                is LongPressOptionItem.CollectionDownloadAttachments -> {
+                    downloadAttachments(longPressOptionItem.collectionId)
+                }
+
                 else -> {
                     //no-op
                 }
             }
+        }
+    }
+
+    private fun downloadAttachments(collectionId: CollectionIdentifier) {
+        try {
+            val items = dbWrapperMain.realmDbStorage.perform(
+                request = ReadAllAttachmentsFromCollectionDbRequest(
+                    collectionId = collectionId,
+                    libraryId = this.library.identifier,
+                    defaults = this.defaults
+                ),
+            )
+            val attachments = items.mapNotNull { item ->
+                val attachment = AttachmentCreator.attachment(
+                    item,
+                    fileStorage = this.fileStore,
+                    defaults = this.defaults,
+                    urlDetector = null,
+                    isForceRemote = false
+                ) ?: return@mapNotNull null
+
+                when (attachment.type) {
+                    is Attachment.Kind.file -> {
+                        val linkType = attachment.type.linkType
+                        when (linkType) {
+                            FileLinkType.importedFile, FileLinkType.importedUrl -> {
+                                return@mapNotNull attachment to item.parent?.key
+                            }
+                            else -> {
+                                //no-op
+                            }
+
+                        }
+                    }
+
+                    else -> {
+                        //no-op
+                    }
+                }
+                return@mapNotNull null
+            }
+            this.attachmentDownloader.batchDownload(
+                attachments = attachments
+            )
+        } catch (error: Exception) {
+            Timber.e(error, "CollectionsViewModel: download attachments")
+        }
+
+    }
+
+    private fun emptyTrash() {
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapperMain,
+                request = EmptyTrashDbRequest(libraryId = this@CollectionsViewModel.library.identifier)
+            ).ifFailure {
+                Timber.e(it, "CollectionsActionHandler: can't empty trash")
+                return@launch
+            }
+            triggerEffect(CollectionsViewEffect.ScreenRefresh)
         }
     }
 
@@ -503,8 +603,8 @@ internal class CollectionsViewModel @Inject constructor(
             )
             val keys = items.map { it.key }.toSet()
             fileCleanupController.delete(
-                type = DeletionType.allForItems(keys, this.libraryId),
-                completed = null
+                type = DeletionType.allForItems(keys, this.libraryId, collectionId),
+                completed = null,
             )
         } catch (exception: Exception) {
             Timber.e(exception, "CollectionsViewModel: remove downloads")

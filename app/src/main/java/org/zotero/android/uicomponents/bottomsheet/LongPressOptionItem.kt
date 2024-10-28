@@ -105,7 +105,22 @@ sealed class LongPressOptionItem(
             resIcon = Drawables.delete_24px
         )
 
-    data class RemoveDownloads(
+    object CollectionEmptyTrash :
+        LongPressOptionItem(
+            titleId = Strings.collection_empty_trash,
+            textAndIconColor = CustomPalette.ErrorRed,
+            resIcon = Drawables.delete_24px
+        )
+
+    data class CollectionDownloadAttachments(
+        val collectionId: CollectionIdentifier,
+    ) :
+        LongPressOptionItem(
+            titleId = Strings.collections_download_attachments,
+            resIcon = Drawables.baseline_download_24
+        )
+
+    data class CollectionRemoveDownloads(
         val collectionId: CollectionIdentifier,
     ) :
         LongPressOptionItem(
