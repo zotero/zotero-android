@@ -36,6 +36,7 @@ import com.pspdfkit.annotations.configuration.MarkupAnnotationConfiguration
 import com.pspdfkit.annotations.configuration.NoteAnnotationConfiguration
 import com.pspdfkit.annotations.configuration.ShapeAnnotationConfiguration
 import com.pspdfkit.configuration.activity.PdfActivityConfiguration
+import com.pspdfkit.configuration.activity.UserInterfaceViewMode
 import com.pspdfkit.configuration.page.PageFitMode
 import com.pspdfkit.configuration.page.PageScrollMode
 import com.pspdfkit.configuration.theming.ThemeMode
@@ -43,6 +44,8 @@ import com.pspdfkit.document.OutlineElement
 import com.pspdfkit.document.PdfDocument
 import com.pspdfkit.document.PdfDocumentLoader
 import com.pspdfkit.listeners.DocumentListener
+import com.pspdfkit.listeners.scrolling.DocumentScrollListener
+import com.pspdfkit.listeners.scrolling.ScrollState
 import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.PdfUiFragment
@@ -237,12 +240,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onUserInterfaceVisibilityChanged(event: OnUserInterfaceVisibilityChangedEvent) {
-        toggleTopAndBottomBarVisibility(event.isVisible)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onPdfPageScrolled(event: OnPdfPageScrolled) {
+    fun onPageChangedEvent(event: OnPageChangedEvent) {
         triggerEffect(PdfReaderViewEffect.ScrollThumbnailListToIndex(event.pageIndex))
         val row = viewState.thumbnailRows.firstOrNull { it.pageIndex == event.pageIndex }
         updateState {
@@ -379,19 +377,13 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     class CustomPdfUiFragment: PdfUiFragment() {
-        override fun onUserInterfaceVisibilityChanged(visible: Boolean) {
-            super.onUserInterfaceVisibilityChanged(visible)
-            EventBus.getDefault().post(OnUserInterfaceVisibilityChangedEvent(visible))
-        }
-
         override fun onPageChanged(document: PdfDocument, pageIndex: Int) {
             super.onPageChanged(document, pageIndex)
-            EventBus.getDefault().post(OnPdfPageScrolled(pageIndex))
+            EventBus.getDefault().post(OnPageChangedEvent(pageIndex))
         }
     }
 
-    data class OnUserInterfaceVisibilityChangedEvent(val isVisible: Boolean)
-    data class OnPdfPageScrolled(val pageIndex: Int)
+    data class OnPageChangedEvent(val pageIndex: Int)
 
     override fun init(
         uri: Uri,
@@ -440,6 +432,7 @@ class PdfReaderViewModel @Inject constructor(
                 addDocumentListenerOnInit()
                 addOnAnnotationCreationModeChangeListener()
                 setOnPreparePopupToolbarListener()
+                addDocumentScrollListener()
             }
 
             override fun onDestroy(owner: LifecycleOwner) {
@@ -450,6 +443,25 @@ class PdfReaderViewModel @Inject constructor(
         fragmentManager.commit {
             add(containerId, this@PdfReaderViewModel.pdfUiFragment)
         }
+    }
+
+    private fun addDocumentScrollListener() {
+        pdfFragment.addDocumentScrollListener(object : DocumentScrollListener {
+            override fun onScrollStateChanged(state: ScrollState) {
+                if (state == ScrollState.DRAGGED) {
+                    setBottomBarVisibility(false)
+                }
+            }
+
+            override fun onDocumentScrolled(p0: Int, p1: Int, p2: Int, p3: Int, p4: Int, p5: Int) {
+                //no-op
+            }
+        })
+
+    }
+
+    private fun setBottomBarVisibility(isVisible: Boolean) {
+        pdfUiFragment.setUserInterfaceVisible(isVisible, true)
     }
 
     private fun addDocumentListenerOnInit() {
@@ -466,9 +478,48 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
+                decideTopBarAndBottomBarVisibility(clickedAnnotation)
                 return false
             }
         })
+    }
+
+    private var lastSelectedAnnotation: Annotation? = null
+
+    private fun decideTopBarAndBottomBarVisibility(currentlySelectedAnnotation: Annotation?) {
+        val wasAnnotationClicked = currentlySelectedAnnotation != null
+        if (currentlySelectedAnnotation == null &&
+            (lastSelectedAnnotation?.type == AnnotationType.FREETEXT || lastSelectedAnnotation?.type == AnnotationType.NOTE)) {
+            lastSelectedAnnotation = null
+            return
+        }
+        lastSelectedAnnotation = currentlySelectedAnnotation
+        if (wasAnnotationClicked) {
+            return
+        }
+        val isBottomBarCurrentlyVisible = pdfUiFragment.isUserInterfaceVisible
+        val isTopBarCurrentlyVisible = viewState.isTopBarVisible
+
+        if (isTopBarCurrentlyVisible && isBottomBarCurrentlyVisible) {
+            setTopBarVisibility(false)
+            setBottomBarVisibility(false)
+            return
+        }
+        if (!isTopBarCurrentlyVisible && !isBottomBarCurrentlyVisible) {
+            setTopBarVisibility(true)
+            setBottomBarVisibility(true)
+            return
+        }
+
+        if (isBottomBarCurrentlyVisible && !isTopBarCurrentlyVisible) {
+            setTopBarVisibility(true)
+            return
+        }
+        if (!isBottomBarCurrentlyVisible && isTopBarCurrentlyVisible) {
+            setBottomBarVisibility(true)
+            return
+        }
+
     }
 
     private fun setOnPreparePopupToolbarListener() {
@@ -841,7 +892,12 @@ class PdfReaderViewModel @Inject constructor(
             }
 
             override fun onAnnotationUpdated(annotation: Annotation) {
-                processAnnotationObserving(annotation, emptyList(), PdfReaderNotification.PSPDFAnnotationChanged)
+                processAnnotationObserving(
+                    annotation = annotation,
+                    changes = emptyList(),
+                    pdfReaderNotification = PdfReaderNotification.PSPDFAnnotationChanged
+                )
+                lastSelectedAnnotation = annotation
             }
 
             override fun onAnnotationRemoved(annotation: Annotation) {
@@ -1959,7 +2015,8 @@ class PdfReaderViewModel @Inject constructor(
             .disableDefaultToolbar()
             .hideDocumentTitleOverlay()
             .enableStylusOnDetection(true)
-            .hideUserInterfaceWhenCreatingAnnotations(true)
+            .hideUserInterfaceWhenCreatingAnnotations(false)
+            .setUserInterfaceViewMode(UserInterfaceViewMode.USER_INTERFACE_VIEW_MODE_MANUAL)
             .build()
     }
 
@@ -2237,6 +2294,7 @@ class PdfReaderViewModel @Inject constructor(
                 addDocumentListener2()
                 addOnAnnotationCreationModeChangeListener()
                 setOnPreparePopupToolbarListener()
+                addDocumentScrollListener()
 //                updateVisibilityOfAnnotations()
 
             }
@@ -2275,6 +2333,7 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
+                decideTopBarAndBottomBarVisibility(clickedAnnotation)
                 return false
             }
         })
@@ -2299,7 +2358,7 @@ class PdfReaderViewModel @Inject constructor(
         })
     }
 
-    private fun toggleTopAndBottomBarVisibility(isVisible: Boolean) {
+    private fun setTopBarVisibility(isVisible: Boolean) {
         updateState {
             copy(isTopBarVisible = isVisible)
         }
