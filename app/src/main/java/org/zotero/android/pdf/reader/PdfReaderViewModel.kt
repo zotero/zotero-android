@@ -1634,7 +1634,8 @@ class PdfReaderViewModel @Inject constructor(
                 select(annotation = annotation, pageIndex = pageIndex, document = this.document)
             }
         } else {
-            select(annotation = null, pageIndex = pdfUiFragment.pageIndex, document = this.document)
+            //no need to provide pageIndex during a deselection.
+            select(annotation = null, pageIndex = null, document = this.document)
         }
     }
 
@@ -1671,13 +1672,13 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun select(
         annotation: org.zotero.android.pdf.data.PDFAnnotation?,
-        pageIndex: Int,
+        pageIndex: Int?,
         document: PdfDocument
     ) {
 
         //TODO updateSelection
 
-        if (annotation != null) {
+        if (annotation != null && pageIndex != null) {
             val pdfAnnotation = document.annotation(pageIndex, annotation.key)
             if (pdfAnnotation != null) {
                 if (!pdfFragment.selectedAnnotations.contains(pdfAnnotation)) {
