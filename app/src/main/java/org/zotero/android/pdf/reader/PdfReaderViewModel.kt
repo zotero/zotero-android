@@ -1920,6 +1920,13 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun deselectSelectedAnnotation(annotation: Annotation) {
+        if (annotation.type == AnnotationType.FREETEXT) {
+            val contents = annotation.contents
+            if (contents.isNullOrBlank()) {
+                this.document.annotationProvider.removeAnnotationFromPage(annotation)
+            }
+        }
+
 //        if (viewState.selectedAnnotationKey?.key == annotation.key ) {
 //            _select(key = null, didSelectInDocument = false)
 //        }
@@ -1927,7 +1934,12 @@ class PdfReaderViewModel @Inject constructor(
 
     val selectedAnnotation: org.zotero.android.pdf.data.PDFAnnotation?
         get() {
-            return viewState.selectedAnnotationKey?.let { annotation(it) }
+            val selectedAnnotationKey = viewState.selectedAnnotationKey
+            val let = selectedAnnotationKey?.let {
+                val annotation = annotation(it)
+                annotation
+            }
+            return let
         }
 
     override fun onCleared() {
@@ -2659,16 +2671,7 @@ class PdfReaderViewModel @Inject constructor(
             schemaController = this.schemaController,
             boundingBoxConverter = this.annotationBoundingBoxConverter
         )
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "PDFReaderViewModel: can't add annotations")
-                return@launch
-            }
-        }
-
+        dbWrapperMain.realmDbStorage.perform(request)
     }
 
     private fun tool(annotation: Annotation): AnnotationTool? {

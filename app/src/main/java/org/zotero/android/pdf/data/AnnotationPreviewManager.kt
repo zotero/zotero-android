@@ -43,7 +43,7 @@ class AnnotationPreviewManager @Inject constructor(
         isDark: Boolean,
         annotationMaxSideSize: Int,
     ) {
-        if (!annotation.shouldRenderPreview || !annotation.isZoteroAnnotation) {
+        if (!annotation.shouldRenderPreview || !annotation.isZoteroAnnotation || !annotation.isAttached) {
             return
         }
         enqueue(
