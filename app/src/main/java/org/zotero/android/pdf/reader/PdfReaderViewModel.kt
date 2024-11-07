@@ -2228,8 +2228,19 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun toggleSideBar() {
+        val newShowSideBarState = !viewState.showSideBar
         updateState {
-            copy(showSideBar = !showSideBar)
+            copy(showSideBar = newShowSideBarState)
+        }
+        val selectedAnnotationKey = viewState.selectedAnnotationKey
+        if (newShowSideBarState && selectedAnnotationKey != null) {
+            val index = viewState.sortedKeys.indexOf(selectedAnnotationKey)
+            triggerEffect(
+                PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(
+                    index,
+                    false
+                )
+            )
         }
     }
 
