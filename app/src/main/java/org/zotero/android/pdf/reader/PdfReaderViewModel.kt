@@ -55,6 +55,7 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import com.pspdfkit.ui.special_mode.manager.AnnotationManager
+import com.pspdfkit.ui.toolbar.popup.PopupToolbarMenuItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
@@ -168,6 +169,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
+import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.util.EnumSet
 import java.util.Timer
@@ -524,25 +526,29 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun setOnPreparePopupToolbarListener() {
         this.pdfFragment.setOnPreparePopupToolbarListener { toolbar ->
-            val sourceItems = toolbar.menuItems
+            val sourceItems = toolbar.menuItems.toMutableList()
             val menuItems = sourceItems.listIterator()
 
             while (menuItems.hasNext()) {
                 val item = menuItems.next()
                 when (item.id) {
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_underline,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_strikeout,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_speak,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_search,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_redact,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_paste_annotation,
-                    com.pspdfkit.R.id.pspdf__text_selection_toolbar_item_link,
+                    R.id.pspdf__text_selection_toolbar_item_strikeout,
+                    R.id.pspdf__text_selection_toolbar_item_speak,
+                    R.id.pspdf__text_selection_toolbar_item_search,
+                    R.id.pspdf__text_selection_toolbar_item_redact,
+                    R.id.pspdf__text_selection_toolbar_item_paste_annotation,
+                    R.id.pspdf__text_selection_toolbar_item_link,
                     -> {
                         menuItems.remove()
                     }
                 }
             }
-
+            val textHighlightItemIndex =
+                sourceItems.indexOfFirst { it.id == R.id.pspdf__text_selection_toolbar_item_highlight }
+            sourceItems[textHighlightItemIndex] = PopupToolbarMenuItem(
+                R.id.pspdf__text_selection_toolbar_item_highlight,
+                Strings.pdf_highlight
+            )
             toolbar.menuItems = sourceItems
         }
     }
