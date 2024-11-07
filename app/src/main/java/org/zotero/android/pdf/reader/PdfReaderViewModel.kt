@@ -1123,18 +1123,17 @@ class PdfReaderViewModel @Inject constructor(
                         }
                     }
                     else -> {
-                        val listOfChanges = mutableListOf(
-                            PdfAnnotationChanges.boundingBox,
-                            PdfAnnotationChanges.paths
-                        )
-                        if (annotation is UnderlineAnnotation) {
-                            listOfChanges.add(PdfAnnotationChanges.color)
-                        }
+                        val listOfChanges =
+                            PdfAnnotationChanges.stringValues(
+                                listOf(
+                                    PdfAnnotationChanges.boundingBox,
+                                    PdfAnnotationChanges.paths
+                                )
+                            ).toMutableList()
+                        listOfChanges.addAll(changes)
                         change(
                             annotation = annotation,
-                            changes = PdfAnnotationChanges.stringValues(
-                                listOfChanges
-                            )
+                            changes = listOfChanges
                         )
                     }
                 }
