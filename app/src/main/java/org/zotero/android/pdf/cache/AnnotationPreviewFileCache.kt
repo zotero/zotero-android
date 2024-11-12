@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AnnotationPreviewFileCache @Inject constructor(
-    dispatchers: Dispatchers,
+    private val dispatchers: Dispatchers,
     private val fileStore: FileStore,
     private val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
 ) {
@@ -44,6 +44,7 @@ class AnnotationPreviewFileCache @Inject constructor(
     fun cancelProcessing() {
         currentlyProcessingAnnotations.clear()
         coroutineScope.cancel()
+        coroutineScope = CoroutineScope(dispatchers.default)
     }
 
 }

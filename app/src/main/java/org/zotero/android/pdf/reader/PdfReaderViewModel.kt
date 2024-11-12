@@ -1069,17 +1069,10 @@ class PdfReaderViewModel @Inject constructor(
             requests.add(request)
         }
 
-        if(requests.isEmpty()) { return }
-
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                writeRequests = requests
-            ).ifFailure {
-                Timber.e(it, "PDFReaderViewModel:  can't update changed annotations")
-                return@launch
-            }
+        if (requests.isEmpty()) {
+            return
         }
+        dbWrapperMain.realmDbStorage.perform(requests)
 
         pdfFragment.notifyAnnotationHasChanged(annotation)
         //TODO
@@ -1088,7 +1081,8 @@ class PdfReaderViewModel @Inject constructor(
     private fun processAnnotationObserving(
         annotation: Annotation,
         changes: List<String>,
-        pdfReaderNotification: PdfReaderNotification
+        pdfReaderNotification: PdfReaderNotification,
+        ignoreDebouncer: Boolean = false,
     ) {
 
         when (pdfReaderNotification) {
@@ -1110,13 +1104,18 @@ class PdfReaderViewModel @Inject constructor(
                         val key = annotation.key
                         if (key != null) {
 //                        if (changes.contains("rotation") || freeTextAnnotation.rotation != 0) {
-                            onAnnotationChangedDebouncerFlow.tryEmit(
-                                Triple(
-                                    Random.nextInt(),
-                                    adjustedAnnotations,
-                                    annotation
+
+                            if (ignoreDebouncer) {
+                                change(annotation = annotation, adjustedAnnotations)
+                            } else {
+                                onAnnotationChangedDebouncerFlow.tryEmit(
+                                    Triple(
+                                        Random.nextInt(),
+                                        adjustedAnnotations,
+                                        annotation
+                                    )
                                 )
-                            )
+                            }
 //                        } else {
 //                            val k = onAnnotationChangedDebouncerFlow.value
 //                            if (k != null) {
@@ -1742,7 +1741,9 @@ class PdfReaderViewModel @Inject constructor(
         if (color != null && color.first != annotation.color) {
             changes.add(PdfAnnotationChanges.color)
         }
+        var ignoreDebouncer = true
         if (contents != null && contents != annotation.comment) {
+            ignoreDebouncer = false
             changes.add(PdfAnnotationChanges.contents)
         }
 
@@ -1779,9 +1780,10 @@ class PdfReaderViewModel @Inject constructor(
         }
 
         processAnnotationObserving(
-            pdfAnnotation,
-            PdfAnnotationChanges.stringValues(changes),
-            PdfReaderNotification.PSPDFAnnotationChanged
+            annotation = pdfAnnotation,
+            changes = PdfAnnotationChanges.stringValues(changes),
+            pdfReaderNotification = PdfReaderNotification.PSPDFAnnotationChanged,
+            ignoreDebouncer = ignoreDebouncer,
         )
     }
 
@@ -3059,15 +3061,7 @@ class PdfReaderViewModel @Inject constructor(
             dateParser = this.dateParser
         )
 
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "PDFReaderViewModel:  can't update annotation $key")
-                return@launch
-            }
-        }
+        dbWrapperMain.realmDbStorage.perform(request)
     }
 
     private fun submitPendingPage(page: Int) {

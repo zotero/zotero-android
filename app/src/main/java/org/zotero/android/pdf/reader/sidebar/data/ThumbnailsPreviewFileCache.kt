@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Singleton
 class ThumbnailsPreviewFileCache @Inject constructor(
-    dispatchers: Dispatchers,
+    private val dispatchers: Dispatchers,
     private val fileStore: FileStore,
     private val thumbnailPreviewMemoryCache: ThumbnailPreviewMemoryCache,
 ) {
@@ -44,6 +44,7 @@ class ThumbnailsPreviewFileCache @Inject constructor(
     fun cancelProcessing() {
         currentlyProcessingThumbnails.clear()
         coroutineScope.cancel()
+        coroutineScope = CoroutineScope(dispatchers.default)
     }
 
 }
