@@ -1933,6 +1933,9 @@ class PdfReaderViewModel @Inject constructor(
                 this.document.annotationProvider.removeAnnotationFromPage(annotation)
             }
         }
+        updateState {
+            copy(selectedAnnotationKey = null)
+        }
 
 //        if (viewState.selectedAnnotationKey?.key == annotation.key ) {
 //            _select(key = null, didSelectInDocument = false)
@@ -2238,10 +2241,7 @@ class PdfReaderViewModel @Inject constructor(
         if (newShowSideBarState && selectedAnnotationKey != null) {
             val index = viewState.sortedKeys.indexOf(selectedAnnotationKey)
             triggerEffect(
-                PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(
-                    index,
-                    false
-                )
+                PdfReaderViewEffect.ScrollSideBar(index)
             )
         }
     }
@@ -3371,6 +3371,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()
+    data class ScrollSideBar(val scrollToIndex: Int): PdfReaderViewEffect()
     object ScreenRefresh: PdfReaderViewEffect()
     object ClearFocus: PdfReaderViewEffect()
     object NavigateToTagPickerScreen: PdfReaderViewEffect()

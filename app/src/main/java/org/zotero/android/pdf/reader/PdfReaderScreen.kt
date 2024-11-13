@@ -80,6 +80,10 @@ internal fun PdfReaderScreen(
                     navigateToPdfFilter()
                 }
 
+                is PdfReaderViewEffect.ScrollSideBar -> {
+                    annotationsLazyListState.scrollToItem(index = consumedEffect.scrollToIndex)
+                }
+
                 is PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList -> {
                     if (consumedEffect.showAnnotationPopup) {
                         if (!layoutType.isTablet()) {
