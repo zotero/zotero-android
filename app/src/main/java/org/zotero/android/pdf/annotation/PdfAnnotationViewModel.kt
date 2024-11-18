@@ -16,6 +16,7 @@ import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationDeleteResult
+import org.zotero.android.pdf.annotation.data.PdfAnnotationFontSizeResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationSizeResult
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
@@ -36,7 +37,6 @@ internal class PdfAnnotationViewModel @Inject constructor(
             updateState {
                 copy(tags = tagPickerResult.tags)
             }
-
             EventBus.getDefault().post(TagPickerResult(tagPickerResult.tags, TagPickerResult.CallPoint.PdfReaderScreen))
         }
     }
@@ -62,7 +62,8 @@ internal class PdfAnnotationViewModel @Inject constructor(
                 annotation = annotation,
                 tags = args.selectedAnnotation.tags,
                 commentFocusText = annotation.comment,
-                size = annotation.lineWidth ?: 1.0f
+                size = annotation.lineWidth ?: 1.0f,
+                fontSize = annotation.fontSize ?: 12.0f
             )
         }
     }
@@ -148,6 +149,29 @@ internal class PdfAnnotationViewModel @Inject constructor(
         triggerEffect(PdfAnnotationViewEffect.Back)
     }
 
+    fun onFontSizeDecrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize - 0.5f)
+        }
+        postFontSizeChangeUpdate()
+    }
+
+    fun onFontSizeIncrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize + 0.5f)
+        }
+        postFontSizeChangeUpdate()
+    }
+
+    private fun postFontSizeChangeUpdate() {
+        EventBus.getDefault().post(
+            PdfAnnotationFontSizeResult(
+                key = viewState.annotation!!.key,
+                size = viewState.fontSize
+            )
+        )
+    }
+
 }
 
 internal data class PdfAnnotationViewState(
@@ -157,6 +181,7 @@ internal data class PdfAnnotationViewState(
     val commentFocusText: String = "",
     val color: String = "",
     val colors: List<String> = emptyList(),
+    val fontSize: Float = 12f,
     val size: Float = 1.0f,
 ) : ViewState
 

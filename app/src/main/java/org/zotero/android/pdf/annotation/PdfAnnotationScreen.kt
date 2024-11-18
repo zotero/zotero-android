@@ -18,6 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.annotation.row.PdfAnnotationHeaderRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationHighlightRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationImageRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationInkRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationNoteRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationTextRow
+import org.zotero.android.pdf.annotation.row.PdfAnnotationUnderlineRow
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -78,8 +85,10 @@ internal fun PdfAnnotationPart(
                 layoutType = layoutType,
                 onBack = onBack,
             )
-            SidebarDivider(modifier = Modifier.fillMaxWidth())
-            Spacer(modifier = Modifier.height(4.dp))
+            if (annotation.type != AnnotationType.text) {
+                SidebarDivider(modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(4.dp))
+            }
         }
 
 
@@ -113,19 +122,22 @@ internal fun PdfAnnotationPart(
                     viewState = viewState,
                     viewModel = viewModel,
                 )
-
-                else -> {
-                    //no-op
-                }
+                AnnotationType.text -> PdfAnnotationTextRow(
+                    layoutType = layoutType,
+                    viewState = viewState,
+                    viewModel = viewModel,
+                )
             }
         }
         item {
-            SidebarDivider(
-                modifier = Modifier
-                    .height(1.dp)
-                    .fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            if (annotation.type != AnnotationType.text) {
+                SidebarDivider(
+                    modifier = Modifier
+                        .height(1.dp)
+                        .fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
             HeadingTextButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = viewModel::onDeleteAnnotation,
@@ -133,8 +145,6 @@ internal fun PdfAnnotationPart(
                 text = stringResource(Strings.pdf_annotation_popover_delete),
             )
         }
-
-
 
     }
 }
