@@ -237,7 +237,7 @@ class PdfReaderViewModel @Inject constructor(
 
     private var disableForceScreenOnTimer: Timer? = null
 
-    private var annotationEditSelectedKey: String? = null
+    private var annotationEditReaderKey: AnnotationKey? = null
     private var isLongPressOnTextAnnotation = false
 
     val screenArgs: PdfReaderArgs by lazy {
@@ -270,8 +270,8 @@ class PdfReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfReaderScreen) {
-            val key = this.annotationEditSelectedKey ?: return
-            set(tags = tagPickerResult.tags, key = key)
+            val key = this.annotationEditReaderKey ?: return
+            set(tags = tagPickerResult.tags, key = key.key)
         }
     }
 
@@ -299,13 +299,13 @@ class PdfReaderViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationMoreDeleteResult) {
-        val key = viewState.selectedAnnotationKey ?: return
+        val key = result.key
         remove(key)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationDeleteResult) {
-        val key = viewState.selectedAnnotationKey ?: return
+        val key = result.key
         remove(key)
     }
 
@@ -1619,7 +1619,7 @@ class PdfReaderViewModel @Inject constructor(
         }
         isLongPressOnTextAnnotation = false
         if (showAnnotationPopup) {
-            annotationEditSelectedKey = selectedAnnotation?.key
+            annotationEditReaderKey = selectedAnnotation?.readerKey
             ScreenArguments.pdfAnnotationArgs = PdfAnnotationArgs(
                 selectedAnnotation = selectedAnnotation,
                 userId = viewState.userId,
@@ -3011,7 +3011,7 @@ class PdfReaderViewModel @Inject constructor(
 
         val selected = annotation.tags.map { it.name }.toSet()
 
-        this.annotationEditSelectedKey = annotation.key
+        this.annotationEditReaderKey = annotation.readerKey
 
         ScreenArguments.tagPickerArgs = TagPickerArgs(
             libraryId = viewState.library.identifier,
@@ -3046,6 +3046,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     override fun onMoreOptionsForItemClicked() {
+        annotationEditReaderKey = selectedAnnotation?.readerKey
         ScreenArguments.pdfAnnotationMoreArgs = PdfAnnotationMoreArgs(
             selectedAnnotation = selectedAnnotation,
             userId = viewState.userId,

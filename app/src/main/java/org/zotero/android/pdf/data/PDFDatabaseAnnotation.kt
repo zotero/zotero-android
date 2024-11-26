@@ -39,7 +39,7 @@ data class PDFDatabaseAnnotation(
 
     override val readerKey: AnnotationKey
         get() {
-            return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
+            return AnnotationKey(key = this.key, type = AnnotationKey.Kind.database)
         }
 
     override val key: String get() {

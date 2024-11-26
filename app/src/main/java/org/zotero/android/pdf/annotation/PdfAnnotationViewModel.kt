@@ -31,6 +31,8 @@ internal class PdfAnnotationViewModel @Inject constructor(
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
 ) : BaseViewModel2<PdfAnnotationViewState, PdfAnnotationViewEffect>(PdfAnnotationViewState()) {
 
+    private var isDeletingAnnotation = false
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfReaderAnnotationScreen) {
@@ -100,12 +102,14 @@ internal class PdfAnnotationViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        EventBus.getDefault().post(
-            PdfAnnotationCommentResult(
-                annotationKey = viewState.annotation!!.key,
-                comment = viewState.commentFocusText
+        if (!isDeletingAnnotation) {
+            EventBus.getDefault().post(
+                PdfAnnotationCommentResult(
+                    annotationKey = viewState.annotation!!.key,
+                    comment = viewState.commentFocusText
+                )
             )
-        )
+        }
         EventBus.getDefault().unregister(this)
         super.onCleared()
     }
@@ -141,9 +145,10 @@ internal class PdfAnnotationViewModel @Inject constructor(
     }
 
     fun onDeleteAnnotation() {
+        isDeletingAnnotation = true
         EventBus.getDefault().post(
             PdfAnnotationDeleteResult(
-                key = viewState.annotation!!.key,
+                key = viewState.annotation!!.readerKey,
             )
         )
         triggerEffect(PdfAnnotationViewEffect.Back)

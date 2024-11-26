@@ -1,3 +1,5 @@
 package org.zotero.android.pdf.annotation.data
 
-data class PdfAnnotationDeleteResult(val key: String)
+import org.zotero.android.pdf.reader.AnnotationKey
+
+data class PdfAnnotationDeleteResult(val key: AnnotationKey)
