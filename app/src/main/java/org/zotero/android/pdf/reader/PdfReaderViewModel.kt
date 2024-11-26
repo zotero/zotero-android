@@ -240,6 +240,8 @@ class PdfReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: AnnotationKey? = null
     private var isLongPressOnTextAnnotation = false
 
+    private var initialPage: Int? = null
+
     val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
@@ -726,6 +728,7 @@ class PdfReaderViewModel @Inject constructor(
         this.activeLineWidth = defaults.getActiveLineWidth()
         this.activeEraserSize = defaults.getActiveEraserSize()
         this.activeFontSize = defaults.getActiveFontSize()
+        this.initialPage = params.page
 
         updateState {
             copy(
@@ -735,7 +738,6 @@ class PdfReaderViewModel @Inject constructor(
                 username = username,
                 displayName = displayName,
                 visiblePage = 0,
-                initialPage = params.page,
                 selectedAnnotationKey = params.preselectedAnnotationKey?.let {
                     AnnotationKey(
                         key = it,
@@ -865,12 +867,13 @@ class PdfReaderViewModel @Inject constructor(
                     boundingBoxConverter = annotationBoundingBoxConverter
                 )
 
+                this.initialPage = null
+
                 updateState {
                     copy(
                         pdfDocumentAnnotations = documentAnnotations,
                         sortedKeys = sortedKeys,
                         visiblePage = page,
-                        initialPage = null,
                     )
                 }
 
@@ -1190,7 +1193,7 @@ class PdfReaderViewModel @Inject constructor(
             }
         }
 
-        val initialPage = viewState.initialPage
+        val initialPage = this.initialPage
         if (initialPage != null && initialPage >= 0 && initialPage < this.document.pageCount) {
             return initialPage to null
         }
@@ -2002,7 +2005,6 @@ class PdfReaderViewModel @Inject constructor(
             .forEach {
                 this.document.annotationProvider.removeAnnotationFromPage(it)
             }
-        submitPendingPage(pdfUiFragment.pageIndex)
         val activity = pdfUiFragment.activity
         if (activity != null) {
             WindowCompat.getInsetsController(activity.window, activity.window.decorView).show(
@@ -2321,6 +2323,7 @@ class PdfReaderViewModel @Inject constructor(
 
     fun onStop(isChangingConfigurations: Boolean) {
         pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
+        submitPendingPage(pdfUiFragment.pageIndex)
         if (isChangingConfigurations) {
             removeFragment()
         }
@@ -3346,7 +3349,6 @@ data class PdfReaderViewState(
     val displayName: String = "",
     val selectedAnnotationKey: AnnotationKey? = null,
     val isDark: Boolean = false,
-    val initialPage: Int? = null,
     val visiblePage: Int = 0,
     val focusSidebarKey: AnnotationKey? = null,
     val focusDocumentLocation: Pair<Int, RectF>? = null,
