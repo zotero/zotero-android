@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -86,7 +86,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
                     .safeClickable(
                         onClick = vMInterface::onMoreOptionsForItemClicked,
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(bounded = false)
+                        indication = ripple(bounded = false)
                     ),
                 painter = painterResource(id = Drawables.more_horiz_24px),
                 contentDescription = null,
@@ -173,7 +173,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
         Box(modifier = Modifier
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true),
+                indication = ripple(bounded = true),
                 onClick = { vMInterface.onTagsClicked(annotation) }
             )
             .sectionVerticalPadding()

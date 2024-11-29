@@ -14,7 +14,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,7 +49,7 @@ internal fun CreatorEditFieldTappableRow(
             .background(CustomTheme.colors.surface)
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = onClick
             ),
         verticalAlignment = Alignment.CenterVertically
@@ -176,7 +176,7 @@ internal fun CreatorEditToggleNamePresentationRow(
             .background(CustomTheme.colors.surface)
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = viewModel::toggleNamePresentation
             )
     ) {
@@ -206,7 +206,7 @@ internal fun CreatorEditDeleteCreatorRow(
             .background(CustomTheme.colors.surface)
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = viewModel::showDeleteCreatorConfirmation
             )
     ) {

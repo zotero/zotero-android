@@ -2,8 +2,8 @@ package org.zotero.android.uicomponents.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.LocalContentColor
+import androidx.compose.material.LocalRippleConfiguration
 import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -48,7 +48,7 @@ fun CustomTheme(
         LocalTextStyle provides customTypography.default,
         LocalCustomColors provides customColors,
         LocalContentColor provides customColors.primaryContent,
-        LocalRippleTheme provides CustomRippleTheme,
+        LocalRippleConfiguration provides CustomRippleTheme.createCustomRippleTheme(),
         LocalCustomShapes provides CustomShapes(),
         LocalUriHandler provides CustomUriHandler(LocalContext.current),
     ) {
@@ -75,7 +75,7 @@ fun CustomThemeWithStatusAndNavBars(
         LocalTextStyle provides customTypography.default,
         LocalCustomColors provides customColors,
         LocalContentColor provides customColors.primaryContent,
-        LocalRippleTheme provides CustomRippleTheme,
+        LocalRippleConfiguration provides CustomRippleTheme.createCustomRippleTheme(),
         LocalCustomShapes provides CustomShapes(),
         LocalUriHandler provides CustomUriHandler(LocalContext.current),
     ) {

@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -72,7 +72,7 @@ internal fun FieldRow(
             .safeClickable(
                 onClick = onRowTapped,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true)
+                indication = ripple(bounded = true)
             )
     ) {
         Spacer(modifier = Modifier.height(2.dp))
@@ -85,7 +85,7 @@ internal fun FieldRow(
                         .safeClickable(
                             onClick = onDelete,
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(bounded = false)
+                            indication = ripple(bounded = false)
                         )
                         .padding(start = 4.dp),
                     painter = painterResource(id = Drawables.do_not_disturb_on_24px),
@@ -152,7 +152,7 @@ fun AddItemRow(
         modifier = Modifier
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = onClick
             )
     ) {
@@ -256,7 +256,7 @@ private fun LazyListScope.listOfNotes(
     ) { index, item ->
         Column(modifier = Modifier.combinedClickable(
             interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(),
+            indication = ripple(),
             onClick = { onItemClicked(index) },
             onLongClick = { onItemLongClicked(index) }
         )) {
@@ -334,7 +334,7 @@ private fun LazyListScope.listOfTags(
     ) { item ->
         Column(modifier = Modifier.combinedClickable(
             interactionSource = remember { MutableInteractionSource() },
-            indication = rememberRipple(),
+            indication = ripple(),
             onClick = {},
             onLongClick = { viewModel.onTagLongClick(item) }
         )) {
@@ -389,7 +389,7 @@ private fun LazyListScope.listOfAttachments(
                     .fillMaxWidth()
                     .combinedClickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         onClick = { viewModel.openAttachment(item) },
                         onLongClick = { viewModel.onAttachmentLongClick(item) },
                     )

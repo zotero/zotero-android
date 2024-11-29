@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.CheckboxColors
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,7 +53,7 @@ fun CustomCheckbox(
                     role = Role.Checkbox,
                     onValueChange = onCheckedChange,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(
+                    indication = ripple(
                         bounded = false,
                         radius = 24.dp
                     )

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
+import androidx.compose.material.ripple
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -113,7 +114,7 @@ private fun LibrariesItem(
                 .background(CustomTheme.colors.surface)
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     onClick = onItemTapped,
                     onLongClick = onItemLongTapped,
                 )

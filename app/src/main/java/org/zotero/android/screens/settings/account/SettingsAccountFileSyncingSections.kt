@@ -16,7 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -94,7 +94,7 @@ private fun SettingsAccountFileSyncingSyncMethodChooserItem(
             .safeClickable(
                 onClick = viewModel::showWebDavOptionsPopup,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
             ),
     ) {
         Text(
@@ -169,7 +169,7 @@ private fun SettingsAccountFileSyncingWebDavUrlItem(
                 modifier = Modifier.safeClickable(
                     onClick = viewModel::showSchemaChooserScreen,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
+                    indication = ripple(),
                 ),
                 text = viewState.scheme.name + "://",
                 style = CustomTheme.typography.newBody,
@@ -292,7 +292,7 @@ private fun SettingsAccountFileSyncingVerifyServerItem(
             .safeClickable(
                 onClick = viewModel::verify,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 enabled = viewState.canVerifyServer
             ),
     ) {
@@ -383,7 +383,7 @@ private fun SettingsAccountFileSyncingVerificationInProgressItem(
                 .safeClickable(
                     onClick = viewModel::cancelVerification,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
+                    indication = ripple(),
                 ),
             text = stringResource(id = Strings.cancel),
             style = CustomTheme.typography.newBody,

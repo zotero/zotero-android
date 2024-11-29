@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -123,7 +123,7 @@ private fun ItemType(
         modifier = Modifier
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = onItemTypeClicked
             )
     ) {
@@ -157,7 +157,7 @@ private fun LazyListScope.listOfCreatorRows(
                 modifier = Modifier
                     .safeClickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(),
+                        indication = ripple(),
                         onClick = { onCreatorClicked(creator) }
                     )
                     .draggedItem(reorderState.offsetByIndex(index + numberOfRowsInLazyColumnBeforeListOfCreatorsStarts))

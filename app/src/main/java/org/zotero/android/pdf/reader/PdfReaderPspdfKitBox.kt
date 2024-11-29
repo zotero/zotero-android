@@ -2,6 +2,7 @@ package org.zotero.android.pdf.reader
 
 import android.net.Uri
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -112,19 +113,22 @@ internal fun PdfReaderPspdfKitBox(
         shouldShowSnapTargetAreas = false
         true
     }
+    val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val anchoredDraggableState = rememberSaveable(
         saver = AnchoredDraggableState.Saver(
-            animationSpec = animationSpec,
+            snapAnimationSpec = animationSpec,
             positionalThreshold = positionalThreshold,
             velocityThreshold = velocityThreshold,
             confirmValueChange = confirmValueChange,
+            decayAnimationSpec = decayAnimationSpec
         )
     ) {
         AnchoredDraggableState(
             initialValue = DragAnchors.Start,
             positionalThreshold = positionalThreshold,
             velocityThreshold = velocityThreshold,
-            animationSpec = animationSpec,
+            snapAnimationSpec = animationSpec,
+            decayAnimationSpec =  decayAnimationSpec,
             confirmValueChange = confirmValueChange,
         )
     }

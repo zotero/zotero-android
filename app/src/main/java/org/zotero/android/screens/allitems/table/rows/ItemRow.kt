@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -42,7 +42,7 @@ internal fun ItemRow(
             modifier = rowModifier
                 .combinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = if (isEditing) null else rememberRipple(),
+                    indication = if (isEditing) null else ripple(),
                     onClick = { onItemTapped(cellModel) },
                     onLongClick = { onItemLongTapped(cellModel.key) }
                 )

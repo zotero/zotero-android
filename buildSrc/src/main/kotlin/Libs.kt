@@ -2,7 +2,7 @@ object Libs {
 
     const val androidJUnitRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    const val pspdfkit = "com.pspdfkit:pspdfkit:2024.4.0"
+    const val pspdfkit = "com.pspdfkit:pspdfkit:2024.8.1"
     const val googleServices = "com.google.gms:google-services:4.3.13"
     const val realmGradlePlugin = "io.realm:realm-gradle-plugin:10.15.1"
     const val materialDesign = "com.google.android.material:material:1.10.0"
@@ -20,9 +20,9 @@ object Libs {
     }
 
     object Compose {
-        const val compileVersion = "1.5.7"
+        const val compileVersion = "1.5.14"
 
-        private const val version = "1.6.0-rc01"
+        private const val version = "1.7.1"
         const val activity = "androidx.activity:activity-compose:1.8.1"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
         const val foundation = "androidx.compose.foundation:foundation:$version"
@@ -102,7 +102,7 @@ object Libs {
     }
 
     object Kotlin {
-        private const val version = "1.9.20"
+        private const val version = "1.9.24"
         const val jsonSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
         const val immutableCollections = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
         const val serialization = "org.jetbrains.kotlin:kotlin-serialization:$version"

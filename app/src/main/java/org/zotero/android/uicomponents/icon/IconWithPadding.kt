@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,7 +39,7 @@ fun IconWithPadding(
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = if (shouldShowRipple) {
-                    rememberRipple(bounded = false)
+                    ripple(bounded = false)
                 } else {
                     null
                 },
@@ -111,7 +111,7 @@ fun IconWithPadding(
             .size(areaSize)
             .safeClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(),
+                indication = ripple(),
                 onClick = onClick,
             ),
         contentAlignment = Alignment.Center

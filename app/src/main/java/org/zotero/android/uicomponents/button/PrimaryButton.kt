@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.LocalRippleConfiguration
+import androidx.compose.material.RippleConfiguration
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.LocalRippleTheme
+import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -16,7 +18,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.PrimaryBackgroundRippleTheme
 
 /**
  * This is the Compose component for primary colored button. [backgroundColor]
@@ -42,7 +43,16 @@ fun PrimaryButton(
     isLoading: Boolean = false,
     isVisuallyDisabled: Boolean = false,
 ) {
-    CompositionLocalProvider(LocalRippleTheme provides PrimaryBackgroundRippleTheme) {
+    CompositionLocalProvider(
+        LocalRippleConfiguration provides RippleConfiguration(
+            rippleAlpha = RippleAlpha(
+                draggedAlpha = 0.25f,
+                focusedAlpha = 0.25f,
+                hoveredAlpha = 0.25f,
+                pressedAlpha = 0.25f
+            ), color = CustomTheme.colors.dynamicTheme.buttonTextColor
+        )
+    ) {
         val disabledButtonBackground = CustomTheme.colors.disabledButtonBackground
         val disabledContentColor = CustomTheme.colors.disabledButtonContent
         Button(

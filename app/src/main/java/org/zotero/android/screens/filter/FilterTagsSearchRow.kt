@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,7 +44,7 @@ internal fun FilterTagsSearchRow(
                     .safeClickable(
                         onClick = viewModel::onMoreSearchOptionsClicked,
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(bounded = false)
+                        indication = ripple(bounded = false)
                     ),
                 painter = painterResource(id = Drawables.more_horiz_24px),
                 contentDescription = null,

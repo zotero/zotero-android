@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -63,7 +63,7 @@ internal fun DeleteGroupPopup(
                     .background(color = CustomTheme.colors.cardBackground)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = rememberRipple(bounded = true),
+                        indication = ripple(bounded = true),
                         onClick = { onDeleteGroup() }
                     ),
                 verticalAlignment = Alignment.CenterVertically

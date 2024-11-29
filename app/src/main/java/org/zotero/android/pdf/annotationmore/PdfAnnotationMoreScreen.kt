@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -167,7 +167,7 @@ private fun DeleteButton(viewModel: PdfAnnotationMoreViewModel) {
             .safeClickable(
                 onClick = viewModel::onDeleteAnnotation,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true)
+                indication = ripple(bounded = true)
             ), contentAlignment = Alignment.Center
     ) {
         Text(
@@ -191,7 +191,7 @@ private fun PageButton(
             .safeClickable(
                 onClick = viewModel::onPageClicked,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true)
+                indication = ripple(bounded = true)
             ), contentAlignment = Alignment.CenterStart
     ) {
         Text(
