@@ -24,18 +24,11 @@ import androidx.compose.material.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -57,16 +50,12 @@ fun CustomBottomSheetScaffold(
     contentColor: Color = CustomTheme.colors.primaryContent,
     content: @Composable () -> Unit = {}
 ) {
-    var scaffoldHeight by remember { mutableStateOf(0) }
-    var bottomSheetHeight by remember { mutableStateOf(0) }
     BottomSheetScaffold(
         sheetContent = {
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .onGloballyPositioned {
-                        bottomSheetHeight = it.size.height
-                    }
+
             ) {
                 DraggableIndicator()
                 Box(
@@ -81,9 +70,7 @@ fun CustomBottomSheetScaffold(
                 }
             }
         },
-        modifier = modifier.onGloballyPositioned {
-            scaffoldHeight = it.size.height
-        },
+        modifier = modifier,
         scaffoldState = scaffoldState,
         topBar = topBar,
         snackbarHost = {
@@ -105,8 +92,6 @@ fun CustomBottomSheetScaffold(
             Box(modifier = Modifier.fillMaxSize()) {
                 content()
                 Scrim(
-                    scaffoldHeight = scaffoldHeight,
-                    bottomSheetHeight = bottomSheetHeight,
                     bottomSheetState = scaffoldState.bottomSheetState,
                 )
             }
@@ -129,32 +114,16 @@ private fun ColumnScope.DraggableIndicator() {
     )
 }
 
-private const val SCRIM_OFFSET_MULTIPLIER = 1.25f
-
 @Composable
 private fun Scrim(
-    scaffoldHeight: Int,
-    bottomSheetHeight: Int,
     bottomSheetState: BottomSheetState,
 ) {
-    // Don't draw the scrim if bottom sheet isn't shown
-    if (bottomSheetState.requireOffset() >= scaffoldHeight) return
-
-    val scrimAlpha by remember {
-        derivedStateOf {
-            val offsetFromBottom = scaffoldHeight - bottomSheetState.requireOffset()
-            if (bottomSheetHeight != 0) {
-                // Multiplier added to delay the animation while scrolling down
-                (offsetFromBottom * SCRIM_OFFSET_MULTIPLIER / bottomSheetHeight).coerceIn(0f..1f)
-            } else 0f
-        }
-    }
 
     val coroutineScope = rememberCoroutineScope()
 
     // This extra box serves as an alpha container, we can't set alpha to
     // the color directly because scrim already has alpha built in
-    Box(modifier = Modifier.alpha(scrimAlpha)) {
+    Box(modifier = Modifier) {
         Spacer(
             modifier = Modifier
                 .background(CustomTheme.colors.scrim)
