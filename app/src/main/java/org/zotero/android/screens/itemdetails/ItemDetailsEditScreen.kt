@@ -128,7 +128,6 @@ private fun ItemType(
             )
     ) {
         Column(
-            modifier = Modifier.padding(start = 28.dp + layoutType.calculateItemCreatorDeleteStartPadding())
         ) {
             FieldRow(
                 detailTitle = stringResource(id = Strings.item_type),
@@ -192,17 +191,52 @@ private fun ListOfEditFieldRows(
         } else {
             field.valueOrAdditionalInfo
         }
-        FieldEditableRow(
-            key = field.key,
-            fieldId = fieldId,
-            detailTitle = title,
-            detailValue = value,
-            layoutType = layoutType,
-            textColor = CustomTheme.colors.primaryContent,
-            onValueChange = onValueChange,
-            isMultilineAllowed = field.key == FieldKeys.Item.extra,
-            onFocusChanges = onFocusChanges
-        )
+
+        // We make all the fields, except title, to be not editable for standalone attachments.
+        if (viewState.data.isAttachment) {
+            FieldReadOnlyRow(layoutType, title, value)
+        } else {
+            FieldEditableRow(
+                key = field.key,
+                fieldId = fieldId,
+                detailTitle = title,
+                detailValue = value,
+                layoutType = layoutType,
+                textColor = CustomTheme.colors.primaryContent,
+                onValueChange = onValueChange,
+                isMultilineAllowed = field.key == FieldKeys.Item.extra,
+                onFocusChanges = onFocusChanges
+            )
+        }
+
+    }
+}
+
+@Composable
+private fun FieldReadOnlyRow(
+    layoutType: CustomLayoutSize.LayoutType,
+    title: String,
+    value: String
+) {
+    Column(
+        modifier = Modifier
+            .safeClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = {
+                    //no action on tap, but still show ripple effect
+                }
+            )
+    ) {
+        Column {
+            FieldRow(
+                detailTitle = title,
+                detailValue = value,
+                layoutType = layoutType,
+                showDivider = false
+            )
+        }
+        CustomDivider()
     }
 }
 

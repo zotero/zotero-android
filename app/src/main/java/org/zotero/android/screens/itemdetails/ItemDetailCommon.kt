@@ -196,12 +196,18 @@ fun DatesRows(
         detailValue = dateFormatItemDetails().format(dateAdded),
         layoutType = layoutType,
         showDivider = showDivider,
+        onRowTapped = {
+            //no action on tap, but still show ripple effect
+        }
     )
     FieldRow(
         stringResource(id = Strings.date_modified),
         dateFormatItemDetails().format(dateModified),
         layoutType,
         showDivider = showDivider,
+        onRowTapped = {
+            //no action on tap, but still show ripple effect
+        }
     )
 }
 
