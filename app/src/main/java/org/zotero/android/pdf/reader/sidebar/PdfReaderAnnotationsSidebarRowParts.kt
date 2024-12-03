@@ -3,7 +3,6 @@ package org.zotero.android.pdf.reader.sidebar
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -38,6 +37,7 @@ import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -171,7 +171,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
     }
     if (shouldDisplayTagsSection) {
         Box(modifier = Modifier
-            .clickable(
+            .debounceClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = true),
                 onClick = { vMInterface.onTagsClicked(annotation) }

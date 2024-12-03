@@ -1,7 +1,6 @@
 package org.zotero.android.pdf.reader.sidebar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +34,7 @@ import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -160,7 +160,7 @@ private fun OutlineItem(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = rowModifier
-                .combinedClickable(
+                .debounceCombinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onClick = onItemTapped,

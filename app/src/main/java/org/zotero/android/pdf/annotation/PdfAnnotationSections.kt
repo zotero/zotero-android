@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.annotation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
@@ -11,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -41,7 +41,7 @@ internal fun TagsSection(
         Text(
             modifier = Modifier
                 .padding(start = 16.dp)
-                .clickable(
+                .debounceClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = { viewModel.onTagsClicked() }
@@ -55,7 +55,7 @@ internal fun TagsSection(
         Text(
             modifier = Modifier
                 .padding(start = 8.dp)
-                .clickable(
+                .debounceClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = { viewModel.onTagsClicked() }

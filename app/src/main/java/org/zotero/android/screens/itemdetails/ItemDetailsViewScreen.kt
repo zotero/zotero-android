@@ -1,6 +1,5 @@
 package org.zotero.android.screens.itemdetails
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +21,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -108,7 +108,7 @@ private fun ListOfCreatorRows(
         val value = creator.name
         Row(
             modifier = Modifier
-                .combinedClickable(
+                .debounceCombinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onLongClick = { onCreatorLongClick(creator) },

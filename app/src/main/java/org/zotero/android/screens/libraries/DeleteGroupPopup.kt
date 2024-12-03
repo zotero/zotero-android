@@ -1,7 +1,6 @@
 package org.zotero.android.screens.libraries
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +30,7 @@ import androidx.compose.ui.window.PopupProperties
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -61,7 +61,7 @@ internal fun DeleteGroupPopup(
                 modifier = Modifier
                     .fillMaxHeight()
                     .background(color = CustomTheme.colors.cardBackground)
-                    .clickable(
+                    .debounceClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(bounded = true),
                         onClick = { onDeleteGroup() }

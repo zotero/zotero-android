@@ -4,7 +4,7 @@ import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 
@@ -19,17 +19,18 @@ import androidx.compose.ui.semantics.Role
  * to describe the element or do customizations
  * @param onClick will be called when user clicks on the element
  */
+@Composable
 fun Modifier.safeClickable(
     enabled: Boolean = true,
-    onClickLabel: String? = null,
     role: Role? = null,
     onClick: (() -> Unit)? = null
 ) = if (onClick != null) {
-    this.clickable(
+    this.debounceClickable(
         enabled = enabled,
-        onClickLabel = onClickLabel,
         onClick = onClick,
-        role = role
+        role = role,
+        interactionSource = null,
+        indication = null,
     )
 } else {
     this
@@ -52,17 +53,16 @@ fun Modifier.safeClickable(
  * to describe the element or do customizations
  * @param onClick will be called when user clicks on the element
  */
+@Composable
 fun Modifier.safeClickable(
     interactionSource: MutableInteractionSource,
     indication: Indication?,
     enabled: Boolean = true,
-    onClickLabel: String? = null,
     role: Role? = null,
     onClick: (() -> Unit)? = null
 ) = if (onClick != null) {
-    this.clickable(
+    this.debounceClickable(
         enabled = enabled,
-        onClickLabel = onClickLabel,
         onClick = onClick,
         role = role,
         indication = indication,

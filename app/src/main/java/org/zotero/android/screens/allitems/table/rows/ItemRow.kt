@@ -1,7 +1,6 @@
 package org.zotero.android.screens.allitems.table.rows
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.data.ItemCellModel
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -40,7 +40,7 @@ internal fun ItemRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = rowModifier
-                .combinedClickable(
+                .debounceCombinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = if (isEditing) null else ripple(),
                     onClick = { onItemTapped(cellModel) },

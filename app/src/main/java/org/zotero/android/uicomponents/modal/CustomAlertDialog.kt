@@ -2,7 +2,6 @@ package org.zotero.android.uicomponents.modal
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.modal.CustomAlertDialog.ButtonsStyle.COMPACT
 import org.zotero.android.uicomponents.modal.CustomAlertDialog.ButtonsStyle.FULL
@@ -107,7 +107,7 @@ private fun DialogContent(
                 color = CustomTheme.colors.dialogBorderColor,
                 shape = RoundedCornerShape(16.dp)
             )
-            .clickable(
+            .debounceClickable(
                 interactionSource = MutableInteractionSource(),
                 indication = null,
                 onClick = {}

@@ -1,7 +1,6 @@
 package org.zotero.android.screens.collections
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -31,6 +30,7 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.badge.RoundBadgeIcon
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -129,7 +129,7 @@ private fun CollectionItem(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = rowModifier
-                .combinedClickable(
+                .debounceCombinedClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onClick = onItemTapped,

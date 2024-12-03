@@ -2,7 +2,6 @@ package org.zotero.android.pdf.annotationmore
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -92,7 +92,7 @@ internal fun MoreFilterCircle(hex: String, isSelected: Boolean, onClick: () -> U
     Canvas(modifier = Modifier
         .padding(4.dp)
         .size(28.dp)
-        .clickable(
+        .debounceClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null,
             onClick = onClick

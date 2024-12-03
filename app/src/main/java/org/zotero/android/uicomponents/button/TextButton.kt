@@ -1,6 +1,5 @@
 package org.zotero.android.uicomponents.button
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -30,7 +30,7 @@ fun TextButton(
     Text(
         color = if (isPressed) pressedColor else contentColor,
         modifier = modifier
-            .clickable(
+            .debounceClickable(
                 indication = null,
                 interactionSource = interactionSource,
                 onClick = onClick,

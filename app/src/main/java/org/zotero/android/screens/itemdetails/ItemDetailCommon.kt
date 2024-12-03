@@ -5,7 +5,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +45,7 @@ import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
 import org.zotero.android.uicomponents.attachmentprogress.State
 import org.zotero.android.uicomponents.attachmentprogress.Style
 import org.zotero.android.uicomponents.checkbox.CircleCheckBox
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
 import org.zotero.android.uicomponents.reorder.ReorderableState
@@ -260,7 +260,7 @@ private fun LazyListScope.listOfNotes(
     itemsIndexed(
         itemTitles
     ) { index, item ->
-        Column(modifier = Modifier.combinedClickable(
+        Column(modifier = Modifier.debounceCombinedClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = ripple(),
             onClick = { onItemClicked(index) },
@@ -338,7 +338,7 @@ private fun LazyListScope.listOfTags(
     items(
         viewState.tags
     ) { item ->
-        Column(modifier = Modifier.combinedClickable(
+        Column(modifier = Modifier.debounceCombinedClickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = ripple(),
             onClick = {},
@@ -393,7 +393,7 @@ private fun LazyListScope.listOfAttachments(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .combinedClickable(
+                    .debounceCombinedClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(),
                         onClick = { viewModel.openAttachment(item) },

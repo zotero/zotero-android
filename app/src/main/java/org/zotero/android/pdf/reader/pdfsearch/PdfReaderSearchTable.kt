@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader.pdfsearch
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchItem
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -38,7 +38,7 @@ private fun PdfReaderSearchRow(
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .combinedClickable(
+            .debounceCombinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = onItemTapped,

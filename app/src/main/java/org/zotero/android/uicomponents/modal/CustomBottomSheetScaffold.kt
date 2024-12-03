@@ -2,7 +2,6 @@ package org.zotero.android.uicomponents.modal
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -32,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.snackbar.CustomSnackbarHost
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -128,7 +128,7 @@ private fun Scrim(
             modifier = Modifier
                 .background(CustomTheme.colors.scrim)
                 .fillMaxSize()
-                .clickable(
+                .debounceClickable(
                     onClick = {
                         coroutineScope.launch {
                             bottomSheetState.collapse()

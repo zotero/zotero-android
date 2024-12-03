@@ -1,7 +1,6 @@
 package org.zotero.android.uicomponents.button
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -16,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 /**
@@ -34,7 +34,7 @@ fun TextFieldClearButton(
         contentDescription = contentDescription,
         colorFilter = ColorFilter.tint(CustomTheme.colors.secondaryContent),
         modifier = modifier
-            .clickable(
+            .debounceClickable(
                 onClick = onClick,
                 indication = ripple(bounded = false),
                 interactionSource = remember { MutableInteractionSource() }
