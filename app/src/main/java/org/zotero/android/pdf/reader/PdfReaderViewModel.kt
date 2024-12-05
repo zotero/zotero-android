@@ -484,6 +484,11 @@ class PdfReaderViewModel @Inject constructor(
                 this@PdfReaderViewModel.onDocumentLoaded(document)
             }
 
+            override fun onDocumentClick(): Boolean {
+                decideTopBarAndBottomBarVisibility(null)
+                return false
+            }
+
             override fun onPageClick(
                 document: PdfDocument,
                 pageIndex: Int,
@@ -2382,6 +2387,11 @@ class PdfReaderViewModel @Inject constructor(
                     queuedUpPdfReaderColorPickerResult = null
 
                 }
+            }
+
+            override fun onDocumentClick(): Boolean {
+                decideTopBarAndBottomBarVisibility(null)
+                return false
             }
 
             override fun onPageClick(
