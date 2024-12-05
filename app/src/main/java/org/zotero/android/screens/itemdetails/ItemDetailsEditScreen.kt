@@ -333,6 +333,7 @@ private fun EditTitle(
     }
     CustomTextField(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(horizontal = 16.dp),
         value = viewState.data.title,
         hint = stringResource(id = Strings.item_detail_untitled),
