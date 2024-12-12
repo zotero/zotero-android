@@ -280,13 +280,7 @@ class PdfReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(pdfAnnotationCommentResult: PdfAnnotationCommentResult) {
         setComment(pdfAnnotationCommentResult.annotationKey, pdfAnnotationCommentResult.comment)
-        if (isTablet) {
-            // Fix for a bug where selecting an already selected annotation again didn't trigger Annotation Edit Popup/Screen.
-            // Unfortunately PSPDFKIT's onAnnotationSelected method is not triggered when user is selecting the same annotation again. Because technically the same annotation just stays selected.
-            // That's why after finishing annotation editing we have to make PSPDFKIT to deselect the currently selected annotation.
-            // Drawback to this is that of course visually annotation gets deselected as well.
-            this.pdfFragment.clearSelectedAnnotations()
-        }
+        clearSelectedAnnotations()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -368,10 +362,8 @@ class PdfReaderViewModel @Inject constructor(
     private fun update(pdfSettings: PDFSettings) {
         defaults.setPDFSettings(pdfSettings)
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
-        if (isTablet) {
-            pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
-            replaceFragment()
-        }
+        pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
+        replaceFragment()
     }
 
     private var pdfReaderThemeCancellable: Job? = null
@@ -1628,11 +1620,17 @@ class PdfReaderViewModel @Inject constructor(
         isLongPressOnTextAnnotation = false
         if (showAnnotationPopup) {
             annotationEditReaderKey = selectedAnnotation?.readerKey
-            ScreenArguments.pdfAnnotationArgs = PdfAnnotationArgs(
+            val pdfAnnotationArgs = PdfAnnotationArgs(
                 selectedAnnotation = selectedAnnotation,
                 userId = viewState.userId,
                 library = viewState.library
             )
+            ScreenArguments.pdfAnnotationArgs = pdfAnnotationArgs
+            if (!isTablet) {
+                updateState {
+                    copy(pdfAnnotationArgs = pdfAnnotationArgs)
+                }
+            }
         }
 
         val index = viewState.sortedKeys.indexOf(viewState.selectedAnnotationKey)
@@ -1731,6 +1729,14 @@ class PdfReaderViewModel @Inject constructor(
                 pdfFragment.clearSelectedAnnotations()
             }
         }
+    }
+
+    private fun clearSelectedAnnotations() {
+        // Fix for a bug where selecting an already selected annotation again didn't trigger Annotation Edit Popup/Screen.
+        // Unfortunately PSPDFKIT's onAnnotationSelected method is not triggered when user is selecting the same annotation again. Because technically the same annotation just stays selected.
+        // That's why after finishing annotation editing we have to make PSPDFKIT to deselect the currently selected annotation.
+        // Drawback to this is that of course visually annotation gets deselected as well.
+        this.pdfFragment.clearSelectedAnnotations()
     }
 
     override fun annotation(key: AnnotationKey): org.zotero.android.pdf.data.PDFAnnotation? {
@@ -2285,8 +2291,15 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun navigateToPdfSettings() {
-        ScreenArguments.pdfSettingsArgs = PdfSettingsArgs(defaults.getPDFSettings())
-        triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
+        val args = PdfSettingsArgs(defaults.getPDFSettings())
+        ScreenArguments.pdfSettingsArgs = args
+        if (isTablet) {
+            triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
+        } else {
+            updateState {
+                copy(pdfSettingsArgs = args)
+            }
+        }
     }
 
     fun navigateToPlainReader() {
@@ -3060,12 +3073,19 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onMoreOptionsForItemClicked() {
         annotationEditReaderKey = selectedAnnotation?.readerKey
-        ScreenArguments.pdfAnnotationMoreArgs = PdfAnnotationMoreArgs(
+        val args = PdfAnnotationMoreArgs(
             selectedAnnotation = selectedAnnotation,
             userId = viewState.userId,
             library = viewState.library
         )
-        triggerEffect(PdfReaderViewEffect.ShowPdfAnnotationMore)
+        ScreenArguments.pdfAnnotationMoreArgs = args
+        if (isTablet) {
+            triggerEffect(PdfReaderViewEffect.ShowPdfAnnotationMore)
+        } else {
+            updateState {
+                copy(pdfAnnotationMoreArgs = args)
+            }
+        }
     }
 
     private fun set(
@@ -3323,6 +3343,31 @@ class PdfReaderViewModel @Inject constructor(
 
     }
 
+    override fun hidePdfAnnotationView() {
+        clearSelectedAnnotations()
+        updateState {
+            copy(
+                pdfAnnotationArgs = null
+            )
+        }
+    }
+
+    override fun hidePdfAnnotationMoreView() {
+        updateState {
+            copy(
+                pdfAnnotationMoreArgs = null
+            )
+        }
+    }
+
+    override fun hidePdfSettingsView() {
+        updateState {
+            copy(
+                pdfSettingsArgs = null
+            )
+        }
+    }
+
     override fun hidePdfSearch() {
         updateState {
             copy(
@@ -3384,6 +3429,9 @@ data class PdfReaderViewState(
     val thumbnailRows: ImmutableList<PdfReaderThumbnailRow> = persistentListOf(),
     val selectedThumbnail: PdfReaderThumbnailRow? = null,
     val showPdfSearch: Boolean = false,
+    var pdfAnnotationArgs: PdfAnnotationArgs? = null,
+    var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs? = null,
+    var pdfSettingsArgs: PdfSettingsArgs? = null,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

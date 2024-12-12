@@ -1,5 +1,6 @@
 package org.zotero.android.pdf.annotation
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
@@ -9,33 +10,45 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 @Composable
-internal fun PdfAnnotationNavigation() {
+internal fun PdfAnnotationNavigation(args: PdfAnnotationArgs, onBack: () -> Unit) {
     val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+
+    BackHandler(onBack = {
+        onBack()
+    })
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfAnnotationDestinatiosn.PDF_ANNOTATION_SCREEN,
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
-        pdfAnnotationNavScreens(navigation = navigation)
+        pdfAnnotationNavScreens(args = args, navigation = navigation)
     }
 }
 
 internal fun NavGraphBuilder.pdfAnnotationNavScreens(
+    args: PdfAnnotationArgs,
     navigation: ZoteroNavigation,
 ) {
-    pdfAnnotationScreen(onBack = navigation::onBack, navigateToTagPicker = navigation::toTagPicker)
+
+    pdfAnnotationScreen(
+        args = args,
+        onBack = navigation::onBack,
+        navigateToTagPicker = navigation::toTagPicker
+    )
     tagPickerScreen(onBack = navigation::onBack)
 }
 
 private fun NavGraphBuilder.pdfAnnotationScreen(
+    args: PdfAnnotationArgs,
     onBack: () -> Unit,
     navigateToTagPicker: () -> Unit,
 ) {
@@ -43,7 +56,11 @@ private fun NavGraphBuilder.pdfAnnotationScreen(
         route = PdfAnnotationDestinatiosn.PDF_ANNOTATION_SCREEN,
         arguments = listOf(),
     ) {
-        PdfAnnotationScreen(onBack = onBack, navigateToTagPicker = navigateToTagPicker)
+        PdfAnnotationScreen(
+            args = args,
+            onBack = onBack,
+            navigateToTagPicker = navigateToTagPicker
+        )
     }
 }
 

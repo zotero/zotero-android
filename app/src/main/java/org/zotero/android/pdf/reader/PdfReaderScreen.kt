@@ -20,6 +20,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
+import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
+import org.zotero.android.pdf.annotationmore.sidebar.PdfAnnotationMoreNavigationView
+import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
@@ -86,10 +89,9 @@ internal fun PdfReaderScreen(
 
                 is PdfReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList -> {
                     if (consumedEffect.showAnnotationPopup) {
-                        if (!layoutType.isTablet()) {
-                            viewModel.removeFragment()
+                        if (layoutType.isTablet()) {
+                            navigateToPdfAnnotation()
                         }
-                        navigateToPdfAnnotation()
                     }
                     if (consumedEffect.scrollToIndex != -1) {
                         annotationsLazyListState.animateScrollToItem(index = consumedEffect.scrollToIndex)
@@ -105,10 +107,9 @@ internal fun PdfReaderScreen(
                 }
 
                 is PdfReaderViewEffect.ShowPdfAnnotationMore -> {
-                    if (!layoutType.isTablet()) {
-                        viewModel.removeFragment()
+                    if (layoutType.isTablet()) {
+                        navigateToPdfAnnotationMore()
                     }
-                    navigateToPdfAnnotationMore()
                 }
 
                 is PdfReaderViewEffect.ShowPdfSettings -> {
@@ -190,7 +191,9 @@ internal fun PdfReaderScreen(
                 )
             }
         }
+        PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
+        PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)
+        PdfSettingsView(viewState = viewState, viewModel = viewModel)
     }
 
 }
-

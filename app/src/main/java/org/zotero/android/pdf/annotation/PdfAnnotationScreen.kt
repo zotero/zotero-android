@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.annotation.row.PdfAnnotationHeaderRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationHighlightRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationImageRow
@@ -35,10 +36,16 @@ import org.zotero.android.uicomponents.topbar.HeadingTextButton
 @Composable
 internal fun PdfAnnotationScreen(
     viewModel: PdfAnnotationViewModel = hiltViewModel(),
+    args: PdfAnnotationArgs,
     navigateToTagPicker: () -> Unit,
     onBack: () -> Unit,
 ) {
-    viewModel.init()
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    LaunchedEffect(args) {
+        viewModel.init(args = args, isTablet = isTablet)
+    }
+
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfAnnotationViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
@@ -83,7 +90,9 @@ internal fun PdfAnnotationPart(
                 annotation = annotation,
                 annotationColor = annotationColor,
                 layoutType = layoutType,
-                onBack = onBack,
+                onBack = {
+                    viewModel.onDone()
+                },
             )
             if (annotation.type != AnnotationType.text) {
                 SidebarDivider(modifier = Modifier.fillMaxWidth())

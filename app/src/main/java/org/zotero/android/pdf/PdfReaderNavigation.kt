@@ -11,13 +11,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import org.zotero.android.androidx.content.longToast
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogFixedDimens
 import org.zotero.android.pdf.annotation.PdfAnnotationNavigation
-import org.zotero.android.pdf.annotation.pdfAnnotationNavScreens
 import org.zotero.android.pdf.annotation.toPdfAnnotationScreen
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreNavigation
-import org.zotero.android.pdf.annotationmore.pdfAnnotationMoreNavScreens
 import org.zotero.android.pdf.annotationmore.toPdfAnnotationMoreScreen
 import org.zotero.android.pdf.colorpicker.PdfReaderColorPickerScreen
 import org.zotero.android.pdf.pdffilter.PdfFilterNavigation
@@ -57,7 +56,7 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
             .width(420.dp),
         route = PdfReaderDestinations.PDF_SETTINGS,
     ) {
-        PdfSettingsScreen(onBack = navigation::onBack)
+        PdfSettingsScreen(args = ScreenArguments.pdfSettingsArgs, onBack = navigation::onBack)
     }
     dialogFixedDimens(
         modifier = Modifier
@@ -65,7 +64,10 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
             .width(420.dp),
         route = PdfReaderDestinations.PDF_ANNOTATION_NAVIGATION,
     ) {
-        PdfAnnotationNavigation()
+        PdfAnnotationNavigation(
+            args = ScreenArguments.pdfAnnotationArgs,
+            onBack = navigation::onBack
+        )
     }
     dialogFixedDimens(
         modifier = Modifier
@@ -73,7 +75,10 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
             .width(420.dp),
         route = PdfReaderDestinations.PDF_ANNOTATION_MORE_NAVIGATION,
     ) {
-        PdfAnnotationMoreNavigation()
+        PdfAnnotationMoreNavigation(
+            args = ScreenArguments.pdfAnnotationMoreArgs,
+            onBack = navigation::onBack
+        )
     }
     dialogFixedDimens(
         modifier = Modifier
@@ -102,20 +107,9 @@ internal fun NavGraphBuilder.pdfReaderNavScreensForPhone(
         navigateToTagPicker = navigateToTagPicker,
     )
     pdfFilterNavScreens(navigation)
-    pdfSettings(navigation)
     pdfPlainReader(navigation)
     pdfColorPicker(navigation)
-    pdfAnnotationMoreNavScreens(navigation)
-    pdfAnnotationNavScreens(navigation)
-}
 
-private fun NavGraphBuilder.pdfSettings(navigation: ZoteroNavigation) {
-    composable(
-        route = PdfReaderDestinations.PDF_SETTINGS,
-        arguments = listOf(),
-    ) {
-        PdfSettingsScreen(onBack = navigation::onBack)
-    }
 }
 
 private fun NavGraphBuilder.pdfPlainReader(navigation: ZoteroNavigation) {

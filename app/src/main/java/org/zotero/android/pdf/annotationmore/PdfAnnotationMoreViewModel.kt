@@ -14,6 +14,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
 import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreDeleteResult
 import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreSaveResult
 import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageArgs
@@ -31,6 +32,9 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
     PdfAnnotationMoreViewState()
 ) {
 
+    private lateinit var args: PdfAnnotationMoreArgs
+    private var pdfReaderThemeCancellable: Job? = null
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationEditPageResult) {
         updateState {
@@ -38,16 +42,14 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
         }
     }
 
-    private var pdfReaderThemeCancellable: Job? = null
-
-    fun init() = initOnce {
+    fun init(args: PdfAnnotationMoreArgs) = initOnce {
+        this.args = args
         EventBus.getDefault().register(this)
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
         }
         startObservingTheme()
 
-        val args = ScreenArguments.pdfAnnotationMoreArgs
         val annotation = args.selectedAnnotation!!
 
         val colors = AnnotationsConfig.colors(annotation.type)

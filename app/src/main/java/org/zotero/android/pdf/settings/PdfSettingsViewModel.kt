@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.pdf.data.PDFSettings
@@ -18,6 +17,7 @@ import org.zotero.android.pdf.data.PageScrollDirection
 import org.zotero.android.pdf.data.PageScrollMode
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
 import org.zotero.android.pdf.settings.data.PdfSettingsOptions
 import javax.inject.Inject
@@ -30,6 +30,7 @@ internal class PdfSettingsViewModel @Inject constructor(
 
     private lateinit var pdfSettings: PDFSettings
     private var pdfReaderThemeCancellable: Job? = null
+    lateinit var args: PdfSettingsArgs
 
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
@@ -41,13 +42,13 @@ internal class PdfSettingsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun init() {
+    fun init(args: PdfSettingsArgs) {
         initOnce {
             updateState {
                 copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
             startObservingTheme()
-            pdfSettings = ScreenArguments.pdfSettingsArgs.pdfSettings
+            pdfSettings = args.pdfSettings
             updateState {
                 copy(
                     selectedPageTransitionOption = convert(pdfSettings.transition),

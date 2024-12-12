@@ -49,4 +49,7 @@ interface PdfReaderVMInterface {
     fun loadThumbnailPreviews(pageIndex: Int)
     fun hidePdfSearch()
     fun togglePdfSearch()
+    fun hidePdfAnnotationView()
+    fun hidePdfAnnotationMoreView()
+    fun hidePdfSettingsView()
 }

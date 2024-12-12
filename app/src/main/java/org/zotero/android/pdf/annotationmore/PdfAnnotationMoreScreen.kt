@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
 import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreFreeTextRow
 import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreHighlightRow
 import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreImageRow
@@ -39,11 +40,15 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun PdfAnnotationMoreScreen(
+    args: PdfAnnotationMoreArgs,
     viewModel: PdfAnnotationMoreViewModel = hiltViewModel(),
     navigateToPageEdit: () -> Unit,
     onBack: () -> Unit,
 ) {
-    viewModel.init()
+
+    LaunchedEffect(args) {
+        viewModel.init(args = args)
+    }
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfAnnotationMoreViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()

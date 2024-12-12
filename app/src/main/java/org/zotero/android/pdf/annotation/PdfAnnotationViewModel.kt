@@ -13,6 +13,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationDeleteResult
@@ -32,6 +33,9 @@ internal class PdfAnnotationViewModel @Inject constructor(
 ) : BaseViewModel2<PdfAnnotationViewState, PdfAnnotationViewEffect>(PdfAnnotationViewState()) {
 
     private var isDeletingAnnotation = false
+    private lateinit var args: PdfAnnotationArgs
+    private var pdfReaderThemeCancellable: Job? = null
+    private var isTablet: Boolean = false
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
@@ -43,16 +47,16 @@ internal class PdfAnnotationViewModel @Inject constructor(
         }
     }
 
-    private var pdfReaderThemeCancellable: Job? = null
 
-    fun init() = initOnce {
+    fun init(args: PdfAnnotationArgs, isTablet: Boolean) = initOnce {
+        this.args = args
+        this.isTablet = isTablet
         EventBus.getDefault().register(this)
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
         }
         startObservingTheme()
 
-        val args = ScreenArguments.pdfAnnotationArgs
         val annotation = args.selectedAnnotation!!
 
         val colors = AnnotationsConfig.colors(annotation.type)
@@ -90,7 +94,6 @@ internal class PdfAnnotationViewModel @Inject constructor(
 //        }
 
         val selected = viewState.tags.map { it.name }.toSet()
-        val args = ScreenArguments.pdfAnnotationArgs
         ScreenArguments.tagPickerArgs = TagPickerArgs(
             libraryId = args.library.identifier,
             selectedTags = selected,
@@ -103,15 +106,19 @@ internal class PdfAnnotationViewModel @Inject constructor(
 
     override fun onCleared() {
         if (!isDeletingAnnotation) {
-            EventBus.getDefault().post(
-                PdfAnnotationCommentResult(
-                    annotationKey = viewState.annotation!!.key,
-                    comment = viewState.commentFocusText
-                )
-            )
+            postAnnotationCommentResult()
         }
         EventBus.getDefault().unregister(this)
         super.onCleared()
+    }
+
+    private fun postAnnotationCommentResult() {
+        EventBus.getDefault().post(
+            PdfAnnotationCommentResult(
+                annotationKey = viewState.annotation!!.key,
+                comment = viewState.commentFocusText
+            )
+        )
     }
 
     fun onCommentTextChange(comment: String) {
@@ -175,6 +182,13 @@ internal class PdfAnnotationViewModel @Inject constructor(
                 size = viewState.fontSize
             )
         )
+    }
+
+    fun onDone() {
+        if (!isTablet) {
+            postAnnotationCommentResult()
+        }
+        triggerEffect(PdfAnnotationViewEffect.Back)
     }
 
 }
