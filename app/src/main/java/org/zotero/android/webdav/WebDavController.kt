@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.contains
 import kotlin.coroutines.resume
 
 
@@ -201,12 +202,16 @@ class WebDavController @Inject constructor(
         val networkResult = safeApiCall {
             provideWebDavApi().options(url)
         }
-        if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
+
+        val httpCode = networkResult.resultHttpCode
+        if (!listOf(200, 204, 404).contains(httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode!!, null)
+        }
+
+        if (networkResult !is CustomResult.GeneralSuccess) {
             return networkResult as CustomResult.GeneralError
         }
-        if (!listOf(200, 204, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
+        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val headers = networkResult.headers
         if (!headers.any { it.first.contains("dav", ignoreCase = true) }) {
             return CustomResult.GeneralError.CodeError(WebDavError.Verification.notDav)
@@ -214,7 +219,7 @@ class WebDavController @Inject constructor(
         return networkResult
     }
 
-    suspend fun createZoteroDirectory():  CustomResult<ResponseBody> {
+    suspend fun createZoteroDirectory(): CustomResult<*> {
         val createUrlResult = createUrl()
         if (createUrlResult is CustomResult.GeneralError) {
             return createUrlResult
@@ -225,19 +230,18 @@ class WebDavController @Inject constructor(
             provideWebDavApi().mkcol(url)
         }
 
-        if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
-            return networkResult as CustomResult.GeneralError
+        val httpCode = networkResult.resultHttpCode
+        return if (listOf(200, 201, 204).contains(httpCode)) {
+            CustomResult.GeneralSuccess(Unit)
+        } else {
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        if (!listOf(200, 201, 204).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
-        return networkResult
-
     }
 
-    private suspend fun checkZoteroDirectory(url: String): CustomResult<ResponseBody> {
+    private suspend fun checkZoteroDirectory(url: String): CustomResult<*> {
         val propFindResult = propFind(url = url)
-        if (propFindResult is CustomResult.GeneralSuccess.NetworkSuccess && propFindResult.httpCode == 207) {
+        val httpCode = propFindResult.resultHttpCode
+        if (httpCode == 207) {
             val checkWhetherReturns404ForMissingFileResult =
                 checkWhetherReturns404ForMissingFile(url = url)
             if (checkWhetherReturns404ForMissingFileResult !is CustomResult.GeneralSuccess) {
@@ -249,14 +253,14 @@ class WebDavController @Inject constructor(
             }
             return checkWritabilityResult
         }
-        if (propFindResult is CustomResult.GeneralError.NetworkError && propFindResult.httpCode == 404) {
+        if (httpCode == 404) {
             return checkWhetherParentAvailable(url = url)
         }
 
         return propFindResult
     }
 
-    private suspend fun propFind(url: String): CustomResult<ResponseBody> {
+    private suspend fun propFind(url: String): CustomResult<*> {
         val headers = mapOf("Content-Type" to "text/xml; charset=utf-8", "Depth" to "0")
         val bodyText = "<propfind xmlns='DAV:'><prop><getcontentlength/></prop></propfind>"
 
@@ -264,13 +268,13 @@ class WebDavController @Inject constructor(
             val body: RequestBody = bodyText.toRequestBody()
             provideWebDavApi().propfind(url = url, headers = headers, body = body)
         }
-        if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
-            return networkResult as CustomResult.GeneralError
+
+        val httpCode = networkResult.resultHttpCode
+        return if (listOf(207, 404).contains(httpCode)) {
+            return networkResult
+        } else {
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        if (!listOf(207, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
-        return networkResult
     }
 
     private suspend fun checkWhetherReturns404ForMissingFile(url: String): CustomResult<Unit> {
@@ -278,21 +282,20 @@ class WebDavController @Inject constructor(
         val networkResult = safeApiCall {
             provideWebDavApi().get(url = appendedUrl)
         }
-        if (networkResult is CustomResult.GeneralError.NetworkError) {
-            if (networkResult.httpCode == 404) {
-                return CustomResult.GeneralSuccess(Unit)
-            }
-            return networkResult
+
+        val httpCode = networkResult.resultHttpCode
+        if (!((200..<300).toList() + 404).contains(httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!((200..<300).toList() + 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
+
+        if (httpCode == 404) {
+            return CustomResult.GeneralSuccess(Unit)
         } else {
             return CustomResult.GeneralError.CodeError(WebDavError.Verification.nonExistentFileNotMissing)
         }
     }
 
-    private suspend fun checkWritability(url: String): CustomResult<ResponseBody> {
+    private suspend fun checkWritability(url: String): CustomResult<*> {
         val appendedUrl = "${url}zotero-test-file.prop"
         val webDavTestWriteRequestResult = webDavTestWriteRequest(appendedUrl)
         if (webDavTestWriteRequestResult !is CustomResult.GeneralSuccess) {
@@ -311,38 +314,37 @@ class WebDavController @Inject constructor(
         return webDavDeleteRequestResult
     }
 
-    private suspend fun webDavDeleteRequest(url: String): CustomResult<ResponseBody> {
+    private suspend fun webDavDeleteRequest(url: String): CustomResult<*> {
         val networkResult = safeApiCall {
             provideWebDavApi().delete(url = url)
         }
-        if (networkResult is CustomResult.GeneralError.NetworkError) {
-            return networkResult
+
+        val httpCode = networkResult.resultHttpCode
+        return if (listOf(200, 204, 404).contains(httpCode)) {
+            CustomResult.GeneralSuccess(Unit)
+        } else {
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 204, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
-        return networkResult
     }
 
-    private suspend fun webDavDownloadRequest(url: String): CustomResult<ResponseBody> {
+    private suspend fun webDavDownloadRequest(url: String): CustomResult<*> {
         val networkResult = safeApiCall {
             provideWebDavApi().get(url = url)
         }
-        if (networkResult is CustomResult.GeneralError.NetworkError) {
-            if (networkResult.httpCode == 404) {
-                return CustomResult.GeneralError.CodeError(WebDavError.Verification.fileMissingAfterUpload)
-            }
-            return networkResult
+        val httpCode = networkResult.resultHttpCode
+
+        if (!listOf(200, 404).contains(httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
+
+        if (httpCode == 404) {
+            return CustomResult.GeneralError.CodeError(WebDavError.Verification.fileMissingAfterUpload)
         }
-        return networkResult
+
+        return CustomResult.GeneralSuccess(Unit)
     }
 
-    private suspend fun webDavTestWriteRequest(url: String): CustomResult<ResponseBody> {
+    private suspend fun webDavTestWriteRequest(url: String): CustomResult<*> {
         val bodyText = " "
 
         val networkResult = safeApiCall {
@@ -350,15 +352,12 @@ class WebDavController @Inject constructor(
             provideWebDavApi().put(url = url, body = body)
         }
 
-        if (networkResult is CustomResult.GeneralError.NetworkError) {
-            return networkResult
+        val httpCode = networkResult.resultHttpCode
+        return if (listOf(200, 201, 204).contains(httpCode)) {
+            CustomResult.GeneralSuccess(Unit)
+        } else {
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 201, 204).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
-
-        return networkResult
     }
 
     private suspend fun checkWhetherParentAvailable(url: String): CustomResult<ResponseBody> {
@@ -369,18 +368,14 @@ class WebDavController @Inject constructor(
             return propFindResult
         }
 
-        if (propFindResult is CustomResult.GeneralSuccess.NetworkSuccess) {
-            if (propFindResult.httpCode == 207) {
-                return CustomResult.GeneralError.CodeError(
-                    WebDavError.Verification.zoteroDirNotFound(
-                        url
-                    )
-                )
-            } else {
-                return CustomResult.GeneralError.CodeError(WebDavError.Verification.parentDirNotFound)
-            }
+        val httpCode = propFindResult.resultHttpCode
+        if (httpCode == 207) {
+            return CustomResult.GeneralError.CodeError(
+                WebDavError.Verification.zoteroDirNotFound(url)
+            )
+        } else {
+            return CustomResult.GeneralError.CodeError(WebDavError.Verification.parentDirNotFound)
         }
-        return propFindResult
     }
 
     suspend fun download(key: String): CustomResult<ResponseBody> {
@@ -448,17 +443,24 @@ class WebDavController @Inject constructor(
         val networkResult = safeApiCall {
             provideWebDavApi().get(url = newUrl)
         }
+
+        val httpCode = networkResult.resultHttpCode
+
+        if (!listOf(200, 404).contains(httpCode)) {
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+        }
+
+        if (httpCode == 404) {
+            Timber.w("WebDavController: $key item prop file not found")
+            return CustomResult.GeneralSuccess(null)
+        }
+
         if (networkResult is CustomResult.GeneralError.NetworkError) {
-            if (networkResult.httpCode == 404) {
-                return CustomResult.GeneralSuccess(null)
-            }
             Timber.e("WebDavController: $key item prop file error: ${networkResult.stringResponse}")
             return networkResult
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
+
         val propContents = networkResult.value!!.string()
         try {
             val (mtime, hash) = MTimeAndHashXmlParser.readMtimeAndHash(propContents)
@@ -475,7 +477,7 @@ class WebDavController @Inject constructor(
     private suspend fun removeExistingMetadata(
         key: String,
         url: String
-    ): CustomResult<ResponseBody> {
+    ): CustomResult<*> {
         Timber.i("WebDavController: remove metadata for $key")
 
         val newUrl = "${url}${key}.prop"
@@ -483,14 +485,12 @@ class WebDavController @Inject constructor(
         val networkResult = safeApiCall {
             provideWebDavApi().delete(url = newUrl)
         }
-        if (networkResult is CustomResult.GeneralError.NetworkError) {
-            return networkResult
+        val httpCode = networkResult.resultHttpCode
+        return if (listOf(200, 204, 404).contains(httpCode)) {
+            CustomResult.GeneralSuccess(Unit)
+        } else {
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
-        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 204, 404).contains(networkResult.httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(networkResult.httpCode, null)
-        }
-        return networkResult
     }
 
     private fun zip(file: File, key: String): CustomResult<File> {
@@ -680,21 +680,20 @@ class WebDavController @Inject constructor(
             val missing= mutableSetOf<String>()
             val failed= mutableSetOf<String>()
 
-            val processResult: (String, CustomResult<ResponseBody>) -> Unit = { key, result ->
-                when(result) {
-                    is CustomResult.GeneralSuccess -> {
+            val processResult: (String, Boolean) -> Unit = { key, isSuccess ->
+                when (isSuccess) {
+                    true -> {
                         if (!failed.contains(key) && !missing.contains(key)) {
                             succeeded.add(key)
                         }
                     }
 
-                    is CustomResult.GeneralError -> {
+                    false -> {
                         succeeded.remove(key)
                         missing.remove(key)
                         failed.add(key)
                     }
                 }
-
 
                 count -= 1
 
@@ -721,44 +720,30 @@ class WebDavController @Inject constructor(
     private fun performDeletionsZip(
         url: String,
         key: String,
-        processResult: (String, CustomResult<ResponseBody>) -> Unit
+        processResult: (String, Boolean) -> Unit
     ) {
 
         val zipUrl = "${url}${key}.zip"
         val deleteZipResult = safeApiCallSync {
             provideWebDavApi().deleteSync(url = zipUrl)
         }
-        if (deleteZipResult is CustomResult.GeneralError) {
-            processResult(key, deleteZipResult)
-            return
-        }
-        deleteZipResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 204, 404).contains(deleteZipResult.httpCode)) {
-            processResult(key, deleteZipResult)
-            return
-        }
-        processResult(key, deleteZipResult)
+        val httpCode = deleteZipResult.resultHttpCode
+        val containsValidCode = listOf(200, 204, 404).contains(httpCode)
+        processResult(key, containsValidCode)
     }
 
     private fun performDeletionsProp(
         url: String,
         key: String,
-        processResult: (String, CustomResult<ResponseBody>) -> Unit
+        processResult: (String, Boolean) -> Unit
     ) {
         val propUrl = "${url}${key}.prop"
         val deletePropResult = safeApiCallSync {
             provideWebDavApi().deleteSync(url = propUrl)
         }
-        if (deletePropResult is CustomResult.GeneralError) {
-            processResult(key, deletePropResult)
-            return
-        }
-        deletePropResult as CustomResult.GeneralSuccess.NetworkSuccess
-        if (!listOf(200, 204, 404).contains(deletePropResult.httpCode)) {
-            processResult(key, deletePropResult)
-            return
-        }
-        processResult(key, deletePropResult)
+        val httpCode = deletePropResult.resultHttpCode
+        val containsValidCode = listOf(200, 204, 404).contains(httpCode)
+        processResult(key, containsValidCode)
     }
 
     suspend fun uploadAttachment(url: String, body: RequestBody): Response<Unit> {

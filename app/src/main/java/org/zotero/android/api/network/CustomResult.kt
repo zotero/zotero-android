@@ -1,6 +1,7 @@
 package org.zotero.android.api.network
 
 import okhttp3.Headers
+import org.zotero.android.api.network.CustomResult.GeneralSuccess.NetworkSuccess
 
 sealed class CustomResult<out T> {
     sealed class GeneralError : CustomResult<Nothing>() {
@@ -49,6 +50,20 @@ sealed class CustomResult<out T> {
                 get() {
                     return headers["last-modified-version"]?.toInt() ?: 0
                 }
+        }
+    }
+
+    val resultHttpCode: Int? get() {
+        return when (this) {
+            is NetworkSuccess -> {
+                this.httpCode
+            }
+
+            is GeneralError.NetworkError -> {
+                this.httpCode
+            }
+
+            else -> null
         }
     }
 }
