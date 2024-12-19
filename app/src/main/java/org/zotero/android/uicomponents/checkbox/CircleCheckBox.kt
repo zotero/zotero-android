@@ -29,13 +29,23 @@ fun CircleCheckBox(
         contentAlignment = Alignment.Center,
     ) {
         if (isChecked) {
-            Icon(
-                painter = painterResource(
-                    id = Drawables.check_small_24px
-                ),
-                contentDescription = null,
-                tint = CustomTheme.colors.zoteroDefaultBlue,
-            )
+            Box {
+                Icon(
+                    painter = painterResource(
+                        id = Drawables.outline_circle_24
+                    ),
+                    contentDescription = null,
+                    tint = CustomPalette.CoolGray,
+                )
+
+                Icon(
+                    painter = painterResource(
+                        id = Drawables.check_small_24px
+                    ),
+                    contentDescription = null,
+                    tint = CustomTheme.colors.zoteroDefaultBlue,
+                )
+            }
         } else {
             Icon(
                 painter = painterResource(

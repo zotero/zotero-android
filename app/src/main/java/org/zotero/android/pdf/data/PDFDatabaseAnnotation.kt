@@ -228,4 +228,8 @@ data class PDFDatabaseAnnotation(
         }
     }
 
+    override val isSyncable: Boolean get() {
+        return true
+    }
+
 }

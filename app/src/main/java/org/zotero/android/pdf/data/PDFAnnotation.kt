@@ -22,6 +22,7 @@ interface PDFAnnotation {
     val fontSize: Float?
     val rotation: Int?
     val sortIndex: String
+    val isSyncable: Boolean
     val tags: List<Tag>
 
     fun editability(currentUserId: Long, library: Library): AnnotationEditability

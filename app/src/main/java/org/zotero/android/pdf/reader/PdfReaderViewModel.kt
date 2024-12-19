@@ -130,6 +130,7 @@ import org.zotero.android.pdf.colorpicker.queuedUpPdfReaderColorPickerResult
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
 import org.zotero.android.pdf.data.AnnotationPreviewManager
 import org.zotero.android.pdf.data.AnnotationsFilter
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.data.PDFDatabaseAnnotation
 import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.pdf.data.PDFSettings
@@ -147,6 +148,7 @@ import org.zotero.android.pdf.reader.pdfsearch.data.OnPdfReaderSearch
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
 import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
+import org.zotero.android.pdf.reader.sidebar.data.InkAnnotationsData
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
@@ -172,9 +174,11 @@ import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
+import java.util.Date
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
+import kotlin.collections.mutableMapOf
 import kotlin.concurrent.timerTask
 import kotlin.random.Random
 
@@ -1957,9 +1961,17 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    override fun selectOrDeselectAnnotationDuringEditing(key: AnnotationKey) {
+        if (viewState.selectedAnnotationsDuringEditing.contains(key)) {
+            //TODO
+        } else {
+            //TODO
+        }
+    }
+
 
     fun selectAnnotationFromDocument(key: AnnotationKey) {
-        if (!viewState.sidebarEditingEnabled) {
+        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
             _select(key = key, didSelectInDocument = true)
         }
     }
@@ -3389,6 +3401,295 @@ class PdfReaderViewModel @Inject constructor(
         }, 25 * 60 * 1000L)
     }
 
+    override fun setSidebar(enabled: Boolean) {
+        updateState {
+            copy(sidebarEditingEnabled = enabled)
+        }
+
+        if (enabled) {
+            _select(key = null, didSelectInDocument = false)
+        } else {
+            updateState {
+                copy(
+                    selectedAnnotationsDuringEditing = emptySet(),
+                    deletionEnabled = false
+                )
+            }
+        }
+    }
+
+    override fun mergeSelectedAnnotations() {
+        if (!viewState.sidebarEditingEnabled) {
+            return
+        }
+
+        if (!selectedAnnotationsMergeable(selected = viewState.selectedAnnotationsDuringEditing)) { return }
+        val toMerge = sortedSyncableAnnotationsAndDocumentAnnotations(viewState.selectedAnnotationsDuringEditing)
+        val oldest = toMerge.firstOrNull()
+        if (toMerge.size <= 1 || oldest == null) {
+            return
+        }
+
+        try {
+            when (oldest.first.type) {
+                org.zotero.android.database.objects.AnnotationType.ink -> {
+                    merge(toMerge)
+                }
+
+                else -> {
+                    //no-op
+                }
+            }
+
+            updateState {
+                copy(
+                    mergingEnabled = false,
+                    deletionEnabled = false,
+                    selectedAnnotationsDuringEditing = emptySet()
+                )
+            }
+        } catch (error: Exception) {
+            Timber.e(error)
+        }
+
+    }
+
+    override fun removeSelectedAnnotations() {
+        if (!viewState.sidebarEditingEnabled) {
+            return
+        }
+        if (viewState.selectedAnnotationsDuringEditing.isEmpty()) {
+            return
+        }
+
+        val keys = viewState.selectedAnnotationsDuringEditing.filter{ it.type == Kind.database }
+        val pdfAnnotations = keys.mapNotNull { key ->
+            val annotation = this.annotation(key) ?: return@mapNotNull null
+            val pdfAnnotation = this.document.annotationProvider.getAnnotations(annotation.page)
+                .firstOrNull { it.key == annotation.key } ?: return@mapNotNull null
+            pdfAnnotation
+        }
+        remove(annotations = pdfAnnotations)
+
+        updateState {
+            copy(
+                mergingEnabled = false,
+                deletionEnabled = false,
+                selectedAnnotationsDuringEditing = emptySet()
+            )
+        }
+    }
+
+    //TODO needs to be verified
+    fun chooseMergedLineWidth(lineWidthData: Map<Float, Pair<Int, Date>>): Float {
+        if (lineWidthData.isEmpty()) {
+            return 1F
+        }
+
+        val width = lineWidthData.keys.firstOrNull()
+        if (lineWidthData.keys.size == 1 && width != null) {
+            return width
+        }
+
+        var data: MutableList<Triple<Float, Int, Date>> = mutableListOf()
+        for ((key, value) in lineWidthData) {
+            data.add(Triple(key, value.first, value.second))
+        }
+
+        data = data.sortedWith { lData, rData ->
+            sortMergeLines(lData, rData)
+        }.toMutableList()
+
+        return data[0].first
+    }
+
+    private fun sortMergeLines(
+        lData: Triple<Float, Int, Date>,
+        rData: Triple<Float, Int, Date>
+    ): Int {
+        if (lData.second != rData.second) {
+            return rData.second - lData.second
+        }
+
+        if (lData.third == rData.third) {
+            return 1
+        }
+        return lData.third.compareTo(rData.third)
+    }
+
+    fun collectInkAnnotationData(annotations: List<Pair<PDFAnnotation, Annotation>>): InkAnnotationsData? {
+        val (oldestAnnotation, oldestDocumentAnnotation) = annotations.firstOrNull() ?: return null
+        val oldestInkAnnotation = oldestDocumentAnnotation as? InkAnnotation ?: return null
+
+        var lines = oldestInkAnnotation.lines.toMutableList()
+        var lineWidthData: MutableMap<Float, Pair<Int, Date>> = mutableMapOf(oldestInkAnnotation.lineWidth to Pair(1, (oldestInkAnnotation.createdDate ?: Date(0))))
+        var tags = oldestAnnotation.tags.toMutableList()
+
+        for ((annotation, documentAnnotation) in annotations.drop(1)) {
+           val inkAnnotation =
+                documentAnnotation as? InkAnnotation ?: continue
+
+            lines += inkAnnotation.lines
+
+            val k = lineWidthData[documentAnnotation.lineWidth]
+
+            if (k != null) {
+                val count = k.first
+                val date = k.second
+                var newDate = date
+
+                val annotationDate = documentAnnotation.createdDate
+
+                if (annotationDate != null && annotationDate < date) {
+                    newDate = annotationDate
+                }
+                lineWidthData[documentAnnotation.lineWidth] = Pair((count + 1), newDate)
+            } else {
+                lineWidthData[documentAnnotation.lineWidth] =
+                    Pair(1, (documentAnnotation.createdDate ?: Date(0)))
+            }
+
+            for (tag in annotation.tags) {
+                if (!tags.contains(tag)) {
+                    tags.add(tag)
+                }
+            }
+        }
+
+        return InkAnnotationsData(
+            oldestAnnotation = oldestAnnotation,
+            oldestDocumentAnnotation = oldestInkAnnotation,
+            lines = lines,
+            lineWidth = chooseMergedLineWidth(lineWidthData),
+            tags = tags
+        )
+    }
+
+    fun groupedAnnotationsByPage(keys: Set<AnnotationKey>): Map<Int, List<PDFAnnotation>> {
+        var groupedAnnotations: MutableMap<Int, MutableList<PDFAnnotation>> = mutableMapOf()
+        for (key in keys) {
+            val annotation = this.annotation(key) ?: continue
+            var annotations = groupedAnnotations.getOrPut(annotation.page) { mutableListOf() }
+            annotations.add(annotation)
+            groupedAnnotations[annotation.page] = annotations
+        }
+        return groupedAnnotations
+    }
+
+    fun sortedSyncableAnnotationsAndDocumentAnnotations(selected: Set<AnnotationKey>): List<Pair<PDFAnnotation, Annotation>> {
+        var tuples: MutableList<Pair<PDFAnnotation, Annotation>> = mutableListOf()
+
+        for ((page, annotations) in groupedAnnotationsByPage(selected)) {
+            val documentAnnotations = this.document.annotationProvider.getAnnotations(page)
+            for (annotation in annotations) {
+                val documentAnnotation =
+                    documentAnnotations.firstOrNull { it.key == annotation.key } ?: continue
+                tuples.add((annotation to documentAnnotation))
+            }
+        }
+
+        return tuples.sortedWith { lTuple, rTuple ->
+            (lTuple.second.createdDate ?: Date()).compareTo(rTuple.second.createdDate ?: Date())
+        }
+    }
+
+    fun selectedAnnotationsMergeable(selected: Set<AnnotationKey>): Boolean {
+        var page: Int? = null
+        var type: org.zotero.android.database.objects.AnnotationType? = null
+        var color: String? = null
+
+        val hasSameProperties: (PDFAnnotation) -> Boolean = hasSameProperties@ { annotation ->
+                // Check whether annotations of one type are selected
+                if (type != null) {
+                    if (type != annotation.type) {
+                        return@hasSameProperties false
+                    }
+                } else {
+                    type = annotation.type
+                }
+            if (color != null) {
+                if (color != annotation.color) {
+                    return@hasSameProperties false
+                }
+            } else {
+                color = annotation.color
+            }
+            return@hasSameProperties true
+        }
+
+        for (key in selected) {
+
+            val annotation = this.annotation(key) ?: continue
+            if (!annotation.isSyncable) {
+                return false
+            }
+
+            if (page != null) {
+                if (page != annotation.page) {
+                    return false
+                }
+            } else {
+                page = annotation.page
+            }
+
+            when (annotation.type) {
+                org.zotero.android.database.objects.AnnotationType.ink -> {
+                    if (!hasSameProperties(annotation)) {
+                        return false
+                    }
+                }
+
+                org.zotero.android.database.objects.AnnotationType.highlight -> {
+                    return false
+                }
+
+                org.zotero.android.database.objects.AnnotationType.note,
+                org.zotero.android.database.objects.AnnotationType.image,
+                org.zotero.android.database.objects.AnnotationType.underline,
+                org.zotero.android.database.objects.AnnotationType.text -> {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
+
+    fun merge(annotations: List<Pair<PDFAnnotation, Annotation>>) {
+        val (oldestAnnotation, oldestInkAnnotation, lines, lineWidth, tags) = collectInkAnnotationData(
+            annotations
+        ) ?: return
+
+        if (AnnotationSplitter.splitPathsIfNeeded(paths = lines) != null) {
+            throw Exception("mergeTooBig")
+        }
+
+        val toDeleteDocumentAnnotations = annotations.drop(1).map { it.second }
+
+        val changes: List<PdfAnnotationChanges>
+        oldestInkAnnotation.lines = lines
+        if (oldestInkAnnotation.lineWidth != lineWidth) {
+            changes = listOf(PdfAnnotationChanges.lineWidth, PdfAnnotationChanges.paths)
+            oldestInkAnnotation.lineWidth = lineWidth
+        } else {
+            changes = listOf(PdfAnnotationChanges.paths)
+        }
+
+        processAnnotationObserving(
+            annotation = oldestInkAnnotation,
+            changes = PdfAnnotationChanges.stringValues(changes),
+            pdfReaderNotification = PdfReaderNotification.PSPDFAnnotationChanged,
+        )
+
+        toDeleteDocumentAnnotations.forEach {
+            this.document.annotationProvider.removeAnnotationFromPage(it)
+        }
+
+        // Update tags in merged annotation
+        set(tags = tags, key = oldestAnnotation.key)
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -3432,6 +3733,9 @@ data class PdfReaderViewState(
     var pdfAnnotationArgs: PdfAnnotationArgs? = null,
     var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs? = null,
     var pdfSettingsArgs: PdfSettingsArgs? = null,
+    val selectedAnnotationsDuringEditing: Set<AnnotationKey> = emptySet(),
+    val deletionEnabled: Boolean = false,
+    val mergingEnabled: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

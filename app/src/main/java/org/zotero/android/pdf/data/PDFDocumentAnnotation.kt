@@ -61,4 +61,9 @@ data class PDFDocumentAnnotation(
             }
         }
     }
+
+    override val isSyncable: Boolean
+        get() {
+            return false
+        }
 }

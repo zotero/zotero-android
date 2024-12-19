@@ -52,4 +52,8 @@ interface PdfReaderVMInterface {
     fun hidePdfAnnotationView()
     fun hidePdfAnnotationMoreView()
     fun hidePdfSettingsView()
+    fun selectOrDeselectAnnotationDuringEditing(key: AnnotationKey)
+    fun setSidebar(enabled: Boolean)
+    fun mergeSelectedAnnotations()
+    fun removeSelectedAnnotations()
 }
