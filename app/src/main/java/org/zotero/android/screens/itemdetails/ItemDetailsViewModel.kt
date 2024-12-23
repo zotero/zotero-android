@@ -12,6 +12,7 @@ import io.realm.ObjectChangeSet
 import io.realm.RealmObjectChangeListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
@@ -264,6 +265,8 @@ class ItemDetailsViewModel @Inject constructor(
         EventBus.getDefault().unregister(this)
         conflictResolutionUseCase.currentlyDisplayedItemLibraryIdentifier = null
         conflictResolutionUseCase.currentlyDisplayedItemKey = null
+
+        coroutineScope.cancel()
         super.onCleared()
     }
 
