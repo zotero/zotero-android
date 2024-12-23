@@ -177,8 +177,9 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showItemDetail(type: DetailType, library: Library) {
-        ScreenArguments.itemDetailsArgs = ItemDetailsArgs(type, library = library, childKey = null)
-        triggerEffect(AllItemsViewEffect.ShowItemDetailEffect)
+        val args = ItemDetailsArgs(type, library = library, childKey = null)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+        triggerEffect(AllItemsViewEffect.ShowItemDetailEffect(encodedArgs))
     }
 
     fun init(isTablet: Boolean) = initOnce {
@@ -499,12 +500,13 @@ internal class AllItemsViewModel @Inject constructor(
                 triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
             }
             else -> {
-                ScreenArguments.itemDetailsArgs = ItemDetailsArgs(
+                val args = ItemDetailsArgs(
                     DetailType.preview(key = item.key),
                     library = this.library,
                     childKey = null
                 )
-                triggerEffect(AllItemsViewEffect.ShowItemDetailEffect)
+                val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+                triggerEffect(AllItemsViewEffect.ShowItemDetailEffect(encodedArgs))
             }
         }
     }
@@ -1140,7 +1142,7 @@ internal data class AllItemsViewState(
 
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowCollectionsEffect: AllItemsViewEffect()
-    object ShowItemDetailEffect: AllItemsViewEffect()
+    data class ShowItemDetailEffect(val screenArgs: String): AllItemsViewEffect()
     object ShowAddOrEditNoteEffect: AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
     data class ShowAddByIdentifierEffect(val params: String) : AllItemsViewEffect()

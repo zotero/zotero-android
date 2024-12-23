@@ -5,8 +5,8 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.collections.CollectionsScreen
@@ -18,9 +18,11 @@ import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.screens.webview.ZoteroWebViewScreen
 import java.io.File
 
+internal const val ARG_ITEM_DETAILS_SCREEN = "itemDetailsArgs"
+
 fun NavGraphBuilder.allItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
-    navigateToItemDetails: () -> Unit,
+    navigateToItemDetails: (String) -> Unit,
     navigateToAddOrEditNote: () -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAllItemsSort: () -> Unit,
@@ -75,9 +77,12 @@ fun NavGraphBuilder.itemDetailsScreen(
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
+
     composable(
-        route = CommonScreenDestinations.ITEM_DETAILS,
-        arguments = listOf(),
+        route = "${CommonScreenDestinations.ITEM_DETAILS}/{$ARG_ITEM_DETAILS_SCREEN}",
+        arguments = listOf(
+            navArgument(ARG_ITEM_DETAILS_SCREEN) { type = NavType.StringType },
+        ),
     ) {
         ItemDetailsScreen(
             onBack = onBack,
@@ -200,8 +205,8 @@ object CommonScreenDestinations {
 }
 
 
-fun ZoteroNavigation.toItemDetails() {
-    navController.navigate(CommonScreenDestinations.ITEM_DETAILS)
+fun ZoteroNavigation.toItemDetails(args: String) {
+    navController.navigate("${CommonScreenDestinations.ITEM_DETAILS}/$args")
 }
 
 fun ZoteroNavigation.toAddOrEditNote() {
