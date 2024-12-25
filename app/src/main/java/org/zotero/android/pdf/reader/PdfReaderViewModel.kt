@@ -2340,6 +2340,13 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun onStop(isChangingConfigurations: Boolean) {
+        if (!this::pdfFragment.isInitialized || this.pdfFragment.document == null) {
+            //If pdfFragment is not yet initialized and onStop is called the most likely cause is that user has returned to the app after a while hence ViewModel was deinitialized and then user either very quickly:
+            //1. Navigated to some other screen from PdfReaderScreen screen
+            //2. Navigated back from the PdfReaderScreen to AllItemsScreen
+            //In either of those cases the ViewModel can be caught in the process of re-initializing pdfFragment and since we are navigating away from PdfReaderScreen the execution of onStop method's contents is no longer needed
+            return
+        }
         pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
         submitPendingPage(pdfUiFragment.pageIndex)
         if (isChangingConfigurations) {
