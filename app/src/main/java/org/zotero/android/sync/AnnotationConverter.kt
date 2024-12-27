@@ -13,6 +13,8 @@ import com.pspdfkit.annotations.TextMarkupAnnotation
 import com.pspdfkit.annotations.UnderlineAnnotation
 import com.pspdfkit.document.PdfDocument
 import io.realm.RealmResults
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -39,7 +41,7 @@ class AnnotationConverter {
 
     companion object {
 
-        fun annotations(
+        suspend fun annotations(
             items: RealmResults<RItem>,
             type: Kind = zotero,
             currentUserId: Long,
@@ -48,8 +50,8 @@ class AnnotationConverter {
             username: String,
             boundingBoxConverter: AnnotationBoundingBoxConverter,
             isDarkMode: Boolean,
-        ): List<Annotation> {
-            return items.mapNotNull { item ->
+        ): List<Annotation> = withContext(Dispatchers.IO) {
+            items.mapNotNull { item ->
                 val annotation = PDFDatabaseAnnotation.init(item) ?: return@mapNotNull null
                 annotation(
                     zoteroAnnotation = annotation,

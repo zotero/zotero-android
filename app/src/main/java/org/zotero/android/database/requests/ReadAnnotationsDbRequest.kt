@@ -30,6 +30,6 @@ class ReadAnnotationsDbRequest(
             .deleted(false)
             .`in`("annotationType", supportedTypes.toTypedArray())
             .sort("annotationSortIndex", Sort.ASCENDING)
-            .findAll()
+            .findAllAsync()
     }
 }

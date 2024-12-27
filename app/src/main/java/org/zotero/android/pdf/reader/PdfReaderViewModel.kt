@@ -62,6 +62,7 @@ import io.realm.RealmResults
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -70,6 +71,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.internal.toHexString
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -197,6 +199,7 @@ class PdfReaderViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val dispatcher: CoroutineDispatcher,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
@@ -473,7 +476,9 @@ class PdfReaderViewModel @Inject constructor(
         this@PdfReaderViewModel.pdfFragment.addDocumentListener(object :
             DocumentListener {
             override fun onDocumentLoaded(document: PdfDocument) {
-                this@PdfReaderViewModel.onDocumentLoaded(document)
+                viewModelScope.launch {
+                    this@PdfReaderViewModel.onDocumentLoaded(document)
+                }
             }
 
             override fun onDocumentClick(): Boolean {
@@ -584,7 +589,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
 
-    private fun onDocumentLoaded(document: PdfDocument) {
+    private suspend fun onDocumentLoaded(document: PdfDocument) {
         this.document = document
         annotationBoundingBoxConverter = AnnotationBoundingBoxConverter(document)
         loadRawDocument()
@@ -778,11 +783,11 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    private fun loadAnnotations(
+    private suspend fun loadAnnotations(
         document: PdfDocument,
         username: String,
         displayName: String
-    ): Map<String, PDFDocumentAnnotation> {
+    ): Map<String, PDFDocumentAnnotation> = withContext(dispatcher){
         val annotations = mutableMapOf<String, PDFDocumentAnnotation>()
         val pdfAnnotations = document.annotationProvider
             .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
@@ -799,17 +804,15 @@ class PdfReaderViewModel @Inject constructor(
                 color = pdfAnnotation.color.toHexString(),
                 username = username,
                 displayName = displayName,
-                boundingBoxConverter = this.annotationBoundingBoxConverter
+                boundingBoxConverter = this@PdfReaderViewModel.annotationBoundingBoxConverter
             ) ?: continue
 
             annotations[annotation.key] = annotation
         }
-
-        return annotations
-
+        annotations
     }
 
-    private fun loadDocumentData() {
+    private suspend fun loadDocumentData() {
         val key = viewState.key
         val library = viewState.library
         val dbResult = loadAnnotationsAndPage(key = key, library = library)
@@ -2396,16 +2399,17 @@ class PdfReaderViewModel @Inject constructor(
     private fun addDocumentListener2() {
         this.pdfFragment.addDocumentListener(object : DocumentListener {
             override fun onDocumentLoaded(document: PdfDocument) {
-                this@PdfReaderViewModel.onDocumentLoaded(document)
+                viewModelScope.launch {
+                    this@PdfReaderViewModel.onDocumentLoaded(document)
 
-                if (queuedUpPdfReaderColorPickerResult != null) {
-                    setToolOptions(
-                        hex = queuedUpPdfReaderColorPickerResult!!.colorHex,
-                        size = queuedUpPdfReaderColorPickerResult!!.size,
-                        tool = queuedUpPdfReaderColorPickerResult!!.annotationTool
-                    )
-                    queuedUpPdfReaderColorPickerResult = null
-
+                    if (queuedUpPdfReaderColorPickerResult != null) {
+                        setToolOptions(
+                            hex = queuedUpPdfReaderColorPickerResult!!.colorHex,
+                            size = queuedUpPdfReaderColorPickerResult!!.size,
+                            tool = queuedUpPdfReaderColorPickerResult!!.annotationTool
+                        )
+                        queuedUpPdfReaderColorPickerResult = null
+                    }
                 }
             }
 
