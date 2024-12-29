@@ -1,8 +1,10 @@
 package org.zotero.android.screens.itemdetails
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import androidx.core.content.FileProvider.getUriForFile
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -1430,6 +1432,9 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToTrashAttachment -> {
                     delete(longPressOptionItem.attachment)
                 }
+                is LongPressOptionItem.ShareAttachmentFile -> {
+                    shareFile(longPressOptionItem.attachment)
+                }
                 is LongPressOptionItem.DeleteAttachmentFile -> {
                     deleteFile(longPressOptionItem.attachment)
                 }
@@ -1477,6 +1482,7 @@ class ItemDetailsViewModel @Inject constructor(
         val actions = mutableListOf<LongPressOptionItem>()
         val attachmentType = attachment.type
         if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
+            actions.add(LongPressOptionItem.ShareAttachmentFile(attachment))
             actions.add(LongPressOptionItem.DeleteAttachmentFile(attachment))
         }
 
@@ -1560,6 +1566,38 @@ class ItemDetailsViewModel @Inject constructor(
 
         updateState {
             copy(data = data.deepCopy(creatorIds = updatedCreatorIds, creators = updatedCreators))
+        }
+    }
+
+    private fun shareFile(attachment: Attachment) {
+        when(val attachmentType = attachment.type) {
+            is Attachment.Kind.url -> {
+                attachmentType.url
+                val shareIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, attachmentType.url)
+                    type = "text/plain"
+                }
+                val chooserIntent = Intent.createChooser(shareIntent, null)
+                chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(chooserIntent)
+            }
+            is Attachment.Kind.file -> {
+                val file = fileStore.attachmentFile(
+                    libraryId = attachment.libraryId,
+                    key = attachment.key,
+                    filename = attachmentType.filename,
+                )
+                val uri = getUriForFile(context, context.packageName + ".provider", file)
+                val shareIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    type = attachmentType.contentType
+                }
+                val chooserIntent = Intent.createChooser(shareIntent, null)
+                chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(chooserIntent)
+            }
         }
     }
 
