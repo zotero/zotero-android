@@ -38,7 +38,7 @@ sealed class LongPressOptionItem(
 
     data class ShareAttachmentFile(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.item_detail_share_attachment_file,
-        resIcon = Drawables.delete_24px
+        resIcon = Drawables.baseline_share_24
     )
 
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
