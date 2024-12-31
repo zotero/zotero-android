@@ -180,6 +180,10 @@ class AnnotationPreviewManager @Inject constructor(
         val resultScale = scaleX.coerceAtLeast(scaleY)
         val resultVideoViewWidth = (width / resultScale).toInt()
         val resultVideoViewHeight = (height / resultScale).toInt()
+        if (resultVideoViewWidth == 0 || resultVideoViewHeight == 0) {
+            throw Exception("An attempt to create an AnnotationPreview for annotation of type ${annotation.type} resulting in a zero scale dimension. width = $width, height = $height, maxSide = $maxSide, resultVideoViewWidth = $resultVideoViewWidth, resultVideoViewHeight = $resultVideoViewHeight")
+        }
+
         return rawDocumentBitmap.scale(resultVideoViewWidth, resultVideoViewHeight, true)
     }
 

@@ -916,6 +916,18 @@ class PdfReaderViewModel @Inject constructor(
         onAnnotationUpdatedListener = object :
             AnnotationProvider.OnAnnotationUpdatedListener {
             override fun onAnnotationCreated(annotation: Annotation) {
+                //Don't allow Square Annotations with zero width or height from being added.
+                val annotationRect = annotation.boundingBox
+                val width = (annotationRect.right - annotationRect.left).toInt()
+                val height = (annotationRect.top - annotationRect.bottom).toInt()
+                if (annotation.type == AnnotationType.SQUARE && (width == 0 || height == 0)) {
+                    Timber.w("PdfReaderViewModel: Prevented an annotation of type ${annotation.type} from being created with width=$width and height=$height")
+                    this@PdfReaderViewModel.document.annotationProvider.removeAnnotationFromPage(
+                        annotation
+                    )
+                    return
+                }
+
                 processAnnotationObserving(annotation, emptyList(), PdfReaderNotification.PSPDFAnnotationsAdded)
             }
 
