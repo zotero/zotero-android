@@ -62,6 +62,12 @@ sealed class LongPressOptionItem(
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.delete_24px
     )
+
+    data class ShareDownload(val item: RItem): LongPressOptionItem(
+        titleId = Strings.items_action_share_download,
+        resIcon = Drawables.baseline_share_24
+    )
+
     data class RemoveDownload(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_remove_download,
         resIcon = Drawables.file_download_off_24px

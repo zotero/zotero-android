@@ -120,7 +120,8 @@
     <string name="items.action.duplicate">Duplicate</string>
     <string name="items.action.create_parent">Create Parent Item</string>
     <string name="items.action.download">Download</string>
-    <string name="items.action.remove_download">Remove Download</string>
+    <string name="items.action.share_download">Share Downloaded Attachments</string>
+    <string name="items.action.remove_download">Remove Downloaded Attachments</string>
     <string name="items.filters.title">Filters</string>
     <string name="items.filters.downloads">Downloaded Files</string>
     <string name="items.filters.tags">Tags</string>
@@ -174,6 +175,7 @@
     <string name="item_detail.show_less">Show less</string>
     <string name="item_detail.view_pdf">View PDF</string>
     <string name="item_detail.data_reloaded">This item has been changed remotely. It will now reload.</string>
+    <string name="item_detail.share_attachment_file">Share Download</string>
     <string name="item_detail.delete_attachment_file">Remove Download</string>
     <string name="item_detail.deleted_title">Deleted</string>
     <string name="item_detail.deleted_message">This item has been deleted. Do you want to restore it?</string>
