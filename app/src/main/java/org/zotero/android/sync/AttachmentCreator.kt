@@ -13,6 +13,7 @@ import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.File
 import java.util.Date
+import kotlin.Int
 
 class AttachmentCreator {
 
@@ -57,20 +58,7 @@ class AttachmentCreator {
                 return null
             }
 
-            attachmentData = attachmentData.sortedWith { lData, rData ->
-                mainAttachmentsAreInIncreasingOrder(
-                    lData = Triple(
-                        lData.contentType,
-                        lData.hasMatchingUrlWithParent,
-                        lData.dateAdded
-                    ),
-                    rData = Triple(
-                        rData.contentType,
-                        rData.hasMatchingUrlWithParent,
-                        rData.dateAdded
-                    )
-                )
-            }
+            attachmentData = sortAttachmentData(attachmentData)
 
             val firstAttachmentData = attachmentData.firstOrNull()
             if (firstAttachmentData == null) {
@@ -402,19 +390,58 @@ class AttachmentCreator {
             return Attachment.Kind.url(urlString)
         }
 
-        private fun mainAttachmentsAreInIncreasingOrder(lData: Triple<String, Boolean, Date>, rData: Triple<String, Boolean, Date>): Int {
-            val lPriority = priority(lData.first)
-            val rPriority = priority(rData.first)
+        private fun sortAttachmentData(unsortedAttachmentData: List<AttachmentData>): List<AttachmentData> {
+            val debugData = unsortedAttachmentData.map {
+                "Triple(\"${it.contentType}\", ${it.hasMatchingUrlWithParent}, Date(${it.dateAdded.time}))"
+            }.joinToString(separator = ", ") { it }
 
-            if(lPriority != rPriority) {
-                return lPriority.compareTo(rPriority)
+            try {
+                return mainAttachmentsAreInIncreasingOrderV1(unsortedAttachmentData)
+            } catch (e: Exception) {
+                Timber.e(e, "Sorting attachmentData using V1 method failed. Debug data = $debugData")
             }
 
-            if( lData.second != rData.second) {
-                return (lData.second).compareTo(!(rData.second))
-            }
+            Timber.w("Attempting to sort attachmentData with V2 method")
 
-            return lData.third.compareTo(rData.third)
+            try {
+                return mainAttachmentsAreInIncreasingOrderV2(unsortedAttachmentData)
+            } catch (e: Exception) {
+                Timber.e(e, "Sorting attachmentData using V2 method failed. Debug data = $debugData")
+            }
+            Timber.w("Returning unsorted attachmentData as a last resort")
+            return unsortedAttachmentData
+        }
+
+        private fun mainAttachmentsAreInIncreasingOrderV1(unsortedAttachmentData: List<AttachmentData>): List<AttachmentData> {
+            return unsortedAttachmentData.sortedWith { lData, rData ->
+                val lPriority = priority(lData.contentType)
+                val rPriority = priority(rData.contentType)
+
+                if (lPriority != rPriority) {
+                    return@sortedWith lPriority.compareTo(rPriority)
+                }
+
+                if (lData.hasMatchingUrlWithParent != rData.hasMatchingUrlWithParent) {
+                    return@sortedWith (lData.hasMatchingUrlWithParent).compareTo(!(rData.hasMatchingUrlWithParent))
+                }
+                return@sortedWith lData.dateAdded.compareTo(rData.dateAdded)
+            }
+        }
+
+        private fun mainAttachmentsAreInIncreasingOrderV2(unsortedAttachmentData: List<AttachmentData>): List<AttachmentData> {
+            return unsortedAttachmentData.sortedWith { lData, rData ->
+                val lPriority = priority(lData.contentType)
+                val rPriority = priority(rData.contentType)
+
+                if (lPriority != rPriority) {
+                    return@sortedWith lPriority.compareTo(rPriority)
+                }
+
+                if (lData.hasMatchingUrlWithParent != rData.hasMatchingUrlWithParent) {
+                    return@sortedWith (lData.hasMatchingUrlWithParent).compareTo((rData.hasMatchingUrlWithParent))
+                }
+                return@sortedWith lData.dateAdded.compareTo(rData.dateAdded)
+            }
         }
 
 
@@ -434,12 +461,12 @@ class AttachmentCreator {
             return Attachment.Kind.file(filename = filename, contentType = contentType, location = Attachment.FileLocation.local, linkType = Attachment.FileLinkType.linkedFile)
         }
         private fun priority(contentType: String): Int {
-            when (contentType) {
-                "application/pdf" -> return 0
-                "text/html" -> return 1
-                "image/gif", "image/jpeg", "image/png" -> return 2
-                "text/plain" -> return 3
-                 else -> return 4
+            return when (contentType) {
+                "application/pdf" -> 0
+                "text/html" -> 1
+                "image/gif", "image/jpeg", "image/png" -> 2
+                "text/plain" -> 3
+                else -> 4
             }
         }
     }
