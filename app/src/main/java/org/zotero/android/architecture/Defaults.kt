@@ -58,8 +58,6 @@ open class Defaults @Inject constructor(
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
 
-    private val needsZeroWidthOrHeightAnnotationsFix = "needsZeroWidthOrHeightAnnotationsFix2"
-
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
@@ -395,14 +393,6 @@ open class Defaults @Inject constructor(
             return currentPerformFullSyncGuard
         }
         return sharedPreferences.getInt(performFullSyncGuardKey, 1)
-    }
-
-    fun needsZeroWidthOrHeightAnnotationsFix(): Boolean {
-        return sharedPreferences.getBoolean(needsZeroWidthOrHeightAnnotationsFix, true)
-    }
-
-    fun setNeedsZeroWidthOrHeightAnnotationsFix(value: Boolean) {
-        sharedPreferences.edit { putBoolean(needsZeroWidthOrHeightAnnotationsFix, value) }
     }
 
     fun reset() {

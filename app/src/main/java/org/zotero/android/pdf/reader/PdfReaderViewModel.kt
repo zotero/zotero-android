@@ -845,12 +845,28 @@ class PdfReaderViewModel @Inject constructor(
 
                 update(
                     document = this.document,
-                    zoteroAnnotations = dbToPdfAnnotations,
+                    zoteroAnnotations = dbToPdfAnnotations.map { it.third },
                     key = key,
                     libraryId = library.identifier,
                     isDark = viewState.isDark
                 )
-                for (annotation in dbToPdfAnnotations) {
+
+                val cleanedDbToPdfAnnotations = dbToPdfAnnotations.mapNotNull { triple ->
+                    val libraryId = triple.first
+                    val rItemKey = triple.second
+                    val annotation = triple.third
+                    if (wasAnnotationsWithZeroSizeRemoved(
+                            libraryId = libraryId,
+                            rItemKey = rItemKey,
+                            annotation = annotation
+                        )
+                    ) {
+                        return@mapNotNull null
+                    }
+                    annotation
+                }
+
+                for (annotation in cleanedDbToPdfAnnotations) {
                     annotationPreviewManager.store(
                         rawDocument = this.rawDocument,
                         annotation = annotation,
@@ -916,12 +932,8 @@ class PdfReaderViewModel @Inject constructor(
         onAnnotationUpdatedListener = object :
             AnnotationProvider.OnAnnotationUpdatedListener {
             override fun onAnnotationCreated(annotation: Annotation) {
-                //Don't allow Square Annotations with zero width or height from being added.
-                val annotationRect = annotation.boundingBox
-                val width = (annotationRect.right - annotationRect.left).toInt()
-                val height = (annotationRect.top - annotationRect.bottom).toInt()
-                if (annotation.type == AnnotationType.SQUARE && (width == 0 || height == 0)) {
-                    Timber.w("PdfReaderViewModel: Prevented an annotation of type ${annotation.type} from being created with width=$width and height=$height")
+                if (isAnnotationZeroSize(annotation)) {
+                    Timber.w("PdfReaderViewModel: Prevented an annotation of type ${annotation.type} from being created due to zero dimensions")
                     this@PdfReaderViewModel.document.annotationProvider.removeAnnotationFromPage(
                         annotation
                     )
@@ -953,6 +965,42 @@ class PdfReaderViewModel @Inject constructor(
             }
         }
         pdfFragment.addOnAnnotationUpdatedListener(onAnnotationUpdatedListener!!)
+    }
+
+    private fun wasAnnotationsWithZeroSizeRemoved(
+        libraryId: LibraryIdentifier,
+        rItemKey: String,
+        annotation: Annotation
+    ): Boolean {
+        if (isAnnotationZeroSize(annotation)) {
+            this@PdfReaderViewModel.document.annotationProvider.removeAnnotationFromPage(
+                annotation
+            )
+            dbWrapperMain.realmDbStorage.perform(
+                MarkObjectsAsDeletedDbRequest(
+                    clazz = RItem::class,
+                    keys = listOf(rItemKey),
+                    libraryId = libraryId
+                )
+            )
+            return true
+        }
+        return false
+    }
+
+    private fun isAnnotationZeroSize(annotation: Annotation): Boolean {
+        val annotationRect = annotation.boundingBox
+        val width = (annotationRect.right - annotationRect.left).toInt()
+        val height = (annotationRect.top - annotationRect.bottom).toInt()
+        if (listOf(
+                AnnotationType.SQUARE,
+                AnnotationType.INK
+            ).contains(annotation.type) && (width == 0 || height == 0)
+        ) {
+            Timber.w("PdfReaderViewModel: Found an annotation of type ${annotation.type} having zero dimensions width=$width and height=$height")
+            return true
+        }
+        return false
     }
 
     private fun change(annotation: Annotation, changes: List<String>) {

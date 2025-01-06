@@ -50,18 +50,23 @@ class AnnotationConverter {
             username: String,
             boundingBoxConverter: AnnotationBoundingBoxConverter,
             isDarkMode: Boolean,
-        ): List<Annotation> = withContext(Dispatchers.IO) {
+        ): List<Triple<LibraryIdentifier, String, Annotation>> = withContext(Dispatchers.IO) {
             items.mapNotNull { item ->
                 val annotation = PDFDatabaseAnnotation.init(item) ?: return@mapNotNull null
-                annotation(
-                    zoteroAnnotation = annotation,
-                    type = type,
-                    currentUserId = currentUserId,
-                    library = library,
-                    displayName = displayName,
-                    username = username,
-                    boundingBoxConverter = boundingBoxConverter,
-                    isDarkMode = isDarkMode
+                val libraryId = item.libraryId ?: return@mapNotNull null
+                Triple(
+                    libraryId,
+                    item.key,
+                    annotation(
+                        zoteroAnnotation = annotation,
+                        type = type,
+                        currentUserId = currentUserId,
+                        library = library,
+                        displayName = displayName,
+                        username = username,
+                        boundingBoxConverter = boundingBoxConverter,
+                        isDarkMode = isDarkMode
+                    )
                 )
             }
         }

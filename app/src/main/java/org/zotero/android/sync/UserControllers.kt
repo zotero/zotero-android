@@ -14,7 +14,6 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.CleanupUnusedTags
-import org.zotero.android.database.requests.FixSquareAnnotationsWithZeroWidthOrHeightDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.websocket.ChangeWsResponse
 import timber.log.Timber
@@ -58,14 +57,6 @@ class UserControllers @Inject constructor(
             dbWrapperMain.realmDbStorage.perform(coordinatorAction = { coordinator ->
                 isFirstLaunch = coordinator.perform(InitializeCustomLibrariesDbRequest())
                 coordinator.perform(CleanupUnusedTags())
-
-                if (defaults.needsZeroWidthOrHeightAnnotationsFix()) {
-                    fileStore.annotationPreviews.deleteRecursively()
-                    fileStore.pageThumbnails.deleteRecursively()
-                    coordinator.perform(FixSquareAnnotationsWithZeroWidthOrHeightDbRequest())
-                    defaults.setNeedsZeroWidthOrHeightAnnotationsFix(false)
-                }
-
                 coordinator.invalidate()
             })
         }
