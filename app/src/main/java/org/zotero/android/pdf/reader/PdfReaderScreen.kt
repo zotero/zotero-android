@@ -43,9 +43,13 @@ internal fun PdfReaderScreen(
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val activity = LocalContext.current as? AppCompatActivity ?: return
+    val currentView = LocalView.current
     ObserveLifecycleEvent { event ->
         when (event) {
-            Lifecycle.Event.ON_STOP -> { viewModel.onStop(activity.isChangingConfigurations) }
+            Lifecycle.Event.ON_STOP -> {
+                currentView.keepScreenOn = false
+                viewModel.onStop(activity.isChangingConfigurations)
+            }
             else -> {}
         }
     }
@@ -66,7 +70,6 @@ internal fun PdfReaderScreen(
         val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val focusManager = LocalFocusManager.current
-        val currentView = LocalView.current
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 is PdfReaderViewEffect.NavigateBack -> {

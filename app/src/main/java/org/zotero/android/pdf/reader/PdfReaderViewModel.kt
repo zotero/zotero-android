@@ -2403,6 +2403,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun onStop(isChangingConfigurations: Boolean) {
+        disableForceScreenOnTimer?.cancel()
         if (!this::pdfFragment.isInitialized || this.pdfFragment.document == null) {
             //If pdfFragment is not yet initialized and onStop is called the most likely cause is that user has returned to the app after a while hence ViewModel was deinitialized and then user either very quickly:
             //1. Navigated to some other screen from PdfReaderScreen screen
