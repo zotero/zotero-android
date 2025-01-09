@@ -2057,7 +2057,11 @@ class PdfReaderViewModel @Inject constructor(
         fragmentManager.commit(allowStateLoss = true) {
             remove(this@PdfReaderViewModel.pdfUiFragment)
         }
-        pdfFragment.removeOnAnnotationUpdatedListener(onAnnotationUpdatedListener!!)
+        if (this::pdfFragment.isInitialized) {
+            onAnnotationUpdatedListener?.let {
+                pdfFragment.removeOnAnnotationUpdatedListener(it)
+            }
+        }
 
         EventBus.getDefault().unregister(this)
         liveAnnotations?.removeAllChangeListeners()
@@ -2072,16 +2076,18 @@ class PdfReaderViewModel @Inject constructor(
         annotationPreviewManager.cancelProcessing()
         annotationPreviewFileCache.cancelProcessing()
         clearThumbnailCaches()
-        document.annotationProvider
-            .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
-            .toList()
-            .blockingGet()
-            .forEach {
-                this.document.annotationProvider.removeAnnotationFromPage(it)
-            }
-        val activity = pdfUiFragment.activity
-        if (activity != null) {
-            WindowCompat.getInsetsController(activity.window, activity.window.decorView).show(
+        if (this::document.isInitialized) {
+            document.annotationProvider
+                .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
+                .toList()
+                .blockingGet()
+                .forEach {
+                    this.document.annotationProvider.removeAnnotationFromPage(it)
+                }
+        }
+
+        pdfUiFragment.activity?.let {
+            WindowCompat.getInsetsController(it.window, it.window.decorView).show(
                 WindowInsetsCompat.Type.systemBars()
             )
         }
