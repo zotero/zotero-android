@@ -20,6 +20,7 @@ import org.zotero.android.ktx.previewId
 import org.zotero.android.ktx.shouldRenderPreview
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
 import org.zotero.android.sync.LibraryIdentifier
+import timber.log.Timber
 import java.io.FileOutputStream
 import java.util.Collections
 import javax.inject.Inject
@@ -43,9 +44,6 @@ class AnnotationPreviewManager @Inject constructor(
         isDark: Boolean,
         annotationMaxSideSize: Int,
     ) {
-        if (!annotation.shouldRenderPreview || !annotation.isZoteroAnnotation || !annotation.isAttached) {
-            return
-        }
         enqueue(
             annotation = annotation,
             key = annotation.previewId,
@@ -104,7 +102,7 @@ class AnnotationPreviewManager @Inject constructor(
         isDark: Boolean = false,
         bitmapSize: Int
     ) = coroutineScope.launch {
-        if (currentlyProcessingAnnotations.contains(key)) {
+        if (currentlyProcessingAnnotations.contains(key) || !isAnnotationInDrawableState(annotation)) {
             return@launch
         }
         currentlyProcessingAnnotations.add(key)
@@ -114,6 +112,10 @@ class AnnotationPreviewManager @Inject constructor(
             rawDocument = rawDocument,
             maxSide = bitmapSize
         )
+
+        if (!isAnnotationInDrawableState(annotation)) {
+            return@launch
+        }
 
         val shouldDrawAnnotation = annotation is InkAnnotation || annotation is FreeTextAnnotation
         if (shouldDrawAnnotation) {
@@ -223,6 +225,15 @@ class AnnotationPreviewManager @Inject constructor(
             isDark = isDark
         )
         tempFile.renameTo(finalFile)
+    }
+
+    fun isAnnotationInDrawableState(annotation: Annotation): Boolean {
+        val isInDrawableState =
+            annotation.shouldRenderPreview && annotation.isZoteroAnnotation && annotation.isAttached
+        if (!annotation.isAttached) {
+            Timber.w("Trying to draw an annotation while it's not in an attached state. Skipping.")
+        }
+        return isInDrawableState
     }
 
     fun cancelProcessing() {
