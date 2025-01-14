@@ -100,7 +100,7 @@ internal class PdfSettingsViewModel @Inject constructor(
     }
 
     fun onOptionSelected(optionOrdinal: Int) {
-        val option = PdfSettingsOptions.values()[optionOrdinal]
+        val option = PdfSettingsOptions.entries[optionOrdinal]
 
         when (option) {
             PdfSettingsOptions.PageTransitionJump, PdfSettingsOptions.PageTransitionContinuous -> {
@@ -129,11 +129,11 @@ internal class PdfSettingsViewModel @Inject constructor(
                 }
             }
         }
-        sendChangedSettings(option)
+        updatePdfSettings(option)
 
     }
 
-    private fun sendChangedSettings(option: PdfSettingsOptions) {
+    private fun updatePdfSettings(option: PdfSettingsOptions) {
         when (option) {
             PdfSettingsOptions.PageTransitionJump -> {
                 pdfSettings.transition = PageScrollMode.JUMP
@@ -183,12 +183,14 @@ internal class PdfSettingsViewModel @Inject constructor(
                 pdfSettings.appearanceMode = PageAppearanceMode.AUTOMATIC
             }
         }
-
-        EventBus.getDefault().post(PdfSettingsChangeResult(pdfSettings))
     }
 
     fun setOsTheme(isDark: Boolean) {
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+    }
+
+    fun sendSettingsParams() {
+        EventBus.getDefault().post(PdfSettingsChangeResult(pdfSettings))
     }
 
 }
@@ -228,5 +230,4 @@ internal data class PdfSettingsViewState(
 }
 
 internal sealed class PdfSettingsViewEffect : ViewEffect {
-    object NavigateBack : PdfSettingsViewEffect()
 }

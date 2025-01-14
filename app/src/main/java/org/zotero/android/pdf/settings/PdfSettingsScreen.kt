@@ -23,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.settings.PdfSettingsViewEffect.NavigateBack
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsOptions
 import org.zotero.android.uicomponents.CustomScaffold
@@ -40,8 +39,14 @@ internal fun PdfSettingsScreen(
     onBack: () -> Unit,
     viewModel: PdfSettingsViewModel = hiltViewModel(),
 ) {
-    BackHandler(onBack = {
+
+    val sendParamsAndBack: () -> Unit = {
+        viewModel.sendSettingsParams()
         onBack()
+    }
+
+    BackHandler(onBack = {
+        sendParamsAndBack()
     })
     LaunchedEffect(args) {
         viewModel.init(args = args)
@@ -49,21 +54,14 @@ internal fun PdfSettingsScreen(
 
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfSettingsViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
     CustomThemeWithStatusAndNavBars(
         isDarkTheme = viewState.isDark,
         statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor
     ) {
-        LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
-                NavigateBack -> onBack()
-                null -> Unit
-            }
-        }
         CustomScaffold(
             topBar = {
                 PdfSettingsTopBar(
-                    onDone = onBack,
+                    onDone = sendParamsAndBack,
                 )
             },
         ) {
