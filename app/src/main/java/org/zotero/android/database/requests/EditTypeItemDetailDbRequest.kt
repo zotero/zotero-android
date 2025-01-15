@@ -100,8 +100,17 @@ class EditTypeItemDetailDbRequest(
         }
 
     }
-    private fun update(creatorIds: List<String>, creators: Map<String, ItemDetailCreator>, item: RItem, changes: MutableList<RItemChanges>, database: Realm) {
-        val toRemove =item.creators.where().rawPredicate("not uuid in %@", creatorIds).findAll()
+    private fun update(
+        creatorIds: List<String>,
+        creators: Map<String, ItemDetailCreator>,
+        item: RItem,
+        changes: MutableList<RItemChanges>,
+        database: Realm
+    ) {
+        val toRemove = item.creators.where()
+            .not()
+            .`in`("uuid", creatorIds.toTypedArray())
+            .findAll()
 
         if (!toRemove.isEmpty()) {
             changes.add(RItemChanges.creators)
@@ -111,7 +120,7 @@ class EditTypeItemDetailDbRequest(
         for (creatorId in creatorIds) {
             val creator = creators[creatorId] ?: continue
             val rCreator =
-                item.creators.where().rawPredicate("uuid == %@", creatorId).findFirst() ?: continue
+                item.creators.where().equalTo("uuid", creatorId).findFirst() ?: continue
             if (rCreator.rawType == creator.type) {
                 continue
             }
