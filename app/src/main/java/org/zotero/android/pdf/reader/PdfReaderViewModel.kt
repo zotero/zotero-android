@@ -821,7 +821,17 @@ class PdfReaderViewModel @Inject constructor(
             is CustomResult.GeneralSuccess -> {
                 this.liveAnnotations?.removeAllChangeListeners()
                 this.liveAnnotations = dbResult.value!!.first
-                val storedPage = dbResult.value!!.second
+                var storedPage = dbResult.value!!.second
+                //We have cases where presumably -1 was saved to DB as storedPage against some PDF documents causing a crash on PDF document open.
+                //Assumption is that PSPDFKIT's pageIndex method returned -1 for when it didn't have it's 'document' completely initialized when user returned to the app after a long time and immediately backed from PdfScreen
+                //-1 should no longer be saved as storedPage as 00950b1 commit should cover for it, by ensuring 'document' is not null
+                //But we still need to clean Database entries with -1 storedPage
+                if (storedPage == -1) {
+                    Timber.w("storedPage was found to be -1")
+                    storedPage = 0
+                    submitPendingPage(0)
+                }
+
                 observe(liveAnnotations!!)
                 this.databaseAnnotations = liveAnnotations!!.freeze()
                 val documentAnnotations = loadAnnotations(
