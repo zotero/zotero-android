@@ -36,6 +36,11 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.delete_24px
     )
 
+    data class ShareAttachmentFile(val attachment: Attachment): LongPressOptionItem(
+        titleId = Strings.item_detail_share_attachment_file,
+        resIcon = Drawables.baseline_share_24
+    )
+
     data class DeleteAttachmentFile(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.item_detail_delete_attachment_file,
         resIcon = Drawables.delete_24px
@@ -57,6 +62,12 @@ sealed class LongPressOptionItem(
         textAndIconColor = CustomPalette.ErrorRed,
         resIcon = Drawables.delete_24px
     )
+
+    data class ShareDownload(val item: RItem): LongPressOptionItem(
+        titleId = Strings.items_action_share_download,
+        resIcon = Drawables.baseline_share_24
+    )
+
     data class RemoveDownload(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_remove_download,
         resIcon = Drawables.delete_24px
