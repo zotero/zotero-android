@@ -56,3 +56,11 @@ buildSrc/gradle/
 app/src/main/assets/translators/
 app/src/main/assets/translation_commit_hash.txt
 app/src/main/assets/translator.zip
+
+#pdf-worker generated files:
+app/src/main/assets/pdf-worker_commit_hash.txt
+app/src/main/assets/pdf-worker.zip
+
+/pdf-worker/cmaps/
+/pdf-worker/standard_fonts/
+/pdf-worker/worker.js
