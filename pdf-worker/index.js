@@ -23,8 +23,8 @@
     ***** END LICENSE BLOCK *****
 */
 
-const pdfReaderCMapsURL =  "file:///data/data/org.zotero.android.debug/files/pdf-worker/cmaps";
-const pdfReaderStandardFontsURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/standard_fonts";
+const pdfReaderCMapsURL =  "file:///data/data/org.zotero.android.debug/files/pdf-worker/cmaps/";
+const pdfReaderStandardFontsURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/standard_fonts/";
 const pdfWorkerURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/worker.js";
 
 function recognizePdf(pdfFileUrl) {
@@ -36,21 +36,6 @@ function recognizePdf(pdfFileUrl) {
          });
      });
     }
-
-function fetchLocal(url) {
-    return new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = function() {
-        resolve(this.response)
-        }
-        xhr.onerror = function() {
-          reject(new TypeError('Local request failed'))
-        }
-        xhr.open('GET', url)
-        xhr.send(null)
-  })
-}
 
 window.addEventListener('DOMContentLoaded', function() {
     Zotero.Debug.init(1);

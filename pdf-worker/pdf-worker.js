@@ -94,12 +94,10 @@ class PDFWorker {
 				let respData = null;
 				try {
 					if (message.action === 'FetchBuiltInCMap') {
-					    Zotero.debug("FetchBuiltInCMap");
-						const response = await fetch(this.config.pdfReaderCMapsURL + message.data + '.bcmap');
-						const arrayBuffer = await response.arrayBuffer();
+						const arrayBuffer = await fetchLocal(this.config.pdfReaderCMapsURL + message.data + '.bcmap');
 						respData = {
 							compressionType: 1,
-							cMapData: new Uint8Array(arrayBuffer)
+							cMapData: arrayBuffer
 						};
 					}
 				}
@@ -110,10 +108,8 @@ class PDFWorker {
 
 				try {
 					if (message.action === 'FetchStandardFontData') {
-					    Zotero.debug("FetchStandardFontData");
-						const response = await fetch(this.config.pdfReaderStandardFontsURL + message.data);
-						const arrayBuffer = await response.arrayBuffer();
-						respData = new Uint8Array(arrayBuffer);
+						const arrayBuffer = await fetchLocal(this.config.pdfReaderStandardFontsURL + message.data);
+						respData = arrayBuffer;
 					}
 				}
 				catch (e) {
