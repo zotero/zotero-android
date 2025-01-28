@@ -28,12 +28,31 @@ function fetchLocal(url) {
         var xhr = new XMLHttpRequest
         xhr.responseType = 'arraybuffer';
         xhr.onload = function() {
-        resolve(this.response)
+        resolve(this.response);
         }
         xhr.onerror = function() {
-          reject(new TypeError('Local request failed'))
+          reject(new TypeError('Local request failed:' + url));
         }
         xhr.open('GET', url)
         xhr.send(null)
   })
+}
+
+const pick = (object, pickKeys) => {
+	if(typeof(pickKeys) === 'function') {
+		return Object.entries(object)
+			.reduce((aggr, [key, value]) => {
+				if(pickKeys(key)) { aggr[key] = value; }
+				return aggr;
+		}, {});
+	}
+	if(!Array.isArray(pickKeys)) {
+		pickKeys = [pickKeys];
+	}
+
+	return Object.entries(object)
+		.reduce((aggr, [key, value]) => {
+			if(pickKeys.includes(key)) { aggr[key] = value; }
+			return aggr;
+	}, {});
 }

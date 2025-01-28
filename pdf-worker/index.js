@@ -23,19 +23,28 @@
     ***** END LICENSE BLOCK *****
 */
 
-const pdfReaderCMapsURL =  "file:///data/data/org.zotero.android.debug/files/pdf-worker/cmaps/";
-const pdfReaderStandardFontsURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/standard_fonts/";
-const pdfWorkerURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/worker.js";
+var pdfReaderCMapsURL;
+var pdfReaderStandardFontsURL;
 
-function recognizePdf(pdfFileUrl) {
-    fetchLocal(pdfFileUrl).then(function(pdfBytes) {
-        const pdfWorker = window.pdfWorker(pdfWorkerURL, pdfReaderCMapsURL, pdfReaderStandardFontsURL);
-        const recognizerInputData = pdfWorker.getRecognizerData(pdfBytes);
-        recognizerInputData.then(function(data) {
-            sendToPort("recognizePdfData", data);
-         });
-     });
+var pdfWorkerURL;
+
+const recognizerUrl = "https://services.zotero.org/recognizer";
+
+function recognizePdf(isDebug, pdfFileUrl, pdfFileName) {
+    if (isDebug) {
+        pdfReaderCMapsURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/cmaps/";
+        pdfReaderStandardFontsURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/standard_fonts/";
+
+        pdfWorkerURL = "file:///data/data/org.zotero.android.debug/files/pdf-worker/worker.js";
+    } else {
+        pdfReaderCMapsURL = "file:///data/data/org.zotero.android/files/pdf-worker/cmaps/";
+        pdfReaderStandardFontsURL = "file:///data/data/org.zotero.android/files/pdf-worker/standard_fonts/";
+
+        pdfWorkerURL = "file:///data/data/org.zotero.android/files/pdf-worker/worker.js";
     }
+
+    window.retrieveMetadata(pdfFileUrl, pdfFileName);
+}
 
 window.addEventListener('DOMContentLoaded', function() {
     Zotero.Debug.init(1);

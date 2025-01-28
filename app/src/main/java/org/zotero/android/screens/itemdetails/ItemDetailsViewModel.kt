@@ -7,7 +7,6 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
 import io.realm.RealmObjectChangeListener
@@ -24,7 +23,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.joda.time.DateTime
-import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
@@ -33,7 +31,6 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.ARG_ITEM_DETAILS_SCREEN
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
@@ -73,7 +70,6 @@ import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.index
 import org.zotero.android.pdf.data.PdfReaderArgs
-import org.zotero.android.pdfworker.web.PdfWorkerWebCallChainExecutor
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
@@ -147,9 +143,6 @@ class ItemDetailsViewModel @Inject constructor(
     private val context: Context,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     stateHandle: SavedStateHandle,
-    private val dispatchers: Dispatchers,
-    private val gson: Gson,
-    private val nonZoteroApi: NonZoteroApi,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
     val screenArgs: ItemDetailsArgs by lazy {
@@ -228,14 +221,6 @@ class ItemDetailsViewModel @Inject constructor(
 
         initViewState(screenArgs)
         loadInitialData()
-
-        pdfWorkerWebCallChainExecutor = PdfWorkerWebCallChainExecutor(
-            context = this.context,
-            dispatchers = dispatchers,
-            gson = gson,
-            fileStore = fileStore,
-            nonZoteroApi = nonZoteroApi,
-        )
     }
 
     private fun setupFileObservers() {
@@ -349,9 +334,6 @@ class ItemDetailsViewModel @Inject constructor(
 
 
     }
-
-    private var pdfWorkerWebCallChainExecutor: PdfWorkerWebCallChainExecutor? = null
-
 
     private fun loadInitialData() {
         val key = viewState.key
