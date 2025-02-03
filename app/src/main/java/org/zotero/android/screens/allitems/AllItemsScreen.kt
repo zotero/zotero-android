@@ -41,6 +41,7 @@ internal fun AllItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
+    navigateToRetrieveMetadata: (params: String) -> Unit,
     navigateToAllItemsSort: () -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToItemDetails: (String) -> Unit,
@@ -77,6 +78,10 @@ internal fun AllItemsScreen(
 
                 is AllItemsViewEffect.ShowAddByIdentifierEffect -> {
                     navigateToAddByIdentifier(consumedEffect.params)
+                }
+
+                is AllItemsViewEffect.ShowRetrieveMetadataDialogEffect -> {
+                    navigateToRetrieveMetadata(consumedEffect.params)
                 }
 
                 AllItemsViewEffect.ShowSortPickerEffect -> {

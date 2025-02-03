@@ -18,12 +18,12 @@ import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
-import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.screens.addbyidentifier.data.AddByIdentifierPickerArgs
 import org.zotero.android.screens.addbyidentifier.data.ISBNParser
 import org.zotero.android.screens.addbyidentifier.data.LookupRow
 import org.zotero.android.screens.addbyidentifier.data.LookupRowItem
+import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -65,6 +65,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
 
     private fun initialize(collectionKeys: Set<String>, libraryId: LibraryIdentifier) {
         identifierLookupController.initialize(
+            lookupMode = IdentifierLookupMode.normal,
             libraryId = libraryId,
             collectionKeys = collectionKeys
         ) { lookupData ->
@@ -325,6 +326,10 @@ internal class AddByIdentifierViewModel @Inject constructor(
                             )
                         }
                         rowsList.addAll(attachments)
+                    }
+
+                    is IdentifierLookupController.LookupData.State.translatedForRecognizer -> {
+                        //no-op
                     }
                 }
             }

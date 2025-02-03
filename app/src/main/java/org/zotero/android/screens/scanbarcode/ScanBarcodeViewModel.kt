@@ -17,15 +17,16 @@ import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.files.FileStore
+import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
+import org.zotero.android.screens.addbyidentifier.IdentifierLookupMode
+import org.zotero.android.screens.addbyidentifier.TranslatorLoadedEventStream
+import org.zotero.android.screens.addbyidentifier.data.LookupRow
+import org.zotero.android.screens.addbyidentifier.data.LookupRowItem
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewEffect.NavigateBack
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewModel.State
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
-import org.zotero.android.screens.addbyidentifier.TranslatorLoadedEventStream
-import org.zotero.android.screens.addbyidentifier.data.LookupRow
-import org.zotero.android.screens.addbyidentifier.data.LookupRowItem
 import timber.log.Timber
 import java.util.LinkedList
 import javax.inject.Inject
@@ -83,6 +84,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
 
     private fun initialize(collectionKeys: Set<String>, libraryId: LibraryIdentifier) {
         identifierLookupController.initialize(
+            lookupMode = IdentifierLookupMode.normal,
             libraryId = libraryId,
             shouldSkipLookupsCleaning = true,
             collectionKeys = collectionKeys
@@ -294,6 +296,9 @@ internal class ScanBarcodeViewModel @Inject constructor(
                             )
                         }
                         rowsList.addAll(attachments)
+                    }
+                    is IdentifierLookupController.LookupData.State.translatedForRecognizer -> {
+                        //no-op
                     }
                 }
             }

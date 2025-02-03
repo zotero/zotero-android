@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.BuildConfig
 import org.zotero.android.ZoteroApplication
-import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -26,7 +25,6 @@ class PdfWorkerWebCallChainExecutor(
     private val dispatchers: Dispatchers,
     private val gson: Gson,
     private val fileStore: FileStore,
-    private val nonZoteroApi: NonZoteroApi,
 ) {
 
     private lateinit var pdfWorkerWebViewHandler: PdfWorkerWebViewHandler
@@ -47,8 +45,6 @@ class PdfWorkerWebCallChainExecutor(
             pdfWorkerWebViewHandler = PdfWorkerWebViewHandler(
                 dispatchers = dispatchers,
                 context = context,
-                gson = gson,
-                nonZoteroApi = nonZoteroApi
             )
             initialize()
             Timber.i("PdfWorkerWebCallChainExecutor: initialization succeeded")
@@ -114,12 +110,11 @@ class PdfWorkerWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "FINISHED_RECOGNIZE_GOT_NOTHING" -> {
-                            Result.Failure(PdfWorkerRecognizeError.nothingWasRecognized)
+                            observable.emitAsync(Result.Success(PdfWorkerRecognizedData.recognizedDataIsEmpty))
                         }
                     }
-
-                    Timber.d("PdfWorkerWebCallChainExecutor: recognizeStage: " + bodyElement)
                 }
 
                 "logHandler" -> {

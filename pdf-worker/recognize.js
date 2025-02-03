@@ -8,23 +8,6 @@ const retrieveMetadata = (pdfFileUrl, pdfFileName) => {
 		try {
 			const recognizerData = await getRecognizerData(pdfFileUrl, pdfFileName)();
 			await recognizePDF(recognizerData)();
-//			const recognizedItem = await recognizePDF(recognizerData)();
-//			delete recognizedItem.key;
-//          delete recognizedItem.version;
-//			sendRecognizeStage("UPDATE_RECOGNIZE_DOCUMENT", { stage: 2});
-//			if (recognizedItem === null) {
-//			    sendRecognizeStage("ERROR_RECOGNIZE_DOCUMENT", {error: 'No data was recognized'});
-//			} else {
-//                delete recognizedItem.key;
-//                delete recognizedItem.version;
-//                sendRecognizeStage("FINISHED_RECOGNIZE_NO_IDENTIFIER", recognizedItem);
-//			}
-
-//			recognizedItem.collections = [...attachmentItem.collections];
-//			const item = await dispatch(createItem(recognizedItem, libraryKey));
-//			dispatch({ type: UPDATE_RECOGNIZE_DOCUMENT, itemKey, libraryKey, stage: 3 });
-//			await dispatch(updateItem(itemKey, { parentItem: item.key, collections: [] }, libraryKey));
-//			dispatch({ type: COMPLETE_RECOGNIZE_DOCUMENT, itemKey, libraryKey, parentItemKey: item.key });
 		} catch (error) {
 		    const errorMessage = error?.message ?? 'Failed to recognize document';
 		    sendRecognizeStage("ERROR_RECOGNIZE_DOCUMENT", errorMessage);
@@ -121,7 +104,7 @@ const recognizePDF = (recognizerData) => {
 				type = 'bookSection';
 			}
 			const newItem = {
-				type,
+				itemType: type,
 				creators: recognizerData.authors.map(author => ({
 					creatorType: 'author', ...pick(author, ['firstName', 'lastName'])
 				})),

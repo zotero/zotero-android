@@ -87,6 +87,11 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.add_24px
     )
 
+    data class RetrieveMetadata(val item: RItem): LongPressOptionItem(
+        titleId = Strings.items_action_retrieve_metadata,
+        resIcon = Drawables.retrieve_metadata_24px
+    )
+
     data class TrashRestore(val item: RItem): LongPressOptionItem(
         titleId = Strings.restore,
         resIcon = Drawables.restore_trash

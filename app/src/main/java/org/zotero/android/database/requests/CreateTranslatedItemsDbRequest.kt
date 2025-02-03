@@ -2,7 +2,8 @@ package org.zotero.android.database.requests
 
 import io.realm.Realm
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbResponseRequest
+import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.UpdatableChangeType
@@ -13,19 +14,20 @@ class CreateTranslatedItemsDbRequest(
     private val responses: List<ItemResponse>,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
-) : DbRequest {
+) : DbResponseRequest<List<RItem>> {
 
     override val needsWrite: Boolean
         get() = true
 
-    override fun process(database: Realm) {
+    override fun process(database: Realm): List<RItem> {
+        val listOfCreatedItems: MutableList<RItem> = mutableListOf()
         for (response in this.responses) {
             val (item, _) = StoreItemDbRequest(
                 response = response,
                 schemaController = this.schemaController,
                 dateParser = this.dateParser,
                 preferRemoteData = true,
-                denyIncorrectCreator = false
+                denyIncorrectCreator = false,
             )
                 .process(database)
 
@@ -53,6 +55,8 @@ class CreateTranslatedItemsDbRequest(
                 changes.add(RItemChanges.tags)
             }
             item.changes.add(RObjectChange.create(changes = changes))
+            listOfCreatedItems.add(item)
         }
+        return listOfCreatedItems
     }
 }
