@@ -42,10 +42,12 @@ fun NavGraphBuilder.dialogFixedMaxHeight(
 
 fun NavGraphBuilder.dialogDynamicHeight(
     route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
     content: @Composable () -> Unit,
 ) {
     customDialog(
         route = route,
+        arguments = arguments,
         dialogModifier = Modifier.fillMaxHeight(0.8f),
         content = content
     )

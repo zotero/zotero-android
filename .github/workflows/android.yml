@@ -51,6 +51,12 @@ jobs:
       - name: Execute bundle_translation.py
         run: python3 scripts/bundle_translation.py
 
+      - name: Grant execute permission for bundle_pdf-worker.py
+        run: chmod +x scripts/bundle_pdf-worker.py
+
+      - name: Execute bundle_pdf-worker.py
+        run: python3 scripts/bundle_pdf-worker.py
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

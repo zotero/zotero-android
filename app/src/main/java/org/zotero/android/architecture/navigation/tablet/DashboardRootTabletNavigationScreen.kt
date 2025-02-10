@@ -37,6 +37,7 @@ internal fun DashboardRootTabletNavigationScreen(
     onShowPdf: (String) -> Unit,
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
+    navigateToRetrieveMetadata: (params: String) -> Unit,
     viewModel: DashboardViewModel,
 ) {
     val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
@@ -81,6 +82,7 @@ internal fun DashboardRootTabletNavigationScreen(
                         onOpenWebpage = onOpenWebpage,
                         toAddOrEditNote = toAddOrEditNote,
                         toZoteroWebViewScreen = toZoteroWebViewScreen,
+                        navigateToRetrieveMetadata = navigateToRetrieveMetadata,
                         navController = rightPaneNavController,
                         navigation = rightPaneNavigation
                     )

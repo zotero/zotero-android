@@ -15,10 +15,12 @@ import org.zotero.android.screens.libraries.LibrariesScreen
 import org.zotero.android.screens.loading.LoadingScreen
 import org.zotero.android.screens.mediaviewer.image.ImageViewerScreen
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
+import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.webview.ZoteroWebViewScreen
 import java.io.File
 
 internal const val ARG_ITEM_DETAILS_SCREEN = "itemDetailsArgs"
+internal const val ARG_RETRIEVE_METADATA = "retrieveMetadataArgs"
 
 fun NavGraphBuilder.allItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
@@ -27,6 +29,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToSinglePicker: () -> Unit,
     navigateToAllItemsSort: () -> Unit,
     navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
+    navigateToRetrieveMetadata: (params: String) -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
@@ -59,6 +62,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToTagFilter = navigateToTagFilter,
             navigateToCollectionPicker = navigateToCollectionPicker,
             navigateToScanBarcode = navigateToScanBarcode,
+            navigateToRetrieveMetadata = navigateToRetrieveMetadata,
         )
     }
 }
@@ -191,6 +195,17 @@ fun NavGraphBuilder.collectionsScreen(
     }
 }
 
+fun NavGraphBuilder.retrieveMetadataScreen() {
+    dialogFixedMaxHeight(
+        route = "${CommonScreenDestinations.RETRIEVE_METADATA_SCREEN}/{$ARG_RETRIEVE_METADATA}",
+        arguments = listOf(
+            navArgument(ARG_RETRIEVE_METADATA) { type = NavType.StringType },
+        ),
+    ) {
+        RetrieveMetadataScreen()
+    }
+}
+
 object CommonScreenDestinations {
     const val LOADING = "loading"
     const val LIBRARIES_SCREEN = "librariesScreen"
@@ -202,6 +217,7 @@ object CommonScreenDestinations {
     const val IMAGE_VIEWER_SCREEN = "imageViewerScreen"
     const val COLLECTIONS_SCREEN = "collectionsScreen"
     const val ZOTERO_WEB_VIEW_SCREEN = "zoteroWebViewScreen"
+    const val RETRIEVE_METADATA_SCREEN = "retrieveMetadataScreen"
 }
 
 
@@ -225,4 +241,8 @@ fun ZoteroNavigation.toZoteroWebViewScreen(encodedUrl: String) {
     navController.navigate(
         "${CommonScreenDestinations.ZOTERO_WEB_VIEW_SCREEN}/$encodedUrl"
     )
+}
+
+fun ZoteroNavigation.toRetrieveMetadata(args: String) {
+    navController.navigate("${CommonScreenDestinations.RETRIEVE_METADATA_SCREEN}/$args")
 }

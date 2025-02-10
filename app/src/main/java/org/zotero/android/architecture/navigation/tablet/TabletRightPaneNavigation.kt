@@ -22,12 +22,12 @@ import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
+import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.sortpicker.SortPickerNavigation
 import org.zotero.android.screens.tagpicker.TagPickerScreen
-import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import java.io.File
@@ -39,6 +39,7 @@ internal fun TabletRightPaneNavigation(
     onShowPdf: (String) -> Unit,
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
+    navigateToRetrieveMetadata: (params: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     navController: NavHostController,
     navigation: ZoteroNavigation,
@@ -66,6 +67,7 @@ internal fun TabletRightPaneNavigation(
             navigateToTagFilter = { },
             navigateToCollectionPicker = navigation::toCollectionPickerDialog,
             navigateToScanBarcode = navigation::toScanBarcodeDialog,
+            navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(

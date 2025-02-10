@@ -19,10 +19,11 @@ import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
+import org.zotero.android.pdfworker.loader.PdfWorkerLoader
+import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsLoader
-import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,6 +47,7 @@ class Controllers @Inject constructor(
     private val crashReporter: CrashReporter,
     private val translatorsLoader: TranslatorsLoader,
     private val translationLoader: TranslationLoader,
+    private val pdfWorkerLoader: PdfWorkerLoader,
     private val context: Context,
     private val identifierLookupController: IdentifierLookupController,
     ) {
@@ -67,7 +69,7 @@ class Controllers @Inject constructor(
     }
 
     private fun startApp() {
-        updateTranslatorAndTranslatorItems()
+        updateBundledItems()
         val controllers = this.userControllers
         val session = this.sessionDataEventStream.currentValue()
         if (session != null && controllers.isControllerInitialized) {
@@ -75,11 +77,12 @@ class Controllers @Inject constructor(
         }
     }
 
-    private fun updateTranslatorAndTranslatorItems() {
+    private fun updateBundledItems() {
         coroutineScope.launch {
             try {
                 translationLoader.updateTranslationIfNeeded()
                 translatorsLoader.updateTranslatorItemsIfNeeded()
+                pdfWorkerLoader.updatePdfWorkerIfNeeded()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
             }

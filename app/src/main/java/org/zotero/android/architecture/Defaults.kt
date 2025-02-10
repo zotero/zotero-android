@@ -50,6 +50,7 @@ open class Defaults @Inject constructor(
     private val lastTranslatorCommitHash = "lastTranslatorCommitHash"
     private val lastTranslatorDeleted = "lastTranslatorDeleted"
     private val lastStylesCommitHash = "lastStylesCommitHash"
+    private val lastPdfWorkerCommitHash = "lastPdfWorkerCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -393,6 +394,14 @@ open class Defaults @Inject constructor(
             return currentPerformFullSyncGuard
         }
         return sharedPreferences.getInt(performFullSyncGuardKey, 1)
+    }
+
+    fun getLastPdfWorkerCommitHash(): String {
+        return sharedPreferences.getString(lastPdfWorkerCommitHash, "") ?: ""
+    }
+
+    fun setLastPdfWorkerCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
     }
 
     fun reset() {

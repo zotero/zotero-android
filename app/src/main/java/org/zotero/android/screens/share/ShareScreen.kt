@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.screens.retrievemetadata.data.RetrieveMetadataState
 import org.zotero.android.screens.share.ShareViewEffect.NavigateBack
 import org.zotero.android.screens.share.ShareViewEffect.NavigateToCollectionPickerScreen
 import org.zotero.android.screens.share.ShareViewEffect.NavigateToTagPickerScreen
@@ -52,6 +53,8 @@ internal fun ShareScreen(
                 null -> Unit
             }
         }
+        val isSubmitting = viewState.isSubmitting
+        val isRetrieveMetadataLoading = viewState.retrieveMetadataState is RetrieveMetadataState.loading
         CustomScaffold(
             backgroundColor = backgroundColor,
             topBar = {
@@ -60,10 +63,10 @@ internal fun ShareScreen(
                     onSave = {
                         viewModel.submitAsync()
                     },
-                    isLeftButtonEnabled = !viewState.isSubmitting,
-                    isRightButtonEnabled = !viewState.isSubmitting && viewState.attachmentState.isSubmittable,
+                    isLeftButtonEnabled = !isSubmitting,
+                    isRightButtonEnabled = !isSubmitting && viewState.attachmentState.isSubmittable && !isRetrieveMetadataLoading,
                     attachmentError = viewState.attachmentState.error,
-                    isSubmitting = viewState.isSubmitting,
+                    isLoading = isSubmitting || isRetrieveMetadataLoading,
                     state = viewState.attachmentState,
                 )
             },
@@ -110,7 +113,7 @@ internal fun ShareScreen(
                         state = viewState.attachmentState,
                         itemState = viewState.itemPickerState,
                         hasItem = hasItem,
-                        isSubmitting = viewState.isSubmitting
+                        isSubmitting = isSubmitting
                     )
                 }
             }

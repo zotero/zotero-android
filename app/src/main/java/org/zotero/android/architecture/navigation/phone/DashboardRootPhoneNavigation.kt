@@ -29,9 +29,11 @@ import org.zotero.android.architecture.navigation.imageViewerScreen
 import org.zotero.android.architecture.navigation.itemDetailsScreen
 import org.zotero.android.architecture.navigation.librariesScreen
 import org.zotero.android.architecture.navigation.loadingScreen
+import org.zotero.android.architecture.navigation.retrieveMetadataScreen
 import org.zotero.android.architecture.navigation.toAddOrEditNote
 import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
+import org.zotero.android.architecture.navigation.toRetrieveMetadata
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
@@ -40,6 +42,7 @@ import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
+import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
@@ -55,7 +58,6 @@ import org.zotero.android.screens.settings.toSettingsScreen
 import org.zotero.android.screens.sortpicker.sortPickerNavScreens
 import org.zotero.android.screens.sortpicker.toSortPicker
 import org.zotero.android.screens.tagpicker.TagPickerScreen
-import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -134,6 +136,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
                     navigateToImageViewerScreen = navigation::toImageViewerScreen,
                     navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
+                    navigateToRetrieveMetadata = navigation::toRetrieveMetadata,
                     navigateToTagFilter = navigation::toTagFilter,
                     navigateToAddByIdentifier = navigation::toAddByIdentifier,
                     navigateToCollectionPicker = navigation::toCollectionPicker,
@@ -234,6 +237,7 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToTagPicker = navigation::toTagPicker
                 )
                 zoterWebViewScreen(onClose = navigation::onBack)
+                retrieveMetadataScreen()
             }
         }
         DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

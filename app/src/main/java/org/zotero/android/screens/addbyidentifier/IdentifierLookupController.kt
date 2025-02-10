@@ -3,7 +3,9 @@ package org.zotero.android.screens.addbyidentifier
 import android.content.Context
 import android.webkit.MimeTypeMap
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -22,12 +24,13 @@ import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventSt
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.CreateAttachmentDbRequest
 import org.zotero.android.database.requests.CreateTranslatedItemsDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.unmarshalMap
-import org.zotero.android.screens.addbyidentifier.data.LookupData
+import org.zotero.android.screens.addbyidentifier.data.IdentifierLookupMode
 import org.zotero.android.screens.addbyidentifier.data.LookupSettings
 import org.zotero.android.screens.share.data.FilenameFormatter
 import org.zotero.android.sync.DateParser
@@ -59,6 +62,7 @@ class IdentifierLookupController @Inject constructor(
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
 ) {
 
+    private lateinit var lookupMode: IdentifierLookupMode
     private var lookupData: MutableMap<String, LookupData> = mutableMapOf()
     private var lookupSavedCount = 0
     private var lookupFailedCount = 0
@@ -78,6 +82,8 @@ class IdentifierLookupController @Inject constructor(
 
     lateinit var observable: EventStream<Update>
 
+    private var recognizerData: JsonObject? = null
+
     init {
         setupObservers()
     }
@@ -85,11 +91,13 @@ class IdentifierLookupController @Inject constructor(
     private var shouldSkipLookupsCleaning = false
 
     fun initialize(
+        lookupMode: IdentifierLookupMode,
         libraryId: LibraryIdentifier,
         collectionKeys: Set<String>,
         shouldSkipLookupsCleaning: Boolean = false,
         completion: (List<LookupData>?) -> Unit
     ) {
+        this.lookupMode = lookupMode
         this.shouldSkipLookupsCleaning = shouldSkipLookupsCleaning
         observable = EventStream<Update>(
             ZoteroApplication.instance.applicationScope
@@ -194,49 +202,78 @@ class IdentifierLookupController @Inject constructor(
 
         fun parse(
             itemData: JsonObject,
-            libraryId: LibraryIdentifier,
-            collectionKeys: Set<String>,
+            lookupSettings: LookupSettings,
             schemaController: SchemaController,
             dateParser: DateParser,
         ): Pair<ItemResponse, List<Pair<Attachment, String>>>? {
             try {
-                val item = itemResponseMapper.fromTranslatorResponse(
+                var item = itemResponseMapper.fromTranslatorResponse(
                     response = itemData,
                     schemaController = schemaController,
                     tagResponseMapper = tagResponseMapper,
                     creatorResponseMapper = creatorResponseMapper
-                ).copy(libraryId = libraryId, collectionKeys = collectionKeys, tags = emptyList())
-                val attachments = itemData["attachments"]?.asJsonArray?.mapNotNull {
-                    val data = it.asJsonObject
-                    val mimeType = data["mimeType"]?.asString ?: return@mapNotNull null
-                    if (mimeType == "text/html") {
-                        return@mapNotNull null
+                )
+
+                when (this.lookupMode) {
+                    is IdentifierLookupMode.normal -> {
+                        item = item.copy(
+                            libraryId = lookupSettings.libraryIdentifier,
+                            collectionKeys = lookupSettings.collectionKeys,
+                            tags = emptyList()
+                        )
                     }
-                    val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-                        ?: return@mapNotNull null
-                    val url = data["url"]?.asString ?: return@mapNotNull null
-                    val key = KeyGenerator.newKey()
-                    val filename = FilenameFormatter.filename(
-                        item = item,
-                        defaultTitle = "Full Text",
-                        ext = ext,
-                        dateParser = dateParser
-                    )
-                    val attachment = Attachment(
-                        type = Attachment.Kind.file(
-                            filename = filename,
-                            contentType = mimeType,
-                            location = Attachment.FileLocation.local,
-                            linkType = Attachment.FileLinkType.importedFile
-                        ),
-                        title = filename,
-                        key = key,
-                        libraryId = libraryId
-                    )
 
-                    attachment to url
-                } ?: emptyList()
+                    is IdentifierLookupMode.identifyAndSaveParentItem, IdentifierLookupMode.identifyOnly -> {
+                        item = item.copy(
+                            libraryId = lookupSettings.libraryIdentifier,
+                            collectionKeys = lookupSettings.collectionKeys,
+                            tags = item.tags
+                        )
+                    }
+                }
 
+                val attachments = when (lookupMode) {
+                    is IdentifierLookupMode.normal -> {
+                        itemData["attachments"]?.asJsonArray?.mapNotNull {
+                            val data = it.asJsonObject
+                            val mimeType = data["mimeType"]?.asString ?: return@mapNotNull null
+                            if (mimeType == "text/html") {
+                                return@mapNotNull null
+                            }
+                            val ext = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                                ?: return@mapNotNull null
+                            val url = data["url"]?.asString ?: return@mapNotNull null
+                            val key = KeyGenerator.newKey()
+                            val filename = FilenameFormatter.filename(
+                                item = item,
+                                defaultTitle = "Full Text",
+                                ext = ext,
+                                dateParser = dateParser
+                            )
+                            val attachment = Attachment(
+                                type = Attachment.Kind.file(
+                                    filename = filename,
+                                    contentType = mimeType,
+                                    location = Attachment.FileLocation.local,
+                                    linkType = Attachment.FileLinkType.importedFile
+                                ),
+                                title = filename,
+                                key = key,
+                                libraryId = lookupSettings.libraryIdentifier
+                            )
+
+                            attachment to url
+                        } ?: emptyList()
+
+                    }
+
+                    is IdentifierLookupMode.identifyAndSaveParentItem -> {
+                        emptyList()
+                    }
+                    is IdentifierLookupMode.identifyOnly -> {
+                        emptyList()
+                    }
+                }
                 return item to attachments
             } catch (error: Exception) {
                 Timber.e(error, "IdentifierLookupController: can't parse data")
@@ -246,75 +283,84 @@ class IdentifierLookupController @Inject constructor(
 
         fun process(
             identifier: String,
+            nonParsedResponseJsonObject: JsonObject,
             response: ItemResponse,
             attachments: List<Pair<Attachment, String>>,
-            libraryId: LibraryIdentifier,
-            collectionKeys: Set<String>
+            lookupSettings: LookupSettings,
         ) {
             fun storeDataAndDownloadAttachmentIfNecessary(
                 identifier: String,
                 response: ItemResponse,
                 attachments: List<Pair<Attachment, String>>
             ) {
-                val request = CreateTranslatedItemsDbRequest(
-                    responses = listOf(response),
-                    schemaController = schemaController,
-                    dateParser = dateParser
-                )
-                dbWrapperMain.realmDbStorage.perform(request = request)
-                changeLookup(
-                    identifier = identifier,
-                    state = LookupData.State.translated(
-                        LookupData.State.TranslatedLookupData(
-                            response = response,
-                            attachments = attachments,
-                            libraryId = libraryId,
-                            collectionKeys = collectionKeys
+                when (this.lookupMode) {
+                    is IdentifierLookupMode.normal -> {
+                        val request = CreateTranslatedItemsDbRequest(
+                            responses = listOf(response),
+                            schemaController = schemaController,
+                            dateParser = dateParser
                         )
-                    )
-                ) { didChange ->
-                    if (!didChange) {
-                        return@changeLookup
-                    }
-                    observable.emitAsync(
-                        Update(
-                            kind = Update.Kind.itemStored(
+                        dbWrapperMain.realmDbStorage.perform(request = request)
+                        changeLookup(
+                            identifier = identifier,
+                            state = LookupData.State.translatedAndParsedAttachments(
+                                LookupData.State.TranslatedLookupData(
+                                    response = response,
+                                    attachments = attachments,
+                                    libraryId = lookupSettings.libraryIdentifier,
+                                    collectionKeys = lookupSettings.collectionKeys
+                                )
+                            )
+                        ) {
+                            complete(
+                                didChange = it,
                                 identifier = identifier,
                                 response = response,
                                 attachments = attachments
-                            ), lookupData = lookupData.values.toList()
-                        )
-                    )
-                    if (defaults.isShareExtensionIncludeAttachment() && !attachments.isEmpty()) {
-                        val downloadData =
-                            attachments.map { Triple(it.first, it.second, response.key) }
-                        remoteFileDownloader.download(data = downloadData)
-                        observable.emitAsync(
-                            Update(
-                                kind = Update.Kind.pendingAttachments(
-                                    identifier = identifier,
-                                    response = response,
-                                    attachments = attachments
-                                ), lookupData = lookupData.values.toList()
                             )
+                        }
+                    }
+                    is IdentifierLookupMode.identifyAndSaveParentItem -> {
+                        val request = CreateTranslatedItemsDbRequest(
+                            responses = listOf(response),
+                            schemaController = this.schemaController,
+                            dateParser = this.dateParser
                         )
+                        val listOfCreatedItems = dbWrapperMain.realmDbStorage.perform(request = request)
+                        changeLookup(
+                            identifier = identifier,
+                            state = LookupData.State.translatedAndCreatedItem(
+                                createdItem = listOfCreatedItems[0],
+                                rawResponse = nonParsedResponseJsonObject,
+                            )
+                        ) {
+                            complete(
+                                didChange = it,
+                                identifier = identifier,
+                                response = response,
+                                attachments = attachments
+                            )
+                        }
                     }
 
-                    if (shouldSkipLookupsCleaning) {
-                        return@changeLookup
-                    }
-                    cleanupLookupIfNeeded(force = false) { cleaned ->
-                        if (!cleaned) {
-                            observable.emitAsync(
-                                Update(
-                                    kind = Update.Kind.finishedAllLookups,
-                                    lookupData = emptyList()
-                                )
+                    IdentifierLookupMode.identifyOnly -> {
+                        changeLookup(
+                            identifier = identifier,
+                            state = LookupData.State.translatedOnly(
+                                itemResponse = response
+                            )
+                        ) {
+                            complete(
+                                didChange = it,
+                                identifier = identifier,
+                                response = response,
+                                attachments = attachments
                             )
                         }
                     }
                 }
             }
+
 
             try {
                 storeDataAndDownloadAttachmentIfNecessary(
@@ -489,19 +535,49 @@ class IdentifierLookupController @Inject constructor(
                             return
                         }
 
-                        val libraryId = lookupWebViewHandler.lookupSettings.libraryIdentifier
-                        val collectionKeys = lookupWebViewHandler.lookupSettings.collectionKeys
+                        val lookupSettings = lookupWebViewHandler.lookupSettings
                         val itemData = data["data"]?.asJsonArray
-                        val item = itemData?.first()?.asJsonObject
-                        if (item == null) {
+                        val translatedItem = itemData?.first()?.asJsonObject
+                        if (translatedItem == null) {
                             changeAndFinishAllLookups(identifier)
                             return
 
                         }
+                        val recognizerData = this.recognizerData
+                        if ((lookupMode is IdentifierLookupMode.identifyAndSaveParentItem ||
+                                    lookupMode is IdentifierLookupMode.identifyOnly)
+                            && recognizerData != null) {
+                            if (translatedItem["abstractNote"] == null && recognizerData["abstract"] != null) {
+                                translatedItem.add("abstractNote", recognizerData["abstract"])
+                            }
+                            if (translatedItem["language"] == null && recognizerData["language"] != null) {
+                                translatedItem.add("language", recognizerData["language"])
+                            }
+                            if (translatedItem.has("tags")) {
+                                val newTags = translatedItem["tags"].asJsonArray.map { tag ->
+                                        if (tag.isJsonPrimitive) {
+                                            val fromJson = gson.fromJson(
+                                                "{ $tag, type: 1 }",
+                                                JsonObject::class.java
+                                            )
+                                            return@map fromJson
+                                        }
+                                    val tagAsObject = tag.asJsonObject
+                                    tagAsObject.add("type", JsonPrimitive(1))
+                                    tagAsObject
+                                }
+                                val jsonArray = JsonArray()
+                                for(t in newTags) {
+                                    jsonArray.add(t)
+                                }
+                                translatedItem.add("tags", jsonArray)
+                            }
+                        }
+
+
                         val parseResult = parse(
-                            item,
-                            libraryId = libraryId,
-                            collectionKeys = collectionKeys,
+                            translatedItem,
+                            lookupSettings = lookupSettings,
                             schemaController = schemaController,
                             dateParser = dateParser
                         )
@@ -513,9 +589,9 @@ class IdentifierLookupController @Inject constructor(
                         process(
                             identifier = identifier,
                             response = response,
+                            nonParsedResponseJsonObject = translatedItem,
                             attachments = attachments,
-                            libraryId = libraryId,
-                            collectionKeys = collectionKeys
+                            lookupSettings = lookupSettings,
                         )
                     }
 
@@ -591,7 +667,15 @@ class IdentifierLookupController @Inject constructor(
                 lookupFailedCount += 1
             }
 
-            is LookupData.State.translated -> {
+            is LookupData.State.translatedAndParsedAttachments -> {
+                lookupSavedCount += 1
+            }
+
+            is LookupData.State.translatedAndCreatedItem -> {
+                lookupSavedCount += 1
+            }
+
+            is LookupData.State.translatedOnly -> {
                 lookupSavedCount += 1
             }
 
@@ -679,7 +763,7 @@ class IdentifierLookupController @Inject constructor(
         }
         val storedItemResponses = lookupData.values.mapNotNull {
             when (it.state) {
-                is LookupData.State.translated -> {
+                is LookupData.State.translatedAndParsedAttachments -> {
                     val translatedLookupData = it.state.translatedLookupData
                     return@mapNotNull translatedLookupData.response to translatedLookupData.libraryId
                 }
@@ -700,6 +784,58 @@ class IdentifierLookupController @Inject constructor(
             dbWrapperMain.realmDbStorage.perform(requests = requests)
         } catch (error: Exception) {
             Timber.e(error, "IdentifierLookupController: can't trash item(s)")
+        }
+    }
+
+    fun setRecognizedData(recognizerData: JsonObject) {
+        this.recognizerData = recognizerData
+    }
+
+    fun complete(
+        didChange: Boolean,
+        identifier: String,
+        response: ItemResponse,
+        attachments: List<Pair<Attachment, String>>,
+    ) {
+        if (!didChange) {
+            return
+        }
+        observable.emitAsync(
+            Update(
+                kind = Update.Kind.itemStored(
+                    identifier = identifier,
+                    response = response,
+                    attachments = attachments
+                ), lookupData = lookupData.values.toList()
+            )
+        )
+        if (lookupMode is IdentifierLookupMode.normal && defaults.isShareExtensionIncludeAttachment() && !attachments.isEmpty()) {
+            val downloadData =
+                attachments.map { Triple(it.first, it.second, response.key) }
+            remoteFileDownloader.download(data = downloadData)
+            observable.emitAsync(
+                Update(
+                    kind = Update.Kind.pendingAttachments(
+                        identifier = identifier,
+                        response = response,
+                        attachments = attachments
+                    ), lookupData = lookupData.values.toList()
+                )
+            )
+        }
+
+        if (shouldSkipLookupsCleaning) {
+            return
+        }
+        cleanupLookupIfNeeded(force = false) { cleaned ->
+            if (!cleaned) {
+                observable.emitAsync(
+                    Update(
+                        kind = Update.Kind.finishedAllLookups,
+                        lookupData = emptyList()
+                    )
+                )
+            }
         }
     }
 
@@ -743,7 +879,12 @@ class IdentifierLookupController @Inject constructor(
             object enqueued : State()
             object inProgress : State()
             object failed : State()
-            data class translated(val translatedLookupData: TranslatedLookupData) : State()
+            data class translatedAndParsedAttachments(val translatedLookupData: TranslatedLookupData) : State()
+            data class translatedAndCreatedItem(
+                val createdItem: RItem,
+                val rawResponse: JsonObject,
+            ) : State()
+            data class translatedOnly(val itemResponse: ItemResponse) : State()
 
             data class TranslatedLookupData(
                 val response: ItemResponse,
@@ -759,7 +900,7 @@ class IdentifierLookupController @Inject constructor(
                             return true
                         }
 
-                        is translated, failed -> {
+                        is translatedAndParsedAttachments, is translatedAndCreatedItem, is translatedOnly, failed -> {
                             return false
                         }
                     }
@@ -776,7 +917,15 @@ class IdentifierLookupController @Inject constructor(
                             return true
                         }
 
-                        from is inProgress && to is translated -> {
+                        from is inProgress && to is translatedAndParsedAttachments -> {
+                            return true
+                        }
+
+                        from is inProgress && to is translatedAndCreatedItem -> {
+                            return true
+                        }
+
+                        from is inProgress && to is translatedOnly -> {
                             return true
                         }
 

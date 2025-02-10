@@ -490,4 +490,10 @@ class FileStore @Inject constructor (
         return File(uploadsDir, "${key}.zip")
     }
 
+    fun pdfWorkerDirectory(): File {
+        val folderPath = File(getRootDirectory(), "pdf-worker")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
 }
