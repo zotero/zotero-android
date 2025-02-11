@@ -6,9 +6,10 @@ import subprocess
 import time
 import urllib.request
 
-commit_hash = "897513ca6427e148d36c9105f1f54f5afc5e28f6"
+pdf_worker_commit_hash = "01901bf65e12741e727df38eaaa24a67d4fc6a5e"
+pdf_worker_wrapper_version="1"
 
-pdf_worker_download_url = "https://zotero-download.s3.amazonaws.com/ci/client-pdf-worker/" + commit_hash + ".zip"
+pdf_worker_download_url = "https://zotero-download.s3.amazonaws.com/ci/client-pdf-worker/" + pdf_worker_commit_hash + ".zip"
 
 # Get bundle directory
 bundle_dir = os.path.join(os.path.abspath("."), "app" + os.sep + "src" + os.sep + "main" + os.sep + "assets")
@@ -23,7 +24,7 @@ if not os.path.isdir(pdf_worker_dir):
     raise Exception(pdf_worker_dir + " is not a directory. Call update_bundled_data.py first.")
 
 with open(os.path.join(bundle_dir, "pdf-worker_commit_hash.txt"), "w") as f:
-    f.write(str(commit_hash))
+    f.write(str(pdf_worker_wrapper_version))
 
 # Download cmaps and standard_fonts
 cmaps_and_fonts_zip_file = os.path.join(pdf_worker_dir, "pdf_worker_cmaps_and_fonts.zip")
