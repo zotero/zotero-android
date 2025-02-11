@@ -139,7 +139,7 @@ class PdfWorkerWebCallChainExecutor(
         pdfFileName: String,
     ) {
         return suspendCancellableCoroutine { cont ->
-            pdfWorkerWebViewHandler.evaluateJavascript("javascript:recognizePdf('${BuildConfig.DEBUG}', '${pdfFilePath}', '${pdfFileName}')") {
+            pdfWorkerWebViewHandler.evaluateJavascript("javascript:recognizePdf(${BuildConfig.DEBUG}, '${pdfFilePath}', '${pdfFileName}')") {
                 cont.resume(Unit)
             }
         }

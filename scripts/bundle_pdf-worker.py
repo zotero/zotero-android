@@ -6,7 +6,7 @@ import subprocess
 import time
 import urllib.request
 
-commit_hash = "01901bf65e12741e727df38eaaa24a67d4fc6a5e"
+commit_hash = "897513ca6427e148d36c9105f1f54f5afc5e28f6"
 
 pdf_worker_download_url = "https://zotero-download.s3.amazonaws.com/ci/client-pdf-worker/" + commit_hash + ".zip"
 
