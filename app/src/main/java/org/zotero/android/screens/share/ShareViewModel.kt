@@ -111,6 +111,7 @@ internal class ShareViewModel @Inject constructor(
     private lateinit var selectedCollectionId: CollectionIdentifier
     private lateinit var selectedLibraryId: LibraryIdentifier
     private lateinit var attachmentKey: String
+    private var wasAttachmentUploaded: Boolean = false
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
@@ -387,7 +388,7 @@ internal class ShareViewModel @Inject constructor(
 
     private fun finishSync(successful: Boolean) {
         Timber.i("ShareViewModel: finishSync success = $successful")
-        if (!successful) {
+        if (!successful && wasAttachmentUploaded) {
             updateState {
                 copy(collectionPickerState = CollectionPickerState.failed)
             }
@@ -979,6 +980,7 @@ internal class ShareViewModel @Inject constructor(
                 zipMimetype = this.zipMimetype,
                 processUploadToZoteroException = ::processUploadToZoteroException,
                 onBack = {
+                    wasAttachmentUploaded = true
                     maybeSaveCachedDataInPdfWorker()
                 })
         } else {
@@ -988,6 +990,7 @@ internal class ShareViewModel @Inject constructor(
                 defaultMimetype = this.defaultMimetype,
                 processUploadToZoteroException = ::processUploadToZoteroException,
                 onBack = {
+                    wasAttachmentUploaded = true
                     maybeSaveCachedDataInPdfWorker()
                 }
             )
@@ -1005,7 +1008,9 @@ internal class ShareViewModel @Inject constructor(
                 tags = tags
             )
         } else {
-            triggerEffect(ShareViewEffect.NavigateBack)
+            if (wasAttachmentUploaded) {
+                triggerEffect(ShareViewEffect.NavigateBack)
+            }
         }
 
 
@@ -1016,7 +1021,8 @@ internal class ShareViewModel @Inject constructor(
         error: CustomResult.GeneralError,
         data: UploadData
     ) {
-
+        wasAttachmentUploaded = false
+        maybeSaveCachedDataInPdfWorker()
         updateState {
             copy(
                 attachmentState = AttachmentState.failed(
@@ -1065,7 +1071,9 @@ internal class ShareViewModel @Inject constructor(
                 updateState { copy(retrieveMetadataState = RetrieveMetadataState.failed(update.errorMessage)) }
             }
             is PdfWorkerController.Update.recognizedAndSaved -> {
-                triggerEffect(ShareViewEffect.NavigateBack)
+                if (wasAttachmentUploaded) {
+                    triggerEffect(ShareViewEffect.NavigateBack)
+                }
             }
             is PdfWorkerController.Update.recognizedAndKeptInMemory -> {
                 updateState {
