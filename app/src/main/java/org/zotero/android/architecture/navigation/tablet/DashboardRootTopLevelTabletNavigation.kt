@@ -9,20 +9,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.navigation.ARG_RETRIEVE_METADATA
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.addNoteScreen
 import org.zotero.android.architecture.navigation.dialogDynamicHeight
-import org.zotero.android.architecture.navigation.retrieveMetadataScreen
+import org.zotero.android.architecture.navigation.dialogFixedMaxHeight
 import org.zotero.android.architecture.navigation.toAddOrEditNote
-import org.zotero.android.architecture.navigation.toRetrieveMetadata
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderScreenAndNavigationForTablet
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.dashboard.DashboardViewModel
+import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import java.io.File
@@ -74,7 +77,9 @@ internal fun DashboardRootTopLevelTabletNavigation(
             navigateToTagPicker = navigation::toTagPickerScreen
         )
         zoterWebViewScreen(onClose = navigation::onBack)
-        retrieveMetadataScreen()
+        retrieveMetadataDialog(onBack = {
+            navController.popBackStack()
+        })
     }
 }
 
@@ -126,10 +131,23 @@ private fun NavGraphBuilder.tagPickerDialog(
     }
 }
 
+private fun NavGraphBuilder.retrieveMetadataDialog(onBack: () -> Unit) {
+    dialogFixedMaxHeight(
+        route = "${DashboardRootDestinations.RETRIEVE_METADATA_DIALOG}/{$ARG_RETRIEVE_METADATA}",
+        arguments = listOf(
+            navArgument(ARG_RETRIEVE_METADATA) { type = NavType.StringType },
+        ),
+    ) {
+        RetrieveMetadataScreen(onBack = onBack)
+    }
+}
+
+
 private object DashboardRootDestinations {
     const val DASHBOARD_SCREEN = "dashboardScreen"
     const val TAG_PICKER_SCREEN = "tagPickerScreen"
     const val TAG_PICKER_DIALOG = "tagPickerDialog"
+    const val RETRIEVE_METADATA_DIALOG = "retrieveMetadataDialog"
 }
 
 private fun ZoteroNavigation.toTagPickerScreen() {
@@ -138,4 +156,8 @@ private fun ZoteroNavigation.toTagPickerScreen() {
 
 private fun ZoteroNavigation.toTagPickerDialog() {
     navController.navigate(DashboardRootDestinations.TAG_PICKER_DIALOG)
+}
+
+private fun ZoteroNavigation.toRetrieveMetadata(args: String) {
+    navController.navigate("${DashboardRootDestinations.RETRIEVE_METADATA_DIALOG}/$args")
 }

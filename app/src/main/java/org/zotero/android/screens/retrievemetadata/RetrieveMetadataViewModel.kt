@@ -45,7 +45,7 @@ internal class RetrieveMetadataViewModel @Inject constructor(
         when(update) {
             is PdfWorkerController.Update.recognizeInit -> {
                 updateState {
-                    copy(fileName = update.fileName)
+                    copy(pdfFileName = update.pdfFileName)
                 }
             }
             PdfWorkerController.Update.recognizedDataIsEmpty -> {
@@ -58,7 +58,7 @@ internal class RetrieveMetadataViewModel @Inject constructor(
             }
             is PdfWorkerController.Update.recognizedAndSaved -> {
                 updateState {
-                    copy(retrieveMetadataState = RetrieveMetadataState.success)
+                    copy(retrieveMetadataState = RetrieveMetadataState.success(update.recognizedTitle))
                 }
             }
             is PdfWorkerController.Update.recognizedAndKeptInMemory -> {
@@ -75,7 +75,7 @@ internal class RetrieveMetadataViewModel @Inject constructor(
 }
 
 internal data class RetrieveMetadataViewState(
-    val fileName: String = "",
+    val pdfFileName: String = "",
     val retrieveMetadataState: RetrieveMetadataState = RetrieveMetadataState.loading,
 ) : ViewState
 

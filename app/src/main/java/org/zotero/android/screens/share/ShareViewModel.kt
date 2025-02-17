@@ -1077,7 +1077,7 @@ internal class ShareViewModel @Inject constructor(
             }
             is PdfWorkerController.Update.recognizedAndKeptInMemory -> {
                 updateState {
-                    copy(retrieveMetadataState = RetrieveMetadataState.success)
+                    copy(retrieveMetadataState = RetrieveMetadataState.success(""))
                 }
             }
         }

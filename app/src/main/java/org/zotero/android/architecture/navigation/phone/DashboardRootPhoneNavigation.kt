@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.navigation.ARG_RETRIEVE_METADATA
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -29,11 +30,9 @@ import org.zotero.android.architecture.navigation.imageViewerScreen
 import org.zotero.android.architecture.navigation.itemDetailsScreen
 import org.zotero.android.architecture.navigation.librariesScreen
 import org.zotero.android.architecture.navigation.loadingScreen
-import org.zotero.android.architecture.navigation.retrieveMetadataScreen
 import org.zotero.android.architecture.navigation.toAddOrEditNote
 import org.zotero.android.architecture.navigation.toImageViewerScreen
 import org.zotero.android.architecture.navigation.toItemDetails
-import org.zotero.android.architecture.navigation.toRetrieveMetadata
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
@@ -52,6 +51,7 @@ import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.filter.FilterScreenPhone
+import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.settings.settingsNavScreens
 import org.zotero.android.screens.settings.toSettingsScreen
@@ -178,6 +178,15 @@ internal fun DashboardRootPhoneNavigation(
                 }
 
                 composable(
+                    route = "${DashboardRootPhoneDestinations.RETRIEVE_METADATA}/{$ARG_RETRIEVE_METADATA}",
+                    arguments = listOf(
+                        navArgument(ARG_RETRIEVE_METADATA) { type = NavType.StringType },
+                    ),
+                ) {
+                    RetrieveMetadataScreen(onBack = navigation::onBack)
+                }
+
+                composable(
                     route = DashboardRootPhoneDestinations.TAG_FILTER,
                     arguments = listOf(),
                 ) {
@@ -237,7 +246,6 @@ internal fun DashboardRootPhoneNavigation(
                     navigateToTagPicker = navigation::toTagPicker
                 )
                 zoterWebViewScreen(onClose = navigation::onBack)
-                retrieveMetadataScreen()
             }
         }
         DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
@@ -259,6 +267,7 @@ private object DashboardRootPhoneDestinations {
     const val TAG_FILTER = "tagFilter"
     const val COLLECTION_PICKER = "collectionPicker"
     const val SCAN_BARCODE = "scanBarcode"
+    const val RETRIEVE_METADATA = "retrieveMetadata"
 
 }
 
@@ -286,6 +295,10 @@ private fun ZoteroNavigation.toCollectionPicker() {
 
 private fun ZoteroNavigation.toTagFilter() {
     navController.navigate(DashboardRootPhoneDestinations.TAG_FILTER)
+}
+
+private fun ZoteroNavigation.toRetrieveMetadata(args: String) {
+    navController.navigate("${DashboardRootPhoneDestinations.RETRIEVE_METADATA}/$args")
 }
 
 private fun toAllItems(

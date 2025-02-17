@@ -140,7 +140,7 @@ class PdfWorkerController @Inject constructor(
             )
         )
 
-        observable.emitAsync(Update.recognizedAndSaved)
+        observable.emitAsync(Update.recognizedAndSaved(createdItem.displayTitle))
     }
 
     private fun processPdfWorkerUpdate(result: Result<PdfWorkerRecognizedData>) {
@@ -268,7 +268,7 @@ class PdfWorkerController @Inject constructor(
             filename = filename,
         )
 
-        observable.emitAsync(Update.recognizeInit(fileName = filename))
+        observable.emitAsync(Update.recognizeInit(pdfFileName = filename))
 
         identifierLookupController.initialize(
             lookupMode = IdentifierLookupMode.identifyAndSaveParentItem,
@@ -344,10 +344,10 @@ class PdfWorkerController @Inject constructor(
     }
 
     sealed interface Update {
-        data class recognizeInit(val fileName: String) : Update
+        data class recognizeInit(val pdfFileName: String) : Update
         object recognizedDataIsEmpty: Update
         data class recognizeError(val errorMessage: String) : Update
-        object recognizedAndSaved : Update
+        data class recognizedAndSaved(val recognizedTitle: String) : Update
         object recognizedAndKeptInMemory : Update
     }
 }
