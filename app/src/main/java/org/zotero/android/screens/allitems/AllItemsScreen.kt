@@ -49,7 +49,7 @@ internal fun AllItemsScreen(
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
-    navigateToTagFilter: () -> Unit,
+    navigateToTagFilter: (params: String) -> Unit,
     navigateToScanBarcode: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
@@ -68,8 +68,8 @@ internal fun AllItemsScreen(
                 is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen()
                 is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails(consumedEffect.screenArgs)
                 is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
-                AllItemsViewEffect.ShowFilterEffect -> {
-                    navigateToTagFilter()
+                is AllItemsViewEffect.ShowPhoneFilterEffect -> {
+                    navigateToTagFilter(consumedEffect.params)
                 }
 
                 AllItemsViewEffect.ShowItemTypePickerEffect -> {

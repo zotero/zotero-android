@@ -96,9 +96,14 @@ internal fun CollectionsScreen(
                             )
                         }
                         NewDivider()
-                        Box(modifier = Modifier
-                            .fillMaxSize()) {
-                            FilterScreenTablet()
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            val args = viewState.tabletFilterArgs
+                            if (args != null) {
+                                FilterScreenTablet(args)
+                            }
                         }
                     }
                 }

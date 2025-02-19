@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.ARG_RETRIEVE_METADATA
+import org.zotero.android.architecture.navigation.ARG_TAGS_FILTER
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -187,8 +188,10 @@ internal fun DashboardRootPhoneNavigation(
                 }
 
                 composable(
-                    route = DashboardRootPhoneDestinations.TAG_FILTER,
-                    arguments = listOf(),
+                    route = "${DashboardRootPhoneDestinations.TAG_FILTER}/{$ARG_TAGS_FILTER}",
+                    arguments = listOf(
+                        navArgument(ARG_TAGS_FILTER) { type = NavType.StringType },
+                    ),
                 ) {
                     FilterScreenPhone(onBack = navigation::onBack)
                 }
@@ -293,8 +296,8 @@ private fun ZoteroNavigation.toCollectionPicker() {
     navController.navigate(DashboardRootPhoneDestinations.COLLECTION_PICKER)
 }
 
-private fun ZoteroNavigation.toTagFilter() {
-    navController.navigate(DashboardRootPhoneDestinations.TAG_FILTER)
+private fun ZoteroNavigation.toTagFilter(params: String) {
+    navController.navigate("${DashboardRootPhoneDestinations.TAG_FILTER}/$params")
 }
 
 private fun ZoteroNavigation.toRetrieveMetadata(args: String) {

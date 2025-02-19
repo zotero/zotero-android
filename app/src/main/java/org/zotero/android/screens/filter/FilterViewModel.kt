@@ -1,5 +1,6 @@
 package org.zotero.android.screens.filter
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,16 +15,19 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.navigation.ARG_TAGS_FILTER
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.require
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.DeleteAutomaticTagsDbRequest
 import org.zotero.android.database.requests.ReadAutomaticTagsDbRequest
 import org.zotero.android.database.requests.ReadColoredTagsDbRequest
 import org.zotero.android.database.requests.ReadFilteredTagsDbRequest
 import org.zotero.android.screens.allitems.data.ItemsFilter
+import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterDialog
 import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
@@ -40,9 +44,16 @@ internal class FilterViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val defaults: Defaults,
     private val dispatchers: Dispatchers,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    stateHandle: SavedStateHandle,
 ) : BaseViewModel2<FilterViewState, FilterViewEffect>(FilterViewState()) {
 
     private val LIST_CHUNK_SIZE = 50
+
+    val phoneScreenArgs: FilterArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_TAGS_FILTER).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: FilterReloadEvent) {
@@ -53,13 +64,15 @@ internal class FilterViewModel @Inject constructor(
 
     private val downloadsFilterEnabled: Boolean
         get() {
-            val filters = ScreenArguments.filterArgs.filters
+            val filters = filterArgs.filters
             return filters.any { it is ItemsFilter.downloadedFiles }
         }
 
-    fun init() = initOnce {
+    private lateinit var filterArgs: FilterArgs
+
+    fun init(filterArgs: FilterArgs) = initOnce {
+        this.filterArgs = filterArgs
         EventBus.getDefault().register(this)
-        val filterArgs = ScreenArguments.filterArgs
         updateState {
             copy(
                 isDownloadsChecked = downloadsFilterEnabled,
@@ -366,9 +379,9 @@ internal class FilterViewModel @Inject constructor(
             )
         }
         itemsDidChange(
-            filters = ScreenArguments.filterArgs.filters,
-            collectionId = ScreenArguments.filterArgs.collectionId,
-            libraryId = ScreenArguments.filterArgs.libraryId
+            filters = filterArgs.filters,
+            collectionId = filterArgs.collectionId,
+            libraryId = filterArgs.libraryId
         )
     }
 
@@ -378,9 +391,9 @@ internal class FilterViewModel @Inject constructor(
             copy(displayAll = displayAll)
         }
         itemsDidChange(
-            filters = ScreenArguments.filterArgs.filters,
-            collectionId = ScreenArguments.filterArgs.collectionId,
-            libraryId = ScreenArguments.filterArgs.libraryId
+            filters = filterArgs.filters,
+            collectionId = filterArgs.collectionId,
+            libraryId = filterArgs.libraryId
         )
 
     }
@@ -389,7 +402,7 @@ internal class FilterViewModel @Inject constructor(
         updateState {
             copy(showFilterOptionsPopup = false)
         }
-        val request = ReadAutomaticTagsDbRequest(libraryId = ScreenArguments.filterArgs.libraryId)
+        val request = ReadAutomaticTagsDbRequest(libraryId = filterArgs.libraryId)
         val count = dbWrapperMain.realmDbStorage.perform(request = request).size
         confirmDeletion(count)
     }
@@ -405,7 +418,7 @@ internal class FilterViewModel @Inject constructor(
         viewModelScope.launch {
             perform(
                 dbWrapper = dbWrapperMain,
-                request = DeleteAutomaticTagsDbRequest(libraryId = ScreenArguments.filterArgs.libraryId)
+                request = DeleteAutomaticTagsDbRequest(libraryId = filterArgs.libraryId)
             )
         }
     }

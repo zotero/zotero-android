@@ -40,6 +40,7 @@ import org.zotero.android.database.requests.ReadLibraryDbRequest
 import org.zotero.android.database.requests.SetCollectionCollapsedDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.allitems.data.AllItemsArgs
+import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionTree
@@ -47,6 +48,8 @@ import org.zotero.android.screens.collections.data.CollectionTreeBuilder
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.screens.filter.data.FilterArgs
+import org.zotero.android.screens.filter.data.UpdateFiltersEvent
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileCleanupController.DeletionType
@@ -94,12 +97,18 @@ internal class CollectionsViewModel @Inject constructor(
         metadataEditable = false,
         filesEditable = false
     )
-
+    private var itemsFilter: List<ItemsFilter> = emptyList()
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: LongPressOptionItem) {
         onLongPressOptionsItemSelected(event)
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(updateFiltersEvent: UpdateFiltersEvent) {
+        this.itemsFilter = updateFiltersEvent.itemsFilter
+    }
+
 
     fun init(isTablet: Boolean) = initOnce {
         EventBus.getDefault().register(this)
@@ -136,6 +145,12 @@ internal class CollectionsViewModel @Inject constructor(
             copy(
                 selectedCollectionId = args.selectedCollectionId,
             )
+        }
+
+        if (isTablet) {
+            updateState {
+                copy(tabletFilterArgs = createShowFilterArgs())
+            }
         }
 
     }
@@ -675,6 +690,18 @@ internal class CollectionsViewModel @Inject constructor(
         return defaults.showCollectionItemCounts()
     }
 
+    private fun createShowFilterArgs(): FilterArgs {
+        val selectedTags =
+            itemsFilter.filterIsInstance<ItemsFilter.tags>().flatMap { it.tags }.toSet()
+        val filterArgs = FilterArgs(
+            filters = itemsFilter,
+            collectionId = viewState.selectedCollectionId,
+            libraryId = this.library.identifier,
+            selectedTags = selectedTags
+        )
+        return filterArgs
+    }
+
 }
 
 internal data class CollectionsViewState(
@@ -686,7 +713,8 @@ internal data class CollectionsViewState(
     val editingData: Triple<String?, String, Collection?>? = null,
     val error: CollectionsError? = null,
     val lce: LCE2 = LCE2.Loading,
-) : ViewState {
+    val tabletFilterArgs: FilterArgs? = null
+    ) : ViewState {
 }
 
 internal sealed class CollectionsViewEffect : ViewEffect {

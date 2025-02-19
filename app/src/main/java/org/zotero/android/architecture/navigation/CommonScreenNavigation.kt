@@ -20,6 +20,7 @@ import java.io.File
 
 internal const val ARG_ITEM_DETAILS_SCREEN = "itemDetailsArgs"
 internal const val ARG_RETRIEVE_METADATA = "retrieveMetadataArgs"
+internal const val ARG_TAGS_FILTER = "tagsScreen"
 
 fun NavGraphBuilder.allItemsScreen(
     navigateToCollectionsScreen: () -> Unit,
@@ -32,7 +33,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
-    navigateToTagFilter: () -> Unit,
+    navigateToTagFilter: (params: String) -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToScanBarcode: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,

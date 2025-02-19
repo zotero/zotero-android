@@ -10,11 +10,15 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
-internal fun FilterScreenPhone(viewModel: FilterViewModel = hiltViewModel(), onBack: () -> Unit) {
+internal fun FilterScreenPhone(
+    viewModel: FilterViewModel = hiltViewModel(),
+    onBack: () -> Unit
+) {
     val viewState by viewModel.viewStates.observeAsState(FilterViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(key1 = viewModel) {
-        viewModel.init()
+        val args = viewModel.phoneScreenArgs
+        viewModel.init(args)
     }
 
     LaunchedEffect(key1 = viewEffect) {
