@@ -1001,10 +1001,11 @@ internal class ShareViewModel @Inject constructor(
     private fun maybeSaveCachedDataInPdfWorker() {
         if (viewState.retrieveMetadataState is RetrieveMetadataState.success) {
             val tags = viewState.tags.map { TagResponse(tag = it.name, type = it.type) }
+            val collectionKeys = this.selectedCollectionId.keyGet?.let { setOf(it) } ?: emptySet()
             pdfWorkerController.saveCachedData(
                 attachmentItemKey = this.attachmentKey,
                 libraryId = this.selectedLibraryId,
-                collectionKeys = setOf(this.selectedCollectionId.keyGet!!),
+                collectionKeys = collectionKeys,
                 tags = tags
             )
         } else {
@@ -1077,7 +1078,10 @@ internal class ShareViewModel @Inject constructor(
             }
             is PdfWorkerController.Update.recognizedAndKeptInMemory -> {
                 updateState {
-                    copy(retrieveMetadataState = RetrieveMetadataState.success(""))
+                    copy(retrieveMetadataState = RetrieveMetadataState.success(
+                        recognizedTitle = update.recognizedTitle,
+                        recognizedTypeIcon = update.recognizedTypeIcon
+                    ))
                 }
             }
         }

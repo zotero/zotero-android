@@ -56,11 +56,18 @@ internal class RetrieveMetadataViewModel @Inject constructor(
             is PdfWorkerController.Update.recognizeError -> {
                 updateState { copy(retrieveMetadataState = RetrieveMetadataState.failed(update.errorMessage)) }
             }
+
             is PdfWorkerController.Update.recognizedAndSaved -> {
                 updateState {
-                    copy(retrieveMetadataState = RetrieveMetadataState.success(update.recognizedTitle))
+                    copy(
+                        retrieveMetadataState = RetrieveMetadataState.success(
+                            recognizedTitle = update.recognizedTitle,
+                            recognizedTypeIcon = "" //no-op
+                        )
+                    )
                 }
             }
+
             is PdfWorkerController.Update.recognizedAndKeptInMemory -> {
                 //no-op
             }

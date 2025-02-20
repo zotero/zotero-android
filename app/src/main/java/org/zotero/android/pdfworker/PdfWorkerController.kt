@@ -11,6 +11,7 @@ import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
 import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
 import org.zotero.android.api.pojo.sync.TagResponse
 import org.zotero.android.architecture.Defaults
@@ -19,6 +20,8 @@ import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
+import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.CreateTranslatedItemsDbRequest
 import org.zotero.android.database.requests.LinkAttachmentToParentItemDbRequest
@@ -118,11 +121,62 @@ class PdfWorkerController @Inject constructor(
                     )
                 }
                 if (state is LookupData.State.translatedOnly) {
-                    this.itemResponse = state.itemResponse
-                    observable.emitAsync(Update.recognizedAndKeptInMemory)
+                    val itemResponse = state.itemResponse
+                    this.itemResponse = itemResponse
+                    val (title, typeIconName) = getTitleAndContentTypeFromResponse(itemResponse)
+                    observable.emitAsync(
+                        Update.recognizedAndKeptInMemory(
+                            recognizedTitle = title,
+                            recognizedTypeIcon = typeIconName
+                        )
+                    )
                 }
             }
         }
+    }
+
+    private fun getTitleAndContentTypeFromResponse(itemResponse: ItemResponse): Pair<String, String> {
+        val title = getTitleFromResponse(itemResponse)
+        val contentType = getContentTypeFromResponse(itemResponse) ?: ""
+        val typeIconName = ItemTypes.iconName(
+            rawType = itemResponse.rawType,
+            contentType = contentType
+        )
+        return Pair(title, typeIconName)
+    }
+
+    private fun getTitleFromResponse(response: ItemResponse): String {
+        val title: String
+        val _title = response.fields[KeyBaseKeyPair(
+            key = FieldKeys.Item.title,
+            baseKey = null
+        )]
+        if (_title != null) {
+            title = _title
+        } else {
+            val _title = response.fields.entries.firstOrNull {
+                this.schemaController.baseKey(
+                    type = response.rawType,
+                    field = it.key.key
+                ) == FieldKeys.Item.title
+            }?.value
+            title = _title ?: ""
+        }
+        return title
+    }
+
+    private fun getContentTypeFromResponse(data: ItemResponse): String? {
+        var contentType: String? = null
+        val allFieldKeys = data.fields.keys.toTypedArray()
+        for (keyPair in allFieldKeys) {
+            val value = data.fields[keyPair] ?: ""
+            when {
+                keyPair.key == FieldKeys.Item.Attachment.contentType || keyPair.baseKey == FieldKeys.Item.Attachment.contentType -> {
+                    contentType = value
+                }
+            }
+        }
+        return contentType
     }
 
     private fun updateItemAndPostProgress(
@@ -191,7 +245,11 @@ class PdfWorkerController @Inject constructor(
                     }
                     PdfWorkerMode.recognizeAndWait -> {
                         this.itemResponse = item
-                        observable.emitAsync(Update.recognizedAndKeptInMemory)
+                        val (title, typeIconName) = getTitleAndContentTypeFromResponse(item)
+                        observable.emitAsync(Update.recognizedAndKeptInMemory(
+                            recognizedTitle = title,
+                            recognizedTypeIcon = typeIconName
+                        ))
                     }
                 }
             }
@@ -348,6 +406,6 @@ class PdfWorkerController @Inject constructor(
         object recognizedDataIsEmpty: Update
         data class recognizeError(val errorMessage: String) : Update
         data class recognizedAndSaved(val recognizedTitle: String) : Update
-        object recognizedAndKeptInMemory : Update
+        data class recognizedAndKeptInMemory(val recognizedTitle: String, val recognizedTypeIcon: String) : Update
     }
 }

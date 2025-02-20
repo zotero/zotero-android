@@ -4,6 +4,6 @@ sealed interface RetrieveMetadataState {
     object loading : RetrieveMetadataState
     object recognizedDataIsEmpty : RetrieveMetadataState
     data class failed(val message: String) : RetrieveMetadataState
-    data class success(val recognizedTitle: String) : RetrieveMetadataState
+    data class success(val recognizedTitle: String, val recognizedTypeIcon: String) : RetrieveMetadataState
     object fileIsNotPdf : RetrieveMetadataState
 }
