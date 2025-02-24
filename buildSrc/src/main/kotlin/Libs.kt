@@ -135,7 +135,6 @@ object Libs {
             const val lifecycleRuntime = "androidx.lifecycle:lifecycle-runtime-ktx:$version"
         }
 
-        const val swipeRefreshLayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
         const val vectorDrawable = "androidx.vectordrawable:vectordrawable:1.1.0"
         const val preferencesKtx = "androidx.preference:preference-ktx:1.2.1"
 

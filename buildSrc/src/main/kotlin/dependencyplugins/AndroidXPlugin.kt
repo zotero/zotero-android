@@ -20,7 +20,6 @@ private fun configure(project: Project) {
         add("implementation", Libs.AndroidX.activity)
         add("implementation", Libs.AndroidX.constraintLayout)
         add("implementation", Libs.AndroidX.constraintLayoutSolver)
-        add("implementation", Libs.AndroidX.swipeRefreshLayout)
 
         add("implementation", Libs.AndroidX.Lifecycle.lifecycleRuntime)
         add("implementation", Libs.AndroidX.Lifecycle.commonJava8)
