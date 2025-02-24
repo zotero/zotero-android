@@ -215,12 +215,13 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
-        setupFileObservers()
-        setupOnFieldValueTextChangeFlow()
-        setupOnAbstractTextChangeFlow()
+            initViewState(screenArgs)
 
-        initViewState(screenArgs)
-        loadInitialData()
+            setupFileObservers()
+            setupOnFieldValueTextChangeFlow()
+            setupOnAbstractTextChangeFlow()
+
+            loadInitialData()
     }
 
     private fun setupFileObservers() {
