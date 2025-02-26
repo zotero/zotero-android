@@ -8,10 +8,9 @@ import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.navigation.toolbar.data.CurrentSyncProgressState
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressEventStream
-import org.zotero.android.database.DbWrapperMain
-import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.sync.SyncError
 import java.util.Timer
 import javax.inject.Inject
@@ -19,14 +18,15 @@ import kotlin.concurrent.timerTask
 
 @HiltViewModel
 class SyncToolbarViewModel @Inject constructor(
-    private val dbWrapperMain: DbWrapperMain,
     private val syncProgressEventStream: SyncProgressEventStream,
+    private val syncToolbarTextGenerator: SyncToolbarTextGenerator,
 ) : BaseViewModel2<SyncToolbarViewState, SyncToolbarViewEffect>(SyncToolbarViewState()) {
 
     private val finishVisibilityTime = 4_000L
     private var timer: Timer? = null
 
     private var pendingErrors: List<Exception>? = null
+    private var muteProgressDialogs = false
 
     fun init() = initOnce {
         setupSyncProgressEventStream()
@@ -49,24 +49,23 @@ class SyncToolbarViewModel @Inject constructor(
                         this.pendingErrors = null
                         resetTimer()
                         updateState {
-                            copy(progress = null)
+                            copy(progressState = null)
                         }
                     }
+
                     else -> {
                         this.pendingErrors = listOf(progress.error)
-                        set(progress = progress)
+                        set(progress)
                     }
                 }
             }
+
             is SyncProgress.finished -> {
                 val errors = progress.errors
                 if (errors.isEmpty()) {
                     this.pendingErrors = null
                     resetTimer()
-//                    updateState {
-//                        copy(progress = null)
-//                    }
-                    set(progress = progress)
+                    set(progress)
                     hideToolbarWithDelay()
 
                     return
@@ -74,24 +73,60 @@ class SyncToolbarViewModel @Inject constructor(
 
                 this.pendingErrors = errors
 
-                set(progress = progress)
+                set(progress)
                 hideToolbarWithDelay()
             }
+
             SyncProgress.starting -> {
                 hideToolbarWithDelay()
             }
+
             else -> {
-                set(progress = progress)
+                set(progress)
             }
         }
 
     }
 
-    private fun set(progress: SyncProgress) {
-        updateState {
-            copy(progress = progress)
-        }
+    private fun set(syncProgress: SyncProgress) {
+        val message = syncToolbarTextGenerator.syncToolbarText(syncProgress)
+        when (syncProgress) {
+            is SyncProgress.aborted -> {
+                muteProgressDialogs = false
+                updateState {
+                    copy(
+                        progressState = CurrentSyncProgressState.Aborted(
+                            message = message,
+                        )
+                    )
+                }
+            }
 
+            is SyncProgress.finished -> {
+                muteProgressDialogs = false
+                updateState {
+                    copy(
+                        progressState = CurrentSyncProgressState.SyncFinished(
+                            message = message,
+                            hasErrors = !this@SyncToolbarViewModel.pendingErrors.isNullOrEmpty()
+                        )
+                    )
+                }
+            }
+
+            else -> {
+                if (muteProgressDialogs) {
+                    return
+                }
+                updateState {
+                    copy(
+                        progressState = CurrentSyncProgressState.InProgress(
+                            message = message,
+                        )
+                    )
+                }
+            }
+        }
     }
 
     fun showErrorDialog() {
@@ -101,11 +136,12 @@ class SyncToolbarViewModel @Inject constructor(
 
     private fun showErrorAlert(errors: List<Exception>) {
         updateState {
-            copy(progress = null)
+            copy(progressState = null)
         }
         val error = errors.firstOrNull() ?: return
+        val message = syncToolbarTextGenerator.syncToolbarAlertMessage(error)
         updateState {
-            copy(dialogError = error)
+            copy(dialogErrorMessage = message.first)
         }
     }
 
@@ -119,33 +155,32 @@ class SyncToolbarViewModel @Inject constructor(
         timer?.schedule(timerTask {
             viewModelScope.launch {
                 updateState {
-                    copy(progress = null)
+                    copy(progressState = null)
                 }
             }
         }, finishVisibilityTime)
-    }
-
-    fun getGroupNameById(groupId: Int): String {
-        val group =
-            dbWrapperMain.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = groupId))
-        val groupName = group.name ?: "${groupId}"
-        return groupName
     }
 
     fun onDismissDialog() {
         this.pendingErrors = null
         updateState {
             copy(
-                dialogError = null,
+                dialogErrorMessage = null,
             )
+        }
+    }
+
+    fun onDismissProgressDialog() {
+        muteProgressDialogs = true
+        updateState {
+            copy(progressState = null)
         }
     }
 }
 
 data class SyncToolbarViewState(
-    val message: String = "",
-    val dialogError: Exception? = null,
-    val progress: SyncProgress? = null
+    val dialogErrorMessage: String? = null,
+    val progressState: CurrentSyncProgressState? = null,
 ) : ViewState
 
 sealed class SyncToolbarViewEffect : ViewEffect {

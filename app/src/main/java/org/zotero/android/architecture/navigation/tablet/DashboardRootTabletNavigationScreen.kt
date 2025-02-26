@@ -10,21 +10,15 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
+import org.zotero.android.architecture.Consumable
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
-import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.ZoteroNavigation
-import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.dashboard.DashboardViewModel
-import org.zotero.android.screens.dashboard.DashboardViewState
+import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
@@ -38,13 +32,8 @@ internal fun DashboardRootTabletNavigationScreen(
     toAddOrEditNote: () -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
-    viewModel: DashboardViewModel,
+    viewEffect: Consumable<DashboardViewEffect>?,
 ) {
-    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
-    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init(isTablet)
-    }
 
     val rightPaneNavController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -57,41 +46,35 @@ internal fun DashboardRootTabletNavigationScreen(
         }
     }
 
-    Box(
-//        modifier = Modifier.fillMaxSize()
-    ) {
-        Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(0.35f)) {
-                    TabletLeftPaneNavigation(
-                        viewModel = viewModel,
-                        navigateAndPopAllItemsScreen = navigateAndPopAllItemsScreen,
-                        onOpenWebpage = onOpenWebpage
-                    )
-                }
-                NewDivider(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
+    Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(0.35f)) {
+                TabletLeftPaneNavigation(
+                    viewEffect = viewEffect,
+                    navigateAndPopAllItemsScreen = navigateAndPopAllItemsScreen,
+                    onOpenWebpage = onOpenWebpage
                 )
-                Box(modifier = Modifier.weight(0.65f)) {
-                    TabletRightPaneNavigation(
-                        onPickFile = onPickFile,
-                        onOpenFile = onOpenFile,
-                        onShowPdf = onShowPdf,
-                        onOpenWebpage = onOpenWebpage,
-                        toAddOrEditNote = toAddOrEditNote,
-                        toZoteroWebViewScreen = toZoteroWebViewScreen,
-                        navigateToRetrieveMetadata = navigateToRetrieveMetadata,
-                        navController = rightPaneNavController,
-                        navigation = rightPaneNavigation
-                    )
-                    SyncToolbarScreen()
-                }
-
             }
+            NewDivider(
+                modifier = Modifier
+                    .width(1.dp)
+                    .fillMaxHeight()
+            )
+            Box(modifier = Modifier.weight(0.65f)) {
+                TabletRightPaneNavigation(
+                    onPickFile = onPickFile,
+                    onOpenFile = onOpenFile,
+                    onShowPdf = onShowPdf,
+                    onOpenWebpage = onOpenWebpage,
+                    toAddOrEditNote = toAddOrEditNote,
+                    toZoteroWebViewScreen = toZoteroWebViewScreen,
+                    navigateToRetrieveMetadata = navigateToRetrieveMetadata,
+                    navController = rightPaneNavController,
+                    navigation = rightPaneNavigation
+                )
+            }
+
         }
-        DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
     }
 }
 

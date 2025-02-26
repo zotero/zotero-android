@@ -12,6 +12,10 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.content.FileProvider
 import dagger.hilt.android.AndroidEntryPoint
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
@@ -24,8 +28,10 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
+import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNavigation
 import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
+import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
@@ -49,7 +55,7 @@ internal class DashboardActivity : BaseActivity() {
         KeyboardVisibilityEvent.setEventListener(
             this,
             this,
-            listener = object: KeyboardVisibilityEventListener {
+            listener = object : KeyboardVisibilityEventListener {
                 override fun onVisibilityChanged(isOpen: Boolean) {
                     EventBus.getDefault().post(EventBusConstants.OnKeyboardVisibilityChange(isOpen))
                 }
@@ -62,7 +68,8 @@ internal class DashboardActivity : BaseActivity() {
         ) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
-                EventBus.getDefault().post(EventBusConstants.FileWasSelected(uri, pickFileCallPoint))
+                EventBus.getDefault()
+                    .post(EventBusConstants.FileWasSelected(uri, pickFileCallPoint))
             }
         }
 
@@ -93,23 +100,34 @@ internal class DashboardActivity : BaseActivity() {
 
         setContent {
             CustomTheme {
-                val layoutType = CustomLayoutSize.calculateLayoutType()
-                if (layoutType.isTablet()) {
-                    DashboardRootTopLevelTabletNavigation(
-                        onPickFile = onPickFile,
-                        viewModel = viewModel,
-                        onOpenFile = onOpenFile,
-                        onOpenWebpage = onOpenWebpage,
-                        wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    )
-                } else {
-                    DashboardRootPhoneNavigation(
-                        onPickFile = onPickFile,
-                        viewModel = viewModel,
-                        onOpenFile = onOpenFile,
-                        onOpenWebpage = onOpenWebpage,
-                        wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    )
+                Box {
+                    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+                    val viewEffect by viewModel.viewEffects.observeAsState()
+                    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+                    LaunchedEffect(key1 = viewModel) {
+                        viewModel.init(isTablet = isTablet)
+                    }
+
+                    val layoutType = CustomLayoutSize.calculateLayoutType()
+                    if (layoutType.isTablet()) {
+                        DashboardRootTopLevelTabletNavigation(
+                            onPickFile = onPickFile,
+                            viewEffect = viewEffect,
+                            onOpenFile = onOpenFile,
+                            onOpenWebpage = onOpenWebpage,
+                            wasPspdfkitInitialized = wasPspdfkitInitialized,
+                        )
+                    } else {
+                        DashboardRootPhoneNavigation(
+                            onPickFile = onPickFile,
+                            onOpenFile = onOpenFile,
+                            onOpenWebpage = onOpenWebpage,
+                            wasPspdfkitInitialized = wasPspdfkitInitialized,
+                            viewEffect = viewEffect,
+                        )
+                    }
+                    DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
+                    SyncToolbarScreen()
                 }
 
             }

@@ -10,11 +10,10 @@ internal fun SyncToolbarDialogs(
     viewState: SyncToolbarViewState,
     viewModel: SyncToolbarViewModel
 ) {
-    val dialogError = viewState.dialogError ?: return
-    val alertMessage = syncToolbarAlertMessage(dialogError = dialogError, viewModel = viewModel)
+    val alertMessage = viewState.dialogErrorMessage ?: return
     CustomAlertDialog(
         title = stringResource(id = Strings.error),
-        description = alertMessage.first,
+        description = alertMessage,
         primaryAction = CustomAlertDialog.ActionConfig(
             text = stringResource(id = Strings.ok),
             onClick = {

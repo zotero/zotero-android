@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import org.zotero.android.architecture.Consumable
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.navigation.ARG_RETRIEVE_METADATA
 import org.zotero.android.architecture.navigation.ZoteroNavigation
@@ -24,7 +25,7 @@ import org.zotero.android.architecture.navigation.toZoteroWebViewScreen
 import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderScreenAndNavigationForTablet
 import org.zotero.android.pdf.toPdfScreen
-import org.zotero.android.screens.dashboard.DashboardViewModel
+import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -35,8 +36,8 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
-    viewModel: DashboardViewModel,
     wasPspdfkitInitialized: Boolean,
+    viewEffect: Consumable<DashboardViewEffect>?,
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
@@ -54,7 +55,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
-            viewModel = viewModel,
+            viewEffect = viewEffect,
             onShowPdf = { pdfScreenParams ->
                 navigation.toPdfScreen(
                     context = context,
@@ -91,7 +92,7 @@ private fun NavGraphBuilder.dashboardScreen(
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
-    viewModel: DashboardViewModel,
+    viewEffect: Consumable<DashboardViewEffect>?,
 ) {
     composable(
         route = DashboardRootDestinations.DASHBOARD_SCREEN,
@@ -105,7 +106,7 @@ private fun NavGraphBuilder.dashboardScreen(
             toZoteroWebViewScreen = toZoteroWebViewScreen,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             onOpenWebpage = onOpenWebpage,
-            viewModel = viewModel
+            viewEffect = viewEffect
         )
     }
 }
