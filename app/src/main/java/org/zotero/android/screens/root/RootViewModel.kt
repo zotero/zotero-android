@@ -1,6 +1,6 @@
 package org.zotero.android.screens.root
 
-import android.os.Bundle
+import android.content.Intent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
@@ -17,10 +17,10 @@ class RootViewModel @Inject constructor(
         RootViewState,
         RootViewEffect>(initialState = RootViewState()) {
 
-    fun init(extras: Bundle?) {
+    fun init(intent: Intent) {
         if (!sessionController.isLoggedIn) {
             triggerEffect(RootViewEffect.NavigateToSignIn)
-        } else if (shareRawAttachmentLoader.doesBundleContainShareData(extras)) {
+        } else if (shareRawAttachmentLoader.doesIntentContainShareData(intent)) {
             triggerEffect(RootViewEffect.NavigateToShare)
         } else {
             triggerEffect(RootViewEffect.NavigateToDashboard)

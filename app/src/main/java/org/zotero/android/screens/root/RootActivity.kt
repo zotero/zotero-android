@@ -18,7 +18,7 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel.init(this.intent.extras)
+        viewModel.init(this.intent)
         viewModel.observeViewChanges(this)
     }
 

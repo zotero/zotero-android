@@ -18,7 +18,7 @@ internal class ShareActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        shareRawAttachmentLoader.loadAttachment(bundleExtras = intent.extras!!)
+        shareRawAttachmentLoader.loadFromIntent(intent)
         setContent {
             CustomTheme {
                 ShareRootNavigation()
@@ -32,6 +32,7 @@ internal class ShareActivity : BaseActivity() {
             context: Context,
         ): Intent {
             return Intent(context, ShareActivity::class.java).apply {
+                data = extraIntent.data
                 putExtras(extraIntent)
             }
         }
