@@ -86,7 +86,7 @@ private fun SetAttachment(title: String, file: File, state: AttachmentState, sho
         val mainIconSize = 22.dp
         val badgeIconSize = 12.dp
         val contentType =
-            MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)!!
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension) ?: "text/html" //TODO proper solution
         val attachmentState = State.stateFrom(
             type = Attachment.Kind.file(
                 filename = "",

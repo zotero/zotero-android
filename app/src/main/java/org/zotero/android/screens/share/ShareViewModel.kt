@@ -488,6 +488,7 @@ internal class ShareViewModel @Inject constructor(
     private suspend fun process(attachment: RawAttachment) {
         when (attachment) {
             is RawAttachment.web -> {
+                reportFileIsNotPdf()
                 processWeb(
                     title = attachment.title,
                     url = attachment.url,
@@ -499,6 +500,7 @@ internal class ShareViewModel @Inject constructor(
                 )
             }
             is RawAttachment.remoteUrl -> {
+                reportFileIsNotPdf()
                 process(url = attachment.url)
             }
             is RawAttachment.fileUrl -> {
@@ -562,6 +564,7 @@ internal class ShareViewModel @Inject constructor(
                             attachmentState = AttachmentState.processed
                         )
                     }
+                    attemptToRecognize(tmpFile = file, fileName = filename)
                 } else {
                     Timber.i("ShareViewModel: downloaded unsupported file")
                     updateState {
@@ -573,6 +576,7 @@ internal class ShareViewModel @Inject constructor(
                         )
                     }
                     file.delete()
+                    reportFileIsNotPdf()
                 }
             }
 
@@ -1041,11 +1045,9 @@ internal class ShareViewModel @Inject constructor(
         return shareErrorProcessor.errorMessage(error)
     }
 
-    fun attemptToRecognize(tmpFile: File, fileName: String) {
+    private fun attemptToRecognize(tmpFile: File, fileName: String) {
         if (!fileStore.isPdf(tmpFile)) {
-            updateState {
-                copy(retrieveMetadataState = RetrieveMetadataState.fileIsNotPdf)
-            }
+            reportFileIsNotPdf()
             return
         }
 
@@ -1056,6 +1058,14 @@ internal class ShareViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         pdfWorkerController.recognizeNewDocument(tmpFile = tmpFile, pdfFileName = fileName)
+    }
+
+    private fun reportFileIsNotPdf() {
+        viewModelScope.launch {
+            updateState {
+                copy(retrieveMetadataState = RetrieveMetadataState.fileIsNotPdf)
+            }
+        }
     }
 
     private fun observe(update: PdfWorkerController.Update) {

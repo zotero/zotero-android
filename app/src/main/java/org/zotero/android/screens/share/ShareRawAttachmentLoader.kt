@@ -18,7 +18,10 @@ class ShareRawAttachmentLoader @Inject constructor() {
     
     fun loadFromIntent(intent: Intent) {
         val bundleExtras = intent.extras
-        if (bundleExtras != null && bundleExtras.containsKey(Intent.EXTRA_STREAM)) {
+        if (bundleExtras != null
+            && (bundleExtras.containsKey(Intent.EXTRA_STREAM)
+                    || bundleExtras.containsKey(Intent.EXTRA_TEXT))
+        ) {
             loadFromIntentExtras(bundleExtras)
         } else {
             loadFromIntentData(intent.data)
