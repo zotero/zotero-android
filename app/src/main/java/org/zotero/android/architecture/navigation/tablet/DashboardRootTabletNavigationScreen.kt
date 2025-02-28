@@ -29,7 +29,7 @@ internal fun DashboardRootTabletNavigationScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onShowPdf: (String) -> Unit,
-    toAddOrEditNote: () -> Unit,
+    toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
     viewEffect: Consumable<DashboardViewEffect>?,

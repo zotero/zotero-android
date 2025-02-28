@@ -1119,7 +1119,7 @@ class ItemDetailsViewModel @Inject constructor(
         val title =
             AddOrEditNoteArgs.TitleData(type = viewState.data.type, title = viewState.data.title)
 
-        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+        val args = AddOrEditNoteArgs(
             text = note?.text ?: "",
             tags = note?.tags ?: listOf(),
             title = title,
@@ -1128,7 +1128,8 @@ class ItemDetailsViewModel @Inject constructor(
             readOnly = !library.metadataEditable,
             isFromDashboard = false
         )
-        triggerEffect(ShowAddOrEditNoteEffect)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+        triggerEffect(ShowAddOrEditNoteEffect(encodedArgs))
     }
 
     private suspend fun saveNote(text: String, tags: List<Tag>, key: String) {
@@ -2097,7 +2098,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowItemTypePickerEffect : ItemDetailsViewEffect()
     object ScreenRefresh : ItemDetailsViewEffect()
     object OnBack : ItemDetailsViewEffect()
-    object ShowAddOrEditNoteEffect : ItemDetailsViewEffect()
+    data class ShowAddOrEditNoteEffect(val screenArgs: String) : ItemDetailsViewEffect()
     object ShowVideoPlayer : ItemDetailsViewEffect()
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()

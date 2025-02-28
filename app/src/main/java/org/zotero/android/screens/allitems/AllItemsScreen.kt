@@ -43,7 +43,7 @@ internal fun AllItemsScreen(
     navigateToAllItemsSort: () -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToItemDetails: (String) -> Unit,
-    navigateToAddOrEditNote: () -> Unit,
+    navigateToAddOrEditNote: (String) -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
@@ -65,7 +65,7 @@ internal fun AllItemsScreen(
                 null -> Unit
                 is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen()
                 is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails(consumedEffect.screenArgs)
-                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote()
+                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(consumedEffect.screenArgs)
                 is AllItemsViewEffect.ShowPhoneFilterEffect -> {
                     navigateToTagFilter(consumedEffect.params)
                 }

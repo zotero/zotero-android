@@ -466,7 +466,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
-        ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+        val args = AddOrEditNoteArgs(
             text = "",
             tags = listOf(),
             title = title,
@@ -475,7 +475,8 @@ internal class AllItemsViewModel @Inject constructor(
             readOnly = false,
             isFromDashboard = true,
         )
-        triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+        triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect(encodedArgs))
     }
 
     private fun showItemDetail(item: RItem) {
@@ -487,7 +488,7 @@ internal class AllItemsViewModel @Inject constructor(
                 }
                 val tags = item.tags!!.map({ Tag(tag = it) })
                 val library = this.library
-                ScreenArguments.addOrEditNoteArgs = AddOrEditNoteArgs(
+                val args = AddOrEditNoteArgs(
                     text = note.text,
                     tags = tags,
                     title = null,
@@ -496,7 +497,8 @@ internal class AllItemsViewModel @Inject constructor(
                     key = note.key,
                     isFromDashboard = true
                 )
-                triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect)
+                val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+                triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect(encodedArgs))
             }
             else -> {
                 val args = ItemDetailsArgs(
@@ -1170,7 +1172,7 @@ internal data class AllItemsViewState(
 internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowCollectionsEffect: AllItemsViewEffect()
     data class ShowItemDetailEffect(val screenArgs: String): AllItemsViewEffect()
-    object ShowAddOrEditNoteEffect: AllItemsViewEffect()
+    data class ShowAddOrEditNoteEffect(val screenArgs: String): AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()
     data class ShowAddByIdentifierEffect(val params: String) : AllItemsViewEffect()
     object ShowSortPickerEffect : AllItemsViewEffect()

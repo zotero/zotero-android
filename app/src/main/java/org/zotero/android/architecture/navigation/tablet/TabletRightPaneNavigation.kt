@@ -37,7 +37,7 @@ internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
-    toAddOrEditNote: () -> Unit,
+    toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,

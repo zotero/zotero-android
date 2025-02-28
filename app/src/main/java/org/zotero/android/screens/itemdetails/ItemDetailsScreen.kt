@@ -26,7 +26,7 @@ internal fun ItemDetailsScreen(
     navigateToCreatorEdit: () -> Unit,
     navigateToTagPicker: () -> Unit,
     navigateToSinglePicker: () -> Unit,
-    navigateToAddOrEditNote: () -> Unit,
+    navigateToAddOrEditNote: (String) -> Unit,
     navigateToVideoPlayerScreen: () -> Unit,
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
@@ -70,8 +70,8 @@ internal fun ItemDetailsScreen(
                     onBack()
                 }
 
-                ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
-                    navigateToAddOrEditNote()
+                is ItemDetailsViewEffect.ShowAddOrEditNoteEffect -> {
+                    navigateToAddOrEditNote(consumedEffect.screenArgs)
                 }
 
                 is ItemDetailsViewEffect.OpenFile -> {
