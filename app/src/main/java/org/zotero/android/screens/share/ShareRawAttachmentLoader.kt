@@ -40,19 +40,7 @@ class ShareRawAttachmentLoader @Inject constructor() {
     private fun loadFromIntentExtras(bundleExtras: Bundle) {
         val urlPath = bundleExtras.getString(Intent.EXTRA_TEXT)
         if (urlPath != null) {
-            val lastPathSegment = urlPath.toUri().lastPathSegment
-            if (lastPathSegment?.contains(".") == true) {
-                loadedAttachment =
-                    Result.Success(RawAttachment.remoteFileUrl(
-                        url = urlPath,
-                        contentType = "",
-                        cookies = "",
-                        userAgent = "",
-                        referrer = ""
-                    ))
-            } else {
-                loadedAttachment = Result.Success(RawAttachment.remoteUrl(urlPath))
-            }
+            loadedAttachment = Result.Success(RawAttachment.remoteUrl(urlPath))
             return
         }
         val fileContentUri = bundleExtras.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)

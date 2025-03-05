@@ -6,6 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.HEAD
 import retrofit2.http.HeaderMap
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -62,4 +63,9 @@ interface NonZoteroApi {
         @Url url: String,
         @HeaderMap headers: Map<String, String>,
     ): retrofit2.Response<ResponseBody>
+
+    @HEAD
+    suspend fun sendHead(
+        @Url url: String,
+    ): retrofit2.Response<Void>
 }

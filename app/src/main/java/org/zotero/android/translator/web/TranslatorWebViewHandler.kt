@@ -77,6 +77,10 @@ class TranslatorWebViewHandler @Inject constructor(
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
+                    //Fix for onPageFinished getting called twice for some webpages
+                    if (view.progress != 100) {
+                        return
+                    }
                     val channel = webView.createWebMessageChannel()
                     val port = channel[0]
                     this@TranslatorWebViewHandler.webViewPort = port
