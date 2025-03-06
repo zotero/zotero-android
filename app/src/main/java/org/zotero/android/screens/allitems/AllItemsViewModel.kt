@@ -767,14 +767,14 @@ internal class AllItemsViewModel @Inject constructor(
 
         val actions = mutableListOf<LongPressOptionItem>()
 
-        if (item.rawType == ItemTypes.attachment && item.parent == null) {
-            actions.add(LongPressOptionItem.CreateParentItem(item))
-        }
-
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
         if (item.rawType == ItemTypes.attachment && item.parent == null && contentType == "application/pdf") {
             actions.add(LongPressOptionItem.RetrieveMetadata(item))
+        }
+
+        if (item.rawType == ItemTypes.attachment && item.parent == null) {
+            actions.add(LongPressOptionItem.CreateParentItem(item))
         }
 
         val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
