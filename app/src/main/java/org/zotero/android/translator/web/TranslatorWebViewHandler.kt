@@ -34,6 +34,7 @@ class TranslatorWebViewHandler @Inject constructor(
     private val nonZoteroApi: NonZoteroApi,
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
+    private var wasPageAlreadyFullyLoaded: Boolean = false
 
     private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
@@ -78,9 +79,10 @@ class TranslatorWebViewHandler @Inject constructor(
 
                 override fun onPageFinished(view: WebView, url: String) {
                     //Fix for onPageFinished getting called twice for some webpages
-                    if (view.progress != 100) {
+                    if (wasPageAlreadyFullyLoaded || view.progress != 100) {
                         return
                     }
+                    wasPageAlreadyFullyLoaded = true
                     val channel = webView.createWebMessageChannel()
                     val port = channel[0]
                     this@TranslatorWebViewHandler.webViewPort = port
