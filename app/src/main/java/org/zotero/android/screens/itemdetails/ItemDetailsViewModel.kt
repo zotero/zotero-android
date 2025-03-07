@@ -1128,7 +1128,10 @@ class ItemDetailsViewModel @Inject constructor(
             readOnly = !library.metadataEditable,
             isFromDashboard = false
         )
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
+            data = args,
+            charset = StandardCharsets.UTF_8
+        )
         triggerEffect(ShowAddOrEditNoteEffect(encodedArgs))
     }
 

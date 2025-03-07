@@ -475,7 +475,10 @@ internal class AllItemsViewModel @Inject constructor(
             readOnly = false,
             isFromDashboard = true,
         )
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
+            data = args,
+            charset = StandardCharsets.UTF_8
+        )
         triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect(encodedArgs))
     }
 
@@ -497,9 +500,13 @@ internal class AllItemsViewModel @Inject constructor(
                     key = note.key,
                     isFromDashboard = true
                 )
-                val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
+                val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
+                    data = args,
+                    charset = StandardCharsets.UTF_8
+                )
                 triggerEffect(AllItemsViewEffect.ShowAddOrEditNoteEffect(encodedArgs))
             }
+
             else -> {
                 val args = ItemDetailsArgs(
                     DetailType.preview(key = item.key),

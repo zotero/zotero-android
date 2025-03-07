@@ -26,6 +26,7 @@ import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,7 +42,10 @@ internal class AddNoteViewModel @Inject constructor(
 
     private val addOrEditNoteArgs: AddOrEditNoteArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_ADD_OR_EDIT_NOTE).require()
-        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+        navigationParamsMarshaller.decodeObjectFromBase64(
+            encodedJson = argsEncoded,
+            charset = StandardCharsets.UTF_8
+        )
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -58,11 +62,12 @@ internal class AddNoteViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
+        val text = addOrEditNoteArgs.text
         viewModelScope.launch {
             updateState {
                 copy(
                     title = addOrEditNoteArgs.title,
-                    text = addOrEditNoteArgs.text,
+                    text = text,
                     tags = addOrEditNoteArgs.tags
                 )
             }
@@ -146,10 +151,11 @@ internal class AddNoteViewModel @Inject constructor(
     }
 
     private fun saveAndExit() {
-        if (addOrEditNoteArgs.text != viewState.text || addOrEditNoteArgs.tags != viewState.tags) {
+        val text = viewState.text
+        if (addOrEditNoteArgs.text != text || addOrEditNoteArgs.tags != viewState.tags) {
             EventBus.getDefault().post(
                 SaveNoteAction(
-                    text = viewState.text,
+                    text = text,
                     tags = viewState.tags,
                     key = addOrEditNoteArgs.key,
                     isFromDashboard = addOrEditNoteArgs.isFromDashboard

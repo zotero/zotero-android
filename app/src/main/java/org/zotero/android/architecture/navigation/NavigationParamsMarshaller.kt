@@ -3,6 +3,7 @@ package org.zotero.android.architecture.navigation
 import com.google.gson.Gson
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.IOUtils
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,20 +11,26 @@ import javax.inject.Singleton
 @Singleton
 class NavigationParamsMarshaller @Inject constructor(val gson: Gson) {
 
-    fun encodeObjectToBase64(data: Any): String {
+    fun encodeObjectToBase64(data: Any, charset: Charset = StandardCharsets.US_ASCII): String {
         val json = gson.toJson(data)
-        val encodedJson = encodeJsonToBase64(json)
+        val encodedJson = encodeJsonToBase64(stringToEncode = json, charset = charset)
         return encodedJson
     }
 
-    private fun encodeJsonToBase64(stringToEncode: String): String {
+    private fun encodeJsonToBase64(
+        stringToEncode: String,
+        charset: Charset
+    ): String {
         val bytes = IOUtils.toByteArray(stringToEncode);
         val encoded: ByteArray = Base64.encodeBase64(bytes)
-        return String(encoded, StandardCharsets.US_ASCII)
+        return String(encoded, charset)
     }
 
-    inline fun <reified T> decodeObjectFromBase64(encodedJson: String): T {
-        val decodedJson = decodeJsonFromBase64Binary(encodedJson)
+    inline fun <reified T> decodeObjectFromBase64(
+        encodedJson: String,
+        charset: Charset = StandardCharsets.US_ASCII
+    ): T {
+        val decodedJson = decodeJsonFromBase64Binary(encodedJson = encodedJson, charset = charset)
         return unmarshal(decodedJson)
     }
 
@@ -31,10 +38,13 @@ class NavigationParamsMarshaller @Inject constructor(val gson: Gson) {
         return gson.fromJson(data, T::class.java)
     }
 
-    fun decodeJsonFromBase64Binary(encodedJson: String): String {
+    fun decodeJsonFromBase64Binary(
+        encodedJson: String,
+        charset: Charset
+    ): String {
         val bytes = IOUtils.toByteArray(encodedJson);
         val decodedJson: ByteArray = Base64.decodeBase64(bytes)
-        return String(decodedJson, StandardCharsets.US_ASCII)
+        return String(decodedJson, charset)
     }
 
 }
