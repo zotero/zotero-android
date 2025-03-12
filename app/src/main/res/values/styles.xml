@@ -17,7 +17,7 @@
         <item name="statusBarColor">@color/toolbarColor</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="appBarLayoutStyle">@style/AppBarLayoutStyle</item>
-        <item name="android:fontFamily">@font/suisse_intl</item>
+        <item name="android:fontFamily">@font/app_font</item>
     </style>
 
     <style name="AppBarLayoutStyle" parent="Widget.MaterialComponents.AppBarLayout.Surface">
@@ -181,12 +181,11 @@
 
     <style name="defaultTextStyle">
         <item name="android:textSize">15sp</item>
-        <item name="android:fontFamily">@font/suisse_intl_regular</item>
         <item name="android:letterSpacing">0</item>
     </style>
     <style name="h2">
         <item name="android:textSize">17sp</item>
-        <item name="android:fontFamily">@font/suisse_intl_semibold</item>
+        <item name="android:fontWeight">600</item>
         <item name="android:letterSpacing">0</item>
     </style>
 

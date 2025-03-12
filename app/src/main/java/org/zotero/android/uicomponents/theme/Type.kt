@@ -7,27 +7,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import org.zotero.android.uicomponents.Fonts
 
 val LocalCustomTypography: ProvidableCompositionLocal<CustomTypography> =
     staticCompositionLocalOf { CustomTypography() }
 
-private val fonts = FontFamily(
-    Font(Fonts.suisse_intl_regular, weight = FontWeight.Normal),
-    Font(Fonts.suisse_intl_regular_italic, weight = FontWeight.Normal, style = FontStyle.Italic),
-    Font(Fonts.suisse_intl_medium, weight = FontWeight.Medium),
-    Font(Fonts.suisse_intl_medium_italic, weight = FontWeight.Medium, style = FontStyle.Italic),
-    Font(Fonts.suisse_intl_semibold, weight = FontWeight.SemiBold),
-    Font(Fonts.suisse_intl_semibold_italic, weight = FontWeight.SemiBold, style = FontStyle.Italic),
-    Font(Fonts.suisse_intl_bold, weight = FontWeight.Bold),
-    Font(Fonts.suisse_intl_bold_italic, weight = FontWeight.Bold, style = FontStyle.Italic),
-)
+private val fonts = FontFamily.Default
 
 data class CustomTypography(
     val displayLarge: TextStyle = TextStyle(
@@ -53,14 +41,14 @@ data class CustomTypography(
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.sp,
         lineHeight = 20.sp,
-        fontFamily = FontFamily(Font(Fonts.reckless_neue_book)),
+        fontFamily = fonts,
     ),
     val subheadLight: TextStyle = TextStyle(
         fontSize = 28.sp,
         fontWeight = FontWeight.Light,
         letterSpacing = 0.sp,
         lineHeight = 32.sp,
-        fontFamily = FontFamily(Font(Fonts.reckless_neue_book)),
+        fontFamily = fonts,
     ),
     val h1: TextStyle = TextStyle(
         fontSize = 23.sp,

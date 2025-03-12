@@ -192,7 +192,7 @@ object StyledTextHelper {
 
     private fun getTypeface(context: Context, font: String): Typeface {
         val resource = when (font) {
-            "bold" -> Fonts.suisse_intl_bold
+            "bold" -> return Typeface.DEFAULT_BOLD
             "reckless" -> Fonts.reckless_neue_book
             "grenette_semibold_italic" -> Fonts.grenette_semibold_italic_pro
             else -> error("Unknown font: $font!")
