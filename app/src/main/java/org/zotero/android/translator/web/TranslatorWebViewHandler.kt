@@ -193,7 +193,6 @@ class TranslatorWebViewHandler @Inject constructor(
         if (this.referrer != null) {
             headers["Referer"] = this.referrer!!
         }
-        headers["Content-Type"] = "application/x-www-form-urlencoded"
 
         if (this.cookies != null) {
             headers["Cookie"] = this.cookies!!
@@ -208,6 +207,9 @@ class TranslatorWebViewHandler @Inject constructor(
                 }
 
                 "POST" -> {
+                    if (headers["Content-Type"] == null) {
+                        headers["Content-Type"] = "application/x-www-form-urlencoded"
+                    }
                     nonZoteroApi.sendWebViewPost(
                         url = url,
                         headers = headers,
