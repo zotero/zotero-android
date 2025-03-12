@@ -80,6 +80,11 @@ android {
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
             manifestPlaceholders["enableCrashReporting"] = false
             extra.set("enableCrashlytics", false)
+            //Prevent variables from being 'optimized out' during debug,
+            //so it becomes possible to see their values in debugger
+            kotlinOptions {
+                freeCompilerArgs = freeCompilerArgs + listOf("-Xdebug")
+            }
         }
         getByName("release") {
             isDebuggable = false

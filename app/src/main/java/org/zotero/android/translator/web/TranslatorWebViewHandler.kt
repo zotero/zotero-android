@@ -193,6 +193,8 @@ class TranslatorWebViewHandler @Inject constructor(
         if (this.referrer != null) {
             headers["Referer"] = this.referrer!!
         }
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+
         if (this.cookies != null) {
             headers["Cookie"] = this.cookies!!
         }
