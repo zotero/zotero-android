@@ -22,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.androidx.content.getDrawableByItemType
+import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.screens.retrievemetadata.data.RetrieveMetadataState
 import org.zotero.android.screens.share.ShareViewEffect.NavigateBack
 import org.zotero.android.screens.share.ShareViewEffect.NavigateToCollectionPickerScreen
@@ -144,14 +146,30 @@ private fun RecognizeItemSection(retrieveMetadataState: RetrieveMetadataState.su
     Spacer(modifier = Modifier.height(20.dp))
     ShareSection {
         RecognizedItemRow(
-            retrieveMetadataState.recognizedTitle,
-            retrieveMetadataState.recognizedTypeIcon
+            title = retrieveMetadataState.recognizedTitle,
+            iconSize = 28.dp,
+            typeIconName = retrieveMetadataState.recognizedTypeIcon
         )
+        Row {
+            Spacer(modifier = Modifier.width(16.dp))
+            RecognizedItemRow(
+                title = "PDF",
+                iconSize = 22.dp,
+                typeIconName = ItemTypes.iconName(
+                    rawType = ItemTypes.attachment,
+                    contentType = "pdf"
+                )
+            )
+        }
     }
 }
 
 @Composable
-fun RecognizedItemRow(title: String, typeIconName: String) {
+private fun RecognizedItemRow(
+    iconSize: Dp,
+    title: String,
+    typeIconName: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,7 +179,7 @@ fun RecognizedItemRow(title: String, typeIconName: String) {
     ) {
         Spacer(modifier = Modifier.width(16.dp))
         Image(
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(iconSize),
             painter = painterResource(id = LocalContext.current.getDrawableByItemType(typeIconName)),
             contentDescription = null,
         )
