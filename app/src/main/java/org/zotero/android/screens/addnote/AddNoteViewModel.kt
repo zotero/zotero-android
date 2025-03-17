@@ -17,7 +17,9 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.navigation.ARG_ADD_OR_EDIT_NOTE
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.requests.ReadNoteDbRequest
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.addnote.data.WebViewSendMessage
@@ -34,11 +36,15 @@ internal class AddNoteViewModel @Inject constructor(
     private val gson: Gson,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     stateHandle: SavedStateHandle,
+    private val dbWrapperMain: DbWrapperMain,
 ) : BaseViewModel2<AddNoteViewState, AddNoteViewEffect>(AddNoteViewState()) {
 
     private lateinit var port: WebMessagePort
 
     private var isSaveDuringExit: Boolean = false
+
+    lateinit var initialText: String
+    lateinit var initialTags: List<Tag>
 
     private val addOrEditNoteArgs: AddOrEditNoteArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_ADD_OR_EDIT_NOTE).require()
@@ -62,14 +68,19 @@ internal class AddNoteViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
-        val text = addOrEditNoteArgs.text
-        viewModelScope.launch {
-            updateState {
-                copy(
-                    title = addOrEditNoteArgs.title,
-                    text = text,
-                    tags = addOrEditNoteArgs.tags
-                )
+
+        dbWrapperMain.realmDbStorage.perform {coordinatorAction ->
+            val note = ReadNoteDbRequest(addOrEditNoteArgs.key).process(coordinatorAction.realm)
+            initialText = note?.text ?: ""
+            initialTags = note?.tags ?: listOf()
+            viewModelScope.launch {
+                updateState {
+                    copy(
+                        title = this@AddNoteViewModel.addOrEditNoteArgs.title,
+                        text = this@AddNoteViewModel.initialText,
+                        tags = this@AddNoteViewModel.initialTags
+                    )
+                }
             }
         }
     }
@@ -152,7 +163,7 @@ internal class AddNoteViewModel @Inject constructor(
 
     private fun saveAndExit() {
         val text = viewState.text
-        if (addOrEditNoteArgs.text != text || addOrEditNoteArgs.tags != viewState.tags) {
+        if (initialText != text || initialTags != viewState.tags) {
             EventBus.getDefault().post(
                 SaveNoteAction(
                     text = text,

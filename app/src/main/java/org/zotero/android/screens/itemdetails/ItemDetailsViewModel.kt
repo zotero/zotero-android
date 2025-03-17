@@ -1120,8 +1120,6 @@ class ItemDetailsViewModel @Inject constructor(
             AddOrEditNoteArgs.TitleData(type = viewState.data.type, title = viewState.data.title)
 
         val args = AddOrEditNoteArgs(
-            text = note?.text ?: "",
-            tags = note?.tags ?: listOf(),
             title = title,
             key = key,
             libraryId = library.identifier,

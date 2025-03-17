@@ -1,15 +1,12 @@
 package org.zotero.android.screens.addnote.data
 
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.Tag
 
 data class AddOrEditNoteArgs(
     val title: TitleData?,
     val key: String,
     val libraryId: LibraryIdentifier,
     val readOnly: Boolean,
-    var text: String,
-    var tags: List<Tag>,
     val isFromDashboard: Boolean,
 ) {
     data class TitleData(

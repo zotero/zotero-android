@@ -467,8 +467,6 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
         val args = AddOrEditNoteArgs(
-            text = "",
-            tags = listOf(),
             title = title,
             key = KeyGenerator.newKey(),
             libraryId = libraryId,
@@ -489,11 +487,8 @@ internal class AllItemsViewModel @Inject constructor(
                 if (note == null) {
                     return
                 }
-                val tags = item.tags!!.map({ Tag(tag = it) })
                 val library = this.library
                 val args = AddOrEditNoteArgs(
-                    text = note.text,
-                    tags = tags,
                     title = null,
                     libraryId = library.identifier,
                     readOnly = !library.metadataEditable,
