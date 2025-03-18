@@ -45,4 +45,6 @@
     <string name="retrieve_metadata_error_failed_to_initialize">Failed to initialize</string>
 
     <string name="sync_snackbar_view_action">View</string>
+
+    <string name="errors.shareext.proxied_urls_not_supported">Proxied URLs are not currently supported</string>
 </resources>

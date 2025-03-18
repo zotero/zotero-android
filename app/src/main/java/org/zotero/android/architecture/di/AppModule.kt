@@ -8,10 +8,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
-import org.zotero.android.api.module.ZoteroNoRedirectModule
 import org.zotero.android.api.module.NonZoteroApiModule
+import org.zotero.android.api.module.NonZoteroNoRedirectModule
 import org.zotero.android.api.module.WebSocketApiModule
 import org.zotero.android.api.module.ZoteroApiModule
+import org.zotero.android.api.module.ZoteroNoRedirectModule
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.coroutines.QDispatchers
@@ -24,6 +25,7 @@ import javax.inject.Singleton
         ZoteroApiModule::class,
         ZoteroNoRedirectModule::class,
         NonZoteroApiModule::class,
+        NonZoteroNoRedirectModule::class,
         WebSocketApiModule::class,
     ]
 )

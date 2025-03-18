@@ -16,6 +16,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.NonZoteroNoRedirectApi
 import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
@@ -103,6 +104,7 @@ internal class ShareViewModel @Inject constructor(
     private val shareItemSubmitter: ShareItemSubmitter,
     private val pdfWorkerController: PdfWorkerController,
     private val nonZoteroApi: NonZoteroApi,
+    private val nonZoteroNoRedirectApi: NonZoteroNoRedirectApi,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -145,7 +147,18 @@ internal class ShareViewModel @Inject constructor(
                     libraries = Libraries.all,
                     retryAttempt = 0
                 )
-                var rawAttachmentType = calculateRawAttachmentType()
+                if (!checkForProxiedUrls()) {
+                    viewModelScope.launch {
+                        updateState {
+                            copy(
+                                attachmentState = AttachmentState.failed(AttachmentState.Error.proxiedUrlsNotSupported),
+                            )
+                        }
+                    }
+                    reportFileIsNotPdf()
+                    return@launch
+                }
+                val rawAttachmentType = calculateRawAttachmentType()
                 process(rawAttachmentType)
             } catch (e: Exception) {
                 Timber.e(e, "ShareViewModel: could not load attachment")
@@ -196,6 +209,20 @@ internal class ShareViewModel @Inject constructor(
         }
         return rawAttachmentType
     }
+
+    private suspend fun checkForProxiedUrls(): Boolean {
+        val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
+        if (rawAttachmentType is RawAttachment.remoteUrl) {
+            val result = nonZoteroNoRedirectApi.sendGet(rawAttachmentType.url)
+            val headers = result.headers()
+            if (headers["Server"] == "EZproxy") {
+                return false
+            }
+
+        }
+        return true
+    }
+
 
     private fun setupObservers() {
         syncObservableEventStream.flow()

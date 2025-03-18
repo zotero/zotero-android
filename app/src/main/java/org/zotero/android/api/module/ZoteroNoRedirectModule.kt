@@ -6,8 +6,8 @@ import dagger.hilt.migration.DisableInstallInCheck
 import okhttp3.OkHttpClient
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.ZoteroNoRedirectApi
-import org.zotero.android.api.annotations.ForNoRedirectsApi
 import org.zotero.android.api.annotations.ForZoteroApi
+import org.zotero.android.api.annotations.ForZoteroNoRedirectsApi
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -17,10 +17,10 @@ object ZoteroNoRedirectModule {
 
     @Provides
     @Singleton
-    @ForNoRedirectsApi
+    @ForZoteroNoRedirectsApi
     fun provideRetrofit(
         @ForZoteroApi baseBuilder: Retrofit.Builder,
-        @ForNoRedirectsApi okHttpClient: OkHttpClient
+        @ForZoteroNoRedirectsApi okHttpClient: OkHttpClient
     ): Retrofit {
         return baseBuilder
             .baseUrl(BuildConfig.BASE_API_URL)
@@ -30,7 +30,7 @@ object ZoteroNoRedirectModule {
 
     @Provides
     @Singleton
-    @ForNoRedirectsApi
+    @ForZoteroNoRedirectsApi
     fun provideOkHttpClient(
         @ForZoteroApi baseClient: OkHttpClient,
     ): OkHttpClient {
@@ -42,7 +42,7 @@ object ZoteroNoRedirectModule {
 
     @Provides
     @Singleton
-    fun provideZoteroNoRedirectApi(@ForNoRedirectsApi retrofit: Retrofit): ZoteroNoRedirectApi =
+    fun provideZoteroNoRedirectApi(@ForZoteroNoRedirectsApi retrofit: Retrofit): ZoteroNoRedirectApi =
         retrofit.create(ZoteroNoRedirectApi::class.java)
 
 }

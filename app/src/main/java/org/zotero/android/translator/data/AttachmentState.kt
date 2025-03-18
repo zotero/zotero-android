@@ -11,6 +11,7 @@ sealed class AttachmentState {
         object cantLoadSchema : Error()
         object cantLoadWebData : Error()
         object downloadFailed : Error()
+        object proxiedUrlsNotSupported: Error()
         object itemsNotFound : Error()
         object expired : Error()
         object unknown : Error()
@@ -28,7 +29,7 @@ sealed class AttachmentState {
         val isFatal: Boolean
             get() {
                 return when (this) {
-                    is cantLoadWebData, is cantLoadSchema -> true
+                    is cantLoadWebData, is cantLoadSchema, is proxiedUrlsNotSupported -> true
                     else -> false
                 }
             }
@@ -78,7 +79,7 @@ sealed class AttachmentState {
                         return false
                     }
                     return when (this.e) {
-                        is Error.apiFailure, is Error.quotaLimit -> {
+                        is Error.apiFailure, is Error.quotaLimit, is Error.proxiedUrlsNotSupported -> {
                             false
                         }
 
