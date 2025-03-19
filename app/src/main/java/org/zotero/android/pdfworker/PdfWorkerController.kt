@@ -187,6 +187,7 @@ class PdfWorkerController @Inject constructor(
         dbWrapperMain.realmDbStorage.perform(
             LinkAttachmentToParentItemDbRequest(
                 schemaController = this.schemaController,
+                fileStore = this.fileStore,
                 dateParser = this.dateParser,
                 libraryId = libraryIdentifier,
                 itemKey = itemKey,
