@@ -21,7 +21,6 @@ import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
@@ -75,6 +74,7 @@ import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
 import org.zotero.android.translator.web.TranslatorWebCallChainExecutor
 import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
+import retrofit2.Response
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -147,7 +147,14 @@ internal class ShareViewModel @Inject constructor(
                     libraries = Libraries.all,
                     retryAttempt = 0
                 )
-                if (!checkForProxiedUrls()) {
+                val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
+
+                val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
+                    nonZoteroApi.sendHead(rawAttachmentType.url)
+                } else {
+                    null
+                }
+                if (isAProxiedUrl(maybeHeadNetworkResult)) {
                     viewModelScope.launch {
                         updateState {
                             copy(
@@ -158,8 +165,8 @@ internal class ShareViewModel @Inject constructor(
                     reportFileIsNotPdf()
                     return@launch
                 }
-                val rawAttachmentType = calculateRawAttachmentType()
-                process(rawAttachmentType)
+                val newRawAttachmentType = calculateRawAttachmentType(rawAttachmentType, maybeHeadNetworkResult)
+                process(newRawAttachmentType)
             } catch (e: Exception) {
                 Timber.e(e, "ShareViewModel: could not load attachment")
                 updateAttachmentState(
@@ -174,53 +181,45 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
-    private suspend fun calculateRawAttachmentType(): RawAttachment {
-        val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
-        //If it's a remoteUrl let's try to determine whether it's pointing to a webpage or a file.
-        if (rawAttachmentType is RawAttachment.remoteUrl) {
-            val networkResult = safeApiCall {
-                nonZoteroApi.sendHead(rawAttachmentType.url)
-            }
-            if (networkResult is CustomResult.GeneralSuccess.NetworkSuccess) {
-                val contentType = networkResult.headers["Content-Type"] ?: ""
-                if (contentType.contains(
-                        other = "application/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "image/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "video/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "audio/",
-                        ignoreCase = true
-                    )
-                ) {
-                    return RawAttachment.remoteFileUrl(
-                        url = rawAttachmentType.url,
-                        contentType = contentType,
-                        cookies = null,
-                        userAgent = DeviceInfoProvider.userAgentString,
-                        referrer = null,
-                    )
-                }
+    private fun calculateRawAttachmentType(
+        rawAttachmentType: RawAttachment,
+        headNetworkResult: Response<Void>?
+    ): RawAttachment {
+        if (headNetworkResult?.isSuccessful == true && rawAttachmentType is RawAttachment.remoteUrl) {
+            val contentType = headNetworkResult.headers()["Content-Type"] ?: ""
+            if (contentType.contains(
+                    other = "application/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "image/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "video/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "audio/",
+                    ignoreCase = true
+                )
+            ) {
+                return RawAttachment.remoteFileUrl(
+                    url = rawAttachmentType.url,
+                    contentType = contentType,
+                    cookies = null,
+                    userAgent = DeviceInfoProvider.userAgentString,
+                    referrer = null,
+                )
             }
         }
         return rawAttachmentType
     }
 
-    private suspend fun checkForProxiedUrls(): Boolean {
-        val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
-        if (rawAttachmentType is RawAttachment.remoteUrl) {
-            val result = nonZoteroNoRedirectApi.sendGet(rawAttachmentType.url)
-            val headers = result.headers()
-            if (headers["Server"] == "EZproxy") {
-                return false
-            }
-
+    private fun isAProxiedUrl(maybeHeadNetworkResult: Response<Void>?): Boolean {
+        if (maybeHeadNetworkResult == null) {
+            return false
         }
-        return true
+        val headers = maybeHeadNetworkResult.headers()
+        val serverHeader = headers["Server"] // Keys do ignoreCase in the internals of Headers class.
+        return serverHeader?.equals(other = "EZproxy", ignoreCase = true) == true
     }
 
 
