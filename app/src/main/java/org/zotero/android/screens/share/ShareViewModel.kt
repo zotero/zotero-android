@@ -219,7 +219,7 @@ internal class ShareViewModel @Inject constructor(
         }
         val headers = maybeHeadNetworkResult.headers()
         val serverHeader = headers["Server"] // Keys do ignoreCase in the internals of Headers class.
-        return serverHeader?.equals(other = "EZproxy", ignoreCase = true) == true
+        return serverHeader == "EZproxy"
     }
 
 
