@@ -88,6 +88,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.architecture.require
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
@@ -200,6 +201,7 @@ class PdfReaderViewModel @Inject constructor(
     private val dateParser: DateParser,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val dispatcher: CoroutineDispatcher,
+    private val progressHandler: SyncProgressHandler,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
@@ -476,6 +478,7 @@ class PdfReaderViewModel @Inject constructor(
         this@PdfReaderViewModel.pdfFragment.addDocumentListener(object :
             DocumentListener {
             override fun onDocumentLoaded(document: PdfDocument) {
+                progressHandler.muteProgressToolbarForScreen()
                 viewModelScope.launch {
                     this@PdfReaderViewModel.onDocumentLoaded(document)
                 }
@@ -2064,6 +2067,7 @@ class PdfReaderViewModel @Inject constructor(
         }
 
     override fun onCleared() {
+        progressHandler.unMuteProgressToolbarForScreen()
         fragmentManager.commit(allowStateLoss = true) {
             remove(this@PdfReaderViewModel.pdfUiFragment)
         }
@@ -2477,6 +2481,8 @@ class PdfReaderViewModel @Inject constructor(
         this.pdfFragment.addDocumentListener(object : DocumentListener {
             override fun onDocumentLoaded(document: PdfDocument) {
                 viewModelScope.launch {
+                    progressHandler.muteProgressToolbarForScreen()
+
                     this@PdfReaderViewModel.onDocumentLoaded(document)
 
                     if (queuedUpPdfReaderColorPickerResult != null) {

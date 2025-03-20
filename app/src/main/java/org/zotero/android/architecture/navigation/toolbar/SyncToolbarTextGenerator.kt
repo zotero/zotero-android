@@ -105,6 +105,10 @@ class SyncToolbarTextGenerator @Inject constructor(
                     formatArgs
                 )
             }
+            is SyncProgress.shouldMuteWhileOnScreen -> {
+                //no op
+                return ""
+            }
         }
     }
 
