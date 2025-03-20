@@ -14,7 +14,8 @@ class NavigationParamsMarshaller @Inject constructor(val gson: Gson) {
     fun encodeObjectToBase64(data: Any, charset: Charset = StandardCharsets.US_ASCII): String {
         val json = gson.toJson(data)
         val encodedJson = encodeJsonToBase64(stringToEncode = json, charset = charset)
-        return encodedJson
+        val escaped = encodedJson.replace('/', '+').replace('_', '-')
+        return escaped
     }
 
     private fun encodeJsonToBase64(
@@ -30,7 +31,8 @@ class NavigationParamsMarshaller @Inject constructor(val gson: Gson) {
         encodedJson: String,
         charset: Charset = StandardCharsets.US_ASCII
     ): T {
-        val decodedJson = decodeJsonFromBase64Binary(encodedJson = encodedJson, charset = charset)
+        val unescaped = encodedJson.replace('-', '_').replace('+', '/')
+        val decodedJson = decodeJsonFromBase64Binary(encodedJson = unescaped, charset = charset)
         return unmarshal(decodedJson)
     }
 
