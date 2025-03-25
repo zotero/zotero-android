@@ -150,7 +150,11 @@ internal class ShareViewModel @Inject constructor(
                 val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
 
                 val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
-                    nonZoteroApi.sendHead(rawAttachmentType.url)
+                    var networkResult: Response<*>? = nonZoteroApi.sendHead(rawAttachmentType.url)
+                    if (networkResult?.code() == 405) {
+                        networkResult = nonZoteroApi.sendWebViewGet(rawAttachmentType.url, emptyMap())
+                    }
+                    networkResult
                 } else {
                     null
                 }
@@ -183,7 +187,7 @@ internal class ShareViewModel @Inject constructor(
 
     private fun calculateRawAttachmentType(
         rawAttachmentType: RawAttachment,
-        headNetworkResult: Response<Void>?
+        headNetworkResult: Response<*>?
     ): RawAttachment {
         if (headNetworkResult?.isSuccessful == true && rawAttachmentType is RawAttachment.remoteUrl) {
             val contentType = headNetworkResult.headers()["Content-Type"] ?: ""
@@ -213,7 +217,7 @@ internal class ShareViewModel @Inject constructor(
         return rawAttachmentType
     }
 
-    private fun isAProxiedUrl(maybeHeadNetworkResult: Response<Void>?): Boolean {
+    private fun isAProxiedUrl(maybeHeadNetworkResult: Response<*>?): Boolean {
         if (maybeHeadNetworkResult == null) {
             return false
         }
@@ -593,7 +597,13 @@ internal class ShareViewModel @Inject constructor(
         referrer: String?
     ) {
         val filename = url.toUri().lastPathSegment!!
-        val ext = MimeTypeMap.getFileExtensionFromUrl(filename)
+        //Some websites return filename without file extension,
+        //but at least for PDFs we can determine it for sure by content-type
+        var ext = if (contentType == "application/pdf") {
+            "pdf"
+        } else {
+            MimeTypeMap.getFileExtensionFromUrl(filename)
+        }
         val file = fileStore.shareExtensionDownload(key = this.attachmentKey, ext = ext)
 
         viewModelScope.launch {
