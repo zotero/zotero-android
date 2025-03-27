@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collections
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
@@ -23,6 +24,9 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
+import org.zotero.android.architecture.navigation.ARG_COLLECTIONS_SCREEN
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.require
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
@@ -60,6 +64,7 @@ import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import timber.log.Timber
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.reflect.KClass
@@ -71,6 +76,8 @@ internal class CollectionsViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val fileCleanupController: AttachmentFileCleanupController,
     private val attachmentDownloader: AttachmentDownloader,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    stateHandle: SavedStateHandle,
     dispatchers: Dispatchers,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()) {
 
@@ -99,6 +106,11 @@ internal class CollectionsViewModel @Inject constructor(
     )
     private var itemsFilter: List<ItemsFilter> = emptyList()
 
+    val screenArgs: CollectionsArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_COLLECTIONS_SCREEN).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: LongPressOptionItem) {
         onLongPressOptionsItemSelected(event)
@@ -114,8 +126,7 @@ internal class CollectionsViewModel @Inject constructor(
         EventBus.getDefault().register(this)
         this.isTablet = isTablet
         viewModelScope.launch {
-            val args = ScreenArguments.collectionsArgs
-            initViewState(args)
+            initViewState(screenArgs)
             loadData()
         }
     }
@@ -281,7 +292,7 @@ internal class CollectionsViewModel @Inject constructor(
                     val snapshot = collectionTree.createSnapshot()
                     viewModelScope.launch {
                         updateCollectionTree(collectionTree, snapshot)
-                        maybeRecreateItemsScreen(ScreenArguments.collectionsArgs.shouldRecreateItemsScreen)
+                        maybeRecreateItemsScreen(screenArgs.shouldRecreateItemsScreen)
                     }
 
                 }
@@ -406,7 +417,14 @@ internal class CollectionsViewModel @Inject constructor(
             searchTerm = null,
             error = null
         )
-        triggerEffect(CollectionsViewEffect.NavigateToAllItemsScreen)
+
+        val collectionsArgs = CollectionsArgs(
+            libraryId = this.libraryId,
+            selectedCollectionId = collection.identifier,
+            shouldRecreateItemsScreen = this.isTablet
+        )
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(CollectionsViewEffect.NavigateToAllItemsScreen(encodedArgs))
     }
 
     fun onItemChevronTapped(collection: Collection) {
@@ -675,11 +693,12 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun navigateToLibraries() {
-        ScreenArguments.collectionsArgs = CollectionsArgs(
+        val collectionsArgs = CollectionsArgs(
             libraryId = fileStore.getSelectedLibrary(),
             fileStore.getSelectedCollectionId()
         )
-        triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen(encodedArgs))
     }
 
     fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {
@@ -719,8 +738,8 @@ internal data class CollectionsViewState(
 
 internal sealed class CollectionsViewEffect : ViewEffect {
     object NavigateBack : CollectionsViewEffect()
-    object NavigateToAllItemsScreen : CollectionsViewEffect()
-    object NavigateToLibrariesScreen : CollectionsViewEffect()
+    data class NavigateToAllItemsScreen(val screenArgs: String) : CollectionsViewEffect()
+    data class NavigateToLibrariesScreen(val screenArgs: String) : CollectionsViewEffect()
     object ShowCollectionEditEffect : CollectionsViewEffect()
     object ScreenRefresh : CollectionsViewEffect()
 }

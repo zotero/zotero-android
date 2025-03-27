@@ -949,8 +949,9 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun navigateToCollections() {
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
-        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect)
+        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
     }
 
     fun onDismissDialog() {
@@ -1172,7 +1173,7 @@ internal data class AllItemsViewState(
 }
 
 internal sealed class AllItemsViewEffect : ViewEffect {
-    object ShowCollectionsEffect: AllItemsViewEffect()
+    data class ShowCollectionsEffect(val screenArgs: String): AllItemsViewEffect()
     data class ShowItemDetailEffect(val screenArgs: String): AllItemsViewEffect()
     data class ShowAddOrEditNoteEffect(val screenArgs: String): AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()

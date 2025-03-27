@@ -61,6 +61,7 @@ internal const val ARG_ADD_BY_IDENTIFIER = "addByIdentifierArg"
 
 @Composable
 internal fun DashboardRootPhoneNavigation(
+    collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
@@ -76,10 +77,11 @@ internal fun DashboardRootPhoneNavigation(
 
 
     LaunchedEffect(key1 = viewEffect) {
-        when (viewEffect?.consume()) {
+        val consumedEffect = viewEffect?.consume()
+        when (consumedEffect) {
             null -> Unit
-            DashboardViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(
-                navController
+            is DashboardViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(
+                navController, consumedEffect.screenArgs
             )
         }
     }
@@ -93,10 +95,11 @@ internal fun DashboardRootPhoneNavigation(
             modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
         ) {
             collectionsScreen(
+                collectionDefaultValue = collectionDefaultValue,
                 onBack = navigation::onBack,
                 navigateToAllItems = {
                     toAllItems(
-                        navController = navController,
+                        navController = navController,it
                     )
                 },
                 navigateToLibraries = {
@@ -106,7 +109,7 @@ internal fun DashboardRootPhoneNavigation(
             )
             librariesScreen(
                 navigateToCollectionsScreen = {
-                    navigateToCollectionsScreen(navController)
+                    navigateToCollectionsScreen(navController, it)
                 },
                 onSettingsTapped = { navigation.toSettingsScreen() }
             )
@@ -240,10 +243,10 @@ internal fun DashboardRootPhoneNavigation(
     }
 }
 
-private fun navigateToCollectionsScreen(navController: NavHostController) {
+private fun navigateToCollectionsScreen(navController: NavHostController, collectionArgs: String) {
     navController.popBackStack(navController.graph.id, inclusive = true)
     navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
-    navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
+    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
 }
 
 private object DashboardRootPhoneDestinations {
@@ -257,8 +260,8 @@ private object DashboardRootPhoneDestinations {
 
 }
 
-private fun ZoteroNavigation.toCollectionsScreen() {
-    navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN) {
+private fun ZoteroNavigation.toCollectionsScreen(params: String) {
+    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$params") {
         launchSingleTop = true
     }
 }
@@ -289,9 +292,10 @@ private fun ZoteroNavigation.toRetrieveMetadata(args: String) {
 
 private fun toAllItems(
     navController: NavHostController,
+    collectionArgs: String,
 ) {
     navController.popBackStack(navController.graph.id, inclusive = true)
-    navController.navigate(CommonScreenDestinations.COLLECTIONS_SCREEN)
+    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
     navController.navigate(CommonScreenDestinations.ALL_ITEMS)
 }
 

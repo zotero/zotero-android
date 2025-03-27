@@ -36,7 +36,7 @@ internal fun AllItemsScreen(
     onPickFile: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
-    navigateToCollectionsScreen: () -> Unit,
+    navigateToCollectionsScreen: (String) -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
@@ -63,7 +63,7 @@ internal fun AllItemsScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen()
+                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen(consumedEffect.screenArgs)
                 is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails(consumedEffect.screenArgs)
                 is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(consumedEffect.screenArgs)
                 is AllItemsViewEffect.ShowPhoneFilterEffect -> {

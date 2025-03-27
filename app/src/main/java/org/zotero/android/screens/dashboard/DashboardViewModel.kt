@@ -24,6 +24,7 @@ import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.architecture.logging.debug.DebugLoggingDialogData
 import org.zotero.android.architecture.logging.debug.DebugLoggingDialogDataEventStream
 import org.zotero.android.architecture.logging.debug.DebugLoggingInterface
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RGroup
@@ -54,6 +55,7 @@ import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.webdav.WebDavSessionStorage
 import timber.log.Timber
 import java.io.File
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
@@ -67,6 +69,7 @@ class DashboardViewModel @Inject constructor(
     private val context: Context,
     private val sessionController: SessionController,
     private val sessionStorage: WebDavSessionStorage,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<DashboardViewState, DashboardViewEffect>(DashboardViewState()),
     DebugLoggingInterface {
 
@@ -144,7 +147,6 @@ class DashboardViewModel @Inject constructor(
     fun init(isTablet: Boolean) = initOnce {
         this.isTablet = isTablet
         EventBus.getDefault().register(this)
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
 
         debugLogging.debugLoggingInterface = this
         setupDebugLoggingDialogDataEventStream()
@@ -426,12 +428,13 @@ class DashboardViewModel @Inject constructor(
     fun showCollections(libraryId: LibraryIdentifier) {
         val collectionId = storeIfNeeded(libraryId = libraryId)
 
-        ScreenArguments.collectionsArgs = CollectionsArgs(
+        val collectionsArgs = CollectionsArgs(
             libraryId = libraryId,
             selectedCollectionId = collectionId,
             shouldRecreateItemsScreen = this.isTablet
         )
-        triggerEffect(DashboardViewEffect.NavigateToCollectionsScreen)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(DashboardViewEffect.NavigateToCollectionsScreen(encodedArgs))
     }
 
     private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
@@ -449,6 +452,12 @@ class DashboardViewModel @Inject constructor(
         return collectionId
 
     }
+
+    fun getInitialCollectionArgs(): String {
+        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        return encodedArgs
+    }
 }
 
 data class DashboardViewState(
@@ -463,7 +472,7 @@ data class DashboardViewState(
     ) : ViewState
 
 sealed class DashboardViewEffect : ViewEffect {
-    object NavigateToCollectionsScreen : DashboardViewEffect()
+    data class NavigateToCollectionsScreen(val screenArgs:String) : DashboardViewEffect()
 }
 
 sealed class ConflictDialogData  {

@@ -21,7 +21,7 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun LibrariesScreen(
-    navigateToCollectionsScreen: () -> Unit,
+    navigateToCollectionsScreen: (String) -> Unit,
     onSettingsTapped: () -> Unit,
     viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
@@ -38,9 +38,10 @@ internal fun LibrariesScreen(
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
+            val consumedEffect = viewEffect?.consume()
+            when (consumedEffect) {
                 null -> Unit
-                LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen()
+                is LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(consumedEffect.screenArgs)
             }
         }
 
