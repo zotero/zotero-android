@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
@@ -123,7 +126,7 @@ internal class ShareViewModel @Inject constructor(
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ShareScreen) {
             updateState {
-                copy(tags = tagPickerResult.tags)
+                copy(tags = tagPickerResult.tags.toImmutableList())
             }
         }
     }
@@ -273,7 +276,7 @@ internal class ShareViewModel @Inject constructor(
                         updateState {
                             copy(
                                 itemPickerState = ItemPickerState(
-                                    items = eventValue.data,
+                                    items = eventValue.data.toImmutableList(),
                                     picked = null
                                 )
                             )
@@ -516,7 +519,7 @@ internal class ShareViewModel @Inject constructor(
                         library = library!!,
                         collection = collection
                     ),
-                    recents = recents
+                    recents = recents.toImmutableList()
                 )
             }
         } catch (e: Exception) {
@@ -808,7 +811,7 @@ internal class ShareViewModel @Inject constructor(
                 val mutableRecents = viewState.recents.toMutableList()
                 mutableRecents.removeFirst()
                 updateState {
-                    copy(recents = mutableRecents)
+                    copy(recents = mutableRecents.toImmutableList())
                 }
             }
         } else {
@@ -823,7 +826,7 @@ internal class ShareViewModel @Inject constructor(
                 )
             }
             updateState {
-                copy(recents = mutableRecents)
+                copy(recents = mutableRecents.toImmutableList())
             }
         }
     }
@@ -1183,9 +1186,9 @@ internal data class ShareViewState(
     val expectedAttachment: Pair<String, File>? = null,
     val processedAttachment: ProcessedAttachment? = null,
     val collectionPickerState: CollectionPickerState = CollectionPickerState.loading,
-    val recents: List<RecentData> = emptyList(),
+    val recents: ImmutableList<RecentData> = persistentListOf(),
     val itemPickerState: ItemPickerState? = null,
-    val tags: List<Tag> = emptyList(),
+    val tags: ImmutableList<Tag> = persistentListOf(),
     val isSubmitting: Boolean = false,
     val retrieveMetadataState: RetrieveMetadataState = RetrieveMetadataState.loading,
 ) : ViewState

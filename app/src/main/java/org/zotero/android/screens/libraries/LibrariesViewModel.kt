@@ -4,6 +4,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
@@ -80,11 +83,11 @@ internal class LibrariesViewModel @Inject constructor(
         updateState {
             copy(
                 customLibraries = this@LibrariesViewModel.customLibraries?.map {
-                createCustomLibraryRowData(it)
-            } ?: emptyList(),
+                    createCustomLibraryRowData(it)
+                }?.toImmutableList() ?: persistentListOf(),
                 groupLibraries = this@LibrariesViewModel.groupLibraries?.map {
                     createGroupLibraryRowData(it)
-                } ?: emptyList(),
+                }?.toImmutableList() ?: persistentListOf(),
                 lce = LCE2.Content
             )
         }
@@ -196,8 +199,8 @@ internal data class  LibrariesViewState(
     val str: String = "",
     val lce: LCE2 = LCE2.Loading,
     val groupIdForDeletePopup: Int? = null,
-    val customLibraries: List<LibraryRowData> = emptyList(),
-    val groupLibraries: List<LibraryRowData> = emptyList(),
+    val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
+    val groupLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
 ) : ViewState {
 
 }

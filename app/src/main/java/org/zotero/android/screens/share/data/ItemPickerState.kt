@@ -1,6 +1,8 @@
 package org.zotero.android.screens.share.data
 
+import kotlinx.collections.immutable.ImmutableList
+
 data class ItemPickerState(
-    val items: List<Pair<String, String>>,
+    val items: ImmutableList<Pair<String, String>>,
     var picked: String?
 )

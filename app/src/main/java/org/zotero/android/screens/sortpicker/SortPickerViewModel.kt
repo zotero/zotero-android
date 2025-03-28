@@ -29,7 +29,7 @@ internal class SortPickerViewModel @Inject constructor(
     fun onEvent(singlePickerResult: SinglePickerResult) {
         if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItemsSortPicker) {
             viewModelScope.launch {
-                val field = ItemsSortType.Field.values().first { it.titleStr == singlePickerResult.id }
+                val field = ItemsSortType.Field.entries.first { it.titleStr == singlePickerResult.id }
                 updateState {
                     copy(sortByTitle = field.titleStr, isAscending = field.defaultOrderAscending )
                 }
@@ -66,7 +66,7 @@ internal class SortPickerViewModel @Inject constructor(
         selected: String,
     ): SinglePickerState {
 
-        val items = ItemsSortType.Field.values().map {
+        val items = ItemsSortType.Field.entries.map {
             SinglePickerItem(id = it.titleStr, name = it.titleStr)
         }
 

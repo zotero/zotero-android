@@ -70,83 +70,15 @@ internal fun SortPickerScreen(
         ) {
             Column(
                 modifier = Modifier
-//                .fillMaxSize()
                     .background(color = CustomTheme.colors.surface)
             ) {
-                DisplayFields(
-                    viewState = viewState,
-                    viewModel = viewModel,
+                SortPickerDisplayFields(
+                    sortByTitle = viewState.sortByTitle,
+                    isAscending = viewState.isAscending,
+                    onSortFieldClicked = viewModel::onSortFieldClicked,
+                    onSortDirectionChanged = viewModel::onSortDirectionChanged,
                 )
             }
         }
     }
 }
-
-@Composable
-private fun DisplayFields(
-    viewState: SortPickerViewState,
-    viewModel: SortPickerViewModel,
-) {
-    FieldTappableRow(
-        detailTitle = stringResource(id = Strings.items_sort_by) + ": " + viewState.sortByTitle,
-        onClick = viewModel::onSortFieldClicked
-    )
-    val ascendingOption = MultiSelectorOption(1, stringResource(id = Strings.items_ascending))
-    val descendingOption = MultiSelectorOption(2, stringResource(id = Strings.items_descending))
-    MultiSelector(
-        modifier = Modifier
-            .padding(all = 16.dp)
-            .fillMaxWidth()
-            .height(36.dp),
-        options = listOf(
-            ascendingOption,
-            descendingOption
-        ),
-        selectedOptionId = if (viewState.isAscending)
-            ascendingOption.id
-        else descendingOption.id,
-        onOptionSelect = { viewModel.onSortDirectionChanged(it == ascendingOption.id) },
-        fontSize = 17.sp,
-    )
-}
-
-@Composable
-private fun FieldTappableRow(
-    detailTitle: String,
-    onClick: () -> Unit,
-) {
-
-    Box(
-        modifier = Modifier
-            .height(60.dp)
-            .safeClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = true),
-                onClick = onClick
-            )
-    ) {
-        Row(modifier = Modifier.align(Alignment.CenterStart)) {
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = detailTitle,
-                style = CustomTheme.typography.newBody,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = CustomTheme.colors.primaryContent,
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                painter = painterResource(id = Drawables.chevron_right_24px),
-                contentDescription = null,
-                tint = CustomTheme.colors.chevronNavigationColor
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-        }
-        NewDivider(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = 16.dp)
-        )
-    }
-}
-
