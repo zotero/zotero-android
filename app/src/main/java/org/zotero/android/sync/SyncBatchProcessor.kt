@@ -4,10 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.CollectionResponseMapper
@@ -15,6 +16,7 @@ import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
@@ -42,6 +44,7 @@ class SyncBatchProcessor(
     val gson: Gson,
     val progress: (Int) -> Unit,
     val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+    val dispatchers: Dispatchers,
 ) {
 
     private var failedIds = Collections.synchronizedList(mutableListOf<String>())
@@ -50,36 +53,39 @@ class SyncBatchProcessor(
     private var isFinished: AtomicBoolean = AtomicBoolean(false)
     private var processedCount: AtomicInteger = AtomicInteger(0)
 
-    private val limitedParallelismDispatcher = Dispatchers.IO.limitedParallelism(4)
-    private val resultsProcessorCoroutineScope = CoroutineScope(limitedParallelismDispatcher)
+    private val resultsProcessorCoroutineScope = CoroutineScope(dispatchers.io)
+    private val semaphore = Semaphore(4)
 
-    suspend fun start() {
+    fun start() {
         this.batches.map { batch ->
-            val keysString = batch.keys.joinToString(separator = ",")
-            val url =
-                BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this.userId) + "/" + batch.objectS.apiPath
 
             resultsProcessorCoroutineScope.launch {
-                val networkResult = safeApiCall {
-                    val parameters = mutableMapOf<String, String>()
-                    when (batch.objectS) {
-                        SyncObject.collection ->
-                            parameters["collectionKey"] = keysString
+                semaphore.withPermit {
+                    val keysString = batch.keys.joinToString(separator = ",")
+                    val url =
+                        BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
 
-                        SyncObject.item, SyncObject.trash ->
-                            parameters["itemKey"] = keysString
+                    val networkResult = safeApiCall {
+                        val parameters = mutableMapOf<String, String>()
+                        when (batch.objectS) {
+                            SyncObject.collection ->
+                                parameters["collectionKey"] = keysString
 
-                        SyncObject.search ->
-                            parameters["searchKey"] = keysString
+                            SyncObject.item, SyncObject.trash ->
+                                parameters["itemKey"] = keysString
 
-                        SyncObject.settings -> {}
+                            SyncObject.search ->
+                                parameters["searchKey"] = keysString
+
+                            SyncObject.settings -> {}
+                        }
+                        zoteroApi.objects(url = url, queryMap = parameters)
                     }
-                    zoteroApi.objects(url = url, queryMap = parameters)
+                    if (!isActive) {
+                        return@launch
+                    }
+                    process(result = networkResult, batch = batch)
                 }
-                if (!isActive) {
-                    return@launch
-                }
-                process(result = networkResult, batch = batch)
             }
         }
     }
@@ -285,7 +291,6 @@ class SyncBatchProcessor(
 
     fun cancelAllOperations() {
         resultsProcessorCoroutineScope.cancel()
-        limitedParallelismDispatcher.cancel()
     }
 
 }
