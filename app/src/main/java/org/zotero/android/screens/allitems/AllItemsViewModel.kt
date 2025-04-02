@@ -341,13 +341,17 @@ internal class AllItemsViewModel @Inject constructor(
         updatedDownloadingAccessories: SnapshotStateMap<String, ItemCellModel.Accessory?>?
     ) {
         viewModelScope.launch {
+            val newItemCellModels = updatedItemCellModels ?: viewState.itemCellModels
+            val maybeFirstItemAfterUpdate = newItemCellModels.firstOrNull()
+            val wasTheFirstItemRecentlyAdded = maybeFirstItemAfterUpdate != null && !viewState.itemCellModels.any { it.key ==  maybeFirstItemAfterUpdate.key}
             updateState {
                 copy(
-                    itemCellModels = updatedItemCellModels ?: viewState.itemCellModels,
+                    itemCellModels = newItemCellModels,
                     accessoryBeingDownloaded = updatedDownloadingAccessories
                         ?: viewState.accessoryBeingDownloaded
                 )
             }
+            triggerEffect(AllItemsViewEffect.MaybeScrollToTop(shouldScrollToTop = wasTheFirstItemRecentlyAdded))
         }
 
     }
@@ -1188,6 +1192,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowImageViewer : AllItemsViewEffect()
     data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
-    object ShowScanBarcode: AllItemsViewEffect()
+    object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
+    data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
 }

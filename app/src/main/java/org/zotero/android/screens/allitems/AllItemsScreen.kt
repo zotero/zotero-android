@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import timber.log.Timber
 import java.io.File
 
 @Composable
@@ -55,6 +57,8 @@ internal fun AllItemsScreen(
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
+        val lazyListState = rememberLazyListState()
+
         val isTablet = layoutType.isTablet()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init(isTablet)
@@ -119,6 +123,15 @@ internal fun AllItemsScreen(
                 is AllItemsViewEffect.ShowScanBarcode -> {
                     navigateToScanBarcode()
                 }
+
+                is AllItemsViewEffect.MaybeScrollToTop -> {
+                    val maybeIndex =
+                        lazyListState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
+                    //Indices of the first visible item AFTER an update, so after the potential new item was added to the top.
+                    if (consumedEffect.shouldScrollToTop && ((1..2).contains(maybeIndex))) {
+                        lazyListState.scrollToItem(index = 0, scrollOffset = 0)
+                    }
+                }
             }
         }
 
@@ -134,51 +147,51 @@ internal fun AllItemsScreen(
             val refreshing = viewState.isRefreshing
             val pullRefreshState = rememberPullRefreshState(refreshing, { viewModel.startSync() })
 
-
-                BaseLceBox(
-                    modifier = Modifier.fillMaxSize(),
-                    lce = viewState.lce,
-                    error = { _ ->
-                        FullScreenError(
-                            modifier = Modifier.align(Alignment.Center),
-                            errorTitle = stringResource(id = Strings.error_list_load_check_crash_logs),
-                        )
-                    },
-                    loading = {
-                        CircularLoading()
-                    },
+            BaseLceBox(
+                modifier = Modifier.fillMaxSize(),
+                lce = viewState.lce,
+                error = { _ ->
+                    FullScreenError(
+                        modifier = Modifier.align(Alignment.Center),
+                        errorTitle = stringResource(id = Strings.error_list_load_check_crash_logs),
+                    )
+                },
+                loading = {
+                    CircularLoading()
+                },
+            ) {
+                AllItemsBottomPanel(layoutType, viewState, viewModel)
+                Column(
+                    modifier = Modifier
+                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                 ) {
-                    AllItemsBottomPanel(layoutType, viewState, viewModel)
-                    Column(
-                        modifier = Modifier
-                            .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-                    ) {
-                        if (!layoutType.isTablet()) {
-                            Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
-                                AllItemsSearchBar(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    viewState = viewState,
-                                    viewModel = viewModel
-                                )
-                                Spacer(
-                                    modifier = Modifier
-                                        .height(16.dp)
-                                )
-                                NewDivider()
-                            }
+                    if (!layoutType.isTablet()) {
+                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
+                            AllItemsSearchBar(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                viewState = viewState,
+                                viewModel = viewModel
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .height(16.dp)
+                            )
+                            NewDivider()
                         }
-                        AllItemsTable(
-                            layoutType = layoutType,
-                            itemCellModels = viewState.itemCellModels,
-                            isEditing = viewState.isEditing,
-                            pullRefreshState = pullRefreshState,
-                            isItemSelected = viewState::isSelected,
-                            getItemAccessory = viewState::getAccessoryForItem,
-                            onItemTapped = viewModel::onItemTapped,
-                            onAccessoryTapped = viewModel::onAccessoryTapped,
-                            onItemLongTapped = viewModel::onItemLongTapped
-                        )
                     }
+                    AllItemsTable(
+                        lazyListState = lazyListState,
+                        layoutType = layoutType,
+                        itemCellModels = viewState.itemCellModels,
+                        isEditing = viewState.isEditing,
+                        pullRefreshState = pullRefreshState,
+                        isItemSelected = viewState::isSelected,
+                        getItemAccessory = viewState::getAccessoryForItem,
+                        onItemTapped = viewModel::onItemTapped,
+                        onAccessoryTapped = viewModel::onAccessoryTapped,
+                        onItemLongTapped = viewModel::onItemLongTapped
+                    )
+                }
 
                 val itemsError = viewState.error
                 if (itemsError != null) {
