@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
@@ -16,11 +19,11 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.NonZoteroNoRedirectApi
 import org.zotero.android.api.mappers.CreatorResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.TagResponseMapper
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.api.pojo.sync.LibraryResponse
@@ -74,6 +77,7 @@ import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
 import org.zotero.android.translator.web.TranslatorWebCallChainExecutor
 import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
+import retrofit2.Response
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -103,6 +107,7 @@ internal class ShareViewModel @Inject constructor(
     private val shareItemSubmitter: ShareItemSubmitter,
     private val pdfWorkerController: PdfWorkerController,
     private val nonZoteroApi: NonZoteroApi,
+    private val nonZoteroNoRedirectApi: NonZoteroNoRedirectApi,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -121,7 +126,7 @@ internal class ShareViewModel @Inject constructor(
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ShareScreen) {
             updateState {
-                copy(tags = tagPickerResult.tags)
+                copy(tags = tagPickerResult.tags.toImmutableList())
             }
         }
     }
@@ -145,8 +150,30 @@ internal class ShareViewModel @Inject constructor(
                     libraries = Libraries.all,
                     retryAttempt = 0
                 )
-                var rawAttachmentType = calculateRawAttachmentType()
-                process(rawAttachmentType)
+                val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
+
+                val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
+                    var networkResult: Response<*>? = nonZoteroApi.sendHead(rawAttachmentType.url)
+                    if (networkResult?.code() == 405) {
+                        networkResult = nonZoteroApi.sendWebViewGet(rawAttachmentType.url, emptyMap())
+                    }
+                    networkResult
+                } else {
+                    null
+                }
+                if (isAProxiedUrl(maybeHeadNetworkResult)) {
+                    viewModelScope.launch {
+                        updateState {
+                            copy(
+                                attachmentState = AttachmentState.failed(AttachmentState.Error.proxiedUrlsNotSupported),
+                            )
+                        }
+                    }
+                    reportFileIsNotPdf()
+                    return@launch
+                }
+                val newRawAttachmentType = calculateRawAttachmentType(rawAttachmentType, maybeHeadNetworkResult)
+                process(newRawAttachmentType)
             } catch (e: Exception) {
                 Timber.e(e, "ShareViewModel: could not load attachment")
                 updateAttachmentState(
@@ -161,41 +188,47 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
-    private suspend fun calculateRawAttachmentType(): RawAttachment {
-        val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
-        //If it's a remoteUrl let's try to determine whether it's pointing to a webpage or a file.
-        if (rawAttachmentType is RawAttachment.remoteUrl) {
-            val networkResult = safeApiCall {
-                nonZoteroApi.sendHead(rawAttachmentType.url)
-            }
-            if (networkResult is CustomResult.GeneralSuccess.NetworkSuccess) {
-                val contentType = networkResult.headers["Content-Type"] ?: ""
-                if (contentType.contains(
-                        other = "application/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "image/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "video/",
-                        ignoreCase = true
-                    ) || contentType.contains(
-                        other = "audio/",
-                        ignoreCase = true
-                    )
-                ) {
-                    return RawAttachment.remoteFileUrl(
-                        url = rawAttachmentType.url,
-                        contentType = contentType,
-                        cookies = null,
-                        userAgent = DeviceInfoProvider.userAgentString,
-                        referrer = null,
-                    )
-                }
+    private fun calculateRawAttachmentType(
+        rawAttachmentType: RawAttachment,
+        headNetworkResult: Response<*>?
+    ): RawAttachment {
+        if (headNetworkResult?.isSuccessful == true && rawAttachmentType is RawAttachment.remoteUrl) {
+            val contentType = headNetworkResult.headers()["Content-Type"] ?: ""
+            if (contentType.contains(
+                    other = "application/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "image/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "video/",
+                    ignoreCase = true
+                ) || contentType.contains(
+                    other = "audio/",
+                    ignoreCase = true
+                )
+            ) {
+                return RawAttachment.remoteFileUrl(
+                    url = rawAttachmentType.url,
+                    contentType = contentType,
+                    cookies = null,
+                    userAgent = DeviceInfoProvider.userAgentString,
+                    referrer = null,
+                )
             }
         }
         return rawAttachmentType
     }
+
+    private fun isAProxiedUrl(maybeHeadNetworkResult: Response<*>?): Boolean {
+        if (maybeHeadNetworkResult == null) {
+            return false
+        }
+        val headers = maybeHeadNetworkResult.headers()
+        val serverHeader = headers["Server"] // Keys do ignoreCase in the internals of Headers class.
+        return serverHeader == "EZproxy"
+    }
+
 
     private fun setupObservers() {
         syncObservableEventStream.flow()
@@ -243,7 +276,7 @@ internal class ShareViewModel @Inject constructor(
                         updateState {
                             copy(
                                 itemPickerState = ItemPickerState(
-                                    items = eventValue.data,
+                                    items = eventValue.data.toImmutableList(),
                                     picked = null
                                 )
                             )
@@ -486,7 +519,7 @@ internal class ShareViewModel @Inject constructor(
                         library = library!!,
                         collection = collection
                     ),
-                    recents = recents
+                    recents = recents.toImmutableList()
                 )
             }
         } catch (e: Exception) {
@@ -567,7 +600,13 @@ internal class ShareViewModel @Inject constructor(
         referrer: String?
     ) {
         val filename = url.toUri().lastPathSegment!!
-        val ext = MimeTypeMap.getFileExtensionFromUrl(filename)
+        //Some websites return filename without file extension,
+        //but at least for PDFs we can determine it for sure by content-type
+        var ext = if (contentType == "application/pdf") {
+            "pdf"
+        } else {
+            MimeTypeMap.getFileExtensionFromUrl(filename)
+        }
         val file = fileStore.shareExtensionDownload(key = this.attachmentKey, ext = ext)
 
         viewModelScope.launch {
@@ -772,7 +811,7 @@ internal class ShareViewModel @Inject constructor(
                 val mutableRecents = viewState.recents.toMutableList()
                 mutableRecents.removeFirst()
                 updateState {
-                    copy(recents = mutableRecents)
+                    copy(recents = mutableRecents.toImmutableList())
                 }
             }
         } else {
@@ -787,7 +826,7 @@ internal class ShareViewModel @Inject constructor(
                 )
             }
             updateState {
-                copy(recents = mutableRecents)
+                copy(recents = mutableRecents.toImmutableList())
             }
         }
     }
@@ -1147,9 +1186,9 @@ internal data class ShareViewState(
     val expectedAttachment: Pair<String, File>? = null,
     val processedAttachment: ProcessedAttachment? = null,
     val collectionPickerState: CollectionPickerState = CollectionPickerState.loading,
-    val recents: List<RecentData> = emptyList(),
+    val recents: ImmutableList<RecentData> = persistentListOf(),
     val itemPickerState: ItemPickerState? = null,
-    val tags: List<Tag> = emptyList(),
+    val tags: ImmutableList<Tag> = persistentListOf(),
     val isSubmitting: Boolean = false,
     val retrieveMetadataState: RetrieveMetadataState = RetrieveMetadataState.loading,
 ) : ViewState

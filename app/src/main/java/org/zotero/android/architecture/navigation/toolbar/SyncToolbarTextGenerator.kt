@@ -105,6 +105,10 @@ class SyncToolbarTextGenerator @Inject constructor(
                     formatArgs
                 )
             }
+            is SyncProgress.shouldMuteWhileOnScreen -> {
+                //no op
+                return ""
+            }
         }
     }
 
@@ -275,7 +279,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                             if (statusCode != null) {
                                 return context.getString(
                                     Strings.errors_sync_toolbar_webdav_request_failed,
-                                    statusCode,
+                                    statusCode.resultHttpCode ?: -1,
                                     httpMethod ?: "Unknown"
                                 ) to null
                             }

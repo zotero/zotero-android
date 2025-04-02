@@ -26,8 +26,8 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 @Composable
 internal fun CollectionsScreen(
     onBack: () -> Unit,
-    navigateToAllItems: () -> Unit,
-    navigateToLibraries: () -> Unit,
+    navigateToAllItems: (String) -> Unit,
+    navigateToLibraries: (String) -> Unit,
     navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
@@ -42,16 +42,17 @@ internal fun CollectionsScreen(
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
+            val consumedEffect = viewEffect?.consume()
+            when (consumedEffect) {
                 null -> Unit
                 CollectionsViewEffect.NavigateBack -> onBack()
-                CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems()
+                is CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems(consumedEffect.screenArgs)
                 CollectionsViewEffect.ShowCollectionEditEffect -> {
                     navigateToCollectionEdit()
                 }
 
-                CollectionsViewEffect.NavigateToLibrariesScreen -> {
-                    navigateToLibraries()
+                is CollectionsViewEffect.NavigateToLibrariesScreen -> {
+                    navigateToLibraries(consumedEffect.screenArgs)
                 }
 
                 else -> {}

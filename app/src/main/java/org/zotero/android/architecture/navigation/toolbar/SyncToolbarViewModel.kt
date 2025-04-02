@@ -26,7 +26,8 @@ class SyncToolbarViewModel @Inject constructor(
     private var timer: Timer? = null
 
     private var pendingErrors: List<Exception>? = null
-    private var muteProgressDialogs = false
+    private var muteProgressDialogsOnUserDismissAction = false
+    private var muteProgressDialogsOnSpecificScreens = false
 
     fun init() = initOnce {
         setupSyncProgressEventStream()
@@ -80,6 +81,17 @@ class SyncToolbarViewModel @Inject constructor(
             SyncProgress.starting -> {
                 hideToolbarWithDelay()
             }
+            is SyncProgress.shouldMuteWhileOnScreen -> {
+                muteProgressDialogsOnSpecificScreens = progress.shouldMute
+                //immediately dismiss the progress snackbar.
+                if (progress.shouldMute) {
+                    this.pendingErrors = null
+                    resetTimer()
+                    updateState {
+                        copy(progressState = null)
+                    }
+                }
+            }
 
             else -> {
                 set(progress)
@@ -89,10 +101,13 @@ class SyncToolbarViewModel @Inject constructor(
     }
 
     private fun set(syncProgress: SyncProgress) {
+        if (muteProgressDialogsOnSpecificScreens) {
+            return
+        }
         val message = syncToolbarTextGenerator.syncToolbarText(syncProgress)
         when (syncProgress) {
             is SyncProgress.aborted -> {
-                muteProgressDialogs = false
+                muteProgressDialogsOnUserDismissAction = false
                 updateState {
                     copy(
                         progressState = CurrentSyncProgressState.Aborted(
@@ -103,7 +118,7 @@ class SyncToolbarViewModel @Inject constructor(
             }
 
             is SyncProgress.finished -> {
-                muteProgressDialogs = false
+                muteProgressDialogsOnUserDismissAction = false
                 updateState {
                     copy(
                         progressState = CurrentSyncProgressState.SyncFinished(
@@ -115,7 +130,7 @@ class SyncToolbarViewModel @Inject constructor(
             }
 
             else -> {
-                if (muteProgressDialogs) {
+                if (muteProgressDialogsOnUserDismissAction) {
                     return
                 }
                 updateState {
@@ -171,7 +186,7 @@ class SyncToolbarViewModel @Inject constructor(
     }
 
     fun onDismissProgressDialog() {
-        muteProgressDialogs = true
+        muteProgressDialogsOnUserDismissAction = true
         updateState {
             copy(progressState = null)
         }

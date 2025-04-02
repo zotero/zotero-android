@@ -3,7 +3,6 @@ package org.zotero.android.screens.share
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.core.net.toUri
 import com.pspdfkit.utils.getSupportParcelable
 import org.zotero.android.architecture.Result
 import org.zotero.android.translator.data.AttachmentState

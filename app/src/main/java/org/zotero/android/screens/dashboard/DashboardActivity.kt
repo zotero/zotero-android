@@ -33,6 +33,7 @@ import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNaviga
 import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.files.FileStore
 import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 import javax.inject.Inject
@@ -48,6 +49,9 @@ internal class DashboardActivity : BaseActivity() {
 
     @Inject
     lateinit var defaults: Defaults
+
+    @Inject
+    lateinit var fileStore: FileStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +101,7 @@ internal class DashboardActivity : BaseActivity() {
             startActivity(intent)
         }
         val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
+        val collectionDefaultValue = viewModel.getInitialCollectionArgs()
 
         setContent {
             CustomTheme {
@@ -111,6 +116,7 @@ internal class DashboardActivity : BaseActivity() {
                     val layoutType = CustomLayoutSize.calculateLayoutType()
                     if (layoutType.isTablet()) {
                         DashboardRootTopLevelTabletNavigation(
+                            collectionDefaultValue = collectionDefaultValue,
                             onPickFile = onPickFile,
                             viewEffect = viewEffect,
                             onOpenFile = onOpenFile,
@@ -119,6 +125,7 @@ internal class DashboardActivity : BaseActivity() {
                         )
                     } else {
                         DashboardRootPhoneNavigation(
+                            collectionDefaultValue = collectionDefaultValue,
                             onPickFile = onPickFile,
                             onOpenFile = onOpenFile,
                             onOpenWebpage = onOpenWebpage,

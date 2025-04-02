@@ -33,6 +33,7 @@ import java.io.File
 
 @Composable
 internal fun DashboardRootTopLevelTabletNavigation(
+    collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
@@ -52,6 +53,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
         modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         dashboardScreen(
+            collectionDefaultValue = collectionDefaultValue,
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
@@ -85,6 +87,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
 }
 
 private fun NavGraphBuilder.dashboardScreen(
+    collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
@@ -99,6 +102,7 @@ private fun NavGraphBuilder.dashboardScreen(
         arguments = listOf(),
     ) {
         DashboardRootTabletNavigationScreen(
+            collectionDefaultValue = collectionDefaultValue,
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,

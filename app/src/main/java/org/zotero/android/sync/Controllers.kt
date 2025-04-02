@@ -175,6 +175,7 @@ class Controllers @Inject constructor(
         if (!this.didInitialize) {
             return
         }
+        userControllers.maybeReconnectWebsockets()
 //        startApp()
     }
 

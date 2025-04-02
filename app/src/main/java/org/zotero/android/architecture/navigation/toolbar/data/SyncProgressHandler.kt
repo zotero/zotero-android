@@ -194,4 +194,14 @@ class SyncProgressHandler @Inject constructor(
         Timber.d("SyncProgressHandler: currentProgress $currentDone/$currentTotal")
     }
 
+    fun muteProgressToolbarForScreen() {
+        Timber.d("SyncProgressHandler: muteProgressToolbarForScreen")
+        emitState(SyncProgress.shouldMuteWhileOnScreen(true))
+    }
+
+    fun unMuteProgressToolbarForScreen() {
+        Timber.d("SyncProgressHandler: unMuteProgressToolbarForScreen")
+        emitState(SyncProgress.shouldMuteWhileOnScreen(false))
+    }
+
 }

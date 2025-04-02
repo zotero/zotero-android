@@ -108,16 +108,18 @@ class UserControllers @Inject constructor(
             }
         }.launchIn(applicationScope)
 
-        this.webSocketController.connect(apiKey = apiKey, completed = {
-            //TODO backgroundUploadObserver.updateSessions()
-            val type = if(defaults.didPerformFullSyncFix()) {
-                SyncKind.normal
-            } else {
-                SyncKind.full
-            }
-            this.syncScheduler.request(type = type, libraries = Libraries.all)
-        })
+        this.webSocketController.connect(apiKey = apiKey, completed = ::onWebSocketConnectionEstablished)
 
+    }
+
+    private fun onWebSocketConnectionEstablished() {
+        //TODO backgroundUploadObserver.updateSessions()
+        val type = if (defaults.didPerformFullSyncFix()) {
+            SyncKind.normal
+        } else {
+            SyncKind.full
+        }
+        this.syncScheduler.request(type = type, libraries = Libraries.all)
     }
 
     fun disableSync(apiKey: String?) {
@@ -128,5 +130,9 @@ class UserControllers @Inject constructor(
 
     private fun createDbStorage(userId: Long) {
         dbWrapperMain.initWithMainConfiguration(userId)
+    }
+
+    fun maybeReconnectWebsockets() {
+        webSocketController.maybeReconnect(completed = ::onWebSocketConnectionEstablished)
     }
 }

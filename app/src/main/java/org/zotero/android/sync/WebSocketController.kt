@@ -73,8 +73,9 @@ class WebSocketController @Inject constructor(
         object notConnected: Error()
     }
     private val completionTimeout = 1500L // miliseconds
-    private val messageTimeout: Int = 300
-    private val disconnectionTimeout: Int = 5
+    private val messageTimeout: Int = 30 //seconds
+    private val disconnectionTimeout: Int = 5 //seconds
+    //in seconds
     private val retryIntervals: List<Int> = listOf(
         2, 5, 10, 15, 30,
         60, 60, 60, 60,
@@ -147,25 +148,25 @@ class WebSocketController @Inject constructor(
             Request.Builder().url(this.url).get().build(),
             object : WebSocketListener() {
                 override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                    Timber.i("onClosed, code:$code, reason:$reason")
+                    Timber.i("WebSocketController: onClosed, code:$code, reason:$reason")
                     reconnect()
                 }
 
                 override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                    Timber.i("onClosing, code:$code, reason:$reason")
+                    Timber.i("WebSocketController: onClosing, code:$code, reason:$reason")
                 }
 
                 override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
-                    Timber.i(t, "onFailure, response:$response")
+                    Timber.i(t, "WebSocketController: onFailure, response:$response")
                     reconnect()
                 }
 
                 override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-                    Timber.i("onOpen")
+                    Timber.i("WebSocketController: onOpen")
                 }
 
                 override fun onMessage(webSocket: WebSocket, text: String) {
-                    Timber.i("onMessage, text:$text")
+                    Timber.i("WebSocketController: onMessage, text:$text")
                     handle(text)
                 }
 
@@ -240,7 +241,7 @@ class WebSocketController @Inject constructor(
         this.connectionRetryCount += 1
         Timber.i("WebSocketController: schedule retry attempt ${this.connectionRetryCount} interval ${interval}")
 
-        val timer = BackgroundTimer(timeIntervalMs = interval + 1000L) {
+        val timer = BackgroundTimer(timeIntervalMs = interval * 1000L) {
             when (this.connectionState){
                 ConnectionState.connecting, ConnectionState.disconnected -> {
                     _connect(apiKey = apiKey, completed = null)
@@ -275,7 +276,7 @@ class WebSocketController @Inject constructor(
 
         Timber.i("WebSocketController: schedule reconnect")
 
-        val timer = BackgroundTimer(timeIntervalMs = disconnectionTimeout + 1000L) {
+        val timer = BackgroundTimer(timeIntervalMs = disconnectionTimeout * 1000L) {
             _connect(apiKey = apiKey, completed = null)
             this.connectionTimer = null
         }
@@ -402,5 +403,20 @@ class WebSocketController @Inject constructor(
             Timber.e(error, "WebSocketController: message error ${message}")
             completion(Error.cantCreateMessage)
         }
+    }
+
+    fun maybeReconnect(completed: (() -> Unit)? = null) {
+        Timber.i("WebSocketController: maybeReconnect called $apiKey $connectionState ")
+        val apiKey = this.apiKey
+        if (apiKey != null && setOf(
+                ConnectionState.disconnected,
+                ConnectionState.connecting
+            ).contains(this@WebSocketController.connectionState)
+        ) {
+            Timber.i("WebSocketController: maybeReconnect initiated")
+            disconnect()
+            connect(apiKey = apiKey, completed = completed)
+        }
+
     }
 }

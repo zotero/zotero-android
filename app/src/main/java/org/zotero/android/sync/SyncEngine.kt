@@ -10,6 +10,7 @@ import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -70,6 +71,7 @@ class SyncUseCase @Inject constructor(
     private val conflictEventStream: ConflictEventStream,
     private val progressHandler: SyncProgressHandler,
     private val sessionStorage: WebDavSessionStorage,
+    private val dispatchers: Dispatchers,
 ) {
     private var userId: Long = 0L
     private var libraryType: Libraries = Libraries.all
@@ -459,6 +461,7 @@ class SyncUseCase @Inject constructor(
 
         this.batchProcessor =
             SyncBatchProcessor(
+                dispatchers = this.dispatchers,
                 batches = batches,
                 userId = defaults.getUserId(),
                 zoteroApi = zoteroApi,

@@ -38,6 +38,9 @@ class ShareErrorProcessor @Inject constructor(
             AttachmentState.Error.downloadFailed -> {
                 context.getString(Strings.errors_shareext_download_failed)
             }
+            AttachmentState.Error.proxiedUrlsNotSupported -> {
+                context.getString(Strings.errors_shareext_proxied_urls_not_supported)
+            }
 
             AttachmentState.Error.downloadedFileNotPdf -> {
                 null

@@ -4,13 +4,16 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.LCE2
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibrary
 import org.zotero.android.database.objects.RCustomLibraryType
@@ -26,12 +29,14 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
 internal class LibrariesViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<LibrariesViewState, LibrariesViewEffect>(LibrariesViewState()) {
 
     var customLibraries: RealmResults<RCustomLibrary>? = null
@@ -78,11 +83,11 @@ internal class LibrariesViewModel @Inject constructor(
         updateState {
             copy(
                 customLibraries = this@LibrariesViewModel.customLibraries?.map {
-                createCustomLibraryRowData(it)
-            } ?: emptyList(),
+                    createCustomLibraryRowData(it)
+                }?.toImmutableList() ?: persistentListOf(),
                 groupLibraries = this@LibrariesViewModel.groupLibraries?.map {
                     createGroupLibraryRowData(it)
-                } ?: emptyList(),
+                }?.toImmutableList() ?: persistentListOf(),
                 lce = LCE2.Content
             )
         }
@@ -138,12 +143,13 @@ internal class LibrariesViewModel @Inject constructor(
     fun showCollections(libraryId: LibraryIdentifier) {
         val collectionId = storeIfNeeded(libraryId = libraryId)
 
-        ScreenArguments.collectionsArgs = CollectionsArgs(
+        val collectionsArgs = CollectionsArgs(
             libraryId = libraryId,
             selectedCollectionId = collectionId,
             shouldRecreateItemsScreen = this.isTablet
         )
-        triggerEffect(LibrariesViewEffect.NavigateToCollectionsScreen)
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(LibrariesViewEffect.NavigateToCollectionsScreen(encodedArgs))
     }
 
     private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
@@ -193,12 +199,12 @@ internal data class  LibrariesViewState(
     val str: String = "",
     val lce: LCE2 = LCE2.Loading,
     val groupIdForDeletePopup: Int? = null,
-    val customLibraries: List<LibraryRowData> = emptyList(),
-    val groupLibraries: List<LibraryRowData> = emptyList(),
+    val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
+    val groupLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
 ) : ViewState {
 
 }
 
 internal sealed class  LibrariesViewEffect : ViewEffect {
-    object NavigateToCollectionsScreen : LibrariesViewEffect()
+    data class NavigateToCollectionsScreen(val screenArgs: String) : LibrariesViewEffect()
 }

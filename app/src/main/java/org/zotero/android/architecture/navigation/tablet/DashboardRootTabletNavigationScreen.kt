@@ -25,6 +25,7 @@ import java.io.File
 
 @Composable
 internal fun DashboardRootTabletNavigationScreen(
+    collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
@@ -40,7 +41,7 @@ internal fun DashboardRootTabletNavigationScreen(
     val rightPaneNavigation = remember(rightPaneNavController) {
         ZoteroNavigation(rightPaneNavController, dispatcher)
     }
-    val navigateAndPopAllItemsScreen: () -> Unit = {
+    val navigateAndPopAllItemsScreen: (String) -> Unit = {
         rightPaneNavController.navigate(CommonScreenDestinations.ALL_ITEMS) {
             popUpTo(0)
         }
@@ -50,6 +51,7 @@ internal fun DashboardRootTabletNavigationScreen(
         Row(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(0.35f)) {
                 TabletLeftPaneNavigation(
+                    collectionDefaultValue = collectionDefaultValue,
                     viewEffect = viewEffect,
                     navigateAndPopAllItemsScreen = navigateAndPopAllItemsScreen,
                     onOpenWebpage = onOpenWebpage

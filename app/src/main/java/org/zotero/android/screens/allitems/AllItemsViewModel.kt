@@ -467,8 +467,6 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
         val args = AddOrEditNoteArgs(
-            text = "",
-            tags = listOf(),
             title = title,
             key = KeyGenerator.newKey(),
             libraryId = libraryId,
@@ -489,11 +487,8 @@ internal class AllItemsViewModel @Inject constructor(
                 if (note == null) {
                     return
                 }
-                val tags = item.tags!!.map({ Tag(tag = it) })
                 val library = this.library
                 val args = AddOrEditNoteArgs(
-                    text = note.text,
-                    tags = tags,
                     title = null,
                     libraryId = library.identifier,
                     readOnly = !library.metadataEditable,
@@ -954,8 +949,9 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun navigateToCollections() {
-        ScreenArguments.collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
-        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect)
+        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
+        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
     }
 
     fun onDismissDialog() {
@@ -1177,7 +1173,7 @@ internal data class AllItemsViewState(
 }
 
 internal sealed class AllItemsViewEffect : ViewEffect {
-    object ShowCollectionsEffect: AllItemsViewEffect()
+    data class ShowCollectionsEffect(val screenArgs: String): AllItemsViewEffect()
     data class ShowItemDetailEffect(val screenArgs: String): AllItemsViewEffect()
     data class ShowAddOrEditNoteEffect(val screenArgs: String): AllItemsViewEffect()
     object ShowItemTypePickerEffect : AllItemsViewEffect()

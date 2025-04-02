@@ -18,13 +18,14 @@ import org.zotero.android.screens.mediaviewer.video.VideoPlayerView
 import org.zotero.android.screens.webview.ZoteroWebViewScreen
 import java.io.File
 
+internal const val ARG_COLLECTIONS_SCREEN = "collectionArgs"
 internal const val ARG_ITEM_DETAILS_SCREEN = "itemDetailsArgs"
 internal const val ARG_RETRIEVE_METADATA = "retrieveMetadataArgs"
 internal const val ARG_TAGS_FILTER = "tagsScreen"
 internal const val ARG_ADD_OR_EDIT_NOTE = "notesScreen"
 
 fun NavGraphBuilder.allItemsScreen(
-    navigateToCollectionsScreen: () -> Unit,
+    navigateToCollectionsScreen: (String) -> Unit,
     navigateToItemDetails: (String) -> Unit,
     navigateToAddOrEditNote: (String) -> Unit,
     navigateToSinglePicker: () -> Unit,
@@ -141,7 +142,7 @@ fun NavGraphBuilder.zoterWebViewScreen(onClose: () -> Unit) {
 }
 
 fun NavGraphBuilder.librariesScreen(
-    navigateToCollectionsScreen: () -> Unit,
+    navigateToCollectionsScreen: (String) -> Unit,
     onSettingsTapped: () -> Unit,
 ) {
     composable(route = CommonScreenDestinations.LIBRARIES_SCREEN) {
@@ -183,12 +184,21 @@ fun NavGraphBuilder.loadingScreen(
 }
 
 fun NavGraphBuilder.collectionsScreen(
+    collectionDefaultValue: String,
     onBack: () -> Unit,
-    navigateToAllItems: () -> Unit,
+    navigateToAllItems: (String) -> Unit,
     navigateToCollectionEdit: () -> Unit,
-    navigateToLibraries: () -> Unit,
+    navigateToLibraries: (String) -> Unit,
 ) {
-    composable(route = CommonScreenDestinations.COLLECTIONS_SCREEN) {
+    composable(
+        route = "${CommonScreenDestinations.COLLECTIONS_SCREEN}/{$ARG_COLLECTIONS_SCREEN}",
+        arguments = listOf(
+            navArgument(ARG_COLLECTIONS_SCREEN) {
+                type = NavType.StringType; defaultValue = collectionDefaultValue
+            },
+        ),
+
+        ) {
         CollectionsScreen(
             onBack = onBack,
             navigateToAllItems = navigateToAllItems,

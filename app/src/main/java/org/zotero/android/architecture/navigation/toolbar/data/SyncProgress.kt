@@ -19,6 +19,7 @@ sealed interface SyncProgress {
     data class uploads(val progress: SyncProgressData): SyncProgress
     data class finished(val errors: List<SyncError.NonFatal>): SyncProgress
     data class aborted(val error: SyncError.Fatal): SyncProgress
+    data class shouldMuteWhileOnScreen(val shouldMute: Boolean): SyncProgress
 
 }
 

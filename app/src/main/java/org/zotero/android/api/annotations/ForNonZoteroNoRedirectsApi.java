@@ -8,5 +8,5 @@ import javax.inject.Qualifier;
 
 @Qualifier
 @Retention(CLASS)
-public @interface ForNoRedirectsApi {
+public @interface ForNonZoteroNoRedirectsApi {
 }
