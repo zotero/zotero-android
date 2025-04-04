@@ -225,9 +225,6 @@ class PdfReaderViewModel @Inject constructor(
 
     private val handler = Handler(context.mainLooper)
 
-    //Used to recreate a new fragment preserving viewport state
-    private lateinit var pdfDocumentBeforeFragmentDestruction: PdfDocument
-
     override var annotationMaxSideSize = 0
 
     override var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
@@ -367,7 +364,6 @@ class PdfReaderViewModel @Inject constructor(
     private fun update(pdfSettings: PDFSettings) {
         defaults.setPDFSettings(pdfSettings)
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
-        pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
         replaceFragment()
     }
 
@@ -1537,7 +1533,9 @@ class PdfReaderViewModel @Inject constructor(
             pdfDocumentAnnotations = viewState.pdfDocumentAnnotations
         )
 
-        pdfFragment.removeOnAnnotationUpdatedListener(onAnnotationUpdatedListener!!)
+        onAnnotationUpdatedListener?.let {
+            pdfFragment.removeOnAnnotationUpdatedListener(it)
+        }
 
         for ((pdfAnnotation, annotation) in updatedPdfAnnotations) {
             update(
@@ -2431,7 +2429,6 @@ class PdfReaderViewModel @Inject constructor(
             //In either of those cases the ViewModel can be caught in the process of re-initializing pdfFragment and since we are navigating away from PdfReaderScreen the execution of onStop method's contents is no longer needed
             return
         }
-        pdfDocumentBeforeFragmentDestruction = pdfFragment.document!!
         submitPendingPage(pdfUiFragment.pageIndex)
         if (isChangingConfigurations) {
             removeFragment()
