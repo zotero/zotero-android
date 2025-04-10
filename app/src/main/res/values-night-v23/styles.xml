@@ -23,6 +23,5 @@
     <style name="CustomPSPDFKitPopupToolbarDark" parent="@style/PSPDFKit.PopupToolbar.Dark">>
         <item name="pspdf__backgroundColor">#212121</item>
         <item name="pspdf__itemTint">@color/white</item>
-        <item name="pspdf__itemTintDisabled">@color/pspdf__popup_toolbar_item_tint_disabled</item>
     </style>
 </resources>

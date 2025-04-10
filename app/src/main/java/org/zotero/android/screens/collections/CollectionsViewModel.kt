@@ -108,7 +108,9 @@ internal class CollectionsViewModel @Inject constructor(
 
     val screenArgs: CollectionsArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_COLLECTIONS_SCREEN).require()
-        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)
+        val decodeObjectFromBase64 =
+            navigationParamsMarshaller.decodeObjectFromBase64<CollectionsArgs>(argsEncoded, StandardCharsets.UTF_8)
+        decodeObjectFromBase64
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

@@ -154,7 +154,7 @@ class SyncScheduler @Inject constructor(
         }
 
         Timber.i("SyncScheduler: start ${nextSync.type} sync for ${nextSync.libraries}")
-        this.syncQueue.removeFirst()
+        this.syncQueue.removeAt(0)
         this.syncInProgress = nextSync
         startSyncController(nextSync)
     }

@@ -18,9 +18,6 @@ private fun TestedExtension.configure(project: Project) {
         compose = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = Libs.Compose.compileVersion
-    }
     project.dependencies.apply {
 //        add("implementation", Libs.Coil.compose)
         add("implementation", Libs.Compose.ui)

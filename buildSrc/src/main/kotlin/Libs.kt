@@ -13,30 +13,22 @@ object Libs {
     const val keyboardVisibility =
         "net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:3.0.0-RC3"
 
-    object Accompanist {
-        private const val version = "0.34.0"
-        const val systemuicontroller =
-            "com.google.accompanist:accompanist-systemuicontroller:$version"
-    }
-
     object Compose {
-        const val compileVersion = "1.5.14"
-
-        private const val version = "1.7.1"
-        const val activity = "androidx.activity:activity-compose:1.8.1"
-        const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+        private const val version = "1.7.8"
+        const val activity = "androidx.activity:activity-compose:1.10.1"
+        const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.1.1"
         const val foundation = "androidx.compose.foundation:foundation:$version"
-        const val lifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
+        const val lifecycle = "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7"
         const val liveData = "androidx.compose.runtime:runtime-livedata:$version"
-        const val navigation = "androidx.navigation:navigation-compose:2.7.5"
+        const val navigation = "androidx.navigation:navigation-compose:2.8.9"
         const val ui = "androidx.compose.ui:ui:$version"
         const val uiTooling = "androidx.compose.ui:ui-tooling:$version"
         const val uiUtil = "androidx.compose.ui:ui-util:$version"
         const val viewBinding = "androidx.compose.ui:ui-viewbinding:$version"
         const val material = "androidx.compose.material:material:$version"
-        const val material3 = "androidx.compose.material3:material3:1.1.2"
+        const val material3 = "androidx.compose.material3:material3:1.3.2"
         const val material3WindowSize =
-            "androidx.compose.material3:material3-window-size-class:1.1.2"
+            "androidx.compose.material3:material3-window-size-class:1.3.2"
     }
 
 
@@ -49,7 +41,7 @@ object Libs {
     }
 
     object Dagger {
-        private const val version = "2.48"
+        private const val version = "2.56.1"
         const val hiltAndroid = "com.google.dagger:hilt-android:$version"
         const val hiltCompiler = "com.google.dagger:hilt-compiler:$version"
         const val hiltGradlePlugin = "com.google.dagger:hilt-android-gradle-plugin:$version"
@@ -102,7 +94,7 @@ object Libs {
     }
 
     object Kotlin {
-        private const val version = "1.9.24"
+        const val version = "2.1.20"
         const val jsonSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1"
         const val immutableCollections = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5"
         const val serialization = "org.jetbrains.kotlin:kotlin-serialization:$version"
@@ -121,7 +113,7 @@ object Libs {
         const val activity = "androidx.activity:activity-ktx:1.8.1"
         const val appCompat = "androidx.appcompat:appcompat:1.6.1"
 
-        const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.4"
+        const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.2.1"
         const val constraintLayoutSolver = "androidx.constraintlayout:constraintlayout-solver:2.0.4"
         const val core = "androidx.core:core-ktx:1.12.0"
 

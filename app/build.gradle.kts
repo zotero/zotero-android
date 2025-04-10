@@ -17,13 +17,13 @@ plugins {
     id("kotlinDependencies")
     id("androidXDependencies")
     id("composeDependencies")
-    id("accompanistDependencies")
     id("daggerAndHiltDependencies")
     id("networkDependencies")
     id("testDependencies")
     //----Dependency plugins end----
 
     id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.20"
 }
 
 android {
@@ -150,7 +150,7 @@ dependencies {
     implementation(Libs.Firebase.Crashlytics.crashlytics)
 
     //PSPDFKIT
-    implementation(Libs.pspdfkit)
+    implementation("io.nutrient:nutrient:10.1.1")
 
     //GSON
     implementation(Libs.gson)

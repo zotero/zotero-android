@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.net.Uri
 import android.util.TypedValue
 import android.widget.FrameLayout
+import androidx.activity.compose.LocalActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -20,7 +21,7 @@ fun PdfReaderPspdfKitView(
     uri: Uri,
     vMInterface: PdfReaderVMInterface
 ) {
-    val activity = LocalContext.current as? AppCompatActivity ?: return
+    val activity = LocalActivity.current as? AppCompatActivity ?: return
     val annotationMaxSideSize = annotationMaxSideSize()
     val fragmentManager = activity.supportFragmentManager
     val layoutType = CustomLayoutSize.calculateLayoutType()

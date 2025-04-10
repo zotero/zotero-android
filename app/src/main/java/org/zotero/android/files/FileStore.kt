@@ -20,12 +20,9 @@ import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -56,8 +53,8 @@ class FileStore @Inject constructor (
         private const val SESSION_IDS_KEY_FILE = "activeUrlSessionIds"
         private const val EXTENSION_SESSION_IDS_KEY = "shareExtensionObservedUrlSessionIds"
 
-        private const val selectedLibraryId = "selectedLibraryId_${file_store_version}.bin"
-        private const val selectedCollectionId = "selectedCollectionId_${file_store_version}.bin"
+        private const val selectedLibraryId = "selectedLibraryId_${file_store_version}_2.bin"
+        private const val selectedCollectionId = "selectedCollectionId_${file_store_version}_2.bin"
     }
 
     fun init() {
@@ -321,6 +318,21 @@ class FileStore @Inject constructor (
         deleteDataWithFilename(ACTIVE_KEY_FILE)
     }
 
+
+    inline internal fun <reified T> loadDataWithFilename(filename: String): T? {
+        if (!fileExists(filename)) {
+            return null
+        }
+        val path = pathForFilename(filename)
+        return try {
+            val json = Files.asCharSource(File(path), Charsets.UTF_8).read()
+            dataMarshaller.unmarshal(json)
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     inline fun <reified T> loadListDataWithFilename(filename: String): MutableList<T>? {
         if (!fileExists(filename)) {
             return null
@@ -413,7 +425,8 @@ class FileStore @Inject constructor (
     }
 
     fun getSelectedLibrary(): LibraryIdentifier {
-        return deserializeFromFile(selectedLibraryId)
+        val loadDataWithFilename = loadDataWithFilename<LibraryIdentifier?>(selectedLibraryId)
+        return loadDataWithFilename
             ?: LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
     }
 
@@ -423,37 +436,22 @@ class FileStore @Inject constructor (
         serializeToFile(selectedLibraryId, libraryIdentifier)
     }
 
+    data class SelectedCollectionIdentifierWrapperForStorage(val collectionIdentifier: CollectionIdentifier)
+
     fun getSelectedCollectionId(): CollectionIdentifier {
-        return deserializeFromFile(selectedCollectionId)
+        val loadDataWithFilename = loadDataWithFilename<SelectedCollectionIdentifierWrapperForStorage?>(selectedCollectionId)
+        return loadDataWithFilename?.collectionIdentifier
             ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
     }
 
     fun setSelectedCollectionId(
         collectionIdentifier: CollectionIdentifier,
     ) {
-        serializeToFile(selectedCollectionId, collectionIdentifier)
+        serializeToFile(selectedCollectionId, SelectedCollectionIdentifierWrapperForStorage(collectionIdentifier))
     }
 
     private fun serializeToFile(fileName: String, objectToSave: Any) {
-        val fileToSave = File(pathForFilename(fileName))
-        val file = FileOutputStream(fileToSave)
-        val outStream = ObjectOutputStream(file)
-        outStream.writeObject(objectToSave)
-        outStream.close()
-        file.close()
-    }
-
-    private fun <T> deserializeFromFile(fileName: String) : T? {
-        val fileToLoad = File(pathForFilename(fileName))
-        if (!fileToLoad.exists()) {
-            return null
-        }
-        val file = FileInputStream(fileToLoad)
-        val inStream = ObjectInputStream(file)
-        val item = inStream.readObject() as T
-        inStream.close()
-        file.close()
-        return item
+        saveObject(objectToSave, fileName)
     }
 
     fun shareExtensionDownload(key: String, ext: String): File {

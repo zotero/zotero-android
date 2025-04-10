@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.2.2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
         classpath(Libs.Kotlin.serialization)
         classpath(Libs.Firebase.Crashlytics.crashlyticsGradle)
         classpath(Libs.googleServices)
@@ -22,7 +22,7 @@ buildscript {
 }
 
 plugins {
-    id("com.google.dagger.hilt.android") version "2.47" apply false
+    id("com.google.dagger.hilt.android") version "2.56.1" apply false
 }
 
 allprojects {
@@ -32,6 +32,9 @@ allprojects {
         maven { setUrl("https://jitpack.io") }
         maven {
             url = uri("https://customers.pspdfkit.com/maven")
+        }
+        maven {
+            url = uri("https://my.nutrient.io/maven")
         }
     }
 

@@ -1,7 +1,7 @@
 package org.zotero.android.pdf.reader
 
 import android.view.MotionEvent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -42,7 +41,7 @@ internal fun PdfReaderScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    val activity = LocalContext.current as? AppCompatActivity ?: return
+    val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
     ObserveLifecycleEvent { event ->
         when (event) {

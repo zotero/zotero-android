@@ -138,7 +138,7 @@ class SyncUseCase @Inject constructor(
             return
         }
 
-        val action = queue.removeFirst()
+        val action = queue.removeAt(0)
 
         if (lastReturnedVersion != null && action.libraryId != processingAction?.libraryId) {
             lastReturnedVersion = null
@@ -922,7 +922,7 @@ class SyncUseCase @Inject constructor(
             if (this.queue.firstOrNull()?.libraryId != libraryId) {
                 break
             }
-            this.queue.removeFirst()
+            this.queue.removeAt(0)
 
         }
     }

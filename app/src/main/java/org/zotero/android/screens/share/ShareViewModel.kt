@@ -809,7 +809,7 @@ internal class ShareViewModel @Inject constructor(
         if (new != null) {
             if (new.isRecent && !viewState.recents[0].isRecent) {
                 val mutableRecents = viewState.recents.toMutableList()
-                mutableRecents.removeFirst()
+                mutableRecents.removeAt(0)
                 updateState {
                     copy(recents = mutableRecents.toImmutableList())
                 }

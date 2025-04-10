@@ -142,7 +142,7 @@ data class CollectionTree(
     private fun firstNode(matching: (Node) -> Boolean, array: List<Node>): Node? {
         val queue = array.toMutableList()
         while (!queue.isEmpty()) {
-            val node = queue.removeFirst()
+            val node = queue.removeAt(0)
 
             if (matching(node)) {
                 return node
