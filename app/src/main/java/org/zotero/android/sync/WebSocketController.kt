@@ -96,7 +96,6 @@ class WebSocketController @Inject constructor(
     private var connectionRetryCount: Int = 0
     private var connectionTimer: BackgroundTimer? = null
     private var completionAction: (() -> Unit)? = null
-    private var completionTimer: BackgroundTimer? = null
     private val url: String = "wss://stream.zotero.org"
 
     private var coroutineScope = CoroutineScope(dispatcher)
@@ -134,14 +133,6 @@ class WebSocketController @Inject constructor(
         }
         if (completed != null) {
             this.completionAction = completed
-
-            val completionTimer = BackgroundTimer(timeIntervalMs = this.completionTimeout) {
-                this.completionAction?.let { it() }
-                this.completionAction = null
-                this.completionTimer = null
-            }
-            completionTimer.resume()
-            this.completionTimer = completionTimer
         }
 
         webSocket = okHttpClient.newWebSocket(
@@ -211,8 +202,6 @@ class WebSocketController @Inject constructor(
                 this.connectionRetryCount = 0
                 this.connectionTimer?.suspend()
                 this.connectionTimer = null
-                this.completionTimer?.suspend()
-                this.completionTimer = null
 
                 this.completionAction?.let { it() }
                 this.completionAction = null
@@ -306,8 +295,6 @@ class WebSocketController @Inject constructor(
         this.connectionRetryCount = 0
         this.connectionTimer?.suspend()
         this.connectionTimer = null
-        this.completionTimer?.suspend()
-        this.completionTimer = null
         for ((_, response) in this.responseListeners) {
             response.timer.suspend()
         }
