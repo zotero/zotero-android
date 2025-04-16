@@ -4,6 +4,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.objects.Attachment
@@ -22,6 +24,7 @@ class UploadFixSyncAction(
     val libraryId: LibraryIdentifier,
     val userId: Long,
     private val coroutineScope: CoroutineScope,
+    private val syncSchedulerSemaphore: Semaphore,
 ) : SyncAction() {
 
     sealed class Error : Exception() {
@@ -41,24 +44,27 @@ class UploadFixSyncAction(
         Timber.i("UploadFixSyncAction: fix upload for ${this.key}; ${this.libraryId}")
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
-                if (update.key != this.key || update.libraryId != this.libraryId) {
-                    return@onEach
-                }
-                when (update.kind) {
-                    is AttachmentDownloader.Update.Kind.failed -> {
-                        this.finishDownload?.let { it(CustomResult.GeneralError.CodeError(update.kind.exception)) }
-                        this.finishDownload = null
+                syncSchedulerSemaphore.withPermit {
+                    if (update.key != this.key || update.libraryId != this.libraryId) {
+                        return@onEach
                     }
+                    when (update.kind) {
+                        is AttachmentDownloader.Update.Kind.failed -> {
+                            this.finishDownload?.let { it(CustomResult.GeneralError.CodeError(update.kind.exception)) }
+                            this.finishDownload = null
+                        }
 
-                    AttachmentDownloader.Update.Kind.ready -> {
-                        this.finishDownload?.let { it(CustomResult.GeneralSuccess(Unit)) }
-                        this.finishDownload = null
-                    }
+                        AttachmentDownloader.Update.Kind.ready -> {
+                            this.finishDownload?.let { it(CustomResult.GeneralSuccess(Unit)) }
+                            this.finishDownload = null
+                        }
 
-                    is AttachmentDownloader.Update.Kind.progress, AttachmentDownloader.Update.Kind.cancelled -> {
-                        //no-op
+                        is AttachmentDownloader.Update.Kind.progress, AttachmentDownloader.Update.Kind.cancelled -> {
+                            //no-op
+                        }
                     }
                 }
+
             }
             .launchIn(coroutineScope)
 
