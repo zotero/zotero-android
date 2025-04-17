@@ -936,6 +936,14 @@ internal class AllItemsViewModel @Inject constructor(
         showDeleteItemsConfirmation(getSelectedKeys())
     }
 
+    fun onDownloadSelectedAttachments() {
+        allItemsProcessor.downloadSelectedAttachments(getSelectedKeys())
+    }
+
+    fun onRemoveSelectedAttachments() {
+        allItemsProcessor.removeSelectedAttachments(getSelectedKeys())
+    }
+
     fun onEmptyTrash() {
         updateState {
             copy(

@@ -723,6 +723,31 @@ class AllItemsProcessor @Inject constructor(
         sendChangedToUi(includeItemCellModels = true)
     }
 
+    fun downloadSelectedAttachments(keys: Set<String>) {
+        var attachments: MutableList<Pair<Attachment, String?>> = mutableListOf()
+        for (key in keys) {
+            val accessory = itemAccessories[key] ?: continue
+            val attachment = accessory.attachmentGet ?: continue
+            val parentKey = if (attachment.key == key) null else key
+            attachments.add(Pair(attachment, parentKey))
+        }
+        fileDownloader.batchDownload(attachments = attachments)
+    }
+
+    fun removeSelectedAttachments(ids: Set<String>) {
+        ids.forEach { it ->
+            val attachment = attachment(it, null) ?: return@forEach
+            fileDownloader.cancel(attachment.first.key, this.library.identifier)
+        }
+        this.fileCleanupController.delete(
+            AttachmentFileCleanupController.DeletionType.allForItems(
+                keys = ids,
+                collectionIdentifier = this.collection.identifier,
+                libraryId = this.library.identifier
+            ), completed = null
+        )
+    }
+
     fun clear() {
         removeAllListenersFromResultsList()
         this.results = null
