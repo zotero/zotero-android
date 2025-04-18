@@ -219,6 +219,7 @@ class PdfReaderViewModel @Inject constructor(
     private val onAnnotationSearchStateFlow = MutableStateFlow("")
     private val onAnnotationChangedDebouncerFlow = MutableStateFlow<Triple<Int, List<String>, FreeTextAnnotation>?>(null)
     private val onOutlineSearchStateFlow = MutableStateFlow("")
+    private val onStorePageFlow = MutableStateFlow(0)
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private lateinit var fragmentManager: FragmentManager
     private var isTablet: Boolean = false
@@ -256,6 +257,8 @@ class PdfReaderViewModel @Inject constructor(
         updateState {
             copy(selectedThumbnail = row)
         }
+
+        onStorePageFlow.tryEmit(event.pageIndex)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -421,6 +424,7 @@ class PdfReaderViewModel @Inject constructor(
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
         setupCommentChangeFlow()
+        setupStorePageFlow()
         setupAnnotationChangedDebouncerFlow()
 
         val pdfSettings = defaults.getPDFSettings()
@@ -624,6 +628,15 @@ class PdfReaderViewModel @Inject constructor(
             .debounce(150)
             .map { text ->
                 searchAnnotations(text)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun setupStorePageFlow() {
+        onStorePageFlow
+            .debounce(3000)
+            .map { page ->
+                store(page)
             }
             .launchIn(viewModelScope)
     }
