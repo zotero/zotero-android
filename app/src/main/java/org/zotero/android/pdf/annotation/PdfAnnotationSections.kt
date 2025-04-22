@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
@@ -16,18 +17,25 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun CommentSection(
+    annotation: PDFAnnotation,
     viewState: PdfAnnotationViewState,
     layoutType: CustomLayoutSize.LayoutType,
     viewModel: PdfAnnotationViewModel
 ) {
+    val enabled = annotation.isZoteroAnnotation
     CustomTextField(
         modifier = Modifier
             .padding(start = 8.dp),
         value = viewState.commentFocusText,
         textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize()),
-        hint = stringResource(id = Strings.pdf_annotations_sidebar_add_comment),
+        hint = if (enabled) {
+            stringResource(id = Strings.pdf_annotations_sidebar_add_comment)
+        } else {
+            stringResource(id = Strings.pdf_annotation_popover_no_comment)
+        },
         ignoreTabsAndCaretReturns = false,
         minLines = 5,
+        enabled = enabled,
         onValueChange = { viewModel.onCommentTextChange(it) })
 }
 

@@ -14,10 +14,12 @@ import org.zotero.android.pdf.annotation.CommentSection
 import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
 import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.TagsSection
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 
 @Composable
 internal fun PdfAnnotationUnderlineRow(
+    annotation: PDFAnnotation,
     viewState: PdfAnnotationViewState,
     viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
@@ -28,22 +30,35 @@ internal fun PdfAnnotationUnderlineRow(
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        CommentSection(viewState, layoutType, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
+        CommentSection(
+            annotation = annotation,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
         )
         Spacer(modifier = Modifier.height(4.dp))
-        ColorPicker(viewState, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+        if (annotation.isZoteroAnnotation) {
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            ColorPicker(viewState, viewModel)
+            Spacer(modifier = Modifier.height(4.dp))
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TagsSection(
+                viewModel = viewModel,
+                viewState = viewState,
+                layoutType = layoutType
+            )
+        }
+
     }
 }

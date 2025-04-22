@@ -104,34 +104,40 @@ internal fun PdfAnnotationPart(
         item {
             when (annotation.type) {
                 AnnotationType.note -> PdfAnnotationNoteRow(
+                    annotation = annotation,
                     layoutType = layoutType,
                     viewModel = viewModel,
                     viewState = viewState,
                 )
 
                 AnnotationType.highlight -> PdfAnnotationHighlightRow(
+                    annotation = annotation,
                     layoutType = layoutType,
                     viewState = viewState,
                     viewModel = viewModel,
                 )
 
                 AnnotationType.ink -> PdfAnnotationInkRow(
+                    annotation = annotation,
                     viewModel = viewModel,
                     viewState = viewState,
                     layoutType = layoutType,
                 )
 
                 AnnotationType.image -> PdfAnnotationImageRow(
+                    annotation = annotation,
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType,
                 )
                 AnnotationType.underline -> PdfAnnotationUnderlineRow(
+                    annotation = annotation,
                     layoutType = layoutType,
                     viewState = viewState,
                     viewModel = viewModel,
                 )
                 AnnotationType.text -> PdfAnnotationTextRow(
+                    annotation = annotation,
                     layoutType = layoutType,
                     viewState = viewState,
                     viewModel = viewModel,
@@ -147,12 +153,15 @@ internal fun PdfAnnotationPart(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
-            HeadingTextButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = viewModel::onDeleteAnnotation,
-                contentColor = CustomPalette.ErrorRed,
-                text = stringResource(Strings.pdf_annotation_popover_delete),
-            )
+            if (annotation.isZoteroAnnotation) {
+                HeadingTextButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = viewModel::onDeleteAnnotation,
+                    contentColor = CustomPalette.ErrorRed,
+                    text = stringResource(Strings.pdf_annotation_popover_delete),
+                )
+            }
+
         }
 
     }

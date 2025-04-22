@@ -702,9 +702,18 @@ class PdfReaderViewModel @Inject constructor(
             AnnotationManager.OnAnnotationSelectedListener {
             override fun onPrepareAnnotationSelection(
                 p0: AnnotationSelectionController,
-                p1: Annotation,
+                annotation: Annotation,
                 p2: Boolean
             ): Boolean {
+                if (!annotation.isZoteroAnnotation && setOf(
+                        AnnotationType.STAMP,
+                        AnnotationType.LINE,
+                        AnnotationType.CIRCLE,
+                        AnnotationType.SQUARE
+                    ).contains(annotation.type)
+                ) {
+                    return false
+                }
                 //no-op
                 return true
             }

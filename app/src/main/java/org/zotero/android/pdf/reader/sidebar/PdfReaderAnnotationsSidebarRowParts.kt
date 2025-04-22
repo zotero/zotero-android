@@ -78,19 +78,30 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+        Spacer(modifier = Modifier.weight(1f))
         if (viewState.isAnnotationSelected(annotation.key)) {
-            Spacer(modifier = Modifier.weight(1f))
+            if (annotation.isZoteroAnnotation) {
+                Image(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .safeClickable(
+                            onClick = vMInterface::onMoreOptionsForItemClicked,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = false)
+                        ),
+                    painter = painterResource(id = Drawables.more_horiz_24px),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
+                )
+            }
+        }
+        if (!annotation.isZoteroAnnotation) {
             Image(
                 modifier = Modifier
-                    .size(22.dp)
-                    .safeClickable(
-                        onClick = vMInterface::onMoreOptionsForItemClicked,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = false)
-                    ),
-                painter = painterResource(id = Drawables.more_horiz_24px),
+                    .size(22.dp),
+                painter = painterResource(id = Drawables.ic_lock_solid),
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(CustomTheme.colors.zoteroDefaultBlue),
+                colorFilter = ColorFilter.tint(CustomTheme.colors.disabledContent),
             )
         }
     }
@@ -123,7 +134,7 @@ private fun PdfReaderAnnotationsSidebarCommentSection(
     annotation: PDFAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
-    if (viewState.isAnnotationSelected(annotation.key)) {
+    if (viewState.isAnnotationSelected(annotation.key) && annotation.isZoteroAnnotation) {
         CustomTextField(
             modifier = Modifier
                 .sectionHorizontalPadding()
@@ -165,7 +176,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
 ) {
     val isSelected = viewState.isAnnotationSelected(annotation.key)
     val areTagsPresent = annotation.tags.isNotEmpty()
-    val shouldDisplayTagsSection = isSelected || areTagsPresent
+    val shouldDisplayTagsSection = (isSelected || areTagsPresent) && annotation.isZoteroAnnotation
     if (shouldDisplayTagsSection) {
         SidebarDivider()
     }

@@ -14,27 +14,42 @@ import org.zotero.android.pdf.annotation.CommentSection
 import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
 import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.TagsSection
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 
 @Composable
 internal fun PdfAnnotationNoteRow(
     viewState: PdfAnnotationViewState,
     viewModel: PdfAnnotationViewModel,
-    layoutType: CustomLayoutSize.LayoutType
+    layoutType: CustomLayoutSize.LayoutType,
+    annotation: PDFAnnotation
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        CommentSection(viewState, layoutType, viewModel)
+        CommentSection(
+            annotation = annotation,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider()
-        Spacer(modifier = Modifier.height(4.dp))
-        ColorPicker(viewState, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider()
-        Spacer(modifier = Modifier.height(4.dp))
-        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+        if (annotation.isZoteroAnnotation) {
+            SidebarDivider()
+            Spacer(modifier = Modifier.height(4.dp))
+            ColorPicker(viewState, viewModel)
+            Spacer(modifier = Modifier.height(4.dp))
+            SidebarDivider()
+            Spacer(modifier = Modifier.height(4.dp))
+            TagsSection(
+                viewModel = viewModel,
+                viewState = viewState,
+                layoutType = layoutType
+            )
+        }
+
     }
 }

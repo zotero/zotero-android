@@ -23,6 +23,7 @@ interface PDFAnnotation {
     val rotation: Int?
     val sortIndex: String
     val tags: List<Tag>
+    val isZoteroAnnotation: Boolean
 
     fun editability(currentUserId: Long, library: Library): AnnotationEditability
     fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<List<PointF>>

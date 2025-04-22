@@ -14,10 +14,12 @@ import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
 import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.SizeSelector
 import org.zotero.android.pdf.annotation.TagsSection
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 
 @Composable
 internal fun PdfAnnotationInkRow(
+    annotation: PDFAnnotation,
     viewState: PdfAnnotationViewState,
     viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
@@ -27,27 +29,40 @@ internal fun PdfAnnotationInkRow(
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        CommentSection(viewState, layoutType, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        SizeSelector(
+        CommentSection(
+            annotation = annotation,
             viewState = viewState,
-            viewModel = viewModel,
-            layoutType = layoutType
+            layoutType = layoutType,
+            viewModel = viewModel
         )
         Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+        if (annotation.isZoteroAnnotation) {
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SizeSelector(
+                viewState = viewState,
+                viewModel = viewModel,
+                layoutType = layoutType
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TagsSection(
+                viewModel = viewModel,
+                viewState = viewState,
+                layoutType = layoutType
+            )
+        }
+
     }
 }
 

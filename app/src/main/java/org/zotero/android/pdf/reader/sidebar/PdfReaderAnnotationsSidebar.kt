@@ -67,7 +67,7 @@ internal fun PdfReaderAnnotationsSidebar(
                 ) { _, key ->
                     val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
                     val isSelected = viewState.isAnnotationSelected(annotation.key)
-                    val horizontalPadding = if (isSelected) 13.dp else 16.dp
+                    val horizontalPadding = if (isSelected && annotation.isZoteroAnnotation) 13.dp else 16.dp
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
                         .clip(shape = RoundedCornerShape(10.dp))

@@ -65,13 +65,25 @@ internal fun PdfAnnotationHeaderRow(
             )
         }
 
-        Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             HeadingTextButton(
                 onClick = onBack,
                 text = stringResource(Strings.done)
             )
             Spacer(modifier = Modifier.width(8.dp))
+            if (!annotation.isZoteroAnnotation) {
+                Image(
+                    modifier = Modifier
+                        .size(22.dp),
+                    painter = painterResource(id = Drawables.ic_lock_solid),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(CustomTheme.colors.disabledContent),
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
         }
-
     }
 }

@@ -26,6 +26,7 @@ data class PDFDocumentAnnotation(
     override val rotation: Int?,
     override val sortIndex: String,
     val dateModified: Date,
+    override val isZoteroAnnotation: Boolean
 ): PDFAnnotation {
     override fun isAuthor(currentUserId: Long): Boolean {
         return this.isAuthor

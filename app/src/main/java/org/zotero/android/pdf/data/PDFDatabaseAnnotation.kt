@@ -18,7 +18,8 @@ import kotlin.math.roundToInt
 
 data class PDFDatabaseAnnotation(
     val item: RItem,
-    override val type: AnnotationType
+    override val type: AnnotationType,
+    override val isZoteroAnnotation: Boolean
 ): PDFAnnotation {
 
     companion object {
@@ -33,7 +34,11 @@ data class PDFDatabaseAnnotation(
             if (!AnnotationsConfig.supported.contains(type.kind)) {
                 return null
             }
-            return PDFDatabaseAnnotation(item = item, type = type)
+            return PDFDatabaseAnnotation(
+                item = item,
+                type = type,
+                isZoteroAnnotation = true
+            )
         }
     }
 
