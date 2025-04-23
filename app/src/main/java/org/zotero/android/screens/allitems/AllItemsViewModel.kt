@@ -393,10 +393,13 @@ internal class AllItemsViewModel @Inject constructor(
             selectionResult as MediaSelectionResult.AttachMediaSuccess
 
             val original = selectionResult.file.file
-            val filename = original.nameWithoutExtension + "." + original.extension
+            val filename = original.name
+            //I was able to reproduce crash with unrecognizable contentType only when file's extension was empty. If so we now treat such file as binary.
             val contentType =
-                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)!!
-            val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename)
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)
+                    ?: "application/octet-stream"
+            val file =
+                fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename)
             if (!original.renameTo(file)) {
                 Timber.e("can't move file")
                 continue
