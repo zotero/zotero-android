@@ -853,6 +853,14 @@ class PdfReaderViewModel @Inject constructor(
                     submitPendingPage(0)
                 }
 
+                //The root cause of this issue is yet unknown, but could've been caused by previous bugs related to storing last visited page.
+                val lastPageIndex = document.pageCount - 1
+                if (storedPage > lastPageIndex) {
+                    Timber.w("storedPage was found to be greater than document's pageCount")
+                    storedPage = lastPageIndex
+                    submitPendingPage(lastPageIndex)
+                }
+
                 observe(liveAnnotations!!)
                 this.databaseAnnotations = liveAnnotations!!.freeze()
                 val documentAnnotations = loadAnnotations(
