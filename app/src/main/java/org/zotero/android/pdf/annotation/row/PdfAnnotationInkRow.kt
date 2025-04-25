@@ -10,19 +10,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotation.CommentSection
-import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
-import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.SizeSelector
 import org.zotero.android.pdf.annotation.TagsSection
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.sync.Tag
 
 @Composable
 internal fun PdfAnnotationInkRow(
     annotation: PDFAnnotation,
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit,
+    size: Float,
+    onSizeChanged: (Float) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -31,9 +34,9 @@ internal fun PdfAnnotationInkRow(
     ) {
         CommentSection(
             annotation = annotation,
-            viewState = viewState,
             layoutType = layoutType,
-            viewModel = viewModel
+            commentFocusText = commentFocusText,
+            onCommentTextChange = onCommentTextChange,
         )
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -45,9 +48,9 @@ internal fun PdfAnnotationInkRow(
             )
             Spacer(modifier = Modifier.height(4.dp))
             SizeSelector(
-                viewState = viewState,
-                viewModel = viewModel,
-                layoutType = layoutType
+                layoutType = layoutType,
+                size = size,
+                onSizeChanged = onSizeChanged,
             )
             Spacer(modifier = Modifier.height(4.dp))
             SidebarDivider(
@@ -57,9 +60,9 @@ internal fun PdfAnnotationInkRow(
             )
             Spacer(modifier = Modifier.height(4.dp))
             TagsSection(
-                viewModel = viewModel,
-                viewState = viewState,
-                layoutType = layoutType
+                layoutType = layoutType,
+                tags = tags,
+                onTagsClicked = onTagsClicked,
             )
         }
 

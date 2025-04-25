@@ -36,18 +36,18 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun ColorPicker(
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel
+    colors: List<String>,
+    onColorSelected: (color: String) -> Unit,
+    selectedColor: String,
 ) {
-    val selectedColor = viewState.color
     FlowRow(
         modifier = Modifier.padding(horizontal = 10.dp),
     ) {
-        viewState.colors.forEach { listColorHex ->
+        colors.forEach { listColorHex ->
             FilterCircle(
                 hex = listColorHex,
                 isSelected = listColorHex == selectedColor,
-                onClick = { viewModel.onColorSelected(listColorHex) })
+                onClick = { onColorSelected(listColorHex) })
         }
     }
 }
@@ -76,9 +76,9 @@ internal fun FilterCircle(hex: String, isSelected: Boolean, onClick: () -> Unit)
 
 @Composable
 internal fun SizeSelector(
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
+    size: Float,
+    onSizeChanged: (Float) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -90,8 +90,8 @@ internal fun SizeSelector(
         )
         Slider(
             modifier = Modifier.weight(1f),
-            value = viewState.size,
-            onValueChange = { viewModel.onSizeChanged(it) },
+            value = size,
+            onValueChange = onSizeChanged,
             colors = SliderDefaults.colors(
                 activeTrackColor = CustomTheme.colors.zoteroDefaultBlue,
                 thumbColor = CustomTheme.colors.zoteroDefaultBlue,
@@ -100,7 +100,7 @@ internal fun SizeSelector(
         )
         Text(
             modifier = Modifier.padding(horizontal = 10.dp),
-            text = String.format("%.1f", viewState.size),
+            text = String.format("%.1f", size),
             color = CustomTheme.colors.pdfSizePickerColor,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculatePdfSidebarTextSize(),

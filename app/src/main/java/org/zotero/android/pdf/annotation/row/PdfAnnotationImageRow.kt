@@ -11,18 +11,22 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotation.ColorPicker
 import org.zotero.android.pdf.annotation.CommentSection
-import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
-import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.TagsSection
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.sync.Tag
 
 @Composable
 internal fun PdfAnnotationImageRow(
     annotation: PDFAnnotation,
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel,
     layoutType: CustomLayoutSize.LayoutType,
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    colors: List<String>,
+    onColorSelected: (color: String) -> Unit,
+    selectedColor: String,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -31,9 +35,9 @@ internal fun PdfAnnotationImageRow(
     ) {
         CommentSection(
             annotation = annotation,
-            viewState = viewState,
             layoutType = layoutType,
-            viewModel = viewModel
+            commentFocusText = commentFocusText,
+            onCommentTextChange = onCommentTextChange,
         )
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -44,7 +48,11 @@ internal fun PdfAnnotationImageRow(
                     .fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
-            ColorPicker(viewState, viewModel)
+            ColorPicker(
+                colors = colors,
+                onColorSelected = onColorSelected,
+                selectedColor = selectedColor
+            )
             Spacer(modifier = Modifier.height(4.dp))
             SidebarDivider(
                 modifier = Modifier
@@ -53,8 +61,8 @@ internal fun PdfAnnotationImageRow(
             )
             Spacer(modifier = Modifier.height(4.dp))
             TagsSection(
-                viewModel = viewModel,
-                viewState = viewState,
+                tags = tags,
+                onTagsClicked = onTagsClicked,
                 layoutType = layoutType
             )
         }
