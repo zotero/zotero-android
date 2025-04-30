@@ -155,6 +155,18 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
         }
     }
 
+    fun onUnderlineTextValueChange(newText: String) {
+        updateState {
+            copy(underlineText = newText)
+        }
+    }
+
+    fun onHighlightTextValueChange(newText: String) {
+        updateState {
+            copy(highlightText = newText)
+        }
+    }
+
 }
 
 internal data class PdfAnnotationMoreViewState(

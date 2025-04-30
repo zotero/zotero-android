@@ -30,7 +30,12 @@ internal fun PdfAnnotationMoreUnderlineRow(
             .fillMaxWidth()
             .background(color = CustomTheme.colors.zoteroEditFieldBackground)
     ) {
-        MoreUnderlineText(annotationColor, viewState, layoutType)
+        MoreUnderlineText(
+            annotationColor = annotationColor,
+            viewState = viewState,
+            onValueChange = viewModel::onUnderlineTextValueChange,
+            layoutType = layoutType,
+        )
         SpacerDivider()
         Spacer(modifier = Modifier.height(4.dp))
         MoreColorPicker(viewState, viewModel)

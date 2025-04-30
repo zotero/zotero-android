@@ -30,7 +30,12 @@ internal fun PdfAnnotationMoreHighlightRow(
             .fillMaxWidth()
             .background(color = CustomTheme.colors.zoteroEditFieldBackground)
     ) {
-        MoreHighlightText(annotationColor, viewState, layoutType)
+        MoreHighlightText(
+            annotationColor = annotationColor,
+            viewState = viewState,
+            onValueChange = viewModel::onHighlightTextValueChange,
+            layoutType = layoutType
+        )
         SpacerDivider()
         Spacer(modifier = Modifier.height(4.dp))
         MoreColorPicker(viewState, viewModel)

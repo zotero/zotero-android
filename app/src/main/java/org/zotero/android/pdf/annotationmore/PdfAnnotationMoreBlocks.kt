@@ -34,6 +34,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -41,6 +42,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 internal fun MoreHighlightText(
     annotationColor: Color,
     viewState: PdfAnnotationMoreViewState,
+    onValueChange: (String) -> Unit,
     layoutType: CustomLayoutSize.LayoutType
 ) {
     Box(
@@ -56,12 +58,15 @@ internal fun MoreHighlightText(
                 .fillMaxHeight()
                 .background(annotationColor)
         )
-        Text(
+
+        CustomTextField(
             modifier = Modifier.padding(start = 20.dp, end = 16.dp),
-            text = viewState.highlightText,
-            color = CustomTheme.colors.primaryContent,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculatePdfSidebarTextSize(),
+            value = viewState.highlightText,
+            hint = "",
+            ignoreTabsAndCaretReturns = false,
+            onValueChange = onValueChange,
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize(),),
+            textColor = CustomTheme.colors.primaryContent,
         )
     }
 }
@@ -216,6 +221,7 @@ private fun FontSizeChangeButton(text: String, onClick: (() -> Unit)) {
 internal fun MoreUnderlineText(
     annotationColor: Color,
     viewState: PdfAnnotationMoreViewState,
+    onValueChange: (String) -> Unit,
     layoutType: CustomLayoutSize.LayoutType
 ) {
     Box(
@@ -231,12 +237,15 @@ internal fun MoreUnderlineText(
                 .fillMaxHeight()
                 .background(annotationColor)
         )
-        Text(
+
+        CustomTextField(
             modifier = Modifier.padding(start = 20.dp, end = 16.dp),
-            text = viewState.underlineText,
-            color = CustomTheme.colors.primaryContent,
-            style = CustomTheme.typography.default,
-            fontSize = layoutType.calculatePdfSidebarTextSize(),
+            value = viewState.underlineText,
+            hint = "",
+            ignoreTabsAndCaretReturns = false,
+            onValueChange = onValueChange,
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize(),),
+            textColor = CustomTheme.colors.primaryContent,
         )
     }
 }
