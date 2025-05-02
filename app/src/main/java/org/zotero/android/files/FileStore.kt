@@ -7,6 +7,8 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import okhttp3.internal.closeQuietly
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
@@ -36,6 +38,7 @@ import javax.inject.Singleton
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,
+    private val dispatcher: CoroutineDispatcher,
     val dataMarshaller: DataMarshaller,
     private val gson: Gson
 ) {
@@ -157,6 +160,14 @@ class FileStore @Inject constructor (
         } catch (e: IOException) {
             Timber.e(e, "Unable to write data to file = $filename")
         }
+    }
+
+    suspend fun attachmentFileAsync(
+        libraryId: LibraryIdentifier,
+        key: String,
+        filename: String,
+    ) = withContext(dispatcher) {
+        attachmentFile(libraryId = libraryId, key = key, filename = filename)
     }
 
     fun attachmentFile(
@@ -417,6 +428,16 @@ class FileStore @Inject constructor (
             ?: LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
     }
 
+    suspend fun getSelectedLibraryAsync() = withContext(dispatcher) {
+        getSelectedLibrary()
+    }
+
+    suspend fun setSelectedLibraryAsync(
+        libraryIdentifier: LibraryIdentifier,
+    ) = withContext(dispatcher) {
+        setSelectedLibrary(libraryIdentifier)
+    }
+
     fun setSelectedLibrary(
         libraryIdentifier: LibraryIdentifier,
     ) {
@@ -426,6 +447,16 @@ class FileStore @Inject constructor (
     fun getSelectedCollectionId(): CollectionIdentifier {
         return deserializeFromFile(selectedCollectionId)
             ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
+    }
+
+    suspend fun getSelectedCollectionIdAsync() = withContext(dispatcher) {
+        getSelectedCollectionId()
+    }
+
+    suspend fun setSelectedCollectionIdAsync(
+        collectionIdentifier: CollectionIdentifier,
+    ) = withContext(dispatcher) {
+        setSelectedCollectionId(collectionIdentifier)
     }
 
     fun setSelectedCollectionId(

@@ -49,19 +49,21 @@ internal class AddByIdentifierViewModel @Inject constructor(
         "10.\\d{4,9}\\/[-._;()\\/:a-zA-Z0-9]+"
 
     fun init() = initOnce {
-        setupAttachmentObserving()
-        val collectionKeys =
-            fileStore.getSelectedCollectionId().keyGet?.let { setOf(it) } ?: emptySet()
-        val libraryId = fileStore.getSelectedLibrary()
-        val restoreLookupState = screenArgs.restoreLookupState
-        initState(
-            restoreLookupState = restoreLookupState,
-            hasDarkBackground = false,
-            collectionKeys = collectionKeys,
-            libraryId = libraryId
-        )
+        viewModelScope.launch {
+            setupAttachmentObserving()
+            val collectionKeys =
+                fileStore.getSelectedCollectionIdAsync().keyGet?.let { setOf(it) } ?: emptySet()
+            val libraryId = fileStore.getSelectedLibraryAsync()
+            val restoreLookupState = screenArgs.restoreLookupState
+            initState(
+                restoreLookupState = restoreLookupState,
+                hasDarkBackground = false,
+                collectionKeys = collectionKeys,
+                libraryId = libraryId
+            )
 
-        initialize(collectionKeys = collectionKeys, libraryId = libraryId)
+            initialize(collectionKeys = collectionKeys, libraryId = libraryId)
+        }
     }
 
     private fun initialize(collectionKeys: Set<String>, libraryId: LibraryIdentifier) {

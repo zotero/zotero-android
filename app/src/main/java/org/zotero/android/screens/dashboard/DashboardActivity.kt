@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.content.FileProvider
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
 import org.greenrobot.eventbus.EventBus
@@ -28,6 +30,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNavigation
 import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
@@ -52,6 +55,9 @@ internal class DashboardActivity : BaseActivity() {
 
     @Inject
     lateinit var fileStore: FileStore
+
+    @Inject
+    lateinit var dispatchers: Dispatchers
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,45 +106,49 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
-        val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
-        val collectionDefaultValue = viewModel.getInitialCollectionArgs()
+        val mainCoroutineScope = CoroutineScope(dispatchers.main)
+        mainCoroutineScope.launch {
+            val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
+            val collectionDefaultValue = viewModel.getInitialCollectionArgs()
 
-        setContent {
-            CustomTheme {
-                Box {
-                    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
-                    val viewEffect by viewModel.viewEffects.observeAsState()
-                    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
-                    LaunchedEffect(key1 = viewModel) {
-                        viewModel.init(isTablet = isTablet)
+            setContent {
+                CustomTheme {
+                    Box {
+                        val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+                        val viewEffect by viewModel.viewEffects.observeAsState()
+                        val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+                        LaunchedEffect(key1 = viewModel) {
+                            viewModel.init(isTablet = isTablet)
+                        }
+                        if (viewState.initialLoadData != null) {
+                            val layoutType = CustomLayoutSize.calculateLayoutType()
+                            if (layoutType.isTablet()) {
+                                DashboardRootTopLevelTabletNavigation(
+                                    collectionDefaultValue = collectionDefaultValue,
+                                    onPickFile = onPickFile,
+                                    viewEffect = viewEffect,
+                                    onOpenFile = onOpenFile,
+                                    onOpenWebpage = onOpenWebpage,
+                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                                )
+                            } else {
+                                DashboardRootPhoneNavigation(
+                                    collectionDefaultValue = collectionDefaultValue,
+                                    onPickFile = onPickFile,
+                                    onOpenFile = onOpenFile,
+                                    onOpenWebpage = onOpenWebpage,
+                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                                    viewEffect = viewEffect,
+                                )
+                            }
+                            DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
+                            SyncToolbarScreen()
+                        }
                     }
-
-                    val layoutType = CustomLayoutSize.calculateLayoutType()
-                    if (layoutType.isTablet()) {
-                        DashboardRootTopLevelTabletNavigation(
-                            collectionDefaultValue = collectionDefaultValue,
-                            onPickFile = onPickFile,
-                            viewEffect = viewEffect,
-                            onOpenFile = onOpenFile,
-                            onOpenWebpage = onOpenWebpage,
-                            wasPspdfkitInitialized = wasPspdfkitInitialized,
-                        )
-                    } else {
-                        DashboardRootPhoneNavigation(
-                            collectionDefaultValue = collectionDefaultValue,
-                            onPickFile = onPickFile,
-                            onOpenFile = onOpenFile,
-                            onOpenWebpage = onOpenWebpage,
-                            wasPspdfkitInitialized = wasPspdfkitInitialized,
-                            viewEffect = viewEffect,
-                        )
-                    }
-                    DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
-                    SyncToolbarScreen()
                 }
-
             }
         }
+
     }
 
     private fun pickFileIntent(): Intent {

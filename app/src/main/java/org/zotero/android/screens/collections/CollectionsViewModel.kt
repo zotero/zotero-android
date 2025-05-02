@@ -407,24 +407,25 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun onItemTapped(collection: Collection) {
-        updateState {
-            copy(selectedCollectionId = collection.identifier)
+        viewModelScope.launch {
+            updateState {
+                copy(selectedCollectionId = collection.identifier)
+            }
+            fileStore.setSelectedCollectionIdAsync(collection.identifier)
+            ScreenArguments.allItemsArgs = AllItemsArgs(
+                collection = collection,
+                library = this@CollectionsViewModel.library,
+                searchTerm = null,
+                error = null
+            )
+            val collectionsArgs = CollectionsArgs(
+                libraryId = this@CollectionsViewModel.libraryId,
+                selectedCollectionId = collection.identifier,
+                shouldRecreateItemsScreen = this@CollectionsViewModel.isTablet
+            )
+            val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+            triggerEffect(CollectionsViewEffect.NavigateToAllItemsScreen(encodedArgs))
         }
-        fileStore.setSelectedCollectionId(collection.identifier)
-        ScreenArguments.allItemsArgs = AllItemsArgs(
-            collection = collection,
-            library = this.library,
-            searchTerm = null,
-            error = null
-        )
-
-        val collectionsArgs = CollectionsArgs(
-            libraryId = this.libraryId,
-            selectedCollectionId = collection.identifier,
-            shouldRecreateItemsScreen = this.isTablet
-        )
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
-        triggerEffect(CollectionsViewEffect.NavigateToAllItemsScreen(encodedArgs))
     }
 
     fun onItemChevronTapped(collection: Collection) {
@@ -693,12 +694,14 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     fun navigateToLibraries() {
-        val collectionsArgs = CollectionsArgs(
-            libraryId = fileStore.getSelectedLibrary(),
-            fileStore.getSelectedCollectionId()
-        )
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
-        triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen(encodedArgs))
+        viewModelScope.launch {
+            val collectionsArgs = CollectionsArgs(
+                libraryId = fileStore.getSelectedLibraryAsync(),
+                fileStore.getSelectedCollectionIdAsync()
+            )
+            val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+            triggerEffect(CollectionsViewEffect.NavigateToLibrariesScreen(encodedArgs))
+        }
     }
 
     fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {

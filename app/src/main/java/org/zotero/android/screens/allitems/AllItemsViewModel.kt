@@ -185,29 +185,32 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun init(isTablet: Boolean) = initOnce {
-        this.isTablet = isTablet
-        EventBus.getDefault().register(this)
-        val args = ScreenArguments.allItemsArgs
-        this.collection = args.collection
-        this.library = args.library
+        viewModelScope.launch {
+            this@AllItemsViewModel.isTablet = isTablet
+            EventBus.getDefault().register(this@AllItemsViewModel)
+            val args = ScreenArguments.allItemsArgs
+            this@AllItemsViewModel.collection = args.collection
+            this@AllItemsViewModel.library = args.library
 
-        val searchTerm = args.searchTerm
+            val searchTerm = args.searchTerm
 
-        updateState {
-            copy(
-                searchTerm = searchTerm,
-                error = args.error,
-                isCollectionTrash = this@AllItemsViewModel.collection.identifier.isTrash,
-                isCollectionACollection = this@AllItemsViewModel.collection.identifier.isCollection,
-                collectionName = this@AllItemsViewModel.collection.name
+            updateState {
+                copy(
+                    searchTerm = searchTerm,
+                    error = args.error,
+                    isCollectionTrash = this@AllItemsViewModel.collection.identifier.isTrash,
+                    isCollectionACollection = this@AllItemsViewModel.collection.identifier.isCollection,
+                    collectionName = this@AllItemsViewModel.collection.name
+                )
+            }
+
+            allItemsProcessor.init(
+                viewModelScope = viewModelScope,
+                allItemsProcessorInterface = this@AllItemsViewModel,
+                searchTerm = searchTerm
             )
         }
 
-        allItemsProcessor.init(
-            viewModelScope = viewModelScope,
-            allItemsProcessorInterface = this,
-            searchTerm = searchTerm
-        )
 
     }
 
@@ -399,7 +402,7 @@ internal class AllItemsViewModel @Inject constructor(
                 MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)
                     ?: "application/octet-stream"
             val file =
-                fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename)
+                fileStore.attachmentFileAsync(libraryId = libraryId, key = key, filename = filename)
             if (!original.renameTo(file)) {
                 Timber.e("can't move file")
                 continue
@@ -964,9 +967,11 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun navigateToCollections() {
-        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
-        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
+        viewModelScope.launch {
+            val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibraryAsync(), fileStore.getSelectedCollectionIdAsync())
+            val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+            triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
+        }
     }
 
     fun onDismissDialog() {

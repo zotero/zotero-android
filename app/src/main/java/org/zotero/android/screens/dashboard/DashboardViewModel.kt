@@ -145,25 +145,31 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun init(isTablet: Boolean) = initOnce {
-        this.isTablet = isTablet
-        EventBus.getDefault().register(this)
+        viewModelScope.launch {
+            this@DashboardViewModel.isTablet = isTablet
+            EventBus.getDefault().register(this@DashboardViewModel)
 
-        debugLogging.debugLoggingInterface = this
-        setupDebugLoggingDialogDataEventStream()
-        setupCrashShareDataEventStream()
-        listenToGroupDeletionEvents()
+            debugLogging.debugLoggingInterface = this@DashboardViewModel
+            setupDebugLoggingDialogDataEventStream()
+            setupCrashShareDataEventStream()
+            listenToGroupDeletionEvents()
 
-        if (sessionController.isInitialized && debugLogging.isEnabled) {
-            setDebugWindow(true)
+            if (sessionController.isInitialized && debugLogging.isEnabled) {
+                setDebugWindow(true)
+            }
+
+            val data = loadInitialDetailData(
+                collectionId = fileStore.getSelectedCollectionIdAsync(),
+                libraryId = fileStore.getSelectedLibraryAsync()
+            )
+            if (data != null) {
+                showItems(data.collection, data.library, searchItemKeys = null)
+            }
+            updateState {
+                copy(initialLoadData = data)
+            }
         }
 
-        val data = loadInitialDetailData(
-            collectionId = fileStore.getSelectedCollectionId(),
-            libraryId = fileStore.getSelectedLibrary()
-        )
-        if (data != null) {
-            showItems(data.collection, data.library, searchItemKeys = null)
-        }
     }
 
     private fun setupDebugLoggingDialogDataEventStream() {
@@ -453,14 +459,19 @@ class DashboardViewModel @Inject constructor(
 
     }
 
-    fun getInitialCollectionArgs(): String {
-        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+    suspend fun getInitialCollectionArgs(): String {
+        val collectionsArgs = CollectionsArgs(
+            libraryId = fileStore.getSelectedLibraryAsync(),
+            selectedCollectionId = fileStore.getSelectedCollectionIdAsync()
+        )
+        val encodedArgs =
+            navigationParamsMarshaller.encodeObjectToBase64Async(collectionsArgs, StandardCharsets.UTF_8)
         return encodedArgs
     }
 }
 
 data class DashboardViewState(
+    val initialLoadData: InitialLoadData? = null,
     val snackbarMessage: SnackbarMessage? = null,
     val conflictDialog: ConflictDialogData? = null,
     val debugLoggingDialogData: DebugLoggingDialogData? = null,
