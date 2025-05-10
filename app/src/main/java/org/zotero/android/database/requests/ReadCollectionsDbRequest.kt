@@ -10,13 +10,14 @@ import org.zotero.android.sync.LibraryIdentifier
 
 class ReadCollectionsDbRequest(
     val libraryId: LibraryIdentifier,
-    val excludedKeys: Set<String> = emptySet()
+    val excludedKeys: Set<String> = emptySet(),
+    val isAsync: Boolean,
 ): DbResponseRequest<RealmResults<RCollection>> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(database: Realm): RealmResults<RCollection> {
-        return database.where<RCollection>()
+        val resultsQuery = database.where<RCollection>()
             .notSyncState(ObjectSyncState.dirty, this.libraryId)
             .and()
             .deleted(false)
@@ -24,6 +25,10 @@ class ReadCollectionsDbRequest(
             .isTrash(false)
             .and()
             .keyNotIn(this.excludedKeys)
-            .findAll()
+        if (isAsync) {
+            return resultsQuery.findAllAsync()
+        } else {
+            return resultsQuery.findAll()
+        }
     }
 }

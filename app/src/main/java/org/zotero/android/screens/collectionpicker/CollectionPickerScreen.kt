@@ -47,7 +47,7 @@ internal fun CollectionPickerScreen(
             topBar = {
                 CollectionPickerTopBar(
                     title = viewState.title,
-                    multipleSelectionAllowed = viewModel.multipleSelectionAllowed,
+                    multipleSelectionAllowed = viewState.multipleSelectionAllowed,
                     onCancelClicked = onBack,
                     onAdd = viewModel::confirmSelection,
                 )

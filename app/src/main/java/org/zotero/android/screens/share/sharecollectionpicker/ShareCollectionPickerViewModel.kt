@@ -49,7 +49,12 @@ internal class ShareCollectionPickerViewModel @Inject constructor(
                 val trees = mutableMapOf<LibraryIdentifier, CollectionTree>()
                 for (library in libraries) {
                     val collections =
-                        coordinator.perform(ReadCollectionsDbRequest(libraryId = library.identifier))
+                        coordinator.perform(
+                            ReadCollectionsDbRequest(
+                                libraryId = library.identifier,
+                                isAsync = false
+                            )
+                        )
                     val tree = CollectionTreeBuilder.collections(
                         rCollections = collections,
                         libraryId = library.identifier,
