@@ -44,12 +44,17 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
 
     private var ignoreNextDbModification: Boolean = false
 
+    private var isTablet: Boolean = false
+    var selectedCollectionId: CollectionIdentifier? = null
+
     fun init(
         libraryId: LibraryIdentifier,
         includeItemCounts: Boolean,
+        isTablet: Boolean,
         collectionTreeControllerInterface: CollectionTreeControllerInterface,
     ) {
         this.libraryId = libraryId
+        this.isTablet = isTablet
         this.includeItemCounts = includeItemCounts
         this.collectionTreeControllerInterface = collectionTreeControllerInterface
     }
@@ -160,7 +165,11 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
                 if (!isActive) {
                     return@launch
                 }
-                sendChangedToUi(includeTreeChanges = true, includeCollapsedChanges = true)
+                sendChangedToUi(
+                    includeTreeChanges = true,
+                    includeCollapsedChanges = true,
+                    shouldExpandCollections = true
+                )
             }
         }
     }
@@ -287,7 +296,8 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
 
     private fun sendChangedToUi(
         includeTreeChanges: Boolean = false,
-        includeCollapsedChanges: Boolean = false
+        includeCollapsedChanges: Boolean = false,
+        shouldExpandCollections: Boolean = false,
     ) {
         val treeChanges = if (includeTreeChanges) {
             createListOfCollectionItemsWithChildren().toPersistentList()
@@ -298,6 +308,9 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
             collapsed.toPersistentMap()
         } else {
             null
+        }
+        if (shouldExpandCollections) {
+            expandCollectionsIfNeeded()
         }
 
         collectionTreeControllerInterface.sendChangesToUi(
@@ -337,9 +350,12 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
         return collections[identifier]
     }
 
-    fun expandCollectionsIfNeeded(selectedCollectionId: CollectionIdentifier) {
+    private fun expandCollectionsIfNeeded() {
+        if (!isTablet || selectedCollectionId == null ) {
+            return
+        }
         val listOfParentsToExpand = traverseCollectionTreeForSelectedCollection(
-            selectedCollectionId = selectedCollectionId,
+            selectedCollectionId = selectedCollectionId!!,
             items = this.nodes,
             listOfParents = LinkedList()
         )
@@ -372,6 +388,5 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
         identifiersToCollapse.forEach {
             this.collapsed[it] = false
         }
-        sendChangedToUi(includeCollapsedChanges = true)
     }
 }

@@ -118,9 +118,11 @@ internal class CollectionsViewModel @Inject constructor(
         initViewState(screenArgs)
         collectionTreeController.init(
             libraryId = this.libraryId,
+            isTablet = isTablet,
             includeItemCounts = defaults.showCollectionItemCounts(),
             collectionTreeControllerInterface = this
         )
+        collectionTreeController.selectedCollectionId = viewState.selectedCollectionId
         viewModelScope.launch {
             loadData()
         }
@@ -318,6 +320,7 @@ internal class CollectionsViewModel @Inject constructor(
             updateState {
                 copy(selectedCollectionId = collection.identifier)
             }
+            collectionTreeController.selectedCollectionId = viewState.selectedCollectionId
             fileStore.setSelectedCollectionIdAsync(collection.identifier)
             ScreenArguments.allItemsArgs = AllItemsArgs(
                 collection = collection,
@@ -640,18 +643,11 @@ internal class CollectionsViewModel @Inject constructor(
                         lce = LCE2.Content
                     )
                 }
-                expandCollectionsIfNeeded()
                 maybeRecreateItemsScreen()
             }
         }
     }
 
-    private fun expandCollectionsIfNeeded() {
-        if (!isTablet) {
-            return
-        }
-        this.collectionTreeController.expandCollectionsIfNeeded(viewState.selectedCollectionId)
-    }
 }
 
 internal data class CollectionsViewState(

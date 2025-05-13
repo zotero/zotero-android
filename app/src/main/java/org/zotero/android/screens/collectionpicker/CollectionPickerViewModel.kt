@@ -50,11 +50,12 @@ internal class CollectionPickerViewModel @Inject constructor(
     private var excludedKeys: Set<String> = emptySet()
     private var libraryId: LibraryIdentifier = LibraryIdentifier.group(0)
 
-    fun init() = initOnce {
+    fun init(isTablet: Boolean) = initOnce {
         initViewState()
         collectionTreeController.init(
             libraryId = this.libraryId,
             includeItemCounts = false,
+            isTablet = isTablet,
             collectionTreeControllerInterface = this
         )
         initRequestAndStartObservingCollectionResults()
