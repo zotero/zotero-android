@@ -2414,8 +2414,10 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun navigateToPlainReader() {
-        ScreenArguments.pdfPlainReaderArgs = PdfPlainReaderArgs(this.document)
-        triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader)
+        val pdfPlainReaderArgs = PdfPlainReaderArgs(this.uri)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfPlainReaderArgs)
+        triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader(params))
+
     }
 
     override fun showToolOptions() {
@@ -3575,7 +3577,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object EnableForceScreenOn : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     object ShowPdfSettings : PdfReaderViewEffect()
-    object ShowPdfPlainReader: PdfReaderViewEffect()
+    data class ShowPdfPlainReader(val params: String): PdfReaderViewEffect()
     object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()

@@ -32,7 +32,7 @@ internal fun PdfReaderScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: () -> Unit,
-    navigateToPdfPlainReader: () -> Unit,
+    navigateToPdfPlainReader: (args: String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
@@ -124,7 +124,7 @@ internal fun PdfReaderScreen(
 
                 is PdfReaderViewEffect.ShowPdfPlainReader -> {
                     viewModel.removeFragment()
-                    navigateToPdfPlainReader()
+                    navigateToPdfPlainReader(consumedEffect.params)
                 }
                 is PdfReaderViewEffect.ShowPdfColorPicker -> {
                     if (!layoutType.isTablet()) {

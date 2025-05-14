@@ -27,6 +27,7 @@ import org.zotero.android.pdf.reader.plainreader.PdfPlanReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
 
 internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
+internal const val ARG_PDF_PLAIN_READER_SCREEN = "pdfPlainReaderScreen"
 
 internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
     navigation: ZoteroNavigation,
@@ -114,8 +115,10 @@ internal fun NavGraphBuilder.pdfReaderNavScreensForPhone(
 
 private fun NavGraphBuilder.pdfPlainReader(navigation: ZoteroNavigation) {
     composable(
-        route = PdfReaderDestinations.PDF_PLAIN_READER,
-        arguments = listOf(),
+        route = "${PdfReaderDestinations.PDF_PLAIN_READER}/{$ARG_PDF_PLAIN_READER_SCREEN}",
+        arguments = listOf(
+            navArgument(ARG_PDF_PLAIN_READER_SCREEN) { type = NavType.StringType },
+        ),
     ) {
         PdfPlanReaderScreen(onBack = navigation::onBack)
     }
@@ -136,7 +139,7 @@ private fun NavGraphBuilder.pdfScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: () -> Unit,
-    navigateToPdfPlainReader: () -> Unit,
+    navigateToPdfPlainReader: (args: String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
@@ -191,8 +194,8 @@ private fun ZoteroNavigation.toPdfSettings() {
     navController.navigate(PdfReaderDestinations.PDF_SETTINGS)
 }
 
-private fun ZoteroNavigation.toPdfPlainReader() {
-    navController.navigate(PdfReaderDestinations.PDF_PLAIN_READER)
+private fun ZoteroNavigation.toPdfPlainReader(args: String) {
+    navController.navigate("${PdfReaderDestinations.PDF_PLAIN_READER}/$args")
 }
 
 private fun ZoteroNavigation.toPdfAnnotationNavigation() {
