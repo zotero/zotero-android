@@ -585,7 +585,7 @@ internal class AllItemsViewModel @Inject constructor(
 
         val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
         if (accessory == null) {
-            showMetadata(allItemsProcessor.getResultByKey(item.key))
+            showMetadata(allItemsProcessor.getResultByKey(item.key)!!)
             return
         }
 
@@ -602,7 +602,9 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAccessoryTapped(key:String) {
-        showMetadata(allItemsProcessor.getResultByKey(key))
+        allItemsProcessor.getResultByKey(key)?.let {
+            showMetadata(it)
+        }
     }
 
     private fun showDoi(doi: String) {
@@ -763,7 +765,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(key: String) {
-        val item = allItemsProcessor.getResultByKey(key)
+        val item = allItemsProcessor.getResultByKey(key)!!
         if (this.collection.identifier.isTrash) {
             EventBus.getDefault().post(
                 ShowDashboardLongPressBottomSheet(

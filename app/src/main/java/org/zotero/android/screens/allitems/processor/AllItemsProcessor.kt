@@ -672,8 +672,8 @@ class AllItemsProcessor @Inject constructor(
     fun getItemAccessoryByKey(key: String): ItemAccessory? {
         return itemAccessories[key]
     }
-    fun getResultByKey(key: String): RItem {
-        return this.results!!.first { it.key == key }
+    fun getResultByKey(key: String): RItem? {
+        return this.results?.firstOrNull { it.key == key }
     }
 
     private fun setSortOrder(ascending: Boolean) {
@@ -715,7 +715,7 @@ class AllItemsProcessor @Inject constructor(
     }
 
     private fun updateAttachmentOnNotification(key: String) {
-        val itemAccessory = accessory(getResultByKey(key))
+        val itemAccessory = getResultByKey(key)?.let { accessory(it) }
         if (itemAccessory != null) {
             this@AllItemsProcessor.itemAccessories.put(key, itemAccessory)
         }
