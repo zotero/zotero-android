@@ -166,6 +166,7 @@ dependencies {
     implementation(Libs.Commons.io)
     implementation(Libs.Commons.codec)
     implementation(Libs.Commons.validator)
+    implementation(Libs.Commons.text)
 
     //Other
     implementation(Libs.timber)

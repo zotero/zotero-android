@@ -1,6 +1,7 @@
 package org.zotero.android.database.requests
 
 import io.realm.RealmQuery
+import org.apache.commons.text.StringEscapeUtils
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.UpdatableChangeType
@@ -363,7 +364,7 @@ fun <T> RealmQuery<T>.itemSearch(components: List<String>): RealmQuery<T> {
 }
 
 private fun <T> itemSearchSubpredicates(query: RealmQuery<T>, text: String) : RealmQuery<T>  {
-    val quotedText = "\"$text\""
+    val quotedText = "\"${StringEscapeUtils.escapeJava(text)}\""
 
     val keyPredicate = "key == $quotedText"
     val childrenKeyPredicate = "any children.key == $quotedText"
