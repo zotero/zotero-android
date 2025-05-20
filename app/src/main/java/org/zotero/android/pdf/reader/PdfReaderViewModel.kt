@@ -243,6 +243,8 @@ class PdfReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: AnnotationKey? = null
     private var isLongPressOnTextAnnotation = false
 
+    private var shouldPreserveFilterResultsBetweenReinitializations = false
+
     private var initialPage: Int? = null
 
     val screenArgs: PdfReaderArgs by lazy {
@@ -877,10 +879,16 @@ class PdfReaderViewModel @Inject constructor(
                     username = viewState.username,
                     boundingBoxConverter = annotationBoundingBoxConverter
                 )
-                val sortedKeys = createSortedKeys(
-                    databaseAnnotations = databaseAnnotations!!,
-                    pdfDocumentAnnotations = documentAnnotations
-                )
+                val sortedKeys =
+                    if (shouldPreserveFilterResultsBetweenReinitializations) {
+                        shouldPreserveFilterResultsBetweenReinitializations = false
+                        viewState.sortedKeys
+                    } else {
+                        createSortedKeys(
+                            databaseAnnotations = databaseAnnotations!!,
+                            pdfDocumentAnnotations = documentAnnotations
+                        )
+                    }
 
                 update(
                     document = this.document,
@@ -1626,7 +1634,7 @@ class PdfReaderViewModel @Inject constructor(
             updateState {
                 copy(
                     snapshotKeys = sortedKeys,
-                    sortedKeys = sortedKeys //TODO filter keys
+//                    sortedKeys = sortedKeys //no need to assign new sorted keys here as previous values is correct filtered one
                 )
             }
         } else {
@@ -2377,6 +2385,9 @@ class PdfReaderViewModel @Inject constructor(
             availableColors = sortedColors,
             availableTags = sortedTags
         )
+        if (!isTablet) {
+            shouldPreserveFilterResultsBetweenReinitializations = true
+        }
         triggerEffect(PdfReaderViewEffect.ShowPdfFilters)
     }
 
