@@ -205,7 +205,6 @@ internal class AllItemsViewModel @Inject constructor(
             }
 
             allItemsProcessor.init(
-                viewModelScope = viewModelScope,
                 allItemsProcessorInterface = this@AllItemsViewModel,
                 searchTerm = searchTerm
             )

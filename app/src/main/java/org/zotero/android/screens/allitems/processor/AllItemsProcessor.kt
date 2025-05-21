@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -50,7 +53,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 class AllItemsProcessor @Inject constructor(
-    dispatchers: Dispatchers,
+    private val dispatchers: Dispatchers,
     private val defaults: Defaults,
     private val fileStore: FileStore,
     private val dbWrapperMain: DbWrapperMain,
@@ -60,11 +63,11 @@ class AllItemsProcessor @Inject constructor(
 ) {
     private lateinit var processorInterface: AllItemsProcessorInterface
 
+    private var mainScope: CoroutineScope = CoroutineScope(dispatchers.main)
     private var listenersCoroutineScope: CoroutineScope = CoroutineScope(dispatchers.io)
-
-    private val limitedParallelismDispatcher =
-        kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
     private var resultsProcessorCoroutineScope: CoroutineScope? = null
+    private val limitedParallelismSemaphoreForWork = Semaphore(1)
+    private val limitedParallelismSemaphoreForUiUpdates = Semaphore(1)
 
     private var results: RealmResults<RItem>? = null
 
@@ -128,18 +131,18 @@ class AllItemsProcessor @Inject constructor(
             .debounce(100)
             .map {
                 if (it != null) {
-                    updateDeletedAttachmentFiles(it.notification)
+                    limitedParallelismSemaphoreForWork.withPermit {
+                        updateDeletedAttachmentFiles(it.notification)
+                    }
                 }
             }
-            .launchIn(viewModelScope)
+            .launchIn(listenersCoroutineScope)
     }
 
-    lateinit var viewModelScope:CoroutineScope
-    fun init(viewModelScope: CoroutineScope, allItemsProcessorInterface: AllItemsProcessorInterface, searchTerm: String?) {
-        this.viewModelScope = viewModelScope
+    fun init(allItemsProcessorInterface: AllItemsProcessorInterface, searchTerm: String?) {
         this.processorInterface = allItemsProcessorInterface
         EventBus.getDefault().register(this)
-        setupFlowListeners(viewModelScope)
+        setupFlowListeners()
         this.sortType = this.defaults.getItemsSortType()
 
         val results = results(
@@ -150,13 +153,13 @@ class AllItemsProcessor @Inject constructor(
         processResultsReset(results)
     }
 
-    private fun setupFlowListeners(viewModelScope: CoroutineScope) {
-        setupSearchStateFlow(viewModelScope)
+    private fun setupFlowListeners() {
+        setupSearchStateFlow()
         setupOnAttachmentFileDeletedStateFlow()
         setupFileObservers()
     }
 
-    private fun setupSearchStateFlow(viewModelScope: CoroutineScope) {
+    private fun setupSearchStateFlow() {
         onSearchStateFlow
             .drop(1)
             .debounce(150)
@@ -166,31 +169,33 @@ class AllItemsProcessor @Inject constructor(
                     filters = processorInterface.currentFilters()
                 )
             }
-            .launchIn(viewModelScope)
+            .launchIn(mainScope)
     }
 
     private fun setupFileObservers() {
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
-                val (progress, remainingCount, totalCount) = fileDownloader.batchData
-                val batchData = progress?.let { ItemsState.DownloadBatchData.init(progress = progress, remaining = remainingCount, total = totalCount)}
-                process(update = update, batchData = batchData)
+                limitedParallelismSemaphoreForWork.withPermit {
+                    val (progress, remainingCount, totalCount) = fileDownloader.batchData
+                    val batchData = progress?.let { ItemsState.DownloadBatchData.init(progress = progress, remaining = remainingCount, total = totalCount)}
+                    process(update = update, batchData = batchData)
 
-                if (update.kind is AttachmentDownloader.Update.Kind.progress) {
-                    return@onEach
-                }
-                if (this.attachmentToOpen != update.key) {
-                    return@onEach
-                }
-                attachmentOpened(update.key)
-                when (update.kind) {
-                    AttachmentDownloader.Update.Kind.ready -> {
-                        showAttachment(key = update.key, parentKey = update.parentKey)
+                    if (update.kind is AttachmentDownloader.Update.Kind.progress) {
+                        return@onEach
                     }
-                    is AttachmentDownloader.Update.Kind.failed -> {
-                        //TODO implement when unzipping is supported
+                    if (this.attachmentToOpen != update.key) {
+                        return@onEach
                     }
-                    else -> {}
+                    attachmentOpened(update.key)
+                    when (update.kind) {
+                        AttachmentDownloader.Update.Kind.ready -> {
+                            showAttachment(key = update.key, parentKey = update.parentKey)
+                        }
+                        is AttachmentDownloader.Update.Kind.failed -> {
+                            //TODO implement when unzipping is supported
+                        }
+                        else -> {}
+                    }
                 }
             }
             .launchIn(listenersCoroutineScope)
@@ -444,7 +449,7 @@ class AllItemsProcessor @Inject constructor(
 
     private fun processResultsReset(results: RealmResults<RItem>) {
         resultsProcessorCoroutineScope?.cancel()
-        resultsProcessorCoroutineScope = CoroutineScope(limitedParallelismDispatcher)
+        resultsProcessorCoroutineScope = CoroutineScope(dispatchers.io)
         removeAllListenersFromResultsList()
         this.results = results
 
@@ -460,27 +465,32 @@ class AllItemsProcessor @Inject constructor(
     }
 
     private fun sendChangedToUi(includeItemCellModels: Boolean = false, includeAccessories: Boolean = false) {
-        val updatedItemCellModels =
-            if (includeItemCellModels) {
-                val copyOfItemCellModels = mutableItemCellModels.toList()
-                copyOfItemCellModels.toMutableStateList()
-            } else {
-                null
-            }
+        resultsProcessorCoroutineScope?.launch {
+            limitedParallelismSemaphoreForUiUpdates.withPermit {
+                val updatedItemCellModels =
+                    if (includeItemCellModels) {
+                        val copyOfItemCellModels = mutableItemCellModels.toList()
+                        copyOfItemCellModels.toMutableStateList()
+                    } else {
+                        null
+                    }
 
-        val updatedDownloadingAccessories = if (includeAccessories) {
-            val copyOfDownloadingAccessories = mutableDownloadingAcessories.toMap()
-           mutableStateMapOf<String, ItemCellModel.Accessory?>().apply {
-               putAll(copyOfDownloadingAccessories)
-           }
-        } else {
-            null
+                val updatedDownloadingAccessories = if (includeAccessories) {
+                    val copyOfDownloadingAccessories = mutableDownloadingAcessories.toMap()
+                    mutableStateMapOf<String, ItemCellModel.Accessory?>().apply {
+                        putAll(copyOfDownloadingAccessories)
+                    }
+                } else {
+                    null
+                }
+
+                processorInterface.sendChangesToUi(
+                    updatedItemCellModels = updatedItemCellModels,
+                    updatedDownloadingAccessories = updatedDownloadingAccessories
+                )
+            }
         }
 
-        processorInterface.sendChangesToUi(
-            updatedItemCellModels = updatedItemCellModels,
-            updatedDownloadingAccessories = updatedDownloadingAccessories
-        )
     }
     internal fun filter(
         searchTerm: String?,
@@ -489,7 +499,7 @@ class AllItemsProcessor @Inject constructor(
         val results = results(
             searchText = searchTerm,
             filters = filters,
-            sortType = this.sortType,
+            sortType = this@AllItemsProcessor.sortType,
         )
         processResultsReset(results)
     }
@@ -519,68 +529,71 @@ class AllItemsProcessor @Inject constructor(
         val updateThreshold = 20
         var currentProcessingCount = 0
 
-        resultsProcessorCoroutineScope!!.launch {
-            val itemCellModelsToUpdate = mutableItemCellModels
-            deletions.sorted().reversed().forEach { idx ->
-                if (!isActive) {
-                    return@launch
+        resultsProcessorCoroutineScope?.launch {
+            limitedParallelismSemaphoreForWork.withPermit {
+                val itemCellModelsToUpdate = mutableItemCellModels
+                deletions.sorted().reversed().forEach { idx ->
+                    if (!isActive) {
+                        return@launch
+                    }
+                    val modelToRemove = itemCellModelsToUpdate.removeAt(idx)
+                    this@AllItemsProcessor.itemAccessories.remove(modelToRemove.key)
                 }
-                val modelToRemove = itemCellModelsToUpdate.removeAt(idx)
-                this@AllItemsProcessor.itemAccessories.remove(modelToRemove.key)
-            }
 
-            insertions.forEach { idx ->
-                if (!isActive) {
-                    return@launch
-                }
-                val item = frozenItems[idx]!!
+                insertions.forEach { idx ->
+                    if (!isActive) {
+                        return@launch
+                    }
+                    val item = frozenItems[idx]!!
 
-                val itemAccessory = accessory(item)
-                if (itemAccessory != null) {
-                    this@AllItemsProcessor.itemAccessories.put(item.key, itemAccessory)
+                    val itemAccessory = accessory(item)
+                    if (itemAccessory != null) {
+                        this@AllItemsProcessor.itemAccessories.put(item.key, itemAccessory)
+                    }
+                    if (!isActive) {
+                        return@launch
+                    }
+                    generateCellModels(
+                        item = item,
+                        itemCellModelsToUpdate = itemCellModelsToUpdate,
+                        insertionIndex = idx
+                    )
+                    if (!isActive) {
+                        return@launch
+                    }
+                    currentProcessingCount++
+                    if (currentProcessingCount % updateThreshold == 0) {
+                        sendChangedToUi(includeItemCellModels = true)
+                    }
+                }
+                modifications.forEach { idx ->
+                    if (!isActive) {
+                        return@launch
+                    }
+                    val item = frozenItems[idx]!!
+                    val itemAccessory = accessory(item)
+                    if (itemAccessory != null) {
+                        this@AllItemsProcessor.itemAccessories.put(item.key, itemAccessory)
+                    }
+                    if (!isActive) {
+                        return@launch
+                    }
+                    generateCellModels(item = item, itemCellModelsToUpdate = itemCellModelsToUpdate)
+                    if (!isActive) {
+                        return@launch
+                    }
+                    currentProcessingCount++
+                    if (currentProcessingCount % updateThreshold == 0) {
+                        sendChangedToUi(includeItemCellModels = true)
+                    }
                 }
                 if (!isActive) {
                     return@launch
                 }
-                generateCellModels(
-                    item = item,
-                    itemCellModelsToUpdate = itemCellModelsToUpdate,
-                    insertionIndex = idx
-                )
-                if (!isActive) {
-                    return@launch
-                }
-                currentProcessingCount++
-                if (currentProcessingCount % updateThreshold == 0) {
-                    sendChangedToUi(includeItemCellModels = true)
-                }
-            }
-            modifications.forEach { idx ->
-                if (!isActive) {
-                    return@launch
-                }
-                val item = frozenItems[idx]!!
-                val itemAccessory = accessory(item)
-                if (itemAccessory != null) {
-                    this@AllItemsProcessor.itemAccessories.put(item.key, itemAccessory)
-                }
-                if (!isActive) {
-                    return@launch
-                }
-                generateCellModels(item = item, itemCellModelsToUpdate = itemCellModelsToUpdate)
-                if (!isActive) {
-                    return@launch
-                }
-                currentProcessingCount++
-                if (currentProcessingCount % updateThreshold == 0) {
-                    sendChangedToUi(includeItemCellModels = true)
-                }
-            }
-            if (!isActive) {
-                return@launch
-            }
 //            mutableItemCellModels = itemCellModelsToUpdate
-            sendChangedToUi(includeItemCellModels = true)
+                sendChangedToUi(includeItemCellModels = true)
+            }
+
         }
 
     }
@@ -693,7 +706,7 @@ class AllItemsProcessor @Inject constructor(
         onSearchStateFlow.tryEmit(text)
     }
 
-    private fun updateDeletedAttachmentFiles(notification: AttachmentFileDeletedNotification) {
+    private suspend fun updateDeletedAttachmentFiles(notification: AttachmentFileDeletedNotification) {
         when (notification) {
             is AttachmentFileDeletedNotification.allForItems -> {
                 if (collection.identifier != notification.collectionIdentifier) {
@@ -714,8 +727,11 @@ class AllItemsProcessor @Inject constructor(
         }
     }
 
-    private fun updateAttachmentOnNotification(key: String) {
-        val itemAccessory = getResultByKey(key)?.let { accessory(it) }
+    private suspend fun updateAttachmentOnNotification(key: String) {
+        val itemAccessory =
+            withContext(dispatchers.main)
+            { getResultByKey(key)?.freeze<RItem>() }
+                ?.let { accessory(it) }
         if (itemAccessory != null) {
             this@AllItemsProcessor.itemAccessories.put(key, itemAccessory)
         }
@@ -754,6 +770,7 @@ class AllItemsProcessor @Inject constructor(
         this.resultsProcessorCoroutineScope?.cancel()
         this.resultsProcessorCoroutineScope = null
         this.listenersCoroutineScope.cancel()
+        this.mainScope.cancel()
         EventBus.getDefault().unregister(this)
     }
 }
