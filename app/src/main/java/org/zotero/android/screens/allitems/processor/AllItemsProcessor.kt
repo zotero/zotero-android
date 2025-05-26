@@ -51,6 +51,7 @@ import org.zotero.android.uicomponents.attachmentprogress.State
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 class AllItemsProcessor @Inject constructor(
     private val dispatchers: Dispatchers,
@@ -67,7 +68,6 @@ class AllItemsProcessor @Inject constructor(
     private var listenersCoroutineScope: CoroutineScope = CoroutineScope(dispatchers.io)
     private var resultsProcessorCoroutineScope: CoroutineScope? = null
     private val limitedParallelismSemaphoreForWork = Semaphore(1)
-    private val limitedParallelismSemaphoreForUiUpdates = Semaphore(1)
 
     private var results: RealmResults<RItem>? = null
 
@@ -131,8 +131,10 @@ class AllItemsProcessor @Inject constructor(
             .debounce(100)
             .map {
                 if (it != null) {
-                    limitedParallelismSemaphoreForWork.withPermit {
-                        updateDeletedAttachmentFiles(it.notification)
+                    resultsProcessorCoroutineScope?.launch {
+                        limitedParallelismSemaphoreForWork.withPermit {
+                            updateDeletedAttachmentFiles(it.notification)
+                        }
                     }
                 }
             }
@@ -175,27 +177,36 @@ class AllItemsProcessor @Inject constructor(
     private fun setupFileObservers() {
         attachmentDownloaderEventStream.flow()
             .onEach { update ->
-                limitedParallelismSemaphoreForWork.withPermit {
-                    val (progress, remainingCount, totalCount) = fileDownloader.batchData
-                    val batchData = progress?.let { ItemsState.DownloadBatchData.init(progress = progress, remaining = remainingCount, total = totalCount)}
-                    process(update = update, batchData = batchData)
+                resultsProcessorCoroutineScope?.launch {
+                    limitedParallelismSemaphoreForWork.withPermit {
+                        val (progress, remainingCount, totalCount) = fileDownloader.batchData
+                        val batchData = progress?.let {
+                            ItemsState.DownloadBatchData.init(
+                                progress = progress,
+                                remaining = remainingCount,
+                                total = totalCount
+                            )
+                        }
+                        process(update = update, batchData = batchData)
 
-                    if (update.kind is AttachmentDownloader.Update.Kind.progress) {
-                        return@onEach
-                    }
-                    if (this.attachmentToOpen != update.key) {
-                        return@onEach
-                    }
-                    attachmentOpened(update.key)
-                    when (update.kind) {
-                        AttachmentDownloader.Update.Kind.ready -> {
-                            showAttachment(key = update.key, parentKey = update.parentKey)
+                        if (update.kind is AttachmentDownloader.Update.Kind.progress) {
+                            return@launch
                         }
-                        is AttachmentDownloader.Update.Kind.failed -> {
-                            //TODO implement when unzipping is supported
+                        if (this@AllItemsProcessor.attachmentToOpen != update.key) {
+                            return@launch
                         }
-                        else -> {}
+                        attachmentOpened(update.key)
+                        when (update.kind) {
+                            AttachmentDownloader.Update.Kind.ready -> {
+                                showAttachment(key = update.key, parentKey = update.parentKey)
+                            }
+                            is AttachmentDownloader.Update.Kind.failed -> {
+                                //TODO implement when unzipping is supported
+                            }
+                            else -> {}
+                        }
                     }
+
                 }
             }
             .launchIn(listenersCoroutineScope)
@@ -321,7 +332,7 @@ class AllItemsProcessor @Inject constructor(
         processorInterface.show(attachment = attachment, library = library)
     }
 
-    private fun process(
+    private suspend fun process(
         update: AttachmentDownloader.Update,
         batchData: ItemsState.DownloadBatchData?
     ) {
@@ -336,16 +347,16 @@ class AllItemsProcessor @Inject constructor(
 
                 itemAccessories[updateKey] = ItemAccessory.attachment(updatedAttachment)
 
-                this.updateItemKey = updateKey
-                if (this.downloadBatchData != batchData) {
-                    this.downloadBatchData = batchData
+                this@AllItemsProcessor.updateItemKey = updateKey
+                if (this@AllItemsProcessor.downloadBatchData != batchData) {
+                    this@AllItemsProcessor.downloadBatchData = batchData
                 }
             }
 
             AttachmentDownloader.Update.Kind.cancelled, is AttachmentDownloader.Update.Kind.failed, is AttachmentDownloader.Update.Kind.progress -> {
-                this.updateItemKey = updateKey
-                if (this.downloadBatchData != batchData) {
-                    this.downloadBatchData = batchData
+                this@AllItemsProcessor.updateItemKey = updateKey
+                if (this@AllItemsProcessor.downloadBatchData != batchData) {
+                    this@AllItemsProcessor.downloadBatchData = batchData
                 }
 
 
@@ -375,7 +386,7 @@ class AllItemsProcessor @Inject constructor(
         }
     }
 
-    private fun CoroutineScope.generateCellModels(
+    private suspend fun generateCellModels(
         item: RItem,
         itemCellModelsToUpdate: MutableList<ItemCellModel>,
         insertionIndex: Int? = null,
@@ -388,7 +399,7 @@ class AllItemsProcessor @Inject constructor(
             typeName = typeName
         )
         val indexToReplace = itemCellModelsToUpdate.indexOfFirst { it.key == cellModel.key }
-        if (!isActive) {
+        if (!coroutineContext.isActive) {
             return
         }
         if (indexToReplace != -1) {
@@ -453,44 +464,52 @@ class AllItemsProcessor @Inject constructor(
         removeAllListenersFromResultsList()
         this.results = results
 
-        mutableItemCellModels = mutableListOf()
-        sendChangedToUi(includeItemCellModels = true)
+        resultsProcessorCoroutineScope?.launch {
+            limitedParallelismSemaphoreForWork.withPermit {
+                mutableItemCellModels = mutableListOf()
+                sendChangedToUi(includeItemCellModels = true)
 
-        startObservingResults()
-        processorInterface.updateTagFilter()
+                mainScope.launch {
+                    startObservingResults()
+                    processorInterface.updateTagFilter()
+                }
+
+            }
+        }
     }
 
     private fun removeAllListenersFromResultsList() {
         this.results?.removeAllChangeListeners()
     }
 
-    private fun sendChangedToUi(includeItemCellModels: Boolean = false, includeAccessories: Boolean = false) {
-        resultsProcessorCoroutineScope?.launch {
-            limitedParallelismSemaphoreForUiUpdates.withPermit {
-                val updatedItemCellModels =
-                    if (includeItemCellModels) {
-                        val copyOfItemCellModels = mutableItemCellModels.toList()
-                        copyOfItemCellModels.toMutableStateList()
-                    } else {
-                        null
-                    }
-
-                val updatedDownloadingAccessories = if (includeAccessories) {
-                    val copyOfDownloadingAccessories = mutableDownloadingAcessories.toMap()
-                    mutableStateMapOf<String, ItemCellModel.Accessory?>().apply {
-                        putAll(copyOfDownloadingAccessories)
-                    }
-                } else {
-                    null
-                }
-
-                processorInterface.sendChangesToUi(
-                    updatedItemCellModels = updatedItemCellModels,
-                    updatedDownloadingAccessories = updatedDownloadingAccessories
-                )
+    private suspend fun sendChangedToUi(
+        includeItemCellModels: Boolean = false,
+        includeAccessories: Boolean = false
+    ) {
+        if (!coroutineContext.isActive) {
+            return
+        }
+        val updatedItemCellModels =
+            if (includeItemCellModels) {
+                mutableItemCellModels.toMutableStateList()
+            } else {
+                null
             }
+        if (!coroutineContext.isActive) {
+            return
         }
 
+        val updatedDownloadingAccessories = if (includeAccessories) {
+            mutableStateMapOf<String, ItemCellModel.Accessory?>().apply {
+                putAll(mutableDownloadingAcessories)
+            }
+        } else {
+            null
+        }
+        processorInterface.sendChangesToUi(
+            updatedItemCellModels = updatedItemCellModels,
+            updatedDownloadingAccessories = updatedDownloadingAccessories
+        )
     }
     internal fun filter(
         searchTerm: String?,
@@ -734,6 +753,9 @@ class AllItemsProcessor @Inject constructor(
                 ?.let { accessory(it) }
         if (itemAccessory != null) {
             this@AllItemsProcessor.itemAccessories.put(key, itemAccessory)
+        }
+        if(!coroutineContext.isActive) {
+            return
         }
         updateCellAccessoryForItem(key)
         sendChangedToUi(includeItemCellModels = true)
