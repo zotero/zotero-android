@@ -197,6 +197,10 @@ internal class CollectionPickerViewModel @Inject constructor(
         }
     }
 
+    override fun onItemTapped(collection: Collection) {
+        //no-op
+    }
+
     private fun removeDeletedCollectionsFromSelection() {
         val removed = mutableSetOf<String>()
         for (key in viewState.selected) {

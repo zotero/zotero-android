@@ -315,7 +315,7 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
-    fun onItemTapped(collection: Collection) {
+    override fun onItemTapped(collection: Collection) {
         viewModelScope.launch {
             updateState {
                 copy(selectedCollectionId = collection.identifier)

@@ -170,7 +170,19 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
                     includeCollapsedChanges = true,
                     shouldExpandCollections = true
                 )
+                selectDefaultCollectionIfNeeded()
             }
+        }
+    }
+
+    private fun selectDefaultCollectionIfNeeded() {
+        val selColId = selectedCollectionId
+        //Currently selected collection got deleted, select default collection
+        if (selColId != null && selColId is CollectionIdentifier.collection && !collections.any { it.key == selectedCollectionId }
+        ) {
+            collectionTreeControllerInterface.onItemTapped(
+                Collection.initWithCustomType(CollectionIdentifier.CustomType.all)
+            )
         }
     }
 
