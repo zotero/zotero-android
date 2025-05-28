@@ -1,6 +1,12 @@
 package org.zotero.android.screens.tagpicker
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
@@ -20,10 +26,17 @@ internal class TagPickerViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
 ) : BaseViewModel2<TagPickerViewState, TagPickerViewEffect>(TagPickerViewState()) {
 
+    private var snapshot: List<Tag>? = null
+    private var libraryId: LibraryIdentifier? = null
+
     fun init() = initOnce {
         val args = ScreenArguments.tagPickerArgs
+        this.libraryId = args.libraryId
         updateState {
-            copy(libraryId = args.libraryId, selectedTags = args.selectedTags, tags = args.tags)
+            copy(
+                selectedTags = args.selectedTags.toPersistentSet(),
+                tags = args.tags.toPersistentList()
+            )
         }
         if (viewState.tags.isEmpty()) {
             load()
@@ -40,21 +53,21 @@ internal class TagPickerViewModel @Inject constructor(
 
     private fun select(name: String) {
         updateState {
-            copy(selectedTags = selectedTags + name)
+            copy(selectedTags = viewState.selectedTags.add(name))
         }
     }
 
     private fun deselect(name: String) {
         updateState {
-            copy(selectedTags = selectedTags - name)
+            copy(selectedTags = viewState.selectedTags.remove(name))
         }
     }
 
     private fun add(name: String) {
-        val snapshot = viewState.snapshot ?: return
+        val snapshot = this.snapshot ?: return
         val tag = Tag(name = name, color = "")
         updateState {
-            copy(tags = snapshot)
+            copy(tags = snapshot.toPersistentList())
         }
 
         val index = viewState.tags.index(
@@ -66,18 +79,13 @@ internal class TagPickerViewModel @Inject constructor(
                 ) == 1
             })
 
-        val updatedTags = viewState.tags.toMutableList()
-        updatedTags.add(index, tag)
-        val updatedSelectedTags = viewState.selectedTags.toMutableSet()
-        updatedSelectedTags.add(name)
 
+        this.snapshot = null
         updateState {
             copy(
                 searchTerm = "",
-                tags = updatedTags,
-                selectedTags = updatedSelectedTags,
-                snapshot = null,
-                addedTagName = name,
+                tags = viewState.tags.add(index, tag),
+                selectedTags = viewState.selectedTags.add(name),
                 showAddTagButton = false
             )
         }
@@ -86,26 +94,24 @@ internal class TagPickerViewModel @Inject constructor(
 
     fun search(term: String) {
         if (!term.isEmpty()) {
-            if (viewState.snapshot == null) {
-                updateState {
-                    copy(snapshot = viewState.tags)
-                }
+            if (this.snapshot == null) {
+                this.snapshot = viewState.tags
             }
-            var updatedTags = viewState.snapshot ?: viewState.tags
+            var updatedTags = this.snapshot ?: viewState.tags
             updatedTags = updatedTags.filter { it.name.contains(term, ignoreCase = true) }
             updateState {
                 copy(
                     searchTerm = term,
-                    tags = updatedTags,
+                    tags = updatedTags.toPersistentList(),
                     showAddTagButton = viewState.tags.isEmpty() || viewState.tags.firstOrNull { it.name == term } == null)
             }
         } else {
-            val snapshot = viewState.snapshot ?: return
+            val snapshot = this.snapshot ?: return
+            this.snapshot = null
             updateState {
                 copy(
                     searchTerm = "",
-                    tags = snapshot,
-                    snapshot = null,
+                    tags = snapshot.toPersistentList(),
                     showAddTagButton = false
                 )
             }
@@ -114,13 +120,13 @@ internal class TagPickerViewModel @Inject constructor(
 
     private fun load() {
         try {
-            val request = ReadTagPickerTagsDbRequest(libraryId = viewState.libraryId!!)
+            val request = ReadTagPickerTagsDbRequest(libraryId = this.libraryId!!)
             val results = dbWrapperMain.realmDbStorage.perform(request = request)
             val colored = results.where().isNotEmpty("color").sort("name").findAll()
             val others = results.where().isEmpty("color").sort("name").findAll()
             val tags = colored.map { Tag(it) } + others.map { Tag(it) }
             updateState {
-                copy(tags = tags)
+                copy(tags = tags.toPersistentList())
             }
         } catch (e: Exception) {
             Timber.e(e, "TagPicker: can't load tag")
@@ -128,14 +134,16 @@ internal class TagPickerViewModel @Inject constructor(
     }
 
     fun onSave() {
-        val allTags = viewState.snapshot ?: viewState.tags
+        val allTags = this.snapshot ?: viewState.tags
         val tags = viewState.selectedTags.mapNotNull { id ->
             allTags.firstOrNull { it.id == id }
         }.sortedBy { it.name }
-        EventBus.getDefault().post(TagPickerResult(
-            tags = tags,
-            callPoint = ScreenArguments.tagPickerArgs.callPoint
-        ))
+        EventBus.getDefault().post(
+            TagPickerResult(
+                tags = tags,
+                callPoint = ScreenArguments.tagPickerArgs.callPoint
+            )
+        )
         triggerEffect(TagPickerViewEffect.OnBack)
     }
 
@@ -148,13 +156,10 @@ internal class TagPickerViewModel @Inject constructor(
 }
 
 internal data class TagPickerViewState(
-    val libraryId: LibraryIdentifier? = null,
-    val tags: List<Tag> = emptyList(),
-    val snapshot: List<Tag>? = null,
-    val selectedTags: Set<String> = emptySet(),
+    val tags: PersistentList<Tag> = persistentListOf(),
+    val selectedTags: PersistentSet<String> = persistentSetOf(),
     val searchTerm: String = "",
     val showAddTagButton: Boolean = false,
-    val addedTagName: String? = null
 ) : ViewState
 
 internal sealed class TagPickerViewEffect : ViewEffect {
