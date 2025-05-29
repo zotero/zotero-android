@@ -18,11 +18,13 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 fun NavGraphBuilder.dialogFixedDimens(
     modifier:Modifier,
     route: String,
+    arguments: List<NamedNavArgument> = emptyList(),
     content: @Composable () -> Unit,
 ) {
     customDialog(
         route = route,
         dialogModifier = modifier,
+        arguments = arguments,
         content = content
     )
 }

@@ -2414,9 +2414,9 @@ class PdfReaderViewModel @Inject constructor(
 
     fun navigateToPdfSettings() {
         val args = PdfSettingsArgs(defaults.getPDFSettings())
-        ScreenArguments.pdfSettingsArgs = args
+        val params = navigationParamsMarshaller.encodeObjectToBase64(args)
         if (isTablet) {
-            triggerEffect(PdfReaderViewEffect.ShowPdfSettings)
+            triggerEffect(PdfReaderViewEffect.ShowPdfSettings(params))
         } else {
             updateState {
                 copy(pdfSettingsArgs = args)
@@ -3587,7 +3587,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object DisableForceScreenOn : PdfReaderViewEffect()
     object EnableForceScreenOn : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
-    object ShowPdfSettings : PdfReaderViewEffect()
+    data class ShowPdfSettings(val params: String) : PdfReaderViewEffect()
     data class ShowPdfPlainReader(val params: String): PdfReaderViewEffect()
     object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()

@@ -31,7 +31,7 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 internal fun PdfReaderScreen(
     onBack: () -> Unit,
     navigateToPdfFilter: () -> Unit,
-    navigateToPdfSettings: () -> Unit,
+    navigateToPdfSettings: (args: String) -> Unit,
     navigateToPdfPlainReader: (args: String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
@@ -119,7 +119,7 @@ internal fun PdfReaderScreen(
                     if (!layoutType.isTablet()) {
                         viewModel.removeFragment()
                     }
-                    navigateToPdfSettings()
+                    navigateToPdfSettings(consumedEffect.params)
                 }
 
                 is PdfReaderViewEffect.ShowPdfPlainReader -> {
