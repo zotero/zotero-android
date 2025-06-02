@@ -13,13 +13,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
@@ -220,7 +220,7 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
         )
     }
 
-    Box(
+    LazyColumn(
         modifier = Modifier
             .offset {
                 IntOffset(
@@ -243,8 +243,7 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
             )
             .clip(roundCornerShape)
     ) {
-        Column(modifier = Modifier)
-        {
+        item {
             Spacer(modifier = Modifier.height(20.dp))
             pdfReaderToolsList.forEach { tool ->
                 if (!tool.isHidden) {
@@ -267,11 +266,9 @@ fun BoxScope.PdfReaderAnnotationCreationToolbar(
                     }
                 }
             }
-        }
 
-        Column(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
+            Spacer(modifier = Modifier.height(60.dp))
+
             AnnotationCreationButton(
                 isEnabled = vMInterface.canUndo(),
                 iconInt = Drawables.undo_24px,
