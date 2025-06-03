@@ -25,10 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.navigation.toolbar.data.CurrentSyncProgressState
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
@@ -95,22 +93,11 @@ internal fun BoxScope.SyncToolbarScreen(
                         .padding(end = 8.dp)
                 ) {
                     when (syncProgress) {
-                        is CurrentSyncProgressState.InProgress -> {
-                            IconWithPadding(
-                                drawableRes = Drawables.ic_close_24dp,
-                                onClick = viewModel::onDismissProgressDialog,
-                                tintColor = Color(0xFFF0F2F7),
-                                shouldShowRipple = false
+                        is CurrentSyncProgressState.SyncFinishedWithError -> {
+                            NewHeadingTextButton(
+                                onClick = viewModel::showErrorDialog,
+                                text = stringResource(Strings.sync_snackbar_view_action),
                             )
-                        }
-
-                        is CurrentSyncProgressState.SyncFinished -> {
-                            if (syncProgress.hasErrors) {
-                                NewHeadingTextButton(
-                                    onClick = viewModel::showErrorDialog,
-                                    text = stringResource(Strings.sync_snackbar_view_action),
-                                )
-                            }
                         }
 
                         is CurrentSyncProgressState.Aborted -> {
