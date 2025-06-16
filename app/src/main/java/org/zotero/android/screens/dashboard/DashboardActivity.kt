@@ -106,6 +106,17 @@ internal class DashboardActivity : BaseActivity() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
+
+        val onExportPdf: (file: File) -> Unit = { file ->
+            val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
+            val resultUri = FileProvider.getUriForFile(this, fileProviderAuthority, file)
+            val share = Intent()
+            share.setAction(Intent.ACTION_SEND)
+            share.setDataAndType(resultUri, "application/pdf")
+            share.putExtra(Intent.EXTRA_STREAM, resultUri)
+            startActivity(Intent.createChooser(share, "Share file"))
+        }
+
         val mainCoroutineScope = CoroutineScope(dispatchers.main)
         mainCoroutineScope.launch {
             val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
@@ -130,6 +141,7 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenFile = onOpenFile,
                                     onOpenWebpage = onOpenWebpage,
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
+                                    onExportPdf = onExportPdf,
                                 )
                             } else {
                                 DashboardRootPhoneNavigation(
@@ -139,6 +151,7 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenWebpage = onOpenWebpage,
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     viewEffect = viewEffect,
+                                    onExportPdf = onExportPdf,
                                 )
                             }
                             DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

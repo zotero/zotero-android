@@ -65,6 +65,7 @@ internal fun DashboardRootPhoneNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    onExportPdf: (file: File) -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
 ) {
@@ -231,6 +232,7 @@ internal fun DashboardRootPhoneNavigation(
             imageViewerScreen(onBack = navigation::onBack)
 
             pdfReaderNavScreensForPhone(
+                onExportPdf = onExportPdf,
                 navigation = navigation,
                 navigateToTagPicker = navigation::toTagPicker
             )

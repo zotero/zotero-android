@@ -175,6 +175,7 @@ import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
+import java.io.File
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
@@ -3523,6 +3524,10 @@ class PdfReaderViewModel @Inject constructor(
         }, 25 * 60 * 1000L)
     }
 
+    fun onExportPdf() {
+        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.uri.path)))
+    }
+
 }
 
 data class PdfReaderViewState(
@@ -3597,6 +3602,8 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object ClearFocus: PdfReaderViewEffect()
     object NavigateToTagPickerScreen: PdfReaderViewEffect()
     data class ScrollThumbnailListToIndex(val scrollToIndex: Int): PdfReaderViewEffect()
+    data class ExportPdf(val file: File) : PdfReaderViewEffect()
+
 }
 
 data class AnnotationKey(

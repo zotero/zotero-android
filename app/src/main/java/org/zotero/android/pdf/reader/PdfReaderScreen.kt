@@ -26,10 +26,12 @@ import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import java.io.File
 
 @Composable
 internal fun PdfReaderScreen(
     onBack: () -> Unit,
+    onExportPdf: (file: File) -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: (args: String) -> Unit,
     navigateToPdfPlainReader: (args: String) -> Unit,
@@ -138,6 +140,9 @@ internal fun PdfReaderScreen(
                 is PdfReaderViewEffect.NavigateToTagPickerScreen -> {
                     navigateToTagPicker()
                 }
+                is PdfReaderViewEffect.ExportPdf -> {
+                    onExportPdf(consumedEffect.file)
+                }
                 else -> {}
             }
         }
@@ -159,6 +164,7 @@ internal fun PdfReaderScreen(
                         PdfReaderTopBar(
                             onBack = onBack,
                             onShowHideSideBar = viewModel::toggleSideBar,
+                            onExportPdf = viewModel::onExportPdf,
                             toPdfSettings = viewModel::navigateToPdfSettings,
                             toPdfPlainReader = viewModel::navigateToPlainReader,
                             showPdfSearch = viewState.showPdfSearch,

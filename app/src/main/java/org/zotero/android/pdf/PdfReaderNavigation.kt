@@ -25,17 +25,20 @@ import org.zotero.android.pdf.pdffilter.toPdfFilterScreen
 import org.zotero.android.pdf.reader.PdfReaderScreen
 import org.zotero.android.pdf.reader.plainreader.PdfPlanReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
+import java.io.File
 
 internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
 internal const val ARG_PDF_SETTINGS_SCREEN = "pdfSettingsScreen"
 internal const val ARG_PDF_PLAIN_READER_SCREEN = "pdfPlainReaderScreen"
 
 internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
+    onExportPdf: (file: File) -> Unit,
     navigation: ZoteroNavigation,
     navigateToTagPickerDialog: () -> Unit,
 ) {
     pdfScreen(
         onBack = navigation::onBack,
+        onExportPdf = onExportPdf,
         navigateToPdfFilter = navigation::toPdfFilterNavigation,
         navigateToPdfSettings = navigation::toPdfSettings,
         navigateToPdfPlainReader = navigation::toPdfPlainReader,
@@ -98,11 +101,13 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
 }
 
 internal fun NavGraphBuilder.pdfReaderNavScreensForPhone(
+    onExportPdf: (file: File) -> Unit,
     navigation: ZoteroNavigation,
     navigateToTagPicker: () -> Unit,
 ) {
     pdfScreen(
         onBack = navigation::onBack,
+        onExportPdf = onExportPdf,
         navigateToPdfFilter = navigation::toPdfFilterScreen,
         navigateToPdfSettings = navigation::toPdfSettings,
         navigateToPdfPlainReader = navigation::toPdfPlainReader,
@@ -141,6 +146,7 @@ private fun NavGraphBuilder.pdfColorPicker(navigation: ZoteroNavigation) {
 
 private fun NavGraphBuilder.pdfScreen(
     onBack: () -> Unit,
+    onExportPdf: (file: File) -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: (args: String) -> Unit,
     navigateToPdfPlainReader: (args: String) -> Unit,
@@ -157,6 +163,7 @@ private fun NavGraphBuilder.pdfScreen(
     ) {
         PdfReaderScreen(
             onBack = onBack,
+            onExportPdf = onExportPdf,
             navigateToPdfFilter = navigateToPdfFilter,
             navigateToPdfSettings = navigateToPdfSettings,
             navigateToPdfPlainReader = navigateToPdfPlainReader,
