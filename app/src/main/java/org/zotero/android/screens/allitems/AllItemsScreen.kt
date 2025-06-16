@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.appupdate.MaybeShowAppUpdateBanner
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.table.AllItemsTable
 import org.zotero.android.uicomponents.CustomScaffold
@@ -29,7 +30,6 @@ import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import timber.log.Timber
 import java.io.File
 
 @Composable
@@ -179,6 +179,13 @@ internal fun AllItemsScreen(
                             NewDivider()
                         }
                     }
+                    MaybeShowAppUpdateBanner(
+                        appUpdateBannerPayload = viewState.appUpdateBannerPayload,
+                        shouldShowAppUpdateBanner = viewState.shouldShowAppUpdateBanner,
+                        onDownloadButtonTapped = viewModel::onAppUpdateDownloadButtonTapped,
+                        onLaterButtonTapped = viewModel::onAppUpdateLaterButtonTapped
+                    )
+
                     AllItemsTable(
                         lazyListState = lazyListState,
                         layoutType = layoutType,

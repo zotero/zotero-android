@@ -1,5 +1,6 @@
 package org.zotero.android.api
 
+import com.google.gson.JsonObject
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -68,4 +69,8 @@ interface NonZoteroApi {
     suspend fun sendHead(
         @Url url: String,
     ): retrofit2.Response<Void>
+
+    @GET("https://www.zotero.org/download/android/update.json")
+    suspend fun getAppUpdateManifest(
+    ): retrofit2.Response<JsonObject>
 }
