@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.appupdate.MaybeShowAppUpdateBanner
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.bottomsheet.AllItemsAddBottomSheet
 import org.zotero.android.screens.allitems.table.AllItemsTable
@@ -196,6 +197,13 @@ internal fun AllItemsScreen(
                     onAccessoryTapped = viewModel::onAccessoryTapped,
                     onItemLongTapped = viewModel::onItemLongTapped,
                     onStartSync = viewModel::startSync
+                )
+
+                MaybeShowAppUpdateBanner(
+                    appUpdateBannerPayload = viewState.appUpdateBannerPayload,
+                    shouldShowAppUpdateBanner = viewState.shouldShowAppUpdateBanner,
+                    onDownloadButtonTapped = viewModel::onAppUpdateDownloadButtonTapped,
+                    onLaterButtonTapped = viewModel::onAppUpdateLaterButtonTapped
                 )
 
                 val itemsError = viewState.error

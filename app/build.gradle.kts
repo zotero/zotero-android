@@ -43,6 +43,11 @@ android {
         buildConfigField("String", "PSPDFKIT_KEY", "\"\"")
         manifestPlaceholders["enableCrashReporting"] = false
 
+        //Making build version components to be accessible from within the app.
+        buildConfigField("int", "BUILD_VERSION_MAJOR", "${BuildConfig.version.major}")
+        buildConfigField("int", "BUILD_VERSION_MINOR", "${BuildConfig.version.minor}")
+        buildConfigField("int", "BUILD_VERSION_PATCH", "${BuildConfig.version.patch}")
+
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }

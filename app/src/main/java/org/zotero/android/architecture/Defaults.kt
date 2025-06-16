@@ -76,6 +76,8 @@ open class Defaults @Inject constructor(
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
 
+    private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
+
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
             sharedPrefsFile,
@@ -429,6 +431,14 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
     }
 
+    fun getDoNotShowAppUpdateBannerBeforeTime(): Long {
+        return sharedPreferences.getLong(doNotShowAppUpdateBannerBeforeTime, 0L)
+    }
+
+    fun setDoNotShowAppUpdateBannerBeforeTime(newValue: Long) {
+        sharedPreferences.edit { putLong(doNotShowAppUpdateBannerBeforeTime, newValue) }
+    }
+
     fun getLastCitationProcCommitHash(): String {
         return sharedPreferences.getString(lastCitationProcCommitHash, "") ?: ""
     }
@@ -574,6 +584,8 @@ open class Defaults @Inject constructor(
         setWebDavUsername(null)
         setWebDavPassword(null)
         setWebDavVerified(false)
+
+        setDoNotShowAppUpdateBannerBeforeTime(0L)
 
         setQuickCopyCslLocaleId("en-US")
         setQuickCopyAsHtml(false)

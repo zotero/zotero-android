@@ -32,6 +32,10 @@
 
     <string name="errors.shareext.proxied_urls_not_supported">Proxied URLs are not currently supported</string>
 
+    <string name="app_update_banner_message">A newer version of the app is available (%s). Would you like to download the update now?</string>
+    <string name="app_update_later_button">REMIND ME LATER</string>
+    <string name="app_update_download_button">DOWNLOAD</string>
+
     <string name="settings_cite_remove_style">Remove Style</string>
 
     <string name="items_generating_annotated_pdf">Generating Annotated PDF</string>

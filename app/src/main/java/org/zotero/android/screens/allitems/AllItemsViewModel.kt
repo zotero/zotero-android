@@ -23,9 +23,11 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.joda.time.DateTime
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.androidx.content.longToast
+import org.zotero.android.appupdate.UpdateSuggestionUseCase
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -122,6 +124,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val allItemsProcessor: AllItemsProcessor,
     private val dispatchers: Dispatchers,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val updateSuggestionUseCase: UpdateSuggestionUseCase,
     private val defaults: Defaults,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
@@ -222,9 +225,33 @@ internal class AllItemsViewModel @Inject constructor(
                 allItemsProcessorInterface = this@AllItemsViewModel,
                 searchTerm = searchTerm
             )
+
+            maybeShowAppUpdateDialog()
+
         }
 
 
+    }
+
+    private fun maybeShowAppUpdateDialog() {
+        val doNotShowAppUpdateBannerBeforeTime = defaults.getDoNotShowAppUpdateBannerBeforeTime()
+
+        if (updateSuggestionUseCase.wasDownloadedFromGooglePlayStore()
+            || System.currentTimeMillis() < doNotShowAppUpdateBannerBeforeTime) {
+            return
+        }
+        viewModelScope.launch {
+            val newestAppVersionFromManifest =
+                updateSuggestionUseCase.getNewestAppVersionFromManifest()
+            if (updateSuggestionUseCase.shouldShowUpdateAppDialog(newestAppVersionFromManifest)) {
+                updateState {
+                    copy(
+                        appUpdateBannerPayload = newestAppVersionFromManifest!!,
+                        shouldShowAppUpdateBanner = true
+                    )
+                }
+            }
+        }
     }
 
     override fun show(attachment: Attachment, parentKey: String?, library: Library) {
@@ -1295,6 +1322,19 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
 
+    fun onAppUpdateDownloadButtonTapped(){
+        updateState {
+            copy(shouldShowAppUpdateBanner = false)
+        }
+    }
+
+    fun onAppUpdateLaterButtonTapped(){
+        defaults.setDoNotShowAppUpdateBannerBeforeTime(DateTime().plusDays(1).millis)
+        updateState {
+            copy(shouldShowAppUpdateBanner = false)
+        }
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1314,6 +1354,8 @@ internal data class AllItemsViewState(
     val showDownloadedFilesPopup: Boolean = false,
     val isGeneratingBibliography: Boolean = false,
     val isGeneratingCitation: Boolean = false,
+    val appUpdateBannerPayload: String = "",
+    val shouldShowAppUpdateBanner: Boolean = false,
 ) : ViewState {
     val tagsFilter: Set<String>?
         get() {
