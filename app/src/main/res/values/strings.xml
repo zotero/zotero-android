@@ -47,4 +47,7 @@
     <string name="sync_snackbar_view_action">View</string>
 
     <string name="errors.shareext.proxied_urls_not_supported">Proxied URLs are not currently supported</string>
+
+    <string name="pdf_reader_share_export_pdf">Export PDF</string>
+    <string name="pdf_reader_share_export_annotated_pdf">Export Annotated PDF</string>
 </resources>

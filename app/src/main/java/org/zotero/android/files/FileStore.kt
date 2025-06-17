@@ -47,6 +47,7 @@ class FileStore @Inject constructor (
     private lateinit var cachesDirectory: File
     private lateinit var debugDirectory: File
     private lateinit var crashDirectory: File
+    private lateinit var readerDirtyPdfFolder: File
 
 
     companion object {
@@ -92,6 +93,9 @@ class FileStore @Inject constructor (
 
         crashDirectory = File(filesDir, "crashLogging")
         crashDirectory.mkdirs()
+
+        readerDirtyPdfFolder = File(filesDir, "readerDirtyPdf")
+        readerDirtyPdfFolder.mkdirs()
     }
 
     fun pathForFilename(filename: String): String {
@@ -526,5 +530,15 @@ class FileStore @Inject constructor (
         folderPath.mkdirs()
         return folderPath
     }
+
+    fun readerDirtyPdfFolder(): File {
+        readerDirtyPdfFolder.mkdirs()
+        return readerDirtyPdfFolder
+    }
+
+    fun pdfReaderDirtyFile(fileName: String): File {
+        return File(readerDirtyPdfFolder(), fileName)
+    }
+
 
 }

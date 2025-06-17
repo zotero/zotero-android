@@ -164,7 +164,7 @@ internal fun PdfReaderScreen(
                         PdfReaderTopBar(
                             onBack = onBack,
                             onShowHideSideBar = viewModel::toggleSideBar,
-                            onExportPdf = viewModel::onExportPdf,
+                            onShareButtonTapped = viewModel::onShareButtonTapped,
                             toPdfSettings = viewModel::navigateToPdfSettings,
                             toPdfPlainReader = viewModel::navigateToPlainReader,
                             showPdfSearch = viewState.showPdfSearch,

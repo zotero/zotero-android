@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.internal.toHexString
+import org.apache.commons.io.FileUtils
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -109,6 +110,7 @@ import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.isZoteroAnnotation
@@ -203,6 +205,7 @@ class PdfReaderViewModel @Inject constructor(
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val dispatcher: CoroutineDispatcher,
     private val progressHandler: SyncProgressHandler,
+    private val fileStore: FileStore,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
@@ -210,7 +213,8 @@ class PdfReaderViewModel @Inject constructor(
     private var databaseAnnotations: RealmResults<RItem>? = null
     private lateinit var annotationBoundingBoxConverter: AnnotationBoundingBoxConverter
     private var containerId = 0
-    private lateinit var uri: Uri
+    private lateinit var originalUri: Uri
+    private lateinit var dirtyUri: Uri
     private lateinit var pdfUiFragment: PdfUiFragment
     private lateinit var pdfFragment: PdfFragment
     private var onAnnotationUpdatedListener: AnnotationProvider.OnAnnotationUpdatedListener? = null
@@ -404,8 +408,8 @@ class PdfReaderViewModel @Inject constructor(
         fragmentManager: FragmentManager,
         isTablet: Boolean,
     ) {
+        initFileUris(uri)
         restartDisableForceScreenOnTimer()
-        this.uri = uri
         this.isTablet = isTablet
         this.fragmentManager = fragmentManager
         this.containerId = containerId
@@ -434,7 +438,7 @@ class PdfReaderViewModel @Inject constructor(
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
         val configuration = generatePdfConfiguration(pdfSettings)
         this@PdfReaderViewModel.pdfUiFragment = PdfUiFragmentBuilder
-            .fromUri(context, uri)
+            .fromUri(context, this.dirtyUri)
             .fragmentClass(CustomPdfUiFragment::class.java)
             .configuration(configuration)
             .build()
@@ -456,6 +460,15 @@ class PdfReaderViewModel @Inject constructor(
         fragmentManager.commit {
             add(containerId, this@PdfReaderViewModel.pdfUiFragment)
         }
+    }
+
+    private fun initFileUris(uri: Uri) {
+        this.originalUri = uri
+        val originalFile = File(uri.path)
+        fileStore.readerDirtyPdfFolder().deleteRecursively()
+        val dirtyFile = fileStore.pdfReaderDirtyFile(originalFile.name)
+        FileUtils.copyFile(originalFile, dirtyFile)
+        this.dirtyUri = Uri.fromFile(dirtyFile)
     }
 
     private fun addDocumentScrollListener() {
@@ -2190,7 +2203,7 @@ class PdfReaderViewModel @Inject constructor(
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
-            .autosaveEnabled(false)
+            .autosaveEnabled(true)
             .scrollbarsEnabled(true)
             .disableDefaultToolbar()
             .hideDocumentTitleOverlay()
@@ -2426,7 +2439,7 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun navigateToPlainReader() {
-        val pdfPlainReaderArgs = PdfPlainReaderArgs(this.uri)
+        val pdfPlainReaderArgs = PdfPlainReaderArgs(this.originalUri)
         val params = navigationParamsMarshaller.encodeObjectToBase64(pdfPlainReaderArgs)
         triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader(params))
 
@@ -2490,7 +2503,7 @@ class PdfReaderViewModel @Inject constructor(
 
         this.pdfUiFragment =
             PdfUiFragmentBuilder
-                .fromUri(context, this.uri)
+                .fromUri(context, this.dirtyUri)
                 .fragmentClass(CustomPdfUiFragment::class.java)
                 .configuration(updatedConfiguration)
                 .build()
@@ -3524,10 +3537,32 @@ class PdfReaderViewModel @Inject constructor(
         }, 25 * 60 * 1000L)
     }
 
-    fun onExportPdf() {
-        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.uri.path)))
+    override fun onExportPdf() {
+        dismissSharePopup()
+        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.originalUri.path)))
     }
 
+    override fun onExportAnnotatedPdf() {
+        dismissSharePopup()
+        this.document.saveIfModified()
+        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.dirtyUri.path)))
+    }
+
+    override fun dismissSharePopup() {
+        updateState {
+            copy(
+                showSharePopup = false
+            )
+        }
+    }
+
+    override fun onShareButtonTapped() {
+        updateState {
+            copy(
+                showSharePopup = true,
+            )
+        }
+    }
 }
 
 data class PdfReaderViewState(
@@ -3571,6 +3606,7 @@ data class PdfReaderViewState(
     var pdfAnnotationArgs: PdfAnnotationArgs? = null,
     var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs? = null,
     var pdfSettingsArgs: PdfSettingsArgs? = null,
+    var showSharePopup: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

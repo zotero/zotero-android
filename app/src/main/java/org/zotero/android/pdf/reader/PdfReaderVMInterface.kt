@@ -52,4 +52,8 @@ interface PdfReaderVMInterface {
     fun hidePdfAnnotationView()
     fun hidePdfAnnotationMoreView()
     fun hidePdfSettingsView()
+    fun onExportPdf()
+    fun onExportAnnotatedPdf()
+    fun dismissSharePopup()
+    fun onShareButtonTapped()
 }
