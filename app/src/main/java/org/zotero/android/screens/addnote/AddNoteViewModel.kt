@@ -61,7 +61,6 @@ internal class AddNoteViewModel @Inject constructor(
                 updateState {
                     copy(tags = tagPickerResult.tags)
                 }
-//                triggerEffect(AddNoteViewEffect.RefreshUI)
             }
         }
     }
@@ -158,7 +157,13 @@ internal class AddNoteViewModel @Inject constructor(
         updateState {
             copy(backHandlerInterceptionEnabled = false)
         }
-        this.port.postMessage(generateForceSaveMessage())
+        //Port might not be initialized by this point if user were to return to AddNoteScreen after a while, when app was loaded off memory and then very quickly tapped back button.
+        //We skip saving message in this case because note was saved before that, when user visited screen last time.
+        if (this::port.isInitialized) {
+            this.port.postMessage(generateForceSaveMessage())
+        } else {
+            triggerEffect(AddNoteViewEffect.NavigateBack)
+        }
     }
 
     private fun saveAndExit() {
