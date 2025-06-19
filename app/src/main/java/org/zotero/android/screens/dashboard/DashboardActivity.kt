@@ -100,7 +100,12 @@ internal class DashboardActivity : BaseActivity() {
 
         val onOpenWebpage: (uri: Uri) -> Unit = { uri ->
             val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
+            //Some devices have no apps to open URLs or such function was restricted.
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                longToast("No app found to open web pages or restriction is in place")
+            }
         }
 
         val onExportPdf: (file: File) -> Unit = { file ->
