@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.compose.setContent
@@ -166,18 +167,27 @@ internal class DashboardActivity : BaseActivity() {
     }
 
     private fun showAppChooserExcludingZoteroApp(intent: Intent) {
-        val chooserIntent = Intent.createChooser(intent, "Share file")
-        val allIntentActivities = packageManager.queryIntentActivities(intent, 0)
-        val excludedApps = allIntentActivities
-            .filter { it.activityInfo.name.contains("org.zotero.android") }
-            .map {
-                ComponentName(it.activityInfo.packageName, it.activityInfo.name)
+        val noAppFoundMessage = "No app found to open this file"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val chooserIntent = Intent.createChooser(intent, "Share file")
+            val allIntentActivities = packageManager.queryIntentActivities(intent, 0)
+            val excludedApps = allIntentActivities
+                .filter { it.activityInfo.name.contains("org.zotero.android") }
+                .map {
+                    ComponentName(it.activityInfo.packageName, it.activityInfo.name)
+                }
+            chooserIntent.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, excludedApps.toTypedArray())
+            if (allIntentActivities.size == excludedApps.size) {
+                longToast(noAppFoundMessage)
+            } else {
+                startActivity(chooserIntent)
             }
-        chooserIntent.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, excludedApps.toTypedArray())
-        if (allIntentActivities.size == excludedApps.size) {
-            longToast("No app found to open this file")
         } else {
-            startActivity(chooserIntent)
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                longToast(noAppFoundMessage)
+            }
         }
     }
 
