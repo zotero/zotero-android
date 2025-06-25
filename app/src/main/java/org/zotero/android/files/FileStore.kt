@@ -540,5 +540,20 @@ class FileStore @Inject constructor (
         return File(readerDirtyPdfFolder(), fileName)
     }
 
+    fun stylesBundleExportDirectory(): File {
+        val folderPath = File(getRootDirectory(), "stylesBundleExport")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun stylesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "styles")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun style(filenameWithoutExtension: String): File {
+        return File(stylesDirectory(), "$filenameWithoutExtension.csl")
+    }
 
 }

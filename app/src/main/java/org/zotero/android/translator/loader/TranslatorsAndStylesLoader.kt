@@ -11,9 +11,13 @@ import org.apache.commons.io.IOUtils
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
+import org.zotero.android.database.requests.SyncStylesDbRequest
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.Unzipper
 import org.zotero.android.screens.share.data.TranslatorMetadata
+import org.zotero.android.styles.data.Style
+import org.zotero.android.styles.data.StylesParser
 import timber.log.Timber
 import java.io.File
 import java.io.InputStreamReader
@@ -23,12 +27,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TranslatorsLoader @Inject constructor(
+class TranslatorsAndStylesLoader @Inject constructor(
     dispatchers: Dispatchers,
     private val context: Context,
     private val gson: Gson,
     private val defaults: Defaults,
     private val itemsUnzipper: TranslatorItemsUnzipper,
+    private val unzipper: Unzipper,
     private val fileStore: FileStore,
     private val bundleDbWrapper: DbWrapperBundle
 ) {
@@ -250,11 +255,11 @@ class TranslatorsLoader @Inject constructor(
 
     private suspend fun _updateTranslatorsFromBundle(forceUpdate: Boolean) {
         val hash = loadLastTranslatorCommitHash()
-        Timber.i("TranslatorsLoader: should update translators from bundle, forceUpdate=$forceUpdate; oldHash=${defaults.getLastTranslatorCommitHash()}; newHash=$hash")
+        Timber.i("TranslatorsAndStylesLoader: should update translators from bundle, forceUpdate=$forceUpdate; oldHash=${defaults.getLastTranslatorCommitHash()}; newHash=$hash")
         if (!forceUpdate && defaults.getLastTranslatorCommitHash() == hash) {
             return
         }
-        Timber.i("TranslatorsLoader: update translators from bundle")
+        Timber.i("TranslatorsAndStylesLoader: update translators from bundle")
 
         val (deletedVersion, deletedIndices) = loadDeleted()
         syncTranslatorsWithBundledData(deleteIndices = deletedIndices, forceUpdate = forceUpdate)
@@ -265,6 +270,10 @@ class TranslatorsLoader @Inject constructor(
 
     private fun loadLastTranslatorCommitHash(): String {
         return loadFromBundle(resource = "translators/commit_hash.txt", map = { it })
+    }
+
+    private fun loadLastStylesCommitHash(): String {
+        return loadFromBundle(resource = "styles/commit_hash.txt", map = { it })
     }
 
     private fun loadDeleted(): Pair<Long, List<String>> {
@@ -306,9 +315,9 @@ class TranslatorsLoader @Inject constructor(
 
 
     private suspend fun syncTranslatorsWithBundledData(deleteIndices: List<String>, forceUpdate: Boolean) {
-        Timber.i("TranslatorsLoader: load index")
+        Timber.i("TranslatorsAndStylesLoader: load index")
         val metadata = loadIndex()
-        Timber.i("TranslatorsLoader: sync translators to database")
+        Timber.i("TranslatorsAndStylesLoader: sync translators to database")
         val request = SyncTranslatorsDbRequest(
             updateMetadata = metadata,
             deleteIndices = deleteIndices,
@@ -320,7 +329,7 @@ class TranslatorsLoader @Inject constructor(
             updated = bundleDbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
         }.join()
 
-        Timber.i("TranslatorsLoader: updated $updated.size translators")
+        Timber.i("TranslatorsAndStylesLoader: updated $updated.size translators")
         deleteIndices.forEach { id ->
             fileStore.translator(id).delete()
         }
@@ -348,6 +357,7 @@ class TranslatorsLoader @Inject constructor(
     private suspend fun updateFromBundle() {
         try {
             _updateTranslatorsFromBundle(forceUpdate = false)
+            _updateStylesFromBundle()
             val timestamp = loadLastTimestamp()
             if (timestamp > defaults.getLastTimestamp()) {
                 defaults.setLastTimestamp(timestamp)
@@ -357,9 +367,65 @@ class TranslatorsLoader @Inject constructor(
             }
             
         } catch (error: Exception) {
-            Timber.e(error, "TranslatorsLoader: can't update from bundle")
+            Timber.e(error, "TranslatorsAndStylesLoader: can't update from bundle")
             throw Error.bundleLoading(error)
         }
+    }
+
+    private suspend fun _updateStylesFromBundle() {
+        val hash = loadLastStylesCommitHash()
+
+        if (defaults.getLastStylesCommitHash() == hash) {
+            return
+        }
+
+        Timber.i("TranslatorsAndStylesLoader: update styles from bundle")
+
+        syncStylesWithBundledData()
+
+        defaults.setLastStylesCommitHash(hash)
+    }
+
+    private suspend fun syncStylesWithBundledData() {
+        fileStore.stylesBundleExportDirectory().deleteRecursively()
+        unzipper.unzipStream(
+            zipInputStream = context.assets.open("styles/styles.zip"),
+            location = fileStore.stylesBundleExportDirectory().absolutePath
+        )
+        val files = fileStore.stylesBundleExportDirectory().listFiles() ?: emptyArray()
+        val styles = files.mapNotNull { file ->
+            if (file.extension != "csl") {
+                return@mapNotNull null
+            }
+            parseStyle(file)
+        }
+        val request = SyncStylesDbRequest(styles = styles)
+        var updated = listOf<String>()
+        uiScope.launch {
+            updated =
+                bundleDbWrapper.realmDbStorage.perform(request = request, invalidateRealm = true)
+        }.join()
+
+        Timber.i("TranslatorsAndStylesController: updated ${updated.size} styles")
+        val filteredFiles = files.filter { updated.contains(it.nameWithoutExtension) }
+        for (file in filteredFiles) {
+            val toFile = fileStore.style(filenameWithoutExtension = file.nameWithoutExtension)
+            if (toFile.exists()) {
+                toFile.delete()
+            }
+            FileUtils.copyFile(file, toFile)
+        }
+    }
+
+    private fun parseStyle(file: File): Style {
+        val parser = StylesParser.fromFile(file)
+
+        val style =  parser.parseXml()
+        if (style != null) {
+            return style
+        }
+
+        throw Error.cantParseXmlResponse
     }
 
     private fun loadLastTimestamp(): Long {
@@ -386,7 +452,7 @@ class TranslatorsLoader @Inject constructor(
             }
 
 
-        Timber.i("TranslatorsLoader: update translators and styles")
+        Timber.i("TranslatorsAndStylesLoader: update translators and styles")
         try {
             checkFolderIntegrity(type = type)
             updateFromBundle()
@@ -400,7 +466,7 @@ class TranslatorsLoader @Inject constructor(
         try {
             if (!fileStore.translatorItemsDirectory().exists()) {
                 if (type != UpdateType.initial) {
-                    Timber.e("TranslatorsLoader: translators directory was missing!")
+                    Timber.e("TranslatorsAndStylesLoader: translators directory was missing!")
                 }
                 fileStore.translatorItemsDirectory().mkdirs()
             }
@@ -419,14 +485,14 @@ class TranslatorsLoader @Inject constructor(
             defaults.setLastTranslatorCommitHash("")
             defaults.setLastTranslatorDeleted(0)
         } catch (error: Exception) {
-            Timber.e(error, "TranslatorsLoader: unable to restore folder integrity")
+            Timber.e(error, "TranslatorsAndStylesLoader: unable to restore folder integrity")
             throw error
         }
 
     }
 
     private fun process(error: Exception, updateType: UpdateType) {
-        Timber.e(error, "TranslatorsLoader: error")
+        Timber.e(error, "TranslatorsAndStylesLoader: error")
 
         val isBundleLoadingError = (error as? Error)?.isBundleLoadingError == true
         if (!isBundleLoadingError) {

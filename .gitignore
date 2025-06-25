@@ -64,3 +64,6 @@ app/src/main/assets/pdf-worker.zip
 /pdf-worker/cmaps/
 /pdf-worker/standard_fonts/
 /pdf-worker/worker.js
+
+#style generated files:
+app/src/main/assets/styles/

@@ -17,5 +17,8 @@ class DbWrapperBundle @Inject constructor(
         val dbFile = fileStore.bundledDataDbFile()
         this.config = Database.bundledDataConfiguration(dbFile)
         this.realmDbStorage = RealmDbStorage(config)
+        this.realmDbStorage.perform {
+            // We call empty transaction here to trigger any pending migrations on app start
+        }
     }
 }

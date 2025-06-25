@@ -24,6 +24,7 @@ import org.zotero.android.database.objects.RPathCoordinate
 import org.zotero.android.database.objects.RRect
 import org.zotero.android.database.objects.RRelation
 import org.zotero.android.database.objects.RSearch
+import org.zotero.android.database.objects.RStyle
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTranslatorMetadata
 import org.zotero.android.database.objects.RTypedTag
@@ -32,10 +33,11 @@ import org.zotero.android.database.objects.RVersions
 import org.zotero.android.database.objects.RWebDavDeletion
 import org.zotero.android.database.requests.key
 import java.io.File
+import java.util.Date
 
 class Database {
     companion object {
-        private const val schemaVersion = 4L //From now on must only increase by 1 whenever db schema changes
+        private const val schemaVersion = 5L //From now on must only increase by 1 whenever db schema changes
 
         fun mainConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()
@@ -160,11 +162,48 @@ class Database {
                 .modules(BundledDataConfigurationDbModule())
                 .schemaVersion(schemaVersion)
                 .allowWritesOnUiThread(true)
-                .migration { dynamicRealm, oldVersion, newVersion ->
-                    //no-op for bundle migration for now
-                }
+                .migration(BundleDbMigration(fileName = dbFile.name))
             return builder.build()
         }
+
+        internal class BundleDbMigration(private val fileName: String): RealmMigration {
+            override fun migrate(dynamicRealm: DynamicRealm, oldVersion: Long, newVersion: Long) {
+                if (oldVersion < 5) {
+                    addRStyle(dynamicRealm)
+                }
+            }
+
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (javaClass != other?.javaClass) return false
+
+                other as BundleDbMigration
+
+                return fileName == other.fileName
+            }
+
+            override fun hashCode(): Int {
+                return fileName.hashCode()
+            }
+
+        }
+
+        private fun addRStyle(dynamicRealm: DynamicRealm) {
+            val realmSchema = dynamicRealm.schema
+            realmSchema.create("RStyle")
+                .addField("identifier", String::class.java, FieldAttribute.PRIMARY_KEY)
+                .setRequired("identifier", true)
+                .addField("title", String::class.java, FieldAttribute.REQUIRED)
+                .addField("href", String::class.java, FieldAttribute.REQUIRED)
+                .addField("updated", Date::class.java)
+                .addField("filename", String::class.java, FieldAttribute.REQUIRED)
+                .addRealmObjectField("dependency", realmSchema.get("RStyle")!!)
+                .addField("installed", Boolean::class.java, FieldAttribute.REQUIRED)
+                .addField("supportsBibliography", Boolean::class.java, FieldAttribute.REQUIRED)
+                .addField("isNoteStyle", Boolean::class.java, FieldAttribute.REQUIRED)
+                .addField("defaultLocale", String::class.java, FieldAttribute.REQUIRED)
+        }
+
     }
 }
 
@@ -198,7 +237,7 @@ data class MainConfigurationDbModule(val placeholder: String) { // empty data cl
 }
 
 @RealmModule(library = false, classes=[
-    RTranslatorMetadata::class
+    RTranslatorMetadata::class, RStyle::class
 ])
 data class BundledDataConfigurationDbModule(val placeholder: String) { // empty data class for equals/hashcode
     constructor(): this("")

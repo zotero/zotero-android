@@ -23,7 +23,7 @@ import org.zotero.android.pdfworker.loader.PdfWorkerLoader
 import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
-import org.zotero.android.translator.loader.TranslatorsLoader
+import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,7 +45,7 @@ class Controllers @Inject constructor(
     private val backgroundUploadProcessor: BackgroundUploadProcessor,
     private val debugLogging: DebugLogging,
     private val crashReporter: CrashReporter,
-    private val translatorsLoader: TranslatorsLoader,
+    private val translatorsAndStylesLoader: TranslatorsAndStylesLoader,
     private val translationLoader: TranslationLoader,
     private val pdfWorkerLoader: PdfWorkerLoader,
     private val context: Context,
@@ -81,7 +81,7 @@ class Controllers @Inject constructor(
         coroutineScope.launch {
             try {
                 translationLoader.updateTranslationIfNeeded()
-                translatorsLoader.updateTranslatorItemsIfNeeded()
+                translatorsAndStylesLoader.updateTranslatorItemsIfNeeded()
                 pdfWorkerLoader.updatePdfWorkerIfNeeded()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
