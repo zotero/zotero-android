@@ -531,6 +531,18 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun citationDirectory(): File {
+        val folderPath = File(getRootDirectory(), "citation")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun utilitiesDirectory(): File {
+        val folderPath = File(citationDirectory(), "utilities")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun readerDirtyPdfFolder(): File {
         readerDirtyPdfFolder.mkdirs()
         return readerDirtyPdfFolder
@@ -540,5 +552,26 @@ class FileStore @Inject constructor (
         return File(readerDirtyPdfFolder(), fileName)
     }
 
+    fun stylesBundleExportDirectory(): File {
+        val folderPath = File(getRootDirectory(), "stylesBundleExport")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun stylesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "styles")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun style(filenameWithoutExtension: String): File {
+        return File(stylesDirectory(), "$filenameWithoutExtension.csl")
+    }
+
+    fun cslLocalesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "cslLocales")
+        folderPath.mkdirs()
+        return folderPath
+    }
 
 }

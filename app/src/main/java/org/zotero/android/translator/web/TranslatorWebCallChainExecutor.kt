@@ -15,7 +15,7 @@ import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.loader.TranslatorsLoader
+import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
@@ -27,7 +27,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
     dispatchers: Dispatchers,
     private val gson: Gson,
     private val translatorWebViewHandler: TranslatorWebViewHandler,
-    private val translatorsLoader: TranslatorsLoader,
+    private val translatorsAndStylesLoader: TranslatorsAndStylesLoader,
     private val translatorActionEventStream: TranslatorActionEventStream,
     private val fileStore: FileStore,
 ) {
@@ -66,7 +66,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
             val loadBundleResult = loadBundleFiles()
             sendInitSchemaAndDateFormatsMessage(loadBundleResult.first, loadBundleResult.second)
             val translatorsResult =
-                translatorsLoader.translators(this@TranslatorWebCallChainExecutor.url)
+                translatorsAndStylesLoader.translators(this@TranslatorWebCallChainExecutor.url)
             sendInitTranslatorsMessage(translatorsResult)
             sendTranslateMessage()
         }

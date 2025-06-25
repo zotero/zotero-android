@@ -23,6 +23,7 @@ import org.zotero.android.architecture.navigation.toItemDetails
 import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
+import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
@@ -68,6 +69,7 @@ internal fun TabletRightPaneNavigation(
             navigateToCollectionPicker = navigation::toCollectionPickerDialog,
             navigateToScanBarcode = navigation::toScanBarcodeDialog,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
+            navigateToSingleCitation = navigation::toSingleCitationDialog,
             onShowPdf = onShowPdf,
         )
         itemDetailsScreen(
@@ -139,6 +141,11 @@ internal fun TabletRightPaneNavigation(
                 },
             )
         }
+        dialogDynamicHeight(
+            route = TabletRightPaneDestinations.SINGLE_CITATION_PICKER_DIALOG,
+        ) {
+            SingleCitationScreen(onBack = { navController.popBackStack() })
+        }
     }
 }
 
@@ -150,6 +157,7 @@ private object TabletRightPaneDestinations {
     const val TAG_PICKER_DIALOG = "tagPickerDialog"
     const val COLLECTION_PICKER_DIALOG = "collectionPickerDialog"
     const val SCAN_BARCODE_DIALOG = "scanBarcodeDialog"
+    const val SINGLE_CITATION_PICKER_DIALOG = "singleCitationPickerDialog"
 
 }
 
@@ -179,4 +187,8 @@ private fun ZoteroNavigation.toCollectionPickerDialog() {
 
 private fun ZoteroNavigation.toScanBarcodeDialog() {
     navController.navigate(TabletRightPaneDestinations.SCAN_BARCODE_DIALOG)
+}
+
+private fun ZoteroNavigation.toSingleCitationDialog() {
+    navController.navigate(TabletRightPaneDestinations.SINGLE_CITATION_PICKER_DIALOG)
 }

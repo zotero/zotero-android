@@ -13,13 +13,13 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
-import org.zotero.android.translator.data.WebPortResponse
-import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.loader.TranslatorsLoader
 import org.zotero.android.screens.addbyidentifier.data.InitializationResult
 import org.zotero.android.screens.addbyidentifier.data.LookupData
 import org.zotero.android.screens.addbyidentifier.data.LookupError
 import org.zotero.android.screens.addbyidentifier.data.LookupSettings
+import org.zotero.android.translator.data.WebPortResponse
+import org.zotero.android.translator.helper.TranslatorHelper
+import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import timber.log.Timber
 import java.io.File
 import kotlin.coroutines.resume
@@ -29,7 +29,7 @@ class LookupWebCallChainExecutor(
     private val context: Context,
     dispatchers: Dispatchers,
     private val gson: Gson,
-    private val translatorsLoader: TranslatorsLoader,
+    private val translatorsAndStylesLoader: TranslatorsAndStylesLoader,
     private val fileStore: FileStore,
     private val nonZoteroApi: NonZoteroApi,
     private val translatorLoadedEventStream: TranslatorLoadedEventStream,
@@ -165,7 +165,7 @@ class LookupWebCallChainExecutor(
             val loadBundleResult = loadBundleFiles()
             sendInitSchemaAndDateFormatsMessage(loadBundleResult.first, loadBundleResult.second)
             val translatorsResult =
-                translatorsLoader.translators(null)
+                translatorsAndStylesLoader.translators(null)
             sendInitTranslatorsMessage(translatorsResult)
             translatorLoadedEventStream.emitAsync(true)
         }

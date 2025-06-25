@@ -44,6 +44,11 @@ open class Defaults @Inject constructor(
     private val activeEraserSize = "activeEraserSize"
     private val activeFontSize = "activeFontSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
+    private val quickCopyStyleId = "quickCopyStyleId"
+    private val quickCopyCslLocaleId = "quickCopyCslLocaleId"
+    private val exportStyleId = "exportStyleId"
+    private val exportLocaleId = "exportLocaleId"
+    private val quickCopyAsHtml = "quickCopyAsHtml"
 
     private val lastTimestamp = "lastTimestamp"
     private val lastTranslationCommitHash = "lastTranslationCommitHash"
@@ -51,6 +56,9 @@ open class Defaults @Inject constructor(
     private val lastTranslatorDeleted = "lastTranslatorDeleted"
     private val lastStylesCommitHash = "lastStylesCommitHash"
     private val lastPdfWorkerCommitHash = "lastPdfWorkerCommitHash"
+    private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
+    private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
+    private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -402,6 +410,74 @@ open class Defaults @Inject constructor(
 
     fun setLastPdfWorkerCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
+    }
+
+    fun getLastCitationProcCommitHash(): String {
+        return sharedPreferences.getString(lastCitationProcCommitHash, "") ?: ""
+    }
+
+    fun setLastCitationProcCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastCitationProcCommitHash, newValue) }
+    }
+
+    fun getLastUtilitiesCommitHash(): String {
+        return sharedPreferences.getString(lastUtilitiesCommitHash, "") ?: ""
+    }
+
+    fun setLastUtilitiesCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastUtilitiesCommitHash, newValue) }
+    }
+
+    fun getQuickCopyStyleId(): String {
+        return sharedPreferences.getString(quickCopyStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+    }
+
+    fun setQuickCopyStyleId(newValue: String) {
+        sharedPreferences.edit { putString(quickCopyStyleId, newValue) }
+    }
+
+    fun getQuickCopyCslLocaleId(): String {
+        return sharedPreferences.getString(quickCopyCslLocaleId, "en-US") ?: ""
+    }
+
+    fun hasQuickCopyCslLocaleId(): Boolean {
+        return sharedPreferences.contains(quickCopyCslLocaleId)
+    }
+
+    fun setQuickCopyCslLocaleId(newValue: String) {
+        sharedPreferences.edit { putString(quickCopyCslLocaleId, newValue) }
+    }
+
+    fun getExportStyleId(): String {
+        return sharedPreferences.getString(exportStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+    }
+
+    fun setExportStyleId(newValue: String) {
+        sharedPreferences.edit { putString(exportStyleId, newValue) }
+    }
+
+    fun getExportLocaleId(): String {
+        return sharedPreferences.getString(exportLocaleId, "en-US") ?: ""
+    }
+
+    fun setExportLocaleId(newValue: String) {
+        sharedPreferences.edit { putString(exportLocaleId, newValue) }
+    }
+
+    fun setQuickCopyAsHtml(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(quickCopyAsHtml, newValue) }
+    }
+
+    fun isQuickCopyAsHtml(): Boolean {
+        return sharedPreferences.getBoolean(quickCopyAsHtml, false)
+    }
+
+    fun getLastCslLocalesCommitHash(): String {
+        return sharedPreferences.getString(lastCslLocalesCommitHash, "") ?: ""
+    }
+
+    fun setLastCslLocalesCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastCslLocalesCommitHash, newValue) }
     }
 
     fun reset() {

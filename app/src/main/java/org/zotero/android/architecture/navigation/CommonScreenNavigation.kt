@@ -38,6 +38,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToTagFilter: (params: String) -> Unit,
     navigateToCollectionPicker: () -> Unit,
     navigateToScanBarcode: () -> Unit,
+    navigateToSingleCitation: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
@@ -65,6 +66,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToCollectionPicker = navigateToCollectionPicker,
             navigateToScanBarcode = navigateToScanBarcode,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
+            navigateToSingleCitation = navigateToSingleCitation,
         )
     }
 }

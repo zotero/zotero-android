@@ -50,4 +50,5 @@
 
     <string name="pdf_reader_share_export_pdf">Export PDF</string>
     <string name="pdf_reader_share_export_annotated_pdf">Export Annotated PDF</string>
+    <string name="settings_cite_remove_style">Remove Style</string>
 </resources>

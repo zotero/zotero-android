@@ -57,6 +57,30 @@ jobs:
       - name: Execute bundle_pdf-worker.py
         run: python3 scripts/bundle_pdf-worker.py
 
+      - name: Grant execute permission for bundle_citation_proc.py
+        run: chmod +x scripts/bundle_citation_proc.py
+
+      - name: Execute bundle_citation_proc.py
+        run: python3 scripts/bundle_citation_proc.py
+
+      - name: Grant execute permission for bundle_csl_locales.py
+        run: chmod +x scripts/bundle_csl_locales.py
+
+      - name: Execute bundle_csl_locales.py
+        run: python3 scripts/bundle_csl_locales.py
+
+      - name: Grant execute permission for bundle_styles.py
+        run: chmod +x scripts/bundle_styles.py
+
+      - name: Execute bundle_styles.py
+        run: python3 scripts/bundle_styles.py
+
+      - name: Grant execute permission for bundle_utilities.sh
+        run: chmod +x scripts/bundle_utilities.sh
+
+      - name: Execute bundle_utilities.sh
+        run: scripts/bundle_utilities.sh
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

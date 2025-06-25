@@ -2,6 +2,7 @@ package org.zotero.android.screens.settings
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.uicomponents.Drawables
-import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -55,17 +55,20 @@ internal fun SettingsItem(
     title: String,
     textColor: Color = CustomTheme.colors.primaryContent,
     onItemTapped: () -> Unit,
+    onItemLongTapped: (() -> Unit)? = null,
     addNewScreenNavigationIndicator: Boolean = false,
+    chevronNavigationColor: Color = CustomTheme.colors.chevronNavigationColor,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 44.dp)
             .background(CustomTheme.colors.surface)
-            .safeClickable(
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
                 onClick = { onItemTapped() },
+                onLongClick = onItemLongTapped
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -81,7 +84,7 @@ internal fun SettingsItem(
             Icon(
                 painter = painterResource(id = Drawables.chevron_right_24px),
                 contentDescription = null,
-                tint = CustomTheme.colors.chevronNavigationColor
+                tint = chevronNavigationColor
             )
             Spacer(modifier = Modifier.width(8.dp))
         }

@@ -215,6 +215,10 @@ fun <T> RealmQuery<T>.item(type: String): RealmQuery<T> {
     return equalTo("rawType", type)
 }
 
+fun <T> RealmQuery<T>.itemNotTypeIn(itemTypes: Set<String>): RealmQuery<T> {
+    return not().`in`("rawType", itemTypes.toTypedArray())
+}
+
 fun <T> RealmQuery<T>.items(
     forCollectionsKeys: Set<String>,
     libraryId: LibraryIdentifier

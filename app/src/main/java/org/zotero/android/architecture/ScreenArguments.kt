@@ -10,6 +10,7 @@ import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
+import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collections.data.CollectionsArgs
@@ -46,4 +47,5 @@ object ScreenArguments {
     lateinit var shareCollectionPickerArgs: ShareCollectionPickerArgs
     lateinit var pdfReaderSearchArgs: PdfReaderSearchArgs
     lateinit var pdfPlainReaderArgs: PdfPlainReaderArgs
+    lateinit var singleCitationArgs: SingleCitationArgs
 }
