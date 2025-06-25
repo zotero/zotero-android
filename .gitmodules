@@ -4,3 +4,12 @@
 [submodule "translation/translate"]
 	path = translation/translate
 	url = https://github.com/zotero/translate.git
+[submodule "utilities"]
+	path = utilities
+	url = https://github.com/zotero/utilities.git
+[submodule "bundled-styles"]
+	path = bundled-styles
+	url = https://github.com/zotero/bundled-styles/
+[submodule "locales"]
+	path = locales
+	url = https://github.com/citation-style-language/locales.git
