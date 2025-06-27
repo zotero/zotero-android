@@ -8,9 +8,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
+import org.joda.time.DateTime
+import org.zotero.android.BuildConfig
+import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.network.CustomResult
+import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
+import org.zotero.android.database.requests.ReadStylesDbRequest
 import org.zotero.android.database.requests.SyncStylesDbRequest
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
@@ -18,8 +24,10 @@ import org.zotero.android.helpers.Unzipper
 import org.zotero.android.screens.share.data.TranslatorMetadata
 import org.zotero.android.styles.data.Style
 import org.zotero.android.styles.data.StylesParser
+import org.zotero.android.sync.Translator
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
@@ -35,7 +43,8 @@ class TranslatorsAndStylesLoader @Inject constructor(
     private val itemsUnzipper: TranslatorItemsUnzipper,
     private val unzipper: Unzipper,
     private val fileStore: FileStore,
-    private val bundleDbWrapper: DbWrapperBundle
+    private val bundleDbWrapper: DbWrapperBundle,
+    private val nonZoteroApi: NonZoteroApi,
 ) {
     enum class UpdateType(val i: Int) {
         manual(1),
@@ -456,10 +465,90 @@ class TranslatorsAndStylesLoader @Inject constructor(
         try {
             checkFolderIntegrity(type = type)
             updateFromBundle()
+            _updateFromRepo(type = type)
             defaults.setLastTimestamp(System.currentTimeMillis() / 1000) //TODO
         } catch (error: Exception) {
             process(error = error, updateType = type)
         }
+    }
+
+    suspend fun _updateFromRepo(type: UpdateType): CustomResult<Long> {//return seconds
+        if  (type == UpdateType.startup && !didDayChange(DateTime(defaults.getLastTimestamp()))) {
+            return CustomResult.GeneralSuccess(defaults.getLastTimestamp())
+        }
+        Timber.i("TranslatorsAndStylesController: update from repo, type=${type}")
+
+        val version = BuildConfig.VERSION_NAME
+        val bundle = "1"
+
+        val fieldMap = mutableMapOf<String, String>()
+        val styles = styles(type)
+        if (!styles.isNullOrEmpty()) {
+            val styleParameters = styles.map{ style ->
+                mapOf("id" to style.identifier,
+                "updated" to (style.updated.time / 1000L).toString(),
+                "url" to style.href)
+            }
+
+            fieldMap["styles"] = gson.toJson(styleParameters)
+        }
+
+        val networkResult = safeApiCall {
+            nonZoteroApi.repoRequest(
+                version = "${version}-${bundle}-android",
+                timestamp = defaults.getLastTimestamp(),
+                type = type.i,
+                fieldMap = fieldMap
+            )
+        }
+        if (networkResult is CustomResult.GeneralError) {
+            return networkResult
+        }
+        networkResult as CustomResult.GeneralSuccess.NetworkSuccess
+        val inputStream = networkResult.value!!.byteStream()
+        val response = parseRepoResponse(inputStream)
+
+        //TODO
+        return CustomResult.GeneralSuccess(1L)
+    }
+    private fun parseRepoResponse(inputStream: InputStream):Triple<Long, List<Translator>,  List<Pair<String, String>>> {
+        try {
+            val parser = RepoParser.fromInputStream(inputStream = inputStream, gson = gson)
+            parser.parseXml()
+            Timber.i("TranslatorsAndStylesController: parsed ${parser.translators.size} translators and ${parser.styles.size} styles")
+            return Triple(parser.timestamp, parser.translators, parser.styles)
+        }catch (e: Exception) {
+            Timber.e(e)
+        }
+        throw Error.cantParseXmlResponse
+    }
+
+    private suspend fun styles(type: UpdateType): List<Style>? {
+        if (type == UpdateType.shareExtension) {
+            return null
+        }
+
+        try {
+            var styles = emptyList<Style>()
+            uiScope.launch {
+                val rStyles = bundleDbWrapper.realmDbStorage.perform(
+                    request = ReadStylesDbRequest(),
+                    invalidateRealm = true
+                )
+                styles = rStyles.mapNotNull { Style.fromRStyle(it) }
+            }.join()
+            return styles
+        } catch (e: Exception) {
+            Timber.e(e, "TranslatorsAndStylesController: can't read styles")
+            return null
+        }
+    }
+
+    private fun didDayChange(date: DateTime): Boolean {
+        val currentDate = DateTime.now()
+        return currentDate.dayOfMonth != date.dayOfMonth
+                || currentDate.monthOfYear != date.monthOfYear
+                || currentDate.yearOfEra != date.yearOfEra
     }
 
     private fun checkFolderIntegrity(type: UpdateType)  {
