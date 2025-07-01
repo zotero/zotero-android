@@ -37,7 +37,7 @@ class SyncTranslatorsDbRequest(
             if (existing != null) {
                 if (
                     this.forceUpdate
-                    || existing.lastUpdated < metadata.lastUpdatedDate
+                    || existing.lastUpdated < metadata.lastUpdated
                     || !fileStore.translator(
                         metadata.id
                     ).exists()
@@ -49,7 +49,7 @@ class SyncTranslatorsDbRequest(
             } else {
                 rMetadata = database.createObject<RTranslatorMetadata>(metadata.id)
             }
-            rMetadata.lastUpdated = metadata.lastUpdatedDate
+            rMetadata.lastUpdated = metadata.lastUpdated
             update.add(metadata.id to metadata.fileName)
         }
         return update

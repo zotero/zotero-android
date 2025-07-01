@@ -51,6 +51,7 @@ open class Defaults @Inject constructor(
     private val lastTranslatorDeleted = "lastTranslatorDeleted"
     private val lastStylesCommitHash = "lastStylesCommitHash"
     private val lastPdfWorkerCommitHash = "lastPdfWorkerCommitHash"
+    private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -402,6 +403,14 @@ open class Defaults @Inject constructor(
 
     fun setLastPdfWorkerCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
+    }
+
+    fun getLastCitationProcCommitHash(): String {
+        return sharedPreferences.getString(lastCitationProcCommitHash, "") ?: ""
+    }
+
+    fun setLastCitationProcCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastCitationProcCommitHash, newValue) }
     }
 
     fun reset() {

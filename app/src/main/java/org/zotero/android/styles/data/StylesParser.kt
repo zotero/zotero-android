@@ -6,6 +6,9 @@ import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import timber.log.Timber
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
+import java.io.Reader
+import java.io.StringReader
 import java.util.Date
 
 class StylesParser {
@@ -22,6 +25,9 @@ class StylesParser {
     private var isNoteStyle: Boolean = false
     private var defaultLocale: String? = null
 
+    private var inputStream: InputStream ? = null
+    private var reader: Reader? = null
+
     companion object {
         fun fromFile(file: File): StylesParser {
             val sp = StylesParser()
@@ -31,6 +37,17 @@ class StylesParser {
             sp.supportsBibliography = false
             sp.isNoteStyle = false
             sp.currentValue = ""
+            sp.inputStream = FileInputStream(file)
+            return sp
+        }
+
+        fun fromString(str: String): StylesParser {
+            val sp = StylesParser()
+            sp.supportsCitation = false
+            sp.supportsBibliography = false
+            sp.isNoteStyle = false
+            sp.currentValue = ""
+            sp.reader = StringReader(str)
             return sp
         }
     }
@@ -53,11 +70,15 @@ class StylesParser {
 
     fun parseXml(): Style? {
         try {
-            val inputStream = FileInputStream(this.file)
             val factory = XmlPullParserFactory.newInstance()
             factory.isNamespaceAware = true
             val xpp = factory.newPullParser()
-            xpp.setInput(inputStream, null)
+            if (this.inputStream != null) {
+                xpp.setInput(this.inputStream, null)
+            } else {
+                xpp.setInput(this.reader)
+            }
+
             var eventType = xpp.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG) {
@@ -157,7 +178,8 @@ class StylesParser {
             if (identifier == null || title == null || updated == null || href == null) {
                 return null
             }
-            inputStream.close()
+            inputStream?.close()
+            reader?.close()
             val style = Style(
                 identifier = identifier,
                 dependencyId = this.dependencyHref,

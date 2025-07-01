@@ -16,6 +16,7 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.logging.crash.CrashReporter
 import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
+import org.zotero.android.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
@@ -48,6 +49,7 @@ class Controllers @Inject constructor(
     private val translatorsAndStylesLoader: TranslatorsAndStylesLoader,
     private val translationLoader: TranslationLoader,
     private val pdfWorkerLoader: PdfWorkerLoader,
+    private val citationProcLoader: CitationProcLoader,
     private val context: Context,
     private val identifierLookupController: IdentifierLookupController,
     ) {
@@ -83,6 +85,7 @@ class Controllers @Inject constructor(
                 translationLoader.updateTranslationIfNeeded()
                 translatorsAndStylesLoader.updateTranslatorItemsIfNeeded()
                 pdfWorkerLoader.updatePdfWorkerIfNeeded()
+                citationProcLoader.updateCitationProcIfNeeded()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
             }

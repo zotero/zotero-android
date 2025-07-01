@@ -3,6 +3,8 @@ package org.zotero.android.translator.loader
 import android.content.Context
 import android.os.Build
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.requests.ReadStylesDbRequest
+import org.zotero.android.database.requests.SyncRepoResponseDbRequest
 import org.zotero.android.database.requests.SyncStylesDbRequest
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
@@ -257,9 +260,15 @@ class TranslatorsAndStylesLoader @Inject constructor(
 
     private fun loadIndex(): List<TranslatorMetadata> {
         val inputStream = context.assets.open("translators/index.json")
-        val type =
-            TypeToken.getParameterized(MutableList::class.java, TranslatorMetadata::class.java).type
-        return gson.fromJson(InputStreamReader(inputStream), type)
+        val array = gson.fromJson(InputStreamReader(inputStream), JsonArray::class.java)
+        return array.map {
+            it as JsonObject
+            TranslatorMetadata.from(
+                id = it["id"].asString,
+                filename = it["fileName"].asString,
+                rawLastUpdated = it["lastUpdated"].asString
+            )
+        }
     }
 
     private suspend fun _updateTranslatorsFromBundle(forceUpdate: Boolean) {
@@ -426,6 +435,24 @@ class TranslatorsAndStylesLoader @Inject constructor(
         }
     }
 
+    private fun splitStyles(styles: List<Pair<String, String>>): Pair<List<Style>, List<Pair<String, ByteArray>>> {
+        val stylesMetadata = mutableListOf<Style>()
+        val stylesData = mutableListOf<Pair<String, ByteArray>>()
+
+        for ((_, xml) in styles) {
+
+            val parser = StylesParser.fromString(xml)
+
+            val style =  parser.parseXml() ?:continue
+
+            stylesMetadata.add(style)
+            stylesData.add(style.filename to xml.toByteArray(Charsets.UTF_8))
+        }
+
+        return stylesMetadata to stylesData
+    }
+
+
     private fun parseStyle(file: File): Style {
         val parser = StylesParser.fromFile(file)
 
@@ -466,15 +493,15 @@ class TranslatorsAndStylesLoader @Inject constructor(
             checkFolderIntegrity(type = type)
             updateFromBundle()
             _updateFromRepo(type = type)
-            defaults.setLastTimestamp(System.currentTimeMillis() / 1000) //TODO
+            defaults.setLastTimestamp(System.currentTimeMillis() / 1000)
         } catch (error: Exception) {
             process(error = error, updateType = type)
         }
     }
 
-    suspend fun _updateFromRepo(type: UpdateType): CustomResult<Long> {//return seconds
-        if  (type == UpdateType.startup && !didDayChange(DateTime(defaults.getLastTimestamp()))) {
-            return CustomResult.GeneralSuccess(defaults.getLastTimestamp())
+    suspend fun _updateFromRepo(type: UpdateType): Long {//returns seconds
+        if (type == UpdateType.startup && !didDayChange(DateTime(defaults.getLastTimestamp()))) {
+            return defaults.getLastTimestamp()
         }
         Timber.i("TranslatorsAndStylesController: update from repo, type=${type}")
 
@@ -482,12 +509,14 @@ class TranslatorsAndStylesLoader @Inject constructor(
         val bundle = "1"
 
         val fieldMap = mutableMapOf<String, String>()
-        val styles = styles(type)
-        if (!styles.isNullOrEmpty()) {
-            val styleParameters = styles.map{ style ->
-                mapOf("id" to style.identifier,
-                "updated" to (style.updated.time / 1000L).toString(),
-                "url" to style.href)
+        val stylesList = styles(type)
+        if (!stylesList.isNullOrEmpty()) {
+            val styleParameters = stylesList.map { style ->
+                mapOf(
+                    "id" to style.identifier,
+                    "updated" to (style.updated.time / 1000L).toString(),
+                    "url" to style.href
+                )
             }
 
             fieldMap["styles"] = gson.toJson(styleParameters)
@@ -501,15 +530,14 @@ class TranslatorsAndStylesLoader @Inject constructor(
                 fieldMap = fieldMap
             )
         }
-        if (networkResult is CustomResult.GeneralError) {
-            return networkResult
+        if (networkResult is CustomResult.GeneralError.NetworkError) {
+            throw Exception(networkResult.stringResponse)
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val inputStream = networkResult.value!!.byteStream()
-        val response = parseRepoResponse(inputStream)
-
-        //TODO
-        return CustomResult.GeneralSuccess(1L)
+        val (timestamp, translators, styles) = parseRepoResponse(inputStream)
+        syncRepoResponse(translators, styles)
+        return timestamp
     }
     private fun parseRepoResponse(inputStream: InputStream):Triple<Long, List<Translator>,  List<Pair<String, String>>> {
         try {
@@ -522,6 +550,108 @@ class TranslatorsAndStylesLoader @Inject constructor(
         }
         throw Error.cantParseXmlResponse
     }
+
+    private fun splitTranslators(translators: List<Translator>): Pair<List<Translator>, List<Translator>> {
+        val update = mutableListOf<Translator>()
+        val delete = mutableListOf<Translator>()
+
+        for (translator in translators) {
+           val priority = translator.metadata["priority"] as? Int ?: continue
+            if (priority > 0) {
+                update.add(translator)
+            } else {
+                delete.add(translator)
+            }
+        }
+
+        return update to delete
+    }
+
+    private fun metadata(translator: Translator): TranslatorMetadata {
+        val id = translator.metadata["translatorID"] as? String ?: {
+            Timber.e("TranslatorsAndStylesController: translator missing id - ${translator.metadata}")
+            throw Error.translatorMissingId
+        }
+        val rawLastUpdated = translator.metadata["lastUpdated"] as? String ?: {
+            Timber.e("TranslatorsAndStylesController: translator missing last updated - ${translator.metadata}")
+            throw Error.translatorMissingLastUpdated
+        }
+        return TranslatorMetadata.from(
+            id = id as String,
+            filename = "",
+            rawLastUpdated = rawLastUpdated as String
+        )
+    }
+
+    private fun data(translator: Translator): ByteArray {
+        var jsonMetadata: String
+
+        try {
+            jsonMetadata = gson.toJson(translator.metadata)
+        } catch (error: Exception) {
+            Timber.e(error, "TranslatorsAndStylesController: can't create data from metadata")
+            throw Error.cantConvertTranslatorToData
+        }
+
+        val code = translator.code
+        val newlines = "\n\n"
+
+        jsonMetadata += (newlines)
+        jsonMetadata += (code)
+        return jsonMetadata.toByteArray()
+    }
+
+    private fun syncRepoResponse(
+        translators: List<Translator>,
+        styles: List<Pair<String, String>>
+    ) {
+        Timber.i("TranslatorsAndStylesController: sync repo response")
+
+        // Split translators into deletions and updates, parse metadata.
+        val (updateTranslators, deleteTranslators) = splitTranslators(translators = translators)
+        Timber.i("TranslatorsAndStylesController: updateTranslators=${updateTranslators.size}; deleteTranslators=${deleteTranslators.size}")
+        val updateTranslatorMetadata = updateTranslators.mapNotNull {
+            try {
+                metadata(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        val deleteTranslatorMetadata = deleteTranslators.mapNotNull {
+            try {
+                metadata(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        val (updateStyles, stylesData) = splitStyles(styles = styles)
+        Timber.i("TranslatorsAndStylesController: updateStyles=${updateStyles.size}; remove local translators")
+
+        // Remove local translators
+        for (metadata in deleteTranslatorMetadata) {
+            fileStore.translator(metadata.id).delete()
+        }
+        Timber.i("TranslatorsAndStylesController: write updated translators")
+        for ((index, metadata) in updateTranslatorMetadata.withIndex()) {
+            val data = data(updateTranslators[index])
+            FileUtils.writeByteArrayToFile(fileStore.translator(filename = metadata.id), data)
+        }
+        Timber.i("TranslatorsAndStylesController: write updated styles")
+        for ((filename, data) in stylesData) {
+            FileUtils.writeByteArrayToFile(fileStore.style(filename), data)
+        }
+
+        Timber.i("TranslatorsAndStylesController: update db from repo")
+        val repoRequest = SyncRepoResponseDbRequest(
+            styles = updateStyles,
+            translators = updateTranslatorMetadata,
+            deleteTranslators = deleteTranslatorMetadata,
+            fileStore = this.fileStore
+        )
+        bundleDbWrapper.realmDbStorage.perform(request = repoRequest)
+    }
+
 
     private suspend fun styles(type: UpdateType): List<Style>? {
         if (type == UpdateType.shareExtension) {

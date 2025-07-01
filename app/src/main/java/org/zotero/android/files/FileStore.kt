@@ -531,6 +531,12 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun citationDirectory(): File {
+        val folderPath = File(getRootDirectory(), "citation")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun readerDirtyPdfFolder(): File {
         readerDirtyPdfFolder.mkdirs()
         return readerDirtyPdfFolder

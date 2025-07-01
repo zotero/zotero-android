@@ -67,3 +67,9 @@ app/src/main/assets/pdf-worker.zip
 
 #style generated files:
 app/src/main/assets/styles/
+
+#citation generated files:
+app/src/main/assets/citation/
+
+#utilities generated files:
+app/src/main/assets/utilities/
