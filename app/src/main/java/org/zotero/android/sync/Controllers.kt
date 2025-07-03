@@ -25,6 +25,7 @@ import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
+import org.zotero.android.utilities.UtilitiesLoader
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -50,6 +51,7 @@ class Controllers @Inject constructor(
     private val translationLoader: TranslationLoader,
     private val pdfWorkerLoader: PdfWorkerLoader,
     private val citationProcLoader: CitationProcLoader,
+    private val utilitiesLoader: UtilitiesLoader,
     private val context: Context,
     private val identifierLookupController: IdentifierLookupController,
     ) {
@@ -86,6 +88,7 @@ class Controllers @Inject constructor(
                 translatorsAndStylesLoader.updateTranslatorItemsIfNeeded()
                 pdfWorkerLoader.updatePdfWorkerIfNeeded()
                 citationProcLoader.updateCitationProcIfNeeded()
+                utilitiesLoader.updateUtilitiesIfNeeded()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
             }

@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.settings.account.SettingsAccountScreen
+import org.zotero.android.screens.settings.cite.SettingsCiteScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -41,6 +42,7 @@ internal fun NavGraphBuilder.settingsNavScreens(
         onOpenWebpage = onOpenWebpage,
         toAccountScreen = navigation::toAccountScreen,
         toDebugScreen = navigation::toDebugScreen,
+        toCiteScreen = navigation::toCiteScreen,
     )
     accountScreen(
         onBack = navigation::onBack,
@@ -51,6 +53,9 @@ internal fun NavGraphBuilder.settingsNavScreens(
         onBack = navigation::onBack,
         toDebugLogScreen = navigation::toDebugLogScreen
     )
+    citeScreen(
+        onBack = navigation::onBack,
+    )
     debugLogScreen(onBack = navigation::onBack)
     singlePickerScreen(onBack = navigation::onBack)
 }
@@ -59,6 +64,7 @@ fun NavGraphBuilder.settingsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
+    toCiteScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -69,6 +75,7 @@ fun NavGraphBuilder.settingsScreen(
             toAccountScreen = toAccountScreen,
             onOpenWebpage = onOpenWebpage,
             toDebugScreen = toDebugScreen,
+            toCiteScreen = toCiteScreen,
         )
     }
 }
@@ -100,6 +107,16 @@ private fun NavGraphBuilder.debugScreen(
     }
 }
 
+private fun NavGraphBuilder.citeScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.CITE,
+    ) {
+        SettingsCiteScreen(onBack = onBack,)
+    }
+}
+
 private fun NavGraphBuilder.debugLogScreen(
     onBack: () -> Unit,
 ) {
@@ -127,6 +144,7 @@ private object SettingsDestinations {
     const val DEBUG = "debug"
     const val DEBUG_LOG = "debugLog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
+    const val CITE = "cite"
 }
 
 fun ZoteroNavigation.toSettingsScreen() {
@@ -139,6 +157,10 @@ fun ZoteroNavigation.toAccountScreen() {
 
 fun ZoteroNavigation.toDebugScreen() {
     navController.navigate(SettingsDestinations.DEBUG)
+}
+
+fun ZoteroNavigation.toCiteScreen() {
+    navController.navigate(SettingsDestinations.CITE)
 }
 
 fun ZoteroNavigation.toDebugLogScreen() {
