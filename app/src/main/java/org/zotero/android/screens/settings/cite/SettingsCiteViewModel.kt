@@ -4,23 +4,38 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
+import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.requests.ReadInstalledStylesDbRequest
+import org.zotero.android.database.requests.ReadStyleDbRequest
+import org.zotero.android.database.requests.ReadStylesDbRequest
+import org.zotero.android.database.requests.UninstallStyleDbRequest
+import org.zotero.android.files.FileStore
+import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.styles.data.Style
+import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsCiteViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val dbWrapperBundle: DbWrapperBundle,
+    private val defaults: Defaults,
+    private  val fileStore: FileStore
 ) : BaseViewModel2<SettingsCiteViewState, SettingsCiteViewEffect>(SettingsCiteViewState()) {
 
     fun init() = initOnce {
         viewModelScope.launch {
+            EventBus.getDefault().register(this@SettingsCiteViewModel)
             val styles = loadStyles()
             updateState {
                 copy(styles = styles)
@@ -34,8 +49,104 @@ internal class SettingsCiteViewModel @Inject constructor(
         styles
     }
 
+    private fun remove(style: Style) {
+        var toRemove = listOf<String>()
+
+        dbWrapperBundle.realmDbStorage.perform { coordinator ->
+            toRemove =
+                coordinator.perform(request = UninstallStyleDbRequest(identifier = style.identifier))
+            resetDefaultStylesIfNeeded(style = style, coordinator = coordinator)
+            coordinator.invalidate()
+        }
+
+        for (identifier in toRemove) {
+            fileStore.style(filenameWithoutExtension = identifier).delete()
+        }
+    }
+
+    private fun resetDefaultStylesIfNeeded(style: Style, coordinator: RealmDbCoordinator) {
+        val quickCopyRemoved = style.identifier == defaults.getQuickCopyStyleId()
+        val exportRemoved = style.identifier == defaults.getExportStyleId()
+
+        if (!quickCopyRemoved && !exportRemoved) {
+            return
+        }
+
+        val resetRemoved: (String) -> Unit = { newId ->
+            if (quickCopyRemoved) {
+                defaults.setQuickCopyStyleId(newId)
+            }
+            if (exportRemoved) {
+                defaults.setExportStyleId(newId)
+            }
+        }
+        try {
+            val defaultStyle =
+                coordinator.perform(request = ReadStyleDbRequest(identifier = "http://www.zotero.org/styles/chicago-note-bibliography"))
+            resetRemoved(defaultStyle.identifier)
+            return
+        } catch (e: Exception) {
+            print(e)
+        }
+        try {
+            val availableStyle = coordinator.perform(request = ReadStylesDbRequest()).first()
+            resetRemoved(availableStyle!!.identifier)
+            return
+        } catch (e: Exception) {
+            print(e)
+        }
+        resetRemoved("")
+    }
+
+
+    private fun onDelete(style: Style) {
+        try {
+            remove(style = style)
+        } catch (e: Exception) {
+            Timber.e(e, "CiteActionHandler: can't delete style ${style.id}")
+            return
+        }
+        val index = viewState.styles.indexOfFirst { it.identifier == style.identifier }
+        val stylesMutable = viewState.styles.toMutableList()
+        stylesMutable.removeAt(index)
+        updateState {
+            copy(styles = stylesMutable)
+        }
+    }
+
     fun onBack() {
         triggerEffect(SettingsCiteViewEffect.OnBack)
+    }
+
+    fun onItemLongTapped(style: Style) {
+        EventBus.getDefault().post(
+            ShowDashboardLongPressBottomSheet(
+                title = style.title,
+                longPressOptionItems = listOf(
+                    LongPressOptionItem.CiteStyleDelete(style),
+                )
+            )
+        )
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: LongPressOptionItem) {
+        onLongPressOptionsItemSelected(event)
+    }
+    private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
+        viewModelScope.launch {
+            when (longPressOptionItem) {
+                is LongPressOptionItem.CiteStyleDelete -> {
+                    onDelete(longPressOptionItem.style)
+                }
+                else -> {}
+            }
+        }
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
     }
 
 }

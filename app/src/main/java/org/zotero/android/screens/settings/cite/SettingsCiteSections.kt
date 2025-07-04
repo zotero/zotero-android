@@ -18,7 +18,8 @@ internal fun SettingsCiteCitationStylesSection(
         viewState.styles.forEach {
             SettingsItem(
                 title = it.title,
-                onItemTapped = {}
+                onItemTapped = {},
+                onItemLongTapped = { viewModel.onItemLongTapped(it) }
             )
             SettingsDivider()
         }

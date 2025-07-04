@@ -44,6 +44,10 @@ open class Defaults @Inject constructor(
     private val activeEraserSize = "activeEraserSize"
     private val activeFontSize = "activeFontSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
+    private val quickCopyStyleId = "quickCopyStyleId"
+    private val quickCopyLocaleId = "quickCopyLocaleId"
+    private val exportStyleId = "exportStyleId"
+    private val exportLocaleId = "exportLocaleId"
 
     private val lastTimestamp = "lastTimestamp"
     private val lastTranslationCommitHash = "lastTranslationCommitHash"
@@ -420,6 +424,38 @@ open class Defaults @Inject constructor(
 
     fun setLastUtilitiesCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastUtilitiesCommitHash, newValue) }
+    }
+
+    fun getQuickCopyStyleId(): String {
+        return sharedPreferences.getString(quickCopyStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+    }
+
+    fun setQuickCopyStyleId(newValue: String) {
+        sharedPreferences.edit { putString(quickCopyStyleId, newValue) }
+    }
+
+    fun getQuickCopyLocaleId(): String {
+        return sharedPreferences.getString(quickCopyLocaleId, "en-US") ?: ""
+    }
+
+    fun setQuickCopyLocaleId(newValue: String) {
+        sharedPreferences.edit { putString(quickCopyLocaleId, newValue) }
+    }
+
+    fun getExportStyleId(): String {
+        return sharedPreferences.getString(exportStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+    }
+
+    fun setExportStyleId(newValue: String) {
+        sharedPreferences.edit { putString(exportStyleId, newValue) }
+    }
+
+    fun getExportLocaleId(): String {
+        return sharedPreferences.getString(exportLocaleId, "en-US") ?: ""
+    }
+
+    fun setExportLocaleId(newValue: String) {
+        sharedPreferences.edit { putString(exportLocaleId, newValue) }
     }
 
     fun reset() {
