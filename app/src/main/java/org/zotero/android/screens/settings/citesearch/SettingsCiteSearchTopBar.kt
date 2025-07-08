@@ -13,6 +13,7 @@ internal fun SettingsCiteSearchTopBar(
 ) {
     NewCustomTopBar(
         backgroundColor = CustomTheme.colors.surface,
+        shouldAddBottomDivider = false,
         title = stringResource(id = Strings.settings_cite_title),
         leftContainerContent = listOf {
             NewHeadingTextButton(

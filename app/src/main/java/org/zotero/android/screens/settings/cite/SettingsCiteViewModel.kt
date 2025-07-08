@@ -12,6 +12,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.requests.ReadInstalledStylesDbRequest
@@ -20,6 +21,7 @@ import org.zotero.android.database.requests.ReadStylesDbRequest
 import org.zotero.android.database.requests.UninstallStyleDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.screens.settings.citesearch.data.SettingsCiteSearchArgs
 import org.zotero.android.styles.data.Style
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import timber.log.Timber
@@ -30,7 +32,8 @@ internal class SettingsCiteViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val dbWrapperBundle: DbWrapperBundle,
     private val defaults: Defaults,
-    private  val fileStore: FileStore
+    private  val fileStore: FileStore,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<SettingsCiteViewState, SettingsCiteViewEffect>(SettingsCiteViewState()) {
 
     fun init() = initOnce {
@@ -149,6 +152,15 @@ internal class SettingsCiteViewModel @Inject constructor(
         super.onCleared()
     }
 
+    fun navigateToCiteSearch() {
+        val installedIds  = viewState.styles.map { it.identifier }.toSet()
+
+        val args =
+            SettingsCiteSearchArgs(installedIds = installedIds)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(args)
+        triggerEffect(SettingsCiteViewEffect.NavigateToCiteSearch(params))
+    }
+
 }
 
 internal data class SettingsCiteViewState(
@@ -158,4 +170,5 @@ internal data class SettingsCiteViewState(
 
 internal sealed class SettingsCiteViewEffect : ViewEffect {
     object OnBack : SettingsCiteViewEffect()
+    data class NavigateToCiteSearch(val args: String) : SettingsCiteViewEffect()
 }

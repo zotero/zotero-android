@@ -198,7 +198,6 @@ internal class LibrariesViewModel @Inject constructor(
 }
 
 internal data class  LibrariesViewState(
-    val str: String = "",
     val lce: LCE2 = LCE2.Loading,
     val groupIdForDeletePopup: Int? = null,
     val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),

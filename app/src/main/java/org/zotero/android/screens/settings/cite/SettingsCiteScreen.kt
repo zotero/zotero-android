@@ -20,6 +20,7 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 @Composable
 internal fun SettingsCiteScreen(
     onBack: () -> Unit,
+    navigateToCiteSearch: (String) -> Unit,
     viewModel: SettingsCiteViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
@@ -37,6 +38,9 @@ internal fun SettingsCiteScreen(
                 null -> Unit
                 is SettingsCiteViewEffect.OnBack -> {
                     onBack()
+                }
+                is SettingsCiteViewEffect.NavigateToCiteSearch -> {
+                    navigateToCiteSearch(consumedEffect.args)
                 }
             }
         }

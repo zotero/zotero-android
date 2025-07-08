@@ -1,5 +1,6 @@
 package org.zotero.android.api
 
+import com.google.gson.JsonArray
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -79,4 +80,8 @@ interface NonZoteroApi {
         @Query("version") version: String,
         @FieldMap fieldMap: Map<String, String>,
     ): retrofit2.Response<ResponseBody>
+
+    @GET("https://www.zotero.org/styles-files/styles.json")
+    suspend fun stylesRequest(
+    ): retrofit2.Response<JsonArray>
 }

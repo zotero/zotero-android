@@ -57,6 +57,7 @@ internal fun SettingsItem(
     onItemTapped: () -> Unit,
     onItemLongTapped: (() -> Unit)? = null,
     addNewScreenNavigationIndicator: Boolean = false,
+    chevronNavigationColor: Color = CustomTheme.colors.chevronNavigationColor,
 ) {
     Row(
         modifier = Modifier
@@ -83,7 +84,7 @@ internal fun SettingsItem(
             Icon(
                 painter = painterResource(id = Drawables.chevron_right_24px),
                 contentDescription = null,
-                tint = CustomTheme.colors.chevronNavigationColor
+                tint = chevronNavigationColor
             )
             Spacer(modifier = Modifier.width(8.dp))
         }

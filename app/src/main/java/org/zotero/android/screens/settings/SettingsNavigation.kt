@@ -7,15 +7,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.settings.account.SettingsAccountScreen
 import org.zotero.android.screens.settings.cite.SettingsCiteScreen
+import org.zotero.android.screens.settings.citesearch.SettingsCiteSearchScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
+
+internal const val ARG_SETTINGS_CITE_SEARCH = "settingsCiteSearchArgs"
 
 @Composable
 internal fun SettingsNavigation(onOpenWebpage: (uri: Uri) -> Unit) {
@@ -54,6 +59,10 @@ internal fun NavGraphBuilder.settingsNavScreens(
         toDebugLogScreen = navigation::toDebugLogScreen
     )
     citeScreen(
+        navigateToCiteSearch = navigation::toCiteSearchScreen,
+        onBack = navigation::onBack,
+    )
+    citeSearchScreen(
         onBack = navigation::onBack,
     )
     debugLogScreen(onBack = navigation::onBack)
@@ -108,12 +117,31 @@ private fun NavGraphBuilder.debugScreen(
 }
 
 private fun NavGraphBuilder.citeScreen(
+    navigateToCiteSearch: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
         route = SettingsDestinations.CITE,
     ) {
-        SettingsCiteScreen(onBack = onBack,)
+        SettingsCiteScreen(
+            onBack = onBack,
+            navigateToCiteSearch = navigateToCiteSearch
+        )
+    }
+}
+
+private fun NavGraphBuilder.citeSearchScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = "${SettingsDestinations.CITE_SEARCH}/{$ARG_SETTINGS_CITE_SEARCH}",
+        arguments = listOf(
+            navArgument(ARG_SETTINGS_CITE_SEARCH) { type = NavType.StringType },
+        ),
+    ) {
+        SettingsCiteSearchScreen(
+            onBack = onBack,
+        )
     }
 }
 
@@ -145,6 +173,7 @@ private object SettingsDestinations {
     const val DEBUG_LOG = "debugLog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
     const val CITE = "cite"
+    const val CITE_SEARCH = "citeSearch"
 }
 
 fun ZoteroNavigation.toSettingsScreen() {
@@ -161,6 +190,10 @@ fun ZoteroNavigation.toDebugScreen() {
 
 fun ZoteroNavigation.toCiteScreen() {
     navController.navigate(SettingsDestinations.CITE)
+}
+
+fun ZoteroNavigation.toCiteSearchScreen(args: String) {
+    navController.navigate("${SettingsDestinations.CITE_SEARCH}/$args")
 }
 
 fun ZoteroNavigation.toDebugLogScreen() {

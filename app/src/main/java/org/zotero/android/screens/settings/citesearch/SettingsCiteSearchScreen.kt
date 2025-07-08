@@ -1,6 +1,7 @@
 package org.zotero.android.screens.settings.citesearch
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -10,11 +11,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.screens.settings.cite.SettingsCiteViewEffect
+import org.zotero.android.screens.settings.SettingsDivider
+import org.zotero.android.screens.settings.SettingsItem
+import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.error.FullScreenError
+import org.zotero.android.uicomponents.loading.BaseLceBox
+import org.zotero.android.uicomponents.loading.CircularLoading
+import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -36,7 +46,7 @@ internal fun SettingsCiteSearchScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is SettingsCiteViewEffect.OnBack -> {
+                is SettingsCiteSearchViewEffect.OnBack -> {
                     onBack()
                 }
             }
@@ -49,17 +59,61 @@ internal fun SettingsCiteSearchScreen(
                 )
             },
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = backgroundColor)
-                    .padding(horizontal = 16.dp)
+            BaseLceBox(
+                modifier = Modifier.fillMaxSize(),
+                lce = viewState.lce,
+                error = { _ ->
+                    FullScreenError(
+                        modifier = Modifier.align(Alignment.Center),
+                        errorTitle = stringResource(id = Strings.error_list_load_check_crash_logs),
+                    )
+                },
+                loading = {
+                    CircularLoading()
+                },
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
+                Column(
+                    modifier = Modifier
+                ) {
+                    Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
+                        SettingsCiteSearchSearchBar(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            viewState = viewState,
+                            viewModel = viewModel
+                        )
+                        Spacer(
+                            modifier = Modifier
+                                .height(16.dp)
+                        )
+                        NewDivider()
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(color = backgroundColor)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(30.dp))
+
+                            SettingsSection {
+                                val styles = viewState.filtered ?: viewState.styles
+                                styles.forEachIndexed { index, style ->
+                                    SettingsItem(
+                                        title = style.title,
+                                        onItemTapped = { viewModel.onItemTapped(style) },
+                                    )
+                                    if (index != viewState.styles.size - 1)
+                                        SettingsDivider()
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(30.dp))
+                        }
+                    }
+
                 }
             }
-
         }
     }
 }
