@@ -12,6 +12,6 @@ data class RemoteStyle(
 ) {
 
     val id: String get() {
-        return "http://zotero.org/styles/${this.name}"
+        return "http://www.zotero.org/styles/${this.name}"
     }
 }

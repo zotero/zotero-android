@@ -2,6 +2,8 @@ package org.zotero.android.screens.settings.cite
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -21,6 +23,7 @@ import org.zotero.android.database.requests.ReadStylesDbRequest
 import org.zotero.android.database.requests.UninstallStyleDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
+import org.zotero.android.screens.settings.citesearch.data.SettingsCitSearchStyleDownloadedEventStream
 import org.zotero.android.screens.settings.citesearch.data.SettingsCiteSearchArgs
 import org.zotero.android.styles.data.Style
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
@@ -32,17 +35,31 @@ internal class SettingsCiteViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val dbWrapperBundle: DbWrapperBundle,
     private val defaults: Defaults,
-    private  val fileStore: FileStore,
+    private val fileStore: FileStore,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val settingsCitSearchStyleDownloadedEventStream: SettingsCitSearchStyleDownloadedEventStream,
 ) : BaseViewModel2<SettingsCiteViewState, SettingsCiteViewEffect>(SettingsCiteViewState()) {
 
     fun init() = initOnce {
+        setupSettingsCitSearchStyleDownloadedEventStream()
         viewModelScope.launch {
             EventBus.getDefault().register(this@SettingsCiteViewModel)
-            val styles = loadStyles()
-            updateState {
-                copy(styles = styles)
+            reloadStyles()
+        }
+    }
+
+    private fun setupSettingsCitSearchStyleDownloadedEventStream() {
+        settingsCitSearchStyleDownloadedEventStream.flow()
+            .onEach { update ->
+                reloadStyles()
             }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun reloadStyles() {
+        val styles = loadStyles()
+        updateState {
+            copy(styles = styles)
         }
     }
 
@@ -136,12 +153,14 @@ internal class SettingsCiteViewModel @Inject constructor(
     fun onEvent(event: LongPressOptionItem) {
         onLongPressOptionsItemSelected(event)
     }
+
     private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
         viewModelScope.launch {
             when (longPressOptionItem) {
                 is LongPressOptionItem.CiteStyleDelete -> {
                     onDelete(longPressOptionItem.style)
                 }
+
                 else -> {}
             }
         }
@@ -153,7 +172,7 @@ internal class SettingsCiteViewModel @Inject constructor(
     }
 
     fun navigateToCiteSearch() {
-        val installedIds  = viewState.styles.map { it.identifier }.toSet()
+        val installedIds = viewState.styles.map { it.identifier }.toSet()
 
         val args =
             SettingsCiteSearchArgs(installedIds = installedIds)

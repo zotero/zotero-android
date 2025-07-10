@@ -4,6 +4,7 @@
         <domain includeSubdomains="true">arxiv.org</domain>
         <domain includeSubdomains="true">home.arpa</domain>
         <domain includeSubdomains="true">local</domain>
+        <domain includeSubdomains="true">www.zotero.org</domain>
     </domain-config>
     <base-config>
         <trust-anchors>

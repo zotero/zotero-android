@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,9 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.screens.settings.SettingsDivider
-import org.zotero.android.screens.settings.SettingsItem
-import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
@@ -33,9 +29,8 @@ internal fun SettingsCiteSearchScreen(
     onBack: () -> Unit,
     viewModel: SettingsCiteSearchViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
+        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
     ) {
         val viewState by viewModel.viewStates.observeAsState(SettingsCiteSearchViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -81,37 +76,10 @@ internal fun SettingsCiteSearchScreen(
                             viewState = viewState,
                             viewModel = viewModel
                         )
-                        Spacer(
-                            modifier = Modifier
-                                .height(16.dp)
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         NewDivider()
                     }
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = backgroundColor)
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        item {
-                            Spacer(modifier = Modifier.height(30.dp))
-
-                            SettingsSection {
-                                val styles = viewState.filtered ?: viewState.styles
-                                styles.forEachIndexed { index, style ->
-                                    SettingsItem(
-                                        title = style.title,
-                                        onItemTapped = { viewModel.onItemTapped(style) },
-                                    )
-                                    if (index != viewState.styles.size - 1)
-                                        SettingsDivider()
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(30.dp))
-                        }
-                    }
-
+                    SettingsCiteSearchStylesTable(viewState, viewModel)
                 }
             }
         }
