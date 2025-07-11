@@ -21,8 +21,18 @@ internal fun SettingsSupportAndPrivacySection(viewModel: SettingsViewModel) {
 }
 
 @Composable
-internal fun SettingsDebugSection(toDebugScreen: () -> Unit, toCiteScreen: () -> Unit) {
+internal fun SettingsDebugSection(
+    toDebugScreen: () -> Unit,
+    toCiteScreen: () -> Unit,
+    toQuickCopyScreen: () -> Unit
+) {
     SettingsSection {
+        SettingsItem(
+            title = stringResource(id = Strings.settings_export_title),
+            onItemTapped = toQuickCopyScreen,
+            addNewScreenNavigationIndicator = true,
+        )
+        SettingsDivider()
         SettingsItem(
             title = stringResource(id = Strings.settings_cite_title),
             onItemTapped = toCiteScreen,

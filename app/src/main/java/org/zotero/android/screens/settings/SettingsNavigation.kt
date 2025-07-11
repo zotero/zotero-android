@@ -17,6 +17,7 @@ import org.zotero.android.screens.settings.cite.SettingsCiteScreen
 import org.zotero.android.screens.settings.citesearch.SettingsCiteSearchScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
+import org.zotero.android.screens.settings.quickcopy.SettingsQuickCopyScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
@@ -48,6 +49,7 @@ internal fun NavGraphBuilder.settingsNavScreens(
         toAccountScreen = navigation::toAccountScreen,
         toDebugScreen = navigation::toDebugScreen,
         toCiteScreen = navigation::toCiteScreen,
+        toQuickCopyScreen = navigation::toQuickCopyScreen,
     )
     accountScreen(
         onBack = navigation::onBack,
@@ -65,6 +67,10 @@ internal fun NavGraphBuilder.settingsNavScreens(
     citeSearchScreen(
         onBack = navigation::onBack,
     )
+    quickCopyScreen(
+        navigateToCiteSearch = {},//TODO,
+        onBack = navigation::onBack,
+    )
     debugLogScreen(onBack = navigation::onBack)
     singlePickerScreen(onBack = navigation::onBack)
 }
@@ -74,6 +80,7 @@ fun NavGraphBuilder.settingsScreen(
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
     toCiteScreen: () -> Unit,
+    toQuickCopyScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -85,6 +92,7 @@ fun NavGraphBuilder.settingsScreen(
             onOpenWebpage = onOpenWebpage,
             toDebugScreen = toDebugScreen,
             toCiteScreen = toCiteScreen,
+            toQuickCopyScreen = toQuickCopyScreen,
         )
     }
 }
@@ -130,6 +138,21 @@ private fun NavGraphBuilder.citeScreen(
     }
 }
 
+private fun NavGraphBuilder.quickCopyScreen(
+    navigateToCiteSearch: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.QUICK_COPY,
+    ) {
+        SettingsQuickCopyScreen(
+            onBack = onBack,
+            navigateToCiteSearch = navigateToCiteSearch
+        )
+    }
+}
+
+
 private fun NavGraphBuilder.citeSearchScreen(
     onBack: () -> Unit,
 ) {
@@ -174,6 +197,7 @@ private object SettingsDestinations {
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
     const val CITE = "cite"
     const val CITE_SEARCH = "citeSearch"
+    const val QUICK_COPY = "quickCopy"
 }
 
 fun ZoteroNavigation.toSettingsScreen() {
@@ -194,6 +218,10 @@ fun ZoteroNavigation.toCiteScreen() {
 
 fun ZoteroNavigation.toCiteSearchScreen(args: String) {
     navController.navigate("${SettingsDestinations.CITE_SEARCH}/$args")
+}
+
+fun ZoteroNavigation.toQuickCopyScreen() {
+    navController.navigate(SettingsDestinations.QUICK_COPY)
 }
 
 fun ZoteroNavigation.toDebugLogScreen() {
