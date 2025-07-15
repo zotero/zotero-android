@@ -33,19 +33,19 @@ internal fun SettingsQuickCopySection(
     SettingsSection {
         SettingsQuickCopyArrowItem(
             title = stringResource(Strings.settings_export_default_format),
-            text = "American Psychological Association 7th edition",
+            text = viewState.selectedStyle,
             onTapped = viewModel::onDefaultFormatTapped
         )
         SettingsDivider()
         SettingsQuickCopyArrowItem(
             title = stringResource(Strings.settings_export_language),
-            text = "English (English)",
+            text = viewState.selectedLanguage,
             onTapped = viewModel::onLanguageTapped
         )
         SettingsDivider()
         SettingsQuickCopySwitchItem(
             title = stringResource(Strings.settings_export_copy_as_html),
-            isChecked = true,
+            isChecked = viewState.copyAsHtml,
             onCheckedChange = viewModel::onQuickCopySwitchTapped
         )
     }

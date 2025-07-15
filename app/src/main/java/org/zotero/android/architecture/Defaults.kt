@@ -48,6 +48,7 @@ open class Defaults @Inject constructor(
     private val quickCopyLocaleId = "quickCopyLocaleId"
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
+    private val quickCopyAsHtml = "quickCopyAsHtml"
 
     private val lastTimestamp = "lastTimestamp"
     private val lastTranslationCommitHash = "lastTranslationCommitHash"
@@ -456,6 +457,14 @@ open class Defaults @Inject constructor(
 
     fun setExportLocaleId(newValue: String) {
         sharedPreferences.edit { putString(exportLocaleId, newValue) }
+    }
+
+    fun setQuickCopyAsHtml(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(quickCopyAsHtml, newValue) }
+    }
+
+    fun isQuickCopyAsHtml(): Boolean {
+        return sharedPreferences.getBoolean(quickCopyAsHtml, false)
     }
 
     fun reset() {

@@ -1,4 +1,4 @@
-package org.zotero.android.screens.settings.quickcopy
+package org.zotero.android.screens.settings.stylepicker
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
@@ -18,16 +18,15 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
-internal fun SettingsQuickCopyScreen(
+internal fun SettingsStylePickerScreen(
     onBack: () -> Unit,
-    navigateToStylePicker: () -> Unit,
-    viewModel: SettingsQuickCopyViewModel = hiltViewModel(),
+    viewModel: SettingsStylePickerViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     CustomThemeWithStatusAndNavBars(
         navBarBackgroundColor = backgroundColor,
     ) {
-        val viewState by viewModel.viewStates.observeAsState(SettingsQuickCopyViewState())
+        val viewState by viewModel.viewStates.observeAsState(SettingsStylePickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init()
@@ -36,18 +35,15 @@ internal fun SettingsQuickCopyScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is SettingsQuickCopyViewEffect.OnBack -> {
+                is SettingsStylePickerViewEffect.OnBack -> {
                     onBack()
-                }
-                is SettingsQuickCopyViewEffect.NavigateToStylePicker -> {
-                    navigateToStylePicker()
                 }
             }
         }
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                SettingsQuickCopyTopBar(
+                SettingsCiteTopBar(
                     onBack = onBack,
                 )
             },
@@ -60,7 +56,7 @@ internal fun SettingsQuickCopyScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(30.dp))
-                    SettingsQuickCopySection(viewState, viewModel)
+                    SettingsCiteCitationStylesSection(viewState, viewModel)
                 }
             }
 

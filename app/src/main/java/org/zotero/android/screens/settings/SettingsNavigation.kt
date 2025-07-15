@@ -18,6 +18,7 @@ import org.zotero.android.screens.settings.citesearch.SettingsCiteSearchScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.screens.settings.quickcopy.SettingsQuickCopyScreen
+import org.zotero.android.screens.settings.stylepicker.SettingsStylePickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
 
@@ -68,7 +69,10 @@ internal fun NavGraphBuilder.settingsNavScreens(
         onBack = navigation::onBack,
     )
     quickCopyScreen(
-        navigateToCiteSearch = {},//TODO,
+        navigateToStylePicker = navigation::toStylePicker,
+        onBack = navigation::onBack,
+    )
+    stylePickerScreen(
         onBack = navigation::onBack,
     )
     debugLogScreen(onBack = navigation::onBack)
@@ -139,7 +143,7 @@ private fun NavGraphBuilder.citeScreen(
 }
 
 private fun NavGraphBuilder.quickCopyScreen(
-    navigateToCiteSearch: (String) -> Unit,
+    navigateToStylePicker: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -147,7 +151,7 @@ private fun NavGraphBuilder.quickCopyScreen(
     ) {
         SettingsQuickCopyScreen(
             onBack = onBack,
-            navigateToCiteSearch = navigateToCiteSearch
+            navigateToStylePicker = navigateToStylePicker
         )
     }
 }
@@ -163,6 +167,18 @@ private fun NavGraphBuilder.citeSearchScreen(
         ),
     ) {
         SettingsCiteSearchScreen(
+            onBack = onBack,
+        )
+    }
+}
+
+private fun NavGraphBuilder.stylePickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.STYLE_PICKER,
+    ) {
+        SettingsStylePickerScreen(
             onBack = onBack,
         )
     }
@@ -198,6 +214,7 @@ private object SettingsDestinations {
     const val CITE = "cite"
     const val CITE_SEARCH = "citeSearch"
     const val QUICK_COPY = "quickCopy"
+    const val STYLE_PICKER = "stylePicker"
 }
 
 fun ZoteroNavigation.toSettingsScreen() {
@@ -218,6 +235,10 @@ fun ZoteroNavigation.toCiteScreen() {
 
 fun ZoteroNavigation.toCiteSearchScreen(args: String) {
     navController.navigate("${SettingsDestinations.CITE_SEARCH}/$args")
+}
+
+fun ZoteroNavigation.toStylePicker() {
+    navController.navigate("${SettingsDestinations.STYLE_PICKER}")
 }
 
 fun ZoteroNavigation.toQuickCopyScreen() {
