@@ -58,6 +58,7 @@ open class Defaults @Inject constructor(
     private val lastPdfWorkerCommitHash = "lastPdfWorkerCommitHash"
     private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
+    private val lastLocalesCommitHash = "lastLocalesCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -439,6 +440,10 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getString(quickCopyLocaleId, "en-US") ?: ""
     }
 
+    fun hasQuickCopyLocaleId(): Boolean {
+        return sharedPreferences.contains(quickCopyLocaleId)
+    }
+
     fun setQuickCopyLocaleId(newValue: String) {
         sharedPreferences.edit { putString(quickCopyLocaleId, newValue) }
     }
@@ -465,6 +470,14 @@ open class Defaults @Inject constructor(
 
     fun isQuickCopyAsHtml(): Boolean {
         return sharedPreferences.getBoolean(quickCopyAsHtml, false)
+    }
+
+    fun getLastLocalesCommitHash(): String {
+        return sharedPreferences.getString(lastLocalesCommitHash, "") ?: ""
+    }
+
+    fun setLastLocalesCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastLocalesCommitHash, newValue) }
     }
 
     fun reset() {

@@ -73,3 +73,6 @@ app/src/main/assets/citation/
 
 #utilities generated files:
 app/src/main/assets/utilities/
+
+#locales generated files:
+app/src/main/assets/locales/

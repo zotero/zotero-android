@@ -120,7 +120,10 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
     }
 
     fun onQuickCopySwitchTapped(bool: Boolean) {
-
+        updateState {
+            copy(copyAsHtml = bool)
+        }
+        defaults.setQuickCopyAsHtml(bool)
     }
 
 }

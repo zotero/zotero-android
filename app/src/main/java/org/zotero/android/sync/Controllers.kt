@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -20,6 +21,8 @@ import org.zotero.android.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
+import org.zotero.android.locales.ExportLocaleReader
+import org.zotero.android.locales.LocalesLoader
 import org.zotero.android.pdfworker.loader.PdfWorkerLoader
 import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
@@ -27,6 +30,7 @@ import org.zotero.android.translator.loader.TranslationLoader
 import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import org.zotero.android.utilities.UtilitiesLoader
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -54,6 +58,9 @@ class Controllers @Inject constructor(
     private val utilitiesLoader: UtilitiesLoader,
     private val context: Context,
     private val identifierLookupController: IdentifierLookupController,
+    private val localesLoader: LocalesLoader,
+    private val defaults: Defaults,
+    private val exportLocaleReader: ExportLocaleReader,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -89,9 +96,26 @@ class Controllers @Inject constructor(
                 pdfWorkerLoader.updatePdfWorkerIfNeeded()
                 citationProcLoader.updateCitationProcIfNeeded()
                 utilitiesLoader.updateUtilitiesIfNeeded()
+                localesLoader.updateLocalesIfNeeded()
+                setupExportDefaults()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
             }
+        }
+    }
+    private fun setupExportDefaults() {
+        if (defaults.hasQuickCopyLocaleId()) {
+            return
+        }
+        try {
+            val localeIds = exportLocaleReader.loadIds()
+            val l = Locale.getDefault().toLanguageTag()
+            val defaultLocale = localeIds.firstOrNull { it.contains(l) } ?: "en-US"
+            defaults.setQuickCopyLocaleId(defaultLocale)
+            defaults.setExportLocaleId(defaultLocale)
+        } catch (e: Exception) {
+            Timber.e(e)
+            return
         }
     }
 
