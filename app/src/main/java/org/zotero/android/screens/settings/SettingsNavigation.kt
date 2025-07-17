@@ -15,6 +15,7 @@ import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.settings.account.SettingsAccountScreen
 import org.zotero.android.screens.settings.cite.SettingsCiteScreen
 import org.zotero.android.screens.settings.citesearch.SettingsCiteSearchScreen
+import org.zotero.android.screens.settings.csllocalepicker.SettingsCslLocalePickerScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.screens.settings.quickcopy.SettingsQuickCopyScreen
@@ -70,6 +71,7 @@ internal fun NavGraphBuilder.settingsNavScreens(
     )
     quickCopyScreen(
         navigateToStylePicker = navigation::toStylePicker,
+        navigateToCslLocalePicker = navigation::toCslLocalePicker,
         onBack = navigation::onBack,
     )
     stylePickerScreen(
@@ -77,6 +79,7 @@ internal fun NavGraphBuilder.settingsNavScreens(
     )
     debugLogScreen(onBack = navigation::onBack)
     singlePickerScreen(onBack = navigation::onBack)
+    cslLocalePickerScreen(onBack = navigation::onBack)
 }
 
 fun NavGraphBuilder.settingsScreen(
@@ -144,6 +147,7 @@ private fun NavGraphBuilder.citeScreen(
 
 private fun NavGraphBuilder.quickCopyScreen(
     navigateToStylePicker: () -> Unit,
+    navigateToCslLocalePicker: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -151,7 +155,8 @@ private fun NavGraphBuilder.quickCopyScreen(
     ) {
         SettingsQuickCopyScreen(
             onBack = onBack,
-            navigateToStylePicker = navigateToStylePicker
+            navigateToStylePicker = navigateToStylePicker,
+            navigateToCslLocalePicker = navigateToCslLocalePicker
         )
     }
 }
@@ -205,12 +210,25 @@ private fun NavGraphBuilder.singlePickerScreen(
     }
 }
 
+private fun NavGraphBuilder.cslLocalePickerScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.CSL_LOCALE_PICKER,
+    ) {
+        SettingsCslLocalePickerScreen(
+            onBack = onBack,
+        )
+    }
+}
+
 private object SettingsDestinations {
     const val SETTINGS = "settings"
     const val ACCOUNT = "account"
     const val DEBUG = "debug"
     const val DEBUG_LOG = "debugLog"
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
+    const val CSL_LOCALE_PICKER = "cslLocalPicker"
     const val CITE = "cite"
     const val CITE_SEARCH = "citeSearch"
     const val QUICK_COPY = "quickCopy"
@@ -251,4 +269,8 @@ fun ZoteroNavigation.toDebugLogScreen() {
 
 fun ZoteroNavigation.toSinglePickerScreen() {
     navController.navigate(SettingsDestinations.SINGLE_PICKER_SCREEN)
+}
+
+fun ZoteroNavigation.toCslLocalePicker() {
+    navController.navigate("${SettingsDestinations.CSL_LOCALE_PICKER}")
 }

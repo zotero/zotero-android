@@ -14,6 +14,8 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.objects.RStyle
 import org.zotero.android.database.requests.ReadStyleDbRequest
+import org.zotero.android.screens.settings.csllocalepicker.data.ExportLocale
+import org.zotero.android.screens.settings.csllocalepicker.data.SettingsQuickCopyUpdateCslLocaleEventStream
 import org.zotero.android.screens.settings.stylepicker.data.SettingsQuickCopyUpdateStyleEventStream
 import org.zotero.android.styles.data.Style
 import timber.log.Timber
@@ -26,6 +28,7 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
     private val dbWrapperBundle: DbWrapperBundle,
     private val defaults: Defaults,
     private val settingsQuickCopyUpdateStyleEventStream: SettingsQuickCopyUpdateStyleEventStream,
+    private val settingsQuickCopyUpdateCslLocaleEventStream: SettingsQuickCopyUpdateCslLocaleEventStream,
 ) : BaseViewModel2<SettingsQuickCopyViewState, SettingsQuickCopyViewEffect>(
     SettingsQuickCopyViewState()
 ) {
@@ -64,7 +67,23 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
 
     fun init() = initOnce {
         setupSettingsQuickCopyReloadEventStream()
+        setupSettingsQuickCopyUpdateCslLocaleEventStream()
         reload()
+    }
+
+    private fun setupSettingsQuickCopyUpdateCslLocaleEventStream() {
+        settingsQuickCopyUpdateCslLocaleEventStream.flow()
+            .onEach { update ->
+                updateLocale(update)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun updateLocale(locale: ExportLocale) {
+        defaults.setQuickCopyCslLocaleId(locale.id)
+        updateState {
+            copy(selectedLanguage = locale.name)
+        }
     }
 
     private fun reload() {
@@ -116,7 +135,11 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
     }
 
     fun onLanguageTapped() {
+        navigateToCslLocalePicker()
+    }
 
+    fun navigateToCslLocalePicker() {
+        triggerEffect(SettingsQuickCopyViewEffect.NavigateToCslLocalePicker)
     }
 
     fun onQuickCopySwitchTapped(bool: Boolean) {
@@ -139,4 +162,5 @@ internal data class SettingsQuickCopyViewState(
 internal sealed class SettingsQuickCopyViewEffect : ViewEffect {
     object OnBack : SettingsQuickCopyViewEffect()
     object NavigateToStylePicker : SettingsQuickCopyViewEffect()
+    object NavigateToCslLocalePicker : SettingsQuickCopyViewEffect()
 }

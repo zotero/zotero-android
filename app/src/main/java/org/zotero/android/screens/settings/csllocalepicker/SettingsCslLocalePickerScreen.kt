@@ -1,4 +1,4 @@
-package org.zotero.android.screens.settings.quickcopy
+package org.zotero.android.screens.settings.csllocalepicker
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
@@ -18,17 +18,15 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
-internal fun SettingsQuickCopyScreen(
+internal fun SettingsCslLocalePickerScreen(
     onBack: () -> Unit,
-    navigateToStylePicker: () -> Unit,
-    navigateToCslLocalePicker: () -> Unit,
-    viewModel: SettingsQuickCopyViewModel = hiltViewModel(),
+    viewModel: SettingsCslLocalePickerViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     CustomThemeWithStatusAndNavBars(
         navBarBackgroundColor = backgroundColor,
     ) {
-        val viewState by viewModel.viewStates.observeAsState(SettingsQuickCopyViewState())
+        val viewState by viewModel.viewStates.observeAsState(SettingsCslLocalePickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init()
@@ -37,22 +35,15 @@ internal fun SettingsQuickCopyScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is SettingsQuickCopyViewEffect.OnBack -> {
+                is SettingsCslLocalePickerViewEffect.OnBack -> {
                     onBack()
-                }
-                is SettingsQuickCopyViewEffect.NavigateToStylePicker -> {
-                    navigateToStylePicker()
-                }
-
-                is SettingsQuickCopyViewEffect.NavigateToCslLocalePicker -> {
-                    navigateToCslLocalePicker()
                 }
             }
         }
         CustomScaffold(
             backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
-                SettingsQuickCopyTopBar(
+                SettingsCslLocalePickerTopBar(
                     onBack = onBack,
                 )
             },
@@ -65,7 +56,7 @@ internal fun SettingsQuickCopyScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(30.dp))
-                    SettingsQuickCopySection(viewState, viewModel)
+                    SettingsCslLocalePickerSections(viewState, viewModel)
                 }
             }
 
