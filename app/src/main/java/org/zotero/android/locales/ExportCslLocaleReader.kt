@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ExportLocaleReader @Inject constructor(
+class ExportCslLocaleReader @Inject constructor(
     private val fileStore: FileStore,
     private val gson: Gson,
 ) {
@@ -20,7 +20,7 @@ class ExportLocaleReader @Inject constructor(
     }
 
     fun loadIds(): List<String> {
-        val localesUrl = File(fileStore.localesDirectory(), "locales.json")
+        val localesUrl = File(fileStore.cslLocalesDirectory(), "locales.json")
         if (!localesUrl.exists()) {
             throw Error.bundledFileMissing
         }

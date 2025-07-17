@@ -10,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class LocalesLoader @Inject constructor(
+class CslLocalesLoader @Inject constructor(
     private val context: Context,
     private val defaults: Defaults,
     private val unzipper: Unzipper,
@@ -42,7 +42,7 @@ class LocalesLoader @Inject constructor(
             }
     }
 
-    fun updateLocalesIfNeeded() {
+    fun updateCslLocalesIfNeeded() {
         _update()
     }
 
@@ -54,7 +54,7 @@ class LocalesLoader @Inject constructor(
                 UpdateType.startup
             }
 
-        Timber.i("LocalesLoader: update locales")
+        Timber.i("CslLocalesLoader: update CSL locales")
         try {
             checkFolderIntegrity(type = type)
             updateFromBundle()
@@ -66,25 +66,25 @@ class LocalesLoader @Inject constructor(
 
     private fun _updateFromBundle(forceUpdate: Boolean) {
         val hash = loadLastLocalesCommitHash()
-        Timber.i("LocalesLoader: should update locales from bundle, forceUpdate=$forceUpdate; oldHash=${defaults.getLastLocalesCommitHash()}; newHash=$hash")
-        if (!forceUpdate && defaults.getLastLocalesCommitHash() == hash) {
+        Timber.i("CslLocalesLoader: should update CSL locales from bundle, forceUpdate=$forceUpdate; oldHash=${defaults.getLastCslLocalesCommitHash()}; newHash=$hash")
+        if (!forceUpdate && defaults.getLastCslLocalesCommitHash() == hash) {
             return
         }
-        Timber.i("LocalesLoader: update locales from bundle")
+        Timber.i("CslLocalesLoader: update CSL locales from bundle")
         updateLocales()
 
-        defaults.setLastLocalesCommitHash(hash)
+        defaults.setLastCslLocalesCommitHash(hash)
     }
 
     private fun updateLocales() {
         unzipper.unzipStream(
-            zipInputStream = context.assets.open("locales/locales.zip"),
-            location = fileStore.localesDirectory().absolutePath
+            zipInputStream = context.assets.open("cslLocales/cslLocales.zip"),
+            location = fileStore.cslLocalesDirectory().absolutePath
         )
     }
 
     private fun loadLastLocalesCommitHash(): String {
-        return loadFromBundle(resource = "locales/commit_hash.txt", map = { it })
+        return loadFromBundle(resource = "cslLocales/commit_hash.txt", map = { it })
     }
 
 
@@ -114,7 +114,7 @@ class LocalesLoader @Inject constructor(
             }
 
         } catch (error: Exception) {
-            Timber.e(error, "LocalesLoader: can't update from bundle")
+            Timber.e(error, "CslLocalesLoader: can't update from bundle")
             throw Error.bundleLoading(error)
         }
     }
@@ -132,34 +132,34 @@ class LocalesLoader @Inject constructor(
 
     private fun checkFolderIntegrity(type: UpdateType) {
         try {
-            if (!fileStore.localesDirectory().exists()) {
+            if (!fileStore.cslLocalesDirectory().exists()) {
                 if (type != UpdateType.initial) {
-                    Timber.e("LocalesLoader: locales directory was missing!")
+                    Timber.e("CslLocalesLoader: CSL locales directory was missing!")
                 }
-                fileStore.localesDirectory().mkdirs()
+                fileStore.cslLocalesDirectory().mkdirs()
             }
 
             if (type == UpdateType.initial) {
                 return
             }
 
-            val fileCount = fileStore.localesDirectory().listFiles()?.size ?: 0
+            val fileCount = fileStore.cslLocalesDirectory().listFiles()?.size ?: 0
 
             if (fileCount != 0) {
                 return
             }
 
             defaults.setLastTimestamp(0L)
-            defaults.setLastLocalesCommitHash("")
+            defaults.setLastCslLocalesCommitHash("")
         } catch (error: Exception) {
-            Timber.e(error, "LocalesLoader: unable to restore folder integrity")
+            Timber.e(error, "CslLocalesLoader: unable to restore folder integrity")
             throw error
         }
 
     }
 
     private fun process(error: Exception) {
-        Timber.e(error, "LocalesLoader: error")
+        Timber.e(error, "CslLocalesLoader: error")
 
         val isBundleLoadingError = (error as? Error)?.isBundleLoadingError == true
         if (!isBundleLoadingError) {

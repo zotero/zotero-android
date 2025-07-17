@@ -54,8 +54,8 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
                 copy(selectedLanguage = selectedLanguage)
             }
         } else {
-            val locToDisplay = Locale.forLanguageTag(defaults.getQuickCopyLocaleId())
-            val selectedLanguage = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: defaults.getQuickCopyLocaleId()
+            val locToDisplay = Locale.forLanguageTag(defaults.getQuickCopyCslLocaleId())
+            val selectedLanguage = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: defaults.getQuickCopyCslLocaleId()
             updateState {
                 copy(selectedLanguage = selectedLanguage)
             }
@@ -83,7 +83,7 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
                 val locToDisplay = Locale.forLanguageTag(defaultLocale)
                 language = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: defaultLocale
             } else {
-                val localeId = defaults.getQuickCopyLocaleId()
+                val localeId = defaults.getQuickCopyCslLocaleId()
                 val locToDisplay = Locale.forLanguageTag(localeId)
                 language = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: localeId
             }

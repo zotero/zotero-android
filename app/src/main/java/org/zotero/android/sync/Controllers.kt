@@ -21,8 +21,8 @@ import org.zotero.android.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
-import org.zotero.android.locales.ExportLocaleReader
-import org.zotero.android.locales.LocalesLoader
+import org.zotero.android.locales.CslLocalesLoader
+import org.zotero.android.locales.ExportCslLocaleReader
 import org.zotero.android.pdfworker.loader.PdfWorkerLoader
 import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
@@ -58,9 +58,9 @@ class Controllers @Inject constructor(
     private val utilitiesLoader: UtilitiesLoader,
     private val context: Context,
     private val identifierLookupController: IdentifierLookupController,
-    private val localesLoader: LocalesLoader,
+    private val cslLocalesLoader: CslLocalesLoader,
     private val defaults: Defaults,
-    private val exportLocaleReader: ExportLocaleReader,
+    private val exportCslLocaleReader: ExportCslLocaleReader,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -96,7 +96,7 @@ class Controllers @Inject constructor(
                 pdfWorkerLoader.updatePdfWorkerIfNeeded()
                 citationProcLoader.updateCitationProcIfNeeded()
                 utilitiesLoader.updateUtilitiesIfNeeded()
-                localesLoader.updateLocalesIfNeeded()
+                cslLocalesLoader.updateCslLocalesIfNeeded()
                 setupExportDefaults()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")
@@ -104,14 +104,14 @@ class Controllers @Inject constructor(
         }
     }
     private fun setupExportDefaults() {
-        if (defaults.hasQuickCopyLocaleId()) {
+        if (defaults.hasQuickCopyCslLocaleId()) {
             return
         }
         try {
-            val localeIds = exportLocaleReader.loadIds()
+            val localeIds = exportCslLocaleReader.loadIds()
             val l = Locale.getDefault().toLanguageTag()
             val defaultLocale = localeIds.firstOrNull { it.contains(l) } ?: "en-US"
-            defaults.setQuickCopyLocaleId(defaultLocale)
+            defaults.setQuickCopyCslLocaleId(defaultLocale)
             defaults.setExportLocaleId(defaultLocale)
         } catch (e: Exception) {
             Timber.e(e)

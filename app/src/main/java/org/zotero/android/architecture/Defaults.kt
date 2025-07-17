@@ -45,7 +45,7 @@ open class Defaults @Inject constructor(
     private val activeFontSize = "activeFontSize"
     private val shareExtensionIncludeTags = "shareExtensionIncludeTags"
     private val quickCopyStyleId = "quickCopyStyleId"
-    private val quickCopyLocaleId = "quickCopyLocaleId"
+    private val quickCopyCslLocaleId = "quickCopyCslLocaleId"
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
@@ -58,7 +58,7 @@ open class Defaults @Inject constructor(
     private val lastPdfWorkerCommitHash = "lastPdfWorkerCommitHash"
     private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
-    private val lastLocalesCommitHash = "lastLocalesCommitHash"
+    private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -436,16 +436,16 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(quickCopyStyleId, newValue) }
     }
 
-    fun getQuickCopyLocaleId(): String {
-        return sharedPreferences.getString(quickCopyLocaleId, "en-US") ?: ""
+    fun getQuickCopyCslLocaleId(): String {
+        return sharedPreferences.getString(quickCopyCslLocaleId, "en-US") ?: ""
     }
 
-    fun hasQuickCopyLocaleId(): Boolean {
-        return sharedPreferences.contains(quickCopyLocaleId)
+    fun hasQuickCopyCslLocaleId(): Boolean {
+        return sharedPreferences.contains(quickCopyCslLocaleId)
     }
 
-    fun setQuickCopyLocaleId(newValue: String) {
-        sharedPreferences.edit { putString(quickCopyLocaleId, newValue) }
+    fun setQuickCopyCslLocaleId(newValue: String) {
+        sharedPreferences.edit { putString(quickCopyCslLocaleId, newValue) }
     }
 
     fun getExportStyleId(): String {
@@ -472,12 +472,12 @@ open class Defaults @Inject constructor(
         return sharedPreferences.getBoolean(quickCopyAsHtml, false)
     }
 
-    fun getLastLocalesCommitHash(): String {
-        return sharedPreferences.getString(lastLocalesCommitHash, "") ?: ""
+    fun getLastCslLocalesCommitHash(): String {
+        return sharedPreferences.getString(lastCslLocalesCommitHash, "") ?: ""
     }
 
-    fun setLastLocalesCommitHash(newValue: String) {
-        sharedPreferences.edit { putString(lastLocalesCommitHash, newValue) }
+    fun setLastCslLocalesCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastCslLocalesCommitHash, newValue) }
     }
 
     fun reset() {

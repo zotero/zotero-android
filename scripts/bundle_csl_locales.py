@@ -4,8 +4,8 @@ import subprocess
 import sys
 
 submodule_path_parts = ["locales"]
-localesToZipSubFolderName = "localesToZip"
-targetFolderToSaveTo = os.path.join(os.path.abspath("."), "app" + os.sep + "src" + os.sep + "main" + os.sep + "assets" + os.sep + "locales")
+localesToZipSubFolderName = "cslLocalesToZip"
+targetFolderToSaveTo = os.path.join(os.path.abspath("."), "app" + os.sep + "src" + os.sep + "main" + os.sep + "assets" + os.sep + "cslLocales")
 
 submodule_path = os.path.join(*submodule_path_parts)
 
@@ -65,6 +65,6 @@ for filename in os.listdir(submodule_dir):
 write_commit_hash(hash_path, current_hash)
 
 os.chdir(localesToZipSubFolder)
-subprocess.check_call(['zip', '-r', os.path.join(targetFolderToSaveTo, "locales.zip"), "."])
+subprocess.check_call(['zip', '-r', os.path.join(targetFolderToSaveTo, "cslLocales.zip"), "."])
 shutil.rmtree(localesToZipSubFolder)
 print("Bundle " + localesToZipSubFolderName + " copied from hash " + current_hash)

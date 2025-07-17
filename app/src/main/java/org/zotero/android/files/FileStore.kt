@@ -568,8 +568,8 @@ class FileStore @Inject constructor (
         return File(stylesDirectory(), "$filenameWithoutExtension.csl")
     }
 
-    fun localesDirectory(): File {
-        val folderPath = File(getRootDirectory(), "locales")
+    fun cslLocalesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "cslLocales")
         folderPath.mkdirs()
         return folderPath
     }
