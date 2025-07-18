@@ -60,6 +60,7 @@ import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
+import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
@@ -714,6 +715,10 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                 }
 
+                is LongPressOptionItem.CopyCitation -> {
+                    showSingleCitation(setOf(longPressOptionItem.item.key))
+                }
+
                 else -> {}
             }
         }
@@ -779,6 +784,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
 
         val actions = mutableListOf<LongPressOptionItem>()
+        actions.add(LongPressOptionItem.CopyCitation(item))
 
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
@@ -1136,6 +1142,14 @@ internal class AllItemsViewModel @Inject constructor(
         return filterArgs
     }
 
+    private fun showSingleCitation(selectedItemKeys: Set<String>) {
+        ScreenArguments.singleCitationArgs = SingleCitationArgs(
+            itemIds = selectedItemKeys,
+            libraryId = this.library.identifier,
+        )
+        triggerEffect(AllItemsViewEffect.ShowSingleCitationEffect)
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1212,4 +1226,5 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
     data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
+    object ShowSingleCitationEffect: AllItemsViewEffect()
 }

@@ -83,6 +83,11 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.remove_from_collection
     )
 
+    data class CopyCitation(val item: RItem): LongPressOptionItem(
+        titleId = Strings.citation_copy_citation,
+        resIcon = Drawables.create_new_folder_24px
+    )
+
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_create_parent,
         resIcon = Drawables.add_24px
