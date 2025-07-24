@@ -6,7 +6,7 @@ import subprocess
 import time
 import urllib.request
 
-citation_proc_version="1"
+citation_proc_version="2"
 
 bundle_dir = os.path.join(os.path.abspath("."), "app" + os.sep + "src" + os.sep + "main" + os.sep + "assets" + os.sep + "citation")
 

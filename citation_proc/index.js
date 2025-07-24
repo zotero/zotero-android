@@ -5,7 +5,7 @@ let collator = new Intl.Collator(['en-US'], {
     numeric: true,
     sensitivity: 'base'
 });
-var Zotero = {};
+//var Zotero = {};
 Zotero.debug = (s) => log(s);
 Zotero.locale = navigator.language;
 Zotero.localeCompare = (a, b) => collator.compare(a, b);
@@ -20,7 +20,7 @@ async function getCit(encodedItemsCsl, encodedItemsData, encodedStyleXml, locale
         document.body.innerHTML = citation;
         sendToPort("heightHandler", document.body.scrollHeight);
     }
-    sendToPort(citationHandler, {result: citation, id: messageId});
+    sendToPort("citationHandler", {result: citation, id: messageId});
 };
 
 async function getBib(encodedItemsCsl, encodedStyleXml, localeId, encodedLocaleXml, format, messageId) {
