@@ -1,10 +1,18 @@
 package org.zotero.android.screens.citation.singlecitation
 
+import android.view.ViewGroup
+import android.webkit.WebView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenuItem
@@ -22,12 +30,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.settings.SettingsDivider
+import org.zotero.android.screens.settings.SettingsSection
+import org.zotero.android.screens.settings.SettingsSectionTitle
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.controls.CustomSwitch
+import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -37,9 +55,8 @@ internal fun SingleCitationScreen(
     scaffoldModifier: Modifier = Modifier,
     viewModel: SingleCitationViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.popupBackgroundContent
+    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
     CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
         navBarBackgroundColor = backgroundColor
     ) {
         val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -62,7 +79,7 @@ internal fun SingleCitationScreen(
         }
         CustomScaffold(
             modifier = scaffoldModifier,
-            backgroundColor = backgroundColor,
+            backgroundColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
                 SingleCitationTopBar(
                     onCancelClicked = onBack,
@@ -70,72 +87,86 @@ internal fun SingleCitationScreen(
                 )
             },
         ) {
-            Column {
-                LocatorDropDownMenu(viewState = viewState, viewModel = viewModel)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSection {
+                    SettingsCitationDropBoxAndEditFieldItem(viewState, viewModel)
+                    SettingsDivider()
+                    SettingsCitationSwitchItem( title = stringResource(Strings.citation_omit_author),
+                        isChecked = viewState.omitAuthor,
+                        onCheckedChange = viewModel::onOmitAuthor)
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                SettingsSectionTitle(titleId = Strings.citation_preview)
+                SettingsSection {
+                    SettingsCitationWebViewItem(
+                        previewHtml = viewState.preview,
+                        height = viewState.previewHeight
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun LocatorDropDownMenu(
+private fun BoxScope.DropDownMenuBox(
     viewState: SingleCitationViewState,
     viewModel: SingleCitationViewModel
 ) {
     var expanded by remember {
         mutableStateOf(false)
     }
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    ExposedDropdownMenuBox(
+        modifier = Modifier
+            .align(Alignment.CenterStart)
+            .padding(start = 16.dp)
+            .padding(vertical = 4.dp)
+            .width(140.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .requiredSizeIn(maxHeight = 50.dp),
+        expanded = expanded,
+        onExpandedChange = {
+            expanded = !expanded
+        }
     ) {
-        ExposedDropdownMenuBox(
-            modifier = Modifier
-                .padding(4.dp)
-                .width(200.dp)
-                .clip(RoundedCornerShape(10.dp)),
+        TextField(
+            modifier = Modifier.menuAnchor(),
+            value = localized(viewState.locator),
+            onValueChange = { },
+            textStyle = CustomTheme.typography.default,
+            readOnly = true,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+        )
+
+        ExposedDropdownMenu(
             expanded = expanded,
-            onExpandedChange = {
-                expanded = !expanded
+            onDismissRequest = {
+                expanded = false
             }
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    modifier = Modifier.menuAnchor(),
-                    value = localized(viewState.locator),
-                    onValueChange = { },
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            locatorsList.forEachIndexed { index, item ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = localized(item),
+                            color = CustomTheme.colors.defaultTextColor,
+                            style = CustomTheme.typography.default,
+                        )
                     },
+                    onClick = {
+                        viewModel.setLocator(item)
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
-            }
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = {
-                    expanded = false
-                }
-            ) {
-                locatorsList.forEachIndexed { index, item ->
-                    DropdownMenuItem(
-                        text = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(localized(item))
-                            }
-                        },
-                        onClick = {
-                            viewModel.setLocator(item)
-                            expanded = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                    )
-                }
             }
         }
     }
@@ -152,4 +183,95 @@ private fun localized(locator: String): String {
         )
     val stringResource = stringResource(resourceId)
     return stringResource
+}
+
+@Composable
+private fun SettingsCitationDropBoxAndEditFieldItem(
+    viewState: SingleCitationViewState,
+    viewModel: SingleCitationViewModel
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
+            .background(CustomTheme.colors.surface)
+    ) {
+        DropDownMenuBox(viewState, viewModel)
+
+        CustomTextField(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(end = 16.dp, start = 170.dp),
+            value = viewState.locatorValue,
+            hint = "Number",
+            ignoreTabsAndCaretReturns = true,
+            maxLines = 1,
+            singleLine = true,
+            onValueChange = viewModel::onLocatorValueChanged,
+            textStyle = CustomTheme.typography.default,
+            textColor = CustomTheme.colors.primaryContent,
+        )
+    }
+}
+
+@Composable
+private fun SettingsCitationSwitchItem(
+    title: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp)
+            .background(CustomTheme.colors.surface)
+    ) {
+        androidx.compose.material.Text(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp, end = 0.dp),
+            text = title,
+            style = CustomTheme.typography.newBody,
+            color = CustomTheme.colors.primaryContent,
+        )
+        CustomSwitch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun SettingsCitationWebViewItem(
+    previewHtml: String,
+    height: Int,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = (height + 10).pxToDp())
+    ) {
+        val color = Color(0xFFD1D1D6).toArgb()
+        AndroidView(
+            factory = { context ->
+                val webView = WebView(context)
+                webView.layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                webView.setBackgroundColor(color);
+                webView.settings.javaScriptEnabled = true
+                webView.settings.allowFileAccess = true
+                webView.settings.allowContentAccess = true
+                webView.loadData(previewHtml, "text/html", "UTF-8")
+                webView
+            },
+            update = { webView ->
+                webView.loadData(previewHtml, "text/html", "UTF-8")
+            }
+        )
+    }
 }

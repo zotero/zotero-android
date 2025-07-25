@@ -115,7 +115,7 @@ class CitationController @Inject constructor(
                     citationControllerPreviewUpdateEventStream.emitAsync(formatted)
                 }
                 "heightHandler" -> {
-                    val jsResult = (bodyElement as JsonObject)["result"].asInt
+                    val jsResult = bodyElement.asInt
                     citationControllerPreviewHeightUpdateEventStream.emitAsync(jsResult)
                 }
             }

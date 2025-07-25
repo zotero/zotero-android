@@ -2,14 +2,20 @@ package org.zotero.android.screens.citation.singlecitation
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.citation.CitationController
+import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.citation.CitationControllerInterface
 import org.zotero.android.citation.CitationControllerPreviewHeightUpdateEventStream
 import org.zotero.android.citation.CitationControllerPreviewUpdateEventStream
@@ -50,6 +56,8 @@ internal class SingleCitationViewModel @Inject constructor(
     private var localeId: String = ""
     private var exportAsHtml: Boolean = false
 
+    private val onLocatorValueChangedFlow = MutableStateFlow("")
+
     fun init() = initOnce {
         setupObservers()
         initViewState()
@@ -69,6 +77,17 @@ internal class SingleCitationViewModel @Inject constructor(
                 updateState {
                     copy(previewHeight = previewHeight)
                 }
+            }
+            .launchIn(viewModelScope)
+        onLocatorValueChangedFlow
+            .drop(1)
+            .debounce(150)
+            .map { value ->
+                loadPreview(
+                    locatorLabel = viewState.locator,
+                    locatorValue = value,
+                    omitAuthor = viewState.omitAuthor,
+                )
             }
             .launchIn(viewModelScope)
     }
@@ -110,6 +129,34 @@ internal class SingleCitationViewModel @Inject constructor(
         updateState {
             copy(locator = locator)
         }
+        viewModelScope.launch {
+            loadPreview(
+                locatorLabel = locator,
+                locatorValue = viewState.locatorValue,
+                omitAuthor = viewState.omitAuthor,
+            )
+        }
+    }
+
+    fun onOmitAuthor(omitAuthor: Boolean) {
+        updateState {
+            copy(omitAuthor = omitAuthor)
+        }
+        viewModelScope.launch {
+            loadPreview(
+                locatorLabel = viewState.locator,
+                locatorValue = viewState.locatorValue,
+                omitAuthor = omitAuthor,
+            )
+        }
+
+    }
+
+    fun onLocatorValueChanged(locatorValue: String) {
+        updateState {
+            copy(locatorValue = locatorValue)
+        }
+        onLocatorValueChangedFlow.tryEmit(locatorValue)
     }
 
     override fun getLocator(): String {
@@ -122,6 +169,21 @@ internal class SingleCitationViewModel @Inject constructor(
 
     override fun omitAuthor(): Boolean {
         return viewState.omitAuthor
+    }
+
+    private suspend fun loadPreview(
+        locatorLabel: String,
+        locatorValue: String,
+        omitAuthor: Boolean,
+    ) {
+        citationController
+            .citation(
+                label = locatorLabel,
+                locator = locatorValue,
+                omitAuthor = omitAuthor,
+                format = Format.html,
+                showInWebView = true
+            )
     }
 
 }

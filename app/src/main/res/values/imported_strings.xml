@@ -132,7 +132,7 @@
     <string name="citation.title">Citation Preview</string>
     <string name="citation.copy_citation">Copy Citation</string>
     <string name="citation.copy_bibliography">Copy Bibliography</string>
-    <string name="citation.preview">Preview:</string>
+    <string name="citation.preview">Preview</string>
     <string name="citation.omit_author">Omit Author</string>
     <string name="citation.locator_placeholder">Number</string>
     <string name="citation.locator.page">Page</string>
