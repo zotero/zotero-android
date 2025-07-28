@@ -60,6 +60,7 @@ class CitationController @Inject constructor(
     private lateinit var styleLocaleId: String
     private lateinit var format: Format
     private var supportsBibliography: Boolean = false
+    private var showInWebView = false
 
     private var citationControllerInterface: CitationControllerInterface? = null
 
@@ -97,6 +98,7 @@ class CitationController @Inject constructor(
                 "logHandler" -> {
                     Timber.i("CitationController JSLOG: ${bodyElement.asString}")
                 }
+
                 "cslHandler" -> {
                     val result = (bodyElement as JsonObject)["result"].asJsonArray
                     this@CitationController.itemsCSL =
@@ -109,11 +111,13 @@ class CitationController @Inject constructor(
                         showInWebView = true
                     )
                 }
+
                 "citationHandler" -> {
                     val jsResult = (bodyElement as JsonObject)["result"].asString
                     val formatted = format(jsResult, this@CitationController.format)
-                    citationControllerPreviewUpdateEventStream.emitAsync(formatted)
+                    citationControllerPreviewUpdateEventStream.emitAsync(formatted to this@CitationController.showInWebView)
                 }
+
                 "heightHandler" -> {
                     val jsResult = bodyElement.asInt
                     citationControllerPreviewHeightUpdateEventStream.emitAsync(jsResult)
@@ -126,7 +130,8 @@ class CitationController @Inject constructor(
     private fun onTranslatorIndexHtmlLoaded() {
         ioCoroutineScope.launch {
             val styleData = loadStyleData(styleId)
-            this@CitationController. styleLocaleId = styleData.defaultLocaleId ?: this@CitationController.localeId
+            this@CitationController.styleLocaleId =
+                styleData.defaultLocaleId ?: this@CitationController.localeId
             val (styleXml, localeXml) = loadEncodedXmls(
                 styleFilename = styleData.filename,
                 localeId = this@CitationController.styleLocaleId
@@ -318,11 +323,19 @@ class CitationController @Inject constructor(
         }
     }
 
-    suspend fun citation(itemIds: Set<String>? = null, label: String?, locator: String?, omitAuthor: Boolean, format: Format, showInWebView: Boolean) {
+    suspend fun citation(
+        itemIds: Set<String>? = null,
+        label: String?,
+        locator: String?,
+        omitAuthor: Boolean,
+        format: Format,
+        showInWebView: Boolean
+    ) {
         val itemIds = itemIds ?: this.itemIds
         val itemsData =
             itemsData(itemIds, label = label, locator = locator, omitAuthor = omitAuthor)
         this.format = format
+        this.showInWebView = showInWebView
         getCitation(
             itemsCSL = this.itemsCSL,
             itemsData = itemsData,
@@ -334,10 +347,18 @@ class CitationController @Inject constructor(
         )
     }
 
-    fun itemsData(itemIds: Set<String>, label: String?, locator: String?, omitAuthor: Boolean): String {
+    fun itemsData(
+        itemIds: Set<String>,
+        label: String?,
+        locator: String?,
+        omitAuthor: Boolean
+    ): String {
         val itemsData = mutableListOf<Map<String, Any>>()
         for (key in itemIds) {
-            val data = mutableMapOf("id" to "https://www.zotero.org/${key}", "suppress-author" to omitAuthor)
+            val data = mutableMapOf(
+                "id" to "https://www.zotero.org/${key}",
+                "suppress-author" to omitAuthor
+            )
             if (label != null) {
                 data["label"] = label
             }
@@ -350,7 +371,7 @@ class CitationController @Inject constructor(
     }
 
     private fun format(result: String, format: Format): String {
-        when(format) {
+        when (format) {
             Format.rtf -> {
                 var newResult = result
                 if (!result.startsWith("{\\rtf")) {
@@ -361,16 +382,19 @@ class CitationController @Inject constructor(
                 }
                 return newResult
             }
+
             Format.html -> {
                 var newResult = result
                 if (!result.startsWith("<!DOCTYPE")) {
-                    newResult = "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>" + newResult
+                    newResult =
+                        "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>" + newResult
                 }
                 if (!result.endsWith("</html>")) {
                     newResult += "</body></html>"
                 }
                 return newResult
             }
+
             Format.text -> {
                 return result
             }

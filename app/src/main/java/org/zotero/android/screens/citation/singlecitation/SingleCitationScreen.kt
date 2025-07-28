@@ -2,6 +2,7 @@ package org.zotero.android.screens.citation.singlecitation
 
 import android.view.ViewGroup
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -37,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.settings.SettingsDivider
 import org.zotero.android.screens.settings.SettingsSection
@@ -252,7 +252,7 @@ private fun SettingsCitationWebViewItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(max = (height + 10).pxToDp())
+            .heightIn(max = (height + 15).dp)
     ) {
         val color = Color(0xFFD1D1D6).toArgb()
         AndroidView(
@@ -262,16 +262,62 @@ private fun SettingsCitationWebViewItem(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 )
-                webView.setBackgroundColor(color);
+                webView.webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(web: WebView, url: String?) {
+                        web.loadUrl("javascript:(function(){ " +
+                                "document.body.style.paddingTop = '10px';" +
+                                "document.body.style.paddingLeft = '10px';" +
+                                "})();")
+                    }
+                }
+
+                webView.setBackgroundColor(color)
                 webView.settings.javaScriptEnabled = true
                 webView.settings.allowFileAccess = true
                 webView.settings.allowContentAccess = true
-                webView.loadData(previewHtml, "text/html", "UTF-8")
+                webView.loadData(injectStyle(previewHtml), "text/html", "UTF-8")
                 webView
             },
             update = { webView ->
-                webView.loadData(previewHtml, "text/html", "UTF-8")
+                webView.loadData(injectStyle(previewHtml), "text/html", "UTF-8")
             }
         )
+    }
+}
+
+private fun injectStyle(htmlString: String): String {
+    val style = """
+            <meta name="viewport" content="width=device-width">
+            <style type="text/css">
+                body{
+                    font-size:1em;
+                    font-family: -apple-system;
+                    -webkit-text-size-adjust:100%;
+                    color:black;
+                    padding:0;
+                    margin:0;
+                    background-color: transparent;
+                }
+
+                @media (prefers-color-scheme: dark) {
+                    body {
+                        background-color:transparent;
+                        color: white;
+                    }
+                }
+            </style>
+            """
+    val headIndexStart = htmlString.indexOf("<head>")
+    val htmlIndexStart = htmlString.indexOf("<html>")
+    if (headIndexStart != -1) {
+        val newStringBuilder = StringBuilder(htmlString)
+        newStringBuilder.insert(headIndexStart + 6, style)
+        return newStringBuilder.toString()
+    } else if (htmlIndexStart != -1) {
+        val newStringBuilder = StringBuilder(htmlString)
+        newStringBuilder.insert(htmlIndexStart + 6,"<head>${style}</head>")
+        return newStringBuilder.toString()
+    } else {
+        return "<html><head>$style</head><body>$htmlString</body></html>"
     }
 }

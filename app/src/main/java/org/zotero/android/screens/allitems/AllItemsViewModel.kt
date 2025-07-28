@@ -28,6 +28,7 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.citation.CitationController
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
@@ -784,7 +785,9 @@ internal class AllItemsViewModel @Inject constructor(
         }
 
         val actions = mutableListOf<LongPressOptionItem>()
-        actions.add(LongPressOptionItem.CopyCitation(item))
+        if (!CitationController.invalidItemTypes.contains(item.rawType)) {
+            actions.add(LongPressOptionItem.CopyCitation(item))
+        }
 
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType

@@ -7,4 +7,4 @@ import javax.inject.Singleton
 
 @Singleton
 class CitationControllerPreviewUpdateEventStream @Inject constructor(applicationScope: ApplicationScope) :
-    EventStream<String>(applicationScope)
+    EventStream<Pair<String, Boolean>>(applicationScope)

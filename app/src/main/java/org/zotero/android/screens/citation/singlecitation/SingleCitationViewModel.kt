@@ -1,5 +1,8 @@
 package org.zotero.android.screens.citation.singlecitation
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +24,7 @@ import org.zotero.android.citation.CitationControllerPreviewHeightUpdateEventStr
 import org.zotero.android.citation.CitationControllerPreviewUpdateEventStream
 import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject
+
 
 val locatorsList = listOf(
     "page",
@@ -47,6 +51,7 @@ internal class SingleCitationViewModel @Inject constructor(
     private val defaults: Defaults,
     private val citationControllerPreviewHeightUpdateEventStream: CitationControllerPreviewHeightUpdateEventStream,
     private val citationControllerPreviewUpdateEventStream: CitationControllerPreviewUpdateEventStream,
+    private val context: Context,
 ) : BaseViewModel2<SingleCitationViewState, SingleCitationViewEffect>(SingleCitationViewState()),
     CitationControllerInterface {
 
@@ -66,10 +71,17 @@ internal class SingleCitationViewModel @Inject constructor(
 
     private fun setupObservers() {
         citationControllerPreviewUpdateEventStream.flow()
-            .onEach { preview ->
-                updateState {
-                    copy(preview = preview)
+            .onEach { p  ->
+                val (text, showInWebView) = p
+                if (showInWebView) {
+                    updateState {
+                        copy(preview = text)
+                    }
+                } else {
+                    copyHtmlToClipboard(viewState.preview, text = text)
+                    triggerEffect(SingleCitationViewEffect.OnBack)
                 }
+
             }
             .launchIn(viewModelScope)
         citationControllerPreviewHeightUpdateEventStream.flow()
@@ -92,6 +104,20 @@ internal class SingleCitationViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun copyPlainTextToClipboard(text: String) {
+        val clipboard: ClipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Zotero", text)
+        clipboard.setPrimaryClip(clip)
+    }
+
+    private fun copyHtmlToClipboard(html: String, text: String) {
+        val clipboard: ClipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newHtmlText("Zotero", text, html)
+        clipboard.setPrimaryClip(clip)
+    }
+
     private fun initViewState() {
         val args = ScreenArguments.singleCitationArgs
         this.libraryId = args.libraryId
@@ -99,12 +125,6 @@ internal class SingleCitationViewModel @Inject constructor(
         this.styleId = defaults.getQuickCopyStyleId()
         this.localeId = defaults.getQuickCopyCslLocaleId()
         this.exportAsHtml = defaults.isQuickCopyAsHtml()
-
-        updateState {
-            copy(
-//                selected = args.itemIds.toImmutableSet(),
-            )
-        }
     }
 
     fun preload() {
@@ -122,6 +142,22 @@ internal class SingleCitationViewModel @Inject constructor(
     }
 
     fun onCopyTapped() {
+        viewModelScope.launch {
+            val preview = viewState.preview.ifEmpty { return@launch }
+
+            if (this@SingleCitationViewModel.exportAsHtml) {
+                copyPlainTextToClipboard(preview)
+                triggerEffect(SingleCitationViewEffect.OnBack)
+                return@launch
+            }
+            citationController.citation(
+                label = viewState.locator,
+                locator = viewState.locatorValue,
+                omitAuthor = viewState.omitAuthor,
+                format = Format.text,
+                showInWebView = false
+            )
+        }
 
     }
 
@@ -189,7 +225,6 @@ internal class SingleCitationViewModel @Inject constructor(
 }
 
 internal data class SingleCitationViewState(
-//    val selected: ImmutableSet<String> = emptyImmutableSet(),
     val locator: String = locatorsList[0],
     val locatorValue: String = "",
     val loadingCopy: Boolean = false,
