@@ -85,7 +85,7 @@ sealed class LongPressOptionItem(
 
     data class CopyCitation(val item: RItem): LongPressOptionItem(
         titleId = Strings.citation_copy_citation,
-        resIcon = Drawables.create_new_folder_24px
+        resIcon = Drawables.file_copy
     )
 
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
