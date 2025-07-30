@@ -102,17 +102,17 @@ internal class SettingsCiteViewModel @Inject constructor(
         }
         try {
             val defaultStyle =
-                coordinator.perform(request = ReadStyleDbRequest(identifier = "http://www.zotero.org/styles/chicago-note-bibliography"))
+                coordinator.perform(request = ReadStyleDbRequest(identifier = "http://www.zotero.org/styles/chicago-notes-bibliography"))
             resetRemoved(defaultStyle.identifier)
             return
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             print(e)
         }
         try {
             val availableStyle = coordinator.perform(request = ReadStylesDbRequest()).first()
             resetRemoved(availableStyle!!.identifier)
             return
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             print(e)
         }
         resetRemoved("")

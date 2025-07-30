@@ -449,7 +449,7 @@ open class Defaults @Inject constructor(
     }
 
     fun getExportStyleId(): String {
-        return sharedPreferences.getString(exportStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+        return sharedPreferences.getString(exportStyleId, "http://www.zotero.org/styles/chicago-notes-bibliography") ?: ""
     }
 
     fun setExportStyleId(newValue: String) {
