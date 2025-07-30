@@ -105,6 +105,7 @@ data class CustomSemanticColors(
     val popupBackgroundColor: Color,
     val popupRowBackgroundColor: Color,
     val chevronNavigationColor:Color,
+    val quickCopyWebViewBackgroundColor: Color
 ) {
 
     data class DynamicTheme(
@@ -167,7 +168,8 @@ fun lightCustomColors(
     pdfEditAnnotationDividerBackground = Color(0xFFE4E4E5),
     popupBackgroundColor = Color(0xFFE1E2E1),
     popupRowBackgroundColor = Color(0xFFFFFFFF),
-    chevronNavigationColor = Color(0xFFAEAEB2)
+    chevronNavigationColor = Color(0xFFAEAEB2),
+    quickCopyWebViewBackgroundColor = Color(0xFFE5E5EA),
 )
 
 fun darkCustomColors(
@@ -219,7 +221,8 @@ fun darkCustomColors(
     pdfEditAnnotationDividerBackground = Color(0xFF2F2F31),
     popupBackgroundColor = Color(0xFF232324),
     popupRowBackgroundColor = Color(0xFF2A2B2B),
-    chevronNavigationColor = Color(0xFFAEAEB2)
+    chevronNavigationColor = Color(0xFFAEAEB2),
+    quickCopyWebViewBackgroundColor = Color(0xFF2C2C2E),
 
 )
 

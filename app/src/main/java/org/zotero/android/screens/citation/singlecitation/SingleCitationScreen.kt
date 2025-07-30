@@ -21,6 +21,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -97,9 +98,11 @@ internal fun SingleCitationScreen(
                 SettingsSection {
                     SettingsCitationDropBoxAndEditFieldItem(viewState, viewModel)
                     SettingsDivider()
-                    SettingsCitationSwitchItem( title = stringResource(Strings.citation_omit_author),
+                    SettingsCitationSwitchItem(
+                        title = stringResource(Strings.citation_omit_author),
                         isChecked = viewState.omitAuthor,
-                        onCheckedChange = viewModel::onOmitAuthor)
+                        onCheckedChange = viewModel::onOmitAuthor
+                    )
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSectionTitle(titleId = Strings.citation_preview)
@@ -140,6 +143,28 @@ private fun BoxScope.DropDownMenuBox(
             value = localized(viewState.locator),
             onValueChange = { },
             textStyle = CustomTheme.typography.default,
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = CustomTheme.colors.defaultTextColor,
+                unfocusedTextColor = CustomTheme.colors.defaultTextColor,
+                disabledTextColor = CustomTheme.colors.defaultTextColor,
+                errorTextColor = CustomTheme.colors.defaultTextColor,
+
+                focusedContainerColor = CustomTheme.colors.popupBackgroundContent,
+                unfocusedContainerColor = CustomTheme.colors.popupBackgroundContent,
+                disabledContainerColor = CustomTheme.colors.popupBackgroundContent,
+                errorContainerColor = CustomTheme.colors.popupBackgroundContent,
+
+                focusedTrailingIconColor = CustomTheme.colors.defaultTextColor,
+                unfocusedTrailingIconColor = CustomTheme.colors.defaultTextColor,
+                disabledTrailingIconColor = CustomTheme.colors.defaultTextColor,
+                errorTrailingIconColor = CustomTheme.colors.defaultTextColor,
+
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+
+                ),
             readOnly = true,
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -147,6 +172,7 @@ private fun BoxScope.DropDownMenuBox(
         )
 
         ExposedDropdownMenu(
+            modifier = Modifier.background(CustomTheme.colors.popupBackgroundContent),
             expanded = expanded,
             onDismissRequest = {
                 expanded = false
@@ -254,7 +280,7 @@ private fun SettingsCitationWebViewItem(
             .fillMaxWidth()
             .heightIn(max = (height + 15).dp)
     ) {
-        val color = Color(0xFFD1D1D6).toArgb()
+        val webViewBackgroundColor = CustomTheme.colors.quickCopyWebViewBackgroundColor.toArgb()
         AndroidView(
             factory = { context ->
                 val webView = WebView(context)
@@ -264,14 +290,16 @@ private fun SettingsCitationWebViewItem(
                 )
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(web: WebView, url: String?) {
-                        web.loadUrl("javascript:(function(){ " +
-                                "document.body.style.paddingTop = '10px';" +
-                                "document.body.style.paddingLeft = '10px';" +
-                                "})();")
+                        web.loadUrl(
+                            "javascript:(function(){ " +
+                                    "document.body.style.paddingTop = '10px';" +
+                                    "document.body.style.paddingLeft = '10px';" +
+                                    "})();"
+                        )
                     }
                 }
 
-                webView.setBackgroundColor(color)
+                webView.setBackgroundColor(webViewBackgroundColor)
                 webView.settings.javaScriptEnabled = true
                 webView.settings.allowFileAccess = true
                 webView.settings.allowContentAccess = true
@@ -315,7 +343,7 @@ private fun injectStyle(htmlString: String): String {
         return newStringBuilder.toString()
     } else if (htmlIndexStart != -1) {
         val newStringBuilder = StringBuilder(htmlString)
-        newStringBuilder.insert(htmlIndexStart + 6,"<head>${style}</head>")
+        newStringBuilder.insert(htmlIndexStart + 6, "<head>${style}</head>")
         return newStringBuilder.toString()
     } else {
         return "<html><head>$style</head><body>$htmlString</body></html>"

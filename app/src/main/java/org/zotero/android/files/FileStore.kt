@@ -399,7 +399,7 @@ class FileStore @Inject constructor (
     }
 
     fun crashLoggingDirectory(): File {
-        this.debugDirectory.mkdirs()
+        this.crashDirectory.mkdirs()
         return this.crashDirectory
     }
 

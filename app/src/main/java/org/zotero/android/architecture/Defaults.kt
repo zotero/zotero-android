@@ -429,7 +429,7 @@ open class Defaults @Inject constructor(
     }
 
     fun getQuickCopyStyleId(): String {
-        return sharedPreferences.getString(quickCopyStyleId, "http://www.zotero.org/styles/chicago-note-bibliography") ?: ""
+        return sharedPreferences.getString(quickCopyStyleId, "http://www.zotero.org/styles/chicago-notes-bibliography") ?: ""
     }
 
     fun setQuickCopyStyleId(newValue: String) {

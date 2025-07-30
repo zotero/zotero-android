@@ -92,7 +92,7 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
             try {
                 style =
                     dbWrapperBundle.realmDbStorage.perform(request = ReadStyleDbRequest(identifier = defaults.getQuickCopyStyleId()))
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Timber.e(e)
             }
 
