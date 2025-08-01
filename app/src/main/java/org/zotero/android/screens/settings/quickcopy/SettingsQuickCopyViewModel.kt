@@ -10,7 +10,6 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.objects.RStyle
 import org.zotero.android.database.requests.ReadStyleDbRequest
@@ -24,7 +23,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsQuickCopyViewModel @Inject constructor(
-    private val dispatchers: Dispatchers,
     private val dbWrapperBundle: DbWrapperBundle,
     private val defaults: Defaults,
     private val settingsQuickCopyUpdateStyleEventStream: SettingsQuickCopyUpdateStyleEventStream,
@@ -54,13 +52,20 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
             val locToDisplay = Locale.forLanguageTag(localeId)
             val selectedLanguage = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: localeId
             updateState {
-                copy(selectedLanguage = selectedLanguage)
+                copy(
+                    selectedLanguage = selectedLanguage,
+                    languagePickerEnabled = false
+                )
             }
         } else {
             val locToDisplay = Locale.forLanguageTag(defaults.getQuickCopyCslLocaleId())
-            val selectedLanguage = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: defaults.getQuickCopyCslLocaleId()
+            val selectedLanguage = locToDisplay.getDisplayLanguage(Locale.getDefault())
+                ?: defaults.getQuickCopyCslLocaleId()
             updateState {
-                copy(selectedLanguage = selectedLanguage)
+                copy(
+                    selectedLanguage = selectedLanguage,
+                    languagePickerEnabled = true
+                )
             }
         }
     }
@@ -107,10 +112,12 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
                 language = locToDisplay.getDisplayLanguage(Locale.getDefault()) ?: localeId
             }
 
+            val languagePickerEnabled = style?.defaultLocale?.isEmpty() ?: true
             updateState {
                 copy(
                     selectedStyle = style?.title ?: "Unknown",
                     selectedLanguage = language,
+                    languagePickerEnabled = languagePickerEnabled,
                     copyAsHtml = defaults.isQuickCopyAsHtml()
                 )
             }
@@ -152,12 +159,11 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
 }
 
 internal data class SettingsQuickCopyViewState(
-    val styles: List<Style> = emptyList(),
     val selectedStyle: String = "",
     val selectedLanguage: String = "",
     val copyAsHtml: Boolean = false,
-) : ViewState {
-}
+    val languagePickerEnabled: Boolean = false,
+) : ViewState
 
 internal sealed class SettingsQuickCopyViewEffect : ViewEffect {
     object OnBack : SettingsQuickCopyViewEffect()

@@ -40,6 +40,7 @@ internal fun SettingsQuickCopyScreen(
                 is SettingsQuickCopyViewEffect.OnBack -> {
                     onBack()
                 }
+
                 is SettingsQuickCopyViewEffect.NavigateToStylePicker -> {
                     navigateToStylePicker()
                 }
@@ -65,7 +66,15 @@ internal fun SettingsQuickCopyScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(30.dp))
-                    SettingsQuickCopySection(viewState, viewModel)
+                    SettingsQuickCopySections(
+                        selectedStyle = viewState.selectedStyle,
+                        selectedLanguage = viewState.selectedLanguage,
+                        languagePickerEnabled = viewState.languagePickerEnabled,
+                        copyAsHtml = viewState.copyAsHtml,
+                        onDefaultFormatTapped = viewModel::onDefaultFormatTapped,
+                        onLanguageTapped = viewModel::onLanguageTapped,
+                        onQuickCopySwitchTapped = viewModel::onQuickCopySwitchTapped,
+                    )
                 }
             }
 
