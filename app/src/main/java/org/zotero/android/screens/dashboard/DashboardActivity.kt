@@ -102,9 +102,9 @@ internal class DashboardActivity : BaseActivity() {
         val onOpenWebpage: (uri: Uri) -> Unit = { uri ->
             val intent = Intent(Intent.ACTION_VIEW, uri)
             //Some devices have no apps to open URLs or such function was restricted.
-            if (intent.resolveActivity(packageManager) != null) {
+            try {
                 startActivity(intent)
-            } else {
+            } catch (e: Exception) {
                 longToast("No app found to open web pages or restriction is in place")
             }
         }
