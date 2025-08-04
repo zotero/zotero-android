@@ -13,6 +13,7 @@ import androidx.navigation.navArgument
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.architecture.navigation.dialogDynamicHeight
 import org.zotero.android.architecture.navigation.dialogFixedDimens
 import org.zotero.android.pdf.annotation.PdfAnnotationNavigation
 import org.zotero.android.pdf.annotation.toPdfAnnotationScreen
@@ -25,6 +26,7 @@ import org.zotero.android.pdf.pdffilter.toPdfFilterScreen
 import org.zotero.android.pdf.reader.PdfReaderScreen
 import org.zotero.android.pdf.reader.plainreader.PdfPlanReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
+import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import java.io.File
 
 internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
@@ -46,6 +48,7 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
         navigateToPdfAnnotation = navigation::toPdfAnnotationNavigation,
         navigateToPdfAnnotationMore = navigation::toPdfAnnotationMoreNavigation,
         navigateToTagPicker = navigateToTagPickerDialog,
+        navigateToSingleCitationScreen = navigation::toSingleCitationScreen,
     )
     dialogFixedDimens(
         modifier = Modifier
@@ -65,6 +68,11 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
         ),
     ) {
         PdfSettingsScreen(args = null, onBack = navigation::onBack)
+    }
+    dialogDynamicHeight(
+        route = PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG,
+    ) {
+        SingleCitationScreen(onBack = navigation::onBack)
     }
     dialogFixedDimens(
         modifier = Modifier
@@ -115,6 +123,7 @@ internal fun NavGraphBuilder.pdfReaderNavScreensForPhone(
         navigateToPdfAnnotationMore = navigation::toPdfAnnotationMoreScreen,
         navigateToPdfColorPicker = navigation::toPdfColorPicker,
         navigateToTagPicker = navigateToTagPicker,
+        navigateToSingleCitationScreen = navigation::toSingleCitationScreen
     )
     pdfFilterNavScreens(navigation)
     pdfPlainReader(navigation)
@@ -154,6 +163,7 @@ private fun NavGraphBuilder.pdfScreen(
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
     navigateToTagPicker: () -> Unit,
+    navigateToSingleCitationScreen: () -> Unit,
 ) {
     composable(
         route = "${PdfReaderDestinations.PDF_SCREEN}/{$ARG_PDF_SCREEN}",
@@ -171,6 +181,7 @@ private fun NavGraphBuilder.pdfScreen(
             navigateToPdfAnnotationMore = navigateToPdfAnnotationMore,
             navigateToPdfColorPicker = navigateToPdfColorPicker,
             navigateToTagPicker = navigateToTagPicker,
+            navigateToSingleCitationScreen = navigateToSingleCitationScreen,
         )
     }
 }
@@ -183,6 +194,7 @@ private object PdfReaderDestinations {
     const val PDF_COLOR_PICKER = "pdfColorPicker"
     const val PDF_ANNOTATION_NAVIGATION = "pdfAnnotationNavigation"
     const val PDF_ANNOTATION_MORE_NAVIGATION = "pdfAnnotationMoreNavigation"
+    const val SINGLE_CITATION_PICKER_DIALOG = "singleCitationPickerDialog"
 }
 
 fun ZoteroNavigation.toPdfScreen(
@@ -203,6 +215,10 @@ private fun ZoteroNavigation.toPdfFilterNavigation() {
 
 private fun ZoteroNavigation.toPdfSettings(args: String) {
     navController.navigate("${PdfReaderDestinations.PDF_SETTINGS}/$args")
+}
+
+private fun ZoteroNavigation.toSingleCitationScreen() {
+    navController.navigate("${PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG}")
 }
 
 private fun ZoteroNavigation.toPdfPlainReader(args: String) {

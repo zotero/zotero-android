@@ -329,7 +329,7 @@ class AllItemsProcessor @Inject constructor(
             return
         }
         val (attachment, library) = attachmentResult
-        processorInterface.show(attachment = attachment, library = library)
+        processorInterface.show(attachment = attachment, parentKey = parentKey, library = library)
     }
 
     private suspend fun process(

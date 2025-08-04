@@ -162,6 +162,7 @@ import org.zotero.android.pdf.reader.sidebar.data.ThumbnailPreviewMemoryCache
 import org.zotero.android.pdf.reader.sidebar.data.ThumbnailsPreviewFileCache
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
+import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
@@ -772,6 +773,7 @@ class PdfReaderViewModel @Inject constructor(
         updateState {
             copy(
                 key = params.key,
+                parentKey = params.parentKey,
                 library = params.library,
                 userId = userId,
                 username = username,
@@ -3563,10 +3565,31 @@ class PdfReaderViewModel @Inject constructor(
             )
         }
     }
+
+    override fun onCopyCitation() {
+        dismissSharePopup()
+        ScreenArguments.singleCitationArgs = SingleCitationArgs(libraryId = viewState.library.identifier, itemIds = setOf(viewState.parentKey!!))
+        if (isTablet) {
+            triggerEffect(PdfReaderViewEffect.ShowSingleCitationScreen)
+        } else {
+            updateState {
+                copy(showSingleCitationScreen = true)
+            }
+        }
+    }
+
+    override fun hideCopyCitation() {
+        updateState {
+            copy(
+                showSingleCitationScreen = false
+            )
+        }
+    }
 }
 
 data class PdfReaderViewState(
     val key: String = "",
+    val parentKey: String? = null,
     val library: Library = Library(
         identifier = LibraryIdentifier.group(0),
         name = "",
@@ -3607,6 +3630,7 @@ data class PdfReaderViewState(
     var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs? = null,
     var pdfSettingsArgs: PdfSettingsArgs? = null,
     var showSharePopup: Boolean = false,
+    val showSingleCitationScreen: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {
@@ -3639,6 +3663,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateToTagPickerScreen: PdfReaderViewEffect()
     data class ScrollThumbnailListToIndex(val scrollToIndex: Int): PdfReaderViewEffect()
     data class ExportPdf(val file: File) : PdfReaderViewEffect()
+    object ShowSingleCitationScreen: PdfReaderViewEffect()
 
 }
 

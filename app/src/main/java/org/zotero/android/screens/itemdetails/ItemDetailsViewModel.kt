@@ -238,7 +238,7 @@ class ItemDetailsViewModel @Inject constructor(
                 attachmentOpened(update.key)
                 when (update.kind) {
                     AttachmentDownloader.Update.Kind.ready -> {
-                        showAttachment(key = update.key, libraryId = update.libraryId)
+                        showAttachment(key = update.key, parentKey = update.parentKey ,libraryId = update.libraryId)
                     }
                     is AttachmentDownloader.Update.Kind.failed -> {
                         //TODO implement when unzipping is supported
@@ -1616,14 +1616,18 @@ class ItemDetailsViewModel @Inject constructor(
 
     }
 
-    private suspend fun showAttachment(key: String, libraryId: LibraryIdentifier) {
-        val attachmentResult = attachment(key = key,  libraryId = libraryId)
+    private suspend fun showAttachment(
+        key: String,
+        parentKey: String?,
+        libraryId: LibraryIdentifier
+    ) {
+        val attachmentResult = attachment(key = key, libraryId = libraryId)
         if (attachmentResult == null) {
             return
         }
         val (attachment, library) = attachmentResult
         viewModelScope.launch {
-            show(attachment = attachment, library = library)
+            show(attachment = attachment, parentKey = parentKey, library = library)
         }
     }
 
@@ -1637,7 +1641,7 @@ class ItemDetailsViewModel @Inject constructor(
         return attachment to library
     }
 
-    private suspend fun show(attachment: Attachment, library: Library) {
+    private suspend fun show(attachment: Attachment, parentKey: String?, library: Library) {
         val attachmentType = attachment.type
         when (attachmentType) {
             is Attachment.Kind.url -> {
@@ -1653,7 +1657,7 @@ class ItemDetailsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(file = file, attachment = attachment)
+                        showPdf(file = file, parentKey = parentKey, attachment = attachment)
                     }
                     "text/html", "text/plain" -> {
                         val url = file.toUri().toString()
@@ -1684,10 +1688,11 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun showPdf(file: File, attachment: Attachment) {
+    private fun showPdf(file: File, parentKey: String?, attachment: Attachment) {
         val uri = Uri.fromFile(file)
         val pdfReaderArgs = PdfReaderArgs(
             key = attachment.key,
+            parentKey = parentKey,
             library = viewState.library!!,
             page = null,
             preselectedAnnotationKey = null,

@@ -56,4 +56,6 @@ interface PdfReaderVMInterface {
     fun onExportAnnotatedPdf()
     fun dismissSharePopup()
     fun onShareButtonTapped()
+    fun onCopyCitation()
+    fun hideCopyCitation()
 }

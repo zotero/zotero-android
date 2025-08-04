@@ -215,7 +215,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
-    override fun show(attachment: Attachment, library: Library) {
+    override fun show(attachment: Attachment, parentKey: String?, library: Library) {
         viewModelScope.launch {
             val attachmentType = attachment.type
             when (attachmentType) {
@@ -232,8 +232,14 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                     when (contentType) {
                         "application/pdf" -> {
-                            showPdf(file = file, key = attachment.key, library = library)
+                            showPdf(
+                                file = file,
+                                key = attachment.key,
+                                parentKey = parentKey,
+                                library = library
+                            )
                         }
+
                         "text/html", "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
@@ -264,10 +270,11 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
 
-    private fun showPdf(file: File, key: String, library: Library) {
+    private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
         val uri = Uri.fromFile(file)
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
+            parentKey = parentKey,
             library = library,
             page = null,
             preselectedAnnotationKey = null,

@@ -18,16 +18,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import org.zotero.android.pdf.reader.PdfReaderViewModel
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.pdf.settings.PdfSettingsScreen
+import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-internal fun PdfSettingsView(
+internal fun PdfCopyCitationView(
     viewState: PdfReaderViewState,
     viewModel: PdfReaderViewModel
 ) {
     AnimatedContent(
-        targetState = viewState.pdfSettingsArgs != null,
+        targetState = viewState.showSingleCitationScreen,
         transitionSpec = {
             createCopyCitationTransitionSpec()
         }, label = ""
@@ -42,11 +42,9 @@ internal fun PdfSettingsView(
                             //Prevent tap to be propagated to composables behind this screen.
                         }
                     }) {
-                val args = viewState.pdfSettingsArgs
-                if (args != null) {
-                    PdfSettingsScreen(
-                        args = args,
-                        onBack = viewModel::hidePdfSettingsView
+                if (viewState.showSingleCitationScreen) {
+                    SingleCitationScreen(
+                        onBack = viewModel::hideCopyCitation
                     )
                 }
             }

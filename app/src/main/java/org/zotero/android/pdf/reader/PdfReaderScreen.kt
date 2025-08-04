@@ -22,6 +22,7 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
 import org.zotero.android.pdf.annotationmore.sidebar.PdfAnnotationMoreNavigationView
+import org.zotero.android.pdf.settings.sidebar.PdfCopyCitationView
 import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -39,6 +40,7 @@ internal fun PdfReaderScreen(
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
     navigateToTagPicker: () -> Unit,
+    navigateToSingleCitationScreen: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
@@ -124,6 +126,13 @@ internal fun PdfReaderScreen(
                     navigateToPdfSettings(consumedEffect.params)
                 }
 
+                is PdfReaderViewEffect.ShowSingleCitationScreen -> {
+                    if (!layoutType.isTablet()) {
+                        viewModel.removeFragment()
+                    }
+                    navigateToSingleCitationScreen()
+                }
+
                 is PdfReaderViewEffect.ShowPdfPlainReader -> {
                     viewModel.removeFragment()
                     navigateToPdfPlainReader(consumedEffect.params)
@@ -203,6 +212,7 @@ internal fun PdfReaderScreen(
         PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)
         PdfSettingsView(viewState = viewState, viewModel = viewModel)
+        PdfCopyCitationView(viewState = viewState, viewModel = viewModel)
     }
 
 }

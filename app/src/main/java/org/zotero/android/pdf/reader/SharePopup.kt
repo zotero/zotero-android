@@ -41,6 +41,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SharePopup(
+    viewState: PdfReaderViewState,
     viewModel: PdfReaderVMInterface,
 ) {
     Popup(
@@ -60,6 +61,14 @@ internal fun SharePopup(
                 )
                 .background(color = CustomTheme.colors.popupBackgroundColor)
         ) {
+            if (viewState.parentKey != null) {
+                PopupDivider()
+                PopupOptionRow(
+                    text = stringResource(id = Strings.citation_copy_citation),
+                    onOptionClick = viewModel::onCopyCitation,
+                    resIcon = Drawables.file_copy
+                )
+            }
             PopupOptionRow(
                 text = stringResource(id = Strings.pdf_reader_share_export_pdf),
                 onOptionClick = viewModel::onExportPdf,

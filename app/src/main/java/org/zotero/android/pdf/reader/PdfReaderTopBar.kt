@@ -88,6 +88,7 @@ internal fun PdfReaderTopBar(
                     if (viewState.showSharePopup) {
                         SharePopup(
                             viewModel = viewModel,
+                            viewState = viewState,
                         )
                     }
                     IconWithPadding(drawableRes = Drawables.share, onClick = onShareButtonTapped)
