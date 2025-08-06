@@ -5,6 +5,7 @@ import android.webkit.WebMessage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,6 +24,8 @@ import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper
 import timber.log.Timber
 import java.io.File
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -31,7 +34,6 @@ class CitationController @Inject constructor(
     dispatchers: Dispatchers,
     private val gson: Gson,
     private val citationWebViewHandler: CitationWebViewHandler,
-    private val citationControllerPreviewUpdateEventStream: CitationControllerPreviewUpdateEventStream,
     private val citationControllerPreviewHeightUpdateEventStream: CitationControllerPreviewHeightUpdateEventStream,
     private val fileStore: FileStore,
     private val dbWrapperMain: DbWrapperMain,
@@ -50,40 +52,55 @@ class CitationController @Inject constructor(
 
     private val ioCoroutineScope = CoroutineScope(dispatchers.io)
 
-    private lateinit var itemIds: Set<String>
-    private lateinit var libraryId: LibraryIdentifier
-    private lateinit var styleId: String
-    private lateinit var localeId: String
-    private lateinit var itemsCSL: String
-    private lateinit var styleXml: String
-    private lateinit var localeXml: String
-    private lateinit var styleLocaleId: String
-    private lateinit var format: Format
-    private var supportsBibliography: Boolean = false
-    private var showInWebView = false
+    private val responseHandlers = ConcurrentHashMap<String, CancellableContinuation<String>>()
 
-    private var citationControllerInterface: CitationControllerInterface? = null
-
-    fun init(
-        citationControllerInterface: CitationControllerInterface,
+    suspend fun startSession(
         itemIds: Set<String>,
         libraryId: LibraryIdentifier,
         styleId: String,
         localeId: String
-    ) {
-        this.citationControllerInterface = citationControllerInterface
-        this.itemIds = itemIds
-        this.libraryId = libraryId
-        this.styleId = styleId
-        this.localeId = localeId
+    ): CitationSession {
+        return suspendCancellableCoroutine { cont ->
+            val file = File(fileStore.citationDirectory(), "index.html")
+            val filePath = "file://" + file.absolutePath
 
-        val file = File(fileStore.citationDirectory(), "index.html")
-        val filePath = "file://" + file.absolutePath
-        loadWebPage(
-            url = filePath,
-            onWebViewLoadPage = ::onTranslatorIndexHtmlLoaded,
-            processWebViewResponses = ::receiveMessage
-        )
+            val onWebPageLoaded: () -> Unit = {
+                ioCoroutineScope.launch {
+                    val styleData = loadStyleData(styleId)
+                    val styleLocaleId =
+                        styleData.defaultLocaleId ?: localeId
+                    val (styleXml, localeXml) = loadEncodedXmls(
+                        styleFilename = styleData.filename,
+                        localeId = styleLocaleId
+                    )
+                    val supportsBibliography = styleData.supportsBibliography
+                    val (schema, dateFormats) = loadBundleFiles()
+                    val itemJsons = loadItemJsons(
+                        keys = itemIds,
+                        libraryId = libraryId
+                    )
+                    val itemCSL = getItemsCSL(itemJsons, schema, dateFormats)
+                    val session = CitationSession(
+                        itemIds = itemIds,
+                        libraryId = libraryId,
+                        styleXML = styleXml,
+                        styleLocaleId = styleLocaleId,
+                        localeXML = localeXml,
+                        supportsBibliography = supportsBibliography,
+                        itemsCSL = itemCSL
+                    )
+                    cont.resume(session)
+                }
+
+            }
+
+            loadWebPage(
+                url = filePath,
+                processWebViewResponses = ::receiveMessage,
+                onWebViewLoadPage = onWebPageLoaded
+            )
+        }
+
     }
 
     private fun receiveMessage(message: WebMessage) {
@@ -94,58 +111,42 @@ class CitationController @Inject constructor(
             val decodedBody: WebPortResponse = gson.fromJson(data, mapType)
             val handlerName = decodedBody.handlerName
             val bodyElement = decodedBody.message
+
+            if (handlerName == "logHandler") {
+                Timber.i("CitationController JSLOG: ${bodyElement.asString}")
+                return@launch
+            }
+
+            if (handlerName == "heightHandler") {
+                val jsResult = bodyElement.asInt
+                citationControllerPreviewHeightUpdateEventStream.emitAsync(jsResult)
+                return@launch
+            }
+
+            val body = (bodyElement as JsonObject)
+            val id = body["id"].asString
+            val jsResult = bodyElement["result"]
+
+            var result: String
             when (handlerName) {
-                "logHandler" -> {
-                    Timber.i("CitationController JSLOG: ${bodyElement.asString}")
+                "citationHandler", "bibliographyHandler" -> {
+                    result = jsResult.asString
                 }
 
                 "cslHandler" -> {
-                    val result = (bodyElement as JsonObject)["result"].asJsonArray
-                    this@CitationController.itemsCSL =
-                        TranslatorHelper.encodeAsJSONForJavascript(gson, result)
-                    citation(
-                        label = citationControllerInterface?.getLocator() ?: "",
-                        locator = citationControllerInterface?.getLocatorValue() ?: "",
-                        omitAuthor = citationControllerInterface?.omitAuthor() ?: false,
-                        format = Format.html,
-                        showInWebView = true
-                    )
+                    result = TranslatorHelper.encodeAsJSONForJavascript(gson, jsResult.asJsonArray)
                 }
-
-                "citationHandler" -> {
-                    val jsResult = (bodyElement as JsonObject)["result"].asString
-                    val formatted = format(jsResult, this@CitationController.format)
-                    citationControllerPreviewUpdateEventStream.emitAsync(formatted to this@CitationController.showInWebView)
-                }
-
-                "heightHandler" -> {
-                    val jsResult = bodyElement.asInt
-                    citationControllerPreviewHeightUpdateEventStream.emitAsync(jsResult)
+                else -> {
+                    return@launch
                 }
             }
-        }
-    }
+            val responseHandler:CancellableContinuation<String>? = responseHandlers[id]
+            if (responseHandler != null) {
+                responseHandler.resume(result)
+            } else {
+                Timber.e("CitationController: response handler for $handlerName with id $id doesn't exist anymore")
+            }
 
-
-    private fun onTranslatorIndexHtmlLoaded() {
-        ioCoroutineScope.launch {
-            val styleData = loadStyleData(styleId)
-            this@CitationController.styleLocaleId =
-                styleData.defaultLocaleId ?: this@CitationController.localeId
-            val (styleXml, localeXml) = loadEncodedXmls(
-                styleFilename = styleData.filename,
-                localeId = this@CitationController.styleLocaleId
-            )
-            this@CitationController.styleXml = styleXml
-            this@CitationController.localeXml = localeXml
-
-            this@CitationController.supportsBibliography = styleData.supportsBibliography
-            val (schema, dateFormats) = loadBundleFiles()
-            val itemJsons = loadItemJsons(
-                keys = this@CitationController.itemIds,
-                libraryId = this@CitationController.libraryId
-            )
-            getItemsCSL(itemJsons, schema, dateFormats)
         }
     }
 
@@ -297,13 +298,11 @@ class CitationController @Inject constructor(
         return data
     }
 
-    private suspend fun getItemsCSL(jsons: String, schema: String, dateFormats: String) {
-        return suspendCancellableCoroutine { cont ->
-            Timber.i("CitationWebViewHandler: call get items CSL js")
-            citationWebViewHandler.evaluateJavascript("javascript:convertItemsToCSL('${jsons}', '${schema}', '${dateFormats}', 'msgid')") {
-                cont.resume(Unit)
-            }
-        }
+    private suspend fun getItemsCSL(jsons: String, schema: String, dateFormats: String): String {
+        val javascript =
+            "javascript:convertItemsToCSL('${jsons}', '${schema}', '${dateFormats}', 'msgid')"
+        Timber.i("CitationWebViewHandler: call get items CSL js")
+        return executeJavascript(javascript)
     }
 
 
@@ -315,36 +314,44 @@ class CitationController @Inject constructor(
         localeXML: String,
         format: String,
         showInWebView: Boolean
-    ) {
+    ): String {
+        val javascript =
+            "javascript:getCit('${itemsCSL}', '${itemsData}', '${styleXML}', '${localeId}', '${localeXML}', '${format}', '${showInWebView}', 'msgid')"
+        return executeJavascript(javascriptStr = javascript)
+    }
+
+    private suspend fun executeJavascript(javascriptStr: String): String {
         return suspendCancellableCoroutine { cont ->
-            citationWebViewHandler.evaluateJavascript("javascript:getCit('${itemsCSL}', '${itemsData}', '${styleXML}', '${localeId}', '${localeXML}', '${format}', '${showInWebView}', 'msgid')") {
-                cont.resume(Unit)
+            val id = UUID.randomUUID().toString()
+            responseHandlers.put(id, cont)
+            citationWebViewHandler.evaluateJavascript(javascriptStr.replace("msgid", id)) {
+//                cont.resume(Unit)
             }
         }
     }
 
     suspend fun citation(
+        session: CitationSession,
         itemIds: Set<String>? = null,
         label: String?,
         locator: String?,
         omitAuthor: Boolean,
         format: Format,
         showInWebView: Boolean
-    ) {
-        val itemIds = itemIds ?: this.itemIds
+    ): String {
+        val itemIds = itemIds ?: session.itemIds
         val itemsData =
             itemsData(itemIds, label = label, locator = locator, omitAuthor = omitAuthor)
-        this.format = format
-        this.showInWebView = showInWebView
-        getCitation(
-            itemsCSL = this.itemsCSL,
+        val result = getCitation(
+            itemsCSL = session.itemsCSL,
             itemsData = itemsData,
-            styleXML = this.styleXml,
-            localeId = this.styleLocaleId,
-            localeXML = this.localeXml,
+            styleXML = session.styleXML,
+            localeId = session.styleLocaleId,
+            localeXML = session.localeXML,
             format = format.name,
             showInWebView = showInWebView
         )
+        return format(result, format)
     }
 
     fun itemsData(

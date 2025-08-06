@@ -19,9 +19,8 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.citation.CitationController
 import org.zotero.android.citation.CitationController.Format
-import org.zotero.android.citation.CitationControllerInterface
 import org.zotero.android.citation.CitationControllerPreviewHeightUpdateEventStream
-import org.zotero.android.citation.CitationControllerPreviewUpdateEventStream
+import org.zotero.android.citation.CitationSession
 import org.zotero.android.sync.LibraryIdentifier
 import javax.inject.Inject
 
@@ -50,10 +49,8 @@ internal class SingleCitationViewModel @Inject constructor(
     private val citationController: CitationController,
     private val defaults: Defaults,
     private val citationControllerPreviewHeightUpdateEventStream: CitationControllerPreviewHeightUpdateEventStream,
-    private val citationControllerPreviewUpdateEventStream: CitationControllerPreviewUpdateEventStream,
     private val context: Context,
-) : BaseViewModel2<SingleCitationViewState, SingleCitationViewEffect>(SingleCitationViewState()),
-    CitationControllerInterface {
+) : BaseViewModel2<SingleCitationViewState, SingleCitationViewEffect>(SingleCitationViewState()) {
 
     private var libraryId: LibraryIdentifier = LibraryIdentifier.group(0)
     private var itemIds: Set<String> = emptySet()
@@ -63,6 +60,8 @@ internal class SingleCitationViewModel @Inject constructor(
 
     private val onLocatorValueChangedFlow = MutableStateFlow("")
 
+    private lateinit var citationSession: CitationSession
+
     fun init() = initOnce {
         setupObservers()
         initViewState()
@@ -70,20 +69,6 @@ internal class SingleCitationViewModel @Inject constructor(
     }
 
     private fun setupObservers() {
-        citationControllerPreviewUpdateEventStream.flow()
-            .onEach { p  ->
-                val (text, showInWebView) = p
-                if (showInWebView) {
-                    updateState {
-                        copy(preview = text)
-                    }
-                } else {
-                    copyHtmlToClipboard(viewState.preview, text = text)
-                    triggerEffect(SingleCitationViewEffect.OnBack)
-                }
-
-            }
-            .launchIn(viewModelScope)
         citationControllerPreviewHeightUpdateEventStream.flow()
             .onEach { previewHeight ->
                 updateState {
@@ -127,14 +112,27 @@ internal class SingleCitationViewModel @Inject constructor(
         this.exportAsHtml = defaults.isQuickCopyAsHtml()
     }
 
-    fun preload() {
-        citationController.init(
-            citationControllerInterface = this,
-            itemIds = this.itemIds,
-            libraryId = this.libraryId,
-            styleId = this.styleId,
-            localeId = this.localeId
+    fun preload() = viewModelScope.launch {
+        val session = citationController.startSession(
+            itemIds = this@SingleCitationViewModel.itemIds,
+            libraryId = this@SingleCitationViewModel.libraryId,
+            styleId = this@SingleCitationViewModel.styleId,
+            localeId = this@SingleCitationViewModel.localeId
         )
+        this@SingleCitationViewModel.citationSession = session
+
+        val previewText = citationController.citation(
+            session = session,
+            label = viewState.locator,
+            locator = viewState.locatorValue,
+            omitAuthor = viewState.omitAuthor,
+            format = Format.html,
+            showInWebView = true
+        )
+
+        updateState {
+            copy(preview = previewText)
+        }
     }
 
     override fun onCleared() {
@@ -150,13 +148,16 @@ internal class SingleCitationViewModel @Inject constructor(
                 triggerEffect(SingleCitationViewEffect.OnBack)
                 return@launch
             }
-            citationController.citation(
+            val text = citationController.citation(
+                session = this@SingleCitationViewModel.citationSession,
                 label = viewState.locator,
                 locator = viewState.locatorValue,
                 omitAuthor = viewState.omitAuthor,
                 format = Format.text,
                 showInWebView = false
             )
+            copyHtmlToClipboard(viewState.preview, text = text)
+            triggerEffect(SingleCitationViewEffect.OnBack)
         }
 
     }
@@ -195,31 +196,22 @@ internal class SingleCitationViewModel @Inject constructor(
         onLocatorValueChangedFlow.tryEmit(locatorValue)
     }
 
-    override fun getLocator(): String {
-        return viewState.locator
-    }
-
-    override fun getLocatorValue(): String {
-        return viewState.locatorValue
-    }
-
-    override fun omitAuthor(): Boolean {
-        return viewState.omitAuthor
-    }
-
     private suspend fun loadPreview(
         locatorLabel: String,
         locatorValue: String,
         omitAuthor: Boolean,
     ) {
-        citationController
+        val previewText = citationController
             .citation(
+                session = this.citationSession,
                 label = locatorLabel,
                 locator = locatorValue,
                 omitAuthor = omitAuthor,
                 format = Format.html,
                 showInWebView = true
             )
+        updateState { copy(preview = previewText) }
+
     }
 
 }
