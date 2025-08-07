@@ -112,3 +112,17 @@ fun Context.getDrawableByItemType(typeIconString: String): Int {
 
 @Composable
 fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
+
+fun Context.copyPlainTextToClipboard(text: String) {
+    val clipboard: ClipboardManager =
+        getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("Zotero", text)
+    clipboard.setPrimaryClip(clip)
+}
+
+fun Context.copyHtmlToClipboard(html: String, text: String) {
+    val clipboard: ClipboardManager =
+        getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newHtmlText("Zotero", text, html)
+    clipboard.setPrimaryClip(clip)
+}

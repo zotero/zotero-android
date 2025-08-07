@@ -408,5 +408,79 @@ class CitationController @Inject constructor(
         }
     }
 
+    private suspend fun getBibliography(
+        itemsCSL: String,
+        styleXML: String,
+        localeId: String,
+        localeXML: String,
+        format: String,
+    ): String {
+        val javascript =
+            "javascript:getBib('${itemsCSL}', '${styleXML}', '${localeId}', '${localeXML}', '${format}', 'msgid')"
+        return executeJavascript(javascript)
+    }
+
+    fun formatBibliography(citations: List<String>, format: Format): String {
+        when (format) {
+            Format.html -> {
+                return "<ol>\n\t<li>" + citations.joinToString(separator = "</li>\n\t<li>") + "</li>\n</ol>"
+            }
+
+            Format.rtf -> {
+                val prefix =
+                    "{\\*\\listtable{\\list\\listtemplateid1\\listhybrid{\\listlevel\\levelnfc0\\levelnfcn0\\leveljc0\\leveljcn0\\levelfollow0\\levelstartat1" +
+                            "\\levelspace360\\levelindent0{\\*\\levelmarker \\{decimal\\}.}{\\leveltext\\leveltemplateid1\\'02\\'00.;}{\\levelnumbers\\'01;}\\fi-360\\li720\\lin720 }" +
+                            "{\\listname ;}\\listid1}}\n{\\*\\listoverridetable{\\listoverride\\listid1\\listoverridecount0\\ls1}}\n\\tx720\\li720\\fi-480\\ls1\\ilvl0\n"
+                return prefix + citations.mapIndexed { index, t ->
+                    "{\\listtext ${index + 1}.    }${t}\\\n"
+                }.joinToString(separator = "")
+            }
+
+
+            Format.text -> {
+                return citations.mapIndexed { index, t ->
+                    "${index + 1}. ${t}"
+                }.joinToString(separator = "\r\n")
+
+            }
+        }
+    }
+
+    suspend fun bibliography(session: CitationSession, format: Format): String {
+        if (session.supportsBibliography) {
+            val bibliography = getBibliography(
+                itemsCSL = session.itemsCSL,
+                styleXML = session.styleXML,
+                localeId = session.styleLocaleId,
+                localeXML = session.localeXML,
+                format = format.name
+            )
+            return format(result = bibliography, format = format)
+        }
+        val numberedBibliography =
+            numberedBibliography(session = session, itemIds = session.itemIds, format = format)
+        return format(result = numberedBibliography, format = format)
+
+    }
+
+    suspend fun numberedBibliography(
+        session: CitationSession,
+        itemIds: Set<String>,
+        format: Format
+    ): String {
+        val citations = itemIds.map {
+            citation(
+                session = session,
+                itemIds = setOf(it),
+                label = null,
+                locator = null,
+                omitAuthor = false,
+                format = format,
+                showInWebView = false
+            )
+        }
+        return formatBibliography(citations, format)
+    }
+
 
 }

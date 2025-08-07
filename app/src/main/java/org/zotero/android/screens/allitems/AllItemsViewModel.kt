@@ -1,5 +1,6 @@
 package org.zotero.android.screens.allitems
 
+import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.mutableStateListOf
@@ -19,7 +20,10 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.zotero.android.androidx.content.copyHtmlToClipboard
+import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
@@ -29,6 +33,7 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.citation.CitationController
+import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
@@ -98,9 +103,11 @@ import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
+import javax.inject.Provider
 
 @HiltViewModel
 internal class AllItemsViewModel @Inject constructor(
+    private val context: Context,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
@@ -110,8 +117,12 @@ internal class AllItemsViewModel @Inject constructor(
     private val allItemsProcessor: AllItemsProcessor,
     private val dispatchers: Dispatchers,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val defaults: Defaults,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
+
+    @Inject
+    lateinit var citationControllerProvider: Provider<CitationController>
 
     private var collection: Collection = Collection(
         identifier = CollectionIdentifier.collection(""),
@@ -333,10 +344,6 @@ internal class AllItemsViewModel @Inject constructor(
                 shouldShowAddBottomSheet = true
             )
         }
-    }
-
-    fun onAddFile() {
-        onAddBottomSheetCollapse()
     }
 
     fun onAddBottomSheetCollapse() {
@@ -727,6 +734,10 @@ internal class AllItemsViewModel @Inject constructor(
                     showSingleCitation(setOf(longPressOptionItem.item.key))
                 }
 
+                is LongPressOptionItem.CopyBibliography -> {
+                    loadBibliography(setOf(longPressOptionItem.item.key))
+                }
+
                 else -> {}
             }
         }
@@ -794,6 +805,7 @@ internal class AllItemsViewModel @Inject constructor(
         val actions = mutableListOf<LongPressOptionItem>()
         if (!CitationController.invalidItemTypes.contains(item.rawType)) {
             actions.add(LongPressOptionItem.CopyCitation(item))
+            actions.add(LongPressOptionItem.CopyBibliography(item))
         }
 
         val attachment = allItemsProcessor.attachment(item.key, null)
@@ -1160,6 +1172,39 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowSingleCitationEffect)
     }
 
+    fun loadBibliography(selectedItemKeys: Set<String>) = viewModelScope.launch {
+        updateState {
+            copy(isGeneratingBibliography = true)
+        }
+
+        val styleId = defaults.getQuickCopyStyleId()
+        val localeId = defaults.getQuickCopyCslLocaleId()
+        val citationController = citationControllerProvider.get()
+        val session = citationController.startSession(
+            itemIds = selectedItemKeys,
+            libraryId = this@AllItemsViewModel.library.identifier,
+            styleId = styleId,
+            localeId = localeId
+        )
+        val html = citationController.bibliography(session, format = Format.html)
+        val resultPair: Pair<String, String?>
+        if (defaults.isQuickCopyAsHtml()) {
+            resultPair = html to null
+        } else {
+            resultPair = html to citationController.bibliography(session = session, format = Format.text)
+        }
+        if (resultPair.second != null) {
+            context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+        } else {
+            context.copyPlainTextToClipboard(resultPair.first)
+        }
+
+        updateState {
+            copy(isGeneratingBibliography = false)
+        }
+
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1177,6 +1222,7 @@ internal data class AllItemsViewState(
     val isCollectionACollection: Boolean = false,
     val collectionName: String = "",
     val showDownloadedFilesPopup: Boolean = false,
+    val isGeneratingBibliography: Boolean = false,
 ) : ViewState {
     val tagsFilter: Set<String>?
         get() {

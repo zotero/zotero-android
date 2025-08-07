@@ -88,6 +88,11 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.file_copy
     )
 
+    data class CopyBibliography(val item: RItem): LongPressOptionItem(
+        titleId = Strings.citation_copy_bibliography,
+        resIcon = Drawables.file_copy
+    )
+
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_create_parent,
         resIcon = Drawables.add_24px

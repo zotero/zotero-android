@@ -1,7 +1,5 @@
 package org.zotero.android.screens.citation.singlecitation
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,6 +10,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.zotero.android.androidx.content.copyHtmlToClipboard
+import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -89,20 +89,6 @@ internal class SingleCitationViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun copyPlainTextToClipboard(text: String) {
-        val clipboard: ClipboardManager =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Zotero", text)
-        clipboard.setPrimaryClip(clip)
-    }
-
-    private fun copyHtmlToClipboard(html: String, text: String) {
-        val clipboard: ClipboardManager =
-            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newHtmlText("Zotero", text, html)
-        clipboard.setPrimaryClip(clip)
-    }
-
     private fun initViewState() {
         val args = ScreenArguments.singleCitationArgs
         this.libraryId = args.libraryId
@@ -144,7 +130,7 @@ internal class SingleCitationViewModel @Inject constructor(
             val preview = viewState.preview.ifEmpty { return@launch }
 
             if (this@SingleCitationViewModel.exportAsHtml) {
-                copyPlainTextToClipboard(preview)
+                context.copyPlainTextToClipboard(preview)
                 triggerEffect(SingleCitationViewEffect.OnBack)
                 return@launch
             }
@@ -156,7 +142,7 @@ internal class SingleCitationViewModel @Inject constructor(
                 format = Format.text,
                 showInWebView = false
             )
-            copyHtmlToClipboard(viewState.preview, text = text)
+            context.copyHtmlToClipboard(viewState.preview, text = text)
             triggerEffect(SingleCitationViewEffect.OnBack)
         }
 

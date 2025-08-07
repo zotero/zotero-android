@@ -223,6 +223,10 @@ internal fun AllItemsScreen(
                     modifier = Modifier.align(Alignment.TopCenter),
                     contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
                 )
+
+                if (viewState.isGeneratingBibliography) {
+                    GeneratingBibliographyLoadingIndicator()
+                }
             }
         }
 
