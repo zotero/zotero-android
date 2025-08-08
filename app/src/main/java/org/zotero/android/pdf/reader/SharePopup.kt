@@ -62,12 +62,18 @@ internal fun SharePopup(
                 .background(color = CustomTheme.colors.popupBackgroundColor)
         ) {
             if (viewState.parentKey != null) {
-                PopupDivider()
                 PopupOptionRow(
                     text = stringResource(id = Strings.citation_copy_citation),
                     onOptionClick = viewModel::onCopyCitation,
                     resIcon = Drawables.file_copy
                 )
+                PopupDivider()
+                PopupOptionRow(
+                    text = stringResource(id = Strings.citation_copy_bibliography),
+                    onOptionClick = viewModel::onCopyBibliography,
+                    resIcon = Drawables.file_copy
+                )
+                PopupDivider()
             }
             PopupOptionRow(
                 text = stringResource(id = Strings.pdf_reader_share_export_pdf),

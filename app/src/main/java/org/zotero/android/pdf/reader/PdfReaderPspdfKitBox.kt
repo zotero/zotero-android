@@ -46,6 +46,7 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.zotero.android.pdf.data.PdfReaderTool
+import org.zotero.android.screens.allitems.GeneratingBibliographyLoadingIndicator
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -158,6 +159,9 @@ internal fun PdfReaderPspdfKitBox(
                 onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
                 shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
             )
+        }
+        if (viewState.isGeneratingBibliography) {
+            GeneratingBibliographyLoadingIndicator()
         }
     }
 }

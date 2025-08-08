@@ -57,5 +57,6 @@ interface PdfReaderVMInterface {
     fun dismissSharePopup()
     fun onShareButtonTapped()
     fun onCopyCitation()
+    fun onCopyBibliography()
     fun hideCopyCitation()
 }

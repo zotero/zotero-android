@@ -79,6 +79,8 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
 import org.zotero.android.ZoteroApplication
+import org.zotero.android.androidx.content.copyHtmlToClipboard
+import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
@@ -91,6 +93,8 @@ import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.architecture.require
+import org.zotero.android.citation.CitationController
+import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -182,6 +186,7 @@ import java.io.File
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
+import javax.inject.Provider
 import kotlin.concurrent.timerTask
 import kotlin.random.Random
 
@@ -252,6 +257,9 @@ class PdfReaderViewModel @Inject constructor(
     private var shouldPreserveFilterResultsBetweenReinitializations = false
 
     private var initialPage: Int? = null
+
+    @Inject
+    lateinit var citationControllerProvider: Provider<CitationController>
 
     val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
@@ -3566,6 +3574,45 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
+    override fun onCopyBibliography() {
+        dismissSharePopup()
+
+        updateState {
+            copy(isGeneratingBibliography = true)
+        }
+
+        viewModelScope.launch {
+            val styleId = defaults.getQuickCopyStyleId()
+            val localeId = defaults.getQuickCopyCslLocaleId()
+            val citationController = citationControllerProvider.get()
+            val libraryId = viewState.library.identifier
+            val selectedItemKeys = setOf(viewState.parentKey!!)
+            val session = citationController.startSession(
+                itemIds = selectedItemKeys,
+                libraryId = libraryId,
+                styleId = styleId,
+                localeId = localeId
+            )
+            val html = citationController.bibliography(session, format = Format.html)
+            val resultPair: Pair<String, String?>
+            if (defaults.isQuickCopyAsHtml()) {
+                resultPair = html to null
+            } else {
+                resultPair = html to citationController.bibliography(session = session, format = Format.text)
+            }
+            if (resultPair.second != null) {
+                context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+            } else {
+                context.copyPlainTextToClipboard(resultPair.first)
+            }
+
+            updateState {
+                copy(isGeneratingBibliography = false)
+            }
+        }
+
+    }
+
     override fun onCopyCitation() {
         dismissSharePopup()
         ScreenArguments.singleCitationArgs = SingleCitationArgs(libraryId = viewState.library.identifier, itemIds = setOf(viewState.parentKey!!))
@@ -3631,6 +3678,7 @@ data class PdfReaderViewState(
     var pdfSettingsArgs: PdfSettingsArgs? = null,
     var showSharePopup: Boolean = false,
     val showSingleCitationScreen: Boolean = false,
+    val isGeneratingBibliography: Boolean = false
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {
