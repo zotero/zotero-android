@@ -699,6 +699,9 @@ internal class AllItemsViewModel @Inject constructor(
                 is LongPressOptionItem.Download -> {
                     allItemsProcessor.downloadAttachments(setOf(longPressOptionItem.item.key))
                 }
+                is LongPressOptionItem.ShareDownload -> {
+                    allItemsProcessor.shareDownloads(setOf(longPressOptionItem.item.key))
+                }
                 is LongPressOptionItem.RemoveDownload -> {
                     allItemsProcessor.removeDownloads(setOf(longPressOptionItem.item.key))
                 }
@@ -825,6 +828,7 @@ internal class AllItemsViewModel @Inject constructor(
                 when(location) {
                     Attachment.FileLocation.local -> {
                         actions.add(LongPressOptionItem.RemoveDownload(item))
+                        actions.add(LongPressOptionItem.ShareDownload(item))
                     }
                     Attachment.FileLocation.remote -> {
                         actions.add(LongPressOptionItem.Download(item))
