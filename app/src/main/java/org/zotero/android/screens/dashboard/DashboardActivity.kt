@@ -1,10 +1,12 @@
 package org.zotero.android.screens.dashboard
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.compose.setContent
@@ -24,6 +26,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
 import org.greenrobot.eventbus.EventBus
@@ -34,6 +38,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint
 import org.zotero.android.architecture.EventBusConstants.FileWasSelected.CallPoint.AllItems
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.navigation.DashboardTopLevelDialogs
 import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNavigation
 import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
@@ -59,6 +64,9 @@ internal class DashboardActivity : BaseActivity() {
 
     @Inject
     lateinit var fileStore: FileStore
+
+    @Inject
+    lateinit var dispatchers: Dispatchers
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,55 +103,97 @@ internal class DashboardActivity : BaseActivity() {
             intent.setDataAndType(resultUri, mimeType)
             intent.putExtra(MediaStore.EXTRA_OUTPUT, resultUri)
             intent.flags = FLAG_GRANT_READ_URI_PERMISSION
-
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            } else {
-                longToast("No app found to open this file")
-            }
+            showAppChooserExcludingZoteroApp(intent)
         }
 
         val onOpenWebpage: (uri: Uri) -> Unit = { uri ->
             val intent = Intent(Intent.ACTION_VIEW, uri)
-            startActivity(intent)
+            //Some devices have no apps to open URLs or such function was restricted.
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                longToast("No app found to open web pages or restriction is in place")
+            }
         }
-        val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
-        val collectionDefaultValue = viewModel.getInitialCollectionArgs()
 
-        setContent {
-            CustomTheme {
-                Box {
-                    val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
-                    val viewEffect by viewModel.viewEffects.observeAsState()
-                    val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
-                    LaunchedEffect(key1 = viewModel) {
-                        viewModel.init(isTablet = isTablet)
-                    }
+        val onExportPdf: (file: File) -> Unit = { file ->
+            val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
+            val resultUri = FileProvider.getUriForFile(this, fileProviderAuthority, file)
+            val share = Intent()
+            share.setAction(Intent.ACTION_SEND)
+            share.setDataAndType(resultUri, "application/pdf")
+            share.putExtra(Intent.EXTRA_STREAM, resultUri)
+            showAppChooserExcludingZoteroApp(share)
+        }
 
-                    val layoutType = CustomLayoutSize.calculateLayoutType()
-                    if (layoutType.isTablet()) {
-                        DashboardRootTopLevelTabletNavigation(
-                            collectionDefaultValue = collectionDefaultValue,
-                            onPickFile = onPickFile,
-                            viewEffect = viewEffect,
-                            onOpenFile = onOpenFile,
-                            onOpenWebpage = onOpenWebpage,
-                            wasPspdfkitInitialized = wasPspdfkitInitialized,
-                        )
-                    } else {
-                        DashboardRootPhoneNavigation(
-                            collectionDefaultValue = collectionDefaultValue,
-                            onPickFile = onPickFile,
-                            onOpenFile = onOpenFile,
-                            onOpenWebpage = onOpenWebpage,
-                            wasPspdfkitInitialized = wasPspdfkitInitialized,
-                            viewEffect = viewEffect,
-                        )
+        val mainCoroutineScope = CoroutineScope(dispatchers.main)
+        mainCoroutineScope.launch {
+            val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
+            val collectionDefaultValue = viewModel.getInitialCollectionArgs()
+
+            setContent {
+                CustomTheme {
+                    Box {
+                        val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
+                        val viewEffect by viewModel.viewEffects.observeAsState()
+                        val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
+                        LaunchedEffect(key1 = viewModel) {
+                            viewModel.init(isTablet = isTablet)
+                        }
+                        if (viewState.initialLoadData != null) {
+                            val layoutType = CustomLayoutSize.calculateLayoutType()
+                            if (layoutType.isTablet()) {
+                                DashboardRootTopLevelTabletNavigation(
+                                    collectionDefaultValue = collectionDefaultValue,
+                                    onPickFile = onPickFile,
+                                    viewEffect = viewEffect,
+                                    onOpenFile = onOpenFile,
+                                    onOpenWebpage = onOpenWebpage,
+                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                                    onExportPdf = onExportPdf,
+                                )
+                            } else {
+                                DashboardRootPhoneNavigation(
+                                    collectionDefaultValue = collectionDefaultValue,
+                                    onPickFile = onPickFile,
+                                    onOpenFile = onOpenFile,
+                                    onOpenWebpage = onOpenWebpage,
+                                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                                    viewEffect = viewEffect,
+                                    onExportPdf = onExportPdf,
+                                )
+                            }
+                            DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
+                            SyncToolbarScreen()
+                        }
                     }
-                    DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)
-                    SyncToolbarScreen()
                 }
+            }
+        }
 
+    }
+
+    private fun showAppChooserExcludingZoteroApp(intent: Intent) {
+        val noAppFoundMessage = "No app found to open this file"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val chooserIntent = Intent.createChooser(intent, "Share file")
+            val allIntentActivities = packageManager.queryIntentActivities(intent, 0)
+            val excludedApps = allIntentActivities
+                .filter { it.activityInfo.name.contains("org.zotero.android") }
+                .map {
+                    ComponentName(it.activityInfo.packageName, it.activityInfo.name)
+                }
+            chooserIntent.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, excludedApps.toTypedArray())
+            if (allIntentActivities.size == excludedApps.size) {
+                longToast(noAppFoundMessage)
+            } else {
+                startActivity(chooserIntent)
+            }
+        } else {
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                longToast(noAppFoundMessage)
             }
         }
     }

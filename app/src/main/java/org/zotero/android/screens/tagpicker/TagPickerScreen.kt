@@ -121,34 +121,3 @@ internal fun TagPickerScreen(
         }
     }
 }
-
-@Composable
-private fun CreateTagRow(
-    tagName: String,
-    onClick: () -> Unit,
-    layoutType: CustomLayoutSize.LayoutType
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .safeClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-            .padding(start = 16.dp),
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(id = Strings.tag_picker_create_tag, tagName),
-            fontSize = layoutType.calculateTextSize(),
-            color = CustomTheme.colors.primaryContent,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CustomDivider()
-    }
-
-}

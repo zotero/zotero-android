@@ -141,29 +141,31 @@ internal class LibrariesViewModel @Inject constructor(
         }
     }
     fun showCollections(libraryId: LibraryIdentifier) {
-        val collectionId = storeIfNeeded(libraryId = libraryId)
+        viewModelScope.launch {
+            val collectionId = storeIfNeeded(libraryId = libraryId)
 
-        val collectionsArgs = CollectionsArgs(
-            libraryId = libraryId,
-            selectedCollectionId = collectionId,
-            shouldRecreateItemsScreen = this.isTablet
-        )
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
-        triggerEffect(LibrariesViewEffect.NavigateToCollectionsScreen(encodedArgs))
+            val collectionsArgs = CollectionsArgs(
+                libraryId = libraryId,
+                selectedCollectionId = collectionId,
+                shouldRecreateItemsScreen = this@LibrariesViewModel.isTablet
+            )
+            val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+            triggerEffect(LibrariesViewEffect.NavigateToCollectionsScreen(encodedArgs))
+        }
     }
 
-    private fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
-        if (fileStore.getSelectedLibrary() == libraryId) {
+    private suspend fun storeIfNeeded(libraryId: LibraryIdentifier, collectionId: CollectionIdentifier? = null): CollectionIdentifier {
+        if (fileStore.getSelectedLibraryAsync() == libraryId) {
             if (collectionId != null) {
-                fileStore.setSelectedCollectionId(collectionId)
+                fileStore.setSelectedCollectionIdAsync(collectionId)
                 return collectionId
             }
-            return fileStore.getSelectedCollectionId()
+            return fileStore.getSelectedCollectionIdAsync()
         }
 
         val collectionId = collectionId ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
-        fileStore.setSelectedLibrary(libraryId)
-        fileStore.setSelectedCollectionId(collectionId)
+        fileStore.setSelectedLibraryAsync(libraryId)
+        fileStore.setSelectedCollectionIdAsync(collectionId)
         return collectionId
 
     }
@@ -196,7 +198,6 @@ internal class LibrariesViewModel @Inject constructor(
 }
 
 internal data class  LibrariesViewState(
-    val str: String = "",
     val lce: LCE2 = LCE2.Loading,
     val groupIdForDeletePopup: Int? = null,
     val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),

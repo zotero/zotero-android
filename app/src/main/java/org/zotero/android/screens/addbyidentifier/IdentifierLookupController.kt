@@ -37,7 +37,7 @@ import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
-import org.zotero.android.translator.loader.TranslatorsLoader
+import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,7 +47,7 @@ class IdentifierLookupController @Inject constructor(
     private val context: Context,
     private val dispatchers: Dispatchers,
     private val gson: Gson,
-    private val translatorsLoader: TranslatorsLoader,
+    private val translatorsAndStylesLoader: TranslatorsAndStylesLoader,
     private val fileStore: FileStore,
     private val nonZoteroApi: NonZoteroApi,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
@@ -116,7 +116,7 @@ class IdentifierLookupController @Inject constructor(
             context = this.context,
             dispatchers = dispatchers,
             gson = gson,
-            translatorsLoader = translatorsLoader,
+            translatorsAndStylesLoader = translatorsAndStylesLoader,
             fileStore = fileStore,
             nonZoteroApi = nonZoteroApi,
             translatorLoadedEventStream = translatorLoadedEventStream,

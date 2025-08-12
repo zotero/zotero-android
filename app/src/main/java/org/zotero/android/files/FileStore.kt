@@ -7,6 +7,8 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import okhttp3.internal.closeQuietly
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
@@ -33,6 +35,7 @@ import javax.inject.Singleton
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,
+    private val dispatcher: CoroutineDispatcher,
     val dataMarshaller: DataMarshaller,
     private val gson: Gson
 ) {
@@ -41,6 +44,7 @@ class FileStore @Inject constructor (
     private lateinit var cachesDirectory: File
     private lateinit var debugDirectory: File
     private lateinit var crashDirectory: File
+    private lateinit var readerDirtyPdfFolder: File
 
 
     companion object {
@@ -86,6 +90,9 @@ class FileStore @Inject constructor (
 
         crashDirectory = File(filesDir, "crashLogging")
         crashDirectory.mkdirs()
+
+        readerDirtyPdfFolder = File(filesDir, "readerDirtyPdf")
+        readerDirtyPdfFolder.mkdirs()
     }
 
     fun pathForFilename(filename: String): String {
@@ -154,6 +161,14 @@ class FileStore @Inject constructor (
         } catch (e: IOException) {
             Timber.e(e, "Unable to write data to file = $filename")
         }
+    }
+
+    suspend fun attachmentFileAsync(
+        libraryId: LibraryIdentifier,
+        key: String,
+        filename: String,
+    ) = withContext(dispatcher) {
+        attachmentFile(libraryId = libraryId, key = key, filename = filename)
     }
 
     fun attachmentFile(
@@ -396,7 +411,7 @@ class FileStore @Inject constructor (
     }
 
     fun crashLoggingDirectory(): File {
-        this.debugDirectory.mkdirs()
+        this.crashDirectory.mkdirs()
         return this.crashDirectory
     }
 
@@ -430,6 +445,16 @@ class FileStore @Inject constructor (
             ?: LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
     }
 
+    suspend fun getSelectedLibraryAsync() = withContext(dispatcher) {
+        getSelectedLibrary()
+    }
+
+    suspend fun setSelectedLibraryAsync(
+        libraryIdentifier: LibraryIdentifier,
+    ) = withContext(dispatcher) {
+        setSelectedLibrary(libraryIdentifier)
+    }
+
     fun setSelectedLibrary(
         libraryIdentifier: LibraryIdentifier,
     ) {
@@ -442,6 +467,16 @@ class FileStore @Inject constructor (
         val loadDataWithFilename = loadDataWithFilename<SelectedCollectionIdentifierWrapperForStorage?>(selectedCollectionId)
         return loadDataWithFilename?.collectionIdentifier
             ?: CollectionIdentifier.custom(CollectionIdentifier.CustomType.all)
+    }
+
+    suspend fun getSelectedCollectionIdAsync() = withContext(dispatcher) {
+        getSelectedCollectionId()
+    }
+
+    suspend fun setSelectedCollectionIdAsync(
+        collectionIdentifier: CollectionIdentifier,
+    ) = withContext(dispatcher) {
+        setSelectedCollectionId(collectionIdentifier)
     }
 
     fun setSelectedCollectionId(
@@ -490,6 +525,49 @@ class FileStore @Inject constructor (
 
     fun pdfWorkerDirectory(): File {
         val folderPath = File(getRootDirectory(), "pdf-worker")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun citationDirectory(): File {
+        val folderPath = File(getRootDirectory(), "citation")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun utilitiesDirectory(): File {
+        val folderPath = File(citationDirectory(), "utilities")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun readerDirtyPdfFolder(): File {
+        readerDirtyPdfFolder.mkdirs()
+        return readerDirtyPdfFolder
+    }
+
+    fun pdfReaderDirtyFile(fileName: String): File {
+        return File(readerDirtyPdfFolder(), fileName)
+    }
+
+    fun stylesBundleExportDirectory(): File {
+        val folderPath = File(getRootDirectory(), "stylesBundleExport")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun stylesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "styles")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun style(filenameWithoutExtension: String): File {
+        return File(stylesDirectory(), "$filenameWithoutExtension.csl")
+    }
+
+    fun cslLocalesDirectory(): File {
+        val folderPath = File(getRootDirectory(), "cslLocales")
         folderPath.mkdirs()
         return folderPath
     }

@@ -1,9 +1,11 @@
 package org.zotero.android.api
 
+import com.google.gson.JsonArray
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.Field
+import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.HEAD
@@ -12,6 +14,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.PartMap
+import retrofit2.http.Query
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
@@ -68,4 +71,17 @@ interface NonZoteroApi {
     suspend fun sendHead(
         @Url url: String,
     ): retrofit2.Response<Void>
+
+    @FormUrlEncoded
+    @POST("https://repo.zotero.org/repo/updated")
+    suspend fun repoRequest(
+        @Query("m") type: Int,
+        @Query("last") timestamp: Long,
+        @Query("version") version: String,
+        @FieldMap fieldMap: Map<String, String>,
+    ): retrofit2.Response<ResponseBody>
+
+    @GET("https://www.zotero.org/styles-files/styles.json")
+    suspend fun stylesRequest(
+    ): retrofit2.Response<JsonArray>
 }

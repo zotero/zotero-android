@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.styles.data.Style
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.Tag
@@ -82,6 +83,16 @@ sealed class LongPressOptionItem(
         resIcon = Drawables.remove_from_collection
     )
 
+    data class CopyCitation(val item: RItem): LongPressOptionItem(
+        titleId = Strings.citation_copy_citation,
+        resIcon = Drawables.file_copy
+    )
+
+    data class CopyBibliography(val item: RItem): LongPressOptionItem(
+        titleId = Strings.citation_copy_bibliography,
+        resIcon = Drawables.file_copy
+    )
+
     data class CreateParentItem(val item: RItem): LongPressOptionItem(
         titleId = Strings.items_action_create_parent,
         resIcon = Drawables.add_24px
@@ -152,5 +163,11 @@ sealed class LongPressOptionItem(
     object DisplayAllTagsInThisLibraryChecked: LongPressOptionItem(
         titleId = Strings.tag_picker_show_all,
         resIcon = Drawables.check_24px,
+    )
+
+    data class CiteStyleDelete(val style: Style): LongPressOptionItem(
+        titleId = Strings.settings_cite_remove_style,
+        textAndIconColor = CustomPalette.ErrorRed,
+        resIcon = Drawables.cell_trash
     )
 }

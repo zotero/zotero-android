@@ -638,7 +638,7 @@ class WebDavController @Inject constructor(
         val requestBody = createRequestBody(file)
 
         val networkResult = safeApiCall {
-            provideWebDavApi().uploadAttachment(url = newUrl, body = requestBody)
+            provideWebDavApi(shouldLogBody = false).uploadAttachment(url = newUrl, body = requestBody)
         }
 
         if (networkResult is CustomResult.GeneralError.NetworkError) {
@@ -747,13 +747,14 @@ class WebDavController @Inject constructor(
     }
 
     suspend fun uploadAttachment(url: String, body: RequestBody): Response<Unit> {
-        return provideWebDavApi().uploadAttachment(url, body)
+        return provideWebDavApi(shouldLogBody = false).uploadAttachment(url, body)
     }
 
     private val authCache: Map<String, CachingAuthenticator> =
         ConcurrentHashMap<String, CachingAuthenticator>()
 
     private fun provideWebDavOkHttpClient(
+        shouldLogBody: Boolean
     ): OkHttpClient {
         val connectionPool = ConnectionPool(
             maxIdleConnections = 10,
@@ -793,13 +794,17 @@ class WebDavController @Inject constructor(
                 } else {
                     Timber.d(message)
                 }
-            }.apply { level = Level.BODY })
+            }.apply {
+                level = if (shouldLogBody) {
+                    Level.BODY
+                } else {
+                    Level.BASIC
+                }
+            })
             .build()
     }
 
-    private fun provideWebDavRetrofit(
-    ): Retrofit {
-        val okHttpClient = provideWebDavOkHttpClient()
+    private fun provideWebDavRetrofit(okHttpClient: OkHttpClient): Retrofit {
         val retrofitBuilder = Retrofit.Builder()
         return retrofitBuilder
             .baseUrl("https://dummyurl.com") //no-op as all URLs for webdav are absolute
@@ -807,8 +812,9 @@ class WebDavController @Inject constructor(
             .build()
     }
 
-    private fun provideWebDavApi(): WebDavApi {
-        val retrofit = provideWebDavRetrofit()
+    private fun provideWebDavApi(shouldLogBody: Boolean = true): WebDavApi {
+        val okHttpClient = provideWebDavOkHttpClient(shouldLogBody)
+        val retrofit = provideWebDavRetrofit(okHttpClient)
         return retrofit.create(WebDavApi::class.java)
     }
 

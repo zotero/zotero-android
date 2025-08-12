@@ -26,7 +26,6 @@ class SyncToolbarViewModel @Inject constructor(
     private var timer: Timer? = null
 
     private var pendingErrors: List<Exception>? = null
-    private var muteProgressDialogsOnUserDismissAction = false
     private var muteProgressDialogsOnSpecificScreens = false
 
     fun init() = initOnce {
@@ -107,7 +106,6 @@ class SyncToolbarViewModel @Inject constructor(
         val message = syncToolbarTextGenerator.syncToolbarText(syncProgress)
         when (syncProgress) {
             is SyncProgress.aborted -> {
-                muteProgressDialogsOnUserDismissAction = false
                 updateState {
                     copy(
                         progressState = CurrentSyncProgressState.Aborted(
@@ -118,28 +116,19 @@ class SyncToolbarViewModel @Inject constructor(
             }
 
             is SyncProgress.finished -> {
-                muteProgressDialogsOnUserDismissAction = false
-                updateState {
-                    copy(
-                        progressState = CurrentSyncProgressState.SyncFinished(
-                            message = message,
-                            hasErrors = !this@SyncToolbarViewModel.pendingErrors.isNullOrEmpty()
+                //Only show sync finished message when there are errors.
+                if(!this@SyncToolbarViewModel.pendingErrors.isNullOrEmpty()) {
+                    updateState {
+                        copy(
+                            progressState = CurrentSyncProgressState.SyncFinishedWithError(
+                                message = message,
+                            )
                         )
-                    )
+                    }
                 }
             }
-
             else -> {
-                if (muteProgressDialogsOnUserDismissAction) {
-                    return
-                }
-                updateState {
-                    copy(
-                        progressState = CurrentSyncProgressState.InProgress(
-                            message = message,
-                        )
-                    )
-                }
+              // We don't show regular progress updates now
             }
         }
     }
@@ -186,7 +175,6 @@ class SyncToolbarViewModel @Inject constructor(
     }
 
     fun onDismissProgressDialog() {
-        muteProgressDialogsOnUserDismissAction = true
         updateState {
             copy(progressState = null)
         }

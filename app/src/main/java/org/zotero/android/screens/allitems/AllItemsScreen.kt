@@ -29,7 +29,6 @@ import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
-import timber.log.Timber
 import java.io.File
 
 @Composable
@@ -51,6 +50,7 @@ internal fun AllItemsScreen(
     navigateToZoterWebViewScreen: (String) -> Unit,
     navigateToTagFilter: (params: String) -> Unit,
     navigateToScanBarcode: () -> Unit,
+    navigateToSingleCitation: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
     CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
@@ -131,6 +131,9 @@ internal fun AllItemsScreen(
                     if (consumedEffect.shouldScrollToTop && ((1..2).contains(maybeIndex))) {
                         lazyListState.scrollToItem(index = 0, scrollOffset = 0)
                     }
+                }
+                AllItemsViewEffect.ShowSingleCitationEffect -> {
+                    navigateToSingleCitation()
                 }
             }
         }
@@ -220,6 +223,10 @@ internal fun AllItemsScreen(
                     modifier = Modifier.align(Alignment.TopCenter),
                     contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
                 )
+
+                if (viewState.isGeneratingBibliography) {
+                    GeneratingBibliographyLoadingIndicator()
+                }
             }
         }
 

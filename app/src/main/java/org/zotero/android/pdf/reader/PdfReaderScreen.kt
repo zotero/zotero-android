@@ -21,21 +21,25 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
 import org.zotero.android.pdf.annotationmore.sidebar.PdfAnnotationMoreNavigationView
+import org.zotero.android.pdf.settings.sidebar.PdfCopyCitationView
 import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
 import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import java.io.File
 
 @Composable
 internal fun PdfReaderScreen(
     onBack: () -> Unit,
+    onExportPdf: (file: File) -> Unit,
     navigateToPdfFilter: () -> Unit,
-    navigateToPdfSettings: () -> Unit,
-    navigateToPdfPlainReader: () -> Unit,
+    navigateToPdfSettings: (args: String) -> Unit,
+    navigateToPdfPlainReader: (args: String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
     navigateToTagPicker: () -> Unit,
+    navigateToSingleCitationScreen: () -> Unit,
     viewModel: PdfReaderViewModel = hiltViewModel(),
 ) {
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
@@ -118,12 +122,19 @@ internal fun PdfReaderScreen(
                     if (!layoutType.isTablet()) {
                         viewModel.removeFragment()
                     }
-                    navigateToPdfSettings()
+                    navigateToPdfSettings(consumedEffect.params)
+                }
+
+                is PdfReaderViewEffect.ShowSingleCitationScreen -> {
+                    if (!layoutType.isTablet()) {
+                        viewModel.removeFragment()
+                    }
+                    navigateToSingleCitationScreen()
                 }
 
                 is PdfReaderViewEffect.ShowPdfPlainReader -> {
                     viewModel.removeFragment()
-                    navigateToPdfPlainReader()
+                    navigateToPdfPlainReader(consumedEffect.params)
                 }
                 is PdfReaderViewEffect.ShowPdfColorPicker -> {
                     if (!layoutType.isTablet()) {
@@ -136,6 +147,9 @@ internal fun PdfReaderScreen(
                 }
                 is PdfReaderViewEffect.NavigateToTagPickerScreen -> {
                     navigateToTagPicker()
+                }
+                is PdfReaderViewEffect.ExportPdf -> {
+                    onExportPdf(consumedEffect.file)
                 }
                 else -> {}
             }
@@ -158,6 +172,7 @@ internal fun PdfReaderScreen(
                         PdfReaderTopBar(
                             onBack = onBack,
                             onShowHideSideBar = viewModel::toggleSideBar,
+                            onShareButtonTapped = viewModel::onShareButtonTapped,
                             toPdfSettings = viewModel::navigateToPdfSettings,
                             toPdfPlainReader = viewModel::navigateToPlainReader,
                             showPdfSearch = viewState.showPdfSearch,
@@ -196,6 +211,7 @@ internal fun PdfReaderScreen(
         PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)
         PdfSettingsView(viewState = viewState, viewModel = viewModel)
+        PdfCopyCitationView(viewState = viewState, viewModel = viewModel)
     }
 
 }

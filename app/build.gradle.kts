@@ -103,7 +103,7 @@ android {
             applicationIdSuffix = ".debug"
         }
         internal {
-            resValue("string", "app_name", """"Zotero Beta""")
+            resValue("string", "app_name", """"Zotero""")
             buildConfigField("String", "PSPDFKIT_KEY", readPspdfkitKey())
         }
     }
@@ -166,6 +166,7 @@ dependencies {
     implementation(Libs.Commons.io)
     implementation(Libs.Commons.codec)
     implementation(Libs.Commons.validator)
+    implementation(Libs.Commons.text)
 
     //Other
     implementation(Libs.timber)

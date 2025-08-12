@@ -45,20 +45,22 @@ internal class ScanBarcodeViewModel @Inject constructor(
     private val queueOfScannedBarcodes = LinkedList<String>()
 
     fun init() = initOnce {
-        setupTranslatorLoadedObserving()
-        setupAttachmentObserving()
-        val collectionKeys =
-            fileStore.getSelectedCollectionId().keyGet?.let { setOf(it) } ?: emptySet()
-        val libraryId = fileStore.getSelectedLibrary()
-        initState(
-            hasDarkBackground = false,
-            collectionKeys = collectionKeys,
-            libraryId = libraryId
-        )
+        viewModelScope.launch {
+            setupTranslatorLoadedObserving()
+            setupAttachmentObserving()
+            val collectionKeys =
+                fileStore.getSelectedCollectionIdAsync().keyGet?.let { setOf(it) } ?: emptySet()
+            val libraryId = fileStore.getSelectedLibraryAsync()
+            initState(
+                hasDarkBackground = false,
+                collectionKeys = collectionKeys,
+                libraryId = libraryId
+            )
 
-        initialize(collectionKeys = collectionKeys, libraryId = libraryId)
+            initialize(collectionKeys = collectionKeys, libraryId = libraryId)
 
-        launchBarcodeScanner()
+            launchBarcodeScanner()
+        }
     }
 
     fun launchBarcodeScanner() {

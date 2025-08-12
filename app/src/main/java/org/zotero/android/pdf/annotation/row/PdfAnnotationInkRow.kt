@@ -10,44 +10,62 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotation.CommentSection
-import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
-import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.SizeSelector
 import org.zotero.android.pdf.annotation.TagsSection
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.sync.Tag
 
 @Composable
 internal fun PdfAnnotationInkRow(
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel,
+    annotation: PDFAnnotation,
     layoutType: CustomLayoutSize.LayoutType,
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit,
+    size: Float,
+    onSizeChanged: (Float) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        CommentSection(viewState, layoutType, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
+        CommentSection(
+            annotation = annotation,
+            layoutType = layoutType,
+            commentFocusText = commentFocusText,
+            onCommentTextChange = onCommentTextChange,
         )
         Spacer(modifier = Modifier.height(4.dp))
-        SizeSelector(
-            viewState = viewState,
-            viewModel = viewModel,
-            layoutType = layoutType
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+        if (annotation.isZoteroAnnotation) {
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SizeSelector(
+                layoutType = layoutType,
+                size = size,
+                onSizeChanged = onSizeChanged,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TagsSection(
+                layoutType = layoutType,
+                tags = tags,
+                onTagsClicked = onTagsClicked,
+            )
+        }
+
     }
 }
 

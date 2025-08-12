@@ -1,5 +1,6 @@
 package org.zotero.android.screens.allitems
 
+import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.mutableStateListOf
@@ -19,7 +20,10 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.zotero.android.androidx.content.copyHtmlToClipboard
+import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
@@ -28,6 +32,8 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.citation.CitationController
+import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.database.DbError
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
@@ -60,6 +66,7 @@ import org.zotero.android.screens.allitems.data.ItemsError
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
+import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
@@ -96,9 +103,11 @@ import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
+import javax.inject.Provider
 
 @HiltViewModel
 internal class AllItemsViewModel @Inject constructor(
+    private val context: Context,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
     private val selectMedia: SelectMediaUseCase,
@@ -108,8 +117,12 @@ internal class AllItemsViewModel @Inject constructor(
     private val allItemsProcessor: AllItemsProcessor,
     private val dispatchers: Dispatchers,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val defaults: Defaults,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
+
+    @Inject
+    lateinit var citationControllerProvider: Provider<CitationController>
 
     private var collection: Collection = Collection(
         identifier = CollectionIdentifier.collection(""),
@@ -185,33 +198,35 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun init(isTablet: Boolean) = initOnce {
-        this.isTablet = isTablet
-        EventBus.getDefault().register(this)
-        val args = ScreenArguments.allItemsArgs
-        this.collection = args.collection
-        this.library = args.library
+        viewModelScope.launch {
+            this@AllItemsViewModel.isTablet = isTablet
+            EventBus.getDefault().register(this@AllItemsViewModel)
+            val args = ScreenArguments.allItemsArgs
+            this@AllItemsViewModel.collection = args.collection
+            this@AllItemsViewModel.library = args.library
 
-        val searchTerm = args.searchTerm
+            val searchTerm = args.searchTerm
 
-        updateState {
-            copy(
-                searchTerm = searchTerm,
-                error = args.error,
-                isCollectionTrash = this@AllItemsViewModel.collection.identifier.isTrash,
-                isCollectionACollection = this@AllItemsViewModel.collection.identifier.isCollection,
-                collectionName = this@AllItemsViewModel.collection.name
+            updateState {
+                copy(
+                    searchTerm = searchTerm,
+                    error = args.error,
+                    isCollectionTrash = this@AllItemsViewModel.collection.identifier.isTrash,
+                    isCollectionACollection = this@AllItemsViewModel.collection.identifier.isCollection,
+                    collectionName = this@AllItemsViewModel.collection.name
+                )
+            }
+
+            allItemsProcessor.init(
+                allItemsProcessorInterface = this@AllItemsViewModel,
+                searchTerm = searchTerm
             )
         }
 
-        allItemsProcessor.init(
-            viewModelScope = viewModelScope,
-            allItemsProcessorInterface = this,
-            searchTerm = searchTerm
-        )
 
     }
 
-    override fun show(attachment: Attachment, library: Library) {
+    override fun show(attachment: Attachment, parentKey: String?, library: Library) {
         viewModelScope.launch {
             val attachmentType = attachment.type
             when (attachmentType) {
@@ -228,8 +243,14 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                     when (contentType) {
                         "application/pdf" -> {
-                            showPdf(file = file, key = attachment.key, library = library)
+                            showPdf(
+                                file = file,
+                                key = attachment.key,
+                                parentKey = parentKey,
+                                library = library
+                            )
                         }
+
                         "text/html", "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
@@ -260,10 +281,11 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
 
-    private fun showPdf(file: File, key: String, library: Library) {
+    private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
         val uri = Uri.fromFile(file)
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
+            parentKey = parentKey,
             library = library,
             page = null,
             preselectedAnnotationKey = null,
@@ -322,10 +344,6 @@ internal class AllItemsViewModel @Inject constructor(
                 shouldShowAddBottomSheet = true
             )
         }
-    }
-
-    fun onAddFile() {
-        onAddBottomSheetCollapse()
     }
 
     fun onAddBottomSheetCollapse() {
@@ -393,10 +411,13 @@ internal class AllItemsViewModel @Inject constructor(
             selectionResult as MediaSelectionResult.AttachMediaSuccess
 
             val original = selectionResult.file.file
-            val filename = original.nameWithoutExtension + "." + original.extension
+            val filename = original.name
+            //I was able to reproduce crash with unrecognizable contentType only when file's extension was empty. If so we now treat such file as binary.
             val contentType =
-                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)!!
-            val file = fileStore.attachmentFile(libraryId = libraryId, key = key, filename = filename)
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(original.extension)
+                    ?: "application/octet-stream"
+            val file =
+                fileStore.attachmentFileAsync(libraryId = libraryId, key = key, filename = filename)
             if (!original.renameTo(file)) {
                 Timber.e("can't move file")
                 continue
@@ -579,7 +600,7 @@ internal class AllItemsViewModel @Inject constructor(
 
         val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
         if (accessory == null) {
-            showMetadata(allItemsProcessor.getResultByKey(item.key))
+            showMetadata(allItemsProcessor.getResultByKey(item.key)!!)
             return
         }
 
@@ -596,7 +617,9 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAccessoryTapped(key:String) {
-        showMetadata(allItemsProcessor.getResultByKey(key))
+        allItemsProcessor.getResultByKey(key)?.let {
+            showMetadata(it)
+        }
     }
 
     private fun showDoi(doi: String) {
@@ -707,6 +730,14 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                 }
 
+                is LongPressOptionItem.CopyCitation -> {
+                    showSingleCitation(setOf(longPressOptionItem.item.key))
+                }
+
+                is LongPressOptionItem.CopyBibliography -> {
+                    loadBibliography(setOf(longPressOptionItem.item.key))
+                }
+
                 else -> {}
             }
         }
@@ -757,7 +788,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(key: String) {
-        val item = allItemsProcessor.getResultByKey(key)
+        val item = allItemsProcessor.getResultByKey(key)!!
         if (this.collection.identifier.isTrash) {
             EventBus.getDefault().post(
                 ShowDashboardLongPressBottomSheet(
@@ -772,6 +803,10 @@ internal class AllItemsViewModel @Inject constructor(
         }
 
         val actions = mutableListOf<LongPressOptionItem>()
+        if (!CitationController.invalidItemTypes.contains(item.rawType)) {
+            actions.add(LongPressOptionItem.CopyCitation(item))
+            actions.add(LongPressOptionItem.CopyBibliography(item))
+        }
 
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
@@ -936,6 +971,14 @@ internal class AllItemsViewModel @Inject constructor(
         showDeleteItemsConfirmation(getSelectedKeys())
     }
 
+    fun onDownloadSelectedAttachments() {
+        allItemsProcessor.downloadSelectedAttachments(getSelectedKeys())
+    }
+
+    fun onRemoveSelectedAttachments() {
+        allItemsProcessor.removeSelectedAttachments(getSelectedKeys())
+    }
+
     fun onEmptyTrash() {
         updateState {
             copy(
@@ -953,9 +996,11 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun navigateToCollections() {
-        val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibrary(), fileStore.getSelectedCollectionId())
-        val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
-        triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
+        viewModelScope.launch {
+            val collectionsArgs = CollectionsArgs(libraryId = fileStore.getSelectedLibraryAsync(), fileStore.getSelectedCollectionIdAsync())
+            val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(collectionsArgs, StandardCharsets.UTF_8)
+            triggerEffect(AllItemsViewEffect.ShowCollectionsEffect(encodedArgs))
+        }
     }
 
     fun onDismissDialog() {
@@ -1119,6 +1164,47 @@ internal class AllItemsViewModel @Inject constructor(
         return filterArgs
     }
 
+    private fun showSingleCitation(selectedItemKeys: Set<String>) {
+        ScreenArguments.singleCitationArgs = SingleCitationArgs(
+            itemIds = selectedItemKeys,
+            libraryId = this.library.identifier,
+        )
+        triggerEffect(AllItemsViewEffect.ShowSingleCitationEffect)
+    }
+
+    fun loadBibliography(selectedItemKeys: Set<String>) = viewModelScope.launch {
+        updateState {
+            copy(isGeneratingBibliography = true)
+        }
+
+        val styleId = defaults.getQuickCopyStyleId()
+        val localeId = defaults.getQuickCopyCslLocaleId()
+        val citationController = citationControllerProvider.get()
+        val session = citationController.startSession(
+            itemIds = selectedItemKeys,
+            libraryId = this@AllItemsViewModel.library.identifier,
+            styleId = styleId,
+            localeId = localeId
+        )
+        val html = citationController.bibliography(session, format = Format.html)
+        val resultPair: Pair<String, String?>
+        if (defaults.isQuickCopyAsHtml()) {
+            resultPair = html to null
+        } else {
+            resultPair = html to citationController.bibliography(session = session, format = Format.text)
+        }
+        if (resultPair.second != null) {
+            context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+        } else {
+            context.copyPlainTextToClipboard(resultPair.first)
+        }
+
+        updateState {
+            copy(isGeneratingBibliography = false)
+        }
+
+    }
+
 }
 
 internal data class AllItemsViewState(
@@ -1136,6 +1222,7 @@ internal data class AllItemsViewState(
     val isCollectionACollection: Boolean = false,
     val collectionName: String = "",
     val showDownloadedFilesPopup: Boolean = false,
+    val isGeneratingBibliography: Boolean = false,
 ) : ViewState {
     val tagsFilter: Set<String>?
         get() {
@@ -1195,4 +1282,5 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
     data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
+    object ShowSingleCitationEffect: AllItemsViewEffect()
 }

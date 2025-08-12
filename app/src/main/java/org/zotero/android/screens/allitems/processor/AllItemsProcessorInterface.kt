@@ -18,7 +18,7 @@ interface AllItemsProcessorInterface {
     fun currentSearchTerm(): String?
     fun currentFilters(): List<ItemsFilter>
 
-    fun show(attachment: Attachment, library: Library)
+    fun show(attachment: Attachment, parentKey: String?, library: Library)
     fun updateTagFilter()
     fun isEditing(): Boolean
     fun showItemDetailWithDelay(creation: DetailType.creation)

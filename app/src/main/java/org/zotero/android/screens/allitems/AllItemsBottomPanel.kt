@@ -82,6 +82,11 @@ private fun EditingBottomPanel(
                         viewModel.onDelete()
                     }
                 )
+
+                DownloadAndRemoveAttachmentBlock(
+                    viewModel = viewModel,
+                    isRestoreAndDeleteEnabled = isRestoreAndDeleteEnabled
+                )
             } else {
                 IconWithPadding(
                     drawableRes = Drawables.create_new_folder_24px,
@@ -110,9 +115,45 @@ private fun EditingBottomPanel(
                         viewModel.onTrash()
                     }
                 )
+
+                DownloadAndRemoveAttachmentBlock(
+                    viewModel = viewModel,
+                    isRestoreAndDeleteEnabled = isRestoreAndDeleteEnabled
+                )
             }
         }
     }
+}
+
+@Composable
+private fun DownloadAndRemoveAttachmentBlock(
+    viewModel: AllItemsViewModel,
+    isRestoreAndDeleteEnabled: Boolean
+) {
+    IconWithPadding(
+        isEnabled = isRestoreAndDeleteEnabled,
+        drawableRes = Drawables.download_24px,
+        tintColor = if (isRestoreAndDeleteEnabled) {
+            CustomTheme.colors.zoteroDefaultBlue
+        } else {
+            CustomTheme.colors.disabledContent
+        },
+        onClick = {
+            viewModel.onDownloadSelectedAttachments()
+        }
+    )
+    IconWithPadding(
+        isEnabled = isRestoreAndDeleteEnabled,
+        drawableRes = Drawables.file_download_off_24px,
+        tintColor = if (isRestoreAndDeleteEnabled) {
+            CustomTheme.colors.zoteroDefaultBlue
+        } else {
+            CustomTheme.colors.disabledContent
+        },
+        onClick = {
+            viewModel.onRemoveSelectedAttachments()
+        }
+    )
 }
 
 @Composable

@@ -38,6 +38,7 @@ import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
+import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
@@ -65,6 +66,7 @@ internal fun DashboardRootPhoneNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    onExportPdf: (file: File) -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
 ) {
@@ -132,6 +134,7 @@ internal fun DashboardRootPhoneNavigation(
                 navigateToAddByIdentifier = navigation::toAddByIdentifier,
                 navigateToCollectionPicker = navigation::toCollectionPicker,
                 navigateToScanBarcode = navigation::toScanBarcode,
+                navigateToSingleCitation = navigation::toSingleCitation,
                 onShowPdf = { pdfScreenParams ->
                     navigation.toPdfScreen(
                         context = context,
@@ -231,6 +234,7 @@ internal fun DashboardRootPhoneNavigation(
             imageViewerScreen(onBack = navigation::onBack)
 
             pdfReaderNavScreensForPhone(
+                onExportPdf = onExportPdf,
                 navigation = navigation,
                 navigateToTagPicker = navigation::toTagPicker
             )
@@ -239,6 +243,13 @@ internal fun DashboardRootPhoneNavigation(
                 navigateToTagPicker = navigation::toTagPicker
             )
             zoterWebViewScreen(onClose = navigation::onBack)
+
+            composable(
+                route = DashboardRootPhoneDestinations.SINGLE_CITATION,
+                arguments = listOf(),
+            ) {
+                SingleCitationScreen(onBack = navigation::onBack)
+            }
         }
     }
 }
@@ -257,6 +268,7 @@ private object DashboardRootPhoneDestinations {
     const val COLLECTION_PICKER = "collectionPicker"
     const val SCAN_BARCODE = "scanBarcode"
     const val RETRIEVE_METADATA = "retrieveMetadata"
+    const val SINGLE_CITATION = "singleCitation"
 
 }
 
@@ -288,6 +300,10 @@ private fun ZoteroNavigation.toTagFilter(params: String) {
 
 private fun ZoteroNavigation.toRetrieveMetadata(args: String) {
     navController.navigate("${DashboardRootPhoneDestinations.RETRIEVE_METADATA}/$args")
+}
+
+private fun ZoteroNavigation.toSingleCitation() {
+    navController.navigate(DashboardRootPhoneDestinations.SINGLE_CITATION)
 }
 
 private fun toAllItems(

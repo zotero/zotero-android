@@ -35,7 +35,7 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @Composable
 internal fun PdfSettingsScreen(
-    args: PdfSettingsArgs,
+    args: PdfSettingsArgs?,
     onBack: () -> Unit,
     viewModel: PdfSettingsViewModel = hiltViewModel(),
 ) {
@@ -48,7 +48,7 @@ internal fun PdfSettingsScreen(
     BackHandler(onBack = {
         sendParamsAndBack()
     })
-    LaunchedEffect(args) {
+    LaunchedEffect(Unit) {
         viewModel.init(args = args)
     }
 

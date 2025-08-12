@@ -2,6 +2,9 @@ package org.zotero.android.pdf.annotation
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -41,7 +44,7 @@ internal class PdfAnnotationViewModel @Inject constructor(
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.PdfReaderAnnotationScreen) {
             updateState {
-                copy(tags = tagPickerResult.tags)
+                copy(tags = tagPickerResult.tags.toImmutableList())
             }
             EventBus.getDefault().post(TagPickerResult(tagPickerResult.tags, TagPickerResult.CallPoint.PdfReaderScreen))
         }
@@ -64,9 +67,9 @@ internal class PdfAnnotationViewModel @Inject constructor(
         updateState {
             copy(
                 color = selectedColor,
-                colors = colors,
+                colors = colors.toImmutableList(),
                 annotation = annotation,
-                tags = args.selectedAnnotation.tags,
+                tags = args.selectedAnnotation.tags.toImmutableList(),
                 commentFocusText = annotation.comment,
                 size = annotation.lineWidth ?: 1.0f,
                 fontSize = annotation.fontSize ?: 12.0f
@@ -196,10 +199,10 @@ internal class PdfAnnotationViewModel @Inject constructor(
 internal data class PdfAnnotationViewState(
     val isDark: Boolean = false,
     val annotation: org.zotero.android.pdf.data.PDFAnnotation? = null,
-    val tags: List<Tag> = emptyList(),
+    val tags: ImmutableList<Tag> = persistentListOf(),
     val commentFocusText: String = "",
     val color: String = "",
-    val colors: List<String> = emptyList(),
+    val colors: ImmutableList<String> = persistentListOf(),
     val fontSize: Float = 12f,
     val size: Float = 1.0f,
 ) : ViewState

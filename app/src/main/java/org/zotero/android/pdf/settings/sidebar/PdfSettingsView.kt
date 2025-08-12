@@ -29,7 +29,7 @@ internal fun PdfSettingsView(
     AnimatedContent(
         targetState = viewState.pdfSettingsArgs != null,
         transitionSpec = {
-            createAnnotationTransitionSpec()
+            createCopyCitationTransitionSpec()
         }, label = ""
     ) { showView ->
         if (showView) {
@@ -54,7 +54,7 @@ internal fun PdfSettingsView(
     }
 }
 
-private fun AnimatedContentTransitionScope<Boolean>.createAnnotationTransitionSpec(): ContentTransform {
+private fun AnimatedContentTransitionScope<Boolean>.createCopyCitationTransitionSpec(): ContentTransform {
     val intOffsetSpec = tween<IntOffset>()
     return (slideInHorizontally(intOffsetSpec) { it } with
             slideOutHorizontally(intOffsetSpec) { it }).using(

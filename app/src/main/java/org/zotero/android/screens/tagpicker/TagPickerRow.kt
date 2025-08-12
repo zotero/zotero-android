@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+import androidx.core.graphics.toColorInt
 
 @Composable
 fun TagPickerRow(
@@ -79,7 +80,7 @@ fun TagPickerRow(
 
 @Composable
 private fun TagPickerCircle(tagColorHex: String) {
-    val colorInt = android.graphics.Color.parseColor(tagColorHex)
+    val colorInt = tagColorHex.toColorInt()
     Canvas(modifier = Modifier.size(16.dp),
         onDraw = {
             drawCircle(color = Color(colorInt))

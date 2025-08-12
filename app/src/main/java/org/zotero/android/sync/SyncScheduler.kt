@@ -6,8 +6,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
+import org.zotero.android.architecture.coroutines.Dispatchers
 import timber.log.Timber
 import java.lang.Integer.min
 import java.util.Date
@@ -20,7 +23,7 @@ import kotlin.concurrent.timerTask
 class SyncScheduler @Inject constructor(
     val syncController: SyncUseCase,
     val observable: SyncObservableEventStream,
-    val dispatcher: CoroutineDispatcher
+    val dispatchers: Dispatchers,
 ) {
     data class Sync(
         val type: SyncKind,
@@ -31,7 +34,8 @@ class SyncScheduler @Inject constructor(
 
     var inProgress = MutableStateFlow<Boolean>(false)
 
-    private var syncSchedulerCoroutineScope = CoroutineScope(kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1))
+    private val coroutineScope = CoroutineScope(dispatchers.io)
+    private val syncSchedulerSemaphore = Semaphore(1)
 
     private val syncTimeout = 3_000L
     private val fullSyncTimeout = 3600_000
@@ -58,31 +62,44 @@ class SyncScheduler @Inject constructor(
         this.lastFullSyncDate = Date(0)
         observable.flow()
             .onEach { sync ->
-                this.syncInProgress = null
-                this.lastSyncFinishDate = Date()
+                syncSchedulerSemaphore.withPermit {
+                    this.syncInProgress = null
+                    this.lastSyncFinishDate = Date()
 
-                if (sync != null) {
-                    enqueueAndStart(sync = sync)
-                } else {
-                    startNextSync()
+                    if (sync != null) {
+                        enqueueAndStart(sync = sync)
+                    } else {
+                        startNextSync()
+                    }
                 }
             }
-            .launchIn(syncSchedulerCoroutineScope)
+            .launchIn(coroutineScope)
     }
 
     fun request(type: SyncKind, libraries: Libraries) {
-        Timber.i("SyncScheduler: requested $type sync for $libraries")
-        enqueueAndStart(sync = Sync(type = type, libraries = libraries))
+        coroutineScope.launch {
+            syncSchedulerSemaphore.withPermit {
+                Timber.i("SyncScheduler: requested $type sync for $libraries")
+                enqueueAndStart(sync = Sync(type = type, libraries = libraries))
+            }
+        }
+
     }
 
     fun webSocketUpdate(libraryId: LibraryIdentifier) {
         Timber.i("SyncScheduler: websocket sync for ${libraryId}")
-        enqueueAndStart(
-            sync = Sync(
-                type = SyncKind.normal,
-                libraries = Libraries.specific(listOf(libraryId))
-            )
-        )
+        coroutineScope.launch {
+            syncSchedulerSemaphore.withPermit {
+                enqueueAndStart(
+                    sync = Sync(
+                        type = SyncKind.normal,
+                        libraries = Libraries.specific(listOf(libraryId))
+                    )
+                )
+            }
+
+        }
+
     }
 
     fun cancelSync() {
@@ -160,13 +177,16 @@ class SyncScheduler @Inject constructor(
     }
 
     private fun startSyncController(nextSync: Sync) {
-        syncSchedulerCoroutineScope.launch {
-            this@SyncScheduler.syncController.start(
-                type = nextSync.type,
-                libraries = nextSync.libraries,
-                retryAttempt = nextSync.retryAttempt,
-                syncSchedulerCoroutineScope = syncSchedulerCoroutineScope,
-            )
+        coroutineScope.launch {
+            syncSchedulerSemaphore.withPermit {
+                this@SyncScheduler.syncController.start(
+                    type = nextSync.type,
+                    libraries = nextSync.libraries,
+                    retryAttempt = nextSync.retryAttempt,
+                    syncSchedulerSemaphore = syncSchedulerSemaphore,
+                )
+            }
+
         }
     }
 
@@ -176,7 +196,12 @@ class SyncScheduler @Inject constructor(
         }
 
         timer?.schedule(timerTask {
-            startNextSync()
+            coroutineScope.launch {
+                syncSchedulerSemaphore.withPermit {
+                    startNextSync()
+                }
+            }
+
         }, timeout)
     }
 
@@ -186,13 +211,15 @@ class SyncScheduler @Inject constructor(
     }
 
     fun startSyncController(type: SyncKind, libraries: Libraries, retryAttempt: Int,) {
-        syncSchedulerCoroutineScope.launch {
-            this@SyncScheduler.syncController.start(
-                type = type,
-                libraries = libraries,
-                retryAttempt = retryAttempt,
-                syncSchedulerCoroutineScope = syncSchedulerCoroutineScope,
-            )
+        coroutineScope.launch {
+            syncSchedulerSemaphore.withPermit {
+                this@SyncScheduler.syncController.start(
+                    type = type,
+                    libraries = libraries,
+                    retryAttempt = retryAttempt,
+                    syncSchedulerSemaphore = syncSchedulerSemaphore,
+                )
+            }
         }
     }
 }

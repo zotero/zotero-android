@@ -17,6 +17,7 @@ import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 internal fun PdfReaderTopBar(
     onBack: () -> Unit,
     onShowHideSideBar: () -> Unit,
+    onShareButtonTapped: () -> Unit,
     toPdfSettings: () -> Unit,
     toPdfPlainReader: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
@@ -81,6 +82,18 @@ internal fun PdfReaderTopBar(
                         isSelected = showPdfSearch
                     )
                 }
+            },
+            {
+                Box {
+                    if (viewState.showSharePopup) {
+                        SharePopup(
+                            viewModel = viewModel,
+                            viewState = viewState,
+                        )
+                    }
+                    IconWithPadding(drawableRes = Drawables.share, onClick = onShareButtonTapped)
+                }
+
             },
             {
                 IconWithPadding(drawableRes = Drawables.settings_24px, onClick = toPdfSettings)

@@ -83,7 +83,7 @@ class CreateItemFromDetailDbRequest(
             rCreator.rawType = creator.type
             rCreator.firstName = creator.firstName
             rCreator.lastName = creator.lastName
-            rCreator.name = creator.name
+            rCreator.name = creator.fullName
             rCreator.orderId = offset
             rCreator.primary = creator.primary
         }

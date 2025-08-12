@@ -25,6 +25,8 @@ internal fun SettingsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
+    toCiteScreen: () -> Unit,
+    toQuickCopyScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
@@ -67,7 +69,11 @@ internal fun SettingsScreen(
                 SettingsSyncAccountSection(toAccountScreen)
 
                 Spacer(modifier = Modifier.height(30.dp))
-                SettingsDebugSection(toDebugScreen)
+                SettingsDebugSection(
+                    toDebugScreen = toDebugScreen,
+                    toCiteScreen = toCiteScreen,
+                    toQuickCopyScreen = toQuickCopyScreen
+                )
 
                 Spacer(modifier = Modifier.height(30.dp))
                 SettingsSupportAndPrivacySection(viewModel)

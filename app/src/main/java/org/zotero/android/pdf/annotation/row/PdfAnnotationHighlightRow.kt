@@ -11,16 +11,22 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotation.ColorPicker
 import org.zotero.android.pdf.annotation.CommentSection
-import org.zotero.android.pdf.annotation.PdfAnnotationViewModel
-import org.zotero.android.pdf.annotation.PdfAnnotationViewState
 import org.zotero.android.pdf.annotation.TagsSection
+import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.sync.Tag
 
 @Composable
 internal fun PdfAnnotationHighlightRow(
-    viewState: PdfAnnotationViewState,
-    viewModel: PdfAnnotationViewModel,
+    annotation: PDFAnnotation,
     layoutType: CustomLayoutSize.LayoutType,
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    colors: List<String>,
+    onColorSelected: (color: String) -> Unit,
+    selectedColor: String,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit
 ) {
 
     Column(
@@ -28,22 +34,39 @@ internal fun PdfAnnotationHighlightRow(
             .fillMaxWidth()
             .padding(top = 0.dp, bottom = 8.dp)
     ) {
-        CommentSection(viewState, layoutType, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
+        CommentSection(
+            annotation = annotation,
+            layoutType = layoutType,
+            commentFocusText = commentFocusText,
+            onCommentTextChange = onCommentTextChange,
         )
         Spacer(modifier = Modifier.height(4.dp))
-        ColorPicker(viewState, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        SidebarDivider(
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        TagsSection(viewModel = viewModel, viewState = viewState, layoutType = layoutType)
+
+        if (annotation.isZoteroAnnotation) {
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            ColorPicker(
+                colors = colors,
+                onColorSelected = onColorSelected,
+                selectedColor = selectedColor,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            SidebarDivider(
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TagsSection(
+                layoutType = layoutType,
+                tags = tags,
+                onTagsClicked = onTagsClicked,
+            )
+        }
+
     }
 }

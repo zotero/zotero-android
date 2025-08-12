@@ -46,16 +46,59 @@ internal fun CollectionsTable(
     LazyColumn(
         state = rememberLazyListState(),
     ) {
+        fixedCollectionRow(
+            customType = CollectionIdentifier.CustomType.all,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
+        )
         recursiveCollectionItem(
             layoutType = layoutType,
             collectionItems = viewState.collectionItemsToDisplay,
             selectedCollectionId = viewState.selectedCollectionId,
-            isCollapsed = { viewModel.isCollapsed(it) },
+            isCollapsed = { viewState.isCollapsed(it) },
             onItemTapped = { viewModel.onItemTapped(it.collection) },
             onItemLongTapped = { viewModel.onItemLongTapped(it.collection) },
             onItemChevronTapped = { viewModel.onItemChevronTapped(it.collection) },
-            showCollectionItemCounts = viewModel.showCollectionItemCounts()
+            showCollectionItemCounts = viewState.showCollectionItemCounts
         )
+        fixedCollectionRow(
+            customType = CollectionIdentifier.CustomType.unfiled,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
+        )
+        fixedCollectionRow(
+            customType = CollectionIdentifier.CustomType.trash,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
+        )
+    }
+}
+
+private fun LazyListScope.fixedCollectionRow(
+    customType: CollectionIdentifier.CustomType,
+    viewState: CollectionsViewState,
+    layoutType: CustomLayoutSize.LayoutType,
+    viewModel: CollectionsViewModel
+) {
+    item {
+        val fixedCollection = viewState.fixedCollections[customType]
+        if (fixedCollection != null) {
+            CollectionItem(
+                layoutType = layoutType,
+                levelPadding = levelPaddingConst,
+                selectedCollectionId = viewState.selectedCollectionId,
+                collection = fixedCollection,
+                hasChildren = false,
+                showCollectionItemCounts = viewState.showCollectionItemCounts,
+                isCollapsed = true,
+                onItemTapped = { viewModel.onItemTapped(fixedCollection) },
+                onItemLongTapped = { viewModel.onItemLongTapped(fixedCollection) },
+                onItemChevronTapped = { viewModel.onItemChevronTapped(fixedCollection) }
+            )
+        }
     }
 }
 

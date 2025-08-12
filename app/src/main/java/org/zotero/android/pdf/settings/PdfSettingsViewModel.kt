@@ -1,5 +1,6 @@
 package org.zotero.android.pdf.settings
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -9,6 +10,9 @@ import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.require
+import org.zotero.android.pdf.ARG_PDF_SETTINGS_SCREEN
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.pdf.data.PageAppearanceMode
 import org.zotero.android.pdf.data.PageFitting
@@ -20,17 +24,24 @@ import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
 import org.zotero.android.pdf.settings.data.PdfSettingsOptions
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
 internal class PdfSettingsViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfSettingsViewState, PdfSettingsViewEffect>(PdfSettingsViewState()) {
+
+    val screenArgs: PdfSettingsArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_PDF_SETTINGS_SCREEN).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)
+    }
 
     private lateinit var pdfSettings: PDFSettings
     private var pdfReaderThemeCancellable: Job? = null
-    lateinit var args: PdfSettingsArgs
 
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
@@ -42,13 +53,14 @@ internal class PdfSettingsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun init(args: PdfSettingsArgs) {
+    fun init(args: PdfSettingsArgs?) {
+        val loadedArgs = args ?: screenArgs
         initOnce {
             updateState {
                 copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
             startObservingTheme()
-            pdfSettings = args.pdfSettings
+            pdfSettings = loadedArgs.pdfSettings
             updateState {
                 copy(
                     selectedPageTransitionOption = convert(pdfSettings.transition),

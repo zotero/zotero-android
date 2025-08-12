@@ -19,6 +19,7 @@ import org.json.JSONObject
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
@@ -401,6 +402,7 @@ class AnnotationConverter {
                 sortIndex = sortIndex,
                 author = author,
                 isAuthor = isAuthor,
+                isZoteroAnnotation = annotation.isZoteroAnnotation
             )
         }
 

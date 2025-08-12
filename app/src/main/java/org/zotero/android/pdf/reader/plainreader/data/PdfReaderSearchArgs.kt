@@ -1,7 +1,7 @@
 package org.zotero.android.pdf.reader.plainreader.data
 
-import com.pspdfkit.document.PdfDocument
+import android.net.Uri
 
 data class PdfPlainReaderArgs(
-    val pdfDocument: PdfDocument,
+    var uri: Uri
 )

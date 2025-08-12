@@ -26,8 +26,9 @@ internal fun CollectionPickerScreen(
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
+        val isTablet = layoutType.isTablet()
         LaunchedEffect(key1 = viewModel) {
-            viewModel.init()
+            viewModel.init(isTablet = isTablet)
         }
 
         LaunchedEffect(key1 = viewEffect) {
@@ -47,7 +48,7 @@ internal fun CollectionPickerScreen(
             topBar = {
                 CollectionPickerTopBar(
                     title = viewState.title,
-                    multipleSelectionAllowed = viewModel.multipleSelectionAllowed,
+                    multipleSelectionAllowed = viewState.multipleSelectionAllowed,
                     onCancelClicked = onBack,
                     onAdd = viewModel::confirmSelection,
                 )

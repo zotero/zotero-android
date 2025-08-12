@@ -37,6 +37,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    onExportPdf: (file: File) -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {
@@ -70,6 +71,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             navigateToRetrieveMetadata = navigation::toRetrieveMetadata
         )
         pdfReaderScreenAndNavigationForTablet(
+            onExportPdf = onExportPdf,
             navigation = navigation,
             navigateToTagPickerDialog = navigation::toTagPickerDialog
         )

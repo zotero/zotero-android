@@ -1,6 +1,8 @@
 package org.zotero.android.architecture.navigation
 
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.IOUtils
 import java.nio.charset.Charset
@@ -9,7 +11,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NavigationParamsMarshaller @Inject constructor(val gson: Gson) {
+class NavigationParamsMarshaller @Inject constructor(
+    val gson: Gson,
+    private val dispatcher: CoroutineDispatcher,
+) {
+
+    suspend fun encodeObjectToBase64Async(data: Any, charset: Charset = StandardCharsets.US_ASCII) =
+        withContext(dispatcher) {
+            encodeObjectToBase64(data = data, charset = charset)
+        }
 
     fun encodeObjectToBase64(data: Any, charset: Charset = StandardCharsets.US_ASCII): String {
         val json = gson.toJson(data)
