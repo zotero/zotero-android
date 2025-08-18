@@ -17,13 +17,13 @@ object TranslatorHelper {
     }
 
     fun encodeFileToBase64Binary(inputStream: InputStream): String {
-        val bytes = IOUtils.toByteArray(inputStream);
+        val bytes = IOUtils.toByteArray(inputStream)
         val encoded: ByteArray = Base64.encodeBase64(bytes)
         return String(encoded, StandardCharsets.US_ASCII)
     }
 
     fun encodeStringToBase64Binary(stringToEncode: String): String {
-        val bytes = IOUtils.toByteArray(stringToEncode);
+        val bytes = IOUtils.toByteArray(stringToEncode)
         val encoded: ByteArray = Base64.encodeBase64(bytes)
         return String(encoded, StandardCharsets.US_ASCII)
     }

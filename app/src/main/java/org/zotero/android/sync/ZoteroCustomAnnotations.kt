@@ -7,8 +7,7 @@ import com.pspdfkit.annotations.SquareAnnotation
 import com.pspdfkit.annotations.UnderlineAnnotation
 
 class ZoteroSquareAnnotations(pageIndex: Int, rect: RectF) :
-    SquareAnnotation(pageIndex, rect) {
-}
+    SquareAnnotation(pageIndex, rect)
 
 class ZoteroHighlightAnnotation(pageIndex: Int, rects: List<RectF>) :
     HighlightAnnotation(pageIndex, rects)

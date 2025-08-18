@@ -57,7 +57,7 @@ class EditNoteDbRequest(
     }
 
     private fun updateTags(tags: List<Tag>, item: RItem, changes: MutableList<RItemChanges>, database: Realm) {
-        val tagsToRemove = item.tags!!.where().tagNameNotIn(tags.map({ it.name })).findAll()
+        val tagsToRemove = item.tags!!.where().tagNameNotIn(tags.map { it.name }).findAll()
         var tagsDidChange = !tagsToRemove.isEmpty()
 
         tagsToRemove.deleteAllFromRealm()

@@ -168,12 +168,14 @@ internal data class CreatorEditViewState(
 ) : ViewState {
     val isValid: Boolean
         get() {
-            when (creator?.namePresentation) {
-                ItemDetailCreator.NamePresentation.full -> return !creator.fullName.trim()
+            return when (creator?.namePresentation) {
+                ItemDetailCreator.NamePresentation.full -> !creator.fullName.trim()
                     .isEmpty()
-                ItemDetailCreator.NamePresentation.separate -> return !creator.firstName.trim()
+
+                ItemDetailCreator.NamePresentation.separate -> !creator.firstName.trim()
                     .isEmpty() && !creator.lastName.trim().isEmpty()
-                else -> return false
+
+                else -> false
             }
         }
 }

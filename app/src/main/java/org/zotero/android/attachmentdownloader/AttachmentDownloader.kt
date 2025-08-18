@@ -29,7 +29,7 @@ class AttachmentDownloader @Inject constructor(
     private val fileStorage: FileStore,
     private val dbWrapperMain: DbWrapperMain,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
-    private val dispatcher: CoroutineDispatcher,
+    dispatcher: CoroutineDispatcher,
     private val unzipper: Unzipper,
     private val webDavController: WebDavController,
     private val sessionStorage: WebDavSessionStorage,
@@ -208,7 +208,7 @@ class AttachmentDownloader @Inject constructor(
                 val location = attachmentType.location
                 val linkType = attachmentType.linkType
                 when (linkType) {
-                    Attachment.FileLinkType.linkedFile, Attachment.FileLinkType.embeddedImage -> {
+                    FileLinkType.linkedFile, FileLinkType.embeddedImage -> {
                         Timber.i("AttachmentDownloader: tried opening linkedFile or embeddedImage ${attachment.key}")
 
                         attachmentDownloaderEventStream.emitAsync(
@@ -223,7 +223,7 @@ class AttachmentDownloader @Inject constructor(
                         )
                     }
 
-                    Attachment.FileLinkType.importedFile, Attachment.FileLinkType.importedUrl -> {
+                    FileLinkType.importedFile, FileLinkType.importedUrl -> {
                         when (location) {
                             FileLocation.local -> {
                                 Timber.i("AttachmentDownloader: open local file ${attachment.key}")

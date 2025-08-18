@@ -56,17 +56,12 @@ internal class SettingsStylePickerViewModel @Inject constructor(
         triggerEffect(SettingsStylePickerViewEffect.OnBack)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-    }
-
 }
 
 internal data class SettingsStylePickerViewState(
     val styles: List<Style> = emptyList(),
     val selected: String = ""
-) : ViewState {
-}
+) : ViewState
 
 internal sealed class SettingsStylePickerViewEffect : ViewEffect {
     object OnBack : SettingsStylePickerViewEffect()

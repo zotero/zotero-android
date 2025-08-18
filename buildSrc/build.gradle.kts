@@ -9,10 +9,8 @@ plugins {
 
 dependencies {
     // This constant is duplicated in root/build.gradle.kts. Make sure to also update there
-    implementation("com.android.tools.build:gradle:8.2.2")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
-    // Without this Hilts aggregate dependencies task is unable to run.
-    implementation("com.squareup:javapoet:1.13.0")
+    implementation("com.android.tools.build:gradle:8.12.0")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0")
 }
 
 gradlePlugin {
@@ -20,10 +18,6 @@ gradlePlugin {
         register("ComposePlugin") {
             id = "composeDependencies"
             implementationClass = "dependencyplugins.ComposePlugin"
-        }
-        register("AccompanistPlugin") {
-            id = "accompanistDependencies"
-            implementationClass = "dependencyplugins.AccompanistPlugin"
         }
         register("DaggerAndHiltPlugin") {
             id = "daggerAndHiltDependencies"

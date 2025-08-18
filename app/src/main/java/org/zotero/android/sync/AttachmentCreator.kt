@@ -13,7 +13,6 @@ import org.zotero.android.files.FileStore
 import timber.log.Timber
 import java.io.File
 import java.util.Date
-import kotlin.Int
 
 class AttachmentCreator {
 
@@ -93,7 +92,7 @@ class AttachmentCreator {
 
         private fun attachmentData(item: RItem): List<AttachmentData> {
             val itemUrl = item.fields.firstOrNull{it.key == FieldKeys.Item.url }?.value
-            var data = mutableListOf<AttachmentData>()
+            val data = mutableListOf<AttachmentData>()
             item.children!!
             for ((idx, child) in item.children.freeze().withIndex()) {
                 if (child.rawType == ItemTypes.attachment && child.syncState != ObjectSyncState.dirty.name && !child.trash) {
@@ -264,7 +263,7 @@ class AttachmentCreator {
             if (filename != null) {
                 val split = filename.split(".")
                 if (split.size > 1) {
-                    val ext = split.lastOrNull()?.toString()
+                    val ext = split.lastOrNull()
                     if (ext != null) {
                         val contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
                         if (contentType != null) {
@@ -279,7 +278,7 @@ class AttachmentCreator {
             if (title != null) {
                 val split = title.split(".")
                 if (split.size > 1) {
-                    val ext = split.lastOrNull()?.toString()
+                    val ext = split.lastOrNull()
                     if (ext != null) {
                         val contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext)
                         if (contentType != null) {
@@ -317,17 +316,17 @@ class AttachmentCreator {
                 return Attachment.FileLocation.remote
             }
             val webDavEnabled = defaults.isWebDavEnabled()
-            if (file.exists()|| (webDavEnabled && file.copyWithExt("zip").exists())) {
+            return if (file.exists()|| (webDavEnabled && file.copyWithExt("zip").exists())) {
                 val md5 = fileStorage.md5(file)
                 if (!item.backendMd5.isEmpty() && md5 != item.backendMd5) {
-                    return Attachment.FileLocation.localAndChangedRemotely
+                    Attachment.FileLocation.localAndChangedRemotely
                 } else {
-                    return Attachment.FileLocation.local
+                    Attachment.FileLocation.local
                 }
             } else if (webDavEnabled || item.links.firstOrNull { it.type == LinkType.enclosure.name } != null) {
-                return Attachment.FileLocation.remote
+                Attachment.FileLocation.remote
             } else {
-                return Attachment.FileLocation.remoteMissing
+                Attachment.FileLocation.remoteMissing
             }
         }
 

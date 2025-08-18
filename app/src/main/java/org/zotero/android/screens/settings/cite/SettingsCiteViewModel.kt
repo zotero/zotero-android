@@ -184,8 +184,7 @@ internal class SettingsCiteViewModel @Inject constructor(
 
 internal data class SettingsCiteViewState(
     val styles: List<Style> = emptyList(),
-) : ViewState {
-}
+) : ViewState
 
 internal sealed class SettingsCiteViewEffect : ViewEffect {
     object OnBack : SettingsCiteViewEffect()

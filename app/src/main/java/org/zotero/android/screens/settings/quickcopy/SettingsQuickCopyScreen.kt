@@ -24,10 +24,7 @@ internal fun SettingsQuickCopyScreen(
     navigateToCslLocalePicker: () -> Unit,
     viewModel: SettingsQuickCopyViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(SettingsQuickCopyViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -35,7 +32,7 @@ internal fun SettingsQuickCopyScreen(
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (val consumedEffect = viewEffect?.consume()) {
+            when (viewEffect?.consume()) {
                 null -> Unit
                 is SettingsQuickCopyViewEffect.OnBack -> {
                     onBack()
@@ -51,7 +48,8 @@ internal fun SettingsQuickCopyScreen(
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SettingsQuickCopyTopBar(
                     onBack = onBack,
@@ -61,7 +59,7 @@ internal fun SettingsQuickCopyScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = backgroundColor)
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 item {

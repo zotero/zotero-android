@@ -27,7 +27,7 @@ class CreateCollectionDbRequest(
         collection.syncState = ObjectSyncState.synced.name
         collection.libraryId = this.libraryId
 
-        val changes = mutableListOf<RCollectionChanges>(RCollectionChanges.nameS)
+        val changes = mutableListOf(RCollectionChanges.nameS)
         val key = this.parentKey
         if (key != null) {
             collection.parentKey = key

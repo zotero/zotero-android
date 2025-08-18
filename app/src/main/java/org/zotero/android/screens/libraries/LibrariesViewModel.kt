@@ -101,13 +101,12 @@ internal class LibrariesViewModel @Inject constructor(
         )
     }
     private fun createGroupLibraryRowData(library: RGroup): LibraryRowData {
-        val state: LibraryState
-        if (library.isLocalOnly) {
-            state = LibraryState.archived
+        val state: LibraryState = if (library.isLocalOnly) {
+            LibraryState.archived
         } else if (!library.canEditMetadata) {
-            state = LibraryState.locked
+            LibraryState.locked
         } else {
-            state = LibraryState.normal
+            LibraryState.normal
         }
         return LibraryRowData(id = library.identifier ,name = library.name, state = state)
     }
@@ -202,9 +201,7 @@ internal data class  LibrariesViewState(
     val groupIdForDeletePopup: Int? = null,
     val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
     val groupLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
-) : ViewState {
-
-}
+) : ViewState
 
 internal sealed class  LibrariesViewEffect : ViewEffect {
     data class NavigateToCollectionsScreen(val screenArgs: String) : LibrariesViewEffect()

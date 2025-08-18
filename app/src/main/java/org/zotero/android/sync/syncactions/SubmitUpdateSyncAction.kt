@@ -219,7 +219,7 @@ class SubmitUpdateSyncAction(
             response = response
         )
 
-        var requests = mutableListOf<DbRequest>()
+        val requests = mutableListOf<DbRequest>()
 
         if (!unchangedKeys.isEmpty()) {
             when (this.objectS) {
@@ -357,14 +357,14 @@ class SubmitUpdateSyncAction(
             return null
         }
 
-        var splitKeys = mutableSetOf<String>()
+        val splitKeys = mutableSetOf<String>()
 
         for (response in failedResponses) {
             when (response.code) {
                 412 -> {
                     Timber.e(
                         "SubmitUpdateSyncAction: failed ${response.key ?: "unknown key"} " +
-                                "- ${response.message}. Library ${libraryId}"
+                                "- ${response.message}. Library $libraryId"
                     )
                     return SyncActionError.objectPreconditionError
                 }
@@ -382,7 +382,7 @@ class SubmitUpdateSyncAction(
         }
 
         if (!splitKeys.isEmpty()) {
-            Timber.w("SubmitUpdateSyncAction: annotations too long: ${splitKeys} in ${libraryId}")
+            Timber.w("SubmitUpdateSyncAction: annotations too long: $splitKeys in $libraryId")
 
             try {
                 dbWrapperMain.realmDbStorage.perform(
@@ -401,19 +401,18 @@ class SubmitUpdateSyncAction(
             }
         }
 
-        Timber.e("SubmitUpdateSyncAction: failures - ${failedResponses}")
+        Timber.e("SubmitUpdateSyncAction: failures - $failedResponses")
 
-        val errorMessages = failedResponses.map { it.message }.joinToString(separator = "\n")
+        val errorMessages = failedResponses.joinToString(separator = "\n") { it.message }
         return SyncActionError.submitUpdateFailures(errorMessages)
     }
 
     private fun process(response: UpdatesResponse): SubmitUpdateProcessResponse {
-        var unchangedKeys = response.unchanged.values.toMutableList()
-        var changedCollections = mutableListOf<CollectionResponse>()
-        var changedItems = mutableListOf<ItemResponse>()
-        var changedSearches = mutableListOf<SearchResponse>()
-        var parsingFailedKeys = mutableListOf<String>()
-
+        val unchangedKeys = response.unchanged.values.toMutableList()
+        val changedCollections = mutableListOf<CollectionResponse>()
+        val changedItems = mutableListOf<ItemResponse>()
+        val changedSearches = mutableListOf<SearchResponse>()
+        val parsingFailedKeys = mutableListOf<String>()
 
         for ((idx, json) in response.successfulJsonObjects) {
             val key = response.successful[idx]

@@ -3,7 +3,6 @@ package org.zotero.android.screens.allitems.processor
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.toMutableStateList
 import io.realm.OrderedCollectionChangeSet
-import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -100,11 +99,12 @@ class AllItemsProcessor @Inject constructor(
         if (singlePickerResult.callPoint == SinglePickerResult.CallPoint.AllItemsShowItem) {
             val collectionKey: String?
             val identifier = this.collection.identifier
-            when (identifier) {
+            collectionKey = when (identifier) {
                 is CollectionIdentifier.collection ->
-                    collectionKey = identifier.key
+                    identifier.key
+
                 is CollectionIdentifier.search, is CollectionIdentifier.custom ->
-                    collectionKey = null
+                    null
             }
 
             val type = singlePickerResult.id
@@ -167,7 +167,7 @@ class AllItemsProcessor @Inject constructor(
             .debounce(150)
             .map { text ->
                 search(
-                    text = if (text.isEmpty()) null else text,
+                    text = text.ifEmpty { null },
                     filters = processorInterface.currentFilters()
                 )
             }
@@ -220,7 +220,7 @@ class AllItemsProcessor @Inject constructor(
     }
 
     private fun onSortFieldChanged(id: String) {
-        val field = ItemsSortType.Field.values().first { it.titleStr == id }
+        val field = ItemsSortType.Field.entries.first { it.titleStr == id }
         val sortType = this.sortType.copy(
             field = field,
             ascending = field.defaultOrderAscending
@@ -412,24 +412,27 @@ class AllItemsProcessor @Inject constructor(
     }
 
     private fun startObservingResults() {
-        this.results!!.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
+        this.results!!.addChangeListener { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     reactToDbUpdate(changeSet, items)
 
                 }
-                OrderedCollectionChangeSet.State.UPDATE ->  {
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
                     reactToDbUpdate(changeSet, items)
                 }
+
                 OrderedCollectionChangeSet.State.ERROR -> {
                     Timber.e(changeSet.error, "ItemsViewController: could not load results")
                     processorInterface.showError(ItemsError.dataLoading)
                 }
+
                 else -> {
                     //no-op
                 }
             }
-        })
+        }
     }
 
     private fun reactToDbUpdate(
@@ -762,7 +765,7 @@ class AllItemsProcessor @Inject constructor(
     }
 
     fun downloadSelectedAttachments(keys: Set<String>) {
-        var attachments: MutableList<Pair<Attachment, String?>> = mutableListOf()
+        val attachments: MutableList<Pair<Attachment, String?>> = mutableListOf()
         for (key in keys) {
             val accessory = itemAccessories[key] ?: continue
             val attachment = accessory.attachmentGet ?: continue

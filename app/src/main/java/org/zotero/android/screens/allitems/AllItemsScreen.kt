@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,7 +51,7 @@ internal fun AllItemsScreen(
     navigateToSingleCitation: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -139,6 +137,7 @@ internal fun AllItemsScreen(
         }
 
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 AllItemsTopBar(
                     viewState = viewState,
@@ -147,8 +146,6 @@ internal fun AllItemsScreen(
                 )
             },
         ) {
-            val refreshing = viewState.isRefreshing
-            val pullRefreshState = rememberPullRefreshState(refreshing, { viewModel.startSync() })
 
             BaseLceBox(
                 modifier = Modifier.fillMaxSize(),
@@ -187,12 +184,13 @@ internal fun AllItemsScreen(
                         layoutType = layoutType,
                         itemCellModels = viewState.itemCellModels,
                         isEditing = viewState.isEditing,
-                        pullRefreshState = pullRefreshState,
+                        isRefreshing = viewState.isRefreshing,
                         isItemSelected = viewState::isSelected,
                         getItemAccessory = viewState::getAccessoryForItem,
                         onItemTapped = viewModel::onItemTapped,
                         onAccessoryTapped = viewModel::onAccessoryTapped,
-                        onItemLongTapped = viewModel::onItemLongTapped
+                        onItemLongTapped = viewModel::onItemLongTapped,
+                        onStartSync = viewModel::startSync
                     )
                 }
 
@@ -215,13 +213,6 @@ internal fun AllItemsScreen(
                     onAddByIdentifier = viewModel::onAddByIdentifier,
                     onClose = viewModel::onAddBottomSheetCollapse,
                     showBottomSheet = viewState.shouldShowAddBottomSheet
-                )
-
-                PullRefreshIndicator(
-                    refreshing = refreshing,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    contentColor = CustomTheme.colors.dynamicTheme.primaryColor,
                 )
 
                 if (viewState.isGeneratingBibliography) {

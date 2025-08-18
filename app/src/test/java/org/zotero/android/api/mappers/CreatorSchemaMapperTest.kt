@@ -7,17 +7,12 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
-import org.junit.Before
 import org.junit.Test
 import org.zotero.android.utils.TestFilesUtils
 
 class CreatorSchemaMapperTest {
 
     private val sut = CreatorSchemaMapper()
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun testCreatorSchemaWithCreatorTypeParsesSuccessfully() {

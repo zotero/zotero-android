@@ -28,10 +28,10 @@ class ShareRawAttachmentLoader @Inject constructor() {
     }
 
     private fun loadFromIntentData(data: Uri?) {
-        if (data == null) {
-            loadedAttachment = Result.Failure(AttachmentState.Error.cantLoadWebData)
+        loadedAttachment = if (data == null) {
+            Result.Failure(AttachmentState.Error.cantLoadWebData)
         } else {
-            loadedAttachment = Result.Success(RawAttachment.fileUrl(data))
+            Result.Success(RawAttachment.fileUrl(data))
         }
 
     }

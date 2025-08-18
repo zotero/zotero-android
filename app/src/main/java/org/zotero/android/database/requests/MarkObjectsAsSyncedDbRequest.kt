@@ -60,13 +60,13 @@ class MarkSettingsAsSyncedDbRequest(
         get() = true
 
     private fun uuidKey(key: String, libraryId: LibraryIdentifier): String {
-        val libraryPart: String
-        when(libraryId) {
+        val libraryPart: String = when(libraryId) {
             is LibraryIdentifier.custom -> {
-                libraryPart = "u"
+                "u"
             }
+
             is LibraryIdentifier.group -> {
-                libraryPart = "g${libraryId.groupId}"
+                "g${libraryId.groupId}"
             }
         }
 

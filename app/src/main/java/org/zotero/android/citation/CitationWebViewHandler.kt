@@ -1,8 +1,8 @@
 package org.zotero.android.citation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebMessage
@@ -10,16 +10,15 @@ import android.webkit.WebMessagePort
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.coroutines.Dispatchers
+import timber.log.Timber
 import javax.inject.Inject
 
 class CitationWebViewHandler @Inject constructor(
     dispatchers: Dispatchers,
     private val context: Context,
-    private val gson: Gson,
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
     private var wasPageAlreadyFullyLoaded: Boolean = false
@@ -38,6 +37,7 @@ class CitationWebViewHandler @Inject constructor(
 
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null) {
         uiMainCoroutineScope.launch {
             webView = WebView(context)
@@ -48,8 +48,7 @@ class CitationWebViewHandler @Inject constructor(
             webView.settings.allowContentAccess = true
             webView.webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                    Log.d(
-                        "WEBVIEW_LOG_TAG",
+                    Timber.tag("WEBVIEW_LOG_TAG").d(
                         consoleMessage.message() + " -- From line "
                                 + consoleMessage.lineNumber() + " of "
                                 + consoleMessage.sourceId()

@@ -19,9 +19,7 @@ object DeviceInfoProvider {
         return "$versionString ($buildString) $devBuildIndicator"
     }
 
-    private val versionString: String get() {
-        return BuildConfig.VERSION_NAME
-    }
+    private const val versionString: String = BuildConfig.VERSION_NAME
 
     private val buildString: String get() {
         return BuildConfig.VERSION_CODE.toString()

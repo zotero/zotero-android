@@ -158,12 +158,6 @@
         <item name="android:layout_height">24dp</item>
     </style>
 
-
-    <style name="AppTheme.IntroActivity">
-        <item name="statusBarColor">@color/clear</item>
-        <item name="android:fitsSystemWindows">true</item>
-    </style>
-
     <declare-styleable name="HomePicViewStyle">
         <attr name="hp_hasRoundedCorners" format="boolean" />
         <attr name="hp_showLargeText" format="boolean" />

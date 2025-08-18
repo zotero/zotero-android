@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,11 +44,7 @@ internal fun ShareScreen(
     viewModel: ShareViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.topBarBackgroundColor
-    val context = LocalContext.current
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = backgroundColor,
-        navBarBackgroundColor = backgroundColor
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(ShareViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -70,7 +66,7 @@ internal fun ShareScreen(
         val isSubmitting = viewState.isSubmitting
         val isRetrieveMetadataLoading = viewState.retrieveMetadataState is RetrieveMetadataState.loading
         CustomScaffold(
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 ShareScreenTopBar(
                     onCancelClicked = onBack,

@@ -11,7 +11,7 @@ import java.util.zip.ZipOutputStream
 
 
 object Zipper {
-    private val BUFFER_SIZE = 8192
+    private const val BUFFER_SIZE = 8192
 
     @Throws(IOException::class)
     fun zip(files: List<File>, zipFile: File) {

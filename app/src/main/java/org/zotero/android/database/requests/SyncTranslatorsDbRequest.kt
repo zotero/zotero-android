@@ -34,7 +34,7 @@ class SyncTranslatorsDbRequest(
             val rMetadata: RTranslatorMetadata
             val existing =
                 database.where<RTranslatorMetadata>().equalTo("id", metadata.id).findFirst()
-            if (existing != null) {
+            rMetadata = if (existing != null) {
                 if (
                     this.forceUpdate
                     || existing.lastUpdated < metadata.lastUpdated
@@ -42,12 +42,12 @@ class SyncTranslatorsDbRequest(
                         metadata.id
                     ).exists()
                 ) {
-                    rMetadata = existing
+                    existing
                 } else {
                     continue
                 }
             } else {
-                rMetadata = database.createObject<RTranslatorMetadata>(metadata.id)
+                database.createObject<RTranslatorMetadata>(metadata.id)
             }
             rMetadata.lastUpdated = metadata.lastUpdated
             update.add(metadata.id to metadata.fileName)

@@ -8,7 +8,7 @@ import java.io.FileWriter
 import java.io.PrintWriter
 import java.util.UUID
 
-class DebugFileWriter constructor(
+class DebugFileWriter(
     private val fileStore: FileStore
 ) {
 
@@ -23,8 +23,8 @@ class DebugFileWriter constructor(
         val fileName = UUID.randomUUID().toString().replace("-", "")
         val file = File(fileStore.debugLoggingDirectory(), fileName)
 
-        fileWriter = FileWriter(file, true);
-        bufferWriter = BufferedWriter(fileWriter);
+        fileWriter = FileWriter(file, true)
+        bufferWriter = BufferedWriter(fileWriter)
         printWriter = PrintWriter(bufferWriter!!)
     }
 

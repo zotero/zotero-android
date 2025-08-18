@@ -30,10 +30,7 @@ internal fun CollectionEditScreen(
     navigateToCollectionPickerScreen: () -> Unit,
     viewModel: CollectionEditViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(CollectionEditViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -53,6 +50,8 @@ internal fun CollectionEditScreen(
             }
         }
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 CollectionEditTopBar(
                     onCancel = onBack,

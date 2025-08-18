@@ -48,17 +48,17 @@ sealed class CollectionIdentifier: java.io.Serializable {
         }
 
     val keyGet: String? get() {
-        when (this) {
-            is collection -> return this.key
-            is search -> return this.key
-            is custom -> return null
+        return when (this) {
+            is collection -> this.key
+            is search -> this.key
+            is custom -> null
         }
     }
 
     val isCollection: Boolean get() {
-        when (this) {
-            is collection -> return true
-            else -> return false
+        return when (this) {
+            is collection -> true
+            else -> false
         }
     }
 }

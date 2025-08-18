@@ -33,8 +33,6 @@ internal fun PdfAnnotationEditPageScreen(
     val viewEffect by viewModel.viewEffects.observeAsState()
     CustomThemeWithStatusAndNavBars(
         isDarkTheme = viewState.isDark,
-        statusBarBackgroundColor = CustomTheme.colors.zoteroEditFieldBackground,
-        navBarBackgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground,
     ) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
@@ -48,6 +46,7 @@ internal fun PdfAnnotationEditPageScreen(
 
         CustomScaffold(
             modifier = Modifier.fillMaxSize(),
+            topBarColor = CustomTheme.colors.zoteroEditFieldBackground,
             topBar = {
                 PdfAnnotationEditPageTopBar(viewModel)
             },

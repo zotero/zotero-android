@@ -602,7 +602,7 @@ internal class ShareViewModel @Inject constructor(
         val filename = url.toUri().lastPathSegment!!
         //Some websites return filename without file extension,
         //but at least for PDFs we can determine it for sure by content-type
-        var ext = if (contentType == "application/pdf") {
+        val ext = if (contentType == "application/pdf") {
             "pdf"
         } else {
             MimeTypeMap.getFileExtensionFromUrl(filename)

@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.pdffilter
 
-import android.graphics.Color.parseColor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffold
@@ -87,7 +87,7 @@ internal fun PdfFilterScreen(
 
 @Composable
 private fun FilterCircle(hex: String, isSelected: Boolean, onClick: () -> Unit) {
-    val color = parseColor(hex)
+    val color = hex.toColorInt()
     Canvas(modifier = Modifier
         .size(32.dp)
         .safeClickable(onClick = onClick), onDraw = {

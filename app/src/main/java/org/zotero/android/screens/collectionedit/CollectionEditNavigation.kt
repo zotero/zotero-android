@@ -2,10 +2,8 @@
 package org.zotero.android.screens.collectionedit
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -23,7 +21,6 @@ internal fun CollectionEditNavigation() {
     ZoteroNavHost(
         navController = navController,
         startDestination = CollectionEditDestinations.COLLECTION_EDIT,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         collectionEditNavScreens(navigation = navigation)
     }

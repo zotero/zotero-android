@@ -8,7 +8,7 @@ class WriteBatch(
     val changeUuids: Map<String, List<String>>
 ) {
     companion object {
-        val maxCount = 50
+        const val maxCount = 50
     }
 
     fun copy(version: Int): WriteBatch {

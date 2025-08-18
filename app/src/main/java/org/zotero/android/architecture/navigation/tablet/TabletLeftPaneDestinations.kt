@@ -3,11 +3,9 @@ package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.Consumable
@@ -52,8 +50,7 @@ internal fun TabletLeftPaneNavigation(
     }
     ZoteroNavHost(
         navController = navController,
-        startDestination = "${CommonScreenDestinations.COLLECTIONS_SCREEN}/$ARG_COLLECTIONS_SCREEN",
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
+        startDestination = "${CommonScreenDestinations.COLLECTIONS_SCREEN}/{$ARG_COLLECTIONS_SCREEN}",
     ) {
         collectionsScreen(
             collectionDefaultValue = collectionDefaultValue,

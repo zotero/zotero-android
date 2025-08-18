@@ -22,8 +22,8 @@ class CrashFileWriter @Inject constructor(
         val fileName = System.currentTimeMillis().toString()
         val file = File(fileStore.crashLoggingDirectory(), fileName)
 
-        fileWriter = FileWriter(file, false);
-        bufferWriter = BufferedWriter(fileWriter);
+        fileWriter = FileWriter(file, false)
+        bufferWriter = BufferedWriter(fileWriter)
         printWriter = PrintWriter(bufferWriter!!)
         printWriter?.write(stackTrace)
         flushAndClose()

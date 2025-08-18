@@ -18,7 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 class DebugLogging @Inject constructor(
-    private val dispatcher: CoroutineDispatcher,
+    dispatcher: CoroutineDispatcher,
     private val debugLoggingTree: DebugLoggingTree,
     private val fileStore: FileStore,
     private val debugLoggingDialogDataEventStream: DebugLoggingDialogDataEventStream,
@@ -151,7 +151,7 @@ class DebugLogging @Inject constructor(
 
     private fun clearDebugDirectory() {
         try {
-            FileUtils.deleteDirectory(fileStore.debugLoggingDirectory());
+            FileUtils.deleteDirectory(fileStore.debugLoggingDirectory())
         } catch (error: Exception) {
             Timber.e(error, "DebugLogging: can't delete directory")
         }

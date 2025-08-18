@@ -11,10 +11,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewEffect
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewModel
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewState
+import org.zotero.android.uicomponents.CustomScaffold
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
@@ -23,10 +23,7 @@ internal fun AddByIdentifierScreen(
     viewModel: AddByIdentifierViewModel = hiltViewModel(),
     onClose: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(AddByIdentifierViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -42,6 +39,8 @@ internal fun AddByIdentifierScreen(
             }
         }
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 when (viewState.lookupState) {
                     AddByIdentifierViewModel.State.loadingIdentifiers,

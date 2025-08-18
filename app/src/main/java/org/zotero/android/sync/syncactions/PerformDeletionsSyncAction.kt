@@ -5,7 +5,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 
-class PerformDeletionsSyncAction constructor(
+class PerformDeletionsSyncAction(
     val libraryId: LibraryIdentifier,
     val collections: List<String>,
     val items: List<String>,

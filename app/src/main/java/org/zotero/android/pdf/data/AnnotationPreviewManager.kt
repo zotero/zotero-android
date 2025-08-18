@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.FreeTextAnnotation
@@ -135,11 +136,7 @@ class AnnotationPreviewManager @Inject constructor(
         sourceBitmap: Bitmap,
         annotation: Annotation
     ) {
-        val annotationBitmap = Bitmap.createBitmap(
-            sourceBitmap.width,
-            sourceBitmap.height,
-            Bitmap.Config.ARGB_8888
-        )
+        val annotationBitmap = createBitmap(sourceBitmap.width, sourceBitmap.height)
         annotation.renderToBitmap(annotationBitmap)
         val canvas = Canvas(sourceBitmap)
         canvas.drawBitmap(

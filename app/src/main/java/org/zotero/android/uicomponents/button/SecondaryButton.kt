@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,16 +46,16 @@ fun SecondaryButton(
         onClick = { if (!isLoading) onClick() },
         modifier = modifier.heightIn(min = 48.dp),
         enabled = isEnabled,
-        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
+        elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp),
         shape = CustomTheme.shapes.button,
         border = BorderStroke(
             width = 1.5.dp,
             color = if (isEnabled) contentColor else CustomTheme.colors.disabledButtonBackground
         ),
         colors = ButtonDefaults.buttonColors(
-            backgroundColor = Color.Transparent,
+            containerColor = Color.Transparent,
             contentColor = contentColor,
-            disabledBackgroundColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
             disabledContentColor = CustomTheme.colors.disabledButtonContent
         )
     ) {

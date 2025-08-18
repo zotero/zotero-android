@@ -2,7 +2,6 @@ package org.zotero.android.locales
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.pspdfkit.internal.utilities.toArrayList
 import org.apache.commons.io.FileUtils
 import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.unmarshalMap
@@ -31,7 +30,7 @@ class ExportCslLocaleReader @Inject constructor(
         val element = dictionary["language-names"]
         val codes =
             element.unmarshalMap<String, List<String>>(gson) ?: return emptyList()
-        return codes.keys.toArrayList()
+        return codes.keys.toList()
     }
 
     fun load(): List<ExportLocale> {

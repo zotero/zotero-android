@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -333,7 +334,7 @@ private fun AnnotationCreationToggleButton(
 
 @Composable
 private fun FilledFilterCircle(hex: String, onClick: () -> Unit) {
-    val color = android.graphics.Color.parseColor(hex)
+    val color = hex.toColorInt()
     Canvas(modifier = Modifier
         .padding(horizontal = 10.dp)
         .size(30.dp)

@@ -2,6 +2,7 @@ package org.zotero.android.androidx.content
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -98,6 +99,7 @@ fun Context.getFileSize(uri: Uri): Long? {
     }
 }
 
+@SuppressLint("DiscouragedApi")
 @Composable
 fun Context.getDrawableByItemType(typeIconString: String): Int {
     val drawableId = remember(typeIconString) {

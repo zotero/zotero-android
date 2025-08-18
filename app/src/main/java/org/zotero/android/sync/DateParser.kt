@@ -413,7 +413,7 @@ class DateParser @Inject constructor() {
 
             parseData.order = update(parseData.order, part, "d")
             val location = toMatchResult.start()
-            var newPart: String = ""
+            var newPart = ""
             val postPart = toMatchResult.substringOrNull(2)
             if (postPart != null) {
                 newPart = postPart
@@ -469,7 +469,7 @@ private data class ParseData(
     var month: Int = 0,
     var year: Int = 0,
     var order: String = "",
-    var parts: MutableList<Part> = mutableListOf<Part>(),
+    var parts: MutableList<Part> = mutableListOf(),
 )
 
 private data class Part(

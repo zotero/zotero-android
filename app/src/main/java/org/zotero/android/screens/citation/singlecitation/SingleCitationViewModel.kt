@@ -121,10 +121,6 @@ internal class SingleCitationViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-    }
-
     fun onCopyTapped() {
         viewModelScope.launch {
             val preview = viewState.preview.ifEmpty { return@launch }

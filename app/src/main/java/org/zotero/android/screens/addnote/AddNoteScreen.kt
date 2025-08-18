@@ -13,6 +13,7 @@ import android.webkit.WebMessagePort
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
@@ -44,10 +45,7 @@ internal fun AddNoteScreen(
     viewModel: AddNoteViewModel = hiltViewModel(),
     navigateToTagPicker: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.addNoteBottomBar,
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AddNoteViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -82,11 +80,13 @@ internal fun AddNoteScreen(
             }
         }
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 AddNoteTopBar(titleData = viewState.title, onDoneClicked = viewModel::onDoneClicked)
             },
         ) {
-            Box {
+            Box(modifier = Modifier.background(CustomTheme.colors.zoteroItemDetailSectionBackground)) {
                 WebView(
                     viewModel = viewModel,
                     isKeyboardShown = isKeyboardShown

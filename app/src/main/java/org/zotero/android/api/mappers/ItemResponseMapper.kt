@@ -176,7 +176,7 @@ class ItemResponseMapper @Inject constructor(
         val creators = data["creators"]?.asJsonArray ?: JsonArray()
 
         val collectionKeys =
-            data["collections"]?.unmarshalList<String>(gson)?.toSet() ?: emptySet<String>()
+            data["collections"]?.unmarshalList<String>(gson)?.toSet() ?: emptySet()
         val parentKey = data["parentItem"]?.asString
         val dateAddedParsed = dateAdded?.let { iso8601DateFormatV2.parse(it) } ?: Date()
         val dateModifiedParsed = dateModified?.let { iso8601DateFormatV2.parse(it) } ?: Date()

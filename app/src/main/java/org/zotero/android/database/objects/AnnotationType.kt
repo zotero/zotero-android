@@ -11,15 +11,15 @@ enum class AnnotationType() {
     text;
 
 
-    val kind: com.pspdfkit.annotations.AnnotationType
+    val kind: AnnotationType
         get() {
             return when (this) {
-                note -> com.pspdfkit.annotations.AnnotationType.NOTE
-                highlight -> com.pspdfkit.annotations.AnnotationType.HIGHLIGHT
-                image -> com.pspdfkit.annotations.AnnotationType.SQUARE
-                ink -> com.pspdfkit.annotations.AnnotationType.INK
-                underline -> com.pspdfkit.annotations.AnnotationType.UNDERLINE
-                text -> com.pspdfkit.annotations.AnnotationType.FREETEXT
+                note -> AnnotationType.NOTE
+                highlight -> AnnotationType.HIGHLIGHT
+                image -> AnnotationType.SQUARE
+                ink -> AnnotationType.INK
+                underline -> AnnotationType.UNDERLINE
+                text -> AnnotationType.FREETEXT
             }
         }
 }

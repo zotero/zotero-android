@@ -85,7 +85,7 @@ class CreatePDFAnnotationsDbRequest(
             item.createdBy = database.where<RUser>().equalTo("identifier", this.userId).findFirst()
         }
 
-        val changes = mutableListOf<RItemChanges>(
+        val changes = mutableListOf(
             RItemChanges.parent,
             RItemChanges.fields,
             RItemChanges.type,

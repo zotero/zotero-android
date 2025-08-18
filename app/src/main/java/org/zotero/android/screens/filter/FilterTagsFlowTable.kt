@@ -9,13 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -50,7 +51,7 @@ internal fun LazyListScope.filterTagsFlowTable(
                         )
                 ) {
                     val textColor = if (it.tag.color.isNotEmpty()) {
-                        val color = android.graphics.Color.parseColor(it.tag.color)
+                        val color = it.tag.color.toColorInt()
                         Color(color)
                     } else {
                         CustomTheme.colors.primaryContent

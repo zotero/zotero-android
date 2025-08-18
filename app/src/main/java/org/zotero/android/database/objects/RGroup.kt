@@ -8,7 +8,7 @@ enum class GroupType(val str: String) {
     publicOpen("PublicOpen"),
     publicClosed("PublicClosed");
     companion object {
-        private val map = GroupType.values().associateBy(GroupType::str)
+        private val map = entries.associateBy(GroupType::str)
 
         fun from(str: String) = map[str]
     }

@@ -22,17 +22,17 @@ data class Attachment(
         }
 
     val hasUrl: Boolean get() {
-        when(this.type) {
-            is Kind.url -> return true
-            is Kind.file -> return this.url != null
+        return when(this.type) {
+            is Kind.url -> true
+            is Kind.file -> this.url != null
         }
     }
 
     val location: FileLocation?
         get() {
-            when (this.type) {
-                is Kind.url -> return null
-                is Kind.file -> return this.type.location
+            return when (this.type) {
+                is Kind.url -> null
+                is Kind.file -> this.type.location
             }
         }
 

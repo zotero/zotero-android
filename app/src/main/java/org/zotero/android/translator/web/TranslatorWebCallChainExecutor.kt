@@ -99,7 +99,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
 
                     val payload = body["payload"].asJsonArray
                     this@TranslatorWebCallChainExecutor.itemSelectionMessageId = messageId
-                    var sortedDictionary: MutableList<Pair<String, String>> = mutableListOf()
+                    val sortedDictionary: MutableList<Pair<String, String>> = mutableListOf()
                     for (data in payload) {
                         val dataAsArray = data.asJsonArray
                         if (dataAsArray.size() != 2) {

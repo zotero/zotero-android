@@ -1,8 +1,10 @@
 package org.zotero.android.helpers
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.files.FileStore
@@ -21,7 +23,7 @@ class SaveFileToInternalStorageUseCase @Inject constructor(
 ) {
     suspend fun execute(stringUri: String): org.zotero.android.architecture.Result<InternalFile> = withContext(dispatcher) {
         try {
-            val uri = Uri.parse(stringUri)
+            val uri = stringUri.toUri()
             org.zotero.android.architecture.Result.Success(createInternalFile(uri))
         } catch (e: Exception) {
             org.zotero.android.architecture.Result.Failure(e)
@@ -72,6 +74,7 @@ class SaveFileToInternalStorageUseCase @Inject constructor(
         )
     }
 
+    @SuppressLint("Range")
     private fun getFileName(uri: Uri): String {
         app.contentResolver.query(
             uri,

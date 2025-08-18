@@ -21,6 +21,7 @@ private fun configure(project: Project) {
         add("implementation", Libs.AndroidX.constraintLayout)
         add("implementation", Libs.AndroidX.constraintLayoutSolver)
 
+        add("implementation", Libs.AndroidX.Lifecycle.lifecycle)
         add("implementation", Libs.AndroidX.Lifecycle.lifecycleRuntime)
         add("implementation", Libs.AndroidX.Lifecycle.commonJava8)
         add("implementation", Libs.AndroidX.Lifecycle.liveData)

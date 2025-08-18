@@ -317,27 +317,27 @@ class SyncToolbarTextGenerator @Inject constructor(
     }
 
     private fun name(objectS: SyncObject): String {
-        when (objectS) {
+        return when (objectS) {
             SyncObject.collection -> {
-                return context.getString(Strings.sync_toolbar_object_collections)
+                context.getString(Strings.sync_toolbar_object_collections)
             }
 
             SyncObject.item, SyncObject.trash -> {
-                return context.getString(Strings.sync_toolbar_object_items)
+                context.getString(Strings.sync_toolbar_object_items)
             }
 
             SyncObject.search -> {
-                return context.getString(Strings.sync_toolbar_object_searches)
+                context.getString(Strings.sync_toolbar_object_searches)
             }
 
-            SyncObject.settings -> return ""
+            SyncObject.settings -> ""
         }
     }
 
     private fun getGroupNameById(groupId: Int): String {
         val group =
             dbWrapperMain.realmDbStorage.perform(request = ReadGroupDbRequest(identifier = groupId))
-        val groupName = group.name ?: "${groupId}"
+        val groupName = group.name ?: "$groupId"
         return groupName
     }
 }

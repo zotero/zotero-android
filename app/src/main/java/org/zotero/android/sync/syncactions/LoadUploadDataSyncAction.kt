@@ -6,7 +6,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 
-class LoadUploadDataSyncAction constructor(
+class LoadUploadDataSyncAction(
     val libraryId: LibraryIdentifier
 ) : SyncAction() {
     fun result(): List<AttachmentUpload> {

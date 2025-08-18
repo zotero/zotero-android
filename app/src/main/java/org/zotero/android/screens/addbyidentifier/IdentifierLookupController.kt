@@ -99,7 +99,7 @@ class IdentifierLookupController @Inject constructor(
     ) {
         this.lookupMode = lookupMode
         this.shouldSkipLookupsCleaning = shouldSkipLookupsCleaning
-        observable = EventStream<Update>(
+        observable = EventStream(
             ZoteroApplication.instance.applicationScope
         )
         val lookupSettings =
@@ -195,7 +195,7 @@ class IdentifierLookupController @Inject constructor(
         fun identifier(data: Map<String, String>): String {
             var result = ""
             for ((key, value) in data) {
-                result += key + ":" + value
+                result += "$key:$value"
             }
             return result
         }
@@ -895,13 +895,13 @@ class IdentifierLookupController @Inject constructor(
 
             val canTransition: Boolean
                 get() {
-                    when (this) {
+                    return when (this) {
                         enqueued, inProgress -> {
-                            return true
+                            true
                         }
 
                         is translatedAndParsedAttachments, is translatedAndCreatedItem, is translatedOnly, failed -> {
-                            return false
+                            false
                         }
                     }
                 }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,7 +23,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,17 +57,15 @@ private val onboardingPages =
     )
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 internal fun OnboardingScreen(
-    onBack: () -> Unit,
     onSignInClick: () -> Unit,
 ) {
     CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
-//    SolidStatusBar()
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
                 .verticalScroll(rememberScrollState())
                 .background(color = CustomTheme.colors.surface),
             horizontalAlignment = Alignment.CenterHorizontally,

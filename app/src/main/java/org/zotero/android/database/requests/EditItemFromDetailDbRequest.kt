@@ -34,7 +34,7 @@ class EditItemFromDetailDbRequest(
         if (item == null) {
             return
         }
-        var changes = mutableListOf<RItemChanges>()
+        val changes = mutableListOf<RItemChanges>()
 
         val typeChanged = this.data.type != item.rawType
         if (typeChanged) {
@@ -119,7 +119,7 @@ class EditItemFromDetailDbRequest(
         }
 
         for ((offset, field) in allFields.withIndex()) {
-            if (!typeChanged && !(field.value != snapshotFields[offset].value)) {
+            if (!typeChanged && field.value == snapshotFields[offset].value) {
                 continue
             }
 

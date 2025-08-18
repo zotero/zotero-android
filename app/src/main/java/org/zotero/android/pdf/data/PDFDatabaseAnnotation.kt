@@ -151,7 +151,7 @@ data class PDFDatabaseAnnotation(
             val type = AnnotationType.valueOf(rawValue)
             return type
         } catch (e: Exception) {
-            Timber.w("DatabaseAnnotation: ${this.key} unknown annotation type ${rawValue}")
+            Timber.w("DatabaseAnnotation: ${this.key} unknown annotation type $rawValue")
             return null
         }
     }

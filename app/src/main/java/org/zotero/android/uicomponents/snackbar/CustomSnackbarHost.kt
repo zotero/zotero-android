@@ -1,9 +1,9 @@
 package org.zotero.android.uicomponents.snackbar
 
-import androidx.compose.material.SnackbarData
-import androidx.compose.material.SnackbarHost
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.material.SnackbarResult
+import androidx.compose.material3.SnackbarData
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -18,7 +18,7 @@ private class SnackbarMessageHandler {
     private val messageMap = mutableMapOf<String, SnackbarMessage>()
 
     fun getSnackbarMessage(snackbarData: SnackbarData): SnackbarMessage? {
-        return messageMap[snackbarData.message]
+        return messageMap[snackbarData.visuals.message]
     }
 
     suspend fun showSnackbar(

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.screens.share.navigation.ShareRootNavigation
@@ -18,6 +19,7 @@ internal class ShareActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         shareRawAttachmentLoader.loadFromIntent(intent)
         setContent {
             CustomTheme {

@@ -77,7 +77,7 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         get() = isChanged
 
     override fun markAsChanged(database: Realm) {
-        this.changes.add(RObjectChange.create(changes = RSearchChanges.values().toList()))
+        this.changes.add(RObjectChange.create(changes = RSearchChanges.entries))
         changeType = UpdatableChangeType.user.name
         deleted = false
         version = 0

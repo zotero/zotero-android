@@ -1015,12 +1015,13 @@ class SyncUseCase @Inject constructor(
                 }
 
                 if (error is ZoteroApiError) {
-                    when (error) {
+                    return when (error) {
                         ZoteroApiError.unchanged -> {
-                            return SyncError.nonFatal2(NonFatal.unchanged)
+                            SyncError.nonFatal2(NonFatal.unchanged)
                         }
+
                         is ZoteroApiError.responseMissing -> {
-                            return SyncError.nonFatal2(NonFatal.unknown(messageS = "missing response", data = data))
+                            SyncError.nonFatal2(NonFatal.unknown(messageS = "missing response", data = data))
                         }
                     }
                 }
@@ -1091,15 +1092,15 @@ class SyncUseCase @Inject constructor(
             412 ->
                 return SyncError.nonFatal2(NonFatal.preconditionFailed(data.libraryId))
             else -> {
-                if (code >= 400 && code <= 499) {
-                    return SyncError.fatal2(
+                return if (code >= 400 && code <= 499) {
+                    SyncError.fatal2(
                         SyncError.Fatal.apiError(
                             response = responseMessage(),
                             data = data
                         )
                     )
                 } else {
-                    return SyncError.nonFatal2(
+                    SyncError.nonFatal2(
                         NonFatal.apiError(
                             response = responseMessage(),
                             data = data
@@ -1418,12 +1419,12 @@ class SyncUseCase @Inject constructor(
     }
 
     private fun handleAllUploadsFailedBeforeReachingZoteroBackend(libraryId: LibraryIdentifier) {
-        if (didEnqueueWriteActionsToZoteroBackend || !(this.enqueuedUploads > 0)) {
+        if (didEnqueueWriteActionsToZoteroBackend || this.enqueuedUploads <= 0) {
             return
         }
         this.uploadsFailedBeforeReachingZoteroBackend += 1
 
-        if (!(this.enqueuedUploads == this.uploadsFailedBeforeReachingZoteroBackend) || !(this.queue.firstOrNull()?.libraryId != libraryId) ) {
+        if (this.enqueuedUploads != this.uploadsFailedBeforeReachingZoteroBackend || this.queue.firstOrNull()?.libraryId == libraryId) {
             return
         }
 

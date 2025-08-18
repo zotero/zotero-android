@@ -5,7 +5,7 @@ import org.zotero.android.sync.AnnotationColorGenerator
 import java.util.EnumSet
 
 object AnnotationsConfig {
-    val defaultActiveColor = "#ffd400"
+    const val defaultActiveColor = "#ffd400"
     val allColors = listOf(
         "#ffd400",
         "#ff6666",
@@ -23,8 +23,8 @@ object AnnotationsConfig {
         org.zotero.android.database.objects.AnnotationType.underline
     )
     val userInterfaceStylesWithVarition: List<Boolean> = listOf(false, true)
-    val positionSizeLimit = 65000
-    val supported = EnumSet.of(
+    const val positionSizeLimit = 65000
+    val supported: EnumSet<AnnotationType> = EnumSet.of(
         AnnotationType.NOTE,
         AnnotationType.HIGHLIGHT,
         AnnotationType.SQUARE,
@@ -32,9 +32,9 @@ object AnnotationsConfig {
         AnnotationType.UNDERLINE,
         AnnotationType.FREETEXT,
     )
-    val keyKey = "Zotero:Key"
+    const val keyKey = "Zotero:Key"
     val noteAnnotationSize = Pair(22F, 22F)
-    val imageAnnotationLineWidth = 2F
+    const val imageAnnotationLineWidth = 2F
     val colorVariationMap: Map<Int, String> = createColorVariationMap()
 
     private fun createColorVariationMap(): Map<Int, String> {

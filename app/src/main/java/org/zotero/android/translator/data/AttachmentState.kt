@@ -51,21 +51,21 @@ sealed class AttachmentState {
 
     val error: Error?
         get() {
-            when (this) {
-                is failed -> return this.e
-                else -> return null
+            return when (this) {
+                is failed -> this.e
+                else -> null
             }
         }
 
     val translationInProgress: Boolean
         get() {
-            when (this) {
+            return when (this) {
                 is decoding, is translating, is downloading -> {
-                    return true
+                    true
                 }
 
                 else -> {
-                    return false
+                    false
                 }
             }
         }

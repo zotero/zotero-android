@@ -444,12 +444,13 @@ internal class AllItemsViewModel @Inject constructor(
         }
         val collections: Set<String>
         val identifier = this.collection.identifier
-        when(identifier) {
+        collections = when(identifier) {
             is CollectionIdentifier.collection -> {
-                collections = setOf(identifier.key)
+                setOf(identifier.key)
             }
+
             is CollectionIdentifier.search, is CollectionIdentifier.custom -> {
-                collections = emptySet()
+                emptySet()
             }
         }
         val type = schemaController.localizedItemType(ItemTypes.attachment) ?: ""
@@ -542,14 +543,15 @@ internal class AllItemsViewModel @Inject constructor(
     private suspend fun saveNote(text: String, tags: List<Tag>, key: String) = withContext(dispatchers.io) {
         val note = Note(key = key, text = text, tags = tags)
         val libraryId = this@AllItemsViewModel.library.identifier
-        var collectionKey: String? = null
+        var collectionKey: String?
 
         val identifier = this@AllItemsViewModel.collection.identifier
-        when (identifier) {
+        collectionKey = when (identifier) {
             is CollectionIdentifier.collection ->
-                collectionKey = identifier.key
+                identifier.key
+
             is CollectionIdentifier.custom, is CollectionIdentifier.search ->
-                collectionKey = null
+                null
         }
 
         try {
@@ -624,11 +626,11 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showDoi(doi: String) {
         val url = "https://doi.org/$doi"
-        triggerEffect(AllItemsViewEffect.OpenWebpage(Uri.parse(url)))
+        triggerEffect(AllItemsViewEffect.OpenWebpage(url.toUri()))
     }
 
     private suspend fun showUrl(url: String) {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
             val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(AllItemsViewEffect.OpenFile(uri.toFile(), mimeType))
@@ -1187,11 +1189,10 @@ internal class AllItemsViewModel @Inject constructor(
             localeId = localeId
         )
         val html = citationController.bibliography(session, format = Format.html)
-        val resultPair: Pair<String, String?>
-        if (defaults.isQuickCopyAsHtml()) {
-            resultPair = html to null
+        val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
+            html to null
         } else {
-            resultPair = html to citationController.bibliography(session = session, format = Format.text)
+            html to citationController.bibliography(session = session, format = Format.text)
         }
         if (resultPair.second != null) {
             context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)

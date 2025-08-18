@@ -1,4 +1,4 @@
-package org.zotero.android.sync;
+package org.zotero.android.sync
 
 import org.zotero.android.database.requests.PerformDeletionsDbRequest
 

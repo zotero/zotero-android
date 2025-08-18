@@ -50,7 +50,7 @@ class CreateAttachmentDbRequest(
             RItemChanges.fields,
             RItemChanges.tags
         )
-        var item = database.createObject<RItem>()
+        val item = database.createObject<RItem>()
         item.key = this.attachment.key
         item.rawType = ItemTypes.attachment
         item.localizedType = this.localizedType

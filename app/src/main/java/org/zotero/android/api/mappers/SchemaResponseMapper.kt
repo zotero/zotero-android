@@ -30,11 +30,9 @@ class SchemaResponseMapper @Inject constructor(
         val locales = mutableMapOf<String, SchemaLocale>()
 
         val localeData: Map<String, JsonObject>? = data["locales"]?.unmarshalMap(gson)
-        if (localeData != null) {
-            localeData.forEach { data ->
-                val fixedKey = data.key.replace("-", "_")
-                locales[fixedKey] = schemaLocaleMapper.fromJson(data.value)
-            }
+        localeData?.forEach { data ->
+            val fixedKey = data.key.replace("-", "_")
+            locales[fixedKey] = schemaLocaleMapper.fromJson(data.value)
         }
 
         val version = data["version"]?.asInt ?: 0

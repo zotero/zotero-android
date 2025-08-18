@@ -55,7 +55,7 @@ data class ItemResponse(
             gsonWithRoundedDecimals: Gson,
         ): Triple<Map<KeyBaseKeyPair, String>, List<List<Double>>?, List<List<Double>>?> {
             val excludedKeys = FieldKeys.Item.knownNonFieldKeys
-            var fields = mutableMapOf<KeyBaseKeyPair, String>()
+            val fields = mutableMapOf<KeyBaseKeyPair, String>()
             var rects: List<List<Double>>? = null
             var paths: List<List<Double>>? = null
 

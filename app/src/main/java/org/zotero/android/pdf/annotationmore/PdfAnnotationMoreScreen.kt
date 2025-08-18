@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
-import androidx.compose.material.ripple
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,8 +54,6 @@ internal fun PdfAnnotationMoreScreen(
     val viewEffect by viewModel.viewEffects.observeAsState()
     CustomThemeWithStatusAndNavBars(
         isDarkTheme = viewState.isDark,
-        statusBarBackgroundColor = CustomTheme.colors.zoteroEditFieldBackground,
-        navBarBackgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground,
     ) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
@@ -73,6 +71,7 @@ internal fun PdfAnnotationMoreScreen(
 
         CustomScaffold(
             modifier = Modifier.fillMaxSize(),
+            topBarColor = CustomTheme.colors.zoteroEditFieldBackground,
             topBar = {
                 PdfAnnotationMoreTopBar(onBack = onBack, viewModel = viewModel)
             },

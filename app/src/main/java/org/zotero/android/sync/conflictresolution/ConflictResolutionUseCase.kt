@@ -14,8 +14,8 @@ import javax.inject.Singleton
 @Singleton
 class ConflictResolutionUseCase @Inject constructor(
     private val syncUseCase: SyncUseCase,
-    private val dispatcher: CoroutineDispatcher,
-    private val conflictEventStream: ConflictEventStream) {
+    dispatcher: CoroutineDispatcher,
+    conflictEventStream: ConflictEventStream) {
     private var coroutineScope = CoroutineScope(dispatcher)
 
     init {

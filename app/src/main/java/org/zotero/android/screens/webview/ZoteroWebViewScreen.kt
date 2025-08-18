@@ -6,6 +6,7 @@ import android.webkit.WebView
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidView
 import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -16,6 +17,7 @@ internal fun ZoteroWebViewScreen(
 ) {
     CustomThemeWithStatusAndNavBars {
         CustomScaffold(
+            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 ZoteroWebviewTopBar(onClose = onClose)
             },
@@ -27,6 +29,7 @@ internal fun ZoteroWebViewScreen(
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun WebView(url: String) {
     AndroidView(

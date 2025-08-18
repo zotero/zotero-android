@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collectionpicker
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,14 +16,10 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 @Composable
 internal fun CollectionPickerScreen(
     onBack: () -> Unit,
-    scaffoldModifier: Modifier = Modifier,
     viewModel: CollectionPickerViewModel = hiltViewModel(),
 ) {
     val backgroundColor = CustomTheme.colors.popupBackgroundContent
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = backgroundColor
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -43,8 +40,7 @@ internal fun CollectionPickerScreen(
             }
         }
         CustomScaffold(
-            modifier = scaffoldModifier,
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 CollectionPickerTopBar(
                     title = viewState.title,
@@ -54,7 +50,7 @@ internal fun CollectionPickerScreen(
                 )
             },
         ) {
-            Column {
+            Column(modifier = Modifier.background(backgroundColor)) {
                 CollectionsPickerTable(
                     viewState = viewState,
                     viewModel = viewModel,

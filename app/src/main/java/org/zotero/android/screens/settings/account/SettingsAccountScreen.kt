@@ -28,10 +28,7 @@ internal fun SettingsAccountScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: SettingsAccountViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(SettingsAccountViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -55,7 +52,8 @@ internal fun SettingsAccountScreen(
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SettingsAccountTopBar(
                     onBack = onBack,
@@ -65,7 +63,7 @@ internal fun SettingsAccountScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = backgroundColor)
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 item {

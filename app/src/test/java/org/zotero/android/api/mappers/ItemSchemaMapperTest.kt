@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
-import org.junit.Before
 import org.junit.Test
 import org.zotero.android.api.pojo.sync.CreatorSchema
 import org.zotero.android.api.pojo.sync.FieldSchema
@@ -16,10 +15,6 @@ class ItemSchemaMapperTest {
     private val fieldSchemaMapper: FieldSchemaMapper = FieldSchemaMapper()
     private val creatorSchemaMapper: CreatorSchemaMapper = CreatorSchemaMapper()
     private val sut = ItemSchemaMapper(fieldSchemaMapper, creatorSchemaMapper)
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun testItemSchemaWithItemTypeParsesSuccessfully() {

@@ -87,9 +87,9 @@ class CollectionTreeBuilder {
             libraryId: LibraryIdentifier,
             includeItemCounts: Boolean
         ): Collection {
-            var itemCount: Int = 0
+            var itemCount = 0
             if (includeItemCounts) {
-                itemCount = if (rCollection.items.size == 0) 0 else rCollection.items.where()
+                itemCount = if (rCollection.items.isEmpty()) 0 else rCollection.items.where()
                     .items(CollectionIdentifier.collection(rCollection.key), libraryId = libraryId)
                     .count().toInt()
             }

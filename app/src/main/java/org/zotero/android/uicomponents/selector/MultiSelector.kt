@@ -19,7 +19,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -199,7 +199,6 @@ fun MultiSelector(
             )
             .background(CustomTheme.colors.sortPickerUnSelected),
         content = {
-            val colors = state.textColors
             options.forEachIndexed { index, option ->
                 Box(
                     modifier = Modifier
@@ -276,7 +275,7 @@ fun PreviewMultiSelector() {
                 MultiSelectorOption(3, "Dolor")
             )
             var selectedOption1 by remember {
-                mutableStateOf(options1.first().id)
+                mutableIntStateOf(options1.first().id)
             }
             val options2 =
                 listOf(
@@ -288,7 +287,7 @@ fun PreviewMultiSelector() {
                 )
 
             var selectedOption2 by remember {
-                mutableStateOf(options2.first().id)
+                mutableIntStateOf(options2.first().id)
             }
             Column(
                 modifier = Modifier

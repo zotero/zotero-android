@@ -4,8 +4,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,10 +40,8 @@ internal fun PdfFilterTagsListAndSelect(
             val formattedTags = viewState.formattedTags()
             Text(
                 modifier = Modifier.weight(1f),
-                text = if (formattedTags.isEmpty()) {
+                text = formattedTags.ifEmpty {
                     stringResource(id = Strings.pdf_annotations_sidebar_filter_tags_placeholder)
-                } else {
-                    formattedTags
                 },
                 color = CustomTheme.colors.primaryContent,
                 style = CustomTheme.typography.default,

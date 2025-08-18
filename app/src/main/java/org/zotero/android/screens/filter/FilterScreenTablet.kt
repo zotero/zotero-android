@@ -14,7 +14,6 @@ internal fun FilterScreenTablet(
 ) {
 
     val viewState by viewModel.viewStates.observeAsState(FilterViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
     LaunchedEffect(key1 = viewModel) {
         viewModel.init(filterArgs)
     }

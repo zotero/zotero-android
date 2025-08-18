@@ -12,8 +12,8 @@ class AnnotationBoundingBoxCalculator {
 
             var minX: Float = Float.MAX_VALUE
             var minY: Float = Float.MAX_VALUE
-            var maxX: Float = 0.0F
-            var maxY: Float = 0.0F
+            var maxX = 0.0F
+            var maxY = 0.0F
 
             for (path in paths) {
                 for (point in path) {
@@ -52,8 +52,8 @@ class AnnotationBoundingBoxCalculator {
 
             var minX: Float = Float.MAX_VALUE
             var minY: Float = Float.MAX_VALUE
-            var maxX: Float = 0.0f
-            var maxY: Float = 0.0f
+            var maxX = 0.0f
+            var maxY = 0.0f
 
             for (rect in rects) {
                 if (rect.left < minX) {

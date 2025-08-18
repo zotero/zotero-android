@@ -1,6 +1,7 @@
 package org.zotero.android.screens.settings
 
 import android.net.Uri
+import androidx.core.net.toUri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
@@ -19,12 +20,12 @@ internal class SettingsViewModel @Inject constructor(
     }
 
     fun openPrivacyPolicy() {
-        val uri = Uri.parse("https://www.zotero.org/support/privacy?app=1")
+        val uri = "https://www.zotero.org/support/privacy?app=1".toUri()
         triggerEffect(SettingsViewEffect.OpenWebpage(uri))
     }
 
     fun openSupportAndFeedback() {
-        val uri = Uri.parse("https://forums.zotero.org/")
+        val uri = "https://forums.zotero.org/".toUri()
         triggerEffect(SettingsViewEffect.OpenWebpage(uri))
     }
 }

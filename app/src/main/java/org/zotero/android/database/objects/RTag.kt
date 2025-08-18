@@ -12,7 +12,7 @@ open class RTypedTag : RealmObject() {
         manual(0);
 
         companion object {
-            private val map = values().associateBy(Kind::int)
+            private val map = entries.associateBy(Kind::int)
 
             fun from(int: Int) = map[int]
         }

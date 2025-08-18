@@ -33,17 +33,13 @@ class StoreSearchesDbRequest(
         val search: RSearch
         val existing =
             database.where<RSearch>().key(data.key, libraryId = libraryId).findFirst()
-        if (existing != null) {
-            search = existing
-        } else {
-            search = database.createObject<RSearch>()
-        }
+        search = existing ?: database.createObject<RSearch>()
 
         search.deleted = false
         search.deleteAllChanges(database = database)
 
         // Update local instance with remote values
-        StoreSearchesDbRequest.update(
+        update(
             search = search, response = data, libraryId = libraryId, database = database
         )
     }

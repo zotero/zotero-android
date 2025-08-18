@@ -19,9 +19,9 @@ class DeleteCreatorItemDetailDbRequest(
     override fun process(database: Realm) {
         val item = database.where<RItem>().key(key, libraryId).findFirst() ?:return
 
-        val creator =item.creators.filter { it.uuid == creatorId }.firstOrNull() ?: return
+        val creator = item.creators.firstOrNull { it.uuid == creatorId } ?: return
 
-        if (!creator.isValid()) {
+        if (!creator.isValid) {
             return
         }
         creator.deleteFromRealm()

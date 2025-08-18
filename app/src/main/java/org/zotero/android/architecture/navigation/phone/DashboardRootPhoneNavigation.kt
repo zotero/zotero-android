@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -94,7 +93,6 @@ internal fun DashboardRootPhoneNavigation(
         ZoteroNavHost(
             navController = navController,
             startDestination = CommonScreenDestinations.ALL_ITEMS,
-            modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
         ) {
             collectionsScreen(
                 collectionDefaultValue = collectionDefaultValue,

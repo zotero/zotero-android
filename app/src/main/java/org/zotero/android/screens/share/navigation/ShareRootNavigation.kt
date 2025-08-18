@@ -4,7 +4,6 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -55,7 +54,6 @@ private fun ShareRootNavHost(
     ZoteroNavHost(
         navController = navController,
         startDestination = ShareRootDestinations.SHARE_SCREEN,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         shareScreen(
             onBack = navigation::onBack,

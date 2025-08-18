@@ -5,7 +5,6 @@ import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.quantityStringResource
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
@@ -15,7 +14,6 @@ internal fun SettingsDebugLogTopBar(
     numberOfLines: Int,
 ) {
     NewCustomTopBar(
-        backgroundColor = CustomTheme.colors.surface,
         title = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
         leftContainerContent = listOf {
             NewHeadingTextButton(

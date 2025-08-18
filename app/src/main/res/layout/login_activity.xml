@@ -13,6 +13,7 @@
             android:id="@+id/background_image"
             android:layout_width="0dp"
             android:layout_height="0dp"
+            android:importantForAccessibility="no"
             android:scaleType="centerCrop"
             android:src="@color/surface"
             app:layout_constraintBottom_toBottomOf="parent"

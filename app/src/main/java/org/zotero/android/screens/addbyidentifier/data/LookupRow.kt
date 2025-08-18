@@ -24,13 +24,13 @@ sealed interface LookupRow {
     data class attachment(val attachment: Attachment, val updateKind: RemoteAttachmentDownloader.Update.Kind): LookupRow
 
     fun isAttachment(key: String, libraryId: LibraryIdentifier): Boolean {
-        when (this) {
+        return when (this) {
             is attachment -> {
-                return this.attachment.key == key && this.attachment.libraryId == libraryId
+                this.attachment.key == key && this.attachment.libraryId == libraryId
             }
 
             is item, is identifier -> {
-                return false
+                false
             }
         }
     }

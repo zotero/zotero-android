@@ -1,6 +1,5 @@
 package org.zotero.android.sync
 
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -32,7 +31,7 @@ class SyncScheduler @Inject constructor(
         val retryOnce: Boolean = false,
     )
 
-    var inProgress = MutableStateFlow<Boolean>(false)
+    var inProgress = MutableStateFlow(false)
 
     private val coroutineScope = CoroutineScope(dispatchers.io)
     private val syncSchedulerSemaphore = Semaphore(1)
@@ -87,7 +86,7 @@ class SyncScheduler @Inject constructor(
     }
 
     fun webSocketUpdate(libraryId: LibraryIdentifier) {
-        Timber.i("SyncScheduler: websocket sync for ${libraryId}")
+        Timber.i("SyncScheduler: websocket sync for $libraryId")
         coroutineScope.launch {
             syncSchedulerSemaphore.withPermit {
                 enqueueAndStart(

@@ -178,7 +178,7 @@ class ReadLibrariesDataDbRequest(
                 )
             }
 
-        val searchDeletions = ReadDeletedObjectsDbRequest<RSearch>(libraryId = libraryId, clazz = RSearch::class)
+        val searchDeletions = ReadDeletedObjectsDbRequest(libraryId = libraryId, clazz = RSearch::class)
             .process(
                 database = database,
             )

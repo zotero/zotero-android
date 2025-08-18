@@ -1,5 +1,6 @@
 package org.zotero.android.screens.retrievemetadata
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -44,29 +45,24 @@ internal fun RetrieveMetadataScreen(
         }
     }
 
-
-    val backgroundColor = CustomTheme.colors.popupBackgroundContent
-
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = backgroundColor
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val isLoadingState = viewState.retrieveMetadataState == RetrieveMetadataState.loading
         CustomScaffold(
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
-                RetrieveMetadataTopBar(onDone = {
+                RetrieveMetadataTopBar(
+                    onDone = {
                     onBack()
                 },
                     onCancel = {
                         onBack()
-                    }
-                    , isLoadingState = isLoadingState)
+                    }, isLoadingState = isLoadingState)
             },
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(CustomTheme.colors.popupBackgroundContent)
             ) {
                 item {
                     RetrieveMetadataItemRow(viewState = viewState, showBottomDivider = false)

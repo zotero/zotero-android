@@ -3,7 +3,6 @@ package org.zotero.android.screens.login
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
@@ -12,7 +11,6 @@ internal fun LoginTopBar(
     onCancelClicked: () -> Unit,
 ) {
     NewCustomTopBar(
-        backgroundColor = CustomTheme.colors.surface,
         shouldAddBottomDivider = false,
         leftContainerContent = listOf {
             NewHeadingTextButton(

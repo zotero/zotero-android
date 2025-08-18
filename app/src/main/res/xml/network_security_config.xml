@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<network-security-config>
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">arxiv.org</domain>
         <domain includeSubdomains="true">home.arpa</domain>
@@ -9,7 +9,8 @@
     <base-config>
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
+            <certificates src="user"
+                tools:ignore="AcceptsUserCertificates" />
         </trust-anchors>
     </base-config>
 </network-security-config>

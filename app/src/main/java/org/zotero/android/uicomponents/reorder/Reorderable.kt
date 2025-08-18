@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,7 +66,7 @@ class ReorderableState(val listState: LazyListState) {
         if (draggedIndex == index) draggedOffset else null
 
     internal var selected by mutableStateOf<LazyListItemInfo?>(null)
-    internal var movedDist by mutableStateOf(0f)
+    internal var movedDist by mutableFloatStateOf(0f)
 }
 
 fun Modifier.reorderable(

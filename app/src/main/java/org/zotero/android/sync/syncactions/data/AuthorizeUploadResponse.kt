@@ -14,10 +14,10 @@ sealed class AuthorizeUploadResponse {
             lastModifiedVersion: Int,
             gson: Gson
         ): AuthorizeUploadResponse {
-            if (data["exists"] != null) {
-                return exists(lastModifiedVersion)
+            return if (data["exists"] != null) {
+                exists(lastModifiedVersion)
             } else {
-                return new(AuthorizeNewUploadResponse.fromJson(data = data, gson = gson))
+                new(AuthorizeNewUploadResponse.fromJson(data = data, gson = gson))
             }
 
         }

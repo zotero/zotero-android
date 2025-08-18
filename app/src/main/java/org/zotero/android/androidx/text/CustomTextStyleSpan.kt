@@ -12,7 +12,7 @@ class CustomTextStyleSpan(private val textStyle: TextStyle) : MetricAffectingSpa
         paint.letterSpacing = textStyle.letterSpacing.value
         val font = (textStyle.fontFamily as? GenericFontFamily)?.name
         if (font != null) {
-            paint.typeface = Typeface.create(font, textStyle.fontStyle?.value ?: 0)
+            paint.typeface = Typeface.create(font, textStyle.fontStyle?.value ?: Typeface.NORMAL)
         }
     }
 
@@ -21,7 +21,7 @@ class CustomTextStyleSpan(private val textStyle: TextStyle) : MetricAffectingSpa
         paint.letterSpacing = textStyle.letterSpacing.value
         val font = (textStyle.fontFamily as? GenericFontFamily)?.name
         if (font != null) {
-            paint.typeface = Typeface.create(font, textStyle.fontStyle?.value ?: 0)
+            paint.typeface = Typeface.create(font, textStyle.fontStyle?.value ?: Typeface.NORMAL)
         }
     }
 }

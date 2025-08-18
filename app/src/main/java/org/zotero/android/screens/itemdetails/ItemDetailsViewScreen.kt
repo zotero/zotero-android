@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.Text
-import androidx.compose.material.ripple
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -103,7 +103,7 @@ private fun ListOfCreatorRows(
     onCreatorLongClick: (ItemDetailCreator) -> Unit,
 ) {
     for (creatorId in viewState.data.creatorIds) {
-        val creator = viewState.data.creators.get(creatorId) ?: continue
+        val creator = viewState.data.creators[creatorId] ?: continue
         val title = creator.localizedType
         val value = creator.name
         Row(
@@ -133,11 +133,11 @@ fun ListOfFieldRows(
     viewModel: ItemDetailsViewModel,
 ) {
     for (fieldId in viewState.data.fieldIds) {
-        val field = viewState.data.fields.get(fieldId) ?: continue
+        val field = viewState.data.fields[fieldId] ?: continue
         val title = field.name
         var value = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.formattedDate)
             ?: field.value
-        value = if (value.isEmpty()) " " else value
+        value = value.ifEmpty { " " }
         val textColor = if (field.isTappable) {
             CustomPalette.Blue
         } else {

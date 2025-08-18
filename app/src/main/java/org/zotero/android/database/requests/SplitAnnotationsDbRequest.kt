@@ -118,11 +118,11 @@ class SplitAnnotationsDbRequest(
     }
 
     private fun points(paths:List<RPath>): List<List<PointF>> {
-        var points: MutableList<List<PointF>> = mutableListOf()
+        val points: MutableList<List<PointF>> = mutableListOf()
 
         for (path in paths.sortedBy { it.sortIndex }) {
             val sortedCoordinates = path.coordinates.sortedBy { it.sortIndex }
-            var coordinates = mutableListOf<PointF>()
+            val coordinates = mutableListOf<PointF>()
 
             for (idx in 0 until (sortedCoordinates.size / 2)) {
                 val xCoord = sortedCoordinates[idx * 2]
@@ -136,7 +136,7 @@ class SplitAnnotationsDbRequest(
     }
 
     private fun createCopyWithoutPathsAndRects(item: RItem, database: Realm, additionalChange: (RItem) -> Unit) {
-        var new = database.createObject<RItem>()
+        val new = database.createObject<RItem>()
         new.key = KeyGenerator.newKey()
         new.rawType = item.rawType
         new.annotationType = item.annotationType

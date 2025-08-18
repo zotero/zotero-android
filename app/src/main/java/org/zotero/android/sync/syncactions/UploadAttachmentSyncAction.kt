@@ -36,20 +36,20 @@ class UploadAttachmentSyncAction(
 ): SyncAction() {
 
     suspend fun result(): CustomResult<Unit> {
-        try {
+        return try {
             when (this.libraryId) {
                 is LibraryIdentifier.custom ->
-                    return if (sessionStorage.isEnabled) {
+                    if (sessionStorage.isEnabled) {
                         webDavResult()
                     } else {
                         zoteroResult()
                     }
 
                 is LibraryIdentifier.group ->
-                    return zoteroResult()
+                    zoteroResult()
             }
         } catch (e: Exception) {
-            return CustomResult.GeneralError.CodeError(e)
+            CustomResult.GeneralError.CodeError(e)
         }
 
     }
@@ -237,7 +237,7 @@ class UploadAttachmentSyncAction(
 
     private suspend fun webDavResult(): CustomResult<Unit> {
         var file: File? = null
-        var tUrl = ""
+        var tUrl: String
         try {
             checkDatabase()
             validateFile()

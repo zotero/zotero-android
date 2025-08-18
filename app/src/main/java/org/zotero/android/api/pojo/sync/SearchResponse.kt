@@ -4,7 +4,7 @@ data class SearchResponse(
     val key: String,
     val library: LibraryResponse,
     val links: LinksResponse?,
-    val data: SearchResponse.Data,
+    val data: Data,
     val version: Int,
 ) {
 

@@ -3,7 +3,9 @@ package org.zotero.android.pdf.reader
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -162,7 +164,7 @@ internal fun PdfReaderScreen(
                 }
                 false
             },
-            backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
+            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
@@ -188,25 +190,28 @@ internal fun PdfReaderScreen(
 
             },
         ) {
-            if (layoutType.isTablet()) {
-                PdfReaderTabletMode(
-                    vMInterface = viewModel,
-                    viewState = viewState,
-                    annotationsLazyListState = annotationsLazyListState,
-                    thumbnailsLazyListState = thumbnailsLazyListState,
-                    layoutType = layoutType,
-                    uri = uri,
-                )
-            } else {
-                PdfReaderPhoneMode(
-                    viewState = viewState,
-                    vMInterface = viewModel,
-                    annotationsLazyListState = annotationsLazyListState,
-                    thumbnailsLazyListState = thumbnailsLazyListState,
-                    layoutType = layoutType,
-                    uri = uri,
-                )
+            Box(modifier = Modifier.background(CustomTheme.colors.pdfAnnotationsTopbarBackground)) {
+                if (layoutType.isTablet()) {
+                    PdfReaderTabletMode(
+                        vMInterface = viewModel,
+                        viewState = viewState,
+                        annotationsLazyListState = annotationsLazyListState,
+                        thumbnailsLazyListState = thumbnailsLazyListState,
+                        layoutType = layoutType,
+                        uri = uri,
+                    )
+                } else {
+                    PdfReaderPhoneMode(
+                        viewState = viewState,
+                        vMInterface = viewModel,
+                        annotationsLazyListState = annotationsLazyListState,
+                        thumbnailsLazyListState = thumbnailsLazyListState,
+                        layoutType = layoutType,
+                        uri = uri,
+                    )
+                }
             }
+
         }
         PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)

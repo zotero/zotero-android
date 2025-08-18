@@ -45,7 +45,7 @@ class ActionsCreator @Inject constructor() {
         type: SyncKind
     ): Triple<List<Action>, Int?, Int> {
         var writeCount = 0
-        var actions = mutableListOf<Action>()
+        val actions = mutableListOf<Action>()
 
         for (libraryData in data) {
             val (_actions, _writeCount) = createLibraryActions(
@@ -234,7 +234,7 @@ class ActionsCreator @Inject constructor() {
         deletions: List<DeleteBatch>,
         libraryData: LibraryData,
     ): List<Action> {
-        var actions = mutableListOf<Action>()
+        val actions = mutableListOf<Action>()
         if (!updates.isEmpty()) {
             updates.forEach {
                 actions.add(Action.submitWriteBatch(it))
@@ -264,7 +264,7 @@ class ActionsCreator @Inject constructor() {
         val maxBatchSize = DownloadBatch.maxCount
         var batchSize = 10
         var lowerBound = 0
-        var batches: MutableList<DownloadBatch> = mutableListOf()
+        val batches: MutableList<DownloadBatch> = mutableListOf()
 
         while (lowerBound < keys.size) {
             val upperBound = Integer.min((keys.size - lowerBound), batchSize) + lowerBound
@@ -303,15 +303,15 @@ class ActionsCreator @Inject constructor() {
         )
 
         if (batches.isEmpty()) {
-            if (shouldStoreVersion) {
-                return listOf(Action.storeVersion(version, libraryId, objectS))
+            return if (shouldStoreVersion) {
+                listOf(Action.storeVersion(version, libraryId, objectS))
             } else {
-                return listOf()
+                listOf()
             }
         }
 
 
-        var actions: MutableList<Action> = mutableListOf(Action.syncBatchesToDb(batches))
+        val actions: MutableList<Action> = mutableListOf(Action.syncBatchesToDb(batches))
         if (shouldStoreVersion) {
             actions.add(Action.storeVersion(version, libraryId, objectS))
         }

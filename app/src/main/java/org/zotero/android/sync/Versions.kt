@@ -12,21 +12,16 @@ class Versions(
 ) {
 
 
-    val max: Int get() {
-        return Math.max(
-            collections,
-            Math.max(
-                items,
-                Math.max(
-                    trash,
-                    Math.max(
-                        searches,
-                        Math.max(deletions, settings)
+    val max: Int
+        get() {
+            return collections.coerceAtLeast(
+                items.coerceAtLeast(
+                    trash.coerceAtLeast(
+                        searches.coerceAtLeast(deletions.coerceAtLeast(settings))
                     )
                 )
             )
-        )
-    }
+        }
 
     companion object {
         fun init(versions: RVersions?): Versions {

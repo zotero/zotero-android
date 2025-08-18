@@ -14,8 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Text
-import androidx.compose.material.ripple
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -127,8 +127,7 @@ private fun ItemType(
                 onClick = onItemTypeClicked
             )
     ) {
-        Column(
-        ) {
+        Column {
             FieldRow(
                 detailTitle = stringResource(id = Strings.item_type),
                 detailValue = viewState.data.localizedType,
@@ -184,7 +183,7 @@ private fun ListOfEditFieldRows(
     onFocusChanges: (String) -> Unit,
 ) {
     for (fieldId in viewState.data.fieldIds) {
-        val field = viewState.data.fields.get(fieldId) ?: continue
+        val field = viewState.data.fields[fieldId] ?: continue
         val title = field.name
         val value = if (field.key == viewState.fieldFocusKey) {
             viewState.fieldFocusText

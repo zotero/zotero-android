@@ -40,13 +40,12 @@ class StoreGroupDbRequest(
         }
 
         val isOwner = response.data.owner == userId
-        val canEditMetadata: Boolean
         val canEditFiles: Boolean
 
-        if (response.data.libraryEditing == "admins") {
-            canEditMetadata = isOwner || (response.data.admins ?: emptyList()).contains(userId)
+        val canEditMetadata: Boolean = if (response.data.libraryEditing == "admins") {
+            isOwner || (response.data.admins ?: emptyList()).contains(userId)
         } else {
-            canEditMetadata = true
+            true
         }
 
         when (response.data.fileEditing) {

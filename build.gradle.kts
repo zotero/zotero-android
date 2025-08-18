@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
@@ -8,8 +9,8 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.2.2")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.20")
+        classpath("com.android.tools.build:gradle:8.12.0")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0")
         classpath(Libs.Kotlin.serialization)
         classpath(Libs.Firebase.Crashlytics.crashlyticsGradle)
         classpath(Libs.googleServices)
@@ -22,7 +23,7 @@ buildscript {
 }
 
 plugins {
-    id("com.google.dagger.hilt.android") version "2.56.1" apply false
+    id("com.google.dagger.hilt.android") version "2.57" apply false
 }
 
 allprojects {
@@ -38,25 +39,29 @@ allprojects {
         }
     }
 
-    tasks.withType<KotlinCompile>().all {
-        kotlinOptions {
-            jvmTarget = javaVersion.toString()
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(jvmTargetVersion)
             suppressWarnings = true
-            freeCompilerArgs = freeCompilerArgs + listOf(
-                "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-Xopt-in=androidx.paging.ExperimentalPagingApi",
-                "-Xopt-in=kotlinx.coroutines.FlowPreview",
-                "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-                "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
-                "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                "-Xopt-in=androidx.compose.ui.text.ExperimentalTextApi",
-                "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
-                "-Xopt-in=com.google.accompanist.pager.ExperimentalPagerApi",
-                "-Xopt-in=coil.annotation.ExperimentalCoilApi",
-                "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
-                "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
-                "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-                "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+            freeCompilerArgs.addAll(
+                listOf(
+                    "-Xopt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+                    "-Xopt-in=androidx.paging.ExperimentalPagingApi",
+                    "-Xopt-in=kotlinx.coroutines.FlowPreview",
+                    "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi",
+                    "-Xopt-in=androidx.compose.material.ExperimentalMaterialApi",
+                    "-Xopt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+                    "-Xopt-in=androidx.compose.ui.text.ExperimentalTextApi",
+                    "-Xopt-in=androidx.compose.animation.ExperimentalAnimationApi",
+                    "-Xopt-in=com.google.accompanist.pager.ExperimentalPagerApi",
+                    "-Xopt-in=coil.annotation.ExperimentalCoilApi",
+                    "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
+                    "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
+                    "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                    "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
+                    "-Xopt-in=androidx.media3.common.util.UnstableApi"
+                )
+
             )
         }
     }
@@ -65,21 +70,28 @@ tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }
 
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions {
-            if (project.findProperty("composeCompilerReports") == "true") {
-                freeCompilerArgs += listOf(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=${project.buildDir.absolutePath}/compose_compiler"
-                )
-            }
-            if (project.findProperty("composeCompilerMetrics") == "true") {
-                freeCompilerArgs += listOf(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=${project.buildDir.absolutePath}/compose_compiler"
-                )
-            }
-        }
-    }
-}
+//Uncomment only when compose compiler reports are needed. Usually during UI optimization refactorings.
+//subprojects {
+//
+//    tasks.withType<KotlinJvmCompile>().configureEach {
+//        compilerOptions {
+//            if (project.findProperty("composeCompilerReports") == "true") {
+//                freeCompilerArgs.addAll(
+//                    listOf(
+//                        "-P",
+//                        "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=${project.buildDir.absolutePath}/compose_compiler"
+//                    )
+//                )
+//            }
+//            if (project.findProperty("composeCompilerMetrics") == "true") {
+//                freeCompilerArgs.addAll(
+//                    listOf(
+//                        "-P",
+//                        "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=${project.buildDir.absolutePath}/compose_compiler"
+//                    )
+//                )
+//            }
+//        }
+//    }
+//
+//}

@@ -14,7 +14,6 @@ private fun configure(project: Project) {
     project.dependencies.apply {
         add("testImplementation", Libs.Test.junit)
         add("testImplementation", Libs.Test.mockitoCore)
-        add("testImplementation", Libs.Test.mockitoInline)
         add("testImplementation", Libs.Test.mockk)
         add("testImplementation", Libs.Test.kluentAndroid)
 

@@ -29,9 +29,7 @@ internal fun SettingsCiteSearchScreen(
     onBack: () -> Unit,
     viewModel: SettingsCiteSearchViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(SettingsCiteSearchViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -39,7 +37,7 @@ internal fun SettingsCiteSearchScreen(
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (val consumedEffect = viewEffect?.consume()) {
+            when (viewEffect?.consume()) {
                 null -> Unit
                 is SettingsCiteSearchViewEffect.OnBack -> {
                     onBack()
@@ -47,7 +45,8 @@ internal fun SettingsCiteSearchScreen(
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SettingsCiteSearchTopBar(
                     onBack = onBack,

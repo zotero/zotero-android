@@ -253,16 +253,18 @@ class FileStore @Inject constructor (
     }
 
     fun jsonCacheFile(objectS: SyncObject, libraryId: LibraryIdentifier, key: String): File {
-        val objectName: String
-        when (objectS) {
+        val objectName: String = when (objectS) {
             SyncObject.collection ->
-                objectName = "collection"
+                "collection"
+
             SyncObject.item, SyncObject.trash ->
-                objectName = "item"
+                "item"
+
             SyncObject.search ->
-                objectName = "search"
+                "search"
+
             SyncObject.settings ->
-                objectName = "settings"
+                "settings"
         }
         val folderPath = File(getRootDirectory(), "jsons/${libraryId.folderName}/$objectName")
         folderPath.mkdirs()
@@ -334,7 +336,7 @@ class FileStore @Inject constructor (
     }
 
 
-    inline internal fun <reified T> loadDataWithFilename(filename: String): T? {
+    internal inline fun <reified T> loadDataWithFilename(filename: String): T? {
         if (!fileExists(filename)) {
             return null
         }

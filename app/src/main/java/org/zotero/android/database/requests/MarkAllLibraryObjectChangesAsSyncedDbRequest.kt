@@ -10,7 +10,7 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
 
-class MarkAllLibraryObjectChangesAsSyncedDbRequest constructor(
+class MarkAllLibraryObjectChangesAsSyncedDbRequest(
     val libraryId: LibraryIdentifier
 ) : DbRequest {
     override val needsWrite: Boolean

@@ -122,8 +122,7 @@ class DashboardViewModel @Inject constructor(
                     }
 
                     is Conflict.groupFileWriteDenied -> {
-                        val domainName: String
-                        domainName = if (!sessionStorage.isEnabled) {
+                        val domainName: String = if (!sessionStorage.isEnabled) {
                             "zotero.org"
                         } else {
                             sessionStorage.url

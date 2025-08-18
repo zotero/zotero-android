@@ -13,12 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.LocalContentColor
-import androidx.compose.material.Text
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -315,7 +316,7 @@ private class DecorationBoxMeasurePolicy(
     hintLineStart: Int = 0,
 ) : MeasurePolicy {
 
-    var hintLineStart by mutableStateOf(hintLineStart)
+    var hintLineStart by mutableIntStateOf(hintLineStart)
 
     override fun MeasureScope.measure(
         measurables: List<Measurable>,
@@ -462,6 +463,6 @@ internal enum class CustomTextFieldPreviewStyle {
 
 internal class CustomTextFieldPreviewStyleProvider :
     CollectionPreviewParameterProvider<CustomTextFieldPreviewStyle>(
-        collection = CustomTextFieldPreviewStyle.values().toList()
+        collection = CustomTextFieldPreviewStyle.entries
     )
 

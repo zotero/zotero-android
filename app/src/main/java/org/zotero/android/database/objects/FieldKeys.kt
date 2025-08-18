@@ -14,18 +14,18 @@ class FieldKeys {
     class Item {
 
         companion object {
-            val title = "title"
-            val abstractN = "abstractNote"
-            val note = "note"
-            val date = "date"
-            val reporter = "reporter"
-            val court = "court"
-            val publisher = "publisher"
-            val publicationTitle = "publicationTitle"
-            val doi = "DOI"
-            val url = "url"
-            val accessDate = "accessDate"
-            val extra = "extra"
+            const val title = "title"
+            const val abstractN = "abstractNote"
+            const val note = "note"
+            const val date = "date"
+            const val reporter = "reporter"
+            const val court = "court"
+            const val publisher = "publisher"
+            const val publicationTitle = "publicationTitle"
+            const val doi = "DOI"
+            const val url = "url"
+            const val accessDate = "accessDate"
+            const val extra = "extra"
 
             fun clean(doi: String): String {
                 if (doi.isEmpty()) {
@@ -68,15 +68,15 @@ class FieldKeys {
 
         class Attachment {
             companion object {
-                val linkMode = "linkMode"
-                val contentType = "contentType"
-                val md5 = "md5"
-                val mtime = "mtime"
-                val title = "title"
-                val filename = "filename"
-                val url = "url"
-                val charset = "charset"
-                val path = "path"
+                const val linkMode = "linkMode"
+                const val contentType = "contentType"
+                const val md5 = "md5"
+                const val mtime = "mtime"
+                const val title = "title"
+                const val filename = "filename"
+                const val url = "url"
+                const val charset = "charset"
+                const val path = "path"
 
                 val knownKeys: Set<String>
                     get() {
@@ -114,26 +114,26 @@ class FieldKeys {
         class Annotation {
             class Position {
                 companion object {
-                    val pageIndex = "pageIndex"
-                    val rects = "rects"
-                    val paths = "paths"
-                    val lineWidth = "width"
-                    val rotation = "rotation"
-                    val fontSize = "fontSize"
+                    const val pageIndex = "pageIndex"
+                    const val rects = "rects"
+                    const val paths = "paths"
+                    const val lineWidth = "width"
+                    const val rotation = "rotation"
+                    const val fontSize = "fontSize"
                 }
 
             }
 
 
             companion object {
-                val type = "annotationType"
-                val text = "annotationText"
-                val comment = "annotationComment"
-                val color = "annotationColor"
-                val pageLabel = "annotationPageLabel"
-                val sortIndex = "annotationSortIndex"
-                val position = "annotationPosition"
-                val authorName = "annotationAuthorName"
+                const val type = "annotationType"
+                const val text = "annotationText"
+                const val comment = "annotationComment"
+                const val color = "annotationColor"
+                const val pageLabel = "annotationPageLabel"
+                const val sortIndex = "annotationSortIndex"
+                const val position = "annotationPosition"
+                const val authorName = "annotationAuthorName"
 
                 val knownKeys: Set<String>
                     get() {
@@ -203,8 +203,8 @@ class FieldKeys {
                                 KeyBaseKeyPair(key = sortIndex, baseKey = null),
                                 KeyBaseKeyPair(key = text, baseKey = null),
                                 KeyBaseKeyPair(
-                                    key = Annotation.Position.pageIndex,
-                                    baseKey = Annotation.position
+                                    key = Position.pageIndex,
+                                    baseKey = position
                                 ),
                             )
                         }

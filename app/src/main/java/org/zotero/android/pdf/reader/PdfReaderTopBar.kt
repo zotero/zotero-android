@@ -9,7 +9,6 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.icon.ToggleIconWithPadding
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
@@ -30,7 +29,6 @@ internal fun PdfReaderTopBar(
 ) {
     val isTablet = CustomLayoutSize.calculateLayoutType().isTablet()
     NewCustomTopBar(
-        backgroundColor = CustomTheme.colors.surface,
         leftContainerContent = listOf(
             {
                 NewHeadingTextButton(

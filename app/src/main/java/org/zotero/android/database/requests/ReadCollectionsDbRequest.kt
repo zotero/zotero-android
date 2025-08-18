@@ -25,10 +25,10 @@ class ReadCollectionsDbRequest(
             .isTrash(false)
             .and()
             .keyNotIn(this.excludedKeys)
-        if (isAsync) {
-            return resultsQuery.findAllAsync()
+        return if (isAsync) {
+            resultsQuery.findAllAsync()
         } else {
-            return resultsQuery.findAll()
+            resultsQuery.findAll()
         }
     }
 }

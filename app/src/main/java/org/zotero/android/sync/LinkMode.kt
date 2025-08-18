@@ -8,7 +8,7 @@ enum class LinkMode(val str: String) {
     embeddedImage("embedded_image");
 
     companion object {
-        private val map = values().associateBy(LinkMode::str)
+        private val map = entries.associateBy(LinkMode::str)
         fun from(str: String) = map[str]
     }
 }

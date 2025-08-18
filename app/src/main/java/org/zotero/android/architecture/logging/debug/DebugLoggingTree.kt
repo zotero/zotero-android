@@ -2,6 +2,7 @@ package org.zotero.android.architecture.logging.debug
 
 import android.util.Log
 import timber.log.Timber.Tree
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +23,7 @@ class DebugLoggingTree @Inject constructor() : Tree() {
     }
 
     private fun formatTimeDiff(diff: Long): String {
-        return String.format("(+%07d)", diff)
+        return String.format(Locale.getDefault(), "(+%07d)", diff)
     }
 
     private fun formatLog(priority: Int, tag: String?, message: String, t: Throwable?): String {

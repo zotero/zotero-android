@@ -44,7 +44,7 @@ class ShareFileDownloader @Inject constructor(
                 val byteStream = networkResult.value!!.byteStream()
                 val total = networkResult.value!!.contentLength()
                 var progress = 0L
-                val out = FileOutputStream(file);
+                val out = FileOutputStream(file)
                 try {
                     ByteStreams.readBytes(byteStream,
                         object : ByteProcessor<Void?> {

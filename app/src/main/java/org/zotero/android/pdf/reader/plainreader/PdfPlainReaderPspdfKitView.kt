@@ -2,11 +2,9 @@ package org.zotero.android.pdf.reader.plainreader
 
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.pspdfkit.ui.PdfReaderView
 
@@ -14,7 +12,6 @@ import com.pspdfkit.ui.PdfReaderView
 fun PdfPlainReaderPspdfKitView(
     viewModel: PdfPlainReaderViewModel,
 ) {
-    val activity = LocalContext.current as? AppCompatActivity ?: return
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -23,7 +20,7 @@ fun PdfPlainReaderPspdfKitView(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            val pdfReaderView = PdfReaderView(activity)
+            val pdfReaderView = PdfReaderView(context)
             pdfReaderView.layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT

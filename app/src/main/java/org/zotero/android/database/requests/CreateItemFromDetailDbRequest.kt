@@ -63,7 +63,7 @@ class CreateItemFromDetailDbRequest(
         item.libraryId = this.libraryId
         item.changesSyncPaused = true
 
-        val changes = mutableListOf<RItemChanges>(RItemChanges.type, RItemChanges.fields)
+        val changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
 
         val collectionKey = this.collectionKey
         if (collectionKey != null) {

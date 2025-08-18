@@ -16,7 +16,6 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import timber.log.Timber
 import java.util.Date
-import kotlin.text.Regex
 
 class LinkAttachmentToParentItemDbRequest(
     private val schemaController: SchemaController,
@@ -66,7 +65,7 @@ class LinkAttachmentToParentItemDbRequest(
             item.fields.where().key(FieldKeys.Item.Attachment.filename).findFirst()!!.value
         val oldFile = fileStore.attachmentFile(libraryId, itemKey, oldFileName)
 
-        val newFileName = getValidFileName("${getFileBaseNameFromItem(parentItem)}.pdf");
+        val newFileName = getValidFileName("${getFileBaseNameFromItem(parentItem)}.pdf")
         val newFile = fileStore.attachmentFile(libraryId, itemKey, newFileName)
 
         oldFile.renameTo(newFile)

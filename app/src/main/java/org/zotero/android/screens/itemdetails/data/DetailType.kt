@@ -15,9 +15,9 @@ sealed class DetailType: Parcelable {
     data class preview(val key: String): DetailType()
 
     val previewKey: String? get() {
-        when(this) {
-            is preview -> return this.key
-            is duplication, is creation -> return null
+        return when(this) {
+            is preview -> this.key
+            is duplication, is creation -> null
         }
     }
 }

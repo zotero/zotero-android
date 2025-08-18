@@ -2,10 +2,13 @@ package org.zotero.android.screens.login
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.androidx.content.longErrorSnackbar
 import org.zotero.android.androidx.content.showKeyboard
@@ -25,11 +28,28 @@ internal class LoginActivity : BaseActivity(), Screen<LoginViewState, LoginViewE
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         binding = LoginActivityBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
         viewModel.observeViewChanges(this)
+
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val innerPadding = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars()
+                        or WindowInsetsCompat.Type.displayCutout()
+                        or WindowInsetsCompat.Type.ime()
+            )
+            v.setPadding(
+                innerPadding.left,
+                innerPadding.top,
+                innerPadding.right,
+                innerPadding.bottom
+            )
+            insets
+        }
 
         binding.signInButton.setOnClickListener {
             viewModel.onUsernameChanged(binding.usernameEditText.text.toString())
@@ -42,7 +62,7 @@ internal class LoginActivity : BaseActivity(), Screen<LoginViewState, LoginViewE
         binding.forgotPasswordButton.setOnClickListener {
             val intent = Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse("https://www.zotero.org/user/lostpassword?app=1")
+                "https://www.zotero.org/user/lostpassword?app=1".toUri()
             )
             startActivity(intent)
         }

@@ -2,9 +2,7 @@
 package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -48,8 +46,6 @@ internal fun TabletRightPaneNavigation(
     ZoteroNavHost(
         navController = navController,
         startDestination = CommonScreenDestinations.ALL_ITEMS,
-        modifier = Modifier
-            .navigationBarsPadding(), // do not draw behind nav bar
     ) {
         loadingScreen()
         allItemsScreen(

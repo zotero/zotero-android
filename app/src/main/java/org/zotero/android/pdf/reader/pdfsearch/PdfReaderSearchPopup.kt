@@ -44,7 +44,7 @@ internal fun PdfReaderSearchPopup(
                     elevation = 4.dp,
                     shape = RoundedCornerShape(16.dp),
                 ),
-            backgroundColor = backgroundColor,
+            topBarColor = backgroundColor,
         ) {
             PdfReaderSearchScreen(onBack = viewModel::hidePdfSearch)
         }

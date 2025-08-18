@@ -3,6 +3,7 @@ package org.zotero.android.screens.root
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
@@ -17,6 +18,7 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         viewModel.init(this.intent)
         viewModel.observeViewChanges(this)

@@ -39,6 +39,6 @@ fun View.longErrorSnackbar(
         snackbar.duration = duration
     }
 
-    snackbar.view.setBackgroundColor(Color(0xFFE0244D).toArgb());
+    snackbar.view.setBackgroundColor(Color(0xFFE0244D).toArgb())
     snackbar.show()
 }

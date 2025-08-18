@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
-import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmModel
 import io.realm.RealmResults
 import kotlinx.collections.immutable.ImmutableList
@@ -205,7 +204,7 @@ internal class CollectionsViewModel @Inject constructor(
                 isAsync = true
             )
         )
-        collections?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
+        collections?.addChangeListener { objects, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     collectionTreeController.reactToCollectionsDbUpdate(
@@ -228,7 +227,7 @@ internal class CollectionsViewModel @Inject constructor(
                     )
                 }
             }
-        })
+        }
     }
 
     private fun maybeInitRequestAndStartObservingAllItemsCount() {
@@ -286,7 +285,7 @@ internal class CollectionsViewModel @Inject constructor(
         results: RealmResults<RItem>?,
         customType: CustomType
     ) {
-        results?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RItem>> { items, changeSet ->
+        results?.addChangeListener { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     reactToItemsCountDbUpdate(itemsCount = items.size, customType = customType)
@@ -304,7 +303,7 @@ internal class CollectionsViewModel @Inject constructor(
                     //no-op
                 }
             }
-        })
+        }
     }
 
     private fun reactToItemsCountDbUpdate(itemsCount: Int, customType: CustomType) {

@@ -317,8 +317,7 @@ internal data class SettingsCiteSearchViewState(
     val filtered: SnapshotStateList<RemoteStyle>? = null,
     val lce: LCE2 = LCE2.Loading,
     val searchTerm: String? = null,
-) : ViewState {
-}
+) : ViewState
 
 internal sealed class SettingsCiteSearchViewEffect : ViewEffect {
     object OnBack : SettingsCiteSearchViewEffect()

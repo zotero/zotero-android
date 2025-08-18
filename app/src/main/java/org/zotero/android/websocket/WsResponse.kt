@@ -13,7 +13,7 @@ data class WsResponse(
         topicUpdated("topicUpdated");
 
         companion object {
-            private val map = Event.values().associateBy(Event::n)
+            private val map = entries.associateBy(Event::n)
 
             fun from(n: String) = map[n]
         }

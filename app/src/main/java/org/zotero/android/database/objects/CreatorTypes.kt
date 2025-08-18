@@ -3,8 +3,8 @@ package org.zotero.android.database.objects
 class CreatorTypes {
 
     companion object {
-        val author = "author"
-        val editor = "editor"
-        val contributor = "contributor"
+        const val author = "author"
+        const val editor = "editor"
+        const val contributor = "contributor"
     }
 }

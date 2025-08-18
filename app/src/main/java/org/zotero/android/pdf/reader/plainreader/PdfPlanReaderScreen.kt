@@ -1,5 +1,6 @@
 package org.zotero.android.pdf.reader.plainreader
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,7 +25,7 @@ internal fun PdfPlanReaderScreen(
 
     CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
         LaunchedEffect(key1 = viewEffect) {
-            when (val consumedEffect = viewEffect?.consume()) {
+            when (viewEffect?.consume()) {
                 is PdfPlainReaderViewEffect.NavigateBack -> {
                     onBack()
                 }
@@ -34,7 +35,7 @@ internal fun PdfPlanReaderScreen(
         }
 
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.pdfAnnotationsTopbarBackground,
+            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 PdfPlainReaderTopBar(
                     onBack = onBack,
@@ -46,6 +47,7 @@ internal fun PdfPlanReaderScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(CustomTheme.colors.pdfAnnotationsTopbarBackground)
             ) {
                 PdfPlainReaderPspdfKitView(viewModel)
             }

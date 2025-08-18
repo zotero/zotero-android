@@ -241,5 +241,4 @@ internal data class PdfSettingsViewState(
 
 }
 
-internal sealed class PdfSettingsViewEffect : ViewEffect {
-}
+internal sealed class PdfSettingsViewEffect : ViewEffect

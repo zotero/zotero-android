@@ -2,6 +2,7 @@ package org.zotero.android.sync
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.toColorInt
 import com.pspdfkit.annotations.BlendMode
 import org.zotero.android.database.objects.AnnotationType
 import java.lang.Float.min
@@ -9,10 +10,10 @@ import java.lang.Float.min
 
 class AnnotationColorGenerator {
     companion object {
-        private val highlightOpacity: Float = 0.5F
-        private val highlightDarkOpacity: Float = 0.5F
-        private val underlineOpacity: Float = 1F
-        private val valunderlineDarkOpacity: Float = 1F
+        private const val highlightOpacity: Float = 0.5F
+        private const val highlightDarkOpacity: Float = 0.5F
+        private const val underlineOpacity: Float = 1F
+        private const val valunderlineDarkOpacity: Float = 1F
 
 
         fun color(
@@ -20,9 +21,9 @@ class AnnotationColorGenerator {
             type: AnnotationType?,
             isDarkMode: Boolean
         ): Triple<Int, Float, BlendMode?> {
-            val colorInt = android.graphics.Color.parseColor(colorHex)
+            val colorInt = colorHex.toColorInt()
 
-            var opacity: Float = 1F
+            var opacity = 1F
 
             when (type) {
                 AnnotationType.note,
@@ -33,18 +34,18 @@ class AnnotationColorGenerator {
                 }
 
                 AnnotationType.highlight -> {
-                    if (isDarkMode) {
-                        opacity = this.highlightDarkOpacity
+                    opacity = if (isDarkMode) {
+                        this.highlightDarkOpacity
                     } else {
-                        opacity = this.highlightOpacity
+                        this.highlightOpacity
                     }
                 }
 
                 AnnotationType.underline -> {
-                    if (isDarkMode) {
-                        opacity = this.valunderlineDarkOpacity
+                    opacity = if (isDarkMode) {
+                        this.valunderlineDarkOpacity
                     } else {
-                        opacity = this.underlineOpacity
+                        this.underlineOpacity
                     }
                 }
 

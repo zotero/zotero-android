@@ -1,5 +1,6 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,14 +16,9 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 @Composable
 internal fun ShareCollectionPickerScreen(
     onBack: () -> Unit,
-    scaffoldModifier: Modifier = Modifier,
     viewModel: ShareCollectionPickerViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.popupBackgroundContent
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = backgroundColor
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(ShareCollectionPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -42,15 +38,14 @@ internal fun ShareCollectionPickerScreen(
             }
         }
         CustomScaffold(
-            modifier = scaffoldModifier,
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 ShareCollectionPickerTopBar(
                     onBackClicked = onBack,
                 )
             },
         ) {
-            Column {
+            Column(modifier = Modifier.background(CustomTheme.colors.popupBackgroundContent)) {
                 ShareCollectionsPickerTable(
                     viewState = viewState,
                     viewModel = viewModel,

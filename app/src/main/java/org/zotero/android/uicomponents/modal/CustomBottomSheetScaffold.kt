@@ -13,16 +13,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.BottomSheetScaffoldState
-import androidx.compose.material.BottomSheetState
-import androidx.compose.material.BottomSheetValue
-import androidx.compose.material.FabPosition
-import androidx.compose.material.rememberBottomSheetScaffoldState
-import androidx.compose.material.rememberBottomSheetState
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.BottomSheetScaffoldState
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,10 +43,7 @@ fun CustomBottomSheetScaffold(
     scaffoldState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     topBar: (@Composable () -> Unit)? = null,
     snackbarMessage: SnackbarMessage? = null,
-    floatingActionButton: (@Composable () -> Unit)? = null,
-    floatingActionButtonPosition: FabPosition = FabPosition.End,
     sheetPeekHeight: Dp = 0.dp,
-    backgroundColor: Color = CustomTheme.colors.surface,
     contentColor: Color = CustomTheme.colors.primaryContent,
     content: @Composable () -> Unit = {}
 ) {
@@ -79,15 +76,12 @@ fun CustomBottomSheetScaffold(
                 snackbarMessage = snackbarMessage
             )
         },
-        floatingActionButton = floatingActionButton,
-        floatingActionButtonPosition = floatingActionButtonPosition,
-        sheetElevation = 0.dp,
-        // Because of drag indicator the shape is handled inside sheetContent
-        sheetBackgroundColor = Color.Transparent,
         sheetContentColor = CustomTheme.colors.primaryContent,
         sheetPeekHeight = sheetPeekHeight,
-        backgroundColor = backgroundColor,
         contentColor = contentColor,
+        containerColor = Color.Transparent,
+        sheetContainerColor = Color.Transparent,
+        sheetDragHandle = null,
         content = {
             Box(modifier = Modifier.fillMaxSize()) {
                 content()
@@ -116,7 +110,7 @@ private fun ColumnScope.DraggableIndicator() {
 
 @Composable
 private fun Scrim(
-    bottomSheetState: BottomSheetState,
+    bottomSheetState: SheetState,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -131,11 +125,11 @@ private fun Scrim(
                 .debounceClickable(
                     onClick = {
                         coroutineScope.launch {
-                            bottomSheetState.collapse()
+                            bottomSheetState.partialExpand()
                         }
                     },
                     indication = null,
-                    interactionSource = MutableInteractionSource()
+                    interactionSource = remember { MutableInteractionSource() }
                 )
         )
     }
@@ -149,8 +143,9 @@ fun CustomModalBottomSheet(
     snackbarMessage: SnackbarMessage? = null,
     sheetContent: @Composable BoxScope.() -> Unit,
 ) {
-    val bottomSheetState = rememberBottomSheetState(
-        initialValue = BottomSheetValue.Collapsed
+    val bottomSheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.PartiallyExpanded,
+
     )
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = bottomSheetState
@@ -162,17 +157,17 @@ fun CustomModalBottomSheet(
     }
 
     LaunchedEffect(shouldCollapse) {
-        if (shouldCollapse) bottomSheetState.collapse()
+        if (shouldCollapse) bottomSheetState.partialExpand()
     }
 
     val coroutineScope = rememberCoroutineScope()
     BackHandler(onBack = {
         coroutineScope.launch {
-            bottomSheetState.collapse()
+            bottomSheetState.partialExpand()
         }
     })
 
-    if (bottomSheetState.currentValue != BottomSheetValue.Collapsed) {
+    if (bottomSheetState.currentValue != SheetValue.PartiallyExpanded) {
         DisposableEffect(Unit) {
             onDispose {
                 /*
@@ -181,7 +176,7 @@ fun CustomModalBottomSheet(
                 another screen without collapsing the bottom sheet). In this case
                 we don't want to fire onCollapse.
                  */
-                if (bottomSheetState.currentValue == BottomSheetValue.Collapsed) {
+                if (bottomSheetState.currentValue == SheetValue.PartiallyExpanded) {
                     onCollapse()
                 }
             }
@@ -192,7 +187,6 @@ fun CustomModalBottomSheet(
         modifier = modifier,
         scaffoldState = scaffoldState,
         sheetContent = { sheetContent() },
-        backgroundColor = Color.Transparent,
         snackbarMessage = snackbarMessage,
         content = { /* No content */ }
     )

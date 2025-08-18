@@ -3,7 +3,6 @@ package org.zotero.android.sync
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Before
 import org.junit.Test
 import org.zotero.android.database.objects.RCustomLibraryType
 import java.util.UUID
@@ -11,10 +10,6 @@ import java.util.UUID
 class ActionsCreatorTest {
 
     private val sut = ActionsCreator()
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun `createGroupActions for full SynkKind full and Libraries all should return these actions in order resolveDeletedGroup, syncGroupToDb and createLibraryAction with onlyDownloads`() {

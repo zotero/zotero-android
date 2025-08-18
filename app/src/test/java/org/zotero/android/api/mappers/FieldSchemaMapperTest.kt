@@ -6,17 +6,12 @@ import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
-import org.junit.Before
 import org.junit.Test
 import org.zotero.android.utils.TestFilesUtils
 
 class FieldSchemaMapperTest {
 
     private val sut = FieldSchemaMapper()
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun testFieldSchemaWithFieldParsesSuccessfully() {

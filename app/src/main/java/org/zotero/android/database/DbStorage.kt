@@ -4,7 +4,7 @@ import io.realm.Realm
 sealed class DbError: Throwable() {
     object objectNotFound: DbError()
     object primaryKeyUnavailable: DbError()
-    object invalidRequest: DbError();
+    object invalidRequest: DbError()
 
     val isObjectNotFound: Boolean
         get() {

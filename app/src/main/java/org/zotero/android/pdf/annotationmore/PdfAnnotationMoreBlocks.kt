@@ -16,10 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
-import androidx.compose.material.ripple
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
@@ -37,6 +38,7 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
+import java.util.Locale
 
 @Composable
 internal fun MoreHighlightText(
@@ -65,7 +67,7 @@ internal fun MoreHighlightText(
             hint = "",
             ignoreTabsAndCaretReturns = false,
             onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize(),),
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize()),
             textColor = CustomTheme.colors.primaryContent,
         )
     }
@@ -93,7 +95,7 @@ internal fun ColumnScope.MoreColorPicker(
 
 @Composable
 internal fun MoreFilterCircle(hex: String, isSelected: Boolean, onClick: () -> Unit) {
-    val color = android.graphics.Color.parseColor(hex)
+    val color = hex.toColorInt()
     Canvas(modifier = Modifier
         .padding(4.dp)
         .size(28.dp)
@@ -145,7 +147,7 @@ internal fun MoreSizeSelector(
         )
         Text(
             modifier = Modifier.padding(start = 10.dp),
-            text = String.format("%.1f", viewState.lineWidth),
+            text = String.format(Locale.getDefault(), "%.1f", viewState.lineWidth),
             color = CustomTheme.colors.pdfSizePickerColor,
             style = CustomTheme.typography.default,
             fontSize = layoutType.calculatePdfSidebarTextSize(),
@@ -166,7 +168,7 @@ internal fun MoreFontSizeSelector(
     ) {
         Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = String.format("%.1f", viewState.fontSize),
+                text = String.format(Locale.getDefault(), "%.1f", viewState.fontSize),
                 color = CustomTheme.colors.defaultTextColor,
                 style = CustomTheme.typography.default,
                 fontSize = 16.sp,
@@ -244,7 +246,7 @@ internal fun MoreUnderlineText(
             hint = "",
             ignoreTabsAndCaretReturns = false,
             onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize(),),
+            textStyle = CustomTheme.typography.default.copy(fontSize = layoutType.calculatePdfSidebarTextSize()),
             textColor = CustomTheme.colors.primaryContent,
         )
     }

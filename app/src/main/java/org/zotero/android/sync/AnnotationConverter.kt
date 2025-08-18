@@ -31,6 +31,7 @@ import org.zotero.android.sync.AnnotationConverter.Kind.zotero
 import timber.log.Timber
 import java.util.Date
 import java.util.EnumSet
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -196,8 +197,8 @@ class AnnotationConverter {
             val text = FreeTextAnnotation(annotation.page, rect, annotation.comment)
             text.color = color
             text.textSize = annotation.fontSize ?: 0.0f
-            text.setBoundingBox(annotation.boundingBox(boundingBoxConverter))//transform size
-            text.setRotation(360 - (annotation.rotation ?: 0))
+            text.boundingBox = annotation.boundingBox(boundingBoxConverter)//transform size
+            text.rotation = 360 - (annotation.rotation ?: 0)
             text.adjustBoundsForRotation()
             return text
         }
@@ -243,15 +244,16 @@ class AnnotationConverter {
             val highlight : HighlightAnnotation
             val rects =
                 annotation.rects(boundingBoxConverter = boundingBoxConverter).map { it.rounded(3) }
-            when (type) {
+            highlight = when (type) {
                 export -> {
-                    highlight = HighlightAnnotation(
+                    HighlightAnnotation(
                         annotation.page,
                         rects
                     )
                 }
+
                 zotero -> {
-                    highlight = ZoteroHighlightAnnotation(
+                    ZoteroHighlightAnnotation(
                         annotation.page,
                         rects
                     )
@@ -472,13 +474,13 @@ class AnnotationConverter {
             val textOffset = boundingBoxConverter?.textOffset(rect = rect, page = annotation.pageIndex) ?: 0
             val minY = boundingBoxConverter?.sortIndexMinY(rect = rect, page = annotation.pageIndex)?.roundToInt() ?: 0
             if (minY < 0) {
-                Timber.w("AnnotationConverter: annotation ${annotation.key} has negative y position ${minY}")
+                Timber.w("AnnotationConverter: annotation ${annotation.key} has negative y position $minY")
             }
             return sortIndex(pageIndex = annotation.pageIndex, textOffset = textOffset, minY = minY)
         }
 
         fun sortIndex(pageIndex: Int, textOffset: Int, minY: Int): String {
-            return String.format("%05d|%06d|%05d", pageIndex, textOffset, max(0, minY))
+            return String.format(Locale.getDefault() ,"%05d|%06d|%05d", pageIndex, textOffset, max(0, minY))
         }
 
         private fun createName(displayName: String, username: String): String {

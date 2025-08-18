@@ -8,7 +8,7 @@ class DownloadBatch(
 ) {
 
     companion object {
-        val maxCount = 50
+        const val maxCount = 50
     }
 
     override fun equals(other: Any?): Boolean {

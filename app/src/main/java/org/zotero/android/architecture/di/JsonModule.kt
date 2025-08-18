@@ -39,7 +39,7 @@ object JsonModule {
                     override fun <T : Any> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T> {
                         val kclass = Reflection.getOrCreateKotlinClass(type.rawType)
                         return if (kclass.sealedSubclasses.any()) {
-                            SealedClassTypeAdapter<T>(kclass, gson)
+                            SealedClassTypeAdapter(kclass, gson)
                         } else
                             gson.getDelegateAdapter(this, type)
                     }

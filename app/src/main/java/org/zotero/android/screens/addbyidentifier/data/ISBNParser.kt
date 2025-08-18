@@ -2,7 +2,7 @@ package org.zotero.android.screens.addbyidentifier.data
 
 object ISBNParser {
 
-    private val isbnRegexPattern = "\\b(?:97[89]\\s*(?:\\d\\s*){9}\\d|(?:\\d\\s*){9}[\\dX])\\b"
+    private const val isbnRegexPattern = "\\b(?:97[89]\\s*(?:\\d\\s*){9}\\d|(?:\\d\\s*){9}[\\dX])\\b"
 
     fun isbns(string: String): List<String> {
         val cleanedString = string.replace(Regex("[\\x2D\\xAD\\u2010-\\u2015\\u2043\\u2212]+"), "")
@@ -58,10 +58,10 @@ object ISBNParser {
                 break
             }
 
-            if (idx % 2 == 0) {
-                sum += intValue
+            sum += if (idx % 2 == 0) {
+                intValue
             } else {
-                sum += intValue * 3
+                intValue * 3
             }
         }
 

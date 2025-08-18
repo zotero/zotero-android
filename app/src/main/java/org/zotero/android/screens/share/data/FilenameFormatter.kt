@@ -20,7 +20,7 @@ object FilenameFormatter {
         }
         val year = year(item, dateParser = dateParser)
         if (year != null) {
-            filename += " - " + year
+            filename += " - $year"
         }
 
         val title =
@@ -28,10 +28,10 @@ object FilenameFormatter {
                 ?: defaultTitle
 
         if (filename.isEmpty()) {
-            return title + "." + ext
+            return "$title.$ext"
         }
 
-        return validate(filename = filename + " - " + title + "." + ext)
+        return validate(filename = "$filename - $title.$ext")
     }
 
     fun validate(filename: String): String {

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.reader.PdfReaderBottomPanel
@@ -90,7 +91,7 @@ internal fun PdfReaderAnnotationsSidebar(
                             )
                     ) {
                         val annotationColor =
-                            Color(android.graphics.Color.parseColor(annotation.displayColor))
+                            Color(annotation.displayColor.toColorInt())
                         val loadPreview = {
                             val preview =
                                 vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)

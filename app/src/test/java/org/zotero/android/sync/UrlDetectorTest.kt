@@ -2,15 +2,10 @@ package org.zotero.android.sync
 
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Before
 import org.junit.Test
 
 class UrlDetectorTest {
     private val sut = UrlDetector()
-
-    @Before
-    fun setUp() {
-    }
 
     @Test
     fun `returns true for valid http domain`() {

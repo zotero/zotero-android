@@ -33,17 +33,17 @@ sealed class SyncError {
 
     val fatal2S: Fatal?
         get() {
-            when (this) {
-                is SyncError.fatal2 -> return error
-                is SyncError.nonFatal2 -> return null
+            return when (this) {
+                is fatal2 -> error
+                is nonFatal2 -> null
             }
         }
 
     val nonFatal2S: NonFatal?
         get() {
             return when (this) {
-                is SyncError.fatal2 -> null
-                is SyncError.nonFatal2 -> error
+                is fatal2 -> null
+                is nonFatal2 -> error
             }
         }
 
@@ -111,11 +111,12 @@ sealed class SyncError {
 
         val isVersionMismatch: Boolean
             get() {
-                when (this) {
+                return when (this) {
                     is versionMismatch ->
-                        return true
+                        true
+
                     else ->
-                        return false
+                        false
                 }
             }
 

@@ -123,7 +123,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Date
 import javax.inject.Inject
 
-val numberOfRowsInLazyColumnBeforeListOfCreatorsStarts = 1
+const val numberOfRowsInLazyColumnBeforeListOfCreatorsStarts = 1
 
 @HiltViewModel
 class ItemDetailsViewModel @Inject constructor(
@@ -339,8 +339,8 @@ class ItemDetailsViewModel @Inject constructor(
     private fun loadInitialData() {
         val key = viewState.key
         val libraryId = viewState.library!!.identifier
-        var collectionKey: String? = null
-        var data: ItemDetailCreateDataResult? = null
+        var collectionKey: String?
+        var data: ItemDetailCreateDataResult?
 
         try {
             val type = viewState.type
@@ -815,21 +815,24 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun parseDateSpecialValue(value: String): Date? {
-        when (value.lowercase()) {
+        return when (value.lowercase()) {
             "tomorrow" ->
-                return DateTime.now().plusDays(1).toDate()
+                DateTime.now().plusDays(1).toDate()
+
             "today" ->
-                return Date()
+                Date()
+
             "yesterday" ->
-                return DateTime.now().minusDays(1).toDate()
+                DateTime.now().minusDays(1).toDate()
+
             else ->
-                return null
+                null
         }
     }
 
     private fun updated(dateField: ItemDetailField): ItemDetailField? {
         val date = parseDateSpecialValue(dateField.value) ?: return null
-        var field = dateField
+        val field = dateField
         field.value = fullDateWithDashes.format(date)
         val order = this.dateParser.parse(field.value)?.orderWithSpaces
         if (order != null) {
@@ -890,7 +893,7 @@ class ItemDetailsViewModel @Inject constructor(
 
             }
 
-            var requests: MutableList<DbRequest> = mutableListOf(
+            val requests: MutableList<DbRequest> = mutableListOf(
                 EndItemDetailEditingDbRequest(
                     libraryId = viewState.library!!.identifier,
                     itemKey = viewState.key
@@ -1045,7 +1048,7 @@ class ItemDetailsViewModel @Inject constructor(
 
                 is DetailType.creation -> {
                     val child = type.child
-                    var actions: MutableList<DbRequest> = mutableListOf(
+                    val actions: MutableList<DbRequest> = mutableListOf(
                         DeleteObjectsDbRequest(
                             clazz = RItem::class,
                             keys = listOf(viewState.key),
@@ -1304,13 +1307,13 @@ class ItemDetailsViewModel @Inject constructor(
             throw ItemDetailError.typeNotSupported(type)
         }
 
-        var creators = originalData.toMutableMap()
+        val creators = originalData.toMutableMap()
         for ((key, originalCreator) in originalData) {
             if(schemas.firstOrNull{ it.creatorType == originalCreator.type } != null) {
                 continue
             }
 
-            var creator = originalCreator.copy()
+            val creator = originalCreator.copy()
 
             if (originalCreator.primary) {
                 creator.type = primary.creatorType
@@ -1354,7 +1357,7 @@ class ItemDetailsViewModel @Inject constructor(
             dateParser = this.dateParser
         )
 
-        var data = originalData
+        val data = originalData
             .deepCopy(
                 type = type,
                 isAttachment = type == ItemTypes.attachment,
@@ -1679,7 +1682,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private suspend fun showUrl(url: String) {
-        val uri = Uri.parse(url)
+        val uri = url.toUri()
         if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
             val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(OpenFile(uri.toFile(), mimeType))
@@ -2008,7 +2011,7 @@ class ItemDetailsViewModel @Inject constructor(
         if (!(!viewState.isEditing || viewState.data.type == ItemTypes.attachment) || !field.isTappable) return
         when (field.key) {
             FieldKeys.Item.Attachment.url -> {
-                triggerEffect(OpenWebpage(Uri.parse(field.value)))
+                triggerEffect(OpenWebpage(field.value.toUri()))
             }
             FieldKeys.Item.doi -> {
                 val encoded = FieldKeys.Item.clean(doi = field.value)
@@ -2019,7 +2022,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun showDoi(doi: String) {
         val url = "https://doi.org/$doi"
-        triggerEffect(OpenWebpage(Uri.parse(url)))
+        triggerEffect(OpenWebpage(url.toUri()))
     }
 
     fun onMove(from: Int, to: Int) {

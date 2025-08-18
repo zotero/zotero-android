@@ -1,12 +1,12 @@
 import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
-import java.io.ByteArrayOutputStream
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
     kotlin("plugin.serialization")
-    id("com.github.triplet.play") version "3.7.0"
+    id("com.github.triplet.play") version "3.12.1"
     id("dagger.hilt.android.plugin")
     id("realm-android")
     id("kotlin-parcelize")
@@ -23,7 +23,7 @@ plugins {
     //----Dependency plugins end----
 
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.1.20"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
 }
 
 android {
@@ -80,11 +80,15 @@ android {
             buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
             manifestPlaceholders["enableCrashReporting"] = false
             extra.set("enableCrashlytics", false)
+
             //Prevent variables from being 'optimized out' during debug,
             //so it becomes possible to see their values in debugger
-            kotlinOptions {
-                freeCompilerArgs = freeCompilerArgs + listOf("-Xdebug")
+            tasks.withType<KotlinJvmCompile>().configureEach {
+                compilerOptions {
+                    freeCompilerArgs.addAll(listOf("-Xdebug"))
+                }
             }
+
         }
         getByName("release") {
             isDebuggable = false
@@ -112,9 +116,12 @@ android {
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
     }
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(jvmTargetVersion)
+        }
     }
+
     buildFeatures {
         viewBinding = true
         buildConfig = true
@@ -126,12 +133,6 @@ android {
 
     androidComponents {
         beforeVariants { it.ignoreUnusedVariants() }
-//        onVariants {
-//            it.outputs.forEach { output ->
-//                val newVersionName = "${BuildConfig.version.name}-${it.flavorName}.${gitLastCommitHash()}"
-//                output.versionName.set(newVersionName)
-//            }
-//        }
     }
 }
 
@@ -150,7 +151,7 @@ dependencies {
     implementation(Libs.Firebase.Crashlytics.crashlytics)
 
     //PSPDFKIT
-    implementation("io.nutrient:nutrient:10.1.1")
+    implementation(Libs.nutrient)
 
     //GSON
     implementation(Libs.gson)
@@ -181,21 +182,8 @@ kapt {
     correctErrorTypes = true
 }
 
-fun gitLastCommitHash(): String {
-    return try {
-        val byteOut = ByteArrayOutputStream()
-        project.exec {
-            commandLine = "git rev-parse --verify --short HEAD".split(" ")
-            standardOutput = byteOut
-        }
-        String(byteOut.toByteArray()).trim().also {
-            if (it == "HEAD")
-                logger.warn("Unable to determine current branch: Project is checked out with detached head!")
-        }
-    } catch (e: Exception) {
-        logger.warn("Unable to determine current branch: ${e.message}")
-        "Unknown Branch"
-    }
+hilt {
+    enableAggregatingTask = false
 }
 
 fun readPspdfkitKey() : String {

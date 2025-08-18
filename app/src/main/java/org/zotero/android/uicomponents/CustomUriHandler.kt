@@ -2,8 +2,8 @@ package org.zotero.android.uicomponents
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.ui.platform.UriHandler
+import androidx.core.net.toUri
 
 class CustomUriHandler(private val context: Context) : UriHandler {
 
@@ -17,7 +17,7 @@ class CustomUriHandler(private val context: Context) : UriHandler {
             uri
         }
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(formattedUrl))
+        val intent = Intent(Intent.ACTION_VIEW, formattedUrl.toUri())
         context.startActivity(intent)
     }
 }

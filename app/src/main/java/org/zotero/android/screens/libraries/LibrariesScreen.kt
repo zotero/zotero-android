@@ -1,5 +1,6 @@
 package org.zotero.android.screens.libraries
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -25,11 +26,7 @@ internal fun LibrariesScreen(
     onSettingsTapped: () -> Unit,
     viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.pdfAnnotationsFormBackground
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -46,7 +43,7 @@ internal fun LibrariesScreen(
         }
 
         CustomScaffold(
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 LibrariesTopBar(
                     onSettingsTapped = onSettingsTapped,
@@ -66,7 +63,7 @@ internal fun LibrariesScreen(
                     CircularLoading()
                 },
             ) {
-                Column {
+                Column(modifier = Modifier.background(CustomTheme.colors.pdfAnnotationsFormBackground)) {
                     LibrariesTable(
                         viewState = viewState,
                         viewModel = viewModel,

@@ -1,6 +1,6 @@
 package org.zotero.android.sync
 
-import InitializeCustomLibrariesDbRequest
+import org.zotero.android.database.requests.InitializeCustomLibrariesDbRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

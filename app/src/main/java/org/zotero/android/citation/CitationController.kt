@@ -219,13 +219,13 @@ class CitationController @Inject constructor(
                 )
             )
                 .where()
-                .itemNotTypeIn(CitationController.invalidItemTypes).findAll()
+                .itemNotTypeIn(invalidItemTypes).findAll()
 
             if (items.isEmpty()) {
                 throw Exception("Invalid Item Types")
             }
 
-            val data = items.map({ data(it) })
+            val data = items.map { data(it) }
 
             items.first()?.realm?.refresh()
 
@@ -382,7 +382,7 @@ class CitationController @Inject constructor(
             Format.rtf -> {
                 var newResult = result
                 if (!result.startsWith("{\\rtf")) {
-                    newResult = "{\\rtf\n" + newResult
+                    newResult = "{\\rtf\n$newResult"
                 }
                 if (!result.endsWith("}")) {
                     newResult += "\n}"
@@ -394,7 +394,7 @@ class CitationController @Inject constructor(
                 var newResult = result
                 if (!result.startsWith("<!DOCTYPE")) {
                     newResult =
-                        "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>" + newResult
+                        "<!DOCTYPE html><html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"></head><body>$newResult"
                 }
                 if (!result.endsWith("</html>")) {
                     newResult += "</body></html>"
@@ -439,7 +439,7 @@ class CitationController @Inject constructor(
 
             Format.text -> {
                 return citations.mapIndexed { index, t ->
-                    "${index + 1}. ${t}"
+                    "${index + 1}. $t"
                 }.joinToString(separator = "\r\n")
 
             }

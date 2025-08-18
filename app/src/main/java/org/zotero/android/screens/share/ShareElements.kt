@@ -15,10 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.material.ripple
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -110,7 +110,7 @@ internal fun ShareItem(
 internal fun ShareSectionTitle(
     @StringRes titleId: Int
 ) {
-    androidx.compose.material3.Text(
+    Text(
         modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
         text = stringResource(id = titleId).uppercase(),
         fontSize = 14.sp,

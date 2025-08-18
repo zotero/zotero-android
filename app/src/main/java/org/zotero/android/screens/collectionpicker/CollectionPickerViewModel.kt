@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
-import io.realm.OrderedRealmCollectionChangeListener
 import io.realm.RealmResults
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -109,7 +108,7 @@ internal class CollectionPickerViewModel @Inject constructor(
                 isAsync = true
             )
         )
-        results?.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RCollection>> { objects, changeSet ->
+        results?.addChangeListener { objects, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     collectionTreeController.reactToCollectionsDbUpdate(
@@ -132,7 +131,7 @@ internal class CollectionPickerViewModel @Inject constructor(
                     )
                 }
             }
-        })
+        }
     }
 
     private fun updateTitle(selectedCount: Int) {

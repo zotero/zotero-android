@@ -66,7 +66,7 @@ class SubmitDeletionSyncAction(
                     libraryId = this.libraryId,
                     type = UpdateVersionType.objectS(this.objectS)
                 )
-                var requests = mutableListOf<DbRequest>(updateVersion)
+                val requests = mutableListOf<DbRequest>(updateVersion)
 
                 when (this.objectS) {
                     SyncObject.collection -> {

@@ -2,10 +2,8 @@ package org.zotero.android.pdf.annotationmore
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,7 +25,6 @@ internal fun PdfAnnotationMoreNavigation(args: PdfAnnotationMoreArgs, onBack: ()
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfAnnotationMoreDestination.PDF_ANNOTATION_MORE_SCREEN,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         pdfAnnotationMoreNavScreens(args = args, navigation = navigation)
     }

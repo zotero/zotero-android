@@ -43,7 +43,7 @@ class CreateNoteDbRequest(
             throw Error.alreadyExists
         }
 
-        val changes = mutableListOf<RItemChanges>(RItemChanges.type, RItemChanges.fields)
+        val changes = mutableListOf(RItemChanges.type, RItemChanges.fields)
 
         val item = database.createObject<RItem>()
         item.key = this.note.key

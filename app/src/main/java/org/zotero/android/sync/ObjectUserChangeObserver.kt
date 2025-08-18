@@ -66,7 +66,7 @@ class ObjectUserChangeObserver(
     private fun registerSettingsObserver(coordinator: RealmDbCoordinator): RealmResults<RPageIndex> {
         val objects = coordinator.perform(request = ReadUserChangedObjectsDbRequest(clazz = RPageIndex::class))
 
-        objects.addChangeListener(OrderedRealmCollectionChangeListener<RealmResults<RPageIndex>> { _, changeSet ->
+        objects.addChangeListener(OrderedRealmCollectionChangeListener { _, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     //no-op

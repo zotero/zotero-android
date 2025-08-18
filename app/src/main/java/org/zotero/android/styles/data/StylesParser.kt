@@ -62,7 +62,7 @@ class StylesParser {
         style("style");
 
         companion object {
-            private val map = Element.values().associateBy(Element::str)
+            private val map = entries.associateBy(Element::str)
             fun from(s: String) = map[s]
         }
     }

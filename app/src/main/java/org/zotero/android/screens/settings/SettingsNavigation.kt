@@ -2,10 +2,8 @@ package org.zotero.android.screens.settings
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
@@ -35,7 +33,6 @@ internal fun SettingsNavigation(onOpenWebpage: (uri: Uri) -> Unit) {
     ZoteroNavHost(
         navController = navController,
         startDestination = SettingsDestinations.SETTINGS,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         settingsNavScreens(navigation = navigation, onOpenWebpage = onOpenWebpage)
     }
@@ -256,7 +253,7 @@ fun ZoteroNavigation.toCiteSearchScreen(args: String) {
 }
 
 fun ZoteroNavigation.toStylePicker() {
-    navController.navigate("${SettingsDestinations.STYLE_PICKER}")
+    navController.navigate(SettingsDestinations.STYLE_PICKER)
 }
 
 fun ZoteroNavigation.toQuickCopyScreen() {
@@ -272,5 +269,5 @@ fun ZoteroNavigation.toSinglePickerScreen() {
 }
 
 fun ZoteroNavigation.toCslLocalePicker() {
-    navController.navigate("${SettingsDestinations.CSL_LOCALE_PICKER}")
+    navController.navigate(SettingsDestinations.CSL_LOCALE_PICKER)
 }

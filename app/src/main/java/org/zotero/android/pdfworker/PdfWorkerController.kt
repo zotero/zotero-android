@@ -73,7 +73,7 @@ class PdfWorkerController @Inject constructor(
     }
 
     private fun initialize() {
-        observable = EventStream<Update>(
+        observable = EventStream(
             ZoteroApplication.instance.applicationScope
         )
 
@@ -224,7 +224,7 @@ class PdfWorkerController @Inject constructor(
             is PdfWorkerRecognizedData.fallbackItem -> {
                 val itemData = successValue.rawData
 
-                var item = itemResponseMapper.fromTranslatorResponse(
+                val item = itemResponseMapper.fromTranslatorResponse(
                     response = itemData,
                     schemaController = schemaController,
                     tagResponseMapper = tagResponseMapper,

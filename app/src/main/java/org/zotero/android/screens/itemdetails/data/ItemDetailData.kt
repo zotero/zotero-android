@@ -21,7 +21,7 @@ data class ItemDetailData(
 ) {
 
     fun databaseFields(schemaController: SchemaController): List<ItemDetailField> {
-        var allFields = this.fields.values.toMutableList()
+        val allFields = this.fields.values.toMutableList()
         val titleKey = schemaController.titleKey(this.type)
         if (titleKey != null) {
             allFields.add(

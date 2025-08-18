@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchColors
-import androidx.compose.material.SwitchDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,8 +49,7 @@ private object CustomSwitch {
         }
         return SwitchDefaults.colors(
             checkedThumbColor = CustomTheme.colors.zoteroDefaultBlue,
-            checkedTrackColor = CustomTheme.colors.zoteroDefaultBlue,
-            checkedTrackAlpha = 0.5f,
+            checkedTrackColor = CustomTheme.colors.zoteroDefaultBlue.copy(0.5f),
             uncheckedThumbColor = if (isLight) {
                 CustomPalette.White
             } else {
@@ -60,8 +59,7 @@ private object CustomSwitch {
                 CustomPalette.FeatherGray
             } else {
                 CustomPalette.LightCharcoal
-            },
-            uncheckedTrackAlpha = 1f,
+            }.copy(1f),
             disabledCheckedThumbColor = disabledThumbColor,
             disabledCheckedTrackColor = disabledTrackColor,
             disabledUncheckedThumbColor = disabledThumbColor,

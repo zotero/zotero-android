@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,10 +37,7 @@ internal fun ScanBarcodeScreen(
     viewModel: ScanBarcodeViewModel = hiltViewModel(),
     onClose: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(ScanBarcodeViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -56,6 +53,7 @@ internal fun ScanBarcodeScreen(
             }
         }
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 ScanBarcodeCloseScanAnotherTopBar(
                     onClose = onClose,

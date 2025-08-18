@@ -12,7 +12,7 @@ class ReadStyleDbRequest(private val identifier: String) : DbResponseRequest<RSt
         get() = false
 
     override fun process(database: Realm): RStyle {
-        Timber.d("ReadStyleDbRequest: trying to read style with identifier: ${identifier}")
+        Timber.d("ReadStyleDbRequest: trying to read style with identifier: $identifier")
         val existing: RStyle? =
             database.where<RStyle>().equalTo("identifier", this.identifier).findFirst()
         if (existing == null) {

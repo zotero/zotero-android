@@ -22,7 +22,7 @@ data class Translator(
                 val value = getAttributeValue(i)
                 when (key) {
                     "id" -> {
-                        updatedMetadata["translatorID"] = Translator.value(
+                        updatedMetadata["translatorID"] = value(
                             string = value,
                             gson = gson
                         )
@@ -30,14 +30,14 @@ data class Translator(
                     }
 
                     "type" -> {
-                        updatedMetadata["translatorType"] = Translator.value(
+                        updatedMetadata["translatorType"] = value(
                             string = value,
                             gson = gson
                         )
                     }
 
                     else -> {
-                        updatedMetadata[key] = Translator.value(string = value, gson = gson)
+                        updatedMetadata[key] = value(string = value, gson = gson)
                     }
                 }
             }
@@ -76,15 +76,15 @@ data class Translator(
         val metadata = this.metadata
         when (key) {
             "id" -> {
-                metadata["translatorID"] = Translator.value(string = value, gson = gson)
+                metadata["translatorID"] = value(string = value, gson = gson)
             }
 
             "type" -> {
-                metadata["translatorType"] = Translator.value(string = value, gson = gson)
+                metadata["translatorType"] = value(string = value, gson = gson)
             }
 
             else -> {
-                metadata[key] = Translator.value(string = value, gson = gson)
+                metadata[key] = value(string = value, gson = gson)
             }
         }
         return Translator(metadata = metadata, code = this.code)

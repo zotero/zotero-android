@@ -45,7 +45,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.contains
 import kotlin.coroutines.resume
 
 
@@ -111,12 +110,10 @@ class WebDavController @Inject constructor(
         val hostComponents = (urlComponents.firstOrNull() ?: "").split(":")
         val host = hostComponents.firstOrNull()
         val port = hostComponents.lastOrNull()?.toIntOrNull()
-
-        val path: String
-        if (urlComponents.size == 1) {
-            path = "/zotero/"
+        val path: String = if (urlComponents.size == 1) {
+            "/zotero/"
         } else {
-            path = "/" + urlComponents.drop(1).filter { it.isNotEmpty() }
+            "/" + urlComponents.drop(1).filter { it.isNotEmpty() }
                 .joinToString(separator = "/") + "/zotero/"
         }
 
@@ -288,10 +285,10 @@ class WebDavController @Inject constructor(
             return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
         }
 
-        if (httpCode == 404) {
-            return CustomResult.GeneralSuccess(Unit)
+        return if (httpCode == 404) {
+            CustomResult.GeneralSuccess(Unit)
         } else {
-            return CustomResult.GeneralError.CodeError(WebDavError.Verification.nonExistentFileNotMissing)
+            CustomResult.GeneralError.CodeError(WebDavError.Verification.nonExistentFileNotMissing)
         }
     }
 
@@ -348,7 +345,7 @@ class WebDavController @Inject constructor(
         val bodyText = " "
 
         val networkResult = safeApiCall {
-            val body: RequestBody = RequestBody.create("text/plain".toMediaType(), bodyText);
+            val body: RequestBody = RequestBody.create("text/plain".toMediaType(), bodyText)
             provideWebDavApi().put(url = url, body = body)
         }
 
@@ -369,12 +366,12 @@ class WebDavController @Inject constructor(
         }
 
         val httpCode = propFindResult.resultHttpCode
-        if (httpCode == 207) {
-            return CustomResult.GeneralError.CodeError(
+        return if (httpCode == 207) {
+            CustomResult.GeneralError.CodeError(
                 WebDavError.Verification.zoteroDirNotFound(url)
             )
         } else {
-            return CustomResult.GeneralError.CodeError(WebDavError.Verification.parentDirNotFound)
+            CustomResult.GeneralError.CodeError(WebDavError.Verification.parentDirNotFound)
         }
     }
 
@@ -425,8 +422,8 @@ class WebDavController @Inject constructor(
             return CustomResult.GeneralSuccess(MetadataResult.new(url))
         }
         val (remoteMtime, remoteHash) = metadataResultValue
-        if (hash == remoteHash) {
-            return CustomResult.GeneralSuccess(
+        return if (hash == remoteHash) {
+            CustomResult.GeneralSuccess(
                 if (mtime == remoteMtime) {
                     MetadataResult.unchanged
                 } else {
@@ -434,7 +431,7 @@ class WebDavController @Inject constructor(
                 }
             )
         } else {
-            return CustomResult.GeneralSuccess(MetadataResult.changed(url))
+            CustomResult.GeneralSuccess(MetadataResult.changed(url))
         }
     }
 

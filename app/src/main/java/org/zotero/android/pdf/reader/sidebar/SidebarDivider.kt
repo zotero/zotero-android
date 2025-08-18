@@ -1,6 +1,6 @@
 package org.zotero.android.pdf.reader.sidebar
 
-import androidx.compose.material.Divider
+import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp

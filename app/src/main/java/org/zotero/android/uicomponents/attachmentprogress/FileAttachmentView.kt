@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +66,7 @@ private fun BoxScope.set(
 ) {
     when (contentType) {
         is ContentType.progress -> {
-            set(progress = contentType.progress, showsStop = (style != Style.lookup))
+            Set(progress = contentType.progress, showsStop = (style != Style.lookup))
             setMainImage(
                 asset = null,
                 shouldAccountForBadge = false,
@@ -76,7 +76,7 @@ private fun BoxScope.set(
         }
 
         is ContentType.image -> {
-            set(progress = null, showsStop = false)
+            Set(progress = null, showsStop = false)
             setMainImage(
                 asset = contentType.asset,
                 shouldAccountForBadge = false,
@@ -86,7 +86,7 @@ private fun BoxScope.set(
         }
 
         is ContentType.imageWithBadge -> {
-            set(progress = null, showsStop = false)
+            Set(progress = null, showsStop = false)
             setMainImage(
                 asset = contentType.main,
                 shouldAccountForBadge = true,
@@ -132,7 +132,7 @@ fun BoxScope.setBadge(asset: Int?, badgeIconSize: Dp) {
 }
 
 @Composable
-private fun BoxScope.set(progress: Int?, showsStop: Boolean) {
+private fun BoxScope.Set(progress: Int?, showsStop: Boolean) {
     val isHidden = progress == null
     if (showsStop) {
         if (!isHidden) {
@@ -153,9 +153,9 @@ private fun BoxScope.set(progress: Int?, showsStop: Boolean) {
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.Center),
             color = CustomTheme.colors.zoteroDefaultBlue,
-            backgroundColor = CustomPalette.CoolGray,
             strokeWidth = 1.dp,
-            progress = progressFloat
+            trackColor = CustomPalette.CoolGray,
+            progress = { progressFloat }
         )
     }
 }
@@ -362,12 +362,12 @@ sealed class State {
     companion object {
         fun stateFrom(type: Attachment.Kind, progress: Int?, error: Throwable?): State {
             if (progress != null) {
-                return State.progress(progress)
+                return progress(progress)
             }
             if (error != null) {
-                return State.failed(type, error)
+                return failed(type, error)
             }
-            return State.ready(type)
+            return ready(type)
         }
     }
 }

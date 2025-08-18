@@ -77,7 +77,7 @@ object ItemDetailDataCreator {
         }
 
         var abstract: String? = null
-        var values = mutableMapOf<String, String>()
+        val values = mutableMapOf<String, String>()
 
         item.fields.forEach { field ->
             when (field.key) {
@@ -100,8 +100,8 @@ object ItemDetailDataCreator {
             }
         )
 
-        var creatorIds = mutableListOf<String>()
-        var creators = mutableMapOf<String, ItemDetailCreator>()
+        val creatorIds = mutableListOf<String>()
+        val creators = mutableMapOf<String, ItemDetailCreator>()
         for (creator in item.creators.sort("orderId")) {
             val localizedType = schemaController.localizedCreator(creator.rawType)
             if (localizedType == null) {
@@ -122,12 +122,10 @@ object ItemDetailDataCreator {
             creatorIds.add(creator.id)
             creators[creator.id] = creator
         }
-
-        val notes: MutableList<Note>
-        if (ignoreChildren) {
-            notes = mutableListOf()
+        val notes: MutableList<Note> = if (ignoreChildren) {
+            mutableListOf()
         } else {
-            notes = item.children!!.where()
+            item.children!!.where()
                 .items(type = ItemTypes.note, notSyncState = ObjectSyncState.dirty, trash = false)
                 .sort("displayTitle")
                 .findAll().mapNotNull { Note.init(it) }.toMutableList()
@@ -230,7 +228,7 @@ object ItemDetailDataCreator {
         if (fieldSchemas == null) {
             throw ItemDetailError.typeNotSupported(itemType)
         }
-        var fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
+        val fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
         val abstractIndex = fieldKeys.indexOf(FieldKeys.Item.abstractN)
 
         if (abstractIndex != -1) {
@@ -255,7 +253,8 @@ object ItemDetailDataCreator {
 
             val name = existingName ?: schemaController.localizedField(key) ?: ""
             val value = existingValue ?: ""
-            val isTappable = ItemDetailDataCreator.isTappable(key = key, value = value, urlDetector = urlDetector, doiDetector = doiDetector)
+            val isTappable =
+                isTappable(key = key, value = value, urlDetector = urlDetector, doiDetector = doiDetector)
             var additionalInfo: Map<ItemDetailField.AdditionalInfoKey, String>? = null
 
             if (key == FieldKeys.Item.date || baseField == FieldKeys.Item.date) {
@@ -292,18 +291,20 @@ object ItemDetailDataCreator {
     }
 
     fun isTappable(key: String, value: String, urlDetector: UrlDetector, doiDetector: (String) -> Boolean): Boolean {
-        when(key) {
+        return when(key) {
             FieldKeys.Item.doi ->
-            return doiDetector(value)
+                doiDetector(value)
+
             FieldKeys.Item.Attachment.url ->
-            return urlDetector.isUrl(value)
+                urlDetector.isUrl(value)
+
             else ->
-            return false
+                false
         }
     }
 
     fun filteredFieldKeys(fieldKeys: List<String>, fields: Map<String, ItemDetailField>): List<String> {
-        var newFieldKeys = mutableListOf<String>()
+        val newFieldKeys = mutableListOf<String>()
         fieldKeys.forEach { key ->
             if (!(fields[key]?.value ?: "").isEmpty()) {
                 newFieldKeys.add(key)
@@ -317,7 +318,7 @@ object ItemDetailDataCreator {
         if (fieldSchemas == null) {
             return emptyList()
         }
-        var fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
+        val fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
         val indexOfAbstract = fieldKeys.indexOf(FieldKeys.Item.abstractN)
         if (indexOfAbstract != -1) {
             fieldKeys.removeAt(indexOfAbstract)

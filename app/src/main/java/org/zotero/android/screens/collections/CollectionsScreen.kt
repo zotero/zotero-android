@@ -31,7 +31,7 @@ internal fun CollectionsScreen(
     navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars(statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor) {
+    CustomThemeWithStatusAndNavBars {
 
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
@@ -60,6 +60,7 @@ internal fun CollectionsScreen(
         }
 
         CustomScaffold(
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
             topBar = {
                 CollectionsTopBar(
                     libraryName = viewState.libraryName,

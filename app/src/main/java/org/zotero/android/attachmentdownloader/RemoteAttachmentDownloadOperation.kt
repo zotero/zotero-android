@@ -14,7 +14,7 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
 
-class RemoteAttachmentDownloadOperation constructor(
+class RemoteAttachmentDownloadOperation(
     private val nonZoteroApi: NonZoteroApi,
     private val fileStorage: FileStore,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,

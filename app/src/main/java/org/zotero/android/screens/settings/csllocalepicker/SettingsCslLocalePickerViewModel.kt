@@ -56,17 +56,12 @@ internal class SettingsCslLocalePickerViewModel @Inject constructor(
         triggerEffect(SettingsCslLocalePickerViewEffect.OnBack)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-    }
-
 }
 
 internal data class SettingsCslLocalePickerViewState(
     val locales: List<ExportLocale> = emptyList(),
     val selected: String = ""
-) : ViewState {
-}
+) : ViewState
 
 internal sealed class SettingsCslLocalePickerViewEffect : ViewEffect {
     object OnBack : SettingsCslLocalePickerViewEffect()

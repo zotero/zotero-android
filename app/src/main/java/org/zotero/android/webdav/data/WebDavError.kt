@@ -70,7 +70,7 @@ sealed class WebDavError {
         fun message(error: CustomResult.GeneralError): String {
             val context = ZoteroApplication.instance
 
-            val verificationError = (error as? CustomResult.GeneralError.CodeError)?.throwable as? WebDavError.Verification
+            val verificationError = (error as? CustomResult.GeneralError.CodeError)?.throwable as? Verification
             if (verificationError != null) {
                 return verificationError.message
             }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotationmore.MoreColorPicker
 import org.zotero.android.pdf.annotationmore.MoreUnderlineText
@@ -24,7 +25,7 @@ internal fun PdfAnnotationMoreUnderlineRow(
     layoutType: CustomLayoutSize.LayoutType,
 ) {
     val annotationColor =
-        Color(android.graphics.Color.parseColor(viewState.color))
+        Color(viewState.color.toColorInt())
     Column(
         modifier = Modifier
             .fillMaxWidth()

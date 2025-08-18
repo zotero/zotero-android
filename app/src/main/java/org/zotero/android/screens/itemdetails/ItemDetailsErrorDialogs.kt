@@ -194,6 +194,6 @@ internal fun ItemDetailsErrorDialogs(
 
 @Composable
 private fun droppedFieldsMessage(names: List<String>): String {
-    val formattedNames = names.map { "- $it\n" }.joinToString(separator = "")
+    val formattedNames = names.joinToString(separator = "") { "- $it\n" }
     return stringResource(id = Strings.errors_item_detail_dropped_fields_message, formattedNames)
 }

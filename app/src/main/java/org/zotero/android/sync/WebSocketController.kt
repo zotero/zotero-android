@@ -228,7 +228,7 @@ class WebSocketController @Inject constructor(
 
         val interval = retryIntervals[min(this.connectionRetryCount, (retryIntervals.size - 1))]
         this.connectionRetryCount += 1
-        Timber.i("WebSocketController: schedule retry attempt ${this.connectionRetryCount} interval ${interval}")
+        Timber.i("WebSocketController: schedule retry attempt ${this.connectionRetryCount} interval $interval")
 
         val timer = BackgroundTimer(timeIntervalMs = interval * 1000L) {
             when (this.connectionState){
@@ -319,7 +319,7 @@ class WebSocketController @Inject constructor(
                 return
             }
 
-            Timber.i("WebSocketController: handle event - ${event}")
+            Timber.i("WebSocketController: handle event - $event")
 
             when (event) {
                 WsResponse.Event.topicAdded, WsResponse.Event.topicRemoved, WsResponse.Event.topicUpdated -> {
@@ -340,7 +340,7 @@ class WebSocketController @Inject constructor(
         } catch (error: Throwable) {
             Timber.e(
                 error,
-                "WebSocketController: received unknown message. Original message: ${textToParse}"
+                "WebSocketController: received unknown message. Original message: $textToParse"
             )
         }
     }
@@ -383,11 +383,11 @@ class WebSocketController @Inject constructor(
 
         try {
             val string = gson.toJson(message)
-            Timber.i("WebSocketController: send message - ${string}")
+            Timber.i("WebSocketController: send message - $string")
             createResponse(responseEvent, completion = completion)
             webSocket.send(string)
         } catch (error: Exception) {
-            Timber.e(error, "WebSocketController: message error ${message}")
+            Timber.e(error, "WebSocketController: message error $message")
             completion(Error.cantCreateMessage)
         }
     }

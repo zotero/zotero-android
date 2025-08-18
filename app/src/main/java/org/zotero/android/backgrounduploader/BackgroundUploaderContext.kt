@@ -14,7 +14,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
     }
 
     fun saveSession(identifier: String) {
-        var ids = this.sessionIds.toMutableList()
+        val ids = this.sessionIds.toMutableList()
         ids.add(identifier)
         saveSessions(ids)
     }
@@ -24,7 +24,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
     }
 
     fun deleteSession(identifier: String) {
-        var ids = this.sessionIds.toMutableList()
+        val ids = this.sessionIds.toMutableList()
         val index = ids.indexOfFirst { it == identifier}
         if (index == -1) {
             return
@@ -43,7 +43,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
         }
 
     fun saveShareExtensionSession(identifier: String) {
-        var ids = this.shareExtensionSessionIds.toMutableList()
+        val ids = this.shareExtensionSessionIds.toMutableList()
         ids.add(identifier)
         fileStore.saveShareExtensionSessions(ids)
     }
@@ -53,7 +53,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
     }
 
     fun deleteShareExtensionSession(identifier: String) {
-        var ids = this.shareExtensionSessionIds.toMutableList()
+        val ids = this.shareExtensionSessionIds.toMutableList()
         val index = ids.indexOfFirst { it == identifier }
         if (index == -1) {
             return
@@ -76,7 +76,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
 
     fun loadUploads(sessionId: String): List<Pair<Int, BackgroundUpload>> {
         val allUploads = uploadsWithTaskIds
-        var result = mutableListOf<Pair<Int, BackgroundUpload>>()
+        val result = mutableListOf<Pair<Int, BackgroundUpload>>()
         for (entry in allUploads.entries) {
             val taskId = entry.key
             val upload = entry.value
@@ -89,7 +89,7 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
     }
 
     fun save(upload: BackgroundUpload, taskId: Int) {
-        var uploads = uploadsWithTaskIds.toMutableMap()
+        val uploads = uploadsWithTaskIds.toMutableMap()
         uploads[taskId] = upload
         save(uploads)
     }
@@ -99,13 +99,13 @@ class BackgroundUploaderContext @Inject constructor(private val defaults: Defaul
     }
 
     fun deleteUpload(taskId: Int) {
-        var uploads = uploadsWithTaskIds.toMutableMap()
+        val uploads = uploadsWithTaskIds.toMutableMap()
         uploads.remove(taskId)
         save(uploads)
     }
 
     fun deleteUploads(taskIds: List<Int>) {
-        var uploads = uploadsWithTaskIds.toMutableMap()
+        val uploads = uploadsWithTaskIds.toMutableMap()
         for (taskId in taskIds) {
             uploads.remove(taskId)
         }

@@ -21,7 +21,7 @@ class MarkForResyncDbAction(
 
     override fun process(database: Realm) {
         val syncDate = Date()
-        var toCreate = this.keys.toMutableList()
+        val toCreate = this.keys.toMutableList()
         val objects = database.where(clazz.java).keys(this.keys, this.libraryId).findAll()
         for (objectS in objects) {
             objectS as Syncable

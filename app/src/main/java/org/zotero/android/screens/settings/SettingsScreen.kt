@@ -29,11 +29,7 @@ internal fun SettingsScreen(
     toQuickCopyScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init()
@@ -52,7 +48,8 @@ internal fun SettingsScreen(
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SettingsTopBar(
                     onClose = onBack,
@@ -62,7 +59,7 @@ internal fun SettingsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = backgroundColor)
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))

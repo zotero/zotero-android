@@ -9,7 +9,7 @@ import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.sync.LibraryIdentifier
 
-class PerformDeletionsDbRequest constructor(
+class PerformDeletionsDbRequest(
     val libraryId: LibraryIdentifier,
     val collections: List<String>,
     val items: List<String>,

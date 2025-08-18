@@ -1,8 +1,8 @@
 package org.zotero.android.translator.web
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebMessage
@@ -50,6 +50,7 @@ class TranslatorWebViewHandler @Inject constructor(
 
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null) {
         uiMainCoroutineScope.launch {
             webView = WebView(context)
@@ -60,8 +61,7 @@ class TranslatorWebViewHandler @Inject constructor(
             webView.settings.allowContentAccess = true
             webView.webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-                    Log.d(
-                        "WEBVIEW_LOG_TAG",
+                    Timber.tag("WEBVIEW_LOG_TAG").d(
                         consoleMessage.message() + " -- From line "
                                 + consoleMessage.lineNumber() + " of "
                                 + consoleMessage.sourceId()
@@ -127,12 +127,10 @@ class TranslatorWebViewHandler @Inject constructor(
             successCodes.contains(statusCode)
         }
         val responseText = data ?: ""
-
-        val payload: Map<String, Any>
-        if (isSuccess) {
-            payload = mapOf("status" to statusCode, "responseText" to responseText, "headers" to headers, "url" to (url ?: ""))
+        val payload: Map<String, Any> = if (isSuccess) {
+            mapOf("status" to statusCode, "responseText" to responseText, "headers" to headers, "url" to (url ?: ""))
         } else {
-            payload = mapOf("error" to mapOf("status" to statusCode, "responseText" to responseText))
+            mapOf("error" to mapOf("status" to statusCode, "responseText" to responseText))
         }
 
         sendMessaging(payload = payload, messageId = messageId)
@@ -224,38 +222,47 @@ class TranslatorWebViewHandler @Inject constructor(
 
         }
 
-        if (networkResult is CustomResult.GeneralSuccess.NetworkSuccess) {
-            val statusCode = networkResult.httpCode
-            val allHeaderFields = networkResult.headers.toMultimap()
-            val data = networkResult.value!!.string()
-            sendHttpResponse(
-                data = data,
-                statusCode = statusCode,
-                url = url,
-                successCodes = successCodes,
-                headers = allHeaderFields,
-                messageId = messageId
-            )
-        } else if (networkResult is CustomResult.GeneralError.NetworkError) {
-            val error = networkResult.stringResponse
-            sendHttpResponse(
-                data = error,
-                statusCode = -1,
-                url = null,
-                successCodes = successCodes,
-                headers = mapOf(),
-                messageId = messageId
-            )
-        } else if (networkResult is CustomResult.GeneralError.CodeError) {
-            val error = networkResult.throwable.localizedMessage
-            sendHttpResponse(
-                data = error,
-                statusCode = -1,
-                url = null,
-                successCodes = successCodes,
-                headers = mapOf(),
-                messageId = messageId
-            )
+        when (networkResult) {
+            is CustomResult.GeneralSuccess.NetworkSuccess -> {
+                val statusCode = networkResult.httpCode
+                val allHeaderFields = networkResult.headers.toMultimap()
+                val data = networkResult.value!!.string()
+                sendHttpResponse(
+                    data = data,
+                    statusCode = statusCode,
+                    url = url,
+                    successCodes = successCodes,
+                    headers = allHeaderFields,
+                    messageId = messageId
+                )
+            }
+
+            is CustomResult.GeneralError.NetworkError -> {
+                val error = networkResult.stringResponse
+                sendHttpResponse(
+                    data = error,
+                    statusCode = -1,
+                    url = null,
+                    successCodes = successCodes,
+                    headers = mapOf(),
+                    messageId = messageId
+                )
+            }
+
+            is CustomResult.GeneralError.CodeError -> {
+                val error = networkResult.throwable.localizedMessage
+                sendHttpResponse(
+                    data = error,
+                    statusCode = -1,
+                    url = null,
+                    successCodes = successCodes,
+                    headers = mapOf(),
+                    messageId = messageId
+                )
+            }
+            else -> {
+                //no-op
+            }
         }
 
     }

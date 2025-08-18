@@ -62,17 +62,21 @@ class ItemTitleFormatter {
 
         private fun separatedCreators(results: List<RCreator>, limit: Int): String {
             val names = creatorNames(results, limit)
-            when (names.size) {
+            return when (names.size) {
                 0 ->
-                    return ""
+                    ""
+
                 1 ->
-                    return names[0]
+                    names[0]
+
                 2 ->
-                    return names[0] + " and " + names[1]
+                    names[0] + " and " + names[1]
+
                 3 ->
-                    return names[0] + ", " + names[1] + " and " + names[2]
+                    names[0] + ", " + names[1] + " and " + names[2]
+
                 else ->
-                    return names[0] + " et al."
+                    names[0] + " et al."
             }
         }
 
@@ -83,7 +87,7 @@ class ItemTitleFormatter {
             val sortedResults = results.sortedBy { it.orderId }
 
             var index = 0
-            var names = mutableListOf<String>()
+            val names = mutableListOf<String>()
 
             while (index < sortedResults.size && names.size < limit) {
                 val name = sortedResults[index].summaryName
@@ -99,11 +103,11 @@ class ItemTitleFormatter {
         private fun caseDisplayTitle(baseTitle: String, fields: List<RItemField>, creators: List<RCreator>): String {
             if (!baseTitle.isEmpty()) {
                 var title = baseTitle
-                val field = fields.filter{it.key == FieldKeys.Item.reporter}.firstOrNull()
+                val field = fields.firstOrNull { it.key == FieldKeys.Item.reporter }
                 if (field != null && !field.value.isEmpty()) {
                     title += " (${field.value})"
                 } else {
-                    val field = fields.filter{it.key == FieldKeys.Item.court}.firstOrNull()
+                    val field = fields.firstOrNull { it.key == FieldKeys.Item.court }
                     if (field != null && !field.value.isEmpty()) {
                         title += " (${field.value})"
                     }
@@ -111,19 +115,20 @@ class ItemTitleFormatter {
                 return title
             }
 
-            var parts = mutableListOf<String>()
-            val fieldCourt = fields.filter { it.key == FieldKeys.Item.court }.firstOrNull()
+            val parts = mutableListOf<String>()
+            val fieldCourt = fields.firstOrNull { it.key == FieldKeys.Item.court }
             if (fieldCourt != null && !fieldCourt.value.isEmpty()) {
                 parts.add(fieldCourt.value)
             }
 
-            val field = fields.filter { it.key ==  FieldKeys.Item.date && it.baseKey == FieldKeys.Item.date}.firstOrNull()
+            val field =
+                fields.firstOrNull { it.key == FieldKeys.Item.date && it.baseKey == FieldKeys.Item.date }
             if (field != null && !field.value.isEmpty()) {
                 parts.add(field.value)
             }
 
             val creator =
-                creators.filter { it.primary == true }.sortedBy { it.orderId }.firstOrNull()
+                creators.filter { it.primary }.minByOrNull { it.orderId }
             if (creator != null) {
                 val name = creator.summaryName
                 if (!name.isEmpty()) {

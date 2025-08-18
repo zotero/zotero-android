@@ -14,11 +14,11 @@ fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
     }
 }
 
-fun <T> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
+fun <T: Any> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.DEV.envName()).block()
 }
 
-fun <T> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
+fun <T: Any> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.INTERNAL.envName()).block()
 }
 

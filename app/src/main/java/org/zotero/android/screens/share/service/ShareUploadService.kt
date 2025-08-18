@@ -24,7 +24,7 @@ class ShareUploadService : Service() {
         startId: Int
     ): Int {
         if (intent == null) return START_NOT_STICKY
-        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         } else {
             ""
@@ -41,7 +41,7 @@ class ShareUploadService : Service() {
             getString(Strings.share_upload_channel_name),
             NotificationManager.IMPORTANCE_HIGH
         )
-        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val service = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         service.createNotificationChannel(chan)
         return "share-file-upload-notification-id"
     }

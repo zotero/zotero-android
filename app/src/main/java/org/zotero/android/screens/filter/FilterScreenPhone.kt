@@ -30,14 +30,10 @@ internal fun FilterScreenPhone(
             else -> {}
         }
     }
-    val backgroundColor = CustomTheme.colors.popupBackgroundContent
-
-    CustomThemeWithStatusAndNavBars(
-        statusBarBackgroundColor = CustomTheme.colors.topBarBackgroundColor,
-        navBarBackgroundColor = backgroundColor
-    ) {
+    CustomThemeWithStatusAndNavBars {
         CustomScaffold(
-            backgroundColor = backgroundColor,
+            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+            bottomBarColor = CustomTheme.colors.popupBackgroundContent,
             topBar = {
                 FilterTopBar(
                     onDone = viewModel::onDone,

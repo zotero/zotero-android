@@ -218,7 +218,7 @@ private fun ZoteroNavigation.toPdfSettings(args: String) {
 }
 
 private fun ZoteroNavigation.toSingleCitationScreen() {
-    navController.navigate("${PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG}")
+    navController.navigate(PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG)
 }
 
 private fun ZoteroNavigation.toPdfPlainReader(args: String) {

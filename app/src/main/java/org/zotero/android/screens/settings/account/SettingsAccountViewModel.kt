@@ -2,6 +2,7 @@ package org.zotero.android.screens.settings.account
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -109,12 +110,12 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     fun openDeleteAccount() {
-        val uri = Uri.parse("https://www.zotero.org/settings/deleteaccount")
+        val uri = "https://www.zotero.org/settings/deleteaccount".toUri()
         triggerEffect(OpenWebpage(uri))
     }
 
     fun openManageAccount() {
-        val uri = Uri.parse("https://www.zotero.org/settings/account")
+        val uri = "https://www.zotero.org/settings/account".toUri()
         triggerEffect(OpenWebpage(uri))
 
     }

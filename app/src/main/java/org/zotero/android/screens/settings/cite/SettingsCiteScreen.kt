@@ -23,10 +23,7 @@ internal fun SettingsCiteScreen(
     navigateToCiteSearch: (String) -> Unit,
     viewModel: SettingsCiteViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(SettingsCiteViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -45,7 +42,8 @@ internal fun SettingsCiteScreen(
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SettingsCiteTopBar(
                     onBack = onBack,
@@ -55,7 +53,7 @@ internal fun SettingsCiteScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = backgroundColor)
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 item {

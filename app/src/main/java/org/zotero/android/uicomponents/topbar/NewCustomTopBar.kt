@@ -1,16 +1,14 @@
 package org.zotero.android.uicomponents.topbar
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -26,7 +24,6 @@ fun NewCustomTopBar(
     rightContainerContent: List<@Composable (RowScope.() -> Unit)> = emptyList(),
     shouldFillMaxWidth: Boolean = true,
     shouldAddBottomDivider: Boolean = true,
-    backgroundColor: Color = CustomTheme.colors.topBarBackgroundColor,
     leftGuidelineStartPercentage: Float = 0.3f,
     rightGuidelineStartPercentage: Float = 0.3f,
 ) {
@@ -37,7 +34,6 @@ fun NewCustomTopBar(
     ConstraintLayout(
         modifier = modifier
             .height(56.dp)
-            .background(color = backgroundColor)
     ) {
         val (leftContainer, rightContainer, titleContainer, bottomDivider) = createRefs()
 
@@ -109,7 +105,6 @@ fun NewCustomTopBarWithTitleContainer(
     rightContainerContent: List<@Composable (RowScope.() -> Unit)> = emptyList(),
     shouldFillMaxWidth: Boolean = true,
     shouldAddBottomDivider: Boolean = true,
-    backgroundColor: Color = CustomTheme.colors.topBarBackgroundColor
 ) {
     var modifier: Modifier = Modifier
     if (shouldFillMaxWidth) {
@@ -118,7 +113,6 @@ fun NewCustomTopBarWithTitleContainer(
     ConstraintLayout(
         modifier = modifier
             .height(56.dp)
-            .background(color = backgroundColor)
     ) {
         val (leftContainer, rightContainer, titleContainer, bottomDivider) = createRefs()
 

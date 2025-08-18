@@ -11,7 +11,7 @@ import java.util.zip.ZipInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val BUFFER_SIZE = 8192
+private const val BUFFER_SIZE = 8192
 
 @Singleton
 class TranslatorItemsUnzipper @Inject constructor(private val context: Context, private val fileStore: FileStore) {
@@ -40,7 +40,7 @@ class TranslatorItemsUnzipper @Inject constructor(private val context: Context, 
                     }
 
                     // unzip the file
-                    val out: FileOutputStream = FileOutputStream(unzipFile, false)
+                    val out = FileOutputStream(unzipFile, false)
                     val fout = BufferedOutputStream(out, BUFFER_SIZE)
                     try {
                         while (zin.read(buffer, 0, BUFFER_SIZE).also { size = it } != -1) {

@@ -131,7 +131,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
     val doi: String?
         get() {
-            val fieldS = fields.filter { it.key == FieldKeys.Item.doi }.firstOrNull()
+            val fieldS = fields.firstOrNull { it.key == FieldKeys.Item.doi }
             if (fieldS == null) {
                 return null
             }
@@ -141,7 +141,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
     val urlString: String?
         get() {
-            return fields.filter { it.key == FieldKeys.Item.url }.firstOrNull()?.value
+            return fields.firstOrNull { it.key == FieldKeys.Item.url }?.value
         }
 
 //    @Ignore
@@ -345,8 +345,8 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             field.changed = true
         }
 
-        val hasLinkModeField = this.fields.filter { it.key == FieldKeys.Item.Attachment.linkMode }
-            .firstOrNull()?.value == LinkMode.importedFile.name
+        val hasLinkModeField =
+            this.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.value == LinkMode.importedFile.name
 
         if (this.rawType == ItemTypes.attachment && hasLinkModeField) {
             this.attachmentNeedsSync = true

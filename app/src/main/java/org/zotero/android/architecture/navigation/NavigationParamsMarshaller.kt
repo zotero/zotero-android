@@ -32,7 +32,7 @@ class NavigationParamsMarshaller @Inject constructor(
         stringToEncode: String,
         charset: Charset
     ): String {
-        val bytes = IOUtils.toByteArray(stringToEncode);
+        val bytes = IOUtils.toByteArray(stringToEncode)
         val encoded: ByteArray = Base64.encodeBase64(bytes)
         return String(encoded, charset)
     }
@@ -54,7 +54,7 @@ class NavigationParamsMarshaller @Inject constructor(
         encodedJson: String,
         charset: Charset
     ): String {
-        val bytes = IOUtils.toByteArray(encodedJson);
+        val bytes = IOUtils.toByteArray(encodedJson)
         val decodedJson: ByteArray = Base64.decodeBase64(bytes)
         return String(decodedJson, charset)
     }

@@ -1,10 +1,8 @@
 package org.zotero.android.pdf.pdffilter
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +20,6 @@ internal fun PdfFilterNavigation() {
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfFilterDestinations.PDF_FILTER_SCREEN,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         pdfFilterNavScreens(navigation = navigation)
     }

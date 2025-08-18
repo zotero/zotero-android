@@ -1,5 +1,6 @@
 package org.zotero.android.screens.citation.singlecitation
 
+import android.annotation.SuppressLint
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -39,7 +40,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.settings.SettingsDivider
 import org.zotero.android.screens.settings.SettingsSection
 import org.zotero.android.screens.settings.SettingsSectionTitle
@@ -53,14 +53,9 @@ import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 @Composable
 internal fun SingleCitationScreen(
     onBack: () -> Unit,
-    scaffoldModifier: Modifier = Modifier,
     viewModel: SingleCitationViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.zoteroItemDetailSectionBackground
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor
-    ) {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
+    CustomThemeWithStatusAndNavBars {
         val viewState by viewModel.viewStates.observeAsState(SingleCitationViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -79,8 +74,8 @@ internal fun SingleCitationScreen(
             }
         }
         CustomScaffold(
-            modifier = scaffoldModifier,
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
             topBar = {
                 SingleCitationTopBar(
                     onCancelClicked = onBack,
@@ -91,7 +86,7 @@ internal fun SingleCitationScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(backgroundColor)
+                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
@@ -198,6 +193,7 @@ private fun BoxScope.DropDownMenuBox(
     }
 }
 
+@SuppressLint("DiscouragedApi")
 @Composable
 private fun localized(locator: String): String {
     val context = LocalContext.current
@@ -252,7 +248,7 @@ private fun SettingsCitationSwitchItem(
             .heightIn(min = 44.dp)
             .background(CustomTheme.colors.surface)
     ) {
-        androidx.compose.material.Text(
+        Text(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp, end = 0.dp),

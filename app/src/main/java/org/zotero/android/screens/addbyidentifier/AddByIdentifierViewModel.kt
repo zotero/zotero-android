@@ -1,6 +1,5 @@
 package org.zotero.android.screens.addbyidentifier
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,7 +34,6 @@ internal class AddByIdentifierViewModel @Inject constructor(
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
     private val schemaController: SchemaController,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
-    private val context: Context,
     stateHandle: SavedStateHandle,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
 ) : BaseViewModel2<AddByIdentifierViewState, AddByIdentifierViewEffect>(AddByIdentifierViewState()) {
@@ -163,7 +161,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
         if (newText.isEmpty()) {
             newText = scannedText
         } else {
-            newText += ", " + scannedText
+            newText += ", $scannedText"
         }
         updateState {
             copy(identifierText = newText)
@@ -313,15 +311,12 @@ internal class AddByIdentifierViewModel @Inject constructor(
                                 parentKey = translationData.response.key,
                                 libraryId = attachment.first.libraryId
                             )
-                            val updateKind: RemoteAttachmentDownloader.Update.Kind
-                            if (error != null) {
-                                updateKind = RemoteAttachmentDownloader.Update.Kind.failed
+                            val updateKind: RemoteAttachmentDownloader.Update.Kind = if (error != null) {
+                                RemoteAttachmentDownloader.Update.Kind.failed
                             } else if (progress != null) {
-                                updateKind =
-                                    RemoteAttachmentDownloader.Update.Kind.progress(progress)
+                                RemoteAttachmentDownloader.Update.Kind.progress(progress)
                             } else {
-                                updateKind =
-                                    RemoteAttachmentDownloader.Update.Kind.ready(attachment.first)
+                                RemoteAttachmentDownloader.Update.Kind.ready(attachment.first)
                             }
                             return@map LookupRow.attachment(
                                 attachment = attachment.first,

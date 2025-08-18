@@ -1,6 +1,5 @@
 package org.zotero.android.screens.dashboard
 
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -19,12 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.platform.LocalView
 import androidx.core.content.FileProvider
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -46,7 +40,6 @@ import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.files.FileStore
 import org.zotero.android.uicomponents.theme.CustomTheme
-import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
@@ -70,6 +63,7 @@ internal class DashboardActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         KeyboardVisibilityEvent.setEventListener(
             this,
@@ -85,7 +79,7 @@ internal class DashboardActivity : BaseActivity() {
         pickFileLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val uri = result.data?.data
                 EventBus.getDefault()
                     .post(EventBusConstants.FileWasSelected(uri, pickFileCallPoint))

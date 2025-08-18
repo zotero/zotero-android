@@ -9,9 +9,9 @@ sealed class ItemAccessory {
 
     val attachmentGet: Attachment?
         get() {
-            when (this) {
-                is attachment -> return this.attachment
-                is doi, is url -> return null
+            return when (this) {
+                is attachment -> this.attachment
+                is doi, is url -> null
             }
         }
 }

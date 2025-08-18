@@ -3,10 +3,8 @@ package org.zotero.android.architecture.navigation.tablet
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -51,7 +49,6 @@ internal fun DashboardRootTopLevelTabletNavigation(
     ZoteroNavHost(
         navController = navController,
         startDestination = DashboardRootDestinations.DASHBOARD_SCREEN,
-        modifier = Modifier.navigationBarsPadding(), // do not draw behind nav bar
     ) {
         dashboardScreen(
             collectionDefaultValue = collectionDefaultValue,

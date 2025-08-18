@@ -61,6 +61,8 @@ internal fun CreatorEditScreen(
             }
         }
         CustomScaffold(
+            topBarColor = CustomTheme.colors.surface,
+            bottomBarColor = CustomTheme.colors.pdfAnnotationsFormBackground,
             topBar = {
                 CreatorEditTopBar(
                     onCloseClicked = onBack,
@@ -77,8 +79,8 @@ internal fun CreatorEditScreen(
                 item {
                     CreatorEditRowFieldsBlock(
                         viewState = viewState,
-                        layoutType = layoutType,
                         viewModel = viewModel,
+                        layoutType = layoutType,
                         lastNameFocusRequester = lastNameFocusRequester,
                         fullNameFocusRequester = fullNameFocusRequester
                     )

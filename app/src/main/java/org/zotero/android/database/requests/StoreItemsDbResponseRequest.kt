@@ -101,11 +101,7 @@ class StoreItemDbRequest(
             .where<RItem>()
             .key(this.response.key, libraryId)
             .findFirst()
-        if (existing != null) {
-            item = existing
-        } else {
-            item = database.createObject<RItem>()
-        }
+        item = existing ?: database.createObject<RItem>()
 
         if (!this.preferRemoteData) {
             if (item.deleted) {
@@ -253,15 +249,14 @@ class StoreItemDbRequest(
                 val baseKey = keyPair.baseKey
                 if (baseKey != null) {
                     keyCount = allFieldKeys.filter { it.key == keyPair.key }.size
-                    if (keyCount == 1) {
-                        existingFieldFilter = item.fields
+                    existingFieldFilter = if (keyCount == 1) {
+                        item.fields
                             .where()
                             .key(keyPair.key)
                     } else {
-                        existingFieldFilter =
-                            item.fields
-                                .where()
-                                .key(keyPair.key, andBaseKey = baseKey)
+                        item.fields
+                            .where()
+                            .key(keyPair.key, andBaseKey = baseKey)
                     }
                 } else {
                     keyCount = 0

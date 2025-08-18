@@ -186,7 +186,7 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
         }
     }
 
-    private fun CoroutineScope.generateCollectionAndUpdateCollectionsFromDbList(
+    private fun generateCollectionAndUpdateCollectionsFromDbList(
         rCollection: RCollection,
         insertionIndex: Int? = null,
         modificationIndex: Int? = null,
@@ -222,7 +222,7 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
     ) {
         val dbCollectionParentKey = dbCollection.parentKey
         val prevChildrenOrEmpty =
-            childrenBeforeDeletion ?: TreeSet<CollectionTreeNode>(CollectionTreeComparator())
+            childrenBeforeDeletion ?: TreeSet(CollectionTreeComparator())
         if (dbCollectionParentKey == null) {
             nodes.add(
                 CollectionTreeNode(

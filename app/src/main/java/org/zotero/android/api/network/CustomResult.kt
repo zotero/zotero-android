@@ -35,9 +35,7 @@ sealed class CustomResult<out T> {
             override val stringResponse: String?,
         ) : NetworkError(httpCode, stringResponse)
 
-        data class CodeError(val throwable: Throwable) : GeneralError() {
-
-        }
+        data class CodeError(val throwable: Throwable) : GeneralError()
     }
 
     open class GeneralSuccess<out T>(open val value: T?) : CustomResult<T>() {

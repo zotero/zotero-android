@@ -92,13 +92,12 @@ class CrashReporter @Inject constructor(
         return fileStore
             .crashLoggingDirectory()
             .listFiles()
-            ?.sortedBy { it.lastModified() }
-            ?.lastOrNull()
+            ?.maxByOrNull { it.lastModified() }
     }
 
     private fun cleanup() {
         try {
-            FileUtils.deleteDirectory(fileStore.crashLoggingDirectory());
+            FileUtils.deleteDirectory(fileStore.crashLoggingDirectory())
         } catch (error: Exception) {
             Timber.e(error, "CrashLogging: can't delete directory")
         }

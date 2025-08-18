@@ -1,10 +1,12 @@
 package org.zotero.android.helpers
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.internal.closeQuietly
@@ -18,6 +20,7 @@ class GetUriDetailsUseCase @Inject constructor(
     private val application: Application,
     private val dispatcher: CoroutineDispatcher
 ) {
+    @SuppressLint("Range")
     fun getFullName(uri: Uri): String? {
         application.contentResolver.query(
             uri,
@@ -39,13 +42,13 @@ class GetUriDetailsUseCase @Inject constructor(
             val mime = MimeTypeMap.getSingleton()
             extension = mime.getExtensionFromMimeType(application.contentResolver.getType(uri))
         } else {
-            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(File(uri.path)).toString())
+            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(File(uri.path!!)).toString())
         }
         return extension
     }
 
     suspend fun getMimeType(uri: String): MimeType? = withContext(dispatcher) {
-        val contentUri = Uri.parse(uri)
+        val contentUri = uri.toUri()
         application.contentResolver.getType(contentUri)
     }
 

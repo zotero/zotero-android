@@ -1,5 +1,6 @@
 package org.zotero.android.pdfworker.web
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.webkit.ConsoleMessage
@@ -27,6 +28,7 @@ class PdfWorkerWebViewHandler(
     var userAgent: String? = null
     var referrer: String? = null
 
+    @SuppressLint("SetJavaScriptEnabled")
     fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null) {
         uiMainCoroutineScope.launch {
             webView = WebView(context)

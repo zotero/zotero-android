@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.LocalRippleConfiguration
-import androidx.compose.material.RippleConfiguration
-import androidx.compose.material.Text
 import androidx.compose.material.ripple.RippleAlpha
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalRippleConfiguration
+import androidx.compose.material3.RippleConfiguration
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -59,13 +59,13 @@ fun PrimaryButton(
             onClick = { if (!isLoading) onClick() },
             modifier = modifier.heightIn(min = 48.dp),
             enabled = isEnabled,
-            elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
+            elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp),
             shape = CustomTheme.shapes.button,
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = if (!isVisuallyDisabled) backgroundColor else disabledButtonBackground,
+                containerColor = if (!isVisuallyDisabled) backgroundColor else disabledButtonBackground,
                 contentColor = if (!isVisuallyDisabled) contentColor else disabledContentColor,
-                disabledBackgroundColor = disabledButtonBackground,
-                disabledContentColor = disabledContentColor
+                disabledContainerColor = disabledButtonBackground,
+                disabledContentColor = disabledContentColor,
             )
         ) {
             if (isLoading) {

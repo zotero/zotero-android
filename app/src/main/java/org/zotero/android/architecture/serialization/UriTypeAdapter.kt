@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.serialization
 
 import android.net.Uri
+import androidx.core.net.toUri
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -16,7 +17,7 @@ object UriTypeAdapter : JsonDeserializer<Uri>, JsonSerializer<Uri> {
         typeOfT: Type?,
         context: JsonDeserializationContext?
     ): Uri {
-        return Uri.parse(json?.asString.toString())
+        return json?.asString.toString().toUri()
     }
 
     override fun serialize(

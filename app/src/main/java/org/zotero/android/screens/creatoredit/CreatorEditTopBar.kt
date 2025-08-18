@@ -3,7 +3,6 @@ package org.zotero.android.screens.creatoredit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewCustomTopBar
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
@@ -15,7 +14,6 @@ internal fun CreatorEditTopBar(
 ) {
     NewCustomTopBar(
         shouldAddBottomDivider = false,
-        backgroundColor = CustomTheme.colors.surface,
         title = viewState.creator?.localizedType,
         leftContainerContent = listOf {
             NewHeadingTextButton(

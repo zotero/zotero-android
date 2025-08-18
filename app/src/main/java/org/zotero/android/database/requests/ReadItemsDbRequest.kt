@@ -71,10 +71,10 @@ class ReadItemsDbRequest(
                 this.sortType.descriptors.second
             )
         }
-        if (isAsync) {
-            return resultsQuery.findAllAsync()
+        return if (isAsync) {
+            resultsQuery.findAllAsync()
         } else {
-            return resultsQuery.findAll()
+            resultsQuery.findAll()
         }
     }
 

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,10 +24,7 @@ internal fun SettingsDebugLogScreen(
     onBack: () -> Unit,
     viewModel: SettingsDebugLogViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.surface
-    CustomThemeWithStatusAndNavBars(
-        navBarBackgroundColor = backgroundColor,
-    ) {
+    CustomThemeWithStatusAndNavBars {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(SettingsDebugLogViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -36,15 +33,12 @@ internal fun SettingsDebugLogScreen(
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (val consumedEffect = viewEffect?.consume()) {
+            when (viewEffect?.consume()) {
                 null -> Unit
-                else -> {
-
-                }
             }
         }
         CustomScaffold(
-            backgroundColor = CustomTheme.colors.popupBackgroundContent,
+            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 SettingsDebugLogTopBar(
                     onBack = onBack,
@@ -55,7 +49,7 @@ internal fun SettingsDebugLogScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = backgroundColor)
+                    .background(color = CustomTheme.colors.surface)
             ) {
                 item {
                     Spacer(modifier = Modifier.height(10.dp))

@@ -19,18 +19,15 @@ private fun TestedExtension.configure(project: Project) {
     }
 
     project.dependencies.apply {
-//        add("implementation", Libs.Coil.compose)
         add("implementation", Libs.Compose.ui)
         add("implementation", Libs.Compose.uiUtil)
         add("implementation", Libs.Compose.uiTooling)
         add("implementation", Libs.Compose.foundation)
         add("implementation", Libs.Compose.activity)
         add("implementation", Libs.Compose.liveData)
-        add("implementation", Libs.Compose.lifecycle)
         add("implementation", Libs.Compose.navigation)
         add("implementation", Libs.Compose.constraintLayout)
         add("implementation", Libs.Compose.viewBinding)
-        add("implementation", Libs.Compose.material)
         add("implementation", Libs.Compose.material3)
         add("implementation", Libs.Compose.material3WindowSize)
     }

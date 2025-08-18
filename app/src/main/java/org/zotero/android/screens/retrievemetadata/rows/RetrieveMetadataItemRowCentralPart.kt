@@ -1,17 +1,17 @@
 package org.zotero.android.screens.retrievemetadata.rows
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,17 +75,22 @@ internal fun RetrieveMetadataItemRowCentralPart(
 
 @Composable
 private fun LoadingPart() {
-    LinearProgressIndicator(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 8.dp),
-        backgroundColor = Color(0x29787880),
-        color = Color(0xFF1A88FF),
-    )
+            .background(Color(0x29787880)),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .padding(top = 4.dp, bottom = 8.dp),
+            color = Color(0xFF1A88FF),
+        )
+    }
 }
 
 @Composable
-private fun RowScope.ErrorMessagePart(errorMessage: String) {
+private fun ErrorMessagePart(errorMessage: String) {
     Image(
         modifier = Modifier.size(16.dp),
         painter = painterResource(id = Drawables.failure),
@@ -103,7 +108,7 @@ private fun RowScope.ErrorMessagePart(errorMessage: String) {
 }
 
 @Composable
-private fun RowScope.SuccessMessagePart(successMessage: String) {
+private fun SuccessMessagePart(successMessage: String) {
     Image(
         modifier = Modifier.size(16.dp),
         painter = painterResource(id = Drawables.success),

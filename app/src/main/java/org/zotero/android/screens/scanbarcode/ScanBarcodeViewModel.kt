@@ -282,15 +282,12 @@ internal class ScanBarcodeViewModel @Inject constructor(
                                 parentKey = translationData.response.key,
                                 libraryId = attachment.first.libraryId
                             )
-                            val updateKind: RemoteAttachmentDownloader.Update.Kind
-                            if (error != null) {
-                                updateKind = RemoteAttachmentDownloader.Update.Kind.failed
+                            val updateKind: RemoteAttachmentDownloader.Update.Kind = if (error != null) {
+                                RemoteAttachmentDownloader.Update.Kind.failed
                             } else if (progress != null) {
-                                updateKind =
-                                    RemoteAttachmentDownloader.Update.Kind.progress(progress)
+                                RemoteAttachmentDownloader.Update.Kind.progress(progress)
                             } else {
-                                updateKind =
-                                    RemoteAttachmentDownloader.Update.Kind.ready(attachment.first)
+                                RemoteAttachmentDownloader.Update.Kind.ready(attachment.first)
                             }
                             return@map LookupRow.attachment(
                                 attachment = attachment.first,

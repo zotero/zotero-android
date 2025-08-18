@@ -5,7 +5,7 @@ import android.graphics.RectF
 import com.pspdfkit.document.PdfDocument
 import org.zotero.android.ktx.distance
 
-class AnnotationBoundingBoxConverter constructor(
+class AnnotationBoundingBoxConverter(
     val document: PdfDocument,
 ) {
 

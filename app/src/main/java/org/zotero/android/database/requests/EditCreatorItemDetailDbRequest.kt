@@ -23,13 +23,13 @@ class EditCreatorItemDetailDbRequest(
         val item = database.where<RItem>().key(key, libraryId).findFirst() ?: return
 
         val rCreator: RCreator
-        val _creator = item.creators.filter {it.uuid == creator.id.toString()}.firstOrNull()
+        val _creator = item.creators.firstOrNull { it.uuid == creator.id }
 
         if (_creator != null) {
             rCreator = _creator
         } else {
             rCreator = database.createEmbeddedObject(RCreator::class.java, item, "creators")
-            rCreator.uuid = creator.id.toString()
+            rCreator.uuid = creator.id
         }
 
         rCreator.rawType = creator.type
