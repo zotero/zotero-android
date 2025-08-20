@@ -47,6 +47,7 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.zotero.android.pdf.data.PdfReaderTool
+import org.zotero.android.screens.allitems.ExportingAnnotatedPdfLoadingIndicator
 import org.zotero.android.screens.allitems.GeneratingBibliographyLoadingIndicator
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -163,6 +164,9 @@ internal fun PdfReaderPspdfKitBox(
         }
         if (viewState.isGeneratingBibliography) {
             GeneratingBibliographyLoadingIndicator()
+        }
+        if (viewState.isExportingAnnotatedPdf) {
+            ExportingAnnotatedPdfLoadingIndicator()
         }
     }
 }

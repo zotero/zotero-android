@@ -2211,7 +2211,7 @@ class PdfReaderViewModel @Inject constructor(
 //            .disableFormEditing()
 //            .disableAnnotationRotation()
 //            .setSelectedAnnotationResizeEnabled(false)
-            .autosaveEnabled(true)
+            .autosaveEnabled(false)
             .scrollbarsEnabled(true)
             .defaultToolbarEnabled(false)
             .documentTitleOverlayEnabled(false)
@@ -3555,8 +3555,19 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onExportAnnotatedPdf() {
         dismissSharePopup()
-        this.document.saveIfModified()
-        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.dirtyUri.path)))
+        updateState {
+            copy(isExportingAnnotatedPdf = true)
+        }
+        viewModelScope.launch {
+            withContext<Unit>(dispatcher) {
+                this@PdfReaderViewModel.document.saveIfModified()
+            }
+            triggerEffect(PdfReaderViewEffect.ExportPdf(File(this@PdfReaderViewModel.dirtyUri.path)))
+            updateState {
+                copy(isExportingAnnotatedPdf = false)
+            }
+        }
+
     }
 
     override fun dismissSharePopup() {
@@ -3678,7 +3689,8 @@ data class PdfReaderViewState(
     var pdfSettingsArgs: PdfSettingsArgs? = null,
     var showSharePopup: Boolean = false,
     val showSingleCitationScreen: Boolean = false,
-    val isGeneratingBibliography: Boolean = false
+    val isGeneratingBibliography: Boolean = false,
+    val isExportingAnnotatedPdf: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {
