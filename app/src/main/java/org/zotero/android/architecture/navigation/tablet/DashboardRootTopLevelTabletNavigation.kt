@@ -70,6 +70,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
         pdfReaderScreenAndNavigationForTablet(
             onExportPdf = onExportPdf,
             navigation = navigation,
+            navController = navController,
             navigateToTagPickerDialog = navigation::toTagPickerDialog
         )
         tagPickerScreen(onBack = navigation::onBack)

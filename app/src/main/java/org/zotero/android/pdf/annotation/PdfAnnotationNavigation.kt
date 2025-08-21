@@ -8,6 +8,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -20,9 +21,13 @@ internal fun PdfAnnotationNavigation(args: PdfAnnotationArgs, onBack: () -> Unit
         ZoteroNavigation(navController, dispatcher)
     }
 
-    BackHandler(onBack = {
-        onBack()
-    })
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    if (!isTablet) {
+        BackHandler(onBack = {
+            onBack()
+        })
+    }
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfAnnotationDestinatiosn.PDF_ANNOTATION_SCREEN,

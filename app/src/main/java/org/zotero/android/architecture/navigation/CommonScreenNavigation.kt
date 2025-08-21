@@ -2,7 +2,6 @@ package org.zotero.android.architecture.navigation
 
 import android.net.Uri
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.slideInHorizontally
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
@@ -46,8 +45,7 @@ fun NavGraphBuilder.allItemsScreen(
 ) {
     composable(
         route = CommonScreenDestinations.ALL_ITEMS,
-        enterTransition = { EnterTransition.None },
-        popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) }) {
+        enterTransition = { EnterTransition.None }) {
         AllItemsScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
@@ -134,7 +132,7 @@ fun NavGraphBuilder.zoterWebViewScreen(onClose: () -> Unit) {
         arguments = listOf(
             navArgument(ARG_WEBVIEW_URL) { type = NavType.StringType },
         ),
-    ) {backStackEntry ->
+    ) { backStackEntry ->
         val url = backStackEntry.arguments?.getString(ARG_WEBVIEW_URL) ?: return@composable
         ZoteroWebViewScreen(
             url = url,

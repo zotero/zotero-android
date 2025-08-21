@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
@@ -36,6 +37,7 @@ internal const val ARG_PDF_PLAIN_READER_SCREEN = "pdfPlainReaderScreen"
 internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
     onExportPdf: (file: File) -> Unit,
     navigation: ZoteroNavigation,
+    navController: NavHostController,
     navigateToTagPickerDialog: () -> Unit,
 ) {
     pdfScreen(
@@ -67,12 +69,12 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
             navArgument(ARG_PDF_SETTINGS_SCREEN) { type = NavType.StringType },
         ),
     ) {
-        PdfSettingsScreen(args = null, onBack = navigation::onBack)
+        PdfSettingsScreen(args = null, onBack = { navController.popBackStack() })
     }
     dialogDynamicHeight(
         route = PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG,
     ) {
-        SingleCitationScreen(onBack = navigation::onBack)
+        SingleCitationScreen(onBack = { navController.popBackStack() })
     }
     dialogFixedDimens(
         modifier = Modifier
@@ -102,7 +104,7 @@ internal fun NavGraphBuilder.pdfReaderScreenAndNavigationForTablet(
             .width(300.dp),
         route = PdfReaderDestinations.PDF_COLOR_PICKER,
     ) {
-        PdfReaderColorPickerScreen(onBack = navigation::onBack)
+        PdfReaderColorPickerScreen(onBack = { navController.popBackStack() })
     }
     pdfPlainReader(navigation)
 

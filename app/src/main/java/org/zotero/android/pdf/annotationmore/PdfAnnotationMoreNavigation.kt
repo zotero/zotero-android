@@ -8,6 +8,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreArgs
 import org.zotero.android.pdf.annotationmore.editpage.PdfAnnotationEditPageScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -19,9 +20,14 @@ internal fun PdfAnnotationMoreNavigation(args: PdfAnnotationMoreArgs, onBack: ()
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
-    BackHandler(onBack = {
-        onBack()
-    })
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    if (!isTablet) {
+        BackHandler(onBack = {
+            onBack()
+        })
+    }
+
     ZoteroNavHost(
         navController = navController,
         startDestination = PdfAnnotationMoreDestination.PDF_ANNOTATION_MORE_SCREEN,

@@ -87,7 +87,7 @@ internal fun TabletRightPaneNavigation(
         dialogDynamicHeight(
             route = TabletRightPaneDestinations.TAG_PICKER_DIALOG,
         ) {
-            TagPickerScreen(onBack = navigation::onBack)
+            TagPickerScreen(onBack = { navController.popBackStack() })
         }
 
         dialogDynamicHeight(
