@@ -97,6 +97,7 @@ import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileDeletedNotification
+import org.zotero.android.sync.AttachmentFileShareController
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.ItemDetailCreateDataResult
 import org.zotero.android.sync.ItemDetailDataCreator
@@ -137,6 +138,7 @@ class ItemDetailsViewModel @Inject constructor(
     private val fileDownloader: AttachmentDownloader,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
+    private val attachmentFileShareController: AttachmentFileShareController,
     private val fileCleanupController: AttachmentFileCleanupController,
     private val conflictResolutionUseCase: ConflictResolutionUseCase,
     private val dateParser: DateParser,
@@ -1433,6 +1435,9 @@ class ItemDetailsViewModel @Inject constructor(
                 is LongPressOptionItem.MoveToTrashAttachment -> {
                     delete(longPressOptionItem.attachment)
                 }
+                is LongPressOptionItem.ShareAttachmentFile -> {
+                    shareFile(longPressOptionItem.attachment)
+                }
                 is LongPressOptionItem.DeleteAttachmentFile -> {
                     deleteFile(longPressOptionItem.attachment)
                 }
@@ -1480,6 +1485,7 @@ class ItemDetailsViewModel @Inject constructor(
         val actions = mutableListOf<LongPressOptionItem>()
         val attachmentType = attachment.type
         if (attachmentType is Attachment.Kind.file && attachmentType.location == Attachment.FileLocation.local) {
+            actions.add(LongPressOptionItem.ShareAttachmentFile(attachment))
             actions.add(LongPressOptionItem.DeleteAttachmentFile(attachment))
         }
 
@@ -1564,6 +1570,10 @@ class ItemDetailsViewModel @Inject constructor(
         updateState {
             copy(data = data.deepCopy(creatorIds = updatedCreatorIds, creators = updatedCreators))
         }
+    }
+
+    private fun shareFile(attachment: Attachment) {
+        this.attachmentFileShareController.share(attachment)
     }
 
     private fun deleteFile(attachment: Attachment) {

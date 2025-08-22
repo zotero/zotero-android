@@ -42,6 +42,7 @@ import org.zotero.android.screens.sortpicker.data.SortDirectionResult
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.AttachmentFileCleanupController
 import org.zotero.android.sync.AttachmentFileDeletedNotification
+import org.zotero.android.sync.AttachmentFileShareController
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
@@ -59,6 +60,7 @@ class AllItemsProcessor @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val fileDownloader: AttachmentDownloader,
+    private val fileShareController: AttachmentFileShareController,
     private val fileCleanupController: AttachmentFileCleanupController,
 ) {
     private lateinit var processorInterface: AllItemsProcessorInterface
@@ -692,6 +694,15 @@ class AllItemsProcessor @Inject constructor(
                 parentKey = if (attachment.key == key) null else key
             )
         }
+    }
+
+    internal fun shareDownloads(ids: Set<String>) {
+        this.fileShareController.share(
+            AttachmentFileShareController.ShareType.allForItems(
+                keys = ids,
+                libraryId = this.library.identifier
+            )
+        )
     }
 
     internal fun removeDownloads(ids: Set<String>) {
