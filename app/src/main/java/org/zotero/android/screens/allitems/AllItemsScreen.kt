@@ -1,12 +1,7 @@
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,18 +10,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.allitems.bottomsheet.AllItemsAddBottomSheet
 import org.zotero.android.screens.allitems.table.AllItemsTable
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
 @Composable
@@ -51,7 +44,7 @@ internal fun AllItemsScreen(
     navigateToSingleCitation: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -65,9 +58,15 @@ internal fun AllItemsScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen(consumedEffect.screenArgs)
+                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen(
+                    consumedEffect.screenArgs
+                )
+
                 is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails(consumedEffect.screenArgs)
-                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(consumedEffect.screenArgs)
+                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(
+                    consumedEffect.screenArgs
+                )
+
                 is AllItemsViewEffect.ShowPhoneFilterEffect -> {
                     navigateToTagFilter(consumedEffect.params)
                 }
@@ -130,14 +129,20 @@ internal fun AllItemsScreen(
                         lazyListState.scrollToItem(index = 0, scrollOffset = 0)
                     }
                 }
+
                 AllItemsViewEffect.ShowSingleCitationEffect -> {
                     navigateToSingleCitation()
                 }
             }
         }
 
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
+            bottomBar = {
+                AllItemsBottomPanelNew(
+                    viewModel = viewModel,
+                    viewState = viewState,
+                )
+            },
             topBar = {
                 AllItemsTopBar(
                     viewState = viewState,
@@ -160,39 +165,18 @@ internal fun AllItemsScreen(
                     CircularLoading()
                 },
             ) {
-                AllItemsBottomPanel(layoutType, viewState, viewModel)
-                Column(
-                    modifier = Modifier
-                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-                ) {
-                    if (!layoutType.isTablet()) {
-                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
-                            AllItemsSearchBar(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                viewState = viewState,
-                                viewModel = viewModel
-                            )
-                            Spacer(
-                                modifier = Modifier
-                                    .height(16.dp)
-                            )
-                            NewDivider()
-                        }
-                    }
-                    AllItemsTable(
-                        lazyListState = lazyListState,
-                        layoutType = layoutType,
-                        itemCellModels = viewState.itemCellModels,
-                        isEditing = viewState.isEditing,
-                        isRefreshing = viewState.isRefreshing,
-                        isItemSelected = viewState::isSelected,
-                        getItemAccessory = viewState::getAccessoryForItem,
-                        onItemTapped = viewModel::onItemTapped,
-                        onAccessoryTapped = viewModel::onAccessoryTapped,
-                        onItemLongTapped = viewModel::onItemLongTapped,
-                        onStartSync = viewModel::startSync
-                    )
-                }
+                AllItemsTable(
+                    lazyListState = lazyListState,
+                    itemCellModels = viewState.itemCellModels,
+                    isEditing = viewState.isEditing,
+                    isRefreshing = viewState.isRefreshing,
+                    isItemSelected = viewState::isSelected,
+                    getItemAccessory = viewState::getAccessoryForItem,
+                    onItemTapped = viewModel::onItemTapped,
+                    onAccessoryTapped = viewModel::onAccessoryTapped,
+                    onItemLongTapped = viewModel::onItemLongTapped,
+                    onStartSync = viewModel::startSync
+                )
 
                 val itemsError = viewState.error
                 if (itemsError != null) {
@@ -204,22 +188,22 @@ internal fun AllItemsScreen(
                         deleteItemsFromCollection = { viewModel.deleteItemsFromCollection(it) },
                     )
                 }
-                val bottomSheetTitle = stringResource(id = Strings.item_type)
-                AllItemsAddBottomSheet(
-                    onScanBarcode = viewModel::onScanBarcode,
-                    onAddFile = onPickFile,
-                    onAddNote = viewModel::onAddNote,
-                    onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
-                    onAddByIdentifier = viewModel::onAddByIdentifier,
-                    onClose = viewModel::onAddBottomSheetCollapse,
-                    showBottomSheet = viewState.shouldShowAddBottomSheet
-                )
 
                 if (viewState.isGeneratingBibliography) {
                     GeneratingBibliographyLoadingIndicator()
                 }
             }
         }
+        val bottomSheetTitle = stringResource(id = Strings.item_type)
+        AllItemsAddBottomSheet(
+            onScanBarcode = viewModel::onScanBarcode,
+            onAddFile = onPickFile,
+            onAddNote = viewModel::onAddNote,
+            onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
+            onAddByIdentifier = viewModel::onAddByIdentifier,
+            onClose = viewModel::onAddBottomSheetCollapse,
+            showBottomSheet = viewState.shouldShowAddBottomSheet
+        )
 
     }
 }

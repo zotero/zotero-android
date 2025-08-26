@@ -39,7 +39,7 @@
 
     <string name="items.action.retrieve_metadata">Retrieve Metadata</string>
 
-    <string name="retrieve_metadata_dialog_title">Metadata Retrieval</string>
+    <string name="retrieve_metadata_dialog_title">Retrieve Metadata</string>
     <string name="retrieve_metadata_status_no_results">Status: recognition yielded no results</string>
 
     <string name="retrieve_metadata_error_failed_to_initialize">Failed to initialize</string>
@@ -53,4 +53,23 @@
     <string name="settings_cite_remove_style">Remove Style</string>
 
     <string name="items_generating_annotated_pdf">Generating Annotated PDF</string>
+
+    <string name="onboarding_access_tagline">Organize research\nhowever you want</string>
+    <string name="onboarding_access_description">Sort your items into collections\nand tag them with keywords.</string>
+
+    <string name="onboarding_annotate_tagline">Highlight and take notes</string>
+    <string name="onboarding_annotate_description">Annotate directly in your PDFs as you read them.</string>
+
+    <string name="onboarding_sync_tagline">Synchronize and collaborate\nacross devices</string>
+    <string name="onboarding_sync_description">Keep your reading and notes seamlessly up to date.</string>
+
+    <string name="onboarding_share_tagline">Tap to collect</string>
+    <string name="onboarding_share_description">Save articles and books directly from the web,\nincluding their PDFs and full metadata.</string>
+
+    <string name="collection_edit_parent">Parent</string>
+
+    <string name="page_number">Page Number</string>
+    <string name="edit_creator">Edit %s</string>
+    <string name="add_creator">Add %s</string>
+
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -136,7 +137,7 @@ private fun BoxScope.Set(progress: Int?, showsStop: Boolean) {
     val isHidden = progress == null
     if (showsStop) {
         if (!isHidden) {
-            val color = CustomTheme.colors.zoteroDefaultBlue
+            val color = MaterialTheme.colorScheme.primary
             Canvas(
                 Modifier
                     .size(8.dp)
@@ -152,7 +153,7 @@ private fun BoxScope.Set(progress: Int?, showsStop: Boolean) {
         val progressFloat = if (progress == null) 0f else progress / 100f
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.Center),
-            color = CustomTheme.colors.zoteroDefaultBlue,
+            color = MaterialTheme.colorScheme.primary,
             strokeWidth = 1.dp,
             trackColor = CustomPalette.CoolGray,
             progress = { progressFloat }

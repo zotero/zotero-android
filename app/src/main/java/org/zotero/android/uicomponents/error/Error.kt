@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.PrimaryButton
-import org.zotero.android.uicomponents.button.PrimaryButtonSmall
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -65,34 +64,6 @@ fun FullScreenError(
                     .padding(top = 28.dp),
                 text = errorButtonText,
                 onClick = { errorAction() },
-            )
-        }
-    }
-}
-
-@Composable
-fun SectionError(
-    modifier: Modifier = Modifier,
-    errorDescription: String = stringResource(Strings.error_list_load_body),
-    errorButtonText: String = stringResource(Strings.error_list_load_refresh),
-    errorAction: (() -> Unit)? = null,
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        ErrorIcon()
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = errorDescription,
-            textAlign = TextAlign.Center
-        )
-        if (errorButtonText.isNotBlank() && errorAction != null) {
-            PrimaryButtonSmall(
-                modifier = Modifier.padding(top = 20.dp),
-                text = errorButtonText,
-                onClick = { errorAction() },
-                backgroundColor = CustomTheme.colors.zoteroDefaultBlue
             )
         }
     }

@@ -1,205 +1,21 @@
 package org.zotero.android.screens.allitems
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.downloadedfiles.DownloadedFilesPopup
-import org.zotero.android.uicomponents.Drawables
-import org.zotero.android.uicomponents.icon.IconWithPadding
-import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-internal fun BoxScope.AllItemsBottomPanel(
-    layoutType: CustomLayoutSize.LayoutType,
+internal fun AllItemsBottomPanelNew(
+    viewModel: AllItemsViewModel,
     viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel
 ) {
-    val commonModifier = Modifier
-        .fillMaxWidth()
-        .height(layoutType.calculateAllItemsBottomPanelHeight())
-        .align(Alignment.BottomStart)
-    if (viewState.selectedKeys != null) {
-        EditingBottomPanel(
-            modifier = commonModifier,
-            viewState = viewState,
+    if (viewState.isEditing) {
+        AllItemsEditingBottomPanel(
             viewModel = viewModel,
+            viewState = viewState,
         )
     } else {
-        BottomPanel(
-            modifier = commonModifier,
+        AllItemsRegularBottomPanel(
             viewModel = viewModel,
             viewState = viewState,
         )
-    }
-}
-
-@Composable
-private fun EditingBottomPanel(
-    viewState: AllItemsViewState,
-    viewModel: AllItemsViewModel,
-    modifier: Modifier,
-) {
-    Column(modifier = modifier) {
-        NewDivider()
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val isRestoreAndDeleteEnabled = viewState.isAnythingSelected()
-            if (viewState.isCollectionTrash) {
-                IconWithPadding(
-                    drawableRes = Drawables.restore_trash,
-                    isEnabled = isRestoreAndDeleteEnabled,
-                    tintColor = if (isRestoreAndDeleteEnabled) {
-                        CustomTheme.colors.zoteroDefaultBlue
-                    } else {
-                        CustomTheme.colors.disabledContent
-                    },
-                    onClick = viewModel::onRestore
-                )
-                IconWithPadding(
-                    drawableRes = Drawables.delete_24px,
-                    isEnabled = isRestoreAndDeleteEnabled,
-                    tintColor = if (isRestoreAndDeleteEnabled) {
-                        CustomTheme.colors.zoteroDefaultBlue
-                    } else {
-                        CustomTheme.colors.disabledContent
-                    },
-                    onClick = {
-                        viewModel.onDelete()
-                    }
-                )
-
-                DownloadAndRemoveAttachmentBlock(
-                    viewModel = viewModel,
-                    isRestoreAndDeleteEnabled = isRestoreAndDeleteEnabled
-                )
-            } else {
-                IconWithPadding(
-                    drawableRes = Drawables.create_new_folder_24px,
-                    isEnabled = isRestoreAndDeleteEnabled,
-                    tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
-                    onClick = {
-                        viewModel.onAddToCollection()
-                    }
-                )
-                if(viewState.isCollectionACollection) {
-                    IconWithPadding(
-                        drawableRes = Drawables.remove_from_collection,
-                        isEnabled = isRestoreAndDeleteEnabled,
-                        tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
-                        onClick = {
-                            viewModel.showRemoveFromCollectionQuestion()
-                        }
-                    )
-                }
-
-                IconWithPadding(
-                    drawableRes = Drawables.delete_24px,
-                    isEnabled = isRestoreAndDeleteEnabled,
-                    tintColor = if (isRestoreAndDeleteEnabled) CustomTheme.colors.zoteroDefaultBlue else CustomTheme.colors.disabledContent,
-                    onClick = {
-                        viewModel.onTrash()
-                    }
-                )
-
-                DownloadAndRemoveAttachmentBlock(
-                    viewModel = viewModel,
-                    isRestoreAndDeleteEnabled = isRestoreAndDeleteEnabled
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DownloadAndRemoveAttachmentBlock(
-    viewModel: AllItemsViewModel,
-    isRestoreAndDeleteEnabled: Boolean
-) {
-    IconWithPadding(
-        isEnabled = isRestoreAndDeleteEnabled,
-        drawableRes = Drawables.download_24px,
-        tintColor = if (isRestoreAndDeleteEnabled) {
-            CustomTheme.colors.zoteroDefaultBlue
-        } else {
-            CustomTheme.colors.disabledContent
-        },
-        onClick = {
-            viewModel.onDownloadSelectedAttachments()
-        }
-    )
-    IconWithPadding(
-        isEnabled = isRestoreAndDeleteEnabled,
-        drawableRes = Drawables.file_download_off_24px,
-        tintColor = if (isRestoreAndDeleteEnabled) {
-            CustomTheme.colors.zoteroDefaultBlue
-        } else {
-            CustomTheme.colors.disabledContent
-        },
-        onClick = {
-            viewModel.onRemoveSelectedAttachments()
-        }
-    )
-}
-
-@Composable
-private fun BottomPanel(
-    modifier: Modifier,
-    viewModel: AllItemsViewModel,
-    viewState: AllItemsViewState,
-) {
-    Box(
-        modifier = modifier
-    ) {
-        NewDivider(modifier = Modifier.align(Alignment.TopStart))
-
-        IconWithPadding(
-            modifier = Modifier
-                .padding(end = 20.dp)
-                .align(Alignment.CenterEnd),
-            drawableRes = Drawables.swap_vert_24px,
-            onClick = {
-                viewModel.showSortPicker()
-            }
-        )
-        Box {
-            if (viewState.showDownloadedFilesPopup) {
-                DownloadedFilesPopup(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                )
-            }
-
-            val filterDrawable =
-                if (viewState.filters.isEmpty()) {
-                    Drawables.filter_list_off_24px
-                } else {
-                    Drawables.filter_list_24px
-                }
-            IconWithPadding(
-                modifier = Modifier
-                    .padding(start = 20.dp)
-                    .align(Alignment.CenterStart),
-                drawableRes = filterDrawable,
-                onClick = {
-                    viewModel.showFilters()
-                }
-            )
-        }
-
     }
 }

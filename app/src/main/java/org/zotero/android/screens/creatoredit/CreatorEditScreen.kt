@@ -1,9 +1,6 @@
 package org.zotero.android.screens.creatoredit
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,17 +9,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
-import org.zotero.android.uicomponents.theme.CustomPalette
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.screens.creatoredit.dialogs.CreatorEditCreatorTypeDialog
+import org.zotero.android.screens.creatoredit.dialogs.CreatorEditDeleteCreatorDialog
+import org.zotero.android.screens.creatoredit.rows.CreatorEditDeleteCreatorRow
+import org.zotero.android.screens.creatoredit.rows.CreatorEditRowFieldsBlock
+import org.zotero.android.screens.creatoredit.rows.CreatorEditToggleNamePresentationRow
+import org.zotero.android.screens.settings.elements.NewSettingsDivider
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun CreatorEditScreen(
@@ -30,8 +26,7 @@ internal fun CreatorEditScreen(
     navigateToSinglePickerScreen: () -> Unit,
     viewModel: CreatorEditViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
-
+    AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CreatorEditViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -60,12 +55,10 @@ internal fun CreatorEditScreen(
                 }
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.surface,
-            bottomBarColor = CustomTheme.colors.pdfAnnotationsFormBackground,
+        CustomScaffoldM3(
             topBar = {
                 CreatorEditTopBar(
-                    onCloseClicked = onBack,
+                    onBack = onBack,
                     onSave = viewModel::onSave,
                     viewState = viewState,
                 )
@@ -74,7 +67,6 @@ internal fun CreatorEditScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.pdfAnnotationsFormBackground)
             ) {
                 item {
                     CreatorEditRowFieldsBlock(
@@ -84,35 +76,19 @@ internal fun CreatorEditScreen(
                         lastNameFocusRequester = lastNameFocusRequester,
                         fullNameFocusRequester = fullNameFocusRequester
                     )
-                    Box(modifier = Modifier.background(CustomTheme.colors.surface)) {
-                        NewDivider(modifier = Modifier.padding(start = 16.dp))
-                    }
                     CreatorEditToggleNamePresentationRow(viewModel, viewState)
                     if (viewState.isEditing) {
-                        CreatorEditSpacerBlock()
+                        NewSettingsDivider()
                         CreatorEditDeleteCreatorRow(viewModel, viewState)
-                    } else {
-                        NewDivider()
                     }
                 }
 
             }
             if (viewState.shouldShowDeleteConfirmation) {
-                CustomAlertDialog(
-                    title = stringResource(id = Strings.warning),
-                    description = stringResource(
-                        id = Strings.creator_editor_delete_confirmation),
-                    primaryAction = CustomAlertDialog.ActionConfig(
-                        text = stringResource(id = Strings.cancel),
-                        onClick = viewModel::onDismissDeleteConformation
-                    ),
-                    secondaryAction = CustomAlertDialog.ActionConfig(
-                        text = stringResource(id = Strings.delete),
-                        textColor = CustomPalette.ErrorRed,
-                        onClick = { viewModel.deleteCreator() }
-                    ),
-                    onDismiss = viewModel::onDismissDeleteConformation
-                )
+                CreatorEditDeleteCreatorDialog(viewModel = viewModel)
+            }
+            if (viewState.showChooserDialog) {
+                CreatorEditCreatorTypeDialog(viewModel = viewModel, viewState = viewState)
             }
         }
 

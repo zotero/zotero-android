@@ -1,6 +1,5 @@
 package org.zotero.android.screens.addbyidentifier.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,16 +13,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewEffect
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewModel
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewState
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.screens.addbyidentifier.topbar.AddByIdentifierCloseAndCancelAllTopBar
+import org.zotero.android.screens.addbyidentifier.topbar.AddByIdentifierTopBar
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun AddByIdentifierScreen(
     viewModel: AddByIdentifierViewModel = hiltViewModel(),
     onClose: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val viewState by viewModel.viewStates.observeAsState(AddByIdentifierViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -38,9 +38,7 @@ internal fun AddByIdentifierScreen(
                 else -> {}
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
-            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
+        CustomScaffoldM3(
             topBar = {
                 when (viewState.lookupState) {
                     AddByIdentifierViewModel.State.loadingIdentifiers,
@@ -56,7 +54,6 @@ internal fun AddByIdentifierScreen(
 
                     else -> {
                         AddByIdentifierTopBar(
-                            title = null,
                             onCancel = onClose,
                             onLookup = viewModel::onLookup
                         )
@@ -68,7 +65,6 @@ internal fun AddByIdentifierScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
                     .padding(horizontal = 16.dp)
             ) {
                 when (viewState.lookupState) {

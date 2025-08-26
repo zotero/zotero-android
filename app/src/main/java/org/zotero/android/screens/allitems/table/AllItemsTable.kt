@@ -9,14 +9,12 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.screens.allitems.table.rows.ItemRow
 
 @Composable
 internal fun AllItemsTable(
     lazyListState: LazyListState,
-    layoutType: CustomLayoutSize.LayoutType,
     itemCellModels: SnapshotStateList<ItemCellModel>,
     isItemSelected: (key: String) -> Boolean,
     getItemAccessory: (itemKey: String) -> ItemCellModel.Accessory?,
@@ -42,8 +40,6 @@ internal fun AllItemsTable(
                     ItemRow(
                         cellModel = item,
                         itemAccessory = getItemAccessory(item.key),
-                        layoutType = layoutType,
-                        showBottomDivider = index != itemCellModels.size - 1,
                         isEditing = isEditing,
                         onItemTapped = onItemTapped,
                         onItemLongTapped = onItemLongTapped,

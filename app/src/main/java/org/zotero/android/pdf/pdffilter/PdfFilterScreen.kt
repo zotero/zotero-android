@@ -1,7 +1,6 @@
 package org.zotero.android.pdf.pdffilter
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -20,12 +19,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun PdfFilterScreen(
@@ -35,10 +32,9 @@ internal fun PdfFilterScreen(
 ) {
     viewModel.init()
 
-    val layoutType = CustomLayoutSize.calculateLayoutType()
     val viewState by viewModel.viewStates.observeAsState(PdfFilterViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    AppThemeM3(darkTheme = viewState.isDark) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
                 null -> Unit
@@ -51,17 +47,16 @@ internal fun PdfFilterScreen(
                 }
             }
         }
-        CustomScaffold(
+        CustomScaffoldM3(
             topBar = {
                 PdfFilterScreenTopBar(
-                    onClose = viewModel::onClose,
+                    onBack = viewModel::onClose,
                     onClear = if (viewState.isClearVisible()) viewModel::onClear else null
                 )
             },
         ) {
             Column(
                 modifier = Modifier
-                    .background(color = CustomTheme.colors.surface)
             ) {
                 LazyRow(
                     modifier = Modifier.align(CenterHorizontally),
@@ -78,7 +73,6 @@ internal fun PdfFilterScreen(
                 PdfFilterTagsListAndSelect(
                     viewState = viewState,
                     viewModel = viewModel,
-                    layoutType = layoutType
                 )
             }
         }

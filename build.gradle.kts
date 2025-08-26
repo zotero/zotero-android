@@ -59,7 +59,8 @@ allprojects {
                     "-Xopt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
                     "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
                     "-Xopt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-                    "-Xopt-in=androidx.media3.common.util.UnstableApi"
+                    "-Xopt-in=androidx.media3.common.util.UnstableApi",
+                    "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi"
                 )
 
             )

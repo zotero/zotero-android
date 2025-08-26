@@ -1,25 +1,38 @@
 package org.zotero.android.screens.settings.debug
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Plurals
-import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.quantityStringResource
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun SettingsDebugLogTopBar(
     onBack: () -> Unit,
     numberOfLines: Int,
 ) {
-    NewCustomTopBar(
-        title = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onBack,
-                text = stringResource(Strings.back_button),
+    TopAppBar(
+        title = {
+            Text(
+                text = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
             )
-        }
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
     )
+
 }

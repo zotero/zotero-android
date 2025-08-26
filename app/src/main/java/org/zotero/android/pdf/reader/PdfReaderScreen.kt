@@ -3,9 +3,7 @@ package org.zotero.android.pdf.reader
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,11 +21,16 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
 import org.zotero.android.pdf.annotationmore.sidebar.PdfAnnotationMoreNavigationView
+import org.zotero.android.pdf.reader.modes.PdfReaderPhoneMode
+import org.zotero.android.pdf.reader.modes.PdfReaderTabletMode
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewModel
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
+import org.zotero.android.pdf.reader.topbar.PdfReaderSearchTopBar
+import org.zotero.android.pdf.reader.topbar.PdfReaderTopBar
 import org.zotero.android.pdf.settings.sidebar.PdfCopyCitationView
 import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
 @Composable
@@ -55,10 +58,11 @@ internal fun PdfReaderScreen(
                 currentView.keepScreenOn = false
                 viewModel.onStop(activity.isChangingConfigurations)
             }
+
             else -> {}
         }
     }
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    AppThemeM3(darkTheme = viewState.isDark) {
         val window = activity.window
         val decorView = window.decorView
         val systemBars = WindowInsetsCompat.Type.systemBars()
@@ -80,9 +84,11 @@ internal fun PdfReaderScreen(
                 is PdfReaderViewEffect.NavigateBack -> {
                     onBack()
                 }
+
                 is PdfReaderViewEffect.DisableForceScreenOn -> {
                     currentView.keepScreenOn = false
                 }
+
                 is PdfReaderViewEffect.EnableForceScreenOn -> {
                     currentView.keepScreenOn = true
                 }
@@ -138,80 +144,98 @@ internal fun PdfReaderScreen(
                     viewModel.removeFragment()
                     navigateToPdfPlainReader(consumedEffect.params)
                 }
+
                 is PdfReaderViewEffect.ShowPdfColorPicker -> {
                     if (!layoutType.isTablet()) {
                         viewModel.removeFragment()
                     }
                     navigateToPdfColorPicker()
                 }
+
                 is PdfReaderViewEffect.ClearFocus -> {
                     focusManager.clearFocus()
                 }
+
                 is PdfReaderViewEffect.NavigateToTagPickerScreen -> {
                     navigateToTagPicker()
                 }
+
                 is PdfReaderViewEffect.ExportPdf -> {
                     onExportPdf(consumedEffect.file)
                 }
+
                 else -> {}
             }
         }
 
-        CustomScaffold(
+        val pdfReaderSearchViewModel: PdfReaderSearchViewModel = hiltViewModel()
+        val pdfReaderSearchViewState by pdfReaderSearchViewModel.viewStates.observeAsState(
+            PdfReaderSearchViewState()
+        )
+
+        CustomScaffoldM3(
             modifier = Modifier.pointerInteropFilter {
                 when (it.action) {
                     MotionEvent.ACTION_DOWN -> viewModel.restartDisableForceScreenOnTimer()
                 }
                 false
             },
-            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
                     label = ""
                 ) { isTopBarVisible ->
                     if (isTopBarVisible) {
-                        PdfReaderTopBar(
-                            onBack = onBack,
-                            onShowHideSideBar = viewModel::toggleSideBar,
-                            onShareButtonTapped = viewModel::onShareButtonTapped,
-                            toPdfSettings = viewModel::navigateToPdfSettings,
-                            toPdfPlainReader = viewModel::navigateToPlainReader,
-                            showPdfSearch = viewState.showPdfSearch,
-                            toggleToolbarButton = viewModel::toggleToolbarButton,
-                            isToolbarButtonSelected = viewState.showCreationToolbar,
-                            showSideBar = viewState.showSideBar,
-                            onShowHidePdfSearch = viewModel::togglePdfSearch,
-                            viewModel = viewModel,
-                            viewState = viewState
-                        )
+                        if (viewState.showPdfSearch && !layoutType.isTablet()) {
+                            PdfReaderSearchTopBar(
+                                viewState = pdfReaderSearchViewState,
+                                viewModel = pdfReaderSearchViewModel,
+                                togglePdfSearch = viewModel::togglePdfSearch
+                            )
+                        } else {
+                            PdfReaderTopBar(
+                                onBack = onBack,
+                                onShowHideSideBar = viewModel::toggleSideBar,
+                                onShareButtonTapped = viewModel::onShareButtonTapped,
+                                toPdfSettings = viewModel::navigateToPdfSettings,
+                                toPdfPlainReader = viewModel::navigateToPlainReader,
+                                showPdfSearch = viewState.showPdfSearch,
+                                toggleToolbarButton = viewModel::toggleToolbarButton,
+                                isToolbarButtonSelected = viewState.showCreationToolbar,
+                                showSideBar = viewState.showSideBar,
+                                onShowHidePdfSearch = viewModel::togglePdfSearch,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                pdfReaderSearchViewState = pdfReaderSearchViewState,
+                                pdfReaderSearchViewModel = pdfReaderSearchViewModel,
+                            )
+                        }
                     }
                 }
 
             },
         ) {
-            Box(modifier = Modifier.background(CustomTheme.colors.pdfAnnotationsTopbarBackground)) {
-                if (layoutType.isTablet()) {
-                    PdfReaderTabletMode(
-                        vMInterface = viewModel,
-                        viewState = viewState,
-                        annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState = thumbnailsLazyListState,
-                        layoutType = layoutType,
-                        uri = uri,
-                    )
-                } else {
-                    PdfReaderPhoneMode(
-                        viewState = viewState,
-                        vMInterface = viewModel,
-                        annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState = thumbnailsLazyListState,
-                        layoutType = layoutType,
-                        uri = uri,
-                    )
-                }
+            if (layoutType.isTablet()) {
+                PdfReaderTabletMode(
+                    vMInterface = viewModel,
+                    viewState = viewState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
+                    layoutType = layoutType,
+                    uri = uri,
+                )
+            } else {
+                PdfReaderPhoneMode(
+                    viewState = viewState,
+                    vMInterface = viewModel,
+                    pdfReaderSearchViewModel = pdfReaderSearchViewModel,
+                    pdfReaderSearchViewState = pdfReaderSearchViewState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
+                    layoutType = layoutType,
+                    uri = uri,
+                )
             }
-
         }
         PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)

@@ -52,15 +52,7 @@
     <string name="migration_debug">App failed to initialize and can’t function properly. Please report Debug ID %s in the Zotero Forums.</string>
     <string name="login_debug">App failed to log in. Please log in again and report Debug ID %s in the Zotero Forums.</string>
     <string name="day_suffixes">st,nd,rd,th</string>
-    <string name="onboarding.access">
-		<annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
-    <string name="onboarding.sync">
-		<annotation font="bold">Synchronize and collaborate</annotation> across devices, keeping your reading and notes seamlessly up to date.</string>
-    <string name="onboarding.annotate">
-		<annotation font="bold">Highlight and take notes</annotation> directly in your PDFs as you read them.</string>
-    <string name="onboarding.share">
-		<annotation font="bold">Tap to collect</annotation> articles and books directly from the web, including their PDFs and full metadata.</string>
-    <string name="onboarding.sign_in">Sign In</string>
+    <string name="onboarding.sign_in">Log in</string>
     <string name="onboarding.create_account">Sign Up</string>
     <string name="login.username">Username</string>
     <string name="login.password">Password</string>
@@ -179,7 +171,7 @@
     <string name="item_detail.deleted_message">This item has been deleted. Do you want to restore it?</string>
     <string name="item_detail.move_to_standalone_attachment">Move to Standalone Attachment</string>
     <string name="tag_picker.title">%d selected</string>
-    <string name="tag_picker.placeholder">Tag name</string>
+    <string name="tag_picker.placeholder">Search Tags</string>
     <string name="tag_picker.create_tag">Create Tag “%s”</string>
     <string name="tag_picker.confirm_deletion_question">Delete Automatic Tags</string>
     <string name="tag_picker.search_placeholder">Search Tags</string>
@@ -192,7 +184,7 @@
     <string name="creator_editor.last_name">Last Name</string>
     <string name="creator_editor.switch_to_single">Switch to single field</string>
     <string name="creator_editor.switch_to_dual">Switch to two fields</string>
-    <string name="creator_editor.delete_confirmation">Do you really want to delete this creator?</string>
+    <string name="creator_editor.delete_confirmation">Are you sure you want to delete this creator?</string>
     <string name="pdf.annotations_sidebar.search_title">Search</string>
     <string name="pdf.annotations_sidebar.add_comment">Add comment</string>
     <string name="pdf.annotations_sidebar.add_tags">Add tags</string>
@@ -309,7 +301,7 @@
     <string name="settings.saving.tags_message">Automatically tag items with keywords and subject headings</string>
     <string name="settings.cite.title">Cite</string>
     <string name="settings.cite.styles_title">Citation Styles</string>
-    <string name="settings.cite.get_more_styles">Get additional styles</string>
+    <string name="settings.cite.get_more_styles">Get Additional Styles</string>
     <string name="settings.cite_search.search_title">Search styles</string>
     <string name="settings.export.title">Quick Copy</string>
     <string name="settings.export.default_format">Default Format</string>

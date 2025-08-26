@@ -1,27 +1,38 @@
 package org.zotero.android.pdf.reader.plainreader
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
+import org.zotero.android.uicomponents.Drawables
 
 @Composable
 internal fun PdfPlainReaderTopBar(
     onBack: () -> Unit,
     title: String,
 ) {
-    NewCustomTopBar(
-        title = title,
-        leftGuidelineStartPercentage = 0.2f,
-        rightGuidelineStartPercentage = 0.05f,
-        leftContainerContent = listOf(
-            {
-                NewHeadingTextButton(
-                    onClick = onBack,
-                    text = stringResource(Strings.back_button),
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
-            },
-        )
+            }
+        },
     )
 }

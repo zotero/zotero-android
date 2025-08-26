@@ -1,7 +1,6 @@
 package org.zotero.android.pdf.colorpicker
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -30,13 +30,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.theme.CustomPalette
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.util.Locale
 
 @Composable
@@ -48,14 +46,14 @@ internal fun PdfReaderColorPickerScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfReaderColorPickerViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    AppThemeM3(darkTheme = viewState.isDark) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
                 PdfReaderColorPickerViewEffect.NavigateBack -> onBack()
                 null -> Unit
             }
         }
-        CustomScaffold(
+        CustomScaffoldM3(
             topBar = {
                 PdfReaderColorPickerTopBar(
                     onDone = onBack,
@@ -64,39 +62,35 @@ internal fun PdfReaderColorPickerScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(0.7f)
-                    .background(color = CustomTheme.colors.surface),
+                    .fillMaxHeight(0.7f).fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
             ) {
                 ColorPicker(viewState, viewModel)
                 val size = viewState.size
                 if (size != null) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    val layoutType = CustomLayoutSize.calculateLayoutType()
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             modifier = Modifier.padding(horizontal = 10.dp),
                             text = stringResource(id = Strings.size),
-                            color = CustomTheme.colors.pdfSizePickerColor,
-                            style = CustomTheme.typography.default,
-                            fontSize = layoutType.calculatePdfSidebarTextSize(),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyLarge,
                         )
                         Slider(
                             modifier = Modifier.weight(1f),
                             value = size,
                             onValueChange = { viewModel.onSizeChanged(it) },
                             colors = SliderDefaults.colors(
-                                activeTrackColor = CustomTheme.colors.zoteroDefaultBlue,
-                                thumbColor = CustomTheme.colors.zoteroDefaultBlue
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                thumbColor = MaterialTheme.colorScheme.primary,
                             ),
                             valueRange = 0.5f..25f
                         )
                         Text(
                             modifier = Modifier.padding(horizontal = 10.dp),
                             text = String.format(Locale.getDefault(), "%.1f", size),
-                            color = CustomTheme.colors.pdfSizePickerColor,
-                            style = CustomTheme.typography.default,
-                            fontSize = layoutType.calculatePdfSidebarTextSize(),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyLarge,
                         )
                     }
                 }

@@ -30,5 +30,8 @@ private fun TestedExtension.configure(project: Project) {
         add("implementation", Libs.Compose.viewBinding)
         add("implementation", Libs.Compose.material3)
         add("implementation", Libs.Compose.material3WindowSize)
+
+        //TODO remove after transition to M3 Expressive is done, this is just helper icons for M3 sample UI components.
+        add("implementation", "androidx.compose.material:material-icons-extended:1.7.7")
     }
 }

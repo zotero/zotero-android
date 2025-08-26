@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,10 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.textinput.CustomTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun PdfAnnotationEditPageScreen(
@@ -31,8 +31,8 @@ internal fun PdfAnnotationEditPageScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfAnnotationEditPageViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    CustomThemeWithStatusAndNavBars(
-        isDarkTheme = viewState.isDark,
+    AppThemeM3(
+        darkTheme = viewState.isDark,
     ) {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
@@ -44,9 +44,9 @@ internal fun PdfAnnotationEditPageScreen(
             }
         }
 
-        CustomScaffold(
+        CustomScaffoldM3(
             modifier = Modifier.fillMaxSize(),
-            topBarColor = CustomTheme.colors.zoteroEditFieldBackground,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
             topBar = {
                 PdfAnnotationEditPageTopBar(viewModel)
             },
@@ -67,14 +67,13 @@ private fun PdfAnnotationEditPagePart(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CustomTheme.colors.pdfAnnotationsFormBackground)
     ) {
         Spacer(modifier = Modifier.height(40.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(44.dp)
-                .background(CustomTheme.colors.zoteroEditFieldBackground),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.CenterStart
         ) {
             CustomTextField(
@@ -85,7 +84,8 @@ private fun PdfAnnotationEditPagePart(
                 value = viewState.pageLabel,
                 hint = "",
                 onValueChange = viewModel::onValueChange,
-                textStyle = CustomTheme.typography.newBody,
+                textColor = MaterialTheme.colorScheme.onSurface,
+                textStyle = MaterialTheme.typography.bodyLarge,
             )
         }
     }

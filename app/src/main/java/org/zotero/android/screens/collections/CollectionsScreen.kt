@@ -14,14 +14,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.filter.FilterScreenTablet
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun CollectionsScreen(
@@ -31,7 +30,7 @@ internal fun CollectionsScreen(
     navigateToCollectionEdit: () -> Unit,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
 
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
@@ -46,7 +45,10 @@ internal fun CollectionsScreen(
             when (consumedEffect) {
                 null -> Unit
                 CollectionsViewEffect.NavigateBack -> onBack()
-                is CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems(consumedEffect.screenArgs)
+                is CollectionsViewEffect.NavigateToAllItemsScreen -> navigateToAllItems(
+                    consumedEffect.screenArgs
+                )
+
                 CollectionsViewEffect.ShowCollectionEditEffect -> {
                     navigateToCollectionEdit()
                 }
@@ -59,8 +61,7 @@ internal fun CollectionsScreen(
             }
         }
 
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
                 CollectionsTopBar(
                     libraryName = viewState.libraryName,

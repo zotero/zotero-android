@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,7 +19,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 internal fun LazyListScope.filterTagsFlowTable(
     viewState: FilterViewState,
@@ -29,17 +29,19 @@ internal fun LazyListScope.filterTagsFlowTable(
             modifier = Modifier,
         ) {
             chunkedList.forEach {
+                val roundCornerShape = RoundedCornerShape(8.dp)
                 var rowModifier: Modifier = Modifier
                     .padding(horizontal = 4.dp, vertical = 4.dp)
-                    .clip(shape = RoundedCornerShape(16.dp))
+                    .clip(shape = roundCornerShape)
                 val selected = viewState.selectedTags.contains(it.tag.name)
                 if (selected) {
+                    val backgroundColor = MaterialTheme.colorScheme.secondaryContainer
                     rowModifier = rowModifier
-                        .background(CustomTheme.colors.zoteroBlueWithDarkMode.copy(alpha = 0.25f))
+                        .background(backgroundColor)
                         .border(
                             width = 1.dp,
-                            color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                            shape = RoundedCornerShape(16.dp)
+                            color = backgroundColor,
+                            shape = roundCornerShape
                         )
                 }
                 Box(
@@ -54,7 +56,7 @@ internal fun LazyListScope.filterTagsFlowTable(
                         val color = it.tag.color.toColorInt()
                         Color(color)
                     } else {
-                        CustomTheme.colors.primaryContent
+                        MaterialTheme.colorScheme.onSurface
                     }
                     Text(
                         modifier = Modifier.padding(
@@ -63,7 +65,7 @@ internal fun LazyListScope.filterTagsFlowTable(
                         ),
                         text = it.tag.name,
                         color = if (it.isActive) textColor else textColor.copy(alpha = 0.55f),
-                        style = CustomTheme.typography.newBody,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )

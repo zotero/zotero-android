@@ -1,31 +1,59 @@
 package org.zotero.android.pdf.pdffilter
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun PdfFilterScreenTopBar(
-    onClose: () -> Unit,
+    onBack: () -> Unit,
     onClear: (() -> Unit)?,
 ) {
-    NewCustomTopBar(
-        title = stringResource(id = Strings.pdf_annotations_sidebar_filter_title),
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onClose,
-                text = stringResource(Strings.close),
+    TopAppBar(
+        title = {
+            Text(
+                text = stringResource(Strings.pdf_annotations_sidebar_filter_title),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
             )
         },
-        rightContainerContent = listOf {
-            if (onClear != null) {
-                NewHeadingTextButton(
-                    onClick = onClear,
-                    text = stringResource(Strings.clear),
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
-        }
-    )
+        },
+        actions = {
+            if (onClear != null) {
+                FilledTonalButton(
+                    onClick = onClear,
+                    shapes = ButtonDefaults.shapes(),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(
+                        text = stringResource(Strings.clear),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+        },
+        )
 }

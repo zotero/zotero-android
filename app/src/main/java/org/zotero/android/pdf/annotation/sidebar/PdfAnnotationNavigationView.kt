@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.ui.unit.IntOffset
 import org.zotero.android.pdf.annotation.PdfAnnotationNavigation
 import org.zotero.android.pdf.reader.PdfReaderViewModel
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfAnnotationNavigationView(
@@ -36,7 +34,6 @@ internal fun PdfAnnotationNavigationView(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(CustomTheme.colors.pdfAnnotationsFormBackground)
                     .pointerInput(Unit) {
                         detectTapGestures {
                             //Prevent tap to be propagated to composables behind this screen.

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarIma
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarInkRow
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarNoteRow
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarUnderlineRow
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarHeaderSection
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -46,7 +48,7 @@ internal fun PdfReaderAnnotationsSidebar(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CustomTheme.colors.pdfAnnotationsFormBackground),
+            .background(MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Column(
             modifier = Modifier
@@ -58,7 +60,7 @@ internal fun PdfReaderAnnotationsSidebar(
                 searchValue = viewState.annotationSearchTerm,
                 onSearch = vMInterface::onAnnotationSearch,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(
                 state = annotationsLazyListState,
                 verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
@@ -69,16 +71,17 @@ internal fun PdfReaderAnnotationsSidebar(
                     val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
                     val isSelected = viewState.isAnnotationSelected(annotation.key)
                     val horizontalPadding = if (isSelected && annotation.isZoteroAnnotation) 13.dp else 16.dp
+                    val roundedCornerShape = RoundedCornerShape(10.dp)
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
-                        .clip(shape = RoundedCornerShape(10.dp))
-                        .background(CustomTheme.colors.pdfAnnotationsItemBackground)
+                        .clip(shape = roundedCornerShape)
+                        .background(CustomTheme.colors.surface)
 
                     if (isSelected) {
                         rowModifier = rowModifier.border(
                             width = 3.dp,
-                            color = CustomTheme.colors.zoteroDefaultBlue,
-                            shape = RoundedCornerShape(10.dp)
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = roundedCornerShape
                         )
                     }
 

@@ -71,7 +71,6 @@ import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
 import org.zotero.android.screens.collections.data.CollectionsArgs
-import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
@@ -93,7 +92,6 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
-import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
 import org.zotero.android.uicomponents.singlepicker.SinglePickerStateCreator
@@ -170,11 +168,6 @@ internal class AllItemsViewModel @Inject constructor(
                 tagSelectionDidChange(filterResult.selectedTags)
             }
         }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(event: LongPressOptionItem) {
-        onLongPressOptionsItemSelected(event)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -586,17 +579,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onItemTapped(item: ItemCellModel) {
         if (viewState.isEditing) {
-            val selectedKeys = viewState.selectedKeys!!
-            val isCurrentlySelected = selectedKeys.contains(item.key)
-            updateState {
-                copy(
-                    selectedKeys = if (isCurrentlySelected) {
-                        selectedKeys.remove(item.key)
-                    } else {
-                        selectedKeys.add(item.key)
-                    }
-                )
-            }
+            addItemToSelection(item.key)
             return
         }
 
@@ -615,6 +598,20 @@ internal class AllItemsViewModel @Inject constructor(
                 is ItemAccessory.doi -> showDoi(accessory.doi)
                 is ItemAccessory.url -> showUrl(url = accessory.url)
             }
+        }
+    }
+
+    private fun addItemToSelection(key: String) {
+        val selectedKeys = viewState.selectedKeys!!
+        val isCurrentlySelected = selectedKeys.contains(key)
+        updateState {
+            copy(
+                selectedKeys = if (isCurrentlySelected) {
+                    selectedKeys.remove(key)
+                } else {
+                    selectedKeys.add(key)
+                }
+            )
         }
     }
 
@@ -692,57 +689,12 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
-    private fun onLongPressOptionsItemSelected(longPressOptionItem: LongPressOptionItem) {
-        viewModelScope.launch {
-            when (longPressOptionItem) {
-                is LongPressOptionItem.MoveToTrashItem -> {
-                    trashItems(setOf(longPressOptionItem.item.key))
-                }
-                is LongPressOptionItem.Download -> {
-                    allItemsProcessor.downloadAttachments(setOf(longPressOptionItem.item.key))
-                }
-                is LongPressOptionItem.RemoveDownload -> {
-                    allItemsProcessor.removeDownloads(setOf(longPressOptionItem.item.key))
-                }
-                is LongPressOptionItem.Duplicate -> {
-                    loadItemForDuplication(longPressOptionItem.item.key)
-                }
-                is LongPressOptionItem.AddToCollection -> {
-                    showCollectionPicker(setOf(longPressOptionItem.item.key))
-                }
-                is LongPressOptionItem.RemoveFromCollection -> {
-                    showRemoveFromCollectionQuestion(setOf(longPressOptionItem.item.key))
-                }
-                is LongPressOptionItem.CreateParentItem -> {
-                    createParent(longPressOptionItem.item)
-                }
-                is LongPressOptionItem.TrashDelete -> {
-                    showDeleteItemsConfirmation(
-                        setOf(longPressOptionItem.item.key)
-                    )
-                }
-                is LongPressOptionItem.TrashRestore -> {
-                    set(trashed = false, setOf(longPressOptionItem.item.key))
-                }
+    fun onTrashRestore() = viewModelScope.launch {
+        set(trashed = false, getSelectedKeys())
+    }
 
-                is LongPressOptionItem.RetrieveMetadata -> {
-                    showRetrieveMetadataDialog(
-                        itemKey = longPressOptionItem.item.key,
-                        libraryId = longPressOptionItem.item.libraryId!!
-                    )
-                }
-
-                is LongPressOptionItem.CopyCitation -> {
-                    showSingleCitation(setOf(longPressOptionItem.item.key))
-                }
-
-                is LongPressOptionItem.CopyBibliography -> {
-                    loadBibliography(setOf(longPressOptionItem.item.key))
-                }
-
-                else -> {}
-            }
-        }
+    fun onTrashDelete() = viewModelScope.launch {
+        showDeleteItemsConfirmation(itemsKeys = getSelectedKeys())
     }
 
     private var preSelectedItemKeysToAddToCollection: Set<String> = emptySet()
@@ -790,78 +742,11 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(key: String) {
-        val item = allItemsProcessor.getResultByKey(key)!!
-        if (this.collection.identifier.isTrash) {
-            EventBus.getDefault().post(
-                ShowDashboardLongPressBottomSheet(
-                    title = item.displayTitle,
-                    longPressOptionItems = listOf(
-                        LongPressOptionItem.TrashRestore(item),
-                        LongPressOptionItem.TrashDelete(item)
-                    )
-                )
-            )
-            return
+        if (!isEditing()) {
+            startEditing()
+            addItemToSelection(key)
         }
 
-        val actions = mutableListOf<LongPressOptionItem>()
-        if (!CitationController.invalidItemTypes.contains(item.rawType)) {
-            actions.add(LongPressOptionItem.CopyCitation(item))
-            actions.add(LongPressOptionItem.CopyBibliography(item))
-        }
-
-        val attachment = allItemsProcessor.attachment(item.key, null)
-        val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
-        if (item.rawType == ItemTypes.attachment && item.parent == null && contentType == "application/pdf") {
-            actions.add(LongPressOptionItem.RetrieveMetadata(item))
-        }
-
-        if (item.rawType == ItemTypes.attachment && item.parent == null) {
-            actions.add(LongPressOptionItem.CreateParentItem(item))
-        }
-
-        val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
-        if (accessory != null) {
-            val location = accessory.attachmentGet?.location
-            if (location != null) {
-                when(location) {
-                    Attachment.FileLocation.local -> {
-                        actions.add(LongPressOptionItem.RemoveDownload(item))
-                    }
-                    Attachment.FileLocation.remote -> {
-                        actions.add(LongPressOptionItem.Download(item))
-                    }
-                    Attachment.FileLocation.localAndChangedRemotely -> {
-                        actions.add(LongPressOptionItem.Download(item))
-                        actions.add(LongPressOptionItem.RemoveDownload(item))
-                    }
-                    Attachment.FileLocation.remoteMissing -> {
-                        //no-op
-                    }
-                }
-            }
-        }
-
-        val identifier = this.collection.identifier
-
-        actions.add(LongPressOptionItem.AddToCollection(item))
-
-        if (identifier is CollectionIdentifier.collection && item.collections?.where()?.key(identifier.key)?.findFirst() != null) {
-            actions.add(LongPressOptionItem.RemoveFromCollection(item))
-        }
-
-        if (item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment) {
-            actions.add(LongPressOptionItem.Duplicate(item))
-        }
-
-        actions.add(LongPressOptionItem.MoveToTrashItem(item))
-
-        EventBus.getDefault().post(
-            ShowDashboardLongPressBottomSheet(
-                title = item.displayTitle,
-                longPressOptionItems = actions
-            )
-        )
     }
 
     fun delete(keys: Set<String>) {
@@ -957,22 +842,6 @@ internal class AllItemsViewModel @Inject constructor(
         }
     }
 
-    fun onTrash() {
-        viewModelScope.launch {
-            trashItems(getSelectedKeys())
-        }
-    }
-
-    fun onRestore() {
-        viewModelScope.launch {
-            set(trashed = false, keys = getSelectedKeys())
-        }
-    }
-
-    fun onDelete() {
-        showDeleteItemsConfirmation(getSelectedKeys())
-    }
-
     fun onDownloadSelectedAttachments() {
         allItemsProcessor.downloadSelectedAttachments(getSelectedKeys())
     }
@@ -1059,10 +928,6 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onAddToCollection() {
        showCollectionPicker(getSelectedKeys())
-    }
-
-    fun showRemoveFromCollectionQuestion() {
-        showRemoveFromCollectionQuestion(getSelectedKeys())
     }
 
     fun showRemoveFromCollectionQuestion(itemsKeys: Set<String>) {
@@ -1205,6 +1070,90 @@ internal class AllItemsViewModel @Inject constructor(
         }
 
     }
+
+    fun onCopyCitation() = viewModelScope.launch {
+        showSingleCitation(getSelectedKeys())
+    }
+
+    fun onCopyBibliography() = viewModelScope.launch {
+        loadBibliography(getSelectedKeys())
+    }
+
+    fun onShowRetrieveDialog() = viewModelScope.launch {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        showRetrieveMetadataDialog(
+            itemKey = item.key,
+            libraryId = item.libraryId!!
+        )
+    }
+
+    fun onCreateDialog() {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        createParent(item)
+    }
+
+    fun onRemoveDownload() {
+        allItemsProcessor.removeDownloads(getSelectedKeys())
+    }
+
+    fun onDownload() {
+        allItemsProcessor.downloadAttachments(getSelectedKeys())
+    }
+
+    fun onRemoveFromCollection() {
+        showRemoveFromCollectionQuestion(getSelectedKeys())
+    }
+
+    fun onDuplicate() {
+        loadItemForDuplication(getSelectedKeys().first())
+    }
+
+    fun onMoveToTrash() = viewModelScope.launch {
+        trashItems(getSelectedKeys())
+    }
+
+    fun shouldIncludeCopyCitationAndBibliographyButtons(): Boolean {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        return !CitationController.invalidItemTypes.contains(item.rawType)
+    }
+
+    fun shouldIncludeRetrieveMetadataButton(): Boolean {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+
+        val attachment = allItemsProcessor.attachment(item.key, null)
+        val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
+        return item.rawType == ItemTypes.attachment && item.parent == null && contentType == "application/pdf"
+    }
+
+    fun shouldIncludeCreateParentButton(): Boolean {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        return item.rawType == ItemTypes.attachment && item.parent == null
+    }
+
+    fun getAttachmentFileLocation(): Attachment.FileLocation? {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+
+        val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
+        if (accessory != null) {
+            val location = accessory.attachmentGet?.location
+            return location
+        }
+        return null
+    }
+
+    fun shouldIncludeRemoveFromCollectionButton(): Boolean {
+        val identifier = this.collection.identifier
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+
+        return (identifier is CollectionIdentifier.collection && item.collections?.where()
+            ?.key(identifier.key)?.findFirst() != null)
+    }
+
+    fun shouldIncludeDuplicateButton(): Boolean {
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        return item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment
+    }
+
 
 }
 

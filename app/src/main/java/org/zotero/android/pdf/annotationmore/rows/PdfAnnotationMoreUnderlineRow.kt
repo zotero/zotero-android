@@ -1,45 +1,26 @@
 package org.zotero.android.pdf.annotationmore.rows
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import PdfAnnotationMoreColorPicker
+import PdfAnnotationMoreUnderlineText
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.annotationmore.MoreColorPicker
-import org.zotero.android.pdf.annotationmore.MoreUnderlineText
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
-import org.zotero.android.pdf.annotationmore.SpacerDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.screens.settings.elements.NewSettingsDivider
 
 @Composable
 internal fun PdfAnnotationMoreUnderlineRow(
     viewState: PdfAnnotationMoreViewState,
     viewModel: PdfAnnotationMoreViewModel,
-    layoutType: CustomLayoutSize.LayoutType,
 ) {
     val annotationColor =
         Color(viewState.color.toColorInt())
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = CustomTheme.colors.zoteroEditFieldBackground)
-    ) {
-        MoreUnderlineText(
-            annotationColor = annotationColor,
-            viewState = viewState,
-            onValueChange = viewModel::onUnderlineTextValueChange,
-            layoutType = layoutType,
-        )
-        SpacerDivider()
-        Spacer(modifier = Modifier.height(4.dp))
-        MoreColorPicker(viewState, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-    }
+    PdfAnnotationMoreUnderlineText(
+        annotationColor = annotationColor,
+        viewState = viewState,
+        onValueChange = viewModel::onUnderlineTextValueChange,
+    )
+    NewSettingsDivider()
+    PdfAnnotationMoreColorPicker(viewState, viewModel)
 }

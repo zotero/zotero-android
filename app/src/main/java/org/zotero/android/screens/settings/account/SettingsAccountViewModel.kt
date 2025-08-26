@@ -125,10 +125,10 @@ internal class SettingsAccountViewModel @Inject constructor(
         context.startActivity(RootActivity.getIntentClearTask(context))
     }
 
-    fun dismissWebDavOptionsPopup() {
+    fun dismissWebDavOptionsDialog() {
         updateState {
             copy(
-                showWebDavOptionsPopup = false
+                showWebDavOptionsDialog = false
             )
         }
     }
@@ -136,13 +136,13 @@ internal class SettingsAccountViewModel @Inject constructor(
     fun showWebDavOptionsPopup() {
         updateState {
             copy(
-                showWebDavOptionsPopup = true
+                showWebDavOptionsDialog = true
             )
         }
     }
 
     fun setFileSyncType(type: FileSyncType) {
-        dismissWebDavOptionsPopup()
+        dismissWebDavOptionsDialog()
         if (viewState.fileSyncType == type) {
             return
         }
@@ -490,7 +490,7 @@ internal class SettingsAccountViewModel @Inject constructor(
 
 internal data class SettingsAccountViewState(
     val account: String = "",
-    val showWebDavOptionsPopup: Boolean = false,
+    val showWebDavOptionsDialog: Boolean = false,
     val fileSyncType: FileSyncType = FileSyncType.zotero,
     val markingForReupload: Boolean = false,
     val scheme: WebDavScheme = WebDavScheme.https,

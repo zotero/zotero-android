@@ -25,7 +25,7 @@ import org.zotero.android.pdf.pdffilter.PdfFilterNavigation
 import org.zotero.android.pdf.pdffilter.pdfFilterNavScreens
 import org.zotero.android.pdf.pdffilter.toPdfFilterScreen
 import org.zotero.android.pdf.reader.PdfReaderScreen
-import org.zotero.android.pdf.reader.plainreader.PdfPlanReaderScreen
+import org.zotero.android.pdf.reader.plainreader.PdfPlainReaderScreen
 import org.zotero.android.pdf.settings.PdfSettingsScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import java.io.File
@@ -140,7 +140,7 @@ private fun NavGraphBuilder.pdfPlainReader(navigation: ZoteroNavigation) {
             navArgument(ARG_PDF_PLAIN_READER_SCREEN) { type = NavType.StringType },
         ),
     ) {
-        PdfPlanReaderScreen(onBack = navigation::onBack)
+        PdfPlainReaderScreen(onBack = navigation::onBack)
     }
 }
 
