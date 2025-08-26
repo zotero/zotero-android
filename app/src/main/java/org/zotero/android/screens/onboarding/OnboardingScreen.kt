@@ -2,195 +2,136 @@ package org.zotero.android.screens.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import org.zotero.android.androidx.text.StyledTextHelper
+import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.button.PrimaryButton
-import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomPalette
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
 
 private val onboardingPages =
     listOf(
-        OnboardingPage(Strings.onboarding_access, Drawables.onboarding_access),
-        OnboardingPage(Strings.onboarding_annotate, Drawables.onboarding_annotate),
-        OnboardingPage(Strings.onboarding_share, Drawables.onboarding_share),
-        OnboardingPage(Strings.onboarding_sync, Drawables.onboarding_sync),
+        OnboardingPage(
+            taglineRes = Strings.onboarding_access_tagline,
+            descriptionRes = Strings.onboarding_access_description,
+            drawableRes = Drawables.onboarding_access
+        ),
+        OnboardingPage(
+            taglineRes = Strings.onboarding_annotate_tagline,
+            descriptionRes = Strings.onboarding_annotate_description,
+            drawableRes = Drawables.onboarding_annotate
+        ),
+        OnboardingPage(
+            taglineRes = Strings.onboarding_share_tagline,
+            descriptionRes = Strings.onboarding_share_description,
+            drawableRes = Drawables.onboarding_share
+        ),
+        OnboardingPage(
+            taglineRes = Strings.onboarding_sync_tagline,
+            descriptionRes = Strings.onboarding_sync_description,
+            drawableRes = Drawables.onboarding_sync
+        ),
     )
 
 @Composable
 internal fun OnboardingScreen(
     onSignInClick: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
-                .verticalScroll(rememberScrollState())
-                .background(color = CustomTheme.colors.surface),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
+    val whiteColor = Color.White
+    val blackColor = Color.Black
+    val backgroundColor = if (isSystemInDarkTheme()) blackColor else whiteColor
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+//            .verticalScroll(rememberScrollState())
+            .background(backgroundColor)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        var contentAreaModifier = Modifier.fillMaxHeight()
+        if (layoutType.isTablet()) {
+            contentAreaModifier =
+                contentAreaModifier.width((LocalWindowInfo.current.containerSize.height / 2).pxToDp())
+        }
 
-            Column(
-                modifier = Modifier
-                    .widthIn(max = 430.dp)
-                    .fillMaxHeight()
-                    .padding(horizontal = 16.dp),
-            ) {
-                val uriHandler = LocalUriHandler.current
-                val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
-                Spacer(modifier = Modifier.weight(1f))
-                HorizontalPager(
-                    state = pagerState,
-                ) { pageIndex ->
-                    val onboardingPage = onboardingPages[pageIndex]
-
+        Column(contentAreaModifier) {
+            val uriHandler = LocalUriHandler.current
+            val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
+            Spacer(modifier = Modifier.weight(1f))
+            HorizontalPager(
+                state = pagerState,
+            ) { pageIndex ->
+                val onboardingPage = onboardingPages[pageIndex]
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Image(
+                        modifier = Modifier.fillMaxWidth().aspectRatio(1.0f),
+                        painter = painterResource(onboardingPage.drawableRes),
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Column(
-                        verticalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier.height(104.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = StyledTextHelper.annotatedStringResource(
-                                LocalContext.current,
-                                stringRes = onboardingPage.strRes
-                            ),
-                            modifier = Modifier.height((26 * 3).dp),
-                            color = CustomTheme.colors.primaryContent,
+                            text = stringResource(onboardingPage.taglineRes),
+                            color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center,
-                            style = CustomTheme.typography.default.copy(lineHeight = 26.sp),
-                            fontSize = layoutType.calculateTextSize(),
+                            style = MaterialTheme.typography.titleSmallEmphasized
                         )
-                        Spacer(modifier = Modifier.height(layoutType.calculatePadding()))
-                        Image(
-                            painter = painterResource(onboardingPage.drawableRes),
-                            contentDescription = null,
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(onboardingPage.descriptionRes),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
+
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    DotsIndicator(
-                        totalDots = pagerState.pageCount,
-                        selectedIndex = pagerState.currentPage,
-                        selectedColor = CustomPalette.CoolGray,
-                        unSelectedColor = CustomPalette.Charcoal
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    PrimaryButton(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        text = stringResource(id = Strings.onboarding_sign_in),
-                        onClick = onSignInClick
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    PrimaryButton(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        text = stringResource(id = Strings.onboarding_create_account),
-                        onClick = {
-                            uriHandler.openUri("https://www.zotero.org/user/register?app=1")
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        modifier = Modifier
-                            .safeClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = {
-                                    uriHandler.openUri("https://www.zotero.org/?app=1")
-                                }
-                            ),
-                        text = stringResource(id = Strings.about_zotero),
-                        color = CustomTheme.colors.zoteroBlueWithDarkMode,
-                        style = CustomTheme.typography.default,
-                        fontSize = layoutType.calculateTextSize(),
-                    )
-                }
-                Spacer(modifier = Modifier.weight(0.7f))
             }
+            Spacer(modifier = Modifier.weight(1f))
+            OnboardingButtonSection(
+                pagerState = pagerState,
+                onSignInClick = onSignInClick,
+                uriHandler = uriHandler
+            )
         }
 
     }
 
-
 }
 
-@Composable
-fun DotsIndicator(
-    totalDots: Int,
-    selectedIndex: Int,
-    selectedColor: Color,
-    unSelectedColor: Color,
-) {
-    LazyRow(
-        modifier = Modifier
-            .wrapContentWidth()
-            .wrapContentHeight()
-
-    ) {
-
-        items(totalDots) { index ->
-            if (index == selectedIndex) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(selectedColor)
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(unSelectedColor)
-                )
-            }
-
-            if (index != totalDots - 1) {
-                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-            }
-        }
-    }
-}

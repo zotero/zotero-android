@@ -53,4 +53,17 @@
     <string name="settings_cite_remove_style">Remove Style</string>
 
     <string name="items_generating_annotated_pdf">Generating Annotated PDF</string>
+
+    <string name="onboarding_access_tagline">Organize research\nhowever you want</string>
+    <string name="onboarding_access_description">Sort your items into collections\nand tag them with keywords.</string>
+
+    <string name="onboarding_annotate_tagline">Highlight and take notes</string>
+    <string name="onboarding_annotate_description">Annotate directly in your PDFs as you read them.</string>
+
+    <string name="onboarding_sync_tagline">Synchronize and collaborate\nacross devices</string>
+    <string name="onboarding_sync_description">Keep your reading and notes seamlessly up to date.</string>
+
+    <string name="onboarding_share_tagline">Tap to collect</string>
+    <string name="onboarding_share_description">Save articles and books directly from the web,\nincluding their PDFs and full metadata.</string>
+
 </resources>

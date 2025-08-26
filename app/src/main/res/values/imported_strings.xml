@@ -52,15 +52,7 @@
     <string name="migration_debug">App failed to initialize and can’t function properly. Please report Debug ID %s in the Zotero Forums.</string>
     <string name="login_debug">App failed to log in. Please log in again and report Debug ID %s in the Zotero Forums.</string>
     <string name="day_suffixes">st,nd,rd,th</string>
-    <string name="onboarding.access">
-		<annotation font="bold">Zotero organizes research</annotation> however you want. Sort your items into collections and tag them with keywords.</string>
-    <string name="onboarding.sync">
-		<annotation font="bold">Synchronize and collaborate</annotation> across devices, keeping your reading and notes seamlessly up to date.</string>
-    <string name="onboarding.annotate">
-		<annotation font="bold">Highlight and take notes</annotation> directly in your PDFs as you read them.</string>
-    <string name="onboarding.share">
-		<annotation font="bold">Tap to collect</annotation> articles and books directly from the web, including their PDFs and full metadata.</string>
-    <string name="onboarding.sign_in">Sign In</string>
+    <string name="onboarding.sign_in">Log in</string>
     <string name="onboarding.create_account">Sign Up</string>
     <string name="login.username">Username</string>
     <string name="login.password">Password</string>
