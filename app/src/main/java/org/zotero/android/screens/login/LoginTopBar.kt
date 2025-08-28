@@ -1,22 +1,27 @@
 package org.zotero.android.screens.login
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
+import androidx.compose.ui.res.painterResource
+import org.zotero.android.uicomponents.Drawables
 
 @Composable
 internal fun LoginTopBar(
     onCancelClicked: () -> Unit,
 ) {
-    NewCustomTopBar(
-        shouldAddBottomDivider = false,
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onCancelClicked,
-                text = stringResource(id = Strings.cancel),
-            )
-        }
+    TopAppBar(
+        title = {},
+        navigationIcon = {
+            IconButton(onClick = onCancelClicked) {
+                Icon(
+                    painter = painterResource(Drawables.ic_close_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
     )
 }

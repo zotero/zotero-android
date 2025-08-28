@@ -11,19 +11,25 @@ import androidx.compose.ui.Modifier
 fun CustomFilledButton(
     text: String,
     onClick: () -> Unit,
+    isLoading: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     FilledTonalButton(
         modifier = modifier,
-        onClick = onClick,
+        onClick = { if (!isLoading) onClick() },
         shapes = ButtonDefaults.shapes(),
         colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
     ) {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onPrimary,
-            style = MaterialTheme.typography.titleMedium
-        )
+        if (isLoading) {
+            ButtonLoadingIndicator(MaterialTheme.colorScheme.onPrimary)
+        } else {
+            Text(
+                text = text,
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
     }
 
 }
