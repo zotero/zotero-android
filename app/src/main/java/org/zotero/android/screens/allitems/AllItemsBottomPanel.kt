@@ -1,5 +1,6 @@
 package org.zotero.android.screens.allitems
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -9,9 +10,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AppBarRow
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.BottomAppBarScrollBehavior
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FlexibleBottomAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.downloadedfiles.DownloadedFilesPopup
@@ -30,6 +46,7 @@ internal fun BoxScope.AllItemsBottomPanel(
         .fillMaxWidth()
         .height(layoutType.calculateAllItemsBottomPanelHeight())
         .align(Alignment.BottomStart)
+        .background(Color.Red)
     if (viewState.selectedKeys != null) {
         EditingBottomPanel(
             modifier = commonModifier,
@@ -37,11 +54,11 @@ internal fun BoxScope.AllItemsBottomPanel(
             viewModel = viewModel,
         )
     } else {
-        BottomPanel(
-            modifier = commonModifier,
-            viewModel = viewModel,
-            viewState = viewState,
-        )
+//        BottomPanelV2(
+//            modifier = commonModifier,
+//            viewModel = viewModel,
+//            viewState = viewState,
+//        )
     }
 }
 
@@ -155,6 +172,101 @@ private fun DownloadAndRemoveAttachmentBlock(
         }
     )
 }
+
+@Composable
+internal fun BottomPanelV2(
+    modifier: Modifier,
+    viewModel: AllItemsViewModel,
+    viewState: AllItemsViewState,
+    scrollBehavior: BottomAppBarScrollBehavior,
+) {
+    Box(
+        modifier = modifier
+    ) {
+        val icons =
+            listOf(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                Icons.AutoMirrored.Filled.ArrowForward,
+                Icons.Filled.Add,
+                Icons.Filled.Check,
+                Icons.Filled.Edit,
+            )
+        val buttons = listOf("Back", "Forward", "Add", "Check", "Edit")
+
+        FlexibleBottomAppBar(
+            horizontalArrangement = BottomAppBarDefaults.FlexibleFixedHorizontalArrangement,
+            scrollBehavior = scrollBehavior,
+            content = {
+                AppBarRow(
+                    overflowIndicator = {}
+                ) {
+                    buttons.forEachIndexed { index, button ->
+                        clickableItem(
+                            onClick = {},
+                            icon = {
+                                if (index == 2) {
+                                    FilledIconButton(
+                                        modifier = Modifier.width(56.dp),
+                                        onClick = { /* doSomething() */ },
+                                    ) {
+                                        Icon(icons[index], contentDescription = button)
+                                    }
+                                } else {
+                                    IconButton(onClick = { /* doSomething() */ }) {
+                                        Icon(icons[index], contentDescription = button)
+                                    }
+                                }
+                            },
+                            label = "item",
+                        )
+
+                    }
+                }
+
+
+
+            },
+        )
+
+
+//
+//        IconWithPadding(
+//            modifier = Modifier
+//                .padding(end = 20.dp)
+//                .align(Alignment.CenterEnd),
+//            drawableRes = Drawables.swap_vert_24px,
+//            onClick = {
+//                viewModel.showSortPicker()
+//            }
+//        )
+//        Box {
+//            if (viewState.showDownloadedFilesPopup) {
+//                DownloadedFilesPopup(
+//                    viewState = viewState,
+//                    viewModel = viewModel,
+//                )
+//            }
+//
+//            val filterDrawable =
+//                if (viewState.filters.isEmpty()) {
+//                    Drawables.filter_list_off_24px
+//                } else {
+//                    Drawables.filter_list_24px
+//                }
+//            IconWithPadding(
+//                modifier = Modifier
+//                    .padding(start = 20.dp)
+//                    .align(Alignment.CenterStart),
+//                drawableRes = filterDrawable,
+//                onClick = {
+//                    viewModel.showFilters()
+//                }
+//            )
+//        }
+
+    }
+}
+
 
 @Composable
 private fun BottomPanel(

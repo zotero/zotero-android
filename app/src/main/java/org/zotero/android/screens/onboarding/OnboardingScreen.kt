@@ -70,10 +70,11 @@ internal fun OnboardingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(backgroundColor)
             .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
             .windowInsetsPadding(TopAppBarDefaults.windowInsets)
 //            .verticalScroll(rememberScrollState())
-            .background(backgroundColor)
+
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom

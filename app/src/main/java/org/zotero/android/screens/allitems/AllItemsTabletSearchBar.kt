@@ -1,6 +1,10 @@
 package org.zotero.android.screens.allitems
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,15 +15,30 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.textinput.SearchBar
+import org.zotero.android.uicomponents.textinput.SearchViewM3
 
 @Composable
-internal fun AllItemsSearchBar(
-    modifier: Modifier = Modifier,
+internal fun AllItemsTabletSearchBar(
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel
 ) {
-    val searchValue = viewState.searchTerm
+    Column(modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets)) {
+        Spacer(modifier = Modifier.height(8.dp))
+        SearchViewM3Wrapper(
+            text = viewState.searchTerm ?: "",
+            onValueChanged = { viewModel.onSearch(it) },
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+
+}
+
+@Composable
+private fun SearchViewM3Wrapper(
+    text: String?,
+    onValueChanged: (String) -> Unit,
+) {
+    val searchValue = text
     var searchBarTextFieldState by remember {
         mutableStateOf(
             TextFieldValue(
@@ -29,15 +48,14 @@ internal fun AllItemsSearchBar(
     }
     val searchBarOnInnerValueChanged: (TextFieldValue) -> Unit = {
         searchBarTextFieldState = it
-        viewModel.onSearch(it.text)
+        onValueChanged(it.text)
     }
     val onSearchAction = {
-//        searchBarOnInnerValueChanged.invoke(TextFieldValue())
+        //no-op
     }
 
-    SearchBar(
+    SearchViewM3(
         hint = stringResource(id = Strings.items_search_title),
-        modifier = modifier.height(40.dp),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

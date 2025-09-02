@@ -1,32 +1,28 @@
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.allitems.table.AllItemsTable
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
 @Composable
@@ -51,7 +47,7 @@ internal fun AllItemsScreen(
     navigateToSingleCitation: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(AllItemsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -135,9 +131,18 @@ internal fun AllItemsScreen(
                 }
             }
         }
+        val scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            bottomBar =  {
+                BottomPanelV2(
+                    scrollBehavior = scrollBehavior,
+                    modifier = Modifier,
+                    viewModel = viewModel,
+                    viewState = viewState,
+                )
+            },
             topBar = {
                 AllItemsTopBar(
                     viewState = viewState,
@@ -165,20 +170,20 @@ internal fun AllItemsScreen(
                     modifier = Modifier
                         .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                 ) {
-                    if (!layoutType.isTablet()) {
-                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
-                            AllItemsSearchBar(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                viewState = viewState,
-                                viewModel = viewModel
-                            )
-                            Spacer(
-                                modifier = Modifier
-                                    .height(16.dp)
-                            )
-                            NewDivider()
-                        }
-                    }
+//                    if (!layoutType.isTablet()) {
+//                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
+//                            AllItemsSearchBar(
+//                                modifier = Modifier.padding(horizontal = 16.dp),
+//                                viewState = viewState,
+//                                viewModel = viewModel
+//                            )
+//                            Spacer(
+//                                modifier = Modifier
+//                                    .height(16.dp)
+//                            )
+//                            NewDivider()
+//                        }
+//                    }
                     AllItemsTable(
                         lazyListState = lazyListState,
                         layoutType = layoutType,
