@@ -136,11 +136,10 @@ internal fun AllItemsScreen(
         CustomScaffoldM3(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             bottomBar =  {
-                BottomPanelV2(
-                    scrollBehavior = scrollBehavior,
-                    modifier = Modifier,
+                AllItemsBottomPanelNew(
                     viewModel = viewModel,
                     viewState = viewState,
+                    scrollBehavior = scrollBehavior
                 )
             },
             topBar = {
@@ -165,7 +164,7 @@ internal fun AllItemsScreen(
                     CircularLoading()
                 },
             ) {
-                AllItemsBottomPanel(layoutType, viewState, viewModel)
+//                AllItemsBottomPanel(layoutType, viewState, viewModel)
                 Column(
                     modifier = Modifier
                         .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())

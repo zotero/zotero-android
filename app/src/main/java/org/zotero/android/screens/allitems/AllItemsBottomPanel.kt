@@ -2,39 +2,44 @@ package org.zotero.android.screens.allitems
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AppBarRow
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.BottomAppBarScrollBehavior
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FlexibleBottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.downloadedfiles.DownloadedFilesPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomTheme
+
+@Composable
+internal fun AllItemsBottomPanelNew(
+    viewModel: AllItemsViewModel,
+    viewState: AllItemsViewState,
+    scrollBehavior: BottomAppBarScrollBehavior,
+) {
+    if (viewState.isEditing) {
+        if (viewState.selectedKeys?.size == 1) {
+            AllItemsSingleItemEditingBottomPanel(
+                viewModel = viewModel,
+                viewState = viewState,
+                scrollBehavior = scrollBehavior
+            )
+        }
+    } else {
+        AllItemsRegularBottomPanel(
+            scrollBehavior = scrollBehavior,
+            viewModel = viewModel,
+            viewState = viewState,
+        )
+    }
+}
 
 @Composable
 internal fun BoxScope.AllItemsBottomPanel(
@@ -44,7 +49,7 @@ internal fun BoxScope.AllItemsBottomPanel(
 ) {
     val commonModifier = Modifier
         .fillMaxWidth()
-        .height(layoutType.calculateAllItemsBottomPanelHeight())
+//        .height(layoutType.calculateAllItemsBottomPanelHeight())
         .align(Alignment.BottomStart)
         .background(Color.Red)
     if (viewState.selectedKeys != null) {
@@ -113,7 +118,7 @@ private fun EditingBottomPanel(
                         viewModel.onAddToCollection()
                     }
                 )
-                if(viewState.isCollectionACollection) {
+                if (viewState.isCollectionACollection) {
                     IconWithPadding(
                         drawableRes = Drawables.remove_from_collection,
                         isEnabled = isRestoreAndDeleteEnabled,
@@ -173,145 +178,60 @@ private fun DownloadAndRemoveAttachmentBlock(
     )
 }
 
-@Composable
-internal fun BottomPanelV2(
-    modifier: Modifier,
-    viewModel: AllItemsViewModel,
-    viewState: AllItemsViewState,
-    scrollBehavior: BottomAppBarScrollBehavior,
-) {
-    Box(
-        modifier = modifier
-    ) {
-        val icons =
-            listOf(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                Icons.AutoMirrored.Filled.ArrowForward,
-                Icons.Filled.Add,
-                Icons.Filled.Check,
-                Icons.Filled.Edit,
-            )
-        val buttons = listOf("Back", "Forward", "Add", "Check", "Edit")
-
-        FlexibleBottomAppBar(
-            horizontalArrangement = BottomAppBarDefaults.FlexibleFixedHorizontalArrangement,
-            scrollBehavior = scrollBehavior,
-            content = {
-                AppBarRow(
-                    overflowIndicator = {}
-                ) {
-                    buttons.forEachIndexed { index, button ->
-                        clickableItem(
-                            onClick = {},
-                            icon = {
-                                if (index == 2) {
-                                    FilledIconButton(
-                                        modifier = Modifier.width(56.dp),
-                                        onClick = { /* doSomething() */ },
-                                    ) {
-                                        Icon(icons[index], contentDescription = button)
-                                    }
-                                } else {
-                                    IconButton(onClick = { /* doSomething() */ }) {
-                                        Icon(icons[index], contentDescription = button)
-                                    }
-                                }
-                            },
-                            label = "item",
-                        )
-
-                    }
-                }
-
-
-
-            },
-        )
-
 
 //
-//        IconWithPadding(
-//            modifier = Modifier
-//                .padding(end = 20.dp)
-//                .align(Alignment.CenterEnd),
-//            drawableRes = Drawables.swap_vert_24px,
-//            onClick = {
-//                viewModel.showSortPicker()
-//            }
-//        )
-//        Box {
-//            if (viewState.showDownloadedFilesPopup) {
-//                DownloadedFilesPopup(
-//                    viewState = viewState,
-//                    viewModel = viewModel,
-//                )
-//            }
-//
-//            val filterDrawable =
-//                if (viewState.filters.isEmpty()) {
-//                    Drawables.filter_list_off_24px
-//                } else {
-//                    Drawables.filter_list_24px
-//                }
-//            IconWithPadding(
-//                modifier = Modifier
-//                    .padding(start = 20.dp)
-//                    .align(Alignment.CenterStart),
-//                drawableRes = filterDrawable,
-//                onClick = {
-//                    viewModel.showFilters()
-//                }
+//private fun allItemsTopBarActions(
+//    viewState: AllItemsViewState,
+//    viewModel: AllItemsViewModel
+//): List<@Composable (RowScope.() -> Unit)> {
+//    val buttonsList :MutableList<@Composable (RowScope.() -> Unit)> = mutableListOf()
+//    if (viewState.isCollectionTrash) {
+//        buttonsList.add {
+//            NewHeadingTextButton(
+//                onClick = viewModel::onEmptyTrash,
+//                text = stringResource(Strings.collections_empty_trash),
 //            )
 //        }
+//    } else {
+//        buttonsList.add {
+//            IconWithPadding(
+//                drawableRes = Drawables.add_24px,
+//                onClick = viewModel::onAdd,
+//                shouldShowRipple = false
+//            )
+//        }
+//    }
+//    if (!viewState.isEditing) {
+//        buttonsList.add {
+//            NewHeadingTextButton(
+//                onClick = viewModel::onSelect,
+//                text = stringResource(Strings.select),
+//            )
+//        }
+//    } else {
+//        val allSelected = viewState.areAllSelected
+//        if (allSelected) {
+//            buttonsList.add {
+//                NewHeadingTextButton(
+//                    onClick = viewModel::toggleSelectionState,
+//                    text = stringResource(Strings.items_deselect_all),
+//                )
+//            }
+//        } else {
+//            buttonsList.add {
+//                NewHeadingTextButton(
+//                    onClick = viewModel::toggleSelectionState,
+//                    text = stringResource(Strings.items_select_all),
+//                )
+//            }
+//        }
+//        buttonsList.add {
+//            NewHeadingTextButton(
+//                onClick = viewModel::onDone,
+//                text = stringResource(Strings.done),
+//            )
+//        }
+//    }
+//    return buttonsList
+//}
 
-    }
-}
-
-
-@Composable
-private fun BottomPanel(
-    modifier: Modifier,
-    viewModel: AllItemsViewModel,
-    viewState: AllItemsViewState,
-) {
-    Box(
-        modifier = modifier
-    ) {
-        NewDivider(modifier = Modifier.align(Alignment.TopStart))
-
-        IconWithPadding(
-            modifier = Modifier
-                .padding(end = 20.dp)
-                .align(Alignment.CenterEnd),
-            drawableRes = Drawables.swap_vert_24px,
-            onClick = {
-                viewModel.showSortPicker()
-            }
-        )
-        Box {
-            if (viewState.showDownloadedFilesPopup) {
-                DownloadedFilesPopup(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                )
-            }
-
-            val filterDrawable =
-                if (viewState.filters.isEmpty()) {
-                    Drawables.filter_list_off_24px
-                } else {
-                    Drawables.filter_list_24px
-                }
-            IconWithPadding(
-                modifier = Modifier
-                    .padding(start = 20.dp)
-                    .align(Alignment.CenterStart),
-                drawableRes = filterDrawable,
-                onClick = {
-                    viewModel.showFilters()
-                }
-            )
-        }
-
-    }
-}

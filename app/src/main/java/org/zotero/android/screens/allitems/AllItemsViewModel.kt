@@ -586,17 +586,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onItemTapped(item: ItemCellModel) {
         if (viewState.isEditing) {
-            val selectedKeys = viewState.selectedKeys!!
-            val isCurrentlySelected = selectedKeys.contains(item.key)
-            updateState {
-                copy(
-                    selectedKeys = if (isCurrentlySelected) {
-                        selectedKeys.remove(item.key)
-                    } else {
-                        selectedKeys.add(item.key)
-                    }
-                )
-            }
+            addItemToSelection(item.key)
             return
         }
 
@@ -615,6 +605,20 @@ internal class AllItemsViewModel @Inject constructor(
                 is ItemAccessory.doi -> showDoi(accessory.doi)
                 is ItemAccessory.url -> showUrl(url = accessory.url)
             }
+        }
+    }
+
+    private fun addItemToSelection(key: String) {
+        val selectedKeys = viewState.selectedKeys!!
+        val isCurrentlySelected = selectedKeys.contains(key)
+        updateState {
+            copy(
+                selectedKeys = if (isCurrentlySelected) {
+                    selectedKeys.remove(key)
+                } else {
+                    selectedKeys.add(key)
+                }
+            )
         }
     }
 
@@ -790,6 +794,15 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onItemLongTapped(key: String) {
+        if (!isEditing()) {
+            startEditing()
+            addItemToSelection(key)
+        }
+
+    }
+
+    fun onItemLongTappedOld(key: String) {
+
         val item = allItemsProcessor.getResultByKey(key)!!
         if (this.collection.identifier.isTrash) {
             EventBus.getDefault().post(

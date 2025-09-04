@@ -9,9 +9,19 @@ internal fun AllItemsTopBar(
     viewModel: AllItemsViewModel,
     layoutType: CustomLayoutSize.LayoutType,
 ) {
-    if (layoutType.isTablet()) {
-        AllItemsTabletSearchBar(viewState, viewModel)
+    if (viewState.isEditing) {
+        AllItemsEditingTopBar(
+            selectedKeysSize = viewState.selectedKeys?.size ?: 0,
+            allSelected = viewState.areAllSelected,
+            onCancelClicked = viewModel::onDone,
+            toggleSelectionState = viewModel::toggleSelectionState
+        )
     } else {
-        AllItemsPhoneAppSearchBar(viewState, viewModel)
+        if (layoutType.isTablet()) {
+            AllItemsTabletSearchBar(viewState, viewModel)
+        } else {
+            AllItemsPhoneAppSearchBar(viewState, viewModel)
+        }
     }
+
 }

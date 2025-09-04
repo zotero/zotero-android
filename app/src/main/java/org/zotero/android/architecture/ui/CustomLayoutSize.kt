@@ -78,10 +78,6 @@ object CustomLayoutSize {
             return 48.dp
         }
 
-        fun calculateSyncProgressBottomPanelHeight(): Dp {
-            return calculateAllItemsBottomPanelHeight() - 4.dp
-        }
-
         fun calculateSelectorHeight(): Dp {
             return when (this) {
                 big, medium -> 50.dp
