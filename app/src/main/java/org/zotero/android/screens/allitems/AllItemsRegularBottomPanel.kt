@@ -3,7 +3,6 @@ package org.zotero.android.screens.allitems
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.BottomAppBarScrollBehavior
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
@@ -21,11 +20,9 @@ import org.zotero.android.uicomponents.Drawables
 internal fun AllItemsRegularBottomPanel(
     viewModel: AllItemsViewModel,
     viewState: AllItemsViewState,
-    scrollBehavior: BottomAppBarScrollBehavior,
 ) {
     FlexibleBottomAppBar(
         horizontalArrangement = Arrangement.SpaceBetween,
-        scrollBehavior = scrollBehavior,
         content = {
             IconButton(onClick = { viewModel.showFilters() }) {
                 Box {

@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import org.zotero.android.database.objects.Attachment
-import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.styles.data.Style
 import org.zotero.android.sync.CollectionIdentifier
@@ -51,67 +50,6 @@ sealed class LongPressOptionItem(
     data class MoveToStandaloneAttachment(val attachment: Attachment): LongPressOptionItem(
         titleId = Strings.item_detail_move_to_standalone_attachment,
         resIcon = Drawables.vertical_align_top_24px
-    )
-
-    data class MoveToTrashItem(val item: RItem): LongPressOptionItem(
-        titleId = Strings.move_to_trash,
-        textAndIconColor = CustomPalette.ErrorRed,
-        resIcon = Drawables.delete_24px
-    )
-    data class RemoveDownload(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_remove_download,
-        resIcon = Drawables.file_download_off_24px
-    )
-
-    data class Download(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_download,
-        resIcon = Drawables.download_24px
-    )
-
-    data class Duplicate(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_duplicate,
-        resIcon = Drawables.content_copy_24px
-    )
-
-    data class AddToCollection(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_add_to_collection,
-        resIcon = Drawables.create_new_folder_24px
-    )
-
-    data class RemoveFromCollection(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_remove_from_collection,
-        resIcon = Drawables.remove_from_collection
-    )
-
-    data class CopyCitation(val item: RItem): LongPressOptionItem(
-        titleId = Strings.citation_copy_citation,
-        resIcon = Drawables.file_copy
-    )
-
-    data class CopyBibliography(val item: RItem): LongPressOptionItem(
-        titleId = Strings.citation_copy_bibliography,
-        resIcon = Drawables.file_copy
-    )
-
-    data class CreateParentItem(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_create_parent,
-        resIcon = Drawables.add_24px
-    )
-
-    data class RetrieveMetadata(val item: RItem): LongPressOptionItem(
-        titleId = Strings.items_action_retrieve_metadata,
-        resIcon = Drawables.retrieve_metadata_24px
-    )
-
-    data class TrashRestore(val item: RItem): LongPressOptionItem(
-        titleId = Strings.restore,
-        resIcon = Drawables.restore_trash
-    )
-
-    data class TrashDelete(val item: RItem): LongPressOptionItem(
-        titleId = Strings.delete,
-        textAndIconColor = CustomPalette.ErrorRed,
-        resIcon = Drawables.delete_24px
     )
 
     data class CollectionDelete(val collection: org.zotero.android.sync.Collection) :

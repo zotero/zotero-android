@@ -16,8 +16,10 @@ import org.zotero.android.uicomponents.Strings
 fun AllItemsEditingTopBar(
     selectedKeysSize: Int,
     allSelected: Boolean,
+    isCollectionTrash: Boolean,
     onCancelClicked: () -> Unit,
     toggleSelectionState: () -> Unit,
+    onEmptyTrash: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -40,6 +42,16 @@ fun AllItemsEditingTopBar(
             }
         },
         actions = {
+            if (isCollectionTrash) {
+                TextButton(onClick = onEmptyTrash) {
+                    Text(
+                        text = stringResource(Strings.collections_empty_trash),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            }
+
             TextButton(onClick = toggleSelectionState) {
                 Text(
                     text = if (allSelected) stringResource(Strings.items_deselect_all) else stringResource(

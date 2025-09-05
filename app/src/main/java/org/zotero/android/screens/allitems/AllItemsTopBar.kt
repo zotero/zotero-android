@@ -13,8 +13,10 @@ internal fun AllItemsTopBar(
         AllItemsEditingTopBar(
             selectedKeysSize = viewState.selectedKeys?.size ?: 0,
             allSelected = viewState.areAllSelected,
+            isCollectionTrash = viewState.isCollectionTrash,
             onCancelClicked = viewModel::onDone,
-            toggleSelectionState = viewModel::toggleSelectionState
+            toggleSelectionState = viewModel::toggleSelectionState,
+            onEmptyTrash = viewModel::onEmptyTrash
         )
     } else {
         if (layoutType.isTablet()) {

@@ -3,16 +3,13 @@ package org.zotero.android.screens.allitems
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -131,15 +128,12 @@ internal fun AllItemsScreen(
                 }
             }
         }
-        val scrollBehavior = BottomAppBarDefaults.exitAlwaysScrollBehavior()
 
         CustomScaffoldM3(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             bottomBar =  {
                 AllItemsBottomPanelNew(
                     viewModel = viewModel,
                     viewState = viewState,
-                    scrollBehavior = scrollBehavior
                 )
             },
             topBar = {
@@ -166,8 +160,8 @@ internal fun AllItemsScreen(
             ) {
 //                AllItemsBottomPanel(layoutType, viewState, viewModel)
                 Column(
-                    modifier = Modifier
-                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
+//                    modifier = Modifier
+//                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
                 ) {
 //                    if (!layoutType.isTablet()) {
 //                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
