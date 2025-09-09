@@ -14,6 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.dashboard.BuildInfo
+import org.zotero.android.screens.settings.elements.NewSettingsDivider
+import org.zotero.android.screens.settings.elements.NewSettingsItem
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.themem3.AppThemeM3

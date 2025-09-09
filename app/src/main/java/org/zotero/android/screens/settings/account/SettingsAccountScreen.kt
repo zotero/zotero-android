@@ -1,25 +1,20 @@
 package org.zotero.android.screens.settings.account
 
 import android.net.Uri
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.screens.settings.account.dialogs.SettingsDirectoryNotFoundDialog
+import org.zotero.android.screens.settings.account.dialogs.SettingsSignOutDialog
+import org.zotero.android.screens.settings.account.sections.SettingsAccountAccountSection
+import org.zotero.android.screens.settings.account.sections.SettingsAccountDataSyncSection
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun SettingsAccountScreen(
@@ -28,7 +23,7 @@ internal fun SettingsAccountScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     viewModel: SettingsAccountViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val viewState by viewModel.viewStates.observeAsState(SettingsAccountViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -51,37 +46,25 @@ internal fun SettingsAccountScreen(
                 }
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.surface,
-            bottomBarColor = CustomTheme.colors.zoteroItemDetailSectionBackground,
+        CustomScaffoldM3(
             topBar = {
                 SettingsAccountTopBar(
                     onBack = onBack,
                 )
             },
         ) {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                    .padding(horizontal = 16.dp)
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
-                    SettingsAccountDataSyncSection(viewState, viewModel)
-                }
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
-                    SettingsAccountFileSyncingSection(viewState, viewModel)
-                }
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
-                    SettingsAccountAccountSection(viewModel)
-                }
+                SettingsAccountDataSyncSection(viewState, viewModel)
+                SettingsAccountFileSyncingSection(viewState, viewModel)
+                SettingsAccountAccountSection(viewModel)
             }
             val createWebDavDirectoryDialogData = viewState.createWebDavDirectoryDialogData
             if (createWebDavDirectoryDialogData != null) {
-                DirectoryNotFoundDialog(url = createWebDavDirectoryDialogData.url,
+                SettingsDirectoryNotFoundDialog(
+                    url = createWebDavDirectoryDialogData.url,
                     onCancel = {
                         viewModel.onDismissCreateDirectoryDialog(createWebDavDirectoryDialogData.error)
                     },
@@ -91,7 +74,7 @@ internal fun SettingsAccountScreen(
 
             val shouldShowSignOutDialog = viewState.shouldShowSignOutDialog
             if (shouldShowSignOutDialog) {
-                SignOutDialog(
+                SettingsSignOutDialog(
                     onCancel = viewModel::onDismissSignOutDialog,
                     onSignOut = viewModel::onSignOut
                 )
@@ -101,48 +84,3 @@ internal fun SettingsAccountScreen(
     }
 }
 
-@Composable
-private fun DirectoryNotFoundDialog (
-    url: String,
-    onCreate: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    CustomAlertDialog(
-        title = stringResource(id = Strings.settings_sync_directory_not_found_title),
-        description = stringResource(
-            id = Strings.settings_sync_directory_not_found_message, url
-        ),
-        descriptionTextColor = CustomTheme.colors.primaryContent,
-        primaryAction = CustomAlertDialog.ActionConfig(
-            text = stringResource(id = Strings.cancel),
-        ),
-        secondaryAction = CustomAlertDialog.ActionConfig(
-            text = stringResource(id = Strings.create),
-            onClick = onCreate
-        ),
-        dismissOnClickOutside = false,
-        onDismiss = onCancel
-    )
-}
-
-@Composable
-private fun SignOutDialog (
-    onSignOut: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    CustomAlertDialog(
-        title = stringResource(id = Strings.warning),
-        description = stringResource(
-            id = Strings.settings_logout_warning
-        ),
-        descriptionTextColor = CustomTheme.colors.primaryContent,
-        primaryAction = CustomAlertDialog.ActionConfig(
-            text = stringResource(id = Strings.no),
-        ),
-        secondaryAction = CustomAlertDialog.ActionConfig(
-            text = stringResource(id = Strings.yes),
-            onClick = onSignOut
-        ),
-        onDismiss = onCancel
-    )
-}
