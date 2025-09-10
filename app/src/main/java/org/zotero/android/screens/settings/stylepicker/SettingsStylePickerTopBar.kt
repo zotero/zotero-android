@@ -1,22 +1,35 @@
 package org.zotero.android.screens.settings.stylepicker
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun SettingsCiteTopBar(
     onBack: () -> Unit,
 ) {
-    NewCustomTopBar(
-        title = stringResource(id = Strings.settings_cite_title),
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onBack,
-                text = stringResource(Strings.back_button),
-            )
-        }
+    TopAppBar(
+        title = { Text(
+            text = stringResource(Strings.settings_cite_title),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleLarge
+        )},
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
     )
+
 }

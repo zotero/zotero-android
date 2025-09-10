@@ -3,7 +3,6 @@ package org.zotero.android.screens.settings.account
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,37 +11,29 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.screens.settings.SettingsDivider
+import org.zotero.android.screens.settings.account.dialogs.SettingsAccountWebDavOptionsDialog
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
+import org.zotero.android.screens.settings.elements.NewSettingsItemWithDescription
 import org.zotero.android.screens.settings.elements.NewSettingsSectionTitle
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -95,122 +86,24 @@ private fun SettingsAccountFileSyncingWebDavItems(
 }
 
 @Composable
-private fun SettingsAccountFileSyncingSyncMethodChooserItem(
+internal fun SettingsAccountFileSyncingSyncMethodChooserItem(
     viewModel: SettingsAccountViewModel,
     viewState: SettingsAccountViewState
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 64.dp)
-            .background(CustomTheme.colors.surface)
-            .safeClickable(
-                onClick = viewModel::showWebDavOptionsPopup,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
-            ),
-    ) {
-        Text(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp, end = 120.dp),
-            text = stringResource(id = Strings.settings_sync_file_syncing_type_message),
-            style = CustomTheme.typography.newBody,
-            color = CustomTheme.colors.primaryContent,
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 24.dp)
-        ) {
-            if (viewState.showWebDavOptionsPopup) {
-                Dialog(onDismissRequest = viewModel::dismissWebDavOptionsPopup) {
-                    val roundCornerShape = RoundedCornerShape(size = 30.dp)
-                    Column(
-                        Modifier
-                            .wrapContentSize()
-                            .clip(roundCornerShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .selectableGroup()
-                    ) {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    text = "Sync files using",
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            },
-                        )
-
-                        NewSettingsRadioButton(
-                            text = stringResource(Strings.file_syncing_zotero_option),
-                            isSelected = viewState.fileSyncType == FileSyncType.zotero,
-                            onOptionSelected = { viewModel.setFileSyncType(FileSyncType.zotero) }
-                        )
-                        NewSettingsRadioButton(
-                            text = stringResource(Strings.file_syncing_webdav_option),
-                            isSelected = viewState.fileSyncType == FileSyncType.webDav,
-                            onOptionSelected = { viewModel.setFileSyncType(FileSyncType.webDav) }
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
-
-
-                }
-            }
-            Row(
-                modifier = Modifier,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier,
-                    text = stringResource(
-                        id = if (viewState.fileSyncType == FileSyncType.zotero) {
-                            Strings.file_syncing_zotero_option
-                        } else {
-                            Strings.file_syncing_webdav_option
-                        }
-                    ),
-                    style = CustomTheme.typography.newBody,
-                    color = CustomTheme.colors.secondaryContent,
-                )
-                Icon(
-                    modifier = Modifier,
-                    painter = painterResource(id = Drawables.baseline_arrow_drop_down_24),
-                    contentDescription = null,
-                    tint = CustomTheme.colors.secondaryContent
-                )
-            }
-        }
+    if (viewState.showWebDavOptionsDialog) {
+        SettingsAccountWebDavOptionsDialog(viewModel, viewState)
     }
-}
-
-@Composable
-private fun NewSettingsRadioButton(text: String, isSelected: Boolean, onOptionSelected: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .selectable(
-                selected = isSelected,
-                onClick = onOptionSelected,
-                role = Role.RadioButton,
-            )
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = null,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodyLarge,
-        )
-    }
+    NewSettingsItemWithDescription(
+        title = stringResource(id = Strings.settings_sync_file_syncing_type_message),
+        description = stringResource(
+            id = if (viewState.fileSyncType == FileSyncType.zotero) {
+                Strings.file_syncing_zotero_option
+            } else {
+                Strings.file_syncing_webdav_option
+            }
+        ),
+        onItemTapped = viewModel::showWebDavOptionsPopup
+    )
 }
 
 @Composable

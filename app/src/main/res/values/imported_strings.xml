@@ -301,7 +301,7 @@
     <string name="settings.saving.tags_message">Automatically tag items with keywords and subject headings</string>
     <string name="settings.cite.title">Cite</string>
     <string name="settings.cite.styles_title">Citation Styles</string>
-    <string name="settings.cite.get_more_styles">Get additional styles</string>
+    <string name="settings.cite.get_more_styles">Get Additional Styles</string>
     <string name="settings.cite_search.search_title">Search styles</string>
     <string name="settings.export.title">Quick Copy</string>
     <string name="settings.export.default_format">Default Format</string>
