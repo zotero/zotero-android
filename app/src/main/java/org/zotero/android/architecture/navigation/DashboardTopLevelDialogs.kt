@@ -20,7 +20,7 @@ import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.dashboard.DebugLoggingDialogs
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
+import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheetM3
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.modal.CustomAlertDialog
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -94,9 +94,9 @@ fun BoxScope.DashboardTopLevelDialogs(
         )
     }
 
-    LongPressBottomSheet(
-        layoutType = layoutType,
+    LongPressBottomSheetM3(
         longPressOptionsHolder = viewState.longPressOptionsHolder,
+        layoutType = layoutType,
         onCollapse = viewModel::dismissBottomSheet,
         onOptionClick = viewModel::onLongPressOptionsItemSelected
     )

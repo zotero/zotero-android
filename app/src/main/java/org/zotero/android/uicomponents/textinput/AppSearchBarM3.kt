@@ -66,7 +66,6 @@ fun AppSearchBarM3(
                 focusRequester.requestFocus()
             }
         }
-
         BasicTextField(
             value = textFieldState,
             onValueChange = onInnerValueChanged,

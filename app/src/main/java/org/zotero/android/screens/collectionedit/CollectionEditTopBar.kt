@@ -1,10 +1,22 @@
 package org.zotero.android.screens.collectionedit
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun CollectionEditTopBar(
@@ -12,26 +24,49 @@ internal fun CollectionEditTopBar(
     onSave: () -> Unit,
     viewState: CollectionEditViewState
 ) {
-    NewCustomTopBar(
-        title = stringResource(
-            id = if (viewState.key != null) {
-                Strings.collections_edit_title
-            } else {
-                Strings.collections_create_title
-            }
-        ),
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onCancel,
-                text = stringResource(Strings.cancel),
+
+    TopAppBar(
+        title = {
+            Text(
+                text = stringResource(
+                    id = if (viewState.key != null) {
+                        Strings.collections_edit_title
+                    } else {
+                        Strings.collections_create_title
+                    }
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
             )
         },
-        rightContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onSave,
-                isEnabled = viewState.isValid,
-                text = stringResource(Strings.save),
-            )
-        }
+        navigationIcon = {
+            IconButton(onClick = onCancel) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+        actions = {
+            val containerColor = if (viewState.isValid) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                CustomTheme.colors.disabledContent
+            }
+
+            FilledTonalButton(
+                onClick = { onSave() },
+                shapes = ButtonDefaults.shapes(),
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = containerColor),
+            ) {
+                Text(
+                    text = stringResource(Strings.save),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        },
     )
 }

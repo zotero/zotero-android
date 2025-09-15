@@ -39,7 +39,7 @@ import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTa
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.files.FileStore
-import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 import javax.inject.Inject
 
@@ -126,7 +126,7 @@ internal class DashboardActivity : BaseActivity() {
             val collectionDefaultValue = viewModel.getInitialCollectionArgs()
 
             setContent {
-                CustomTheme {
+                AppThemeM3 {
                     Box {
                         val viewState by viewModel.viewStates.observeAsState(DashboardViewState())
                         val viewEffect by viewModel.viewEffects.observeAsState()

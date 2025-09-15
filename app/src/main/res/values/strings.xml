@@ -66,4 +66,6 @@
     <string name="onboarding_share_tagline">Tap to collect</string>
     <string name="onboarding_share_description">Save articles and books directly from the web,\nincluding their PDFs and full metadata.</string>
 
+    <string name="collection_edit_parent">Parent</string>
+
 </resources>
