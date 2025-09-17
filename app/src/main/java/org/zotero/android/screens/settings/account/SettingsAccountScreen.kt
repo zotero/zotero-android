@@ -1,8 +1,8 @@
 package org.zotero.android.screens.settings.account
 
 import android.net.Uri
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,6 +13,7 @@ import org.zotero.android.screens.settings.account.dialogs.SettingsDirectoryNotF
 import org.zotero.android.screens.settings.account.dialogs.SettingsSignOutDialog
 import org.zotero.android.screens.settings.account.sections.SettingsAccountAccountSection
 import org.zotero.android.screens.settings.account.sections.SettingsAccountDataSyncSection
+import org.zotero.android.screens.settings.account.sections.SettingsAccountFileSyncingSection
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
@@ -53,13 +54,20 @@ internal fun SettingsAccountScreen(
                 )
             },
         ) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                SettingsAccountDataSyncSection(viewState, viewModel)
-                SettingsAccountFileSyncingSection(viewState, viewModel)
-                SettingsAccountAccountSection(viewModel)
+                item {
+                    SettingsAccountDataSyncSection(viewState, viewModel)
+                }
+                item {
+                    SettingsAccountFileSyncingSection(viewState, viewModel)
+                }
+                item {
+                    SettingsAccountAccountSection(viewModel)
+                }
+
             }
             val createWebDavDirectoryDialogData = viewState.createWebDavDirectoryDialogData
             if (createWebDavDirectoryDialogData != null) {

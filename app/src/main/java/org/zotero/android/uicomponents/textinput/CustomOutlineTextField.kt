@@ -160,6 +160,8 @@ fun CustomOutlineTextField(
     textStyle: TextStyle = LocalTextStyle.current,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     semanticsModifier: Modifier = Modifier,
+    prefix: @Composable (() -> Unit)? = null,
+    suffix: @Composable (() -> Unit)? = null,
 ) {
     val innerModifier by remember {
         derivedStateOf { modifier.copyFillModifiers() }
@@ -185,6 +187,8 @@ fun CustomOutlineTextField(
 
         OutlinedTextField(
             value = textFieldValue,
+            prefix = prefix,
+            suffix = suffix,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedLabelColor = labelColor,
                 unfocusedPlaceholderColor = placeholderColor,
