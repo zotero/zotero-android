@@ -1,25 +1,21 @@
 package org.zotero.android.screens.collectionpicker
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.screens.collectionpicker.table.CollectionsPickerTable
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun CollectionPickerScreen(
     onBack: () -> Unit,
     viewModel: CollectionPickerViewModel = hiltViewModel(),
 ) {
-    val backgroundColor = CustomTheme.colors.popupBackgroundContent
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(CollectionPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -39,24 +35,21 @@ internal fun CollectionPickerScreen(
                 }
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
                 CollectionPickerTopBar(
                     title = viewState.title,
                     multipleSelectionAllowed = viewState.multipleSelectionAllowed,
-                    onCancelClicked = onBack,
+                    onBackClicked = onBack,
                     onAdd = viewModel::confirmSelection,
                 )
             },
         ) {
-            Column(modifier = Modifier.background(backgroundColor)) {
-                CollectionsPickerTable(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    layoutType = layoutType
-                )
-            }
+            CollectionsPickerTable(
+                viewState = viewState,
+                viewModel = viewModel,
+                layoutType = layoutType
+            )
         }
     }
 }

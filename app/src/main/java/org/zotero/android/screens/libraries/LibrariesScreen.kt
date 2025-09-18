@@ -1,7 +1,5 @@
 package org.zotero.android.screens.libraries
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,13 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.screens.libraries.table.LibrariesTable
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun LibrariesScreen(
@@ -26,7 +24,7 @@ internal fun LibrariesScreen(
     onSettingsTapped: () -> Unit,
     viewModel: LibrariesViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
@@ -38,12 +36,13 @@ internal fun LibrariesScreen(
             val consumedEffect = viewEffect?.consume()
             when (consumedEffect) {
                 null -> Unit
-                is LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(consumedEffect.screenArgs)
+                is LibrariesViewEffect.NavigateToCollectionsScreen -> navigateToCollectionsScreen(
+                    consumedEffect.screenArgs
+                )
             }
         }
 
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
                 LibrariesTopBar(
                     onSettingsTapped = onSettingsTapped,
@@ -63,12 +62,10 @@ internal fun LibrariesScreen(
                     CircularLoading()
                 },
             ) {
-                Column(modifier = Modifier.background(CustomTheme.colors.pdfAnnotationsFormBackground)) {
-                    LibrariesTable(
-                        viewState = viewState,
-                        viewModel = viewModel,
-                    )
-                }
+                LibrariesTable(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                )
             }
         }
     }

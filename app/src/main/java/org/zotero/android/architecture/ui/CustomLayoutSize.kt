@@ -54,12 +54,6 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateItemsRowMainIconSize(): Dp {
-            return when (this) {
-                big, medium -> 26.dp
-                small -> 22.dp
-            }
-        }
         fun calculateItemsRowTextSize(): TextUnit {
             return when (this) {
                 big, medium -> 20.sp
