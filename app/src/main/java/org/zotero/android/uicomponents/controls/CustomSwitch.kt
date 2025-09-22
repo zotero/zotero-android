@@ -21,6 +21,7 @@ fun CustomSwitch(
     checked: Boolean,
     modifier: Modifier = Modifier,
     onCheckedChange: ((Boolean) -> Unit)? = null,
+    colors: SwitchColors = SwitchDefaults.colors(),
     enabled: Boolean = true,
 ) {
     Switch(
@@ -28,7 +29,7 @@ fun CustomSwitch(
         onCheckedChange = onCheckedChange,
         modifier = modifier,
         enabled = enabled,
-        colors = CustomSwitch.colors(),
+        colors = colors,
     )
 }
 

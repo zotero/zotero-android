@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 
@@ -39,12 +40,13 @@ fun SearchViewM3(
     onInnerValueChanged: (TextFieldValue) -> Unit,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     textFieldState: TextFieldValue,
-    focusOnScreenOpen: Boolean = false
+    focusOnScreenOpen: Boolean = false,
+    horizontalPadding: Dp = 12.dp,
 ) {
     val cornerShape = RoundedCornerShape(24.dp)
     Row(
         modifier = modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = horizontalPadding)
             .clip(cornerShape)
             .background(
                 color = MaterialTheme.colorScheme.surfaceContainer,

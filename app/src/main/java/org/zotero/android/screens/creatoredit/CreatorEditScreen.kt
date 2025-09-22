@@ -114,6 +114,9 @@ internal fun CreatorEditScreen(
                     onDismiss = viewModel::onDismissDeleteConformation
                 )
             }
+            if (viewState.showChooserDialog) {
+                CreatorEditCreatorTypeDialog(viewModel = viewModel, viewState = viewState)
+            }
         }
 
     }

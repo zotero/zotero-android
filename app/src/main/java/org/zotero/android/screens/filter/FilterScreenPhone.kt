@@ -1,13 +1,19 @@
 package org.zotero.android.screens.filter
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun FilterScreenPhone(
@@ -30,15 +36,23 @@ internal fun FilterScreenPhone(
             else -> {}
         }
     }
-    CustomThemeWithStatusAndNavBars {
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
-            bottomBarColor = CustomTheme.colors.popupBackgroundContent,
+    AppThemeM3 {
+        CustomScaffoldM3(
             topBar = {
                 FilterTopBar(
                     onDone = viewModel::onDone,
+                    viewState = viewState,
+                    viewModel = viewModel,
                 )
             },
+            bottomBar = {
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .fillMaxWidth()
+                        .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+                )
+            }
         ) {
             FilterScreen(viewModel = viewModel, viewState = viewState)
         }
