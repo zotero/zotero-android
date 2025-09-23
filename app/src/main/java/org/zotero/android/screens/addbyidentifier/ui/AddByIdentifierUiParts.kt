@@ -1,6 +1,7 @@
 package org.zotero.android.screens.addbyidentifier.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,11 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import org.zotero.android.uicomponents.Strings
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewModel
 import org.zotero.android.screens.addbyidentifier.AddByIdentifierViewState
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -33,17 +36,13 @@ internal fun LazyListScope.addByIdentifierTitleEditFieldAndError(
     failedState: AddByIdentifierViewModel.State.failed?
 ) {
     item {
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         IdentifierTitle()
-
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         IdentifierEditField(
             identifierText = viewState.identifierText,
             onIdentifierTextChange = viewModel::onIdentifierTextChange,
         )
-
-//        Spacer(modifier = Modifier.height(20.dp))
-//        ScanTextButton(onClick = viewModel::onScanText)
 
         if (failedState != null) {
             val errorText = when (failedState.error) {
@@ -74,8 +73,8 @@ internal fun LazyListScope.addByIdentifierTitleEditFieldAndError(
 internal fun IdentifierTitle() {
     Text(
         text = stringResource(id = Strings.lookup_title),
-        color = CustomPalette.DarkGrayColor,
-        style = CustomTheme.typography.subhead,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
     )
 }
 
@@ -84,11 +83,17 @@ internal fun IdentifierEditField(
     identifierText: String,
     onIdentifierTextChange: (String) -> Unit,
 ) {
+    val roundedCornerShape = RoundedCornerShape(size = 6.dp)
     Row(
         modifier = Modifier
             .background(
-                color = CustomTheme.colors.zoteroEditFieldBackground,
-                shape = RoundedCornerShape(size = 10.dp)
+                color = Color.Transparent,
+                shape = roundedCornerShape
+            )
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+                shape = roundedCornerShape
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -106,7 +111,7 @@ internal fun IdentifierEditField(
             maxLines = 4,
             ignoreTabsAndCaretReturns = false,
             focusRequester = focusRequester,
-            textColor = CustomTheme.colors.primaryContent,
+            textColor = MaterialTheme.colorScheme.onSurface,
             onValueChange = onIdentifierTextChange,
             textStyle = CustomTheme.typography.newBody,
         )

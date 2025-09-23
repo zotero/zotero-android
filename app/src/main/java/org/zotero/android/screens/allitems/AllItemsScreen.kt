@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.allitems.bottomsheet.AllItemsAddBottomSheet
 import org.zotero.android.screens.allitems.table.AllItemsTable
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
@@ -202,22 +203,22 @@ internal fun AllItemsScreen(
                         deleteItemsFromCollection = { viewModel.deleteItemsFromCollection(it) },
                     )
                 }
-                val bottomSheetTitle = stringResource(id = Strings.item_type)
-                AllItemsAddBottomSheet(
-                    onScanBarcode = viewModel::onScanBarcode,
-                    onAddFile = onPickFile,
-                    onAddNote = viewModel::onAddNote,
-                    onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
-                    onAddByIdentifier = viewModel::onAddByIdentifier,
-                    onClose = viewModel::onAddBottomSheetCollapse,
-                    showBottomSheet = viewState.shouldShowAddBottomSheet
-                )
 
                 if (viewState.isGeneratingBibliography) {
                     GeneratingBibliographyLoadingIndicator()
                 }
             }
         }
+        val bottomSheetTitle = stringResource(id = Strings.item_type)
+        AllItemsAddBottomSheet(
+            onScanBarcode = viewModel::onScanBarcode,
+            onAddFile = onPickFile,
+            onAddNote = viewModel::onAddNote,
+            onAddManually = { viewModel.onAddManually(bottomSheetTitle) },
+            onAddByIdentifier = viewModel::onAddByIdentifier,
+            onClose = viewModel::onAddBottomSheetCollapse,
+            showBottomSheet = viewState.shouldShowAddBottomSheet
+        )
 
     }
 }

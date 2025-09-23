@@ -3,7 +3,6 @@ package org.zotero.android.architecture.navigation
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.dashboard.ChangedItemsDeletedAlert
 import org.zotero.android.screens.dashboard.ConflictResolutionDialogs
 import org.zotero.android.screens.dashboard.CrashLoggingDialogs
@@ -20,7 +19,6 @@ fun BoxScope.DashboardTopLevelDialogs(
     viewState: DashboardViewState,
     viewModel: DashboardViewModel,
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
     val changedItemsDeletedAlert = viewState.changedItemsDeletedAlertQueue.firstOrNull()
     if (changedItemsDeletedAlert != null) {
         ChangedItemsDeletedAlert(
@@ -85,7 +83,6 @@ fun BoxScope.DashboardTopLevelDialogs(
 
     LongPressBottomSheetM3(
         longPressOptionsHolder = viewState.longPressOptionsHolder,
-        layoutType = layoutType,
         onCollapse = viewModel::dismissBottomSheet,
         onOptionClick = viewModel::onLongPressOptionsItemSelected
     )

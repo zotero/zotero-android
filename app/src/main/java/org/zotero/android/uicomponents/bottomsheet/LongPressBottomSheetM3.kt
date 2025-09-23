@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.uicomponents.modal.CustomModalBottomSheetM3
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -22,7 +21,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun LongPressBottomSheetM3(
     onCollapse: () -> Unit,
-    layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder? = null,
     onOptionClick: (LongPressOptionItem) -> Unit,
 ) {
@@ -30,7 +28,6 @@ internal fun LongPressBottomSheetM3(
 
     if (shouldShow) {
         CustomModalBottomSheetM3(
-            layoutType = layoutType,
             sheetContent = {
                 LongPressBottomSheetContent(
                     longPressOptionsHolder = longPressOptionsHolder,

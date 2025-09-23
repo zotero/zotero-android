@@ -41,12 +41,9 @@ fun CustomBottomSheetScaffoldM3(
     topBar: (@Composable () -> Unit)? = null,
     snackbarMessage: SnackbarMessage? = null,
     sheetPeekHeight: Dp = 0.dp,
-    layoutType: CustomLayoutSize.LayoutType,
     content: @Composable () -> Unit = {}
 ) {
-
-
-
+    val layoutType = CustomLayoutSize.calculateLayoutType()
     BottomSheetScaffold(
         sheetContent = {
             Column(
@@ -119,7 +116,6 @@ private fun Scrim(
 @Composable
 fun CustomModalBottomSheetM3(
     modifier: Modifier = Modifier,
-    layoutType: CustomLayoutSize.LayoutType,
     onCollapse: () -> Unit,
     shouldCollapse: Boolean = false,
     snackbarMessage: SnackbarMessage? = null,
@@ -171,6 +167,5 @@ fun CustomModalBottomSheetM3(
         sheetContent = { sheetContent() },
         snackbarMessage = snackbarMessage,
         content = { /* No content */ },
-        layoutType = layoutType,
     )
 }
