@@ -1,5 +1,7 @@
 package org.zotero.android.pdf.annotationmore.rows
 
+import PdfAnnotationMoreColorPicker
+import PdfAnnotationMoreSizeSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.pdf.annotationmore.MoreColorPicker
 import org.zotero.android.pdf.annotationmore.MoreSidebarDivider
-import org.zotero.android.pdf.annotationmore.MoreSizeSelector
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -21,7 +20,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 internal fun PdfAnnotationMoreInkRow(
     viewState: PdfAnnotationMoreViewState,
     viewModel: PdfAnnotationMoreViewModel,
-    layoutType: CustomLayoutSize.LayoutType,
 ) {
     Column(
         modifier = Modifier
@@ -29,7 +27,7 @@ internal fun PdfAnnotationMoreInkRow(
             .background(color = CustomTheme.colors.zoteroEditFieldBackground)
     ) {
         Spacer(modifier = Modifier.height(4.dp))
-        MoreColorPicker(viewState, viewModel)
+        PdfAnnotationMoreColorPicker(viewState, viewModel)
         Spacer(modifier = Modifier.height(4.dp))
         MoreSidebarDivider(
             modifier = Modifier
@@ -37,10 +35,9 @@ internal fun PdfAnnotationMoreInkRow(
                 .fillMaxWidth()
                 .padding(start = 16.dp)
         )
-        MoreSizeSelector(
+        PdfAnnotationMoreSizeSelector(
             viewState = viewState,
             viewModel = viewModel,
-            layoutType = layoutType
         )
     }
 }

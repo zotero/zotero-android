@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.annotation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,8 +33,7 @@ import org.zotero.android.pdf.reader.sidebar.SidebarDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomPalette
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
@@ -54,7 +52,7 @@ internal fun PdfAnnotationScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(PdfAnnotationViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    AppThemeM3 {
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
                 is PdfAnnotationViewEffect.NavigateToTagPickerScreen -> {
@@ -113,7 +111,6 @@ internal fun PdfAnnotationPart(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(CustomTheme.colors.surface)
             .windowInsetsPadding(TopAppBarDefaults.windowInsets)
     ) {
         val annotationColor =

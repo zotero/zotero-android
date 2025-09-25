@@ -29,13 +29,11 @@ internal fun SortPickerNavigation() {
 internal fun NavGraphBuilder.sortPickerNavScreens(navigation: ZoteroNavigation) {
     sortPickerScreen(
         onBack = navigation::onBack,
-        navigateToSinglePickerScreen = navigation::toSinglePickerScreen,
     )
     singlePickerScreen(onBack = navigation::onBack)
 }
 
 private fun NavGraphBuilder.sortPickerScreen(
-    navigateToSinglePickerScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
     composable(
@@ -44,7 +42,6 @@ private fun NavGraphBuilder.sortPickerScreen(
     ) {
         SortPickerScreen(
             onBack = onBack,
-            navigateToSinglePickerScreen = navigateToSinglePickerScreen,
         )
     }
 }
@@ -67,8 +64,4 @@ private object SortPickerDestinations {
 
 fun ZoteroNavigation.toSortPicker() {
     navController.navigate(SortPickerDestinations.SORT_PICKER)
-}
-
-private fun ZoteroNavigation.toSinglePickerScreen() {
-    navController.navigate(SortPickerDestinations.SINGLE_PICKER_SCREEN)
 }
