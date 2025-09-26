@@ -5,8 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,19 +22,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.R
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
 internal fun PdfAnnotationHeaderRow(
     annotation: PDFAnnotation,
     annotationColor: Color,
-    layoutType: CustomLayoutSize.LayoutType,
     onBack: () -> Unit,
 ) {
     val title = stringResource(R.string.page) + " " + annotation.pageLabel
@@ -49,7 +50,7 @@ internal fun PdfAnnotationHeaderRow(
         ) {
             Spacer(modifier = Modifier.width(8.dp))
             Image(
-                modifier = Modifier.size(layoutType.calculatePdfSidebarHeaderIconSize()),
+                modifier = Modifier.size(24.dp),
                 painter = painterResource(id = icon),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(annotationColor),
@@ -57,27 +58,34 @@ internal fun PdfAnnotationHeaderRow(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = title,
-                color = CustomTheme.colors.primaryContent,
-                style = CustomTheme.typography.defaultBold,
-                fontSize = layoutType.calculatePdfSidebarTextSize(),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
         Row(
-            modifier = Modifier.align(Alignment.CenterEnd),
+            modifier = Modifier.align(Alignment.CenterEnd).padding(top = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            HeadingTextButton(
+
+            FilledTonalButton(
                 onClick = onBack,
-                text = stringResource(Strings.done)
-            )
+                shapes = ButtonDefaults.shapes(),
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+            ) {
+                Text(
+                    text = stringResource(Strings.done),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
             Spacer(modifier = Modifier.width(8.dp))
             if (!annotation.isZoteroAnnotation) {
                 Image(
                     modifier = Modifier
-                        .size(22.dp),
+                        .size(24.dp),
                     painter = painterResource(id = Drawables.ic_lock_solid),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(CustomTheme.colors.disabledContent),

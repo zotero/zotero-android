@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
 import org.zotero.android.uicomponents.textinput.CustomTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfAnnotationMoreHighlightText(
@@ -30,20 +30,20 @@ internal fun PdfAnnotationMoreHighlightText(
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 8.dp)
+                .padding(start = 16.dp)
                 .width(3.dp)
                 .fillMaxHeight()
                 .background(annotationColor)
         )
 
         CustomTextField(
-            modifier = Modifier.padding(start = 20.dp, end = 16.dp),
+            modifier = Modifier.padding(start = 27.dp, end = 16.dp),
             value = viewState.highlightText,
             hint = "",
             ignoreTabsAndCaretReturns = false,
             onValueChange = onValueChange,
-            textStyle = CustomTheme.typography.default.copy(fontSize = 16.sp),
-            textColor = CustomTheme.colors.primaryContent,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+            textColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

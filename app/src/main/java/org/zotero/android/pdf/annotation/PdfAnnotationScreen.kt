@@ -1,17 +1,25 @@
 package org.zotero.android.pdf.annotation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -29,12 +37,11 @@ import org.zotero.android.pdf.annotation.row.PdfAnnotationNoteRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationTextRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationUnderlineRow
 import org.zotero.android.pdf.data.PDFAnnotation
-import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomPalette
+import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.themem3.AppThemeM3
-import org.zotero.android.uicomponents.topbar.HeadingTextButton
 
 @Composable
 internal fun PdfAnnotationScreen(
@@ -104,14 +111,13 @@ internal fun PdfAnnotationPart(
     size: Float,
     onSizeChanged: (Float) -> Unit,
 ) {
-
     val annotation = stateAnnotation ?: return
-    val layoutType = CustomLayoutSize.calculateLayoutType()
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         val annotationColor =
             Color(annotation.displayColor.toColorInt())
@@ -119,21 +125,14 @@ internal fun PdfAnnotationPart(
             PdfAnnotationHeaderRow(
                 annotation = annotation,
                 annotationColor = annotationColor,
-                layoutType = layoutType,
                 onBack = onDone,
             )
-            if (annotation.type != AnnotationType.text) {
-                SidebarDivider(modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(4.dp))
-            }
         }
-
 
         item {
             when (annotation.type) {
                 AnnotationType.note -> PdfAnnotationNoteRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,
@@ -145,7 +144,6 @@ internal fun PdfAnnotationPart(
 
                 AnnotationType.highlight -> PdfAnnotationHighlightRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,
@@ -157,7 +155,6 @@ internal fun PdfAnnotationPart(
 
                 AnnotationType.ink -> PdfAnnotationInkRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     onCommentTextChange = onCommentTextChange,
                     commentFocusText = commentFocusText,
                     tags = tags,
@@ -168,7 +165,6 @@ internal fun PdfAnnotationPart(
 
                 AnnotationType.image -> PdfAnnotationImageRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,
@@ -179,7 +175,6 @@ internal fun PdfAnnotationPart(
                 )
                 AnnotationType.underline -> PdfAnnotationUnderlineRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     onColorSelected = onColorSelected,
                     onCommentTextChange = onCommentTextChange,
                     selectedColor = selectedColor,
@@ -190,7 +185,6 @@ internal fun PdfAnnotationPart(
                 )
                 AnnotationType.text -> PdfAnnotationTextRow(
                     annotation = annotation,
-                    layoutType = layoutType,
                     fontSize = fontSize,
                     onFontSizeDecrease = onFontSizeDecrease,
                     onFontSizeIncrease = onFontSizeIncrease,
@@ -203,24 +197,33 @@ internal fun PdfAnnotationPart(
             }
         }
         item {
-            if (annotation.type != AnnotationType.text) {
-                SidebarDivider(
-                    modifier = Modifier
-                        .height(1.dp)
-                        .fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
             if (annotation.isZoteroAnnotation) {
-                HeadingTextButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = onDeleteAnnotation,
-                    contentColor = CustomPalette.ErrorRed,
-                    text = stringResource(Strings.pdf_annotation_popover_delete),
-                )
+                NewSettingsDivider()
+                DeleteButton(onDeleteAnnotation = onDeleteAnnotation)
             }
 
         }
 
+    }
+}
+
+@Composable
+private fun DeleteButton(onDeleteAnnotation: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .safeClickable(
+                onClick = onDeleteAnnotation,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = true)
+            ), contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            text = stringResource(Strings.pdf_annotation_popover_delete),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge,
+        )
     }
 }

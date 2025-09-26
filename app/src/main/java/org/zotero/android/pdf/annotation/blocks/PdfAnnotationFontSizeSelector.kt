@@ -1,3 +1,5 @@
+package org.zotero.android.pdf.annotation.blocks
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,14 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
-import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
 import java.util.Locale
 
 @Composable
-internal fun PdfAnnotationMoreFontSizeSelector(
-    viewState: PdfAnnotationMoreViewState,
-    viewModel: PdfAnnotationMoreViewModel,
+internal fun PdfAnnotationFontSizeSelector(
+    fontSize: Float,
+    onFontSizeDecrease: () -> Unit,
+    onFontSizeIncrease: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -28,7 +29,7 @@ internal fun PdfAnnotationMoreFontSizeSelector(
     ) {
         Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = String.format(Locale.getDefault(), "%.1f", viewState.fontSize),
+                text = String.format(Locale.getDefault(), "%.1f", fontSize),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyLarge,
             )
@@ -41,9 +42,9 @@ internal fun PdfAnnotationMoreFontSizeSelector(
         }
 
         Row(modifier = Modifier.align(Alignment.CenterEnd)) {
-            PdfAnnotationMoreFontSizeChangeButton(text = "-", onClick = viewModel::onFontSizeDecrease)
+            PdfAnnotationFontSizeChangeButton(text = "-", onClick = onFontSizeDecrease)
             Spacer(modifier = Modifier.width(2.dp))
-            PdfAnnotationMoreFontSizeChangeButton(text = "+", onClick = viewModel::onFontSizeIncrease)
+            PdfAnnotationFontSizeChangeButton(text = "+", onClick = onFontSizeIncrease)
         }
     }
 }

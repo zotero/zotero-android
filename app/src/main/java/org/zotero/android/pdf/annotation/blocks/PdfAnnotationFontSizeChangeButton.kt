@@ -1,3 +1,5 @@
+package org.zotero.android.pdf.annotation.blocks
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -17,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import org.zotero.android.uicomponents.foundation.safeClickable
 
 @Composable
-internal fun PdfAnnotationMoreFontSizeChangeButton(text: String, onClick: (() -> Unit)) {
+internal fun PdfAnnotationFontSizeChangeButton(text: String, onClick: (() -> Unit)) {
     val roundCornerShape = RoundedCornerShape(size = 8.dp)
 
     Box(

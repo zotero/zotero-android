@@ -2,10 +2,7 @@ package org.zotero.android.pdf.annotationmore.rows
 
 import PdfAnnotationMoreColorPicker
 import PdfAnnotationMoreHighlightText
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
@@ -19,16 +16,11 @@ internal fun PdfAnnotationMoreHighlightRow(
 ) {
     val annotationColor =
         Color(viewState.color.toColorInt())
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        PdfAnnotationMoreHighlightText(
-            annotationColor = annotationColor,
-            viewState = viewState,
-            onValueChange = viewModel::onHighlightTextValueChange,
-        )
-        NewSettingsDivider()
-        PdfAnnotationMoreColorPicker(viewState, viewModel)
-    }
+    PdfAnnotationMoreHighlightText(
+        annotationColor = annotationColor,
+        viewState = viewState,
+        onValueChange = viewModel::onHighlightTextValueChange,
+    )
+    NewSettingsDivider()
+    PdfAnnotationMoreColorPicker(viewState, viewModel)
 }
