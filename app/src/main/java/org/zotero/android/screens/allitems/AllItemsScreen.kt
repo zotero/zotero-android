@@ -1,7 +1,6 @@
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -59,9 +58,15 @@ internal fun AllItemsScreen(
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 null -> Unit
-                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen(consumedEffect.screenArgs)
+                is AllItemsViewEffect.ShowCollectionsEffect -> navigateToCollectionsScreen(
+                    consumedEffect.screenArgs
+                )
+
                 is AllItemsViewEffect.ShowItemDetailEffect -> navigateToItemDetails(consumedEffect.screenArgs)
-                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(consumedEffect.screenArgs)
+                is AllItemsViewEffect.ShowAddOrEditNoteEffect -> navigateToAddOrEditNote(
+                    consumedEffect.screenArgs
+                )
+
                 is AllItemsViewEffect.ShowPhoneFilterEffect -> {
                     navigateToTagFilter(consumedEffect.params)
                 }
@@ -124,6 +129,7 @@ internal fun AllItemsScreen(
                         lazyListState.scrollToItem(index = 0, scrollOffset = 0)
                     }
                 }
+
                 AllItemsViewEffect.ShowSingleCitationEffect -> {
                     navigateToSingleCitation()
                 }
@@ -131,7 +137,7 @@ internal fun AllItemsScreen(
         }
 
         CustomScaffoldM3(
-            bottomBar =  {
+            bottomBar = {
                 AllItemsBottomPanelNew(
                     viewModel = viewModel,
                     viewState = viewState,
@@ -159,39 +165,18 @@ internal fun AllItemsScreen(
                     CircularLoading()
                 },
             ) {
-//                AllItemsBottomPanel(layoutType, viewState, viewModel)
-                Column(
-//                    modifier = Modifier
-//                        .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight())
-                ) {
-//                    if (!layoutType.isTablet()) {
-//                        Column(modifier = Modifier.background(CustomTheme.colors.topBarBackgroundColor)) {
-//                            AllItemsSearchBar(
-//                                modifier = Modifier.padding(horizontal = 16.dp),
-//                                viewState = viewState,
-//                                viewModel = viewModel
-//                            )
-//                            Spacer(
-//                                modifier = Modifier
-//                                    .height(16.dp)
-//                            )
-//                            NewDivider()
-//                        }
-//                    }
-                    AllItemsTable(
-                        lazyListState = lazyListState,
-                        layoutType = layoutType,
-                        itemCellModels = viewState.itemCellModels,
-                        isEditing = viewState.isEditing,
-                        isRefreshing = viewState.isRefreshing,
-                        isItemSelected = viewState::isSelected,
-                        getItemAccessory = viewState::getAccessoryForItem,
-                        onItemTapped = viewModel::onItemTapped,
-                        onAccessoryTapped = viewModel::onAccessoryTapped,
-                        onItemLongTapped = viewModel::onItemLongTapped,
-                        onStartSync = viewModel::startSync
-                    )
-                }
+                AllItemsTable(
+                    lazyListState = lazyListState,
+                    itemCellModels = viewState.itemCellModels,
+                    isEditing = viewState.isEditing,
+                    isRefreshing = viewState.isRefreshing,
+                    isItemSelected = viewState::isSelected,
+                    getItemAccessory = viewState::getAccessoryForItem,
+                    onItemTapped = viewModel::onItemTapped,
+                    onAccessoryTapped = viewModel::onAccessoryTapped,
+                    onItemLongTapped = viewModel::onItemLongTapped,
+                    onStartSync = viewModel::startSync
+                )
 
                 val itemsError = viewState.error
                 if (itemsError != null) {

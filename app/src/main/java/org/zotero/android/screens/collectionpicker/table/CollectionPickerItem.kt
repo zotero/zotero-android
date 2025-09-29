@@ -23,7 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun CollectionPickerItem(
@@ -35,7 +34,7 @@ internal fun CollectionPickerItem(
 ) {
     var rowModifier: Modifier = Modifier
     if (isSelected) {
-        rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
+        rowModifier = rowModifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
     }
 
     Row(
