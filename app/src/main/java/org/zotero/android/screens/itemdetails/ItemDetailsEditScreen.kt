@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.itemdetails.rows.ItemDetailsFieldRow
+import org.zotero.android.screens.itemdetails.rows.ItemDetailsItemType
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.misc.CustomDivider
@@ -62,7 +64,7 @@ internal fun ItemDetailsEditScreen(
             Spacer(modifier = Modifier.height(12.dp))
             CustomDivider(modifier = Modifier.padding(start = 16.dp))
             Column(modifier = Modifier.padding(horizontal = 12.dp)) {
-                ItemType(
+                ItemDetailsItemType(
                     viewState = viewState,
                     layoutType = layoutType,
                     onItemTypeClicked = viewModel::onItemTypeClicked
@@ -84,7 +86,6 @@ internal fun ItemDetailsEditScreen(
                     CustomDivider()
                     AddItemRow(
                         titleRes = Strings.item_detail_add_creator,
-                        startPadding = 0.dp,
                         onClick = viewModel::onAddCreator
                     )
                     CustomDivider()
@@ -100,7 +101,6 @@ internal fun ItemDetailsEditScreen(
                     dateAdded = viewState.data.dateAdded,
                     dateModified = viewState.data.dateModified,
                     layoutType = layoutType,
-                    showDivider = true
                 )
                 if (!viewState.data.isAttachment) {
                     EditAbstractRow(
@@ -113,31 +113,6 @@ internal fun ItemDetailsEditScreen(
     }
 }
 
-@Composable
-private fun ItemType(
-    viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType,
-    onItemTypeClicked: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .safeClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(),
-                onClick = onItemTypeClicked
-            )
-    ) {
-        Column {
-            FieldRow(
-                detailTitle = stringResource(id = Strings.item_type),
-                detailValue = viewState.data.localizedType,
-                layoutType = layoutType,
-                showDivider = false
-            )
-        }
-        CustomDivider()
-    }
-}
 
 private fun LazyListScope.listOfCreatorRows(
     viewState: ItemDetailsViewState,
@@ -162,11 +137,10 @@ private fun LazyListScope.listOfCreatorRows(
                     .background(color = CustomTheme.colors.surface),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FieldRow(
+                ItemDetailsFieldRow(
                     detailTitle = title,
                     detailValue = value,
                     layoutType = layoutType,
-                    showDivider = true,
                     reorderState = reorderState,
                     onDelete = { onDeleteCreator(creatorId) }
                 )
@@ -228,11 +202,10 @@ private fun FieldReadOnlyRow(
             )
     ) {
         Column {
-            FieldRow(
+            ItemDetailsFieldRow(
                 detailTitle = title,
                 detailValue = value,
                 layoutType = layoutType,
-                showDivider = false
             )
         }
         CustomDivider()

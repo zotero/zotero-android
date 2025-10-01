@@ -13,11 +13,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.screens.itemdetails.topbars.ItemDetailsEditingTopBar
+import org.zotero.android.screens.itemdetails.topbars.ItemDetailsTopBar
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.reorder.rememberReorderState
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
 @Composable
@@ -36,7 +38,7 @@ internal fun ItemDetailsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
 
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
@@ -108,15 +110,20 @@ internal fun ItemDetailsScreen(
 
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
-                ItemDetailsTopBar(
-                    type = viewState.type,
-                    onViewOrEditClicked = viewModel::onSaveOrEditClicked,
-                    onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
-                    isEditing = viewState.isEditing
-                )
+                if (viewState.isEditing) {
+                    ItemDetailsEditingTopBar(
+                        type = viewState.type,
+                        onViewOrEditClicked = viewModel::onSaveOrEditClicked,
+                        onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
+                    )
+                } else {
+                    ItemDetailsTopBar(
+                        onViewOrEditClicked = viewModel::onSaveOrEditClicked,
+                        onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
+                    )
+                }
             },
         ) {
             Column(
