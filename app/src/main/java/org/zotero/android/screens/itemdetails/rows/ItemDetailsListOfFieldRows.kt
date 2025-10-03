@@ -2,7 +2,6 @@ package org.zotero.android.screens.itemdetails.rows
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.itemdetails.ItemDetailsViewModel
 import org.zotero.android.screens.itemdetails.ItemDetailsViewState
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
@@ -10,7 +9,6 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailField
 @Composable
 fun ItemDetailsListOfFieldRows(
     viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType,
     viewModel: ItemDetailsViewModel,
 ) {
     for (fieldId in viewState.data.fieldIds) {
@@ -28,7 +26,6 @@ fun ItemDetailsListOfFieldRows(
         ItemDetailsFieldRow(
             detailTitle = title,
             detailValue = value,
-            layoutType = layoutType,
             textColor = textColor,
             additionalInfoString = field.additionalInfo?.get(ItemDetailField.AdditionalInfoKey.dateOrder),
             onRowTapped = { viewModel.onRowTapped(field) }

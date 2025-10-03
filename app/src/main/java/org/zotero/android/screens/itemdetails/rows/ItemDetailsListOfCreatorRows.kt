@@ -6,7 +6,6 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.itemdetails.ItemDetailsViewState
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
@@ -14,7 +13,6 @@ import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 @Composable
 internal fun ItemDetailsListOfCreatorRows(
     viewState: ItemDetailsViewState,
-    layoutType: CustomLayoutSize.LayoutType,
     onCreatorLongClick: (ItemDetailCreator) -> Unit,
 ) {
     for (creatorId in viewState.data.creatorIds) {
@@ -33,7 +31,6 @@ internal fun ItemDetailsListOfCreatorRows(
             ItemDetailsFieldRow(
                 detailTitle = title,
                 detailValue = value,
-                layoutType = layoutType,
             )
         }
     }

@@ -1,9 +1,7 @@
 package org.zotero.android.screens.itemdetails
 
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -12,13 +10,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsEditingTopBar
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsTopBar
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
 import org.zotero.android.uicomponents.reorder.rememberReorderState
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
@@ -40,7 +36,6 @@ internal fun ItemDetailsScreen(
 ) {
     AppThemeM3 {
 
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(ItemDetailsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
 
@@ -129,27 +124,18 @@ internal fun ItemDetailsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.surface),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight(),
-                ) {
-                    if (viewState.isEditing) {
-                        ItemDetailsEditScreen(
-                            viewState = viewState,
-                            layoutType = layoutType,
-                            viewModel = viewModel,
-                            reorderState = reorderState,
-                        )
-                    } else {
-                        ItemDetailsViewScreen(
-                            viewState = viewState,
-                            layoutType = layoutType,
-                            viewModel = viewModel
-                        )
-                    }
-
+                if (viewState.isEditing) {
+                    ItemDetailsEditScreen(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        reorderState = reorderState,
+                    )
+                } else {
+                    ItemDetailsViewScreen(
+                        viewState = viewState,
+                        viewModel = viewModel
+                    )
                 }
             }
             val itemDetailError = viewState.error
@@ -165,7 +151,6 @@ internal fun ItemDetailsScreen(
                 )
             }
             LongPressBottomSheet(
-                layoutType = layoutType,
                 longPressOptionsHolder = viewState.longPressOptionsHolder,
                 onCollapse = viewModel::dismissBottomSheet,
                 onOptionClick = viewModel::onLongPressOptionsItemSelected

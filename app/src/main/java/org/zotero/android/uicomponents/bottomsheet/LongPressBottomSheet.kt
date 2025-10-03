@@ -18,7 +18,6 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 @Composable
 internal fun LongPressBottomSheet(
     onCollapse: () -> Unit,
-    layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder? = null,
     onOptionClick: (LongPressOptionItem) -> Unit,
     tabletWidthPercentage: Float = 0.5f,
@@ -29,7 +28,6 @@ internal fun LongPressBottomSheet(
         CustomModalBottomSheet(
             sheetContent = {
                 LongPressBottomSheetContent(
-                    layoutType = layoutType,
                     longPressOptionsHolder = longPressOptionsHolder!!,
                     tabletWidthPercentage = tabletWidthPercentage,
                     onOptionClick = {
@@ -47,11 +45,12 @@ internal fun LongPressBottomSheet(
 
 @Composable
 private fun BoxScope.LongPressBottomSheetContent(
-    layoutType: CustomLayoutSize.LayoutType,
     longPressOptionsHolder: LongPressOptionsHolder,
     onOptionClick: (LongPressOptionItem) -> Unit,
     tabletWidthPercentage: Float
 ) {
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+
     Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
