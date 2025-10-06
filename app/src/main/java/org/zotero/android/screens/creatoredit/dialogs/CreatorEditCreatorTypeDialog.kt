@@ -1,4 +1,4 @@
-package org.zotero.android.screens.creatoredit
+package org.zotero.android.screens.creatoredit.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -24,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import org.zotero.android.screens.creatoredit.CreatorEditViewModel
+import org.zotero.android.screens.creatoredit.CreatorEditViewState
 import org.zotero.android.uicomponents.Strings
 
 @Composable

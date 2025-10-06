@@ -69,5 +69,7 @@
     <string name="collection_edit_parent">Parent</string>
 
     <string name="page_number">Page Number</string>
+    <string name="edit_creator">Edit %s</string>
+    <string name="add_creator">Add %s</string>
 
 </resources>
