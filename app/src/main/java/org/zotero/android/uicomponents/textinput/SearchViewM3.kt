@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -40,6 +41,7 @@ fun SearchViewM3(
     onInnerValueChanged: (TextFieldValue) -> Unit,
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
     textFieldState: TextFieldValue,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     focusOnScreenOpen: Boolean = false,
     horizontalPadding: Dp = 12.dp,
 ) {
@@ -49,7 +51,7 @@ fun SearchViewM3(
             .padding(horizontal = horizontalPadding)
             .clip(cornerShape)
             .background(
-                color = MaterialTheme.colorScheme.surfaceContainer,
+                color = backgroundColor,
                 shape = cornerShape)
             .heightIn(48.dp),
         verticalAlignment = CenterVertically

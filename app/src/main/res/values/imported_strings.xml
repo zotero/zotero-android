@@ -171,7 +171,7 @@
     <string name="item_detail.deleted_message">This item has been deleted. Do you want to restore it?</string>
     <string name="item_detail.move_to_standalone_attachment">Move to Standalone Attachment</string>
     <string name="tag_picker.title">%d selected</string>
-    <string name="tag_picker.placeholder">Tag name</string>
+    <string name="tag_picker.placeholder">Search Tags</string>
     <string name="tag_picker.create_tag">Create Tag “%s”</string>
     <string name="tag_picker.confirm_deletion_question">Delete Automatic Tags</string>
     <string name="tag_picker.search_placeholder">Search Tags</string>
