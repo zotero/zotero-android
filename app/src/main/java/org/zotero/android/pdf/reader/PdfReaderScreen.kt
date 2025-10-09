@@ -23,11 +23,17 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
 import org.zotero.android.pdf.annotationmore.sidebar.PdfAnnotationMoreNavigationView
+import org.zotero.android.pdf.reader.modes.PdfReaderPhoneMode
+import org.zotero.android.pdf.reader.modes.PdfReaderTabletMode
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewModel
+import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
+import org.zotero.android.pdf.reader.topbar.PdfReaderSearchTopBar
+import org.zotero.android.pdf.reader.topbar.PdfReaderTopBar
 import org.zotero.android.pdf.settings.sidebar.PdfCopyCitationView
 import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
 @Composable
@@ -58,7 +64,7 @@ internal fun PdfReaderScreen(
             else -> {}
         }
     }
-    CustomThemeWithStatusAndNavBars(isDarkTheme = viewState.isDark) {
+    AppThemeM3(darkTheme = viewState.isDark) {
         val window = activity.window
         val decorView = window.decorView
         val systemBars = WindowInsetsCompat.Type.systemBars()
@@ -157,34 +163,46 @@ internal fun PdfReaderScreen(
             }
         }
 
-        CustomScaffold(
+        val pdfReaderSearchViewModel: PdfReaderSearchViewModel = hiltViewModel()
+        val pdfReaderSearchViewState by pdfReaderSearchViewModel.viewStates.observeAsState(PdfReaderSearchViewState())
+
+        CustomScaffoldM3(
             modifier = Modifier.pointerInteropFilter {
                 when (it.action) {
                     MotionEvent.ACTION_DOWN -> viewModel.restartDisableForceScreenOnTimer()
                 }
                 false
             },
-            topBarColor = CustomTheme.colors.surface,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
                     label = ""
                 ) { isTopBarVisible ->
                     if (isTopBarVisible) {
-                        PdfReaderTopBar(
-                            onBack = onBack,
-                            onShowHideSideBar = viewModel::toggleSideBar,
-                            onShareButtonTapped = viewModel::onShareButtonTapped,
-                            toPdfSettings = viewModel::navigateToPdfSettings,
-                            toPdfPlainReader = viewModel::navigateToPlainReader,
-                            showPdfSearch = viewState.showPdfSearch,
-                            toggleToolbarButton = viewModel::toggleToolbarButton,
-                            isToolbarButtonSelected = viewState.showCreationToolbar,
-                            showSideBar = viewState.showSideBar,
-                            onShowHidePdfSearch = viewModel::togglePdfSearch,
-                            viewModel = viewModel,
-                            viewState = viewState
-                        )
+                        if (viewState.showPdfSearch && !layoutType.isTablet()) {
+                            PdfReaderSearchTopBar(
+                                viewState = pdfReaderSearchViewState,
+                                viewModel = pdfReaderSearchViewModel,
+                                togglePdfSearch = viewModel::togglePdfSearch
+                            )
+                        } else {
+                            PdfReaderTopBar(
+                                onBack = onBack,
+                                onShowHideSideBar = viewModel::toggleSideBar,
+                                onShareButtonTapped = viewModel::onShareButtonTapped,
+                                toPdfSettings = viewModel::navigateToPdfSettings,
+                                toPdfPlainReader = viewModel::navigateToPlainReader,
+                                showPdfSearch = viewState.showPdfSearch,
+                                toggleToolbarButton = viewModel::toggleToolbarButton,
+                                isToolbarButtonSelected = viewState.showCreationToolbar,
+                                showSideBar = viewState.showSideBar,
+                                onShowHidePdfSearch = viewModel::togglePdfSearch,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                pdfReaderSearchViewState = pdfReaderSearchViewState,
+                                pdfReaderSearchViewModel = pdfReaderSearchViewModel,
+                            )
+                        }
                     }
                 }
 
@@ -204,6 +222,8 @@ internal fun PdfReaderScreen(
                     PdfReaderPhoneMode(
                         viewState = viewState,
                         vMInterface = viewModel,
+                        pdfReaderSearchViewModel = pdfReaderSearchViewModel,
+                        pdfReaderSearchViewState = pdfReaderSearchViewState,
                         annotationsLazyListState = annotationsLazyListState,
                         thumbnailsLazyListState = thumbnailsLazyListState,
                         layoutType = layoutType,

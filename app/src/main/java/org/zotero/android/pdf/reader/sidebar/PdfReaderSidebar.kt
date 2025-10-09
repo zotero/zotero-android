@@ -1,14 +1,12 @@
 package org.zotero.android.pdf.reader.sidebar
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -16,9 +14,7 @@ import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Annotations
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Thumbnails
-import org.zotero.android.uicomponents.selector.MultiSelector
 import org.zotero.android.uicomponents.selector.MultiSelectorOption
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 private val sliderOptions = listOf(
     Thumbnails,
@@ -40,21 +36,30 @@ internal fun PdfReaderSidebar(
         )
     }
 
-    val selectorColor = CustomTheme.colors.primaryContent
     val selectedOption = viewState.sidebarSliderSelectedOption
-    Spacer(modifier = Modifier.height(16.dp))
-    MultiSelector(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(layoutType.calculateSelectorHeight())
-            .padding(horizontal = 16.dp),
-        options = selectorOptions,
-        selectedOptionId = selectedOption.ordinal,
-        onOptionSelect = vMInterface::setSidebarSliderSelectedOption,
-        fontSize = 12.sp,
-        selectedColor = selectorColor,
-        unselectedcolor = selectorColor
-    )
+
+    SecondaryTabRow(selectedTabIndex = selectedOption.ordinal) {
+        selectorOptions.forEachIndexed { index, selectorOption ->
+            val isSelected = selectedOption.ordinal == index
+            Tab(
+                text = {
+                    val textColor = if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    Text(
+                        text = selectorOption.optionString,
+                        color = textColor,
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 12.sp),
+                    )
+
+                },
+                selected = isSelected,
+                onClick = { vMInterface.setSidebarSliderSelectedOption(index) }
+            )
+        }
+    }
 
     when (selectedOption) {
         Thumbnails -> {
@@ -64,6 +69,7 @@ internal fun PdfReaderSidebar(
                 thumbnailsLazyListState = thumbnailsLazyListState,
             )
         }
+
         Annotations -> {
             PdfReaderAnnotationsSidebar(
                 vMInterface = vMInterface,
@@ -79,10 +85,6 @@ internal fun PdfReaderSidebar(
                 viewState = viewState,
                 layoutType = layoutType,
             )
-        }
-
-        else -> {
-            //no-op
         }
     }
 }

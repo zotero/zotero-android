@@ -59,7 +59,7 @@ internal fun PdfReaderAnnotationsSidebar(
                 searchValue = viewState.annotationSearchTerm,
                 onSearch = vMInterface::onAnnotationSearch,
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             LazyColumn(
                 state = annotationsLazyListState,
                 verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
