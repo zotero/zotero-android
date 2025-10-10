@@ -64,7 +64,7 @@ internal fun PdfReaderTopBar(
             )
             IconButton(onClick = toPdfPlainReader) {
                 Icon(
-                    painter = painterResource(Drawables.pdf_raw_reader),
+                    painter = painterResource(Drawables.reader),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
