@@ -2,7 +2,6 @@ package org.zotero.android.pdf.reader.modes
 
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,7 +18,6 @@ import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebar
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfReaderTabletMode(
@@ -39,7 +37,6 @@ internal fun PdfReaderTabletMode(
                     modifier = Modifier
                         .fillMaxHeight()
                         .fillMaxWidth(0.35f)
-                        .background(CustomTheme.colors.pdfAnnotationsFormBackground)
                 ) {
                     PdfReaderSidebar(
                         vMInterface = vMInterface,

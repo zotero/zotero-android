@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -15,7 +16,6 @@ import org.zotero.android.screens.settings.account.SettingsAccountViewModel
 import org.zotero.android.screens.settings.account.SettingsAccountViewState
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomOutlineTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SettingsAccountFileSyncingUsernameItem(
@@ -34,7 +34,7 @@ internal fun SettingsAccountFileSyncingUsernameItem(
         labelText = stringResource(id = Strings.settings_sync_username),
         placeholderText = stringResource(id = Strings.settings_sync_username),
         onValueChange = viewModel::setUsername,
-        textStyle = CustomTheme.typography.newBody,
+        textStyle = MaterialTheme.typography.bodyLarge,
         maxLines = 1,
         singleLine = true,
         keyboardOptions = KeyboardOptions(

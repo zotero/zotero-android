@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.textinput.CustomTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
@@ -74,7 +73,7 @@ private fun PdfAnnotationEditPagePart(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(44.dp)
-                .background(CustomTheme.colors.zoteroEditFieldBackground),
+                .background(MaterialTheme.colorScheme.surface),
             contentAlignment = Alignment.CenterStart
         ) {
             CustomTextField(
@@ -85,6 +84,7 @@ private fun PdfAnnotationEditPagePart(
                 value = viewState.pageLabel,
                 hint = "",
                 onValueChange = viewModel::onValueChange,
+                textColor = MaterialTheme.colorScheme.onSurface,
                 textStyle = MaterialTheme.typography.bodyLarge,
             )
         }

@@ -21,7 +21,8 @@ internal fun RowScope.ItemRowRightPart(
     itemAccessory: ItemCellModel.Accessory?,
     isEditing: Boolean,
     onAccessoryTapped: (key: String) -> Unit,
-    isItemSelected: (key: String) -> Boolean
+    isItemSelected: (key: String) -> Boolean,
+    onItemTapped: (item: ItemCellModel) -> Unit,
 ) {
     ItemRowSetAccessory(
         accessory = itemAccessory,
@@ -33,7 +34,7 @@ internal fun RowScope.ItemRowRightPart(
         label = ""
     ) { isEditing ->
         if (isEditing) {
-            IconButton(onClick = { } ) {
+            IconButton(onClick = { onItemTapped(model)} ) {
                 if (isItemSelected(model.key)) {
                     Icon(
                         painter = painterResource(Drawables.check_circle),

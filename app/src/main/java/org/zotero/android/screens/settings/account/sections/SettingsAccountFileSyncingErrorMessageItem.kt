@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.webdav.data.WebDavError
 
 @Composable
@@ -30,7 +29,7 @@ internal fun SettingsAccountFileSyncingErrorMessageItem(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             text = errorMessage,
-            style = CustomTheme.typography.newBody,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.error,
         )
     }

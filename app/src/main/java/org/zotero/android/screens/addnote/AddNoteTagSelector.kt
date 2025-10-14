@@ -18,7 +18,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun BoxScope.AddNoteTagSelector(
@@ -30,7 +29,7 @@ internal fun BoxScope.AddNoteTagSelector(
             .align(Alignment.BottomCenter)
             .fillMaxWidth()
             .height(48.dp)
-            .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
+            .background(color = MaterialTheme.colorScheme.surfaceContainer)
             .padding(horizontal = 16.dp)
             .safeClickable(
                 onClick = viewModel::onTagsClicked,

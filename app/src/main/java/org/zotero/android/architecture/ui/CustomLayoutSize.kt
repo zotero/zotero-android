@@ -26,24 +26,10 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculateTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 20.sp
-                small -> 14.sp
-            }
-        }
-
         fun calculateItemFieldLabelWidth(): Dp {
             return when (this) {
                 big, medium -> 160.dp
                 small -> 120.dp
-            }
-        }
-
-        fun calculatePadding(): Dp {
-            return when (this) {
-                big, medium -> 50.dp
-                small -> 8.dp
             }
         }
 
@@ -85,18 +71,6 @@ object CustomLayoutSize {
             }
         }
 
-        fun calculatePdfSidebarHeaderIconSize(): Dp {
-            return when (this) {
-                big, medium -> 24.dp
-                small -> 22.dp
-            }
-        }
-        fun calculatePdfSidebarTextSize(): TextUnit {
-            return when (this) {
-                big, medium -> 16.sp
-                small -> 16.sp
-            }
-        }
     }
 
     @Composable

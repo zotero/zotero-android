@@ -3,9 +3,7 @@ package org.zotero.android.pdf.reader
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +30,6 @@ import org.zotero.android.pdf.reader.topbar.PdfReaderTopBar
 import org.zotero.android.pdf.settings.sidebar.PdfCopyCitationView
 import org.zotero.android.pdf.settings.sidebar.PdfSettingsView
 import org.zotero.android.uicomponents.CustomScaffoldM3
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
 
@@ -61,6 +58,7 @@ internal fun PdfReaderScreen(
                 currentView.keepScreenOn = false
                 viewModel.onStop(activity.isChangingConfigurations)
             }
+
             else -> {}
         }
     }
@@ -86,9 +84,11 @@ internal fun PdfReaderScreen(
                 is PdfReaderViewEffect.NavigateBack -> {
                     onBack()
                 }
+
                 is PdfReaderViewEffect.DisableForceScreenOn -> {
                     currentView.keepScreenOn = false
                 }
+
                 is PdfReaderViewEffect.EnableForceScreenOn -> {
                     currentView.keepScreenOn = true
                 }
@@ -144,27 +144,34 @@ internal fun PdfReaderScreen(
                     viewModel.removeFragment()
                     navigateToPdfPlainReader(consumedEffect.params)
                 }
+
                 is PdfReaderViewEffect.ShowPdfColorPicker -> {
                     if (!layoutType.isTablet()) {
                         viewModel.removeFragment()
                     }
                     navigateToPdfColorPicker()
                 }
+
                 is PdfReaderViewEffect.ClearFocus -> {
                     focusManager.clearFocus()
                 }
+
                 is PdfReaderViewEffect.NavigateToTagPickerScreen -> {
                     navigateToTagPicker()
                 }
+
                 is PdfReaderViewEffect.ExportPdf -> {
                     onExportPdf(consumedEffect.file)
                 }
+
                 else -> {}
             }
         }
 
         val pdfReaderSearchViewModel: PdfReaderSearchViewModel = hiltViewModel()
-        val pdfReaderSearchViewState by pdfReaderSearchViewModel.viewStates.observeAsState(PdfReaderSearchViewState())
+        val pdfReaderSearchViewState by pdfReaderSearchViewModel.viewStates.observeAsState(
+            PdfReaderSearchViewState()
+        )
 
         CustomScaffoldM3(
             modifier = Modifier.pointerInteropFilter {
@@ -208,30 +215,27 @@ internal fun PdfReaderScreen(
 
             },
         ) {
-            Box(modifier = Modifier.background(CustomTheme.colors.pdfAnnotationsTopbarBackground)) {
-                if (layoutType.isTablet()) {
-                    PdfReaderTabletMode(
-                        vMInterface = viewModel,
-                        viewState = viewState,
-                        annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState = thumbnailsLazyListState,
-                        layoutType = layoutType,
-                        uri = uri,
-                    )
-                } else {
-                    PdfReaderPhoneMode(
-                        viewState = viewState,
-                        vMInterface = viewModel,
-                        pdfReaderSearchViewModel = pdfReaderSearchViewModel,
-                        pdfReaderSearchViewState = pdfReaderSearchViewState,
-                        annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState = thumbnailsLazyListState,
-                        layoutType = layoutType,
-                        uri = uri,
-                    )
-                }
+            if (layoutType.isTablet()) {
+                PdfReaderTabletMode(
+                    vMInterface = viewModel,
+                    viewState = viewState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
+                    layoutType = layoutType,
+                    uri = uri,
+                )
+            } else {
+                PdfReaderPhoneMode(
+                    viewState = viewState,
+                    vMInterface = viewModel,
+                    pdfReaderSearchViewModel = pdfReaderSearchViewModel,
+                    pdfReaderSearchViewState = pdfReaderSearchViewState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
+                    layoutType = layoutType,
+                    uri = uri,
+                )
             }
-
         }
         PdfAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)

@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 @Composable
 internal fun TagPickerCheckBox(
     isChecked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit),
 ) {
-    Checkbox(checked = isChecked, onCheckedChange = {})
+    Checkbox(checked = isChecked, onCheckedChange = onCheckedChange)
 }

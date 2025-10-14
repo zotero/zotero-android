@@ -1,9 +1,9 @@
 package org.zotero.android.screens.itemdetails.rows.edit
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.screens.itemdetails.ItemDetailsViewState
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun ItemDetailsEditListOfFieldRows(
@@ -28,7 +28,7 @@ internal fun ItemDetailsEditListOfFieldRows(
                 fieldId = fieldId,
                 detailTitle = title,
                 detailValue = value,
-                textColor = CustomTheme.colors.primaryContent,
+                textColor = MaterialTheme.colorScheme.onSurface,
                 onValueChange = onValueChange,
                 isMultilineAllowed = field.key == FieldKeys.Item.extra,
                 onFocusChanges = onFocusChanges

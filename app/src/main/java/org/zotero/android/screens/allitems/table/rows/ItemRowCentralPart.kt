@@ -15,6 +15,7 @@ internal fun RowScope.ItemRowCentralPart(
     isEditing: Boolean,
     onAccessoryTapped: (key: String) -> Unit,
     isItemSelected: (key: String) -> Boolean,
+    onItemTapped: (item: ItemCellModel) -> Unit,
 ) {
     ItemRowTitleAndSubtitlePart(model)
     Spacer(modifier = Modifier.width(8.dp))
@@ -24,5 +25,6 @@ internal fun RowScope.ItemRowCentralPart(
         isEditing = isEditing,
         onAccessoryTapped = onAccessoryTapped,
         isItemSelected = isItemSelected,
+        onItemTapped = onItemTapped,
     )
 }

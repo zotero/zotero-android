@@ -2,12 +2,9 @@ package org.zotero.android.architecture.navigation.phone
 
 import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -54,7 +51,6 @@ import org.zotero.android.screens.sortpicker.toSortPicker
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
-import org.zotero.android.uicomponents.theme.CustomTheme
 import java.io.File
 
 internal const val ARG_ADD_BY_IDENTIFIER = "addByIdentifierArg"
@@ -89,165 +85,163 @@ internal fun DashboardRootPhoneNavigation(
 
     val context = LocalContext.current
 
-    Column(modifier = Modifier.background(color = CustomTheme.colors.surface)) {
-        ZoteroNavHost(
-            navController = navController,
-            startDestination = CommonScreenDestinations.ALL_ITEMS,
+    ZoteroNavHost(
+        navController = navController,
+        startDestination = CommonScreenDestinations.ALL_ITEMS,
+    ) {
+        collectionsScreen(
+            collectionDefaultValue = collectionDefaultValue,
+            onBack = navigation::onBack,
+            navigateToAllItems = {
+                toAllItems(
+                    navController = navController, it
+                )
+            },
+            navigateToLibraries = {
+                navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
+            },
+            navigateToCollectionEdit = { navigation.toCollectionEditScreen() },
+        )
+        librariesScreen(
+            navigateToCollectionsScreen = {
+                navigateToCollectionsScreen(navController, it)
+            },
+            onSettingsTapped = { navigation.toSettingsScreen() }
+        )
+
+        loadingScreen()
+        allItemsScreen(
+            onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.AllItems) },
+            onOpenFile = onOpenFile,
+            onOpenWebpage = onOpenWebpage,
+            navigateToCollectionsScreen = navigation::toCollectionsScreen,
+            navigateToItemDetails = navigation::toItemDetails,
+            navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToSinglePicker = navigation::toSinglePicker,
+            navigateToAllItemsSort = navigation::toSortPicker,
+            navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
+            navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
+            navigateToRetrieveMetadata = navigation::toRetrieveMetadata,
+            navigateToTagFilter = navigation::toTagFilter,
+            navigateToAddByIdentifier = navigation::toAddByIdentifier,
+            navigateToCollectionPicker = navigation::toCollectionPicker,
+            navigateToScanBarcode = navigation::toScanBarcode,
+            navigateToSingleCitation = navigation::toSingleCitation,
+            onShowPdf = { pdfScreenParams ->
+                navigation.toPdfScreen(
+                    context = context,
+                    pdfScreenParams = pdfScreenParams,
+                    wasPspdfkitInitialized = wasPspdfkitInitialized
+                )
+            },
+        )
+        itemDetailsScreen(
+            navigateToCreatorEdit = navigation::toCreatorEdit,
+            navigateToTagPicker = navigation::toTagPicker,
+            navigateToSinglePicker = navigation::toSinglePicker,
+            navigateToAddOrEditNote = navigation::toAddOrEditNote,
+            navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
+            navigateToImageViewerScreen = navigation::toImageViewerScreen,
+            navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
+            onBack = navigation::onBack,
+            onOpenFile = onOpenFile,
+            onOpenWebpage = onOpenWebpage,
+            onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
+            onShowPdf = { pdfScreenParams ->
+                navigation.toPdfScreen(
+                    context = context,
+                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                    pdfScreenParams = pdfScreenParams
+                )
+            },
+        )
+
+        composable(
+            route = DashboardRootPhoneDestinations.TAG_PICKER,
+            arguments = listOf(),
         ) {
-            collectionsScreen(
-                collectionDefaultValue = collectionDefaultValue,
-                onBack = navigation::onBack,
-                navigateToAllItems = {
-                    toAllItems(
-                        navController = navController,it
-                    )
-                },
-                navigateToLibraries = {
-                    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
-                },
-                navigateToCollectionEdit = { navigation.toCollectionEditScreen() },
+            TagPickerScreen(onBack = navigation::onBack)
+        }
+
+        composable(
+            route = "${DashboardRootPhoneDestinations.RETRIEVE_METADATA}/{$ARG_RETRIEVE_METADATA}",
+            arguments = listOf(
+                navArgument(ARG_RETRIEVE_METADATA) { type = NavType.StringType },
+            ),
+        ) {
+            RetrieveMetadataScreen(onBack = navigation::onBack)
+        }
+
+        composable(
+            route = "${DashboardRootPhoneDestinations.TAG_FILTER}/{$ARG_TAGS_FILTER}",
+            arguments = listOf(
+                navArgument(ARG_TAGS_FILTER) { type = NavType.StringType },
+            ),
+        ) {
+            FilterScreenPhone(onBack = navigation::onBack)
+        }
+
+        composable(
+            route = DashboardRootPhoneDestinations.SINGLE_PICKER,
+            arguments = listOf(),
+        ) {
+            SinglePickerScreen(
+                onCloseClicked = navigation::onBack,
             )
-            librariesScreen(
-                navigateToCollectionsScreen = {
-                    navigateToCollectionsScreen(navController, it)
-                },
-                onSettingsTapped = { navigation.toSettingsScreen() }
+        }
+
+        composable(
+            route = "${DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER}/{$ARG_ADD_BY_IDENTIFIER}",
+            arguments = listOf(
+                navArgument(ARG_ADD_BY_IDENTIFIER) { type = NavType.StringType },
+            ),
+        ) {
+            AddByIdentifierScreen(
+                onClose = navigation::onBack,
             )
+        }
 
-            loadingScreen()
-            allItemsScreen(
-                onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.AllItems) },
-                onOpenFile = onOpenFile,
-                onOpenWebpage = onOpenWebpage,
-                navigateToCollectionsScreen = navigation::toCollectionsScreen,
-                navigateToItemDetails = navigation::toItemDetails,
-                navigateToAddOrEditNote = navigation::toAddOrEditNote,
-                navigateToSinglePicker = navigation::toSinglePicker,
-                navigateToAllItemsSort = navigation::toSortPicker,
-                navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
-                navigateToImageViewerScreen = navigation::toImageViewerScreen,
-                navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
-                navigateToRetrieveMetadata = navigation::toRetrieveMetadata,
-                navigateToTagFilter = navigation::toTagFilter,
-                navigateToAddByIdentifier = navigation::toAddByIdentifier,
-                navigateToCollectionPicker = navigation::toCollectionPicker,
-                navigateToScanBarcode = navigation::toScanBarcode,
-                navigateToSingleCitation = navigation::toSingleCitation,
-                onShowPdf = { pdfScreenParams ->
-                    navigation.toPdfScreen(
-                        context = context,
-                        pdfScreenParams = pdfScreenParams,
-                        wasPspdfkitInitialized = wasPspdfkitInitialized
-                    )
-                },
+        composable(
+            route = DashboardRootPhoneDestinations.SCAN_BARCODE,
+            arguments = listOf(),
+        ) {
+            ScanBarcodeScreen(
+                onClose = navigation::onBack,
             )
-            itemDetailsScreen(
-                navigateToCreatorEdit = navigation::toCreatorEdit,
-                navigateToTagPicker = navigation::toTagPicker,
-                navigateToSinglePicker = navigation::toSinglePicker,
-                navigateToAddOrEditNote = navigation::toAddOrEditNote,
-                navigateToVideoPlayerScreen = navigation::toVideoPlayerScreen,
-                navigateToImageViewerScreen = navigation::toImageViewerScreen,
-                navigateToZoterWebViewScreen = navigation::toZoteroWebViewScreen,
-                onBack = navigation::onBack,
-                onOpenFile = onOpenFile,
-                onOpenWebpage = onOpenWebpage,
-                onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-                onShowPdf = { pdfScreenParams ->
-                    navigation.toPdfScreen(
-                        context = context,
-                        wasPspdfkitInitialized = wasPspdfkitInitialized,
-                        pdfScreenParams = pdfScreenParams
-                    )
-                },
-            )
+        }
 
-            composable(
-                route = DashboardRootPhoneDestinations.TAG_PICKER,
-                arguments = listOf(),
-            ) {
-                TagPickerScreen(onBack = navigation::onBack)
-            }
+        composable(
+            route = DashboardRootPhoneDestinations.COLLECTION_PICKER,
+            arguments = listOf(),
+        ) {
+            CollectionPickerScreen(onBack = navigation::onBack)
+        }
 
-            composable(
-                route = "${DashboardRootPhoneDestinations.RETRIEVE_METADATA}/{$ARG_RETRIEVE_METADATA}",
-                arguments = listOf(
-                    navArgument(ARG_RETRIEVE_METADATA) { type = NavType.StringType },
-                ),
-            ) {
-                RetrieveMetadataScreen(onBack = navigation::onBack)
-            }
+        sortPickerNavScreens(navigation)
+        creatorEditNavScreens(navigation)
+        collectionEditNavScreens(navigation)
+        settingsNavScreens(navigation = navigation, onOpenWebpage = onOpenWebpage)
 
-            composable(
-                route = "${DashboardRootPhoneDestinations.TAG_FILTER}/{$ARG_TAGS_FILTER}",
-                arguments = listOf(
-                    navArgument(ARG_TAGS_FILTER) { type = NavType.StringType },
-                ),
-            ) {
-                FilterScreenPhone(onBack = navigation::onBack)
-            }
+        videoPlayerScreen()
+        imageViewerScreen(onBack = navigation::onBack)
 
-            composable(
-                route = DashboardRootPhoneDestinations.SINGLE_PICKER,
-                arguments = listOf(),
-            ) {
-                SinglePickerScreen(
-                    onCloseClicked = navigation::onBack,
-                )
-            }
+        pdfReaderNavScreensForPhone(
+            onExportPdf = onExportPdf,
+            navigation = navigation,
+            navigateToTagPicker = navigation::toTagPicker
+        )
+        addNoteScreen(
+            onBack = navigation::onBack,
+            navigateToTagPicker = navigation::toTagPicker
+        )
+        zoterWebViewScreen(onClose = navigation::onBack)
 
-            composable(
-                route = "${DashboardRootPhoneDestinations.ADD_BY_IDENTIFIER}/{$ARG_ADD_BY_IDENTIFIER}",
-                arguments = listOf(
-                    navArgument(ARG_ADD_BY_IDENTIFIER) { type = NavType.StringType },
-                ),
-            ) {
-                AddByIdentifierScreen(
-                    onClose = navigation::onBack,
-                )
-            }
-
-            composable(
-                route = DashboardRootPhoneDestinations.SCAN_BARCODE,
-                arguments = listOf(),
-            ) {
-                ScanBarcodeScreen(
-                    onClose = navigation::onBack,
-                )
-            }
-
-            composable(
-                route = DashboardRootPhoneDestinations.COLLECTION_PICKER,
-                arguments = listOf(),
-            ) {
-                CollectionPickerScreen(onBack = navigation::onBack)
-            }
-
-            sortPickerNavScreens(navigation)
-            creatorEditNavScreens(navigation)
-            collectionEditNavScreens(navigation)
-            settingsNavScreens(navigation = navigation, onOpenWebpage = onOpenWebpage)
-
-            videoPlayerScreen()
-            imageViewerScreen(onBack = navigation::onBack)
-
-            pdfReaderNavScreensForPhone(
-                onExportPdf = onExportPdf,
-                navigation = navigation,
-                navigateToTagPicker = navigation::toTagPicker
-            )
-            addNoteScreen(
-                onBack = navigation::onBack,
-                navigateToTagPicker = navigation::toTagPicker
-            )
-            zoterWebViewScreen(onClose = navigation::onBack)
-
-            composable(
-                route = DashboardRootPhoneDestinations.SINGLE_CITATION,
-                arguments = listOf(),
-            ) {
-                SingleCitationScreen(onBack = navigation::onBack)
-            }
+        composable(
+            route = DashboardRootPhoneDestinations.SINGLE_CITATION,
+            arguments = listOf(),
+        ) {
+            SingleCitationScreen(onBack = navigation::onBack)
         }
     }
 }

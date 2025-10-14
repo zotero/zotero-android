@@ -13,8 +13,7 @@ import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchScreen
 import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewModel
 import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.CustomScaffoldM3
 
 @Composable
 internal fun PdfReaderSearchPopup(
@@ -22,7 +21,6 @@ internal fun PdfReaderSearchPopup(
     pdfReaderSearchViewModel: PdfReaderSearchViewModel,
     pdfReaderSearchViewState: PdfReaderSearchViewState,
 ) {
-    val backgroundColor = CustomTheme.colors.cardBackground
     Popup(
         properties = PopupProperties(
             dismissOnBackPress = true,
@@ -33,7 +31,7 @@ internal fun PdfReaderSearchPopup(
         popupPositionProvider = pdfReaderSearchPopupPositionProvider(),
 
         ) {
-        CustomScaffold(
+        CustomScaffoldM3(
             modifier = Modifier
                 .width(350.dp)
                 .height(530.dp)
@@ -41,7 +39,7 @@ internal fun PdfReaderSearchPopup(
                     elevation = 4.dp,
                     shape = RoundedCornerShape(16.dp),
                 ),
-            topBarColor = backgroundColor,
+            topBar = {},
         ) {
             PdfReaderSearchScreen(
                 onBack = viewModel::hidePdfSearch,

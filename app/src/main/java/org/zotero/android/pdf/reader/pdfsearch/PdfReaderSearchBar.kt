@@ -10,7 +10,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.SearchViewM3
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfReaderSearchBar(
@@ -33,7 +32,6 @@ internal fun PdfReaderSearchBar(
         hint = stringResource(id = Strings.pdf_search_title),
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,
-        backgroundColor = CustomTheme.colors.pdfAnnotationsSearchBarBackground,
         focusOnScreenOpen = true
     )
 }

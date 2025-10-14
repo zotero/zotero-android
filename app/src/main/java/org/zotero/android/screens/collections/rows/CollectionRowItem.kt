@@ -27,7 +27,6 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 import org.zotero.android.uicomponents.icon.IconWithPadding
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun CollectionRowItem(
@@ -44,7 +43,7 @@ internal fun CollectionRowItem(
 ) {
     var rowModifier: Modifier = Modifier.height(48.dp)
     if (layoutType.isTablet() && selectedCollectionId == collection.identifier) {
-        rowModifier = rowModifier.background(color = CustomTheme.colors.popupSelectedRow)
+        rowModifier = rowModifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
     }
     val arrowIconAreaSize = 48.dp
     val mainIconSize = 28.dp

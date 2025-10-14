@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,7 +15,6 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun BoxScope.PdfReaderBottomPanel(
@@ -27,7 +27,7 @@ internal fun BoxScope.PdfReaderBottomPanel(
             .fillMaxWidth()
             .height(layoutType.calculateAllItemsBottomPanelHeight())
             .align(Alignment.BottomStart)
-            .background(color = CustomTheme.colors.surface)
+            .background(color = MaterialTheme.colorScheme.surface)
     ) {
         NewDivider(modifier = Modifier.align(Alignment.TopStart))
         val filterDrawable =

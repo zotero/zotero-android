@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Color
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.pdf.reader.sidebar.PdfReaderAnnotationsSidebarHighlightedTextSection
-import org.zotero.android.pdf.reader.sidebar.PdfReaderAnnotationsSidebarTagsAndCommentsSection
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarHighlightedTextSection
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarTagsAndCommentsSection
 
 @Composable
 internal fun PdfReaderAnnotationsSidebarHighlightRow(

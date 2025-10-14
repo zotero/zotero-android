@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -15,7 +16,6 @@ import org.zotero.android.screens.settings.account.SettingsAccountViewModel
 import org.zotero.android.screens.settings.account.SettingsAccountViewState
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomOutlineTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SettingsAccountFileSyncingPasswordItem(
@@ -32,7 +32,7 @@ internal fun SettingsAccountFileSyncingPasswordItem(
         visualTransformation = PasswordVisualTransformation(),
         onValueChange = viewModel::setPassword,
         maxLines = 1,
-        textStyle = CustomTheme.typography.newBody,
+        textStyle = MaterialTheme.typography.bodyLarge,
         singleLine = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,

@@ -21,7 +21,6 @@ import org.zotero.android.screens.settings.account.SettingsAccountViewState
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.textinput.CustomOutlineTextField
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SettingsAccountFileSyncingWebDavUrlItem(
@@ -41,7 +40,7 @@ internal fun SettingsAccountFileSyncingWebDavUrlItem(
         placeholderText = stringResource(id = Strings.file_syncing_url),
         labelText = stringResource(id = Strings.file_syncing_url),
         onValueChange = viewModel::setUrl,
-        textStyle = CustomTheme.typography.newBody,
+        textStyle = MaterialTheme.typography.bodyLarge,
         maxLines = 1,
         singleLine = true,
         keyboardOptions = KeyboardOptions(

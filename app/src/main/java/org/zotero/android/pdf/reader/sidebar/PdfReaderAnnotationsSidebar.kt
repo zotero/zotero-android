@@ -34,6 +34,7 @@ import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarIma
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarInkRow
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarNoteRow
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarUnderlineRow
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarHeaderSection
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
@@ -70,16 +71,17 @@ internal fun PdfReaderAnnotationsSidebar(
                     val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
                     val isSelected = viewState.isAnnotationSelected(annotation.key)
                     val horizontalPadding = if (isSelected && annotation.isZoteroAnnotation) 13.dp else 16.dp
+                    val roundedCornerShape = RoundedCornerShape(10.dp)
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
-                        .clip(shape = RoundedCornerShape(10.dp))
-                        .background(CustomTheme.colors.pdfAnnotationsItemBackground)
+                        .clip(shape = roundedCornerShape)
+                        .background(CustomTheme.colors.surface)
 
                     if (isSelected) {
                         rowModifier = rowModifier.border(
                             width = 3.dp,
-                            color = CustomTheme.colors.zoteroDefaultBlue,
-                            shape = RoundedCornerShape(10.dp)
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = roundedCornerShape
                         )
                     }
 

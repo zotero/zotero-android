@@ -65,8 +65,8 @@ internal fun SettingsAccountFileSyncingVerifyServerItem(
                     modifier = Modifier
                         .align(Alignment.CenterVertically),
                     text = stringResource(id = Strings.settings_sync_verified),
-                    style = CustomTheme.typography.newBody,
-                    color = CustomTheme.colors.primaryContent,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Icon(
                     modifier = Modifier

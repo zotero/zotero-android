@@ -5,7 +5,6 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.IntOffset
@@ -38,7 +36,6 @@ import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomTheme
 import kotlin.math.roundToInt
 
 private val pdfReaderToolsList = listOf(
@@ -102,15 +99,15 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
             onShowSnapTargetAreas()
         }.launchIn(coroutineScope)
     }
-
+    val snapAreaBackgroundColor =
+        MaterialTheme.colorScheme.surface
     if (shouldShowSnapTargetAreas) {
         val stroke = Stroke(
             width = 5f,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
         )
-        val snapAreaBackgroundColor =
-            if (isSystemInDarkTheme()) Color(0xFF080E1C) else Color(0xFFE2EAFB)
-        val color = MaterialTheme.colorScheme.primary
+
+        val strokeColor = MaterialTheme.colorScheme.primary
         Box(
             modifier = Modifier
                 .width(48.dp)
@@ -122,7 +119,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 )
                 .clip(roundCornerShape)
                 .drawBehind {
-                    drawRoundRect(color = color, style = stroke)
+                    drawRoundRect(color = strokeColor, style = stroke)
                 }
         )
         Box(
@@ -137,7 +134,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 )
                 .clip(roundCornerShape)
                 .drawBehind {
-                    drawRoundRect(color = color, style = stroke)
+                    drawRoundRect(color = strokeColor, style = stroke)
                 }
         )
     }
@@ -160,7 +157,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
             .height(520.dp)
             .padding(start = 16.dp, top = 16.dp)
             .background(
-                color = CustomTheme.colors.pdfToolbarBackgroundColor,
+                color = snapAreaBackgroundColor,
                 shape = roundCornerShape
             )
             .clip(roundCornerShape)

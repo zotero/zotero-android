@@ -79,6 +79,7 @@ fun TagPickerRow(
 
         TagPickerCheckBox(
             isChecked = isChecked,
+            onCheckedChange = { onTap() }
         )
 
         if (!isRowSelected) {

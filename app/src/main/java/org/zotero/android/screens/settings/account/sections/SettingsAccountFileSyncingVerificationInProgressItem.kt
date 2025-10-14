@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -20,7 +21,6 @@ import org.zotero.android.screens.settings.account.SettingsAccountViewModel
 import org.zotero.android.screens.settings.account.SettingsAccountViewState
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun SettingsAccountFileSyncingVerificationInProgressItem(
@@ -31,10 +31,10 @@ internal fun SettingsAccountFileSyncingVerificationInProgressItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(44.dp)
-            .background(CustomTheme.colors.surface)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         CircularProgressIndicator(
-            color = CustomTheme.colors.zoteroDefaultBlue,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .padding(start = 16.dp)
                 .align(Alignment.CenterStart)
@@ -50,8 +50,8 @@ internal fun SettingsAccountFileSyncingVerificationInProgressItem(
                     indication = ripple(),
                 ),
             text = stringResource(id = Strings.cancel),
-            style = CustomTheme.typography.newBody,
-            color = CustomTheme.colors.zoteroBlueWithDarkMode,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

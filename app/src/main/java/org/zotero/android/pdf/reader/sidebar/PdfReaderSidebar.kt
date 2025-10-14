@@ -51,7 +51,7 @@ internal fun PdfReaderSidebar(
                     Text(
                         text = selectorOption.optionString,
                         color = textColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 12.sp),
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 11.sp),
                     )
 
                 },

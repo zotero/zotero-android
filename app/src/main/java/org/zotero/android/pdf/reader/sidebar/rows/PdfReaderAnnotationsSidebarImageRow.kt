@@ -5,9 +5,9 @@ import androidx.compose.runtime.Composable
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.pdf.reader.sidebar.PdfReaderAnnotationsSidebarImageSection
-import org.zotero.android.pdf.reader.sidebar.PdfReaderAnnotationsSidebarTagsAndCommentsSection
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarImageSection
+import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarTagsAndCommentsSection
 
 @Composable
 internal fun PdfReaderAnnotationsSidebarImageRow(

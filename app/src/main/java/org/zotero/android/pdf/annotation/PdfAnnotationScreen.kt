@@ -117,7 +117,7 @@ internal fun PdfAnnotationPart(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(TopAppBarDefaults.windowInsets)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         val annotationColor =
             Color(annotation.displayColor.toColorInt())

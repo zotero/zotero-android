@@ -73,6 +73,7 @@ internal fun ItemRow(
             itemAccessory = itemAccessory,
             onAccessoryTapped = onAccessoryTapped,
             isItemSelected = isItemSelected,
+            onItemTapped = onItemTapped
         )
         if (!isRowSelected) {
             Spacer(modifier = Modifier.width(8.dp))

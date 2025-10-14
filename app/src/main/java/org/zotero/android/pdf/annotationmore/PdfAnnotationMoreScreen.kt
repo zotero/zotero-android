@@ -73,7 +73,6 @@ internal fun PdfAnnotationMoreScreen(
             topBar = {
                 PdfAnnotationMoreTopBar(onBack = onBack, viewModel = viewModel)
             },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
             bottomBar = {
                 Box(
                     modifier = Modifier
