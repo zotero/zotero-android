@@ -39,6 +39,5 @@ internal fun AllItemsAddBottomSheetContent(
             title = stringResource(id = Strings.items_new_file),
             onClick = onAddFile
         )
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }

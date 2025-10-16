@@ -4,7 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.architecture.logging.debug.DebugLoggingDialogData
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 import java.io.File
 
 @Composable
@@ -19,58 +20,70 @@ internal fun DebugLoggingDialogs(
 ) {
     when (dialogData) {
         is DebugLoggingDialogData.start -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_start
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
             )
         }
 
         is DebugLoggingDialogData.contentReading -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_content_reading
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = {
                         if (dialogData.shouldIncludeRetryAndOkProcessing) {
                             onContentReadingOk()
                         }
 
-                    }
-                ),
-                secondaryAction = if (dialogData.shouldIncludeRetryAndOkProcessing) CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.retry),
-                    onClick = { onContentReadingRetry(dialogData.logs, dialogData.userId, dialogData.customAlertMessage) }
-                ) else null,
+                    }),
+                dismissButton = if (dialogData.shouldIncludeRetryAndOkProcessing) {
+                    CustomAlertDialogM3ActionConfig(
+                        text = stringResource(id = Strings.retry),
+                        onClick = {
+                            onContentReadingRetry(
+                                dialogData.logs,
+                                dialogData.userId,
+                                dialogData.customAlertMessage
+                            )
+                        }
+                    )
+                } else {
+                    null
+                },
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
             )
         }
 
         is DebugLoggingDialogData.cantCreateData -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_content_reading
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = {
                         onContentReadingOk()
-                    }
-                ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                    }),
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.retry),
-                    onClick = { onContentReadingRetry(dialogData.logs, dialogData.userId, dialogData.customAlertMessage) }
+                    onClick = {
+                        onContentReadingRetry(
+                            dialogData.logs,
+                            dialogData.userId,
+                            dialogData.customAlertMessage
+                        )
+                    }
                 ),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
@@ -78,14 +91,13 @@ internal fun DebugLoggingDialogs(
         }
 
         DebugLoggingDialogData.noLogsRecorded -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_no_logs_recorded
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
-                    onClick = { }
                 ),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
@@ -93,54 +105,65 @@ internal fun DebugLoggingDialogs(
         }
 
         is DebugLoggingDialogData.upload -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_upload
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
-                    onClick = { onUploadOk() }
-                ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                    onClick = { onUploadOk() }),
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.retry),
-                    onClick = { onUploadRetry(dialogData.logs, dialogData.userId, dialogData.customAlertMessage) }
-                ),
+                    onClick = {
+                        onUploadRetry(
+                            dialogData.logs,
+                            dialogData.userId,
+                            dialogData.customAlertMessage
+                        )
+                    }),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
             )
         }
 
         is DebugLoggingDialogData.responseParsing -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_logging_title),
                 description = stringResource(
                     id = Strings.errors_logging_response_parsing
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = { onUploadOk() }
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.retry),
-                    onClick = { onUploadRetry(dialogData.logs, dialogData.userId, dialogData.customAlertMessage) }
+                    onClick = {
+                        onUploadRetry(
+                            dialogData.logs,
+                            dialogData.userId,
+                            dialogData.customAlertMessage
+                        )
+                    }
                 ),
                 dismissOnClickOutside = false,
                 onDismiss = onDismissDialog
             )
         }
+
         is DebugLoggingDialogData.share -> {
             val message = dialogData.customMessage ?: stringResource(
                 id = Strings.settings_log_alert_message,
                 dialogData.debugId
             )
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.settings_log_alert_title),
                 description = message,
-                primaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.copy_1),
                     onClick = { onShareCopy(dialogData.debugId) }
                 ),

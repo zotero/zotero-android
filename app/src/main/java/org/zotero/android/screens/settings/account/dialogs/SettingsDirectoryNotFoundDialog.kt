@@ -1,10 +1,10 @@
 package org.zotero.android.screens.settings.account.dialogs
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 
 @Composable
 internal fun SettingsDirectoryNotFoundDialog(
@@ -17,12 +17,13 @@ internal fun SettingsDirectoryNotFoundDialog(
         description = stringResource(
             id = Strings.settings_sync_directory_not_found_message, url
         ),
-
-        leftButtonColor = MaterialTheme.colorScheme.primary,
-        leftButtonText = stringResource(id = Strings.cancel),
-        rightButtonColor = MaterialTheme.colorScheme.primary,
-        rightButtonText = stringResource(id = Strings.create),
-        onRightButtonClicked = onCreate,
+        dismissButton = CustomAlertDialogM3ActionConfig(
+            text = stringResource(id = Strings.cancel),
+        ),
+        confirmButton = CustomAlertDialogM3ActionConfig(
+            text = stringResource(id = Strings.create),
+            onClick = onCreate
+        ),
         onDismiss = onCancel
     )
 }

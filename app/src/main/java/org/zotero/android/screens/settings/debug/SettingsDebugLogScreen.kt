@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffoldM3
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
@@ -48,7 +48,7 @@ internal fun SettingsDebugLogScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.surface)
+                    .background(color = MaterialTheme.colorScheme.surface)
             ) {
                 item {
                     Spacer(modifier = Modifier.height(10.dp))

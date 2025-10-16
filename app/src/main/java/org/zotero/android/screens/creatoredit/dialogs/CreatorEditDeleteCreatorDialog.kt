@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.creatoredit.CreatorEditViewModel
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 
 @Composable
 internal fun CreatorEditDeleteCreatorDialog(
@@ -17,11 +18,14 @@ internal fun CreatorEditDeleteCreatorDialog(
         description = stringResource(
             id = Strings.creator_editor_delete_confirmation
         ),
-        rightButtonColor = MaterialTheme.colorScheme.primary,
-        rightButtonText = stringResource(id = Strings.cancel),
-        leftButtonColor = MaterialTheme.colorScheme.error,
-        leftButtonText = stringResource(id = Strings.delete),
-        onLeftButtonClicked = viewModel::deleteCreator,
+        dismissButton = CustomAlertDialogM3ActionConfig(
+            text = stringResource(id = Strings.cancel),
+        ),
+        confirmButton = CustomAlertDialogM3ActionConfig(
+            text = stringResource(id = Strings.delete),
+            textColor = MaterialTheme.colorScheme.error,
+            onClick = viewModel::deleteCreator
+        ),
         onDismiss = viewModel::onDismissDeleteConformation
     )
 }

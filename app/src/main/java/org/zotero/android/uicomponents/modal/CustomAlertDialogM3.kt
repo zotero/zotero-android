@@ -7,21 +7,37 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun CustomAlertDialogM3(
     title: String,
     description: String,
-    leftButtonText: String,
-    leftButtonColor: Color,
-    onLeftButtonClicked: () -> Unit = {},
-    rightButtonText: String,
-    rightButtonColor: Color,
-    onRightButtonClicked: () -> Unit = {},
+    confirmButton: CustomAlertDialogM3ActionConfig,
+    dismissButton: CustomAlertDialogM3ActionConfig? = null,
+    dismissOnClickOutside: Boolean = true,
     onDismiss: () -> Unit,
 ) {
+    val dismissButtonCallback: @Composable (() -> Unit)? = dismissButton?.let {
+         {
+            TextButton(onClick = {
+                onDismiss()
+                dismissButton.onClick()
+            }, shapes = ButtonDefaults.shapes()) {
+                Text(
+                    text = dismissButton.text,
+                    color = dismissButton.textColor ?: MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnClickOutside = dismissOnClickOutside,
+            dismissOnBackPress = dismissOnClickOutside
+        ),
         title = {
             Text(
                 text = title,
@@ -39,26 +55,21 @@ fun CustomAlertDialogM3(
         confirmButton = {
             TextButton(onClick = {
                 onDismiss()
-                onLeftButtonClicked()
+                confirmButton.onClick()
             }, shapes = ButtonDefaults.shapes()) {
                 Text(
-                    text = leftButtonText,
-                    color = leftButtonColor,
+                    text = confirmButton.text,
+                    color = confirmButton.textColor ?: MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelLarge
                 )
             }
         },
-        dismissButton = {
-            TextButton(onClick = {
-                onDismiss()
-                onRightButtonClicked()
-            }, shapes = ButtonDefaults.shapes()) {
-                Text(
-                    text = rightButtonText,
-                    color = rightButtonColor,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
+        dismissButton = dismissButtonCallback
     )
 }
+
+data class CustomAlertDialogM3ActionConfig(
+    val text: String,
+    val textColor: Color? = null,
+    val onClick: () -> Unit = {},
+)

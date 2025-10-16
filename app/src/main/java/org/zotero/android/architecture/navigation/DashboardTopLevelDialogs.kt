@@ -11,7 +11,8 @@ import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.dashboard.DebugLoggingDialogs
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheetM3
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 import org.zotero.android.uicomponents.theme.CustomPalette
 
 @Composable
@@ -49,7 +50,7 @@ fun BoxScope.DashboardTopLevelDialogs(
             onUploadRetry = viewModel::onUploadRetry,
             onUploadOk = viewModel::onUploadOk,
             onShareCopy = viewModel::onShareCopy
-            )
+        )
     }
 
     val crashReportIdDialogData = viewState.crashReportIdDialogData
@@ -63,15 +64,15 @@ fun BoxScope.DashboardTopLevelDialogs(
 
     val deleteGroupDialogData = viewState.deleteGroupDialogData
     if (deleteGroupDialogData != null) {
-        CustomAlertDialog(
+        CustomAlertDialogM3(
             title = stringResource(id = Strings.delete),
             description = stringResource(
                 id = Strings.libraries_delete_question, deleteGroupDialogData.name
             ),
-            primaryAction = CustomAlertDialog.ActionConfig(
+            dismissButton = CustomAlertDialogM3ActionConfig(
                 text = stringResource(id = Strings.no),
             ),
-            secondaryAction = CustomAlertDialog.ActionConfig(
+            confirmButton = CustomAlertDialogM3ActionConfig(
                 text = stringResource(id = Strings.yes),
                 textColor = CustomPalette.ErrorRed,
                 onClick = { viewModel.deleteNonLocalGroup(deleteGroupDialogData.id) }
@@ -82,6 +83,7 @@ fun BoxScope.DashboardTopLevelDialogs(
     }
 
     LongPressBottomSheetM3(
+        shouldIncludeBottomBarOffset = true,
         longPressOptionsHolder = viewState.longPressOptionsHolder,
         onCollapse = viewModel::dismissBottomSheet,
         onOptionClick = viewModel::onLongPressOptionsItemSelected

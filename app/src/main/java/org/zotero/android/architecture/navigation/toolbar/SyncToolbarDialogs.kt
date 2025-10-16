@@ -3,7 +3,8 @@ package org.zotero.android.architecture.navigation.toolbar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 
 @Composable
 internal fun SyncToolbarDialogs(
@@ -11,14 +12,11 @@ internal fun SyncToolbarDialogs(
     viewModel: SyncToolbarViewModel
 ) {
     val alertMessage = viewState.dialogErrorMessage ?: return
-    CustomAlertDialog(
+    CustomAlertDialogM3(
         title = stringResource(id = Strings.error),
         description = alertMessage,
-        primaryAction = CustomAlertDialog.ActionConfig(
+        confirmButton = CustomAlertDialogM3ActionConfig(
             text = stringResource(id = Strings.ok),
-            onClick = {
-                viewModel.onDismissDialog()
-            }
         ),
         onDismiss = viewModel::onDismissDialog
     )

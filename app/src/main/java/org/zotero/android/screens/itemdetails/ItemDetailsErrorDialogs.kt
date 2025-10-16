@@ -1,11 +1,12 @@
 package org.zotero.android.screens.itemdetails
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
-import org.zotero.android.uicomponents.theme.CustomPalette
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 
 @Composable
 internal fun ItemDetailsErrorDialogs(
@@ -22,170 +23,156 @@ internal fun ItemDetailsErrorDialogs(
             when (itemDetailError.attachmentError) {
                 ItemDetailError.AttachmentAddError.allFailedCreation -> TODO()
                 is ItemDetailError.AttachmentAddError.couldNotMoveFromSource -> {
-                    CustomAlertDialog(
+                    CustomAlertDialogM3(
                         title = stringResource(id = Strings.error),
                         description = stringResource(
                             id = Strings.errors_item_detail_cant_create_attachments_with_names,
                             itemDetailError.attachmentError.names.joinToString(separator = ", ")
                         ),
-                        primaryAction = CustomAlertDialog.ActionConfig(
+                        confirmButton = CustomAlertDialogM3ActionConfig(
                             text = stringResource(id = Strings.ok),
-                            onClick = onDismissErrorDialog
                         ),
                         onDismiss = onDismissErrorDialog
                     )
                 }
+
                 is ItemDetailError.AttachmentAddError.someFailedCreation -> {
-                    CustomAlertDialog(
+                    CustomAlertDialogM3(
                         title = stringResource(id = Strings.error),
                         description = stringResource(
                             id = Strings.errors_item_detail_cant_create_attachments_with_names,
                             itemDetailError.attachmentError.names.joinToString(separator = ", ")
                         ),
-                        primaryAction = CustomAlertDialog.ActionConfig(
+                        confirmButton = CustomAlertDialogM3ActionConfig(
                             text = stringResource(id = Strings.ok),
-                            onClick = onDismissErrorDialog
                         ),
                         onDismiss = onDismissErrorDialog
                     )
                 }
             }
         }
+
         ItemDetailError.cantCreateData -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_cant_load_data
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onBack
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onBack
             )
         }
+
         ItemDetailError.cantRemoveItem, ItemDetailError.cantRemoveParent -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_unknown
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         ItemDetailError.cantSaveNote -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_cant_save_note
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         ItemDetailError.cantSaveTags -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_cant_save_tags
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         ItemDetailError.cantStoreChanges -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_cant_save_changes
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         ItemDetailError.cantTrashItem -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_cant_trash_item
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         is ItemDetailError.droppedFields -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.errors_item_detail_dropped_fields_title),
                 description = droppedFieldsMessage(names = itemDetailError.fields),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = acceptPrompt
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.cancel),
                     onClick = cancelPrompt
                 ),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         is ItemDetailError.typeNotSupported -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.error),
                 description = stringResource(
                     id = Strings.errors_item_detail_unsupported_type,
                     itemDetailError.type
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
-                    text = stringResource(id = Strings.ok),
-                    onClick = onDismissErrorDialog
-                ),
+                confirmButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         is ItemDetailError.itemWasChangedRemotely -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
                     id = Strings.item_detail_data_reloaded,
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.ok),
                     onClick = acceptItemWasChangedRemotely
                 ),
                 onDismiss = onDismissErrorDialog
             )
         }
+
         is ItemDetailError.askUserToDeleteOrRestoreItem -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.item_detail_deleted_title),
                 description = stringResource(
                     id = Strings.item_detail_deleted_message,
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.yes),
-                    onClick = { deleteOrRestoreItem(false) }
-                ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                    onClick = { deleteOrRestoreItem(false) }),
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.delete),
-                    textColor = CustomPalette.ErrorRed,
-                    onClick = { deleteOrRestoreItem(true) }
-                ),
+                    textColor = MaterialTheme.colorScheme.error,
+                    onClick = { deleteOrRestoreItem(true) }),
                 onDismiss = onDismissErrorDialog
             )
         }

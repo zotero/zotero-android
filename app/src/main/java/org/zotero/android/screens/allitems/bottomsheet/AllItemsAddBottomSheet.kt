@@ -1,11 +1,14 @@
 package org.zotero.android.screens.allitems.bottomsheet
 
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import org.zotero.android.uicomponents.modal.CustomModalBottomSheetM3
 
 @Composable
@@ -25,8 +28,11 @@ internal fun AllItemsAddBottomSheet(
         }
     }
 
+    val modifier = Modifier.windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+
     if (shouldShow) {
         CustomModalBottomSheetM3(
+            modifier = modifier,
             shouldCollapse = !showBottomSheet,
             sheetContent = {
                 AllItemsAddBottomSheetContent(

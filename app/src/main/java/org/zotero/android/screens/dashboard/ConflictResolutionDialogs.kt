@@ -3,7 +3,8 @@ package org.zotero.android.screens.dashboard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 import org.zotero.android.uicomponents.theme.CustomPalette
 
 @Composable
@@ -18,18 +19,18 @@ internal fun ConflictResolutionDialogs(
 ) {
     when (conflictDialogData) {
         is ConflictDialogData.groupRemoved -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
                     id = Strings.errors_sync_group_removed,
                     conflictDialogData.groupName
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.remove),
                     textColor = CustomPalette.ErrorRed,
                     onClick = { deleteGroup(conflictDialogData.groupId) }
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.keep),
                     onClick = { markGroupAsLocalOnly(conflictDialogData.groupId) }
                 ),
@@ -38,17 +39,17 @@ internal fun ConflictResolutionDialogs(
             )
         }
         is ConflictDialogData.groupMetadataWriteDenied -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
                     id = Strings.errors_sync_metadata_write_denied,
                     conflictDialogData.groupName
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.errors_sync_revert_to_original),
                     onClick = { revertGroupChanges(conflictDialogData.groupId) }
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.errors_sync_skip_group),
                     onClick = { skipGroup(conflictDialogData.groupId) }
                 ),
@@ -57,18 +58,18 @@ internal fun ConflictResolutionDialogs(
             )
         }
         is ConflictDialogData.groupFileWriteDenied -> {
-            CustomAlertDialog(
+            CustomAlertDialogM3(
                 title = stringResource(id = Strings.warning),
                 description = stringResource(
                     id = Strings.errors_sync_file_write_denied,
                     conflictDialogData.groupName,
                     conflictDialogData.domainName
                 ),
-                primaryAction = CustomAlertDialog.ActionConfig(
+                confirmButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.errors_sync_reset_group_files),
                     onClick = { revertGroupFiles(conflictDialogData.groupId) }
                 ),
-                secondaryAction = CustomAlertDialog.ActionConfig(
+                dismissButton = CustomAlertDialogM3ActionConfig(
                     text = stringResource(id = Strings.errors_sync_skip_group),
                     onClick = { skipGroup(conflictDialogData.groupId) }
                 ),
@@ -86,18 +87,17 @@ internal fun ChangedItemsDeletedAlert(
     deleteRemovedItemsWithLocalChanges: (key: String) -> Unit,
     restoreRemovedItemsWithLocalChanges: (key: String) -> Unit,
 ) {
-
-    CustomAlertDialog(
+    CustomAlertDialogM3(
         title = stringResource(id = Strings.warning),
         description = stringResource(
             id = Strings.sync_conflict_resolution_changed_item_deleted,
             conflictDialogData.title
         ),
-        primaryAction = CustomAlertDialog.ActionConfig(
+        dismissButton = CustomAlertDialogM3ActionConfig(
             text = stringResource(id = Strings.restore),
             onClick = { restoreRemovedItemsWithLocalChanges(conflictDialogData.key) }
         ),
-        secondaryAction = CustomAlertDialog.ActionConfig(
+        confirmButton = CustomAlertDialogM3ActionConfig(
             text = stringResource(id = Strings.delete),
             textColor = CustomPalette.ErrorRed,
             onClick = { deleteRemovedItemsWithLocalChanges(conflictDialogData.key) }

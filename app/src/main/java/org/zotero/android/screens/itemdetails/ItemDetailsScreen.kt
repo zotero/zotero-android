@@ -13,7 +13,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsEditingTopBar
 import org.zotero.android.screens.itemdetails.topbars.ItemDetailsTopBar
 import org.zotero.android.uicomponents.CustomScaffoldM3
-import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheet
+import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheetM3
 import org.zotero.android.uicomponents.reorder.rememberReorderState
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 import java.io.File
@@ -150,7 +150,7 @@ internal fun ItemDetailsScreen(
                     deleteOrRestoreItem = viewModel::deleteOrRestoreItem
                 )
             }
-            LongPressBottomSheet(
+            LongPressBottomSheetM3(
                 longPressOptionsHolder = viewState.longPressOptionsHolder,
                 onCollapse = viewModel::dismissBottomSheet,
                 onOptionClick = viewModel::onLongPressOptionsItemSelected

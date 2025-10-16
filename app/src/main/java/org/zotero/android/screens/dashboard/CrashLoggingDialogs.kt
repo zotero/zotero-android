@@ -4,7 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import org.zotero.android.architecture.logging.crash.CrashReportIdDialogData
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.modal.CustomAlertDialog
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
+import org.zotero.android.uicomponents.modal.CustomAlertDialogM3ActionConfig
 
 @Composable
 internal fun CrashLoggingDialogs(
@@ -12,18 +13,15 @@ internal fun CrashLoggingDialogs(
     onDismissDialog: () -> Unit,
     onShareCopy: (String) -> Unit,
 ) {
-    CustomAlertDialog(
+    CustomAlertDialogM3(
         title = stringResource(id = Strings.settings_crash_alert_title),
         description = stringResource(
             id = Strings.settings_crash_alert_message, dialogData.reportId
         ),
-        primaryAction = CustomAlertDialog.ActionConfig(
-            text = stringResource(id = Strings.ok),
-        ),
-        secondaryAction = CustomAlertDialog.ActionConfig(
+        dismissButton = CustomAlertDialogM3ActionConfig(text = stringResource(id = Strings.ok)),
+        confirmButton = CustomAlertDialogM3ActionConfig(
             text = stringResource(id = Strings.settings_crash_alert_copy_id),
-            onClick = { onShareCopy(dialogData.reportId) }
-        ),
+            onClick = { onShareCopy(dialogData.reportId) }),
         dismissOnClickOutside = false,
         onDismiss = onDismissDialog
     )

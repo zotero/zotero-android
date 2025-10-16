@@ -10,14 +10,14 @@ import androidx.compose.ui.platform.LocalContext
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import org.zotero.android.architecture.ScreenArguments
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.uicomponents.CustomScaffoldM3
 
 @Composable
 internal fun ImageViewerScreen(onBack: () -> Unit) {
     val uri = ScreenArguments.imageViewerArgs.uri
     val title = ScreenArguments.imageViewerArgs.title
 
-    CustomScaffold(
+    CustomScaffoldM3(
         topBar = {
             ImageViewerTopBar(title = title, onDoneClicked = onBack)
         },

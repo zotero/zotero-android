@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
@@ -13,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 fun FullScreenLceBox(
@@ -46,7 +46,7 @@ fun FullScreenLceBox(
 @Composable
 fun BoxScope.CircularLoading() {
     CircularProgressIndicator(
-        color = CustomTheme.colors.zoteroDefaultBlue,
+        color = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .size(48.dp)
             .align(Center),

@@ -1,21 +1,28 @@
 package org.zotero.android.screens.webview
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
+import androidx.compose.ui.res.painterResource
+import org.zotero.android.uicomponents.Drawables
 
 @Composable
 internal fun ZoteroWebviewTopBar(
     onClose: () -> Unit,
 ) {
-    NewCustomTopBar(
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                text = stringResource(id = Strings.close),
-                onClick = onClose
-            )
+    TopAppBar(
+        title = {
+        },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
         },
     )
 }

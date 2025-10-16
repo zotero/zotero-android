@@ -39,7 +39,7 @@
 
     <string name="items.action.retrieve_metadata">Retrieve Metadata</string>
 
-    <string name="retrieve_metadata_dialog_title">Metadata Retrieval</string>
+    <string name="retrieve_metadata_dialog_title">Retrieve Metadata</string>
     <string name="retrieve_metadata_status_no_results">Status: recognition yielded no results</string>
 
     <string name="retrieve_metadata_error_failed_to_initialize">Failed to initialize</string>
