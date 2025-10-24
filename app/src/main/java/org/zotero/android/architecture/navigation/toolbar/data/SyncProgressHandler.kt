@@ -204,4 +204,8 @@ class SyncProgressHandler @Inject constructor(
         emitState(SyncProgress.shouldMuteWhileOnScreen(false))
     }
 
+    fun showScanBarcodeMessage(message: String) {
+        emitState(SyncProgress.scanBarcodeMessage(message))
+    }
+
 }

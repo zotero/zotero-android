@@ -1,6 +1,5 @@
 package org.zotero.android.screens.scanbarcode.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,21 +23,20 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewEffect.NavigateBack
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewModel
-import org.zotero.android.screens.scanbarcode.ScanBarcodeViewModel.Error
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewModel.State
 import org.zotero.android.screens.scanbarcode.ScanBarcodeViewState
-import org.zotero.android.uicomponents.CustomScaffold
+import org.zotero.android.screens.scanbarcode.ui.rows.ScanBarcodeScanAnotherRow
+import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun ScanBarcodeScreen(
     viewModel: ScanBarcodeViewModel = hiltViewModel(),
     onClose: () -> Unit,
 ) {
-    CustomThemeWithStatusAndNavBars {
+    AppThemeM3 {
         val viewState by viewModel.viewStates.observeAsState(ScanBarcodeViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -52,20 +51,17 @@ internal fun ScanBarcodeScreen(
                 else -> {}
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
-                ScanBarcodeCloseScanAnotherTopBar(
-                    onClose = onClose,
-                    onScan = viewModel::launchBarcodeScanner
+                ScanBarcodeTopBar(
+                    onDone = onClose,
                 )
             },
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = CustomTheme.colors.zoteroItemDetailSectionBackground)
-                    .padding(horizontal = 16.dp)
+                    .padding(start = 16.dp, end = 8.dp)
             ) {
                 if (viewState.lookupState == State.waitingInput) {
                     scanBarcodeLoadingIndicator()
@@ -87,43 +83,15 @@ internal fun ScanBarcodeScreen(
                         rows = viewState.lookupRows,
                         onDelete = { viewModel.onItemDelete(it) })
                     if (viewState.lookupState == State.loadingIdentifiers) {
-                        scanBarcodeLoadingIndicator()
+//                        scanBarcodeLoadingIndicator()
+                    } else {
+                        item {
+                            ScanBarcodeScanAnotherRow(onClick = viewModel::launchBarcodeScanner)
+                        }
                     }
-                    scanBarcodeError(
-                        failedState = viewState.lookupState as? State.failed
-                    )
                 }
             }
         }
-    }
-}
-
-internal fun LazyListScope.scanBarcodeError(
-    failedState: State.failed?
-) {
-    if (failedState != null) {
-        item {
-            val errorText = when (failedState.error) {
-                is Error.noIdentifiersDetectedAndNoLookupData -> {
-                    stringResource(id = Strings.errors_lookup)
-                }
-
-                is Error.noIdentifiersDetectedWithLookupData -> {
-                    stringResource(id = Strings.scar_barcode_error_lookup_no_new_identifiers_found)
-                }
-
-                else -> {
-                    stringResource(id = Strings.errors_unknown)
-                }
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = errorText,
-                style = CustomTheme.typography.newBody,
-                color = CustomPalette.ErrorRed,
-            )
-        }
-
     }
 }
 
@@ -132,7 +100,7 @@ internal fun LazyListScope.scanBarcodeLoadingIndicator() {
         Spacer(modifier = Modifier.height(30.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             CircularProgressIndicator(
-                color = CustomTheme.colors.zoteroDefaultBlue,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .size(48.dp)
             )

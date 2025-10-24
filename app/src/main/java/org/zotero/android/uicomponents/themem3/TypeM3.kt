@@ -16,6 +16,7 @@ val AppTypographyM3 = Typography(
 		fontWeight = FontWeight.Bold,
 	),
 	bodyLarge = TextStyle(
+        fontSize = 16.sp,
         letterSpacing = 0.15.sp,
     ),
 	bodyMedium = TextStyle(

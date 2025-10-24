@@ -1,0 +1,87 @@
+package org.zotero.android.screens.scanbarcode.ui.rows
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.text.HtmlCompat
+import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
+import org.zotero.android.database.objects.Attachment
+import org.zotero.android.sync.SyncError
+import org.zotero.android.uicomponents.attachmentprogress.FileAttachmentView
+import org.zotero.android.uicomponents.attachmentprogress.State
+import org.zotero.android.uicomponents.attachmentprogress.Style
+
+@Composable
+internal fun ScanBarcodeLookupAttachmentRow(
+    title: String,
+    attachmentType: Attachment.Kind,
+    update: RemoteAttachmentDownloader.Update.Kind,
+) {
+    val iconSize = 28.dp
+    val mainIconSize = 22.dp
+    val badgeIconSize = 12.dp
+    val modifier = Modifier.size(iconSize)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Spacer(modifier = Modifier.width(24.dp))
+        when (update) {
+            is RemoteAttachmentDownloader.Update.Kind.ready -> {
+                FileAttachmentView(
+                    modifier = modifier,
+                    state = State.ready(attachmentType),
+                    style = Style.lookup,
+                    mainIconSize = mainIconSize,
+                    badgeIconSize = badgeIconSize,
+                )
+            }
+
+            is RemoteAttachmentDownloader.Update.Kind.progress -> {
+                FileAttachmentView(
+                    modifier = modifier,
+                    state = State.progress(update.progressInHundreds),
+                    style = Style.lookup,
+                    mainIconSize = mainIconSize,
+                    badgeIconSize = badgeIconSize,
+                )
+            }
+
+            is RemoteAttachmentDownloader.Update.Kind.failed, is RemoteAttachmentDownloader.Update.Kind.cancelled -> {
+                FileAttachmentView(
+                    modifier = modifier,
+                    state = State.failed(attachmentType, SyncError.NonFatal.unchanged),
+                    style = Style.lookup,
+                    mainIconSize = mainIconSize,
+                    badgeIconSize = badgeIconSize,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            modifier = Modifier.padding(end = 8.dp),
+            text = HtmlCompat.fromHtml(
+                title,
+                HtmlCompat.FROM_HTML_MODE_LEGACY
+            ).toString(),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+
+}

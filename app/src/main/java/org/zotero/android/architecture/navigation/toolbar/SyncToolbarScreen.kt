@@ -3,12 +3,15 @@ package org.zotero.android.architecture.navigation.toolbar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,6 @@ import org.zotero.android.architecture.navigation.toolbar.data.CurrentSyncProgre
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
@@ -42,7 +43,6 @@ internal fun BoxScope.SyncToolbarScreen(
 
     LaunchedEffect(key1 = viewEffect) {
         when (viewEffect?.consume()) {
-//            NavigateBack -> onBack()
             null -> Unit
             else -> {}
         }
@@ -53,59 +53,53 @@ internal fun BoxScope.SyncToolbarScreen(
     AnimatedContent(
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(bottom = layoutType.calculateAllItemsBottomPanelHeight() + 16.dp),
+            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
+            .padding(bottom = BottomAppBarDefaults.FlexibleBottomAppBarHeight),
         targetState = syncProgress != null,
         label = ""
     ) { shouldShow ->
         if (shouldShow && syncProgress != null) {
-            val roundCornerShape = RoundedCornerShape(size = 10.dp)
+            val roundCornerShape = RoundedCornerShape(size = 4.dp)
             val widthFraction = if (layoutType.isTablet()) {
                 0.7f
             } else {
                 0.9f
             }
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth(widthFraction)
-                    .height(48.dp)
-                    .background(color = Color(0xFF2E3138), roundCornerShape)
+                    .height(68.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.inverseSurface,
+                        shape = roundCornerShape
+                    )
                     .clip(roundCornerShape)
+                    .padding(16.dp)
                     .safeClickable(
                         onClick = viewModel::showErrorDialog,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                     ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 56.dp)
-                        .align(Alignment.CenterStart),
+                    modifier = Modifier.weight(1f),
                     text = syncProgress.message,
-                    color = Color(0xFFF0F2F7),
-                    style = CustomTheme.typography.newInfo,
-                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 8.dp)
-                ) {
-                    when (syncProgress) {
-                        is CurrentSyncProgressState.SyncFinishedWithError -> {
-                            NewHeadingTextButton(
-                                onClick = viewModel::showErrorDialog,
-                                text = stringResource(Strings.sync_snackbar_view_action),
-                            )
-                        }
+                when (syncProgress) {
+                    is CurrentSyncProgressState.SyncFinishedWithError, is CurrentSyncProgressState.Aborted -> {
+                        NewHeadingTextButton(
+                            onClick = viewModel::showErrorDialog,
+                            text = stringResource(Strings.sync_snackbar_view_action),
+                        )
+                    }
 
-                        is CurrentSyncProgressState.Aborted -> {
-                            NewHeadingTextButton(
-                                onClick = viewModel::showErrorDialog,
-                                text = stringResource(Strings.sync_snackbar_view_action),
-                            )
-                        }
+                    else -> {
+                        //no-op
                     }
                 }
 

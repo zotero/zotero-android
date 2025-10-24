@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.zotero.android.androidx.content.longToast
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
 import org.zotero.android.database.objects.FieldKeys
@@ -40,6 +40,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
     private val schemaController: SchemaController,
     private val remoteFileDownloader: RemoteAttachmentDownloader,
     private val context: Context,
+    private val progressHandler: SyncProgressHandler,
 ) : BaseViewModel2<ScanBarcodeViewState, ScanBarcodeViewEffect>(ScanBarcodeViewState()) {
 
     private val queueOfScannedBarcodes = LinkedList<String>()
@@ -79,7 +80,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
             }
             .addOnFailureListener { e ->
                 Timber.e(e, "Barcode scanning failed")
-                context.longToast("Barcode scanning is not supported on your device")
+                progressHandler.showScanBarcodeMessage("Barcode scanning is not supported on your device")
                 triggerEffect(NavigateBack)
             }
     }
@@ -113,16 +114,18 @@ internal class ScanBarcodeViewModel @Inject constructor(
                     }
                     when (update.kind) {
                         is IdentifierLookupController.Update.Kind.lookupError -> {
-                            updateLookupState(State.failed(update.kind.error))
+                            val failedState = State.failed(update.kind.error)
+                            updateLookupState(failedState)
+                            progressHandler.showScanBarcodeMessage(scanBarcodeError(failedState))
                         }
 
                         is IdentifierLookupController.Update.Kind.identifiersDetected -> {
                             val identifiers = update.kind.identifiers
                             if (identifiers.isEmpty()) {
                                 if (update.lookupData.isEmpty()) {
-                                    context.longToast(Strings.errors_lookup)
+                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup))
                                 } else {
-                                    context.longToast(Strings.scar_barcode_error_lookup_no_new_identifiers_found)
+                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.scar_barcode_error_lookup_no_new_identifiers_found))
                                 }
                             }
                             updateLookupState(State.lookup(update.lookupData))
@@ -164,7 +167,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
 
     private fun onLookup(identifier: String) {
         if (identifier.isBlank()) {
-            context.longToast("Failed to scan barcode")
+            progressHandler.showScanBarcodeMessage("Failed to scan barcode")
             return
         }
         val newIdentifier = identifier.split("\n", ",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -383,7 +386,25 @@ internal class ScanBarcodeViewModel @Inject constructor(
                 lookupState = updatedLookupState
             )
         }
+    }
 
+    private fun scanBarcodeError(
+        failedState: State.failed
+    ): String {
+        val errorText = when (failedState.error) {
+            is Error.noIdentifiersDetectedAndNoLookupData -> {
+                context.getString(Strings.errors_lookup)
+            }
+
+            is Error.noIdentifiersDetectedWithLookupData -> {
+                context.getString(Strings.scar_barcode_error_lookup_no_new_identifiers_found)
+            }
+
+            else -> {
+                context.getString(Strings.errors_unknown)
+            }
+        }
+        return errorText
     }
 
 

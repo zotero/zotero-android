@@ -91,6 +91,11 @@ class SyncToolbarViewModel @Inject constructor(
                     }
                 }
             }
+            is SyncProgress.scanBarcodeMessage -> {
+                resetTimer()
+                set(progress)
+                hideToolbarWithDelay()
+            }
 
             else -> {
                 set(progress)
@@ -125,6 +130,16 @@ class SyncToolbarViewModel @Inject constructor(
                             )
                         )
                     }
+                }
+            }
+
+            is SyncProgress.scanBarcodeMessage -> {
+                updateState {
+                    copy(
+                        progressState = CurrentSyncProgressState.RegularMessage(
+                            message = message,
+                        )
+                    )
                 }
             }
             else -> {
@@ -171,12 +186,6 @@ class SyncToolbarViewModel @Inject constructor(
             copy(
                 dialogErrorMessage = null,
             )
-        }
-    }
-
-    fun onDismissProgressDialog() {
-        updateState {
-            copy(progressState = null)
         }
     }
 }

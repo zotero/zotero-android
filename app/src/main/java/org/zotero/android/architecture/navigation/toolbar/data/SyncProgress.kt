@@ -21,6 +21,8 @@ sealed interface SyncProgress {
     data class aborted(val error: SyncError.Fatal): SyncProgress
     data class shouldMuteWhileOnScreen(val shouldMute: Boolean): SyncProgress
 
+    data class scanBarcodeMessage(val text: String): SyncProgress
+
 }
 
 data class SyncProgressData(

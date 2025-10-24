@@ -109,6 +109,10 @@ class SyncToolbarTextGenerator @Inject constructor(
                 //no op
                 return ""
             }
+
+            is SyncProgress.scanBarcodeMessage -> {
+                return progress.text
+            }
         }
     }
 
