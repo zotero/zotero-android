@@ -1,4 +1,4 @@
-package org.zotero.android.uicomponents.singlepicker
+package org.zotero.android.screens.share.rows
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun SinglePickerRadioButtonRow(
+internal fun ShareCollectionOptionRow(
     text: String,
     isSelected: Boolean,
     onOptionSelected: () -> Unit
@@ -27,19 +27,19 @@ internal fun SinglePickerRadioButtonRow(
         Modifier
             .fillMaxWidth()
             .height(48.dp)
+            .padding(horizontal = 16.dp)
             .selectable(
                 selected = isSelected,
                 onClick = onOptionSelected,
                 role = Role.RadioButton,
-            )
-            .padding(horizontal = 16.dp),
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(
             selected = isSelected,
             onClick = null,
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = text,
             color = MaterialTheme.colorScheme.onSurface,

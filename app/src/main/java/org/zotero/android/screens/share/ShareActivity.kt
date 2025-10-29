@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.screens.share.navigation.ShareRootNavigation
-import org.zotero.android.uicomponents.theme.CustomTheme
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -22,7 +22,7 @@ internal class ShareActivity : BaseActivity() {
         enableEdgeToEdge()
         shareRawAttachmentLoader.loadFromIntent(intent)
         setContent {
-            CustomTheme {
+            AppThemeM3 {
                 ShareRootNavigation()
             }
         }

@@ -1,12 +1,24 @@
 package org.zotero.android.screens.sortpicker
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 
 @Composable
@@ -25,29 +37,43 @@ internal fun SortPickerSortDirectionSelector(
         optionsList.indexOf(descendingOptionLabel)
     }
 
-    SingleChoiceSegmentedButtonRow {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
         optionsList.forEachIndexed { index, opt ->
             val isSelected = index == selectedOptionIndex
-            SegmentedButton(
-                colors = SegmentedButtonDefaults.colors(
-                    activeContainerColor = MaterialTheme.colorScheme.secondary,
-                    activeContentColor = MaterialTheme.colorScheme.onSecondary,
-                    inactiveContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    inactiveContainerColor = MaterialTheme.colorScheme.secondaryContainer
+            ToggleButton(
+                checked = isSelected,
+                onCheckedChange = { viewModel.onSortDirectionChanged(isAscending = opt == ascendingOptionLabel) },
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { role = Role.RadioButton },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    optionsList.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+                colors = ToggleButtonDefaults.toggleButtonColors(
+                    checkedContainerColor = MaterialTheme.colorScheme.secondary,
+                    checkedContentColor = MaterialTheme.colorScheme.onSecondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 ),
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = optionsList.size,
-                ),
-                onClick = { viewModel.onSortDirectionChanged(isAscending = opt == ascendingOptionLabel) },
-                selected = isSelected,
-                label = {
-                    Text(
-                        text = opt,
-                        style = MaterialTheme.typography.labelLarge,
+            ) {
+                if (isSelected) {
+                    Icon(
+                        painter = painterResource(id = Drawables.check_24px),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondary
                     )
+                    Spacer(Modifier.size(6.dp))
                 }
-            )
+                Text(
+                    text = opt,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1
+                )
+            }
         }
     }
 }

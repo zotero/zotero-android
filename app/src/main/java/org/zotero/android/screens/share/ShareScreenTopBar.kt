@@ -1,12 +1,25 @@
 package org.zotero.android.screens.share
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.zotero.android.translator.data.AttachmentState
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun ShareScreenTopBar(
@@ -15,42 +28,78 @@ internal fun ShareScreenTopBar(
     isLeftButtonEnabled: Boolean,
     isRightButtonEnabled: Boolean,
     isLoading: Boolean,
-    state: AttachmentState,
     attachmentError: AttachmentState.Error?,
-    ) {
+) {
     when (attachmentError) {
         is AttachmentState.Error.quotaLimit, is AttachmentState.Error.webDavFailure, is AttachmentState.Error.apiFailure -> {
-            NewCustomTopBar(
-                shouldAddBottomDivider = false,
-                rightContainerContent = listOf {
-                    NewHeadingTextButton(
-                        style = CustomTheme.typography.defaultBold,
-                        text = stringResource(id = Strings.done),
-                        onClick = onCancelClicked
-                    )
-                }
-            )
-        }
-        else -> {
-            NewCustomTopBar(
-                shouldAddBottomDivider = false,
-                leftContainerContent = listOf {
-                    NewHeadingTextButton(
-                        text = stringResource(id = Strings.cancel),
-                        isEnabled = isLeftButtonEnabled,
-                        onClick = onCancelClicked
-                    )
+            TopAppBar(
+                title = {
                 },
-                rightContainerContent = listOf {
-                    NewHeadingTextButton(
-                        style = CustomTheme.typography.defaultBold,
-                        text = stringResource(id = Strings.shareext_save),
-                        isEnabled = isRightButtonEnabled,
-                        isLoading = isLoading,
-                        onClick = onSave
-                    )
-                }
-            )
+                navigationIcon = {
+                },
+                actions = {
+                    FilledTonalButton(
+                        onClick = { onCancelClicked() },
+                        shapes = ButtonDefaults.shapes(),
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(
+                            text = stringResource(Strings.done),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                })
+        }
+
+        else -> {
+            TopAppBar(
+                title = {
+                },
+                navigationIcon = {
+                    val containerColor = if (isLeftButtonEnabled) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        CustomTheme.colors.disabledContent
+                    }
+
+                    IconButton(onClick = onCancelClicked, enabled = isLeftButtonEnabled) {
+                        Icon(
+                            painter = painterResource(Drawables.arrow_back_24dp),
+                            contentDescription = null,
+                            tint = containerColor,
+                        )
+                    }
+                },
+                actions = {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        val containerColor = if (isLeftButtonEnabled) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            CustomTheme.colors.disabledContent
+                        }
+
+                        FilledTonalButton(
+                            onClick = { onSave() }, enabled = isRightButtonEnabled,
+                            shapes = ButtonDefaults.shapes(),
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = containerColor),
+                        ) {
+                            Text(
+                                text = stringResource(Strings.shareext_save),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                })
+
         }
     }
 

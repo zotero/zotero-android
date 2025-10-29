@@ -14,7 +14,6 @@ import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Annotations
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Thumbnails
-import org.zotero.android.uicomponents.selector.MultiSelectorOption
 
 private val sliderOptions = listOf(
     Thumbnails,
@@ -31,9 +30,8 @@ internal fun PdfReaderSidebar(
     thumbnailsLazyListState: LazyListState,
 ) {
     val selectorOptions = sliderOptions.map {
-        MultiSelectorOption(
-            id = it.ordinal, optionString = stringResource(id = it.optionStringId)
-        )
+        stringResource(id = it.optionStringId)
+
     }
 
     val selectedOption = viewState.sidebarSliderSelectedOption
@@ -49,7 +47,7 @@ internal fun PdfReaderSidebar(
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
                     Text(
-                        text = selectorOption.optionString,
+                        text = selectorOption,
                         color = textColor,
                         style = MaterialTheme.typography.titleSmall.copy(fontSize = 11.sp),
                     )
