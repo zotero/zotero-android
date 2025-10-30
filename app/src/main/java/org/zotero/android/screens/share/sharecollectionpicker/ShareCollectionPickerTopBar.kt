@@ -1,23 +1,38 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
 
 @Composable
 internal fun ShareCollectionPickerTopBar(
-    onBackClicked: () -> Unit,
+    onBack: () -> Unit,
 ) {
-    NewCustomTopBar(
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                text = stringResource(id = Strings.back_button),
-                onClick = onBackClicked
+    TopAppBar(
+        title = {
+            Text(
+                text = stringResource(Strings.collection_picker_select_collection),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
             )
         },
-        leftGuidelineStartPercentage = 0.2f,
-        rightGuidelineStartPercentage = 0.2f,
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(Drawables.arrow_back_24dp),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+        actions = {
+        },
     )
 }

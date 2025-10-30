@@ -1,25 +1,19 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.uicomponents.CustomScaffold
-import org.zotero.android.uicomponents.theme.CustomTheme
-import org.zotero.android.uicomponents.theme.CustomThemeWithStatusAndNavBars
+import org.zotero.android.uicomponents.CustomScaffoldM3
+import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun ShareCollectionPickerScreen(
     onBack: () -> Unit,
     viewModel: ShareCollectionPickerViewModel = hiltViewModel(),
 ) {
-    CustomThemeWithStatusAndNavBars {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
+    AppThemeM3 {
         val viewState by viewModel.viewStates.observeAsState(ShareCollectionPickerViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
@@ -31,27 +25,25 @@ internal fun ShareCollectionPickerScreen(
                 is ShareCollectionPickerViewEffect.OnBack -> {
                     onBack()
                 }
+                is ShareCollectionPickerViewEffect.ScreenRefresh -> {
+                }
 
                 else -> {
                     //no-op
                 }
             }
         }
-        CustomScaffold(
-            topBarColor = CustomTheme.colors.topBarBackgroundColor,
+        CustomScaffoldM3(
             topBar = {
                 ShareCollectionPickerTopBar(
-                    onBackClicked = onBack,
+                    onBack = onBack,
                 )
             },
         ) {
-            Column(modifier = Modifier.background(CustomTheme.colors.popupBackgroundContent)) {
-                ShareCollectionsPickerTable(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    layoutType = layoutType
-                )
-            }
+            ShareCollectionsPickerTable(
+                viewState = viewState,
+                viewModel = viewModel,
+            )
         }
     }
 }

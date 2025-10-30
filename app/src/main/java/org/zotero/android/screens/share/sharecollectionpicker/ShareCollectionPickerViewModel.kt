@@ -19,6 +19,7 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -142,6 +143,9 @@ internal class ShareCollectionPickerViewModel @Inject constructor(
         tree.set(
             collapsed = !collapsed, collection.identifier
         )
+        updateState {
+            copy(forceUpdateKey = UUID.randomUUID().toString())
+        }
         triggerEffect(ShareCollectionPickerViewEffect.ScreenRefresh)
     }
 
@@ -165,6 +169,8 @@ internal data class ShareCollectionPickerViewState(
 
     val trees: Map<LibraryIdentifier, CollectionTree> = emptyMap(),
     val treesToDisplay: Map<LibraryIdentifier, List<CollectionItemWithChildren>> = emptyMap(),
+
+    val forceUpdateKey: String = ""
 ) : ViewState {
     fun isCollapsed(libraryIdentifier: LibraryIdentifier, snapshot: CollectionItemWithChildren): Boolean {
         return trees[libraryIdentifier]?.collapsed?.get(snapshot.collection.identifier) ?: true
