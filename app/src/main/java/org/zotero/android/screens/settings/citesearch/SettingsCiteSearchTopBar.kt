@@ -1,23 +1,31 @@
 package org.zotero.android.screens.settings.citesearch
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.topbar.NewCustomTopBar
-import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
+import androidx.compose.ui.Modifier
 
 @Composable
 internal fun SettingsCiteSearchTopBar(
     onBack: () -> Unit,
+    viewState: SettingsCiteSearchViewState,
+    viewModel: SettingsCiteSearchViewModel
 ) {
-    NewCustomTopBar(
-        shouldAddBottomDivider = false,
-        title = stringResource(id = Strings.settings_cite_title),
-        leftContainerContent = listOf {
-            NewHeadingTextButton(
-                onClick = onBack,
-                text = stringResource(Strings.back_button),
-            )
-        }
-    )
+    Column(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+    ) {
+        SettingsCiteAppSearchBarM3Wrapper(
+            text = viewState.searchTerm,
+            onValueChanged = { viewModel.onSearch(it) },
+            onBack = {
+                viewModel.onSearch("")
+                onBack()
+            }
+        )
+    }
 }
