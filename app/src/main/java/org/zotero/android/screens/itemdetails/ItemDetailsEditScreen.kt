@@ -7,8 +7,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -50,6 +53,10 @@ private fun EditTitle(
     onValueChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
     val moveFocusDownAction = {
         focusManager.moveFocus(FocusDirection.Down)
     }
@@ -62,6 +69,7 @@ private fun EditTitle(
         onValueChange = onValueChange,
         textColor = MaterialTheme.colorScheme.onSurface,
         textStyle = MaterialTheme.typography.headlineSmall,
+        focusRequester = focusRequester,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Next
         ),

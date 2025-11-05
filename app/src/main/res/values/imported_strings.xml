@@ -161,7 +161,7 @@
     <string name="item_detail.add_attachment">Add attachment</string>
     <string name="item_detail.split_name">Split name</string>
     <string name="item_detail.merge_name">Merge name</string>
-    <string name="item_detail.untitled">Untitled</string>
+    <string name="item_detail.untitled">Title</string>
     <string name="item_detail.show_more">Show more</string>
     <string name="item_detail.show_less">Show less</string>
     <string name="item_detail.view_pdf">View PDF</string>
@@ -447,7 +447,7 @@
     <string name="errors.pdf.cant_update_annotation">Can\'t update annotation.</string>
     <string name="errors.pdf.cant_add_annotations">Can\'t add annotations.</string>
     <string name="errors.pdf.cant_delete_annotations">Can\'t delete annotations.</string>
-    <string name="accessibility.untitled">Untitled</string>
+    <string name="accessibility.untitled">Title</string>
     <string name="accessibility.locked">Locked</string>
     <string name="accessibility.archived">Archived</string>
     <string name="accessibility.collections.items">items</string>
