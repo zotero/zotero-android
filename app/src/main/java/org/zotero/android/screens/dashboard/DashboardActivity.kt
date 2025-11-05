@@ -40,6 +40,7 @@ import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.files.FileStore
 import org.zotero.android.uicomponents.themem3.AppThemeM3
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
@@ -106,7 +107,10 @@ internal class DashboardActivity : BaseActivity() {
             try {
                 startActivity(intent)
             } catch (e: Exception) {
-                longToast("No app found to open web pages or restriction is in place")
+                val errorMessage =
+                    "No app found to open web pages or restriction is in place. URL = $uri"
+                Timber.e(e, errorMessage)
+                longToast(errorMessage)
             }
         }
 
