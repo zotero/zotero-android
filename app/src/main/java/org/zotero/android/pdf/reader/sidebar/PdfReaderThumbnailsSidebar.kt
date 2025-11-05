@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -42,7 +43,7 @@ internal fun PdfReaderThumbnailsSidebar(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(CustomTheme.colors.pdfAnnotationsFormBackground),
+            .background(MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -63,12 +64,12 @@ internal fun PdfReaderThumbnailsSidebar(
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
                         .clip(shape = RoundedCornerShape(10.dp))
-                        .background(CustomTheme.colors.pdfAnnotationsItemBackground)
+                        .background(MaterialTheme.colorScheme.surface)
 
                     if (isSelected) {
                         rowModifier = rowModifier.border(
                             width = 3.dp,
-                            color = CustomTheme.colors.zoteroDefaultBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             shape = RoundedCornerShape(10.dp)
                         )
                     }
@@ -118,8 +119,8 @@ internal fun PdfReaderThumbnailsSidebar(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = row.title,
-                        color = CustomTheme.colors.defaultTextColor,
-                        style = CustomTheme.typography.newBody,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
             }

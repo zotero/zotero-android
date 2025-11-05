@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -52,13 +53,13 @@ internal fun PdfReaderOutlineSidebar(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(CustomTheme.colors.pdfAnnotationsFormBackground)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
                 text = stringResource(id = Strings.pdf_sidebar_no_outline),
                 color = CustomPalette.SystemGray,
-                style = CustomTheme.typography.newHeadline.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
             )
         }
 
@@ -67,7 +68,7 @@ internal fun PdfReaderOutlineSidebar(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    color = CustomTheme.colors.pdfAnnotationsFormBackground,
+                    color = MaterialTheme.colorScheme.surfaceContainer,
                 )
 
         ) {
@@ -97,7 +98,7 @@ internal fun PdfReaderOutlineTable(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .background(
-                color = CustomTheme.colors.pdfAnnotationsItemBackground,
+                color = MaterialTheme.colorScheme.surface,
                 shape = roundCornerShape)
             .clip(roundCornerShape),
         state = rememberLazyListState(),
@@ -174,7 +175,7 @@ private fun OutlineItem(
                 text = outline.title,
                 style = CustomTheme.typography.newBody,
                 color = if (outline.isActive) {
-                    CustomTheme.colors.allItemsRowTitleColor
+                    MaterialTheme.colorScheme.onSurface
                 } else {
                     CustomPalette.SystemGray
                 },
@@ -189,6 +190,7 @@ private fun OutlineItem(
                     },
                     onClick = { onItemChevronTapped() },
                     areaSize = arrowIconAreaSize,
+                    tintColor = MaterialTheme.colorScheme.primary,
                     shouldShowRipple = false
                 )
                 Spacer(modifier = Modifier.width(8.dp))

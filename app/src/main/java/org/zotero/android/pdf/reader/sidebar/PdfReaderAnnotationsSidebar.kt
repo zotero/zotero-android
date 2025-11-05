@@ -36,7 +36,6 @@ import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarNot
 import org.zotero.android.pdf.reader.sidebar.rows.PdfReaderAnnotationsSidebarUnderlineRow
 import org.zotero.android.pdf.reader.sidebar.sections.PdfReaderAnnotationsSidebarHeaderSection
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun PdfReaderAnnotationsSidebar(
@@ -75,7 +74,7 @@ internal fun PdfReaderAnnotationsSidebar(
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
                         .clip(shape = roundedCornerShape)
-                        .background(CustomTheme.colors.surface)
+                        .background(MaterialTheme.colorScheme.surface)
 
                     if (isSelected) {
                         rowModifier = rowModifier.border(
