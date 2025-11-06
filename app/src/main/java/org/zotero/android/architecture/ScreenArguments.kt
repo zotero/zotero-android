@@ -48,4 +48,6 @@ object ScreenArguments {
     lateinit var pdfReaderSearchArgs: PdfReaderSearchArgs
     lateinit var pdfPlainReaderArgs: PdfPlainReaderArgs
     lateinit var singleCitationArgs: SingleCitationArgs
+
+    var allItemsCollectionsLibsNavDirectionLeftToRight = true
 }

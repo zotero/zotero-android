@@ -60,6 +60,7 @@ internal fun TabletLeftPaneNavigation(
                 navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
             },
             navigateToCollectionEdit = navigation::toCollectionEditNavigation,
+            isTablet = true
         )
 
         librariesScreen(

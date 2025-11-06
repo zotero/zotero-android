@@ -2,10 +2,14 @@ package org.zotero.android.architecture.navigation
 
 import android.net.Uri
 import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.screens.addnote.AddNoteScreen
 import org.zotero.android.screens.allitems.AllItemsScreen
 import org.zotero.android.screens.collections.CollectionsScreen
@@ -42,10 +46,47 @@ fun NavGraphBuilder.allItemsScreen(
     onOpenWebpage: (uri: Uri) -> Unit,
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
+    isTablet: Boolean
 ) {
     composable(
         route = CommonScreenDestinations.ALL_ITEMS,
-        enterTransition = { EnterTransition.None }) {
+        popEnterTransition = {
+            if (isTablet) {
+                EnterTransition.None
+            } else {
+                slideInHorizontally(initialOffsetX = { it })
+            }
+        },
+        popExitTransition = {
+            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                slideOutHorizontally(targetOffsetX = { it })
+            } else {
+                slideOutHorizontally(targetOffsetX = { it })
+            }
+        },
+        exitTransition = {
+            if (isTablet) {
+                ExitTransition.None
+            } else {
+                if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                    slideOutHorizontally(targetOffsetX = { -it })
+                } else {
+                    slideOutHorizontally(targetOffsetX = { it })
+                }
+            }
+
+        },
+        enterTransition = {
+            if (isTablet) {
+                EnterTransition.None
+            } else {
+                if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                    slideInHorizontally(initialOffsetX = { it })
+                } else {
+                    slideInHorizontally(initialOffsetX = { -it })
+                }
+            }
+        }) {
         AllItemsScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
@@ -145,7 +186,11 @@ fun NavGraphBuilder.librariesScreen(
     navigateToCollectionsScreen: (String) -> Unit,
     onSettingsTapped: () -> Unit,
 ) {
-    composable(route = CommonScreenDestinations.LIBRARIES_SCREEN) {
+    composable(
+        route = CommonScreenDestinations.LIBRARIES_SCREEN,
+        enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+        popExitTransition = { slideOutHorizontally(targetOffsetX = { -it }) })
+    {
         LibrariesScreen(
             onSettingsTapped = onSettingsTapped,
             navigateToCollectionsScreen = navigateToCollectionsScreen,
@@ -189,6 +234,7 @@ fun NavGraphBuilder.collectionsScreen(
     navigateToAllItems: (String) -> Unit,
     navigateToCollectionEdit: () -> Unit,
     navigateToLibraries: (String) -> Unit,
+    isTablet: Boolean,
 ) {
     composable(
         route = "${CommonScreenDestinations.COLLECTIONS_SCREEN}/{$ARG_COLLECTIONS_SCREEN}",
@@ -197,8 +243,36 @@ fun NavGraphBuilder.collectionsScreen(
                 type = NavType.StringType; defaultValue = collectionDefaultValue
             },
         ),
+        popExitTransition = {
+            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                slideOutHorizontally(targetOffsetX = { it })
+            } else {
+                slideOutHorizontally(targetOffsetX = { -it })
+            }
+        },
+        popEnterTransition = {
+            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                slideInHorizontally(initialOffsetX = { -it })
+            } else {
+                slideInHorizontally(initialOffsetX = { it })
+            }
+        },
+        enterTransition = {
+            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                slideInHorizontally(initialOffsetX = { it })
+            } else {
+                slideInHorizontally(initialOffsetX = { -it })
+            }
+        },
+        exitTransition = {
+            if (!isTablet && ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                slideOutHorizontally(targetOffsetX = { -it })
+            } else {
+                slideOutHorizontally(targetOffsetX = { it })
+            }
 
-        ) {
+        },
+    ) {
         CollectionsScreen(
             onBack = onBack,
             navigateToAllItems = navigateToAllItems,

@@ -67,6 +67,7 @@ internal fun TabletRightPaneNavigation(
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             navigateToSingleCitation = navigation::toSingleCitationDialog,
             onShowPdf = onShowPdf,
+            isTablet = true,
         )
         itemDetailsScreen(
             navigateToCreatorEdit = navigation::toCreatorEditDialog,

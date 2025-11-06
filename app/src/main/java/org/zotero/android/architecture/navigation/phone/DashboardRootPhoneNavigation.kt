@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import org.zotero.android.architecture.Consumable
 import org.zotero.android.architecture.EventBusConstants
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.navigation.ARG_RETRIEVE_METADATA
 import org.zotero.android.architecture.navigation.ARG_TAGS_FILTER
 import org.zotero.android.architecture.navigation.CommonScreenDestinations
@@ -93,15 +94,22 @@ internal fun DashboardRootPhoneNavigation(
             collectionDefaultValue = collectionDefaultValue,
             onBack = navigation::onBack,
             navigateToAllItems = {
+                ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = true
                 toAllItems(
                     navController = navController, it
                 )
             },
             navigateToLibraries = {
+                ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = false
                 navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
             },
-            navigateToCollectionEdit = { navigation.toCollectionEditScreen() },
+            navigateToCollectionEdit = {
+                ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = true
+                navigation.toCollectionEditScreen()
+            },
+            isTablet = false
         )
+
         librariesScreen(
             navigateToCollectionsScreen = {
                 navigateToCollectionsScreen(navController, it)
@@ -135,6 +143,7 @@ internal fun DashboardRootPhoneNavigation(
                     wasPspdfkitInitialized = wasPspdfkitInitialized
                 )
             },
+            isTablet = false
         )
         itemDetailsScreen(
             navigateToCreatorEdit = navigation::toCreatorEdit,
@@ -247,6 +256,7 @@ internal fun DashboardRootPhoneNavigation(
 }
 
 private fun navigateToCollectionsScreen(navController: NavHostController, collectionArgs: String) {
+    ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = true
     navController.popBackStack(navController.graph.id, inclusive = true)
     navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
     navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
@@ -265,6 +275,7 @@ private object DashboardRootPhoneDestinations {
 }
 
 private fun ZoteroNavigation.toCollectionsScreen(params: String) {
+    ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = false
     navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$params") {
         launchSingleTop = true
     }
