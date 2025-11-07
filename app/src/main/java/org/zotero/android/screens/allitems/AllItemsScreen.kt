@@ -1,6 +1,7 @@
 package org.zotero.android.screens.allitems
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -51,6 +52,13 @@ internal fun AllItemsScreen(
         val lazyListState = rememberLazyListState()
 
         val isTablet = layoutType.isTablet()
+
+        if (!isTablet)  {
+            BackHandler(onBack = {
+                viewModel.navigateToCollections()
+            })
+        }
+
         LaunchedEffect(key1 = viewModel) {
             viewModel.init(isTablet)
         }

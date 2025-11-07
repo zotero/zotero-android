@@ -1,5 +1,6 @@
 package org.zotero.android.screens.libraries
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,14 +21,22 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
 internal fun LibrariesScreen(
+    viewModel: LibrariesViewModel = hiltViewModel(),
     navigateToCollectionsScreen: (String) -> Unit,
     onSettingsTapped: () -> Unit,
-    viewModel: LibrariesViewModel = hiltViewModel(),
+    onExitApp:() -> Unit,
 ) {
     AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val viewState by viewModel.viewStates.observeAsState(LibrariesViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
+
+        BackHandler(
+            enabled = viewState.backHandlerEnabled,
+            onBack = {
+                onExitApp()
+            })
+
         LaunchedEffect(key1 = viewModel) {
             viewModel.init(isTablet = layoutType.isTablet())
         }

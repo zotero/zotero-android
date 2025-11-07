@@ -9,6 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ViewEffect
@@ -22,6 +24,7 @@ import org.zotero.android.database.requests.ReadAllCustomLibrariesDbRequest
 import org.zotero.android.database.requests.ReadAllGroupsDbRequest
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.collections.data.CollectionsArgs
+import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.libraries.data.DeleteGroupDialogData
 import org.zotero.android.screens.libraries.data.LibraryRowData
 import org.zotero.android.screens.libraries.data.LibraryState
@@ -43,7 +46,15 @@ internal class LibrariesViewModel @Inject constructor(
     var groupLibraries: RealmResults<RGroup>? = null
     var isTablet: Boolean = false
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: LibrariesAndCollectionsBackButtonActiveEvent) {
+        updateState {
+            copy(backHandlerEnabled = event.enabled)
+        }
+    }
+
     fun init(isTablet: Boolean) = initOnce {
+        EventBus.getDefault().register(this)
         this.isTablet = isTablet
         viewModelScope.launch {
             loadData()
@@ -122,6 +133,7 @@ internal class LibrariesViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        EventBus.getDefault().unregister(this)
         groupLibraries?.removeAllChangeListeners()
         super.onCleared()
     }
@@ -201,6 +213,7 @@ internal data class  LibrariesViewState(
     val groupIdForDeletePopup: Int? = null,
     val customLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
     val groupLibraries: ImmutableList<LibraryRowData> = persistentListOf(),
+    val backHandlerEnabled: Boolean = true,
 ) : ViewState
 
 internal sealed class  LibrariesViewEffect : ViewEffect {

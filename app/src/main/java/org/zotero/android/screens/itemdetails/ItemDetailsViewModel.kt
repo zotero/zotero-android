@@ -72,6 +72,7 @@ import org.zotero.android.ktx.index
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.NavigateToPdfScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OnBack
@@ -215,13 +216,14 @@ class ItemDetailsViewModel @Inject constructor(
 
     fun init() = initOnce {
         EventBus.getDefault().register(this)
-            initViewState(screenArgs)
+        initViewState(screenArgs)
+        EventBus.getDefault().post(LibrariesAndCollectionsBackButtonActiveEvent(false))
 
-            setupFileObservers()
-            setupOnFieldValueTextChangeFlow()
-            setupOnAbstractTextChangeFlow()
+        setupFileObservers()
+        setupOnFieldValueTextChangeFlow()
+        setupOnAbstractTextChangeFlow()
 
-            loadInitialData()
+        loadInitialData()
     }
 
     private fun setupFileObservers() {
@@ -262,6 +264,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        EventBus.getDefault().post(LibrariesAndCollectionsBackButtonActiveEvent(true))
         currentItem?.removeAllChangeListeners()
         EventBus.getDefault().unregister(this)
         conflictResolutionUseCase.currentlyDisplayedItemLibraryIdentifier = null

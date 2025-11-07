@@ -149,6 +149,7 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenWebpage = onOpenWebpage,
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     onExportPdf = onExportPdf,
+                                    onExitApp = { finish() }
                                 )
                             } else {
                                 DashboardRootPhoneNavigation(
@@ -159,6 +160,7 @@ internal class DashboardActivity : BaseActivity() {
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     viewEffect = viewEffect,
                                     onExportPdf = onExportPdf,
+                                    onExitApp = { finish() }
                                 )
                             }
                             DashboardTopLevelDialogs(viewState = viewState, viewModel = viewModel)

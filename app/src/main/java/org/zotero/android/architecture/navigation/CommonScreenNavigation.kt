@@ -54,16 +54,20 @@ fun NavGraphBuilder.allItemsScreen(
             if (isTablet) {
                 EnterTransition.None
             } else {
-                slideInHorizontally(initialOffsetX = { it })
+                if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+                    slideInHorizontally(initialOffsetX = { -it })
+                } else {
+                    slideInHorizontally(initialOffsetX = { it })
+                }
             }
         },
-        popExitTransition = {
-            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
-                slideOutHorizontally(targetOffsetX = { it })
-            } else {
-                slideOutHorizontally(targetOffsetX = { it })
-            }
-        },
+//        popExitTransition = {
+//            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+//                slideOutHorizontally(targetOffsetX = { it })
+//            } else {
+//                slideOutHorizontally(targetOffsetX = { it })
+//            }
+//        },
         exitTransition = {
             if (isTablet) {
                 ExitTransition.None
@@ -185,15 +189,18 @@ fun NavGraphBuilder.zoterWebViewScreen(onClose: () -> Unit) {
 fun NavGraphBuilder.librariesScreen(
     navigateToCollectionsScreen: (String) -> Unit,
     onSettingsTapped: () -> Unit,
+    onExitApp:() -> Unit,
 ) {
     composable(
         route = CommonScreenDestinations.LIBRARIES_SCREEN,
         enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-        popExitTransition = { slideOutHorizontally(targetOffsetX = { -it }) })
+//        popExitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }
+    )
     {
         LibrariesScreen(
             onSettingsTapped = onSettingsTapped,
             navigateToCollectionsScreen = navigateToCollectionsScreen,
+            onExitApp = onExitApp,
         )
     }
 }
@@ -243,13 +250,13 @@ fun NavGraphBuilder.collectionsScreen(
                 type = NavType.StringType; defaultValue = collectionDefaultValue
             },
         ),
-        popExitTransition = {
-            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
-                slideOutHorizontally(targetOffsetX = { it })
-            } else {
-                slideOutHorizontally(targetOffsetX = { -it })
-            }
-        },
+//        popExitTransition = {
+//            if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
+//                slideOutHorizontally(targetOffsetX = { it })
+//            } else {
+//                slideOutHorizontally(targetOffsetX = { -it })
+//            }
+//        },
         popEnterTransition = {
             if (ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight) {
                 slideInHorizontally(initialOffsetX = { -it })

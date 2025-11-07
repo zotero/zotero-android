@@ -29,6 +29,7 @@ internal fun DashboardRootTabletNavigationScreen(
     onShowPdf: (String) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
+    onExitApp:() -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {
@@ -39,8 +40,9 @@ internal fun DashboardRootTabletNavigationScreen(
         ZoteroNavigation(rightPaneNavController, dispatcher)
     }
     val navigateAndPopAllItemsScreen: (String) -> Unit = {
+        rightPaneNavController.popBackStack(rightPaneNavController.graph.id, inclusive = true)
         rightPaneNavController.navigate(CommonScreenDestinations.ALL_ITEMS) {
-            popUpTo(0)
+//            popUpTo(0)
         }
     }
 
@@ -50,7 +52,8 @@ internal fun DashboardRootTabletNavigationScreen(
                 collectionDefaultValue = collectionDefaultValue,
                 viewEffect = viewEffect,
                 navigateAndPopAllItemsScreen = navigateAndPopAllItemsScreen,
-                onOpenWebpage = onOpenWebpage
+                onOpenWebpage = onOpenWebpage,
+                onExitApp = onExitApp,
             )
         }
         NewDivider(

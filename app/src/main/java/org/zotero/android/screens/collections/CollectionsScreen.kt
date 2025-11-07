@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collections
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +37,13 @@ internal fun CollectionsScreen(
         val viewState by viewModel.viewStates.observeAsState(CollectionsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         val isTablet = layoutType.isTablet()
+
+        BackHandler(
+            enabled = viewState.backHandlerEnabled,
+            onBack = {
+                viewModel.navigateToLibraries()
+            })
+
         LaunchedEffect(key1 = viewModel) {
             viewModel.init(isTablet = isTablet)
         }

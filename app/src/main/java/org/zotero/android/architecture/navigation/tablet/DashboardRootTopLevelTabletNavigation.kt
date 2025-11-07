@@ -36,6 +36,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onExportPdf: (file: File) -> Unit,
+    onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {
@@ -65,6 +66,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             },
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
+            onExitApp = onExitApp,
             navigateToRetrieveMetadata = navigation::toRetrieveMetadata
         )
         pdfReaderScreenAndNavigationForTablet(
@@ -95,6 +97,7 @@ private fun NavGraphBuilder.dashboardScreen(
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
+    onExitApp:() -> Unit,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {
     composable(
@@ -106,6 +109,7 @@ private fun NavGraphBuilder.dashboardScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,
+            onExitApp = onExitApp,
             toAddOrEditNote = toAddOrEditNote,
             toZoteroWebViewScreen = toZoteroWebViewScreen,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,

@@ -26,6 +26,7 @@ internal fun TabletLeftPaneNavigation(
     viewEffect: Consumable<DashboardViewEffect>?,
     onOpenWebpage: (uri: Uri) -> Unit,
     navigateAndPopAllItemsScreen: (String) -> Unit,
+    onExitApp:() -> Unit,
     collectionDefaultValue: String
 ) {
     val navController = rememberNavController()
@@ -67,7 +68,8 @@ internal fun TabletLeftPaneNavigation(
             navigateToCollectionsScreen = {
                 navigateToCollectionsScreen(navController, it)
             },
-            onSettingsTapped = navigation::toSettingsNavigation
+            onSettingsTapped = navigation::toSettingsNavigation,
+            onExitApp = onExitApp,
         )
         dialogFixedMaxHeight(
             route = TabletLeftPaneDestinations.COLLECTION_EDIT_NAVIGATION,
@@ -84,8 +86,8 @@ internal fun TabletLeftPaneNavigation(
 }
 
 private fun navigateToCollectionsScreen(navController: NavHostController, collectionArgs: String) {
-    navController.popBackStack(navController.graph.id, inclusive = true)
-    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
+//    navController.popBackStack(navController.graph.id, inclusive = true)
+//    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
     navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
 }
 

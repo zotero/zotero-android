@@ -50,6 +50,7 @@ import org.zotero.android.screens.collections.controller.CollectionTreeControlle
 import org.zotero.android.screens.collections.data.CollectionItemWithChildren
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.collections.data.CollectionsError
+import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.dashboard.data.ShowDashboardLongPressBottomSheet
 import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.UpdateFiltersEvent
@@ -111,6 +112,13 @@ internal class CollectionsViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(updateFiltersEvent: UpdateFiltersEvent) {
         this.itemsFilter = updateFiltersEvent.itemsFilter
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: LibrariesAndCollectionsBackButtonActiveEvent) {
+        updateState {
+            copy(backHandlerEnabled = event.enabled)
+        }
     }
 
     fun init(isTablet: Boolean) = initOnce {
@@ -665,6 +673,7 @@ internal data class CollectionsViewState(
     val showCollectionItemCounts: Boolean = false,
 
     val fixedCollections: PersistentMap<CustomType, Collection> = persistentMapOf(),
+    val backHandlerEnabled: Boolean = true,
     ) : ViewState {
     fun isCollapsed(snapshot: CollectionItemWithChildren): Boolean {
        return collapsed[snapshot.collection.identifier] != false

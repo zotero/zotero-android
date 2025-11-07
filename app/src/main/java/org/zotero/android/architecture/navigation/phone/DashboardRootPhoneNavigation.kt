@@ -63,6 +63,7 @@ internal fun DashboardRootPhoneNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (uri: Uri) -> Unit,
     onExportPdf: (file: File) -> Unit,
+    onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
 ) {
@@ -107,14 +108,15 @@ internal fun DashboardRootPhoneNavigation(
                 ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = true
                 navigation.toCollectionEditScreen()
             },
-            isTablet = false
+            isTablet = false,
         )
 
         librariesScreen(
             navigateToCollectionsScreen = {
                 navigateToCollectionsScreen(navController, it)
             },
-            onSettingsTapped = { navigation.toSettingsScreen() }
+            onSettingsTapped = { navigation.toSettingsScreen() },
+            onExitApp = onExitApp,
         )
 
         loadingScreen()
@@ -257,8 +259,8 @@ internal fun DashboardRootPhoneNavigation(
 
 private fun navigateToCollectionsScreen(navController: NavHostController, collectionArgs: String) {
     ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = true
-    navController.popBackStack(navController.graph.id, inclusive = true)
-    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
+//    navController.popBackStack(navController.graph.id, inclusive = true)
+//    navController.navigate(CommonScreenDestinations.LIBRARIES_SCREEN)
     navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
 }
 
@@ -277,7 +279,7 @@ private object DashboardRootPhoneDestinations {
 private fun ZoteroNavigation.toCollectionsScreen(params: String) {
     ScreenArguments.allItemsCollectionsLibsNavDirectionLeftToRight = false
     navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$params") {
-        launchSingleTop = true
+//        launchSingleTop = true
     }
 }
 
@@ -313,8 +315,8 @@ private fun toAllItems(
     navController: NavHostController,
     collectionArgs: String,
 ) {
-    navController.popBackStack(navController.graph.id, inclusive = true)
-    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
+//    navController.popBackStack(navController.graph.id, inclusive = true)
+//    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
     navController.navigate(CommonScreenDestinations.ALL_ITEMS)
 }
 
