@@ -1,9 +1,9 @@
 package org.zotero.android.screens.allitems.table.rows
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,11 +20,13 @@ internal fun RowScope.ItemRowSetAccessory(
 ) {
     when (accessory) {
         is ItemCellModel.Accessory.attachment -> {
-            IconButton(onClick = {}) {
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 FileAttachmentView(
                     modifier = Modifier
-                        .size(20.dp)
-                        .align(Alignment.CenterVertically),
+                        .size(20.dp),
                     state = accessory.state,
                     style = Style.list,
                     mainIconSize = 16.dp,
@@ -34,7 +36,10 @@ internal fun RowScope.ItemRowSetAccessory(
         }
 
         is ItemCellModel.Accessory.doi, is ItemCellModel.Accessory.url -> {
-            IconButton(onClick = {}) {
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     modifier = Modifier.size(16.dp),
                     painter = painterResource(Drawables.list_link),

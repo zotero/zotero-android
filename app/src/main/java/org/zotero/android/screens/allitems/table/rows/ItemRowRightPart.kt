@@ -1,11 +1,11 @@
 package org.zotero.android.screens.allitems.table.rows
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,14 +27,21 @@ internal fun RowScope.ItemRowRightPart(
     ItemRowSetAccessory(
         accessory = itemAccessory,
     )
-    Spacer(modifier = Modifier.width(8.dp))
+//    Spacer(modifier = Modifier.width(8.dp))
     AnimatedContent(
         modifier = Modifier.align(Alignment.CenterVertically),
         targetState = isEditing,
         label = ""
     ) { isEditing ->
         if (isEditing) {
-            IconButton(onClick = { onItemTapped(model)} ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(onClick = {
+                        onItemTapped(model)
+                    }),
+                contentAlignment = Alignment.Center
+            ) {
                 if (isItemSelected(model.key)) {
                     Icon(
                         painter = painterResource(Drawables.check_circle),
@@ -50,11 +57,18 @@ internal fun RowScope.ItemRowRightPart(
                 }
             }
         } else {
-            IconButton(onClick = { onAccessoryTapped(model.key) }) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(onClick = {
+                        onAccessoryTapped(model.key)
+                    }),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     painter = painterResource(Drawables.info_24px),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
