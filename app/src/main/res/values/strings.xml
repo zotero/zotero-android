@@ -37,6 +37,7 @@
     <string name="errors.shareext.proxied_urls_not_supported">Proxied URLs are not currently supported</string>
 
     <string name="settings_cite_remove_style">Remove Style</string>
+    <string name="settings_show_subcollection_items">Show Subcollection Items</string>
 
     <string name="items_generating_annotated_pdf">Generating Annotated PDF</string>
 
