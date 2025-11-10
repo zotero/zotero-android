@@ -1,0 +1,56 @@
+<resources>
+    <plurals name="items_collections_selected">
+        <item quantity="zero">Select a Collection</item>
+        <item quantity="one">%d Collection Selected</item>
+        <item quantity="other">%d Collections Selected</item>
+    </plurals>
+    <plurals name="items_delete_question">
+        <item quantity="one">Are you sure you want to delete the selected item?</item>
+        <item quantity="other">Are you sure you want to delete the selected items?</item>
+    </plurals>
+    <plurals name="items_remove_from_collection_question">
+        <item quantity="one">Are you sure you want to remove the selected item from this collection?</item>
+        <item quantity="other">Are you sure you want to remove the selected items from this collection?</item>
+    </plurals>
+    <plurals name="items_toolbar_filter">
+        <item quantity="one">Filter: %d item</item>
+        <item quantity="other">Filter: %d items</item>
+    </plurals>
+    <plurals name="pdf_search_matches">
+        <item quantity="one">Found %d match</item>
+        <item quantity="other">Found %d matches</item>
+    </plurals>
+    <plurals name="settings_storage_files_size_and_unit">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_errors">
+        <item quantity="one">%d issue</item>
+        <item quantity="other">%d issues</item>
+    </plurals>
+    <plurals name="tag_picker_tags_selected">
+        <item quantity="one">%d tag selected</item>
+        <item quantity="other">%d tags selected</item>
+    </plurals>
+    <plurals name="tag_picker_confirm_deletion">
+        <item quantity="one">Are you sure you want to delete %d automatic tag in this library?\n\nThis action cannot be undone.</item>
+        <item quantity="other">Are you sure you want to delete %d automatic tags in this library?\n\nThis action cannot be undone.</item>
+    </plurals>
+    <plurals name="settings_lines_logged">
+        <item quantity="one">%d line logged</item>
+        <item quantity="other">%d lines logged</item>
+    </plurals>
+    <plurals name="settings_lines">
+        <item quantity="one">%d line</item>
+        <item quantity="other">%d lines</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_webdav_error2">
+        <item quantity="one">Could not delete %d file from your WebDAV server</item>
+        <item quantity="other">Could not delete %d files from your WebDAV server</item>
+    </plurals>
+    <plurals name="settings_general_after_x_days">
+        <item quantity="one">After 1 Day</item>
+        <item quantity="other">After %d Days</item>
+    </plurals>
+
+</resources>

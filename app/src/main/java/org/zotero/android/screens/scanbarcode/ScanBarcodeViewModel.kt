@@ -123,9 +123,9 @@ internal class ScanBarcodeViewModel @Inject constructor(
                             val identifiers = update.kind.identifiers
                             if (identifiers.isEmpty()) {
                                 if (update.lookupData.isEmpty()) {
-                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup))
+                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup_no_identifiers_and_no_lookup_data))
                                 } else {
-                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.scar_barcode_error_lookup_no_new_identifiers_found))
+                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup_no_identifiers_with_lookup_data))
                                 }
                             }
                             updateLookupState(State.lookup(update.lookupData))
@@ -393,11 +393,11 @@ internal class ScanBarcodeViewModel @Inject constructor(
     ): String {
         val errorText = when (failedState.error) {
             is Error.noIdentifiersDetectedAndNoLookupData -> {
-                context.getString(Strings.errors_lookup)
+                context.getString(Strings.errors_lookup_no_identifiers_and_no_lookup_data)
             }
 
             is Error.noIdentifiersDetectedWithLookupData -> {
-                context.getString(Strings.scar_barcode_error_lookup_no_new_identifiers_found)
+                context.getString(Strings.errors_lookup_no_identifiers_with_lookup_data)
             }
 
             else -> {

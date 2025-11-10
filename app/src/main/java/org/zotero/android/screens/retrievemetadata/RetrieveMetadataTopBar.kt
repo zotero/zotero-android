@@ -26,7 +26,7 @@ internal fun RetrieveMetadataTopBar(
     TopAppBar(
         title = {
             Text(
-                text = stringResource(Strings.retrieve_metadata_dialog_title),
+                text = stringResource(Strings.items_action_retrieve_metadata),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

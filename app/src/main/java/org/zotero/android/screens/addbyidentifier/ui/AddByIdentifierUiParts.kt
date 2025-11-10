@@ -47,11 +47,11 @@ internal fun LazyListScope.addByIdentifierTitleEditFieldAndError(
         if (failedState != null) {
             val errorText = when (failedState.error) {
                 is AddByIdentifierViewModel.Error.noIdentifiersDetectedAndNoLookupData -> {
-                    stringResource(id = Strings.errors_lookup)
+                    stringResource(id = Strings.errors_lookup_no_identifiers_and_no_lookup_data)
                 }
 
                 is AddByIdentifierViewModel.Error.noIdentifiersDetectedWithLookupData -> {
-                    stringResource(id = Strings.scar_barcode_error_lookup_no_new_identifiers_found)
+                    stringResource(id = Strings.errors_lookup_no_identifiers_with_lookup_data)
                 }
 
                 else -> {

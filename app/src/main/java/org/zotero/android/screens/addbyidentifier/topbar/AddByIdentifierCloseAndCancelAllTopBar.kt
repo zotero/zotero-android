@@ -42,7 +42,7 @@ internal fun AddByIdentifierCloseAndCancelAllTopBar(
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(
-                    text = stringResource(Strings.add_by_identifier_cancel_all_button),
+                    text = stringResource(Strings.cancel_all),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelLarge
                 )

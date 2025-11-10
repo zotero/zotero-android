@@ -61,7 +61,7 @@ sealed class LongPressOptionItem(
 
     object CollectionEmptyTrash :
         LongPressOptionItem(
-            titleId = Strings.collection_empty_trash,
+            titleId = Strings.collections_empty_trash,
             textAndIconColor = CustomPalette.ErrorRed,
             resIcon = Drawables.delete_24px
         )
@@ -78,7 +78,7 @@ sealed class LongPressOptionItem(
         val collectionId: CollectionIdentifier,
     ) :
         LongPressOptionItem(
-            titleId = Strings.collection_remove_downloads,
+            titleId = Strings.collections_delete_attachment_files,
             resIcon = Drawables.file_download_off_24px
         )
 

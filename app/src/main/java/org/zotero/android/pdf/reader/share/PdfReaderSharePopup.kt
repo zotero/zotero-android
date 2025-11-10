@@ -52,12 +52,12 @@ internal fun PdfReaderSharePopup(
                 )
             }
             PdfReaderSharePopupOptionRow(
-                text = stringResource(id = Strings.pdf_reader_share_export_pdf),
+                text = stringResource(id = Strings.pdf_export_export),
                 onOptionClick = viewModel::onExportPdf,
                 resIcon = Drawables.share
             )
             PdfReaderSharePopupOptionRow(
-                text = stringResource(id = Strings.pdf_reader_share_export_annotated_pdf),
+                text = stringResource(id = Strings.pdf_export_export_annotated),
                 onOptionClick = viewModel::onExportAnnotatedPdf,
                 resIcon = Drawables.share
             )
