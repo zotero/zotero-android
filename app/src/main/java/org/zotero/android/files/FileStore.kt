@@ -442,8 +442,8 @@ class FileStore @Inject constructor (
     }
 
     fun getSelectedLibrary(): LibraryIdentifier {
-        val loadDataWithFilename = loadDataWithFilename<LibraryIdentifier?>(selectedLibraryId)
-        return loadDataWithFilename
+        val loadDataWithFilename = loadDataWithFilename<SelectedLibraryIdentifierWrapperForStorage?>(selectedLibraryId)
+        return loadDataWithFilename?.libraryIdentifier
             ?: LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
     }
 
@@ -460,10 +460,11 @@ class FileStore @Inject constructor (
     fun setSelectedLibrary(
         libraryIdentifier: LibraryIdentifier,
     ) {
-        serializeToFile(selectedLibraryId, libraryIdentifier)
+        serializeToFile(selectedLibraryId, SelectedLibraryIdentifierWrapperForStorage(libraryIdentifier))
     }
 
-    data class SelectedCollectionIdentifierWrapperForStorage(val collectionIdentifier: CollectionIdentifier)
+
+
 
     fun getSelectedCollectionId(): CollectionIdentifier {
         val loadDataWithFilename = loadDataWithFilename<SelectedCollectionIdentifierWrapperForStorage?>(selectedCollectionId)
