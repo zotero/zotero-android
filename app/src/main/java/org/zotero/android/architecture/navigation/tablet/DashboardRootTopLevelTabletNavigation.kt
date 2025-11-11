@@ -34,7 +34,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     onExportPdf: (file: File) -> Unit,
     onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
@@ -96,7 +96,7 @@ private fun NavGraphBuilder.dashboardScreen(
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     onExitApp:() -> Unit,
     viewEffect: Consumable<DashboardViewEffect>?,
 ) {

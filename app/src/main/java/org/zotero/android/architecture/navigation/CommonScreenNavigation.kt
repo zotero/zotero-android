@@ -43,7 +43,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToScanBarcode: () -> Unit,
     navigateToSingleCitation: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
     isTablet: Boolean
@@ -124,7 +124,7 @@ fun NavGraphBuilder.itemDetailsScreen(
     navigateToImageViewerScreen: () -> Unit,
     navigateToZoterWebViewScreen: (String) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
 ) {

@@ -39,7 +39,7 @@ internal fun TabletRightPaneNavigation(
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     navController: NavHostController,
     navigation: ZoteroNavigation,
 ) {

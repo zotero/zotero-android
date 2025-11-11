@@ -43,6 +43,7 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
@@ -101,14 +102,20 @@ internal class DashboardActivity : BaseActivity() {
             showAppChooserExcludingZoteroApp(intent)
         }
 
-        val onOpenWebpage: (uri: Uri) -> Unit = { uri ->
-            val intent = Intent(Intent.ACTION_VIEW, uri)
+        val onOpenWebpage: (url: String) -> Unit = { url ->
+            var prefixedUrl = url
+            if (!prefixedUrl.startsWith("http://") && !prefixedUrl.startsWith("https://")) {
+                prefixedUrl = "http://$prefixedUrl"
+            }
+
+
+            val intent = Intent(Intent.ACTION_VIEW, prefixedUrl.toUri())
             //Some devices have no apps to open URLs or such function was restricted.
             try {
                 startActivity(intent)
             } catch (e: Exception) {
                 val errorMessage =
-                    "No app found to open web pages or restriction is in place. URL = $uri"
+                    "No app found to open web pages or restriction is in place. URL = $prefixedUrl"
                 Timber.e(e, errorMessage)
                 longToast(errorMessage)
             }

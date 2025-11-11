@@ -31,7 +31,7 @@ internal fun ItemDetailsScreen(
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
 ) {
     AppThemeM3 {
@@ -80,7 +80,7 @@ internal fun ItemDetailsScreen(
                 }
 
                 is ItemDetailsViewEffect.OpenWebpage -> {
-                    onOpenWebpage(consumedEffect.uri)
+                    onOpenWebpage(consumedEffect.url)
                 }
 
                 is ItemDetailsViewEffect.ShowVideoPlayer -> {

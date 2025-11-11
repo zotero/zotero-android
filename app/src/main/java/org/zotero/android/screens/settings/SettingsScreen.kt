@@ -23,7 +23,7 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 @Composable
 internal fun SettingsScreen(
     onBack: () -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
     toCiteScreen: () -> Unit,
@@ -44,7 +44,7 @@ internal fun SettingsScreen(
                 }
 
                 is SettingsViewEffect.OpenWebpage -> {
-                    onOpenWebpage(consumedEffect.uri)
+                    onOpenWebpage(consumedEffect.url)
                 }
             }
         }

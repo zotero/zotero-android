@@ -24,7 +24,7 @@ import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 @Composable
 internal fun TabletLeftPaneNavigation(
     viewEffect: Consumable<DashboardViewEffect>?,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     navigateAndPopAllItemsScreen: (String) -> Unit,
     onExitApp:() -> Unit,
     collectionDefaultValue: String

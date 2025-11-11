@@ -1,6 +1,5 @@
 package org.zotero.android.screens.settings.account
 
-import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -21,7 +20,7 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 internal fun SettingsAccountScreen(
     navigateToSinglePickerScreen: () -> Unit,
     onBack: () -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     viewModel: SettingsAccountViewModel = hiltViewModel(),
 ) {
     AppThemeM3 {
@@ -39,7 +38,7 @@ internal fun SettingsAccountScreen(
                 }
 
                 is SettingsAccountViewEffect.OpenWebpage -> {
-                    onOpenWebpage(consumedEffect.uri)
+                    onOpenWebpage(consumedEffect.url)
                 }
 
                 SettingsAccountViewEffect.NavigateToSinglePickerScreen -> {

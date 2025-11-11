@@ -1,6 +1,5 @@
 package org.zotero.android.screens.allitems
 
-import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,7 +27,7 @@ internal fun AllItemsScreen(
     viewModel: AllItemsViewModel = hiltViewModel(),
     onPickFile: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onOpenWebpage: (uri: Uri) -> Unit,
+    onOpenWebpage: (url: String) -> Unit,
     navigateToCollectionsScreen: (String) -> Unit,
     navigateToSinglePicker: () -> Unit,
     navigateToAddByIdentifier: (addByIdentifierParams: String) -> Unit,
@@ -108,7 +107,7 @@ internal fun AllItemsScreen(
                     consumedEffect.mimeType
                 )
 
-                is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.uri)
+                is AllItemsViewEffect.OpenWebpage -> onOpenWebpage(consumedEffect.url)
                 is AllItemsViewEffect.NavigateToPdfScreen -> {
                     onShowPdf(consumedEffect.params)
                 }

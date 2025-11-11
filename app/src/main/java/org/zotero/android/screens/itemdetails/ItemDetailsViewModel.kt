@@ -1690,7 +1690,7 @@ class ItemDetailsViewModel @Inject constructor(
             val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(OpenFile(uri.toFile(), mimeType))
         } else {
-            triggerEffect(OpenWebpage(uri))
+            triggerEffect(OpenWebpage(url))
         }
     }
 
@@ -2014,7 +2014,7 @@ class ItemDetailsViewModel @Inject constructor(
         if (!(!viewState.isEditing || viewState.data.type == ItemTypes.attachment) || !field.isTappable) return
         when (field.key) {
             FieldKeys.Item.Attachment.url -> {
-                triggerEffect(OpenWebpage(field.value.toUri()))
+                triggerEffect(OpenWebpage(field.value))
             }
             FieldKeys.Item.doi -> {
                 val encoded = FieldKeys.Item.clean(doi = field.value)
@@ -2025,7 +2025,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private fun showDoi(doi: String) {
         val url = "https://doi.org/$doi"
-        triggerEffect(OpenWebpage(url.toUri()))
+        triggerEffect(OpenWebpage(url))
     }
 
     fun onMove(from: Int, to: Int) {
@@ -2115,7 +2115,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class NavigateToPdfScreen(val params: String) : ItemDetailsViewEffect()
-    data class OpenWebpage(val uri: Uri) : ItemDetailsViewEffect()
+    data class OpenWebpage(val url: String) : ItemDetailsViewEffect()
     data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()
 }

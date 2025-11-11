@@ -623,7 +623,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     private fun showDoi(doi: String) {
         val url = "https://doi.org/$doi"
-        triggerEffect(AllItemsViewEffect.OpenWebpage(url.toUri()))
+        triggerEffect(AllItemsViewEffect.OpenWebpage(url))
     }
 
     private suspend fun showUrl(url: String) {
@@ -632,7 +632,7 @@ internal class AllItemsViewModel @Inject constructor(
             val mimeType = getUriDetailsUseCase.getMimeType(url)!!
             triggerEffect(AllItemsViewEffect.OpenFile(uri.toFile(), mimeType))
         } else {
-            triggerEffect(AllItemsViewEffect.OpenWebpage(uri))
+            triggerEffect(AllItemsViewEffect.OpenWebpage(url))
         }
     }
 
@@ -1222,7 +1222,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowSortPickerEffect : AllItemsViewEffect()
     object ShowCollectionPickerEffect: AllItemsViewEffect()
     data class ShowPhoneFilterEffect(val params: String) : AllItemsViewEffect()
-    data class OpenWebpage(val uri: Uri) : AllItemsViewEffect()
+    data class OpenWebpage(val url: String) : AllItemsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : AllItemsViewEffect()
     data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
