@@ -59,7 +59,7 @@ data class Translator(
                 return false
             }
 
-            if (string.first() != '{') {
+            if (string.firstOrNull() != '{') {
                 return string
             }
             try {

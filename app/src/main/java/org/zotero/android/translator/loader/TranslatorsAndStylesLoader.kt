@@ -506,7 +506,6 @@ class TranslatorsAndStylesLoader @Inject constructor(
         Timber.i("TranslatorsAndStylesController: update from repo, type=${type}")
 
         val version = BuildConfig.VERSION_NAME
-        val bundle = "1"
 
         val fieldMap = mutableMapOf<String, String>()
         val stylesList = styles(type)
@@ -524,7 +523,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
 
         val networkResult = safeApiCall {
             nonZoteroApi.repoRequest(
-                version = "${version}-${bundle}-android",
+                version = "${version}-android",
                 timestamp = defaults.getLastTimestamp(),
                 type = type.i,
                 fieldMap = fieldMap
