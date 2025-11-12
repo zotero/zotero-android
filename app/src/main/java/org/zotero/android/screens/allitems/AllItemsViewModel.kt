@@ -691,6 +691,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onTrashRestore() = viewModelScope.launch {
         set(trashed = false, getSelectedKeys())
+        stopEditing()
     }
 
     fun onTrashDelete() = viewModelScope.launch {
@@ -750,6 +751,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun delete(keys: Set<String>) {
+        stopEditing()
         viewModelScope.launch {
             perform(
                 dbWrapper = dbWrapperMain,
@@ -770,6 +772,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private suspend fun trashItems(keys: Set<String>) {
+        stopEditing()
         set(trashed = true, keys = keys)
     }
 
@@ -844,10 +847,12 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onDownloadSelectedAttachments() {
         allItemsProcessor.downloadSelectedAttachments(getSelectedKeys())
+        stopEditing()
     }
 
     fun onRemoveSelectedAttachments() {
         allItemsProcessor.removeSelectedAttachments(getSelectedKeys())
+        stopEditing()
     }
 
     fun onEmptyTrash() {
@@ -951,6 +956,7 @@ internal class AllItemsViewModel @Inject constructor(
             itemKeys = keys,
             libraryId = this.library.identifier
         )
+        stopEditing()
         viewModelScope.launch {
             perform(dbWrapperMain, request = request).ifFailure {
                 Timber.e(it, "ItemsStore: can't delete items")
@@ -963,6 +969,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun add(itemKeys: Set<String>, collectionKeys: Set<String>) {
+        stopEditing()
         val request = AssignItemsToCollectionsDbRequest(
             collectionKeys = collectionKeys,
             itemKeys = itemKeys,
@@ -1032,6 +1039,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showSingleCitation(selectedItemKeys: Set<String>) {
+        stopEditing()
         ScreenArguments.singleCitationArgs = SingleCitationArgs(
             itemIds = selectedItemKeys,
             libraryId = this.library.identifier,
@@ -1077,6 +1085,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onCopyBibliography() = viewModelScope.launch {
         loadBibliography(getSelectedKeys())
+        stopEditing()
     }
 
     fun onShowRetrieveDialog() = viewModelScope.launch {
@@ -1094,10 +1103,12 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun onRemoveDownload() {
         allItemsProcessor.removeDownloads(getSelectedKeys())
+        stopEditing()
     }
 
     fun onDownload() {
         allItemsProcessor.downloadAttachments(getSelectedKeys())
+        stopEditing()
     }
 
     fun onRemoveFromCollection() {

@@ -112,7 +112,7 @@ private fun localized(locator: String): String {
     val context = LocalContext.current
     val resourceId =
         context.resources.getIdentifier(
-            "citation.locator.${locator.replace(' ', '_')}",
+            "citation_locator_${locator.replace(' ', '_')}",
             "string",
             context.packageName
         )
