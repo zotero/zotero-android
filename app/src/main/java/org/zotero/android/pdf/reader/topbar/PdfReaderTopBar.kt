@@ -6,10 +6,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -19,6 +27,7 @@ import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
 import org.zotero.android.pdf.reader.pdfsearch.popup.PdfReaderSearchPopup
 import org.zotero.android.pdf.reader.share.PdfReaderSharePopup
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.icon.IconWithPaddingM3
 
 @Composable
@@ -54,37 +63,109 @@ internal fun PdfReaderTopBar(
         },
         actions = {
             Spacer(modifier = Modifier.width(48.dp))
-            IconWithPaddingM3(
-                unselectedDrawableRes = Drawables.view_sidebar,
-                selectedDrawableRes = Drawables.view_sidebar_filled,
-                onToggle = {
-                    onShowHideSideBar()
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Below,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.pdf_reader_sidebar
+                            )
+                        )
+                    }
                 },
-                isSelected = showSideBar
-            )
-            IconButton(onClick = toPdfPlainReader) {
-                Icon(
-                    painter = painterResource(Drawables.reader),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
+                state = rememberTooltipState()
+            ) {
+                IconWithPaddingM3(
+                    unselectedDrawableRes = Drawables.view_sidebar,
+                    selectedDrawableRes = Drawables.view_sidebar_filled,
+                    onToggle = {
+                        onShowHideSideBar()
+                    },
+                    isSelected = showSideBar
                 )
             }
+
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Below,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.pdf_reader_plain_reader
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                IconButton(onClick = toPdfPlainReader) {
+                    Icon(
+                        painter = painterResource(Drawables.reader),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+            }
+
             Spacer(modifier = Modifier.weight(1f))
-            IconWithPaddingM3(
-                unselectedDrawableRes = Drawables.draw,
-                selectedDrawableRes = Drawables.draw_filled,
-                onToggle = toggleToolbarButton,
-                isSelected = isToolbarButtonSelected
-            )
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Below,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.pdf_reader_toolbar
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                IconWithPaddingM3(
+                    unselectedDrawableRes = Drawables.draw,
+                    selectedDrawableRes = Drawables.draw_filled,
+                    onToggle = toggleToolbarButton,
+                    isSelected = isToolbarButtonSelected
+                )
+            }
 
             if (isTablet) {
                 Box {
-                    IconWithPaddingM3(
-                        unselectedDrawableRes = Drawables.search,
-                        selectedDrawableRes = Drawables.search,
-                        onToggle = onShowHidePdfSearch,
-                        isSelected = true,
-                    )
+                    TooltipBox(
+                        positionProvider = rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Below,
+                            4.dp
+                        ),
+                        tooltip = {
+                            PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                                Text(
+                                    stringResource(
+                                        Strings.searchbar_placeholder
+                                    )
+                                )
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        IconWithPaddingM3(
+                            unselectedDrawableRes = Drawables.search,
+                            selectedDrawableRes = Drawables.search,
+                            onToggle = onShowHidePdfSearch,
+                            isSelected = true,
+                        )
+
+                    }
                     if (viewState.showPdfSearch) {
                         PdfReaderSearchPopup(
                             viewModel = viewModel,
@@ -94,14 +175,31 @@ internal fun PdfReaderTopBar(
                     }
                 }
             } else {
-                IconWithPaddingM3(
-                    unselectedDrawableRes = Drawables.search,
-                    selectedDrawableRes = Drawables.search,
-                    onToggle = {
-                        onShowHidePdfSearch()
+                TooltipBox(
+                    positionProvider = rememberTooltipPositionProvider(
+                        TooltipAnchorPosition.Below,
+                        4.dp
+                    ),
+                    tooltip = {
+                        PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                            Text(
+                                stringResource(
+                                    Strings.searchbar_placeholder
+                                )
+                            )
+                        }
                     },
-                    isSelected = showPdfSearch
-                )
+                    state = rememberTooltipState()
+                ) {
+                    IconWithPaddingM3(
+                        unselectedDrawableRes = Drawables.search,
+                        selectedDrawableRes = Drawables.search,
+                        onToggle = {
+                            onShowHidePdfSearch()
+                        },
+                        isSelected = showPdfSearch
+                    )
+                }
             }
             Box {
                 if (viewState.showSharePopup) {
@@ -110,22 +208,56 @@ internal fun PdfReaderTopBar(
                         viewState = viewState,
                     )
                 }
-                IconWithPaddingM3(
-                    unselectedDrawableRes = Drawables.share,
-                    selectedDrawableRes = Drawables.share,
-                    onToggle = onShareButtonTapped,
-                    isSelected = false
-                )
+                TooltipBox(
+                    positionProvider = rememberTooltipPositionProvider(
+                        TooltipAnchorPosition.Below,
+                        4.dp
+                    ),
+                    tooltip = {
+                        PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                            Text(
+                                stringResource(
+                                    Strings.share
+                                )
+                            )
+                        }
+                    },
+                    state = rememberTooltipState()
+                ) {
+                    IconWithPaddingM3(
+                        unselectedDrawableRes = Drawables.share,
+                        selectedDrawableRes = Drawables.share,
+                        onToggle = onShareButtonTapped,
+                        isSelected = false
+                    )
+
+                }
             }
 
-            IconWithPaddingM3(
-                unselectedDrawableRes = Drawables.settings_24px,
-                selectedDrawableRes = Drawables.settings_24px,
-                onToggle = toPdfSettings,
-                isSelected = false
-            )
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Below,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.settings_title
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                IconWithPaddingM3(
+                    unselectedDrawableRes = Drawables.settings_24px,
+                    selectedDrawableRes = Drawables.settings_24px,
+                    onToggle = toPdfSettings,
+                    isSelected = false
+                )
+
+            }
         },
-
-        )
-
+    )
 }

@@ -13,7 +13,13 @@ import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,12 +38,21 @@ internal fun AppBarRowScope.allItemsBottomPanelItem(
 ) {
     customItem(
         appbarContent = {
-            IconButton(onClick = onClick) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = decideIconTintToUse(iconTint),
-                )
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) { Text(stringResource(overflowTextResId)) }
+                },
+                state = rememberTooltipState()
+            ) {
+                IconButton(onClick = onClick) {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        tint = decideIconTintToUse(iconTint),
+                    )
+                }
+
             }
         },
         menuContent = {
@@ -45,7 +60,6 @@ internal fun AppBarRowScope.allItemsBottomPanelItem(
                 modifier = Modifier
                     .widthIn(min = 160.dp)
                     .heightIn(min = 48.dp)
-
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,

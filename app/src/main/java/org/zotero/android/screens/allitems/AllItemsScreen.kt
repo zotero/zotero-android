@@ -144,17 +144,17 @@ internal fun AllItemsScreen(
         }
 
         CustomScaffoldM3(
-            bottomBar = {
-                AllItemsBottomPanelNew(
-                    viewModel = viewModel,
-                    viewState = viewState,
-                )
-            },
             topBar = {
                 AllItemsTopBar(
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType,
+                )
+            },
+            bottomBar = {
+                AllItemsBottomPanelNew(
+                    viewModel = viewModel,
+                    viewState = viewState,
                 )
             },
         ) {

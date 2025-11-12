@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -25,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -166,11 +174,28 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
             Spacer(modifier = Modifier.height(4.dp))
             pdfReaderToolsList.forEach { tool ->
                 if (!tool.isHidden) {
-                    PdfReaderAnnotationCreationToggleButton(
-                        activeAnnotationTool = vMInterface.activeAnnotationTool,
-                        pdfReaderTool = tool,
-                        toggleButton = vMInterface::toggle
-                    )
+                    TooltipBox(
+                        positionProvider = rememberTooltipPositionProvider(
+                            TooltipAnchorPosition.Above,
+                            4.dp
+                        ),
+                        tooltip = {
+                            PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                                Text(
+                                    text = stringResource(tool.title)
+                                )
+                            }
+                        },
+                        state = rememberTooltipState()
+                    ) {
+                        PdfReaderAnnotationCreationToggleButton(
+                            activeAnnotationTool = vMInterface.activeAnnotationTool,
+                            pdfReaderTool = tool,
+                            toggleButton = vMInterface::toggle
+                        )
+
+                    }
+
                 }
             }
             val activeAnnotationTool = vMInterface.activeAnnotationTool
@@ -187,21 +212,75 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            PdfReaderAnnotationCreationButton(
-                isEnabled = vMInterface.canUndo(),
-                iconInt = Drawables.undo_24px,
-                onButtonClick = vMInterface::onUndoClick
-            )
-            PdfReaderAnnotationCreationButton(
-                isEnabled = vMInterface.canRedo(),
-                iconInt = Drawables.redo_24px,
-                onButtonClick = vMInterface::onRedoClick
-            )
-            PdfReaderAnnotationCreationButton(
-                isEnabled = true,
-                iconInt = Drawables.cancel_24px,
-                onButtonClick = vMInterface::onCloseClick
-            )
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.accessibility_pdf_undo
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                PdfReaderAnnotationCreationButton(
+                    isEnabled = vMInterface.canUndo(),
+                    iconInt = Drawables.undo_24px,
+                    onButtonClick = vMInterface::onUndoClick
+                )
+            }
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.accessibility_pdf_redo
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                PdfReaderAnnotationCreationButton(
+                    isEnabled = vMInterface.canRedo(),
+                    iconInt = Drawables.redo_24px,
+                    onButtonClick = vMInterface::onRedoClick
+                )
+            }
+
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.cancel
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                PdfReaderAnnotationCreationButton(
+                    isEnabled = true,
+                    iconInt = Drawables.cancel_24px,
+                    onButtonClick = vMInterface::onCloseClick
+                )
+
+            }
+
             PdfReaderAnnotationCreationButton(
                 isEnabled = true,
                 iconInt = Drawables.drag_handle,

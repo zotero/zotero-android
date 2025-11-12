@@ -7,13 +7,22 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.allitems.data.ItemCellModel
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.Strings
 
 @Composable
 internal fun RowScope.ItemRowRightPart(
@@ -57,19 +66,36 @@ internal fun RowScope.ItemRowRightPart(
                 }
             }
         } else {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable(onClick = {
-                        onAccessoryTapped(model.key)
-                    }),
-                contentAlignment = Alignment.Center
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    10.dp
+                ),
+                tooltip = {
+                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                        Text(
+                            stringResource(
+                                Strings.all_items_details
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
             ) {
-                Icon(
-                    painter = painterResource(Drawables.info_24px),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable(onClick = {
+                            onAccessoryTapped(model.key)
+                        }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(Drawables.info_24px),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

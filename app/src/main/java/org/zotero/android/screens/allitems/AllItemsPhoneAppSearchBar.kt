@@ -5,8 +5,14 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.AppSearchBarM3
@@ -51,12 +58,30 @@ internal fun AllItemsPhoneAppSearchBar(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { isInSearchMode = !isInSearchMode }) {
-                            Icon(
-                                painter = painterResource(Drawables.search_24px),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                        TooltipBox(
+                            positionProvider = rememberTooltipPositionProvider(
+                                TooltipAnchorPosition.Below,
+                                4.dp
+                            ),
+                            tooltip = {
+                                PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                                    Text(
+                                        stringResource(
+                                            Strings.searchbar_placeholder
+                                        )
+                                    )
+                                }
+                            },
+                            state = rememberTooltipState()
+                        ) {
+                            IconButton(onClick = { isInSearchMode = !isInSearchMode }) {
+                                Icon(
+                                    painter = painterResource(Drawables.search_24px),
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+
                         }
 
                     },
