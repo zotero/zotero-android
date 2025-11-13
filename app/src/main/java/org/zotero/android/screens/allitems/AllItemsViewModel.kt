@@ -67,6 +67,7 @@ import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
+import org.zotero.android.screens.citbibexport.data.CitationBibliographyExportArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
@@ -1165,6 +1166,15 @@ internal class AllItemsViewModel @Inject constructor(
         return item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment
     }
 
+    fun onShare() {
+        ScreenArguments.citationBibliographyExportArgs = CitationBibliographyExportArgs(
+            itemIds = getSelectedKeys(),
+            libraryId = this.library.identifier
+        )
+
+        triggerEffect(AllItemsViewEffect.ShowCitationBibliographyExportEffect)
+    }
+
 
 }
 
@@ -1244,4 +1254,6 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
     data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
     object ShowSingleCitationEffect: AllItemsViewEffect()
+    object ShowCitationBibliographyExportEffect: AllItemsViewEffect()
+
 }

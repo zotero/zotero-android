@@ -93,7 +93,8 @@ private fun AppBarRowScope.editingMultipleItemsSelectedActions(
             allItemsBottomPanelItem(
                 iconRes = Drawables.remove_from_collection,
                 overflowTextResId = Strings.items_action_remove_from_collection,
-                onClick = { viewModel.onRemoveFromCollection() })
+                onClick = { viewModel.onRemoveFromCollection() }
+            )
         }
 
 
@@ -106,6 +107,12 @@ private fun AppBarRowScope.editingMultipleItemsSelectedActions(
 
         DownloadAndRemoveAttachmentBlock(
             viewModel = viewModel,
+        )
+
+        allItemsBottomPanelItem(
+            iconRes = Drawables.share,
+            overflowTextResId = Strings.share,
+            onClick = { viewModel.onShare() }
         )
     }
 

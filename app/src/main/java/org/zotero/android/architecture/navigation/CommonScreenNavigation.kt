@@ -1,6 +1,5 @@
 package org.zotero.android.architecture.navigation
 
-import android.net.Uri
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
@@ -42,6 +41,7 @@ fun NavGraphBuilder.allItemsScreen(
     navigateToCollectionPicker: () -> Unit,
     navigateToScanBarcode: () -> Unit,
     navigateToSingleCitation: () -> Unit,
+    navigateToCitationBibliographyExport:() -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
@@ -110,6 +110,7 @@ fun NavGraphBuilder.allItemsScreen(
             navigateToScanBarcode = navigateToScanBarcode,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             navigateToSingleCitation = navigateToSingleCitation,
+            navigateToCitationBibliographyExport = navigateToCitationBibliographyExport
         )
     }
 }

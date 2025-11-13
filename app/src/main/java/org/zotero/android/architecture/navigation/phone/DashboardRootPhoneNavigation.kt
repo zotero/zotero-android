@@ -1,6 +1,5 @@
 package org.zotero.android.architecture.navigation.phone
 
-import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +35,7 @@ import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
+import org.zotero.android.screens.citbibexport.CitationBibliographyExportScreen
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
@@ -138,6 +138,7 @@ internal fun DashboardRootPhoneNavigation(
             navigateToCollectionPicker = navigation::toCollectionPicker,
             navigateToScanBarcode = navigation::toScanBarcode,
             navigateToSingleCitation = navigation::toSingleCitation,
+            navigateToCitationBibliographyExport = navigation::toCitationBibliographyExport,
             onShowPdf = { pdfScreenParams ->
                 navigation.toPdfScreen(
                     context = context,
@@ -229,6 +230,13 @@ internal fun DashboardRootPhoneNavigation(
             CollectionPickerScreen(onBack = navigation::onBack)
         }
 
+        composable(
+            route = DashboardRootPhoneDestinations.CITATION_BIBLIOGRAPHY_EXPORT,
+            arguments = listOf(),
+        ) {
+            CitationBibliographyExportScreen(onBack = navigation::onBack)
+        }
+
         sortPickerNavScreens(navigation)
         creatorEditNavScreens(navigation)
         collectionEditNavScreens(navigation)
@@ -273,6 +281,7 @@ private object DashboardRootPhoneDestinations {
     const val SCAN_BARCODE = "scanBarcode"
     const val RETRIEVE_METADATA = "retrieveMetadata"
     const val SINGLE_CITATION = "singleCitation"
+    const val CITATION_BIBLIOGRAPHY_EXPORT = "citationBibliographyExport"
 
 }
 
@@ -297,6 +306,10 @@ private fun ZoteroNavigation.toAddByIdentifier(params: String) {
 
 private fun ZoteroNavigation.toCollectionPicker() {
     navController.navigate(DashboardRootPhoneDestinations.COLLECTION_PICKER)
+}
+
+private fun ZoteroNavigation.toCitationBibliographyExport() {
+    navController.navigate(DashboardRootPhoneDestinations.CITATION_BIBLIOGRAPHY_EXPORT)
 }
 
 private fun ZoteroNavigation.toTagFilter(params: String) {

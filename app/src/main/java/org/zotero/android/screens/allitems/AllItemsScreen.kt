@@ -42,6 +42,7 @@ internal fun AllItemsScreen(
     navigateToTagFilter: (params: String) -> Unit,
     navigateToScanBarcode: () -> Unit,
     navigateToSingleCitation: () -> Unit,
+    navigateToCitationBibliographyExport:() -> Unit,
     onShowPdf: (String) -> Unit,
 ) {
     AppThemeM3 {
@@ -139,6 +140,10 @@ internal fun AllItemsScreen(
 
                 AllItemsViewEffect.ShowSingleCitationEffect -> {
                     navigateToSingleCitation()
+                }
+
+                AllItemsViewEffect.ShowCitationBibliographyExportEffect -> {
+                    navigateToCitationBibliographyExport()
                 }
             }
         }

@@ -1,7 +1,6 @@
 
 package org.zotero.android.architecture.navigation.tablet
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -22,6 +21,7 @@ import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
+import org.zotero.android.screens.citbibexport.CitationBibliographyExportScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
@@ -66,6 +66,7 @@ internal fun TabletRightPaneNavigation(
             navigateToScanBarcode = navigation::toScanBarcodeDialog,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             navigateToSingleCitation = navigation::toSingleCitationDialog,
+            navigateToCitationBibliographyExport = navigation::toCitationBibliographyExport,
             onShowPdf = onShowPdf,
             isTablet = true,
         )
@@ -95,6 +96,12 @@ internal fun TabletRightPaneNavigation(
             route = TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG,
         ) {
             CollectionPickerScreen(onBack = { navController.popBackStack() })
+        }
+
+        dialogDynamicHeight(
+            route = TabletRightPaneDestinations.CITATION_BIBLIOGRAPHY_EXPORT_DIALOG,
+        ) {
+            CitationBibliographyExportScreen(onBack = { navController.popBackStack() })
         }
 
         dialogFixedMaxHeight(
@@ -155,6 +162,7 @@ private object TabletRightPaneDestinations {
     const val COLLECTION_PICKER_DIALOG = "collectionPickerDialog"
     const val SCAN_BARCODE_DIALOG = "scanBarcodeDialog"
     const val SINGLE_CITATION_PICKER_DIALOG = "singleCitationPickerDialog"
+    const val CITATION_BIBLIOGRAPHY_EXPORT_DIALOG = "citationBibliographyExportDialog"
 
 }
 
@@ -180,6 +188,10 @@ private fun ZoteroNavigation.toAddByIdentifierDialog(params: String) {
 
 private fun ZoteroNavigation.toCollectionPickerDialog() {
     navController.navigate(TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG)
+}
+
+private fun ZoteroNavigation.toCitationBibliographyExport() {
+    navController.navigate(TabletRightPaneDestinations.CITATION_BIBLIOGRAPHY_EXPORT_DIALOG)
 }
 
 private fun ZoteroNavigation.toScanBarcodeDialog() {
