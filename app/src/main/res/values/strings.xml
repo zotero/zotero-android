@@ -69,5 +69,7 @@
     <string name="pdf_reader_plain_reader">Plain Reader</string>
     <string name="pdf_reader_toolbar">Toolbar</string>
 
+    <string name="items_generating_cit">Generating Citation</string>
+
 
 </resources>
