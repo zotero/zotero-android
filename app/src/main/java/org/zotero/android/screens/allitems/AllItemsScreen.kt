@@ -204,6 +204,9 @@ internal fun AllItemsScreen(
                 if (viewState.isGeneratingBibliography) {
                     GeneratingBibliographyLoadingIndicator()
                 }
+                if (viewState.isGeneratingCitation) {
+                    GeneratingCitationLoadingIndicator()
+                }
             }
         }
         val bottomSheetTitle = stringResource(id = Strings.item_type)

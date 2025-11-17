@@ -68,6 +68,7 @@ import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.citbibexport.data.CitationBibliographyExportArgs
+import org.zotero.android.screens.citation.singlecitation.locatorsList
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
@@ -1039,13 +1040,24 @@ internal class AllItemsViewModel @Inject constructor(
         return filterArgs
     }
 
-    private fun showSingleCitation(selectedItemKeys: Set<String>) {
+    private suspend fun showSingleCitation(selectedItemKeys: Set<String>) {
         stopEditing()
-        ScreenArguments.singleCitationArgs = SingleCitationArgs(
-            itemIds = selectedItemKeys,
-            libraryId = this.library.identifier,
-        )
-        triggerEffect(AllItemsViewEffect.ShowSingleCitationEffect)
+        if (selectedItemKeys.size == 1) {
+            ScreenArguments.singleCitationArgs = SingleCitationArgs(
+                itemIds = selectedItemKeys,
+                libraryId = this.library.identifier,
+            )
+            triggerEffect(AllItemsViewEffect.ShowSingleCitationEffect)
+        } else {
+            updateState {
+                copy(isGeneratingCitation = true)
+            }
+            copyMultipleCitations(selectedItemKeys)
+            updateState {
+                copy(isGeneratingCitation = false)
+            }
+        }
+
     }
 
     fun loadBibliography(selectedItemKeys: Set<String>) = viewModelScope.launch {
@@ -1125,8 +1137,13 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun shouldIncludeCopyCitationAndBibliographyButtons(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
-        return !CitationController.invalidItemTypes.contains(item.rawType)
+        val shouldNotInclude = getSelectedKeys().any { it ->
+            val item = allItemsProcessor.getResultByKey(it)!!
+            CitationController.invalidItemTypes.contains(item.rawType)
+        }
+
+        return !shouldNotInclude
+
     }
 
     fun shouldIncludeRetrieveMetadataButton(): Boolean {
@@ -1166,6 +1183,50 @@ internal class AllItemsViewModel @Inject constructor(
         return item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment
     }
 
+    private suspend fun copyMultipleCitations(itemIds: Set<String>) = withContext(dispatchers.io) {
+        val styleId = defaults.getQuickCopyStyleId()
+        val localeId = defaults.getQuickCopyCslLocaleId()
+        val exportAsHtml = defaults.isQuickCopyAsHtml()
+
+        val citationController = citationControllerProvider.get()
+
+        val session = citationController.startSession(
+            itemIds = itemIds,
+            libraryId = this@AllItemsViewModel.library.identifier,
+            styleId = styleId,
+            localeId = localeId
+        )
+        val locator: String = locatorsList[0]
+        val locatorValue = ""
+
+        val preview = citationController.citation(
+            session = session,
+            label = locator,
+            locator = locatorValue,
+            omitAuthor = false,
+            format = Format.html,
+            showInWebView = true
+        )
+
+        if (preview.isEmpty()) {
+            return@withContext
+        }
+
+        if (exportAsHtml) {
+            context.copyPlainTextToClipboard(preview)
+            return@withContext
+        }
+        val text = citationController.citation(
+            session = session,
+            label = locator,
+            locator = locatorValue,
+            omitAuthor = false,
+            format = Format.text,
+            showInWebView = false
+        )
+        context.copyHtmlToClipboard(preview, text = text)
+    }
+
     fun onShare() {
         ScreenArguments.citationBibliographyExportArgs = CitationBibliographyExportArgs(
             itemIds = getSelectedKeys(),
@@ -1194,6 +1255,7 @@ internal data class AllItemsViewState(
     val collectionName: String = "",
     val showDownloadedFilesPopup: Boolean = false,
     val isGeneratingBibliography: Boolean = false,
+    val isGeneratingCitation: Boolean = false,
 ) : ViewState {
     val tagsFilter: Set<String>?
         get() {

@@ -105,6 +105,19 @@ private fun AppBarRowScope.editingMultipleItemsSelectedActions(
             textColor = errorRedColor,
             onClick = { viewModel.onMoveToTrash() })
 
+        if (viewModel.shouldIncludeCopyCitationAndBibliographyButtons()) {
+            allItemsBottomPanelItem(
+                iconRes = Drawables.cite,
+                overflowTextResId = Strings.citation_copy_citation,
+                onClick = { viewModel.onCopyCitation() })
+
+            allItemsBottomPanelItem(
+                iconRes = Drawables.bibliography,
+                overflowTextResId = Strings.citation_copy_bibliography,
+                onClick = { viewModel.onCopyBibliography() })
+        }
+
+
         DownloadAndRemoveAttachmentBlock(
             viewModel = viewModel,
         )
