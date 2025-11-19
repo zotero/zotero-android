@@ -5,7 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -17,7 +17,6 @@ import javax.inject.Inject
 @HiltViewModel
 internal class SettingsCslLocalePickerViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
-    private val defaults: Defaults,
     private val exportCslLocaleReader: ExportCslLocaleReader,
     private val settingsQuickCopyUpdateCslLocaleEventStream: SettingsQuickCopyUpdateCslLocaleEventStream,
 ) : BaseViewModel2<SettingsCslLocalePickerViewState, SettingsCslLocalePickerViewEffect>(
@@ -25,7 +24,7 @@ internal class SettingsCslLocalePickerViewModel @Inject constructor(
 ) {
 
     fun init() = initOnce {
-        val selected = defaults.getQuickCopyCslLocaleId()
+        val selected = ScreenArguments.settingsCslLocalePickerArgs.selected
         updateState {
             copy(selected = selected)
         }

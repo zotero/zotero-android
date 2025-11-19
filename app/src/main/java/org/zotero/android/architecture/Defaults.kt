@@ -7,6 +7,8 @@ import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.files.DataMarshaller
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
+import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
+import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
@@ -49,6 +51,9 @@ open class Defaults @Inject constructor(
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
+
+    private val exportOutputMode = "exportOutputMode"
+    private val exportOutputMethod = "exportOutputMethod"
 
     private val lastTimestamp = "lastTimestamp"
     private val lastTranslationCommitHash = "lastTranslationCommitHash"
@@ -480,6 +485,36 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastCslLocalesCommitHash, newValue) }
     }
 
+    fun getExportOutputMethod(): CitBibExportOutputMethod {
+        val json: String = sharedPreferences.getString(
+            this.exportOutputMethod,
+            null
+        ) ?: return CitBibExportOutputMethod.copy
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun setExportOutputMethod(
+        method: CitBibExportOutputMethod,
+    ) {
+        val json = dataMarshaller.marshal(method)
+        sharedPreferences.edit { putString(this@Defaults.exportOutputMethod, json) }
+    }
+
+    fun getExportOutputMode(): CitBibExportOutputMode {
+        val json: String = sharedPreferences.getString(
+            this.exportOutputMode,
+            null
+        ) ?: return CitBibExportOutputMode.bibliography
+        return dataMarshaller.unmarshal(json)
+    }
+
+    fun setExportOutputMode(
+        mode: CitBibExportOutputMode,
+    ) {
+        val json = dataMarshaller.marshal(mode)
+        sharedPreferences.edit { putString(this@Defaults.exportOutputMode, json) }
+    }
+
     fun reset() {
         setUsername("")
         setDisplayName("")
@@ -503,6 +538,12 @@ open class Defaults @Inject constructor(
         setWebDavUsername(null)
         setWebDavPassword(null)
         setWebDavVerified(false)
+
+        setQuickCopyCslLocaleId("en-US")
+        setQuickCopyAsHtml(false)
+        setQuickCopyStyleId("http://www.zotero.org/styles/chicago-notes-bibliography")
+        setExportOutputMethod(CitBibExportOutputMethod.copy)
+        setExportOutputMode(CitBibExportOutputMode.bibliography)
     }
 
 }

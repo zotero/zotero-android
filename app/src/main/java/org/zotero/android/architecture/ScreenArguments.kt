@@ -20,6 +20,8 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.settings.csllocalepicker.data.SettingsCslLocalePickerArgs
+import org.zotero.android.screens.settings.stylepicker.data.SettingsStylePickerArgs
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -50,6 +52,8 @@ object ScreenArguments {
     lateinit var pdfPlainReaderArgs: PdfPlainReaderArgs
     lateinit var singleCitationArgs: SingleCitationArgs
     lateinit var citationBibliographyExportArgs: CitationBibliographyExportArgs
+    lateinit var settingsCslLocalePickerArgs: SettingsCslLocalePickerArgs
+    lateinit var settingsStylePickerArgs: SettingsStylePickerArgs
 
     var allItemsCollectionsLibsNavDirectionLeftToRight = true
 }

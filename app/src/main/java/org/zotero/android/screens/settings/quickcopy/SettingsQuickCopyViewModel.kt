@@ -8,14 +8,17 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.objects.RStyle
 import org.zotero.android.database.requests.ReadStyleDbRequest
 import org.zotero.android.screens.settings.csllocalepicker.data.ExportLocale
+import org.zotero.android.screens.settings.csllocalepicker.data.SettingsCslLocalePickerArgs
 import org.zotero.android.screens.settings.csllocalepicker.data.SettingsQuickCopyUpdateCslLocaleEventStream
 import org.zotero.android.screens.settings.stylepicker.data.SettingsQuickCopyUpdateStyleEventStream
+import org.zotero.android.screens.settings.stylepicker.data.SettingsStylePickerArgs
 import org.zotero.android.styles.data.Style
 import timber.log.Timber
 import java.util.Locale
@@ -134,6 +137,7 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
     }
 
     fun navigateToStylePicker() {
+        ScreenArguments.settingsStylePickerArgs = SettingsStylePickerArgs(selected = defaults.getQuickCopyStyleId())
         triggerEffect(SettingsQuickCopyViewEffect.NavigateToStylePicker)
     }
 
@@ -146,6 +150,7 @@ internal class SettingsQuickCopyViewModel @Inject constructor(
     }
 
     fun navigateToCslLocalePicker() {
+        ScreenArguments.settingsCslLocalePickerArgs = SettingsCslLocalePickerArgs(selected = defaults.getQuickCopyCslLocaleId())
         triggerEffect(SettingsQuickCopyViewEffect.NavigateToCslLocalePicker)
     }
 

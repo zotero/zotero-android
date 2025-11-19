@@ -25,12 +25,16 @@ internal fun CitationBibliographyExportTopBar(
 
     TopAppBar(
         title = {
-
+            Text(
+                text = stringResource(Strings.share),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge
+            )
         },
         navigationIcon = {
             IconButton(onClick = onCancel) {
                 Icon(
-                    painter = painterResource(Drawables.arrow_back_24dp),
+                    painter = painterResource(Drawables.ic_close_24dp),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface,
                 )

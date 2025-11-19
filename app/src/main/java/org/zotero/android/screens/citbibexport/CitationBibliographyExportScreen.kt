@@ -1,9 +1,12 @@
 package org.zotero.android.screens.citbibexport
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.uicomponents.CustomScaffoldM3
@@ -12,6 +15,8 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 @Composable
 internal fun CitationBibliographyExportScreen(
     onBack: () -> Unit,
+    navigateToStylePicker: () -> Unit,
+    navigateToCslLocalePicker: () -> Unit,
     viewModel: CitationBibliographyExportViewModel = hiltViewModel(),
 ) {
     AppThemeM3 {
@@ -28,6 +33,13 @@ internal fun CitationBibliographyExportScreen(
                 is CitationBibliographyExportViewEffect.OnBack -> {
                     onBack()
                 }
+                is CitationBibliographyExportViewEffect.NavigateToStylePicker -> {
+                    navigateToStylePicker()
+                }
+
+                is CitationBibliographyExportViewEffect.NavigateToCslLocalePicker -> {
+                    navigateToCslLocalePicker()
+                }
 
                 else -> {
                     //no-op
@@ -42,6 +54,15 @@ internal fun CitationBibliographyExportScreen(
                 )
             },
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                CitationBibliographyExportSections(
+                    viewModel = viewModel,
+                    viewState = viewState
+                )
+            }
         }
     }
 }

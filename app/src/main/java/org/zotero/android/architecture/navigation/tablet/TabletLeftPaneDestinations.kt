@@ -1,7 +1,6 @@
 
 package org.zotero.android.architecture.navigation.tablet
 
-import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
