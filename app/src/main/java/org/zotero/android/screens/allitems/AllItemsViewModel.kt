@@ -67,7 +67,7 @@ import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
-import org.zotero.android.screens.citbibexport.data.CitationBibliographyExportArgs
+import org.zotero.android.screens.citbibexport.data.CitBibExportArgs
 import org.zotero.android.screens.citation.singlecitation.locatorsList
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
@@ -1228,7 +1228,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onShare() {
-        ScreenArguments.citationBibliographyExportArgs = CitationBibliographyExportArgs(
+        ScreenArguments.citBibExportArgs = CitBibExportArgs(
             itemIds = getSelectedKeys(),
             libraryId = this.library.identifier
         )

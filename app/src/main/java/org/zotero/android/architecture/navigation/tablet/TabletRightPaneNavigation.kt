@@ -21,7 +21,7 @@ import org.zotero.android.architecture.navigation.toVideoPlayerScreen
 import org.zotero.android.architecture.navigation.videoPlayerScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
-import org.zotero.android.screens.citbibexport.CitationBibliographyExportScreen
+import org.zotero.android.screens.citbibexport.CitBibExportNavigation
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
 import org.zotero.android.screens.creatoredit.CreatorEditNavigation
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
@@ -36,6 +36,7 @@ internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
@@ -66,7 +67,7 @@ internal fun TabletRightPaneNavigation(
             navigateToScanBarcode = navigation::toScanBarcodeDialog,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,
             navigateToSingleCitation = navigation::toSingleCitationDialog,
-            navigateToCitationBibliographyExport = navigation::toCitationBibliographyExport,
+            navigateToCitationBibliographyExport = navigation::toCitBibExportNavigation,
             onShowPdf = onShowPdf,
             isTablet = true,
         )
@@ -96,12 +97,6 @@ internal fun TabletRightPaneNavigation(
             route = TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG,
         ) {
             CollectionPickerScreen(onBack = { navController.popBackStack() })
-        }
-
-        dialogDynamicHeight(
-            route = TabletRightPaneDestinations.CITATION_BIBLIOGRAPHY_EXPORT_DIALOG,
-        ) {
-            CitationBibliographyExportScreen(onBack = { navController.popBackStack() })
         }
 
         dialogFixedMaxHeight(
@@ -150,6 +145,12 @@ internal fun TabletRightPaneNavigation(
         ) {
             SingleCitationScreen(onBack = { navController.popBackStack() })
         }
+
+        dialogDynamicHeight(
+            route = TabletRightPaneDestinations.CIT_BIB_EXPORT_NAVIGATION,
+        ) {
+            CitBibExportNavigation(onExportHtml = onExportHtml)
+        }
     }
 }
 
@@ -162,7 +163,7 @@ private object TabletRightPaneDestinations {
     const val COLLECTION_PICKER_DIALOG = "collectionPickerDialog"
     const val SCAN_BARCODE_DIALOG = "scanBarcodeDialog"
     const val SINGLE_CITATION_PICKER_DIALOG = "singleCitationPickerDialog"
-    const val CITATION_BIBLIOGRAPHY_EXPORT_DIALOG = "citationBibliographyExportDialog"
+    const val CIT_BIB_EXPORT_NAVIGATION ="citBibExportNavigation"
 
 }
 
@@ -190,14 +191,14 @@ private fun ZoteroNavigation.toCollectionPickerDialog() {
     navController.navigate(TabletRightPaneDestinations.COLLECTION_PICKER_DIALOG)
 }
 
-private fun ZoteroNavigation.toCitationBibliographyExport() {
-    navController.navigate(TabletRightPaneDestinations.CITATION_BIBLIOGRAPHY_EXPORT_DIALOG)
-}
-
 private fun ZoteroNavigation.toScanBarcodeDialog() {
     navController.navigate(TabletRightPaneDestinations.SCAN_BARCODE_DIALOG)
 }
 
 private fun ZoteroNavigation.toSingleCitationDialog() {
     navController.navigate(TabletRightPaneDestinations.SINGLE_CITATION_PICKER_DIALOG)
+}
+
+private fun ZoteroNavigation.toCitBibExportNavigation() {
+    navController.navigate(TabletRightPaneDestinations.CIT_BIB_EXPORT_NAVIGATION)
 }

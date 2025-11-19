@@ -117,15 +117,15 @@ private fun AppBarRowScope.editingMultipleItemsSelectedActions(
                 onClick = { viewModel.onCopyBibliography() })
         }
 
-
-        DownloadAndRemoveAttachmentBlock(
-            viewModel = viewModel,
-        )
-
         allItemsBottomPanelItem(
             iconRes = Drawables.share,
             overflowTextResId = Strings.share,
             onClick = { viewModel.onShare() }
+        )
+
+
+        DownloadAndRemoveAttachmentBlock(
+            viewModel = viewModel,
         )
     }
 
@@ -195,6 +195,13 @@ private fun AppBarRowScope.editingSingleItemSelectedActions(
                 overflowTextResId = Strings.citation_copy_bibliography,
                 onClick = { viewModel.onCopyBibliography() })
         }
+
+        allItemsBottomPanelItem(
+            iconRes = Drawables.share,
+            overflowTextResId = Strings.share,
+            onClick = { viewModel.onShare() }
+        )
+
         if (viewModel.shouldIncludeRetrieveMetadataButton()) {
             allItemsBottomPanelItem(
                 iconRes = Drawables.retrieve_metadata_24px,
@@ -250,7 +257,6 @@ private fun AppBarRowScope.editingSingleItemSelectedActions(
                 overflowTextResId = Strings.items_action_duplicate,
                 onClick = { viewModel.onDuplicate() })
         }
-
 
     }
 

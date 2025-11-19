@@ -45,6 +45,7 @@ class FileStore @Inject constructor (
     private lateinit var debugDirectory: File
     private lateinit var crashDirectory: File
     private lateinit var readerDirtyPdfFolder: File
+    private lateinit var exportHtmlFolder: File
 
 
     companion object {
@@ -93,6 +94,9 @@ class FileStore @Inject constructor (
 
         readerDirtyPdfFolder = File(filesDir, "readerDirtyPdf")
         readerDirtyPdfFolder.mkdirs()
+
+        exportHtmlFolder = File(filesDir, "exportHtmlFolder")
+        exportHtmlFolder.mkdirs()
     }
 
     fun pathForFilename(filename: String): String {
@@ -198,6 +202,15 @@ class FileStore @Inject constructor (
         val name = annotationKey + (if(isDark) "_dark" else "") + ".png"
         val result = File(folderPath, name)
         return result
+    }
+
+    fun exportHtmlFolder(): File {
+        exportHtmlFolder.mkdirs()
+        return exportHtmlFolder
+    }
+
+    fun exportHtmlFile(fileName: String): File {
+        return File(exportHtmlFolder(), fileName)
     }
 
     fun generateTempFile(): File {

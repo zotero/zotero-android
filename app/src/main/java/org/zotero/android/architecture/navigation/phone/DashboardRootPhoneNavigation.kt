@@ -35,7 +35,8 @@ import org.zotero.android.pdf.pdfReaderNavScreensForPhone
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.addbyidentifier.ui.AddByIdentifierScreen
 import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
-import org.zotero.android.screens.citbibexport.CitationBibliographyExportScreen
+import org.zotero.android.screens.citbibexport.citBibExportNavScreens
+import org.zotero.android.screens.citbibexport.toCitBibExport
 import org.zotero.android.screens.collectionedit.collectionEditNavScreens
 import org.zotero.android.screens.collectionedit.toCollectionEditScreen
 import org.zotero.android.screens.collectionpicker.CollectionPickerScreen
@@ -63,6 +64,7 @@ internal fun DashboardRootPhoneNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onExportPdf: (file: File) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
@@ -138,7 +140,7 @@ internal fun DashboardRootPhoneNavigation(
             navigateToCollectionPicker = navigation::toCollectionPicker,
             navigateToScanBarcode = navigation::toScanBarcode,
             navigateToSingleCitation = navigation::toSingleCitation,
-            navigateToCitationBibliographyExport = navigation::toCitationBibliographyExport,
+            navigateToCitationBibliographyExport = navigation::toCitBibExport,
             onShowPdf = { pdfScreenParams ->
                 navigation.toPdfScreen(
                     context = context,
@@ -230,17 +232,11 @@ internal fun DashboardRootPhoneNavigation(
             CollectionPickerScreen(onBack = navigation::onBack)
         }
 
-        composable(
-            route = DashboardRootPhoneDestinations.CITATION_BIBLIOGRAPHY_EXPORT,
-            arguments = listOf(),
-        ) {
-            CitationBibliographyExportScreen(onBack = navigation::onBack)
-        }
-
         sortPickerNavScreens(navigation)
         creatorEditNavScreens(navigation)
         collectionEditNavScreens(navigation)
         settingsNavScreens(navigation = navigation, onOpenWebpage = onOpenWebpage)
+        citBibExportNavScreens(navigation = navigation, onExportHtml = onExportHtml)
 
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)
@@ -281,7 +277,6 @@ private object DashboardRootPhoneDestinations {
     const val SCAN_BARCODE = "scanBarcode"
     const val RETRIEVE_METADATA = "retrieveMetadata"
     const val SINGLE_CITATION = "singleCitation"
-    const val CITATION_BIBLIOGRAPHY_EXPORT = "citationBibliographyExport"
 
 }
 
@@ -306,10 +301,6 @@ private fun ZoteroNavigation.toAddByIdentifier(params: String) {
 
 private fun ZoteroNavigation.toCollectionPicker() {
     navController.navigate(DashboardRootPhoneDestinations.COLLECTION_PICKER)
-}
-
-private fun ZoteroNavigation.toCitationBibliographyExport() {
-    navController.navigate(DashboardRootPhoneDestinations.CITATION_BIBLIOGRAPHY_EXPORT)
 }
 
 private fun ZoteroNavigation.toTagFilter(params: String) {

@@ -5,7 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -19,12 +19,11 @@ import javax.inject.Inject
 internal class SettingsStylePickerViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val dbWrapperBundle: DbWrapperBundle,
-    private val defaults: Defaults,
     private val settingsQuickCopyUpdateStyleEventStream: SettingsQuickCopyUpdateStyleEventStream,
 ) : BaseViewModel2<SettingsStylePickerViewState, SettingsStylePickerViewEffect>(SettingsStylePickerViewState()) {
 
     fun init() = initOnce {
-        val selected = defaults.getQuickCopyStyleId()
+        val selected = ScreenArguments.settingsStylePickerArgs.selected
         updateState {
             copy(selected = selected)
         }

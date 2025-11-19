@@ -11,7 +11,7 @@ import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
-import org.zotero.android.screens.citbibexport.data.CitationBibliographyExportArgs
+import org.zotero.android.screens.citbibexport.data.CitBibExportArgs
 import org.zotero.android.screens.collectionedit.data.CollectionEditArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collections.data.CollectionsArgs
@@ -20,6 +20,8 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.settings.csllocalepicker.data.SettingsCslLocalePickerArgs
+import org.zotero.android.screens.settings.stylepicker.data.SettingsStylePickerArgs
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -49,7 +51,9 @@ object ScreenArguments {
     lateinit var pdfReaderSearchArgs: PdfReaderSearchArgs
     lateinit var pdfPlainReaderArgs: PdfPlainReaderArgs
     lateinit var singleCitationArgs: SingleCitationArgs
-    lateinit var citationBibliographyExportArgs: CitationBibliographyExportArgs
+    lateinit var citBibExportArgs: CitBibExportArgs
+    lateinit var settingsCslLocalePickerArgs: SettingsCslLocalePickerArgs
+    lateinit var settingsStylePickerArgs: SettingsStylePickerArgs
 
     var allItemsCollectionsLibsNavDirectionLeftToRight = true
 }
