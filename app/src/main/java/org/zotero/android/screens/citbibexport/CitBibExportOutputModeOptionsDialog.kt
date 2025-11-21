@@ -22,8 +22,8 @@ import org.zotero.android.uicomponents.Strings
 
 @Composable
 internal fun CitBibExportOutputModeOptionsDialog(
-    viewModel: CitationBibliographyExportViewModel,
-    viewState: CitationBibliographyExportViewState
+    viewModel: CitBibExportViewModel,
+    viewState: CitBibExportViewState
 ) {
     Dialog(onDismissRequest = viewModel::dismissOutputModeDialog) {
         val roundCornerShape = RoundedCornerShape(size = 30.dp)

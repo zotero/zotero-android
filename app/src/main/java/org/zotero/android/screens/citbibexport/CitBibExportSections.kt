@@ -8,17 +8,17 @@ import org.zotero.android.uicomponents.Strings
 
 
 @Composable
-internal fun CitationBibliographyExportSections(
-    viewState: CitationBibliographyExportViewState,
-    viewModel: CitationBibliographyExportViewModel,
+internal fun CitBibExportSections(
+    viewState: CitBibExportViewState,
+    viewModel: CitBibExportViewModel,
 ) {
-    CitationBibliographyExportItemWithDescription(
+    CitBibExportItemWithDescription(
         title = stringResource(Strings.citation_style),
         description = viewState.style.title,
         onItemTapped = viewModel::onStyleTapped
     )
 
-    CitationBibliographyExportItemWithDescription(
+    CitBibExportItemWithDescription(
         title = stringResource(Strings.citation_language),
         description = viewState.localeName,
         isEnabled = viewState.languagePickerEnabled,
@@ -28,7 +28,7 @@ internal fun CitationBibliographyExportSections(
     if (viewState.showOutputModeDialog) {
         CitBibExportOutputModeOptionsDialog(viewModel = viewModel, viewState = viewState)
     }
-    CitationBibliographyExportItemWithDescription(
+    CitBibExportItemWithDescription(
         title = stringResource(id = Strings.citation_output_mode),
         description =
             if (viewState.mode == CitBibExportOutputMode.bibliography) {
@@ -43,7 +43,7 @@ internal fun CitationBibliographyExportSections(
     if (viewState.showOutputMethodDialog) {
         CitBibExportOutputMethodOptionsDialog(viewModel = viewModel, viewState = viewState)
     }
-    CitationBibliographyExportItemWithDescription(
+    CitBibExportItemWithDescription(
         title = stringResource(id = Strings.citation_output_method),
         description = stringResource(
             id = if (viewState.method == CitBibExportOutputMethod.copy) {

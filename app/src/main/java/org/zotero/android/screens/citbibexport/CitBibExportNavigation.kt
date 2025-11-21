@@ -10,9 +10,10 @@ import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.screens.settings.csllocalepicker.SettingsCslLocalePickerScreen
 import org.zotero.android.screens.settings.stylepicker.SettingsStylePickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
+import java.io.File
 
 @Composable
-internal fun CitBibExportNavigation() {
+internal fun CitBibExportNavigation(onExportHtml: (file: File) -> Unit) {
     val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
@@ -22,17 +23,19 @@ internal fun CitBibExportNavigation() {
         navController = navController,
         startDestination = CibBibExportDestinations.CIT_BIB_EXPORT,
     ) {
-        citBibExportNavScreens(navigation = navigation)
+        citBibExportNavScreens(navigation = navigation, onExportHtml = onExportHtml)
     }
 }
 
 internal fun NavGraphBuilder.citBibExportNavScreens(
     navigation: ZoteroNavigation,
+    onExportHtml: (file: File) -> Unit,
 ) {
     cibBibExportScreen(
         onBack = navigation::onBack,
         toStylePicker = navigation::toStylePicker,
         toLocalePicker = navigation::toCslLocalePicker,
+        onExportHtml = onExportHtml,
     )
     stylePickerScreen(
         onBack = navigation::onBack,
@@ -44,14 +47,16 @@ fun NavGraphBuilder.cibBibExportScreen(
     onBack: () -> Unit,
     toStylePicker: () -> Unit,
     toLocalePicker: () -> Unit,
+    onExportHtml: (file: File) -> Unit,
 ) {
     composable(
         route = CibBibExportDestinations.CIT_BIB_EXPORT,
     ) {
-        CitationBibliographyExportScreen(
+        CitBibExportScreen(
             onBack = onBack,
             navigateToStylePicker = toStylePicker,
-            navigateToCslLocalePicker = toLocalePicker
+            navigateToCslLocalePicker = toLocalePicker,
+            onExportHtml = onExportHtml,
         )
     }
 }

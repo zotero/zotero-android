@@ -1,6 +1,5 @@
 package org.zotero.android.architecture.navigation.tablet
 
-import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,6 +23,7 @@ import java.io.File
 internal fun DashboardRootTabletNavigationScreen(
     collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onShowPdf: (String) -> Unit,
@@ -66,6 +66,7 @@ internal fun DashboardRootTabletNavigationScreen(
                 onPickFile = onPickFile,
                 onOpenFile = onOpenFile,
                 onShowPdf = onShowPdf,
+                onExportHtml = onExportHtml,
                 onOpenWebpage = onOpenWebpage,
                 toAddOrEditNote = toAddOrEditNote,
                 toZoteroWebViewScreen = toZoteroWebViewScreen,

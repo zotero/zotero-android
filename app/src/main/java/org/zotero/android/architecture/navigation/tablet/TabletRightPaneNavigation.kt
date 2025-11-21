@@ -36,6 +36,7 @@ internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
@@ -148,7 +149,7 @@ internal fun TabletRightPaneNavigation(
         dialogDynamicHeight(
             route = TabletRightPaneDestinations.CIT_BIB_EXPORT_NAVIGATION,
         ) {
-            CitBibExportNavigation()
+            CitBibExportNavigation(onExportHtml = onExportHtml)
         }
     }
 }

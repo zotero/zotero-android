@@ -64,6 +64,7 @@ internal fun DashboardRootPhoneNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onExportPdf: (file: File) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?
@@ -235,7 +236,7 @@ internal fun DashboardRootPhoneNavigation(
         creatorEditNavScreens(navigation)
         collectionEditNavScreens(navigation)
         settingsNavScreens(navigation = navigation, onOpenWebpage = onOpenWebpage)
-        citBibExportNavScreens(navigation = navigation)
+        citBibExportNavScreens(navigation = navigation, onExportHtml = onExportHtml)
 
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)

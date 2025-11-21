@@ -1,8 +1,10 @@
 package org.zotero.android.screens.citbibexport
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,13 +18,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
-internal fun CitationBibliographyExportTopBar(
+internal fun CitBibExportTopBar(
     onCancel: () -> Unit,
     onDone: () -> Unit,
+    isDoneButtonEnabled: Boolean,
+    isLoading: Boolean,
 ) {
-
+    val containerColor = if (isDoneButtonEnabled) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        CustomTheme.colors.disabledContent
+    }
     TopAppBar(
         title = {
             Text(
@@ -41,18 +50,28 @@ internal fun CitationBibliographyExportTopBar(
             }
         },
         actions = {
-            FilledTonalButton(
-                onClick = onDone,
-                shapes = ButtonDefaults.shapes(),
-                colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
-            ) {
-                Text(
-                    text = stringResource(Strings.done),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.labelLarge
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp
                 )
+                Spacer(modifier = Modifier.width(20.dp))
+            } else {
+                FilledTonalButton(
+                    onClick = { onDone() },
+                    enabled = isDoneButtonEnabled,
+                    shapes = ButtonDefaults.shapes(),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = containerColor)
+                ) {
+                    Text(
+                        text = stringResource(Strings.done),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
             }
-            Spacer(modifier = Modifier.width(8.dp))
         }
     )
 }

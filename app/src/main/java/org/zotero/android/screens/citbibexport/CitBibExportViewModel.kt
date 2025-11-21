@@ -6,13 +6,21 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.apache.commons.io.FileUtils
+import org.zotero.android.androidx.content.copyHtmlToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.citation.CitationController
+import org.zotero.android.citation.CitationController.Format
+import org.zotero.android.citation.CitationSession
+import org.zotero.android.citation.data.InvalidItemTypesException
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.requests.ReadStyleDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.screens.citbibexport.data.CitBibExportKind
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
@@ -24,25 +32,33 @@ import org.zotero.android.styles.data.Style
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
+import java.io.File
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import javax.inject.Provider
 
 @HiltViewModel
-internal class CitationBibliographyExportViewModel @Inject constructor(
+internal class CitBibExportViewModel @Inject constructor(
     private val dbWrapperBundle: DbWrapperBundle,
     private val defaults: Defaults,
     private val context: Context,
     private val settingsQuickCopyUpdateStyleEventStream: SettingsQuickCopyUpdateStyleEventStream,
     private val settingsQuickCopyUpdateCslLocaleEventStream: SettingsQuickCopyUpdateCslLocaleEventStream,
-) : BaseViewModel2<CitationBibliographyExportViewState, CitationBibliographyExportViewEffect>(
-    CitationBibliographyExportViewState()
+    private val fileStore: FileStore,
+) : BaseViewModel2<CitBibExportViewState, CitBibExportViewEffect>(
+    CitBibExportViewState()
 ) {
+
+    @Inject
+    lateinit var citationControllerProvider: Provider<CitationController>
 
     private lateinit var itemIds: Set<String>
     private lateinit var libraryId: LibraryIdentifier
 
-    fun init(isTablet: Boolean) = initOnce {
+    private var wasFileShared = false
+
+    fun init() = initOnce {
         initViewState()
         setupSettingsQuickCopyReloadEventStream()
         setupSettingsQuickCopyUpdateCslLocaleEventStream()
@@ -50,7 +66,7 @@ internal class CitationBibliographyExportViewModel @Inject constructor(
     }
 
     private fun initViewState() {
-        val args = ScreenArguments.citationBibliographyExportArgs
+        val args = ScreenArguments.citBibExportArgs
         this.itemIds = args.itemIds
         this.libraryId = args.libraryId
 
@@ -62,14 +78,10 @@ internal class CitationBibliographyExportViewModel @Inject constructor(
         }
     }
 
-    fun onDone() {
-
-    }
-
     fun navigateToStylePicker() {
         ScreenArguments.settingsStylePickerArgs =
             SettingsStylePickerArgs(selected = defaults.getExportStyleId())
-        triggerEffect(CitationBibliographyExportViewEffect.NavigateToStylePicker)
+        triggerEffect(CitBibExportViewEffect.NavigateToStylePicker)
     }
 
     fun onStyleTapped() {
@@ -83,15 +95,7 @@ internal class CitationBibliographyExportViewModel @Inject constructor(
     fun navigateToCslLocalePicker() {
         ScreenArguments.settingsCslLocalePickerArgs =
             SettingsCslLocalePickerArgs(selected = defaults.getExportLocaleId())
-        triggerEffect(CitationBibliographyExportViewEffect.NavigateToCslLocalePicker)
-    }
-
-    fun onOutputModeTapped() {
-
-    }
-
-    fun onOutputMethodTapped() {
-
+        triggerEffect(CitBibExportViewEffect.NavigateToCslLocalePicker)
     }
 
     private fun reload() {
@@ -250,9 +254,126 @@ internal class CitationBibliographyExportViewModel @Inject constructor(
         }
     }
 
+    private suspend fun loadForHtml(
+        citationController: CitationController,
+        session: CitationSession
+    ): String {
+        return when (viewState.mode) {
+            CitBibExportOutputMode.citation -> {
+                citationController.citation(
+                    session = session,
+                    label = null,
+                    locator = null,
+                    omitAuthor = false,
+                    format = Format.html,
+                    showInWebView = false
+                )
+            }
+
+            CitBibExportOutputMode.bibliography -> {
+                citationController.bibliography(session = session, format = Format.html)
+            }
+        }
+    }
+
+    private suspend fun loadForCopy(
+        citationController: CitationController,
+        session: CitationSession
+    ): Pair<String, String> {
+        val html = loadForHtml(citationController, session)
+        when (viewState.mode) {
+            CitBibExportOutputMode.citation -> {
+                return html to citationController.citation(
+                    session = session,
+                    label = null,
+                    locator = null,
+                    omitAuthor = false,
+                    format = Format.text,
+                    showInWebView = false
+                )
+            }
+
+            CitBibExportOutputMode.bibliography -> {
+                return html to citationController.bibliography(
+                    session = session,
+                    format = Format.html
+                )
+            }
+        }
+    }
+
+    private suspend fun loadSession(citationController: CitationController): CitationSession {
+        val session = citationController.startSession(
+            this.itemIds,
+            this.libraryId,
+            styleId = viewState.style.identifier,
+            localeId = viewState.localeId
+        )
+        return session
+    }
+
+    private fun copy(html: String, plaintext: String) {
+        context.copyHtmlToClipboard(html, text = plaintext)
+        triggerEffect(CitBibExportViewEffect.OnBack)
+    }
+
+    private fun save(html: String) {
+        val file = fileStore.exportHtmlFile("Untitled.html")
+        file.delete()
+        FileUtils.write(file, html, "UTF-8")
+        wasFileShared = true
+        triggerEffect(CitBibExportViewEffect.ExportHtml(file))
+    }
+
+    fun closeScreenIfNeeded() {
+        if (wasFileShared) {
+            triggerEffect(CitBibExportViewEffect.OnBack)
+        }
+
+    }
+
+    fun process() {
+        viewModelScope.launch {
+            updateState {
+                copy(isLoading = true)
+            }
+            try {
+                val citationController = citationControllerProvider.get()
+                val session = loadSession(citationController)
+                when (viewState.method) {
+                    CitBibExportOutputMethod.copy -> {
+                        val data = loadForCopy(citationController, session)
+                        copy(data.first, data.second)
+                    }
+
+                    CitBibExportOutputMethod.html -> {
+                        val html = loadForHtml(citationController, session)
+                        save(html = html)
+                    }
+
+                }
+            } catch (e: Exception) {
+                updateState {
+                    copy(isDoneEnabled = false)
+                }
+
+                if (e is InvalidItemTypesException) {
+                    context.longToast(Strings.errors_citation_invalid_types)
+                } else {
+                    context.longToast(e.toString())
+                    Timber.e(e)
+                }
+            }
+
+            updateState {
+                copy(isLoading = false)
+            }
+        }
+
+    }
 }
 
-internal data class CitationBibliographyExportViewState(
+internal data class CitBibExportViewState(
     val style: Style = Style(
         identifier = "",
         title = "",
@@ -272,10 +393,13 @@ internal data class CitationBibliographyExportViewState(
     val languagePickerEnabled: Boolean = false,
     val showOutputModeDialog: Boolean = false,
     val showOutputMethodDialog: Boolean = false,
+    val isDoneEnabled: Boolean = true,
+    val isLoading: Boolean = false,
 ) : ViewState
 
-internal sealed class CitationBibliographyExportViewEffect : ViewEffect {
-    object OnBack : CitationBibliographyExportViewEffect()
-    object NavigateToStylePicker : CitationBibliographyExportViewEffect()
-    object NavigateToCslLocalePicker : CitationBibliographyExportViewEffect()
+internal sealed class CitBibExportViewEffect : ViewEffect {
+    object OnBack : CitBibExportViewEffect()
+    object NavigateToStylePicker : CitBibExportViewEffect()
+    object NavigateToCslLocalePicker : CitBibExportViewEffect()
+    data class ExportHtml(val file: File) : CitBibExportViewEffect()
 }

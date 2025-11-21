@@ -36,6 +36,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onExportPdf: (file: File) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     onExitApp:() -> Unit,
     wasPspdfkitInitialized: Boolean,
     viewEffect: Consumable<DashboardViewEffect>?,
@@ -67,6 +68,7 @@ internal fun DashboardRootTopLevelTabletNavigation(
             toAddOrEditNote = navigation::toAddOrEditNote,
             toZoteroWebViewScreen = navigation::toZoteroWebViewScreen,
             onExitApp = onExitApp,
+            onExportHtml = onExportHtml,
             navigateToRetrieveMetadata = navigation::toRetrieveMetadata
         )
         pdfReaderScreenAndNavigationForTablet(
@@ -93,6 +95,7 @@ private fun NavGraphBuilder.dashboardScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
+    onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     navigateToRetrieveMetadata: (params: String) -> Unit,
@@ -110,6 +113,7 @@ private fun NavGraphBuilder.dashboardScreen(
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,
             onExitApp = onExitApp,
+            onExportHtml = onExportHtml,
             toAddOrEditNote = toAddOrEditNote,
             toZoteroWebViewScreen = toZoteroWebViewScreen,
             navigateToRetrieveMetadata = navigateToRetrieveMetadata,

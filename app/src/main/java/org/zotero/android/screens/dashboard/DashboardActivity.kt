@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -19,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -43,7 +43,6 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import androidx.core.net.toUri
 
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
@@ -131,6 +130,16 @@ internal class DashboardActivity : BaseActivity() {
             showAppChooserExcludingZoteroApp(share)
         }
 
+        val onExportHtml: (file: File) -> Unit = { file ->
+            val fileProviderAuthority = BuildConfig.APPLICATION_ID + ".provider"
+            val resultUri = FileProvider.getUriForFile(this, fileProviderAuthority, file)
+            val share = Intent()
+            share.setAction(Intent.ACTION_SEND)
+            share.setDataAndType(resultUri, "text/html")
+            share.putExtra(Intent.EXTRA_STREAM, resultUri)
+            showAppChooserExcludingZoteroApp(share)
+        }
+
         val mainCoroutineScope = CoroutineScope(dispatchers.main)
         mainCoroutineScope.launch {
             val wasPspdfkitInitialized = defaults.wasPspdfkitInitialized()
@@ -156,6 +165,7 @@ internal class DashboardActivity : BaseActivity() {
                                     onOpenWebpage = onOpenWebpage,
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     onExportPdf = onExportPdf,
+                                    onExportHtml = onExportHtml,
                                     onExitApp = { finish() }
                                 )
                             } else {
@@ -167,6 +177,7 @@ internal class DashboardActivity : BaseActivity() {
                                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                                     viewEffect = viewEffect,
                                     onExportPdf = onExportPdf,
+                                    onExportHtml = onExportHtml,
                                     onExitApp = { finish() }
                                 )
                             }

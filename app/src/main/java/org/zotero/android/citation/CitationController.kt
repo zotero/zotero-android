@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.citation.data.InvalidItemTypesException
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.ItemTypes
@@ -28,6 +29,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class CitationController @Inject constructor(
     private val context: Context,
@@ -75,21 +77,26 @@ class CitationController @Inject constructor(
                     )
                     val supportsBibliography = styleData.supportsBibliography
                     val (schema, dateFormats) = loadBundleFiles()
-                    val itemJsons = loadItemJsons(
-                        keys = itemIds,
-                        libraryId = libraryId
-                    )
-                    val itemCSL = getItemsCSL(itemJsons, schema, dateFormats)
-                    val session = CitationSession(
-                        itemIds = itemIds,
-                        libraryId = libraryId,
-                        styleXML = styleXml,
-                        styleLocaleId = styleLocaleId,
-                        localeXML = localeXml,
-                        supportsBibliography = supportsBibliography,
-                        itemsCSL = itemCSL
-                    )
-                    cont.resume(session)
+                    try {
+                        val itemJsons = loadItemJsons(
+                            keys = itemIds,
+                            libraryId = libraryId
+                        )
+                        val itemCSL = getItemsCSL(itemJsons, schema, dateFormats)
+                        val session = CitationSession(
+                            itemIds = itemIds,
+                            libraryId = libraryId,
+                            styleXML = styleXml,
+                            styleLocaleId = styleLocaleId,
+                            localeXML = localeXml,
+                            supportsBibliography = supportsBibliography,
+                            itemsCSL = itemCSL
+                        )
+                        cont.resume(session)
+                    }catch (e: Exception) {
+                        cont.resumeWithException(e)
+                    }
+
                 }
 
             }
@@ -222,7 +229,7 @@ class CitationController @Inject constructor(
                 .itemNotTypeIn(invalidItemTypes).findAll()
 
             if (items.isEmpty()) {
-                throw Exception("Invalid Item Types")
+                throw InvalidItemTypesException()
             }
 
             val data = items.map { data(it) }
@@ -233,7 +240,9 @@ class CitationController @Inject constructor(
 
             return result
         } catch (error: Exception) {
-            Timber.e(error, "CitationController: can't read items")
+            if (error !is InvalidItemTypesException) {
+                Timber.e(error, "CitationController: can't read items")
+            }
             throw error
         }
     }

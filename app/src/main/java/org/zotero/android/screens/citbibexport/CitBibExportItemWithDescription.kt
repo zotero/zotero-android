@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun CitationBibliographyExportItemWithDescription(
+internal fun CitBibExportItemWithDescription(
     title: String,
     description: String,
     isEnabled: Boolean = true,

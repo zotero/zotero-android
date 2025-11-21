@@ -8,37 +8,51 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import org.zotero.android.architecture.ui.CustomLayoutSize
+import androidx.lifecycle.Lifecycle
+import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
+import java.io.File
 
 @Composable
-internal fun CitationBibliographyExportScreen(
+internal fun CitBibExportScreen(
     onBack: () -> Unit,
     navigateToStylePicker: () -> Unit,
     navigateToCslLocalePicker: () -> Unit,
-    viewModel: CitationBibliographyExportViewModel = hiltViewModel(),
+    onExportHtml: (file: File) -> Unit,
+    viewModel: CitBibExportViewModel = hiltViewModel(),
 ) {
     AppThemeM3 {
-        val layoutType = CustomLayoutSize.calculateLayoutType()
-        val viewState by viewModel.viewStates.observeAsState(CitationBibliographyExportViewState())
+        val viewState by viewModel.viewStates.observeAsState(CitBibExportViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
-        val isTablet = layoutType.isTablet()
         LaunchedEffect(key1 = viewModel) {
-            viewModel.init(isTablet = isTablet)
+            viewModel.init()
+        }
+
+        ObserveLifecycleEvent { event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.closeScreenIfNeeded()
+                }
+
+                else -> {}
+            }
         }
 
         LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
-                is CitationBibliographyExportViewEffect.OnBack -> {
+            when (val consumedEffect = viewEffect?.consume()) {
+                is CitBibExportViewEffect.OnBack -> {
                     onBack()
                 }
-                is CitationBibliographyExportViewEffect.NavigateToStylePicker -> {
+                is CitBibExportViewEffect.NavigateToStylePicker -> {
                     navigateToStylePicker()
                 }
 
-                is CitationBibliographyExportViewEffect.NavigateToCslLocalePicker -> {
+                is CitBibExportViewEffect.NavigateToCslLocalePicker -> {
                     navigateToCslLocalePicker()
+                }
+                is CitBibExportViewEffect.ExportHtml -> {
+                    onExportHtml(consumedEffect.file)
                 }
 
                 else -> {
@@ -48,9 +62,11 @@ internal fun CitationBibliographyExportScreen(
         }
         CustomScaffoldM3(
             topBar = {
-                CitationBibliographyExportTopBar(
+                CitBibExportTopBar(
                     onCancel = onBack,
-                    onDone = viewModel::onDone,
+                    onDone = viewModel::process,
+                    isDoneButtonEnabled = viewState.isDoneEnabled,
+                    isLoading = viewState.isLoading
                 )
             },
         ) {
@@ -58,7 +74,7 @@ internal fun CitationBibliographyExportScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                CitationBibliographyExportSections(
+                CitBibExportSections(
                     viewModel = viewModel,
                     viewState = viewState
                 )
