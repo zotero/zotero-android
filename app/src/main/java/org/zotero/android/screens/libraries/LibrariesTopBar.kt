@@ -7,7 +7,6 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
@@ -42,7 +41,7 @@ internal fun LibrariesTopBar(
                     4.dp
                 ),
                 tooltip = {
-                    PlainTooltip(caretShape = TooltipDefaults.caretShape()) {
+                    PlainTooltip() {
                         Text(
                             stringResource(
                                 Strings.settings_title

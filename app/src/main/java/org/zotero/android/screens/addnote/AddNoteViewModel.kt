@@ -169,6 +169,7 @@ internal class AddNoteViewModel @Inject constructor(
     private fun saveAndExit() {
         val text = viewState.text
         if (initialText != text || initialTags != viewState.tags) {
+            println()
             EventBus.getDefault().post(
                 SaveNoteAction(
                     text = text,

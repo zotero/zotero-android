@@ -11,7 +11,6 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
@@ -58,7 +57,6 @@ internal fun BoxScope.PdfReaderBottomPanel(
                 PlainTooltip(
                     modifier = Modifier
                         .padding(start = 12.dp),
-                    caretShape = TooltipDefaults.caretShape()
                 ) {
                     Text(
                         stringResource(

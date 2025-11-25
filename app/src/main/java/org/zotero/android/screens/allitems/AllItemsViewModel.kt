@@ -67,8 +67,8 @@ import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.processor.AllItemsProcessor
 import org.zotero.android.screens.allitems.processor.AllItemsProcessorInterface
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
-import org.zotero.android.screens.citbibexport.data.CitBibExportArgs
 import org.zotero.android.screens.citation.singlecitation.locatorsList
+import org.zotero.android.screens.citbibexport.data.CitBibExportArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMode
 import org.zotero.android.screens.collectionpicker.data.CollectionPickerMultiResult
@@ -150,6 +150,7 @@ internal class AllItemsViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(saveNoteAction: SaveNoteAction) {
+        println()
         if (saveNoteAction.isFromDashboard) {
             viewModelScope.launch {
                 saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
@@ -487,9 +488,10 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
+        val key = KeyGenerator.newKey()
         val args = AddOrEditNoteArgs(
             title = title,
-            key = KeyGenerator.newKey(),
+            key = key,
             libraryId = libraryId,
             readOnly = false,
             isFromDashboard = true,
