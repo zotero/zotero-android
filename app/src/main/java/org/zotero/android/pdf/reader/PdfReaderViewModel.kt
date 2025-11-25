@@ -2126,9 +2126,6 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         progressHandler.unMuteProgressToolbarForScreen()
-        fragmentManager.commit(allowStateLoss = true) {
-            remove(this@PdfReaderViewModel.pdfUiFragment)
-        }
         if (this::pdfFragment.isInitialized) {
             onAnnotationUpdatedListener?.let {
                 pdfFragment.removeOnAnnotationUpdatedListener(it)
@@ -2162,6 +2159,10 @@ class PdfReaderViewModel @Inject constructor(
             WindowCompat.getInsetsController(it.window, it.window.decorView).show(
                 WindowInsetsCompat.Type.systemBars()
             )
+        }
+
+        fragmentManager.commit(allowStateLoss = true) {
+            remove(this@PdfReaderViewModel.pdfUiFragment)
         }
         super.onCleared()
     }
