@@ -319,7 +319,7 @@ private fun toAllItems(
     navController: NavHostController,
     collectionArgs: String,
 ) {
-//    navController.popBackStack(navController.graph.id, inclusive = true)
+    navController.popBackStack(navController.graph.id, inclusive = true)
 //    navController.navigate("${CommonScreenDestinations.COLLECTIONS_SCREEN}/$collectionArgs")
     navController.navigate(CommonScreenDestinations.ALL_ITEMS)
 }
