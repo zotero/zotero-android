@@ -1,7 +1,9 @@
 package org.zotero.android.attachmentdownloader
 
+import java.util.concurrent.ConcurrentHashMap
+
 class AttachmentBatchProgress {
-    private val downloadsInProgress = mutableMapOf<String, Int>()
+    private val downloadsInProgress = ConcurrentHashMap<String, Int>()
 
     var currentProgress = 0
 
