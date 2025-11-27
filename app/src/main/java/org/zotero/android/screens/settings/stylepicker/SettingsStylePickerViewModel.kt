@@ -2,6 +2,9 @@ package org.zotero.android.screens.settings.stylepicker
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.BaseViewModel2
@@ -36,7 +39,7 @@ internal class SettingsStylePickerViewModel @Inject constructor(
     private suspend fun reloadStyles() {
         val styles = loadStyles()
         updateState {
-            copy(styles = styles)
+            copy(styles = styles.toPersistentList())
         }
     }
 
@@ -58,7 +61,7 @@ internal class SettingsStylePickerViewModel @Inject constructor(
 }
 
 internal data class SettingsStylePickerViewState(
-    val styles: List<Style> = emptyList(),
+    val styles: PersistentList<Style> = persistentListOf(),
     val selected: String = ""
 ) : ViewState
 

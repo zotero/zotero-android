@@ -2,6 +2,9 @@ package org.zotero.android.screens.settings.cite
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -59,7 +62,7 @@ internal class SettingsCiteViewModel @Inject constructor(
     private suspend fun reloadStyles() {
         val styles = loadStyles()
         updateState {
-            copy(styles = styles)
+            copy(styles = styles.toPersistentList())
         }
     }
 
@@ -130,7 +133,7 @@ internal class SettingsCiteViewModel @Inject constructor(
         val stylesMutable = viewState.styles.toMutableList()
         stylesMutable.removeAt(index)
         updateState {
-            copy(styles = stylesMutable)
+            copy(styles = stylesMutable.toPersistentList())
         }
     }
 
@@ -183,7 +186,7 @@ internal class SettingsCiteViewModel @Inject constructor(
 }
 
 internal data class SettingsCiteViewState(
-    val styles: List<Style> = emptyList(),
+    val styles: PersistentList<Style> = persistentListOf(),
 ) : ViewState
 
 internal sealed class SettingsCiteViewEffect : ViewEffect {

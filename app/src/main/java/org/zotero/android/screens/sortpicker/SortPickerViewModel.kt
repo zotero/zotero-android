@@ -1,6 +1,9 @@
 package org.zotero.android.screens.sortpicker
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ScreenArguments
@@ -27,7 +30,7 @@ internal class SortPickerViewModel @Inject constructor(
         updateState {
             copy(
                 isAscending = args.sortType.ascending,
-                sortByRows = pickerState.objects,
+                sortByRows = pickerState.objects.toPersistentList(),
                 selectedSortByRow = pickerState.selectedRow
             )
         }
@@ -71,7 +74,7 @@ internal class SortPickerViewModel @Inject constructor(
 internal data class SortPickerViewState(
     val isAscending: Boolean = true,
 
-    val sortByRows: List<SinglePickerItem> = emptyList(),
+    val sortByRows: PersistentList<SinglePickerItem> = persistentListOf(),
     val selectedSortByRow: String = "",
 ) : ViewState
 

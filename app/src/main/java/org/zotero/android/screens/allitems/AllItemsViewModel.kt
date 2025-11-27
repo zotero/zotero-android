@@ -11,8 +11,11 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -655,13 +658,13 @@ internal class AllItemsViewModel @Inject constructor(
         if (filter is ItemsFilter.tags) {
             updateState {
                 copy(
-                    filters = viewState.filters.filter { it !is ItemsFilter.tags }
+                    filters = viewState.filters.filter { it !is ItemsFilter.tags }.toPersistentList()
                 )
             }
         }
         updateState {
             copy(
-                filters = viewState.filters + filter
+                filters = (viewState.filters + filter).toPersistentList()
             )
         }
         EventBus.getDefault().post(UpdateFiltersEvent(viewState.filters))
@@ -675,7 +678,7 @@ internal class AllItemsViewModel @Inject constructor(
         }
         updateState {
             copy(
-                filters = viewState.filters - filter
+                filters = (viewState.filters - filter).toPersistentList()
             )
         }
         EventBus.getDefault().post(UpdateFiltersEvent(viewState.filters))
@@ -1251,7 +1254,7 @@ internal data class AllItemsViewState(
     val shouldShowAddBottomSheet: Boolean = false,
     val searchTerm: String? = null,
     val isRefreshing: Boolean = false,
-    val filters: List<ItemsFilter> = emptyList(),
+    val filters: PersistentList<ItemsFilter> = persistentListOf(),
     val isCollectionTrash: Boolean = false,
     val isCollectionACollection: Boolean = false,
     val collectionName: String = "",

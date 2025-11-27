@@ -2,6 +2,9 @@ package org.zotero.android.screens.settings.csllocalepicker
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.BaseViewModel2
@@ -37,7 +40,7 @@ internal class SettingsCslLocalePickerViewModel @Inject constructor(
     private suspend fun reloadCslLocales() {
         val locales = loadCslLocales()
         updateState {
-            copy(locales = locales)
+            copy(locales = locales.toPersistentList())
         }
     }
 
@@ -58,7 +61,7 @@ internal class SettingsCslLocalePickerViewModel @Inject constructor(
 }
 
 internal data class SettingsCslLocalePickerViewState(
-    val locales: List<ExportLocale> = emptyList(),
+    val locales: PersistentList<ExportLocale> = persistentListOf(),
     val selected: String = ""
 ) : ViewState
 

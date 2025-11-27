@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -86,7 +89,7 @@ class DashboardViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: AskUserToResolveChangedDeletedItem) {
         updateState {
-            copy(changedItemsDeletedAlertQueue = event.conflictDataList)
+            copy(changedItemsDeletedAlertQueue = event.conflictDataList.toPersistentList())
         }
     }
 
@@ -273,7 +276,7 @@ class DashboardViewModel @Inject constructor(
 
     private fun maybeCompleteRemovedItemsWithLocalChanges(key: String) {
         updateState {
-            copy(changedItemsDeletedAlertQueue = viewState.changedItemsDeletedAlertQueue.filter { it.key != key })
+            copy(changedItemsDeletedAlertQueue = viewState.changedItemsDeletedAlertQueue.filter { it.key != key }.toPersistentList())
         }
         if (viewState.changedItemsDeletedAlertQueue.isEmpty()) {
             conflictResolutionUseCase.completeRemovedItemsWithLocalChanges()
@@ -476,7 +479,7 @@ data class DashboardViewState(
     val debugLoggingDialogData: DebugLoggingDialogData? = null,
     val crashReportIdDialogData: CrashReportIdDialogData? = null,
     val deleteGroupDialogData: DeleteGroupDialogData? = null,
-    val changedItemsDeletedAlertQueue: List<ConflictDialogData.changedItemsDeletedAlert> = emptyList(),
+    val changedItemsDeletedAlertQueue: PersistentList<ConflictDialogData.changedItemsDeletedAlert> = persistentListOf(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val showDebugWindow: Boolean = false,
     ) : ViewState

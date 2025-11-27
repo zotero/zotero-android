@@ -3,6 +3,11 @@ package org.zotero.android.screens.filter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
@@ -18,6 +23,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.emptyImmutableSet
 import org.zotero.android.architecture.navigation.ARG_TAGS_FILTER
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
@@ -76,7 +82,7 @@ internal class FilterViewModel @Inject constructor(
         updateState {
             copy(
                 isDownloadsChecked = downloadsFilterEnabled,
-                selectedTags = filterArgs.selectedTags,
+                selectedTags = filterArgs.selectedTags.toImmutableSet(),
 //                displayAll = defaults.isTagPickerDisplayAllTags(),
                 showAutomatic = defaults.isTagPickerShowAutomaticTags()
             )
@@ -108,7 +114,7 @@ internal class FilterViewModel @Inject constructor(
             }
             updateState {
                 copy(
-                    tags = filtered,
+                    tags = filtered.toPersistentList(),
                     searchTerm = term
                 )
             }
@@ -180,7 +186,7 @@ internal class FilterViewModel @Inject constructor(
     fun deselectAll() {
         updateState {
             copy(
-                selectedTags = emptySet(),
+                selectedTags = emptyImmutableSet(),
                 showFilterOptionsPopup = false
             )
         }
@@ -202,13 +208,13 @@ internal class FilterViewModel @Inject constructor(
 
     private fun select(name: String) {
         updateState {
-            copy(selectedTags = viewState.selectedTags + name)
+            copy(selectedTags = (viewState.selectedTags + name).toImmutableSet())
         }
     }
 
     private fun deselect(name: String) {
         updateState {
-            copy(selectedTags = viewState.selectedTags - name)
+            copy(selectedTags = (viewState.selectedTags - name).toImmutableSet())
         }
     }
 
@@ -355,9 +361,9 @@ internal class FilterViewModel @Inject constructor(
             viewModelScope.launch {
                 updateState {
                     copy(
-                        tags = chunkedSorted,
-                        snapshot = snapshot?.chunked(LIST_CHUNK_SIZE),
-                        selectedTags = selected
+                        tags = chunkedSorted.toPersistentList(),
+                        snapshot = snapshot?.chunked(LIST_CHUNK_SIZE)?.toPersistentList(),
+                        selectedTags = selected.toImmutableSet()
                     )
                 }
             }
@@ -439,9 +445,9 @@ internal data class FilterViewState(
     val showFilterOptionsPopup: Boolean = false,
     val showAutomatic: Boolean = false,
     val displayAll: Boolean = false,
-    val tags: List<List<FilterTag>> = emptyList(),
-    val snapshot: List<List<FilterTag>>? = null,
-    val selectedTags: Set<String> = emptySet(),
+    val tags: PersistentList<List<FilterTag>> = persistentListOf(),
+    val snapshot: PersistentList<List<FilterTag>>? = null,
+    val selectedTags: ImmutableSet<String> = emptyImmutableSet(),
     val dialog: FilterDialog? = null,
 ) : ViewState
 

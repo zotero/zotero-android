@@ -2,6 +2,9 @@ package org.zotero.android.screens.creatoredit
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
@@ -99,7 +102,7 @@ internal class CreatorEditViewModel @Inject constructor(
         )
         updateState {
             copy(
-                listOfCreatorTypes = pickerState.objects,
+                listOfCreatorTypes = pickerState.objects.toPersistentList(),
                 selectedCreatorType = pickerState.selectedRow,
                 showChooserDialog = true
             )
@@ -162,7 +165,7 @@ internal data class CreatorEditViewState(
     val isEditing: Boolean = false,
     val shouldShowDeleteConfirmation: Boolean = false,
 
-    val listOfCreatorTypes: List<SinglePickerItem> = emptyList(),
+    val listOfCreatorTypes: PersistentList<SinglePickerItem> = persistentListOf(),
     val showChooserDialog: Boolean = false,
     val selectedCreatorType: String = "",
 ) : ViewState {

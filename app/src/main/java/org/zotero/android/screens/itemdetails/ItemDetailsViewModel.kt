@@ -10,6 +10,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.ObjectChangeSet
 import io.realm.RealmObjectChangeListener
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -31,6 +37,7 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.emptyImmutableSet
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.ARG_ITEM_DETAILS_SCREEN
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
@@ -507,9 +514,9 @@ class ItemDetailsViewModel @Inject constructor(
         }
         updateState {
             copy(
-                attachments = attachments,
-                notes = notes,
-                tags = tags,
+                attachments = attachments.toPersistentList(),
+                notes = notes.toPersistentList(),
+                tags = tags.toPersistentList(),
                 isLoadingData = false,
                 isEditing = isEditing,
             )
@@ -1012,7 +1019,7 @@ class ItemDetailsViewModel @Inject constructor(
                     val attachmentsMutable = viewState.attachments.toMutableList()
                     attachmentsMutable[index] = new
                     updateState {
-                        copy(attachments = attachmentsMutable, updateAttachmentKey = new.key)
+                        copy(attachments = attachmentsMutable.toPersistentList(), updateAttachmentKey = new.key)
                     }
                 }
             }
@@ -1152,14 +1159,14 @@ class ItemDetailsViewModel @Inject constructor(
         }
         updateState {
             copy(
-                notes = updatedNotes,
-                backgroundProcessedItems = backgroundProcessedItems + key
+                notes = updatedNotes.toPersistentList(),
+                backgroundProcessedItems = (backgroundProcessedItems + key).toImmutableSet()
             )
         }
 
         fun finishSave(error: Throwable?) {
             updateState {
-                copy(backgroundProcessedItems = backgroundProcessedItems - key)
+                copy(backgroundProcessedItems = (backgroundProcessedItems - key).toImmutableSet())
             }
             if (error == null) {
                 return
@@ -1180,7 +1187,7 @@ class ItemDetailsViewModel @Inject constructor(
                 updatedNotes.removeAt(index)
             }
             updateState {
-                copy(notes = updatedNotes)
+                copy(notes = updatedNotes.toPersistentList())
             }
         }
 
@@ -1504,7 +1511,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private suspend fun delete(tag: Tag) {
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems + tag.name)
+            copy(backgroundProcessedItems = (backgroundProcessedItems + tag.name).toImmutableSet())
         }
         val request = DeleteTagFromItemDbRequest(
             key = viewState.key,
@@ -1516,7 +1523,7 @@ class ItemDetailsViewModel @Inject constructor(
             updateState {
                 copy(
                     error = ItemDetailError.cantSaveTags,
-                    backgroundProcessedItems = backgroundProcessedItems - tag.name
+                    backgroundProcessedItems = (backgroundProcessedItems - tag.name).toImmutableSet()
                 )
             }
             return
@@ -1527,8 +1534,8 @@ class ItemDetailsViewModel @Inject constructor(
             updatedTags.removeAt(index)
             updateState {
                 copy(
-                    tags = updatedTags,
-                    backgroundProcessedItems = backgroundProcessedItems - tag.name
+                    tags = updatedTags.toPersistentList(),
+                    backgroundProcessedItems = (backgroundProcessedItems - tag.name).toPersistentSet()
                 )
             }
         }
@@ -1546,7 +1553,7 @@ class ItemDetailsViewModel @Inject constructor(
             val updatedNotes = viewState.notes.toMutableList()
             updatedNotes.removeAt(index)
             updateState {
-                copy(notes = updatedNotes)
+                copy(notes = updatedNotes.toPersistentList())
             }
         }
     }
@@ -1591,14 +1598,14 @@ class ItemDetailsViewModel @Inject constructor(
             val updatedAttachments = viewState.attachments.toMutableList()
             updatedAttachments.removeAt(index)
             updateState {
-                copy(attachments = updatedAttachments)
+                copy(attachments = updatedAttachments.toPersistentList())
             }
         }
     }
 
     private suspend fun trashItem(key: String, onSuccess: () -> Unit) {
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems + key)
+            copy(backgroundProcessedItems = (backgroundProcessedItems + key).toImmutableSet())
         }
         val request = MarkItemsAsTrashedDbRequest(
             keys = listOf(key),
@@ -1610,13 +1617,13 @@ class ItemDetailsViewModel @Inject constructor(
             updateState {
                 copy(
                     error = ItemDetailError.cantTrashItem,
-                    backgroundProcessedItems = backgroundProcessedItems - key
+                    backgroundProcessedItems = (backgroundProcessedItems - key).toImmutableSet()
                 )
             }
             return
         }
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems - key)
+            copy(backgroundProcessedItems = (backgroundProcessedItems - key).toImmutableSet())
         }
         onSuccess()
 
@@ -1781,7 +1788,7 @@ class ItemDetailsViewModel @Inject constructor(
                 updatedAttachments[index] = new
                 updateState {
                     copy(
-                        attachments = updatedAttachments,
+                        attachments = updatedAttachments.toPersistentList(),
                         updateAttachmentKey = new.key
                     )
                 }
@@ -1801,7 +1808,7 @@ class ItemDetailsViewModel @Inject constructor(
             updatedAttachments[index] = new
         }
         updateState {
-            copy(attachments = updatedAttachments)
+            copy(attachments = updatedAttachments.toPersistentList())
         }
     }
 
@@ -1809,8 +1816,8 @@ class ItemDetailsViewModel @Inject constructor(
         val oldTags = viewState.tags
         updateState {
             copy(
-                tags = tags,
-                backgroundProcessedItems = backgroundProcessedItems + tags.map { it.name }
+                tags = tags.toPersistentList(),
+                backgroundProcessedItems = (backgroundProcessedItems + tags.map { it.name }).toImmutableSet()
             )
         }
 
@@ -1818,7 +1825,7 @@ class ItemDetailsViewModel @Inject constructor(
         val result = perform(dbWrapper = dbWrapperMain, request = request)
 
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems - tags.map { it.name })
+            copy(backgroundProcessedItems = (backgroundProcessedItems - tags.map { it.name }).toImmutableSet())
         }
         if (result is Result.Failure) {
             Timber.e(result.exception, "ItemDetailActionHandler: can't set tags to item")
@@ -1849,8 +1856,8 @@ class ItemDetailsViewModel @Inject constructor(
                 updatedAttachments.add(index, attachment)
                 updateState {
                     copy(
-                        attachments = updatedAttachments,
-                        backgroundProcessedItems = backgroundProcessedItems + attachment.key
+                        attachments = updatedAttachments.toPersistentList(),
+                        backgroundProcessedItems = (backgroundProcessedItems + attachment.key).toImmutableSet()
                     )
                 }
             }
@@ -1882,7 +1889,7 @@ class ItemDetailsViewModel @Inject constructor(
                     perform(dbWrapperMain, invalidateRealm = true, request = request)
                 for (attachment in attachments) {
                     updateState {
-                        copy(backgroundProcessedItems = backgroundProcessedItems - attachment.key)
+                        copy(backgroundProcessedItems = (backgroundProcessedItems - attachment.key).toImmutableSet())
                     }
                 }
 
@@ -1899,7 +1906,7 @@ class ItemDetailsViewModel @Inject constructor(
 
                     updateState {
                         copy(
-                            attachments = updatedAttachments,
+                            attachments = updatedAttachments.toPersistentList(),
                             error = ItemDetailError.cantAddAttachments(ItemDetailError.AttachmentAddError.allFailedCreation)
                         )
                     }
@@ -1915,7 +1922,7 @@ class ItemDetailsViewModel @Inject constructor(
 
                     updateState {
                         copy(
-                            attachments = updatedAttachments,
+                            attachments = updatedAttachments.toPersistentList(),
                             error = ItemDetailError.cantAddAttachments(
                                 ItemDetailError.AttachmentAddError.someFailedCreation(
                                     failed.map { it.second })
@@ -1980,7 +1987,7 @@ class ItemDetailsViewModel @Inject constructor(
 
     private suspend fun moveToStandalone(attachment: Attachment) {
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems + attachment.key)
+            copy(backgroundProcessedItems = (backgroundProcessedItems + attachment.key).toImmutableSet())
         }
 
         val result = perform(
@@ -1992,7 +1999,7 @@ class ItemDetailsViewModel @Inject constructor(
         )
 
         updateState {
-            copy(backgroundProcessedItems = backgroundProcessedItems - attachment.key)
+            copy(backgroundProcessedItems = (backgroundProcessedItems - attachment.key).toImmutableSet())
         }
         if (result is Result.Failure) {
             Timber.e(
@@ -2004,7 +2011,7 @@ class ItemDetailsViewModel @Inject constructor(
             }
         } else {
             updateState {
-                copy(attachments = attachments - attachment)
+                copy(attachments = (attachments - attachment).toPersistentList())
             }
 
         }
@@ -2091,13 +2098,13 @@ data class ItemDetailsViewState(
     val data: ItemDetailData = ItemDetailData.empty,
     var snapshot: ItemDetailData? = null,
     var promptSnapshot: ItemDetailData? = null,
-    var notes: List<Note> = emptyList(),
-    var attachments: List<Attachment> = emptyList(),
-    var tags: List<Tag> = emptyList(),
+    var notes: PersistentList<Note> = persistentListOf(),
+    var attachments: PersistentList<Attachment> = persistentListOf(),
+    var tags: PersistentList<Tag> = persistentListOf(),
     var updateAttachmentKey: String? = null,
     var attachmentToOpen: String? = null,
     var isLoadingData: Boolean = false,
-    var backgroundProcessedItems: Set<String> = emptySet(),
+    var backgroundProcessedItems: ImmutableSet<String> = emptyImmutableSet(),
     val longPressOptionsHolder: LongPressOptionsHolder? = null,
     val fieldFocusKey: String? = null,
     val fieldFocusText: String = "",

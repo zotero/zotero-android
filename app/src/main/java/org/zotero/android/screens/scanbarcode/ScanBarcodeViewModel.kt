@@ -4,6 +4,11 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -12,6 +17,7 @@ import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.emptyImmutableSet
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloader
 import org.zotero.android.attachmentdownloader.RemoteAttachmentDownloaderEventStream
@@ -157,7 +163,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
     ) {
         updateState {
             copy(
-                collectionKeys = collectionKeys,
+                collectionKeys = collectionKeys.toImmutableSet(),
                 libraryId = libraryId,
                 hasDarkBackground = hasDarkBackground,
             )
@@ -309,7 +315,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
             }
         }
         updateState {
-            copy(lookupRows = rowsList)
+            copy(lookupRows = rowsList.toPersistentList())
         }
     }
 
@@ -346,7 +352,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
             }
         }
         updateState {
-            copy(lookupRows = rows)
+            copy(lookupRows = rows.toPersistentList())
         }
     }
 
@@ -382,7 +388,7 @@ internal class ScanBarcodeViewModel @Inject constructor(
 
         updateState {
             copy(
-                lookupRows = lookupRowsMutable,
+                lookupRows = lookupRowsMutable.toPersistentList(),
                 lookupState = updatedLookupState
             )
         }
@@ -423,11 +429,11 @@ internal class ScanBarcodeViewModel @Inject constructor(
 }
 
 internal data class ScanBarcodeViewState(
-    val collectionKeys: Set<String> = emptySet(),
+    val collectionKeys: ImmutableSet<String> = emptyImmutableSet(),
     val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
     val hasDarkBackground: Boolean = false,
     val lookupState: State = State.waitingInput,
-    val lookupRows: List<LookupRow> = emptyList(),
+    val lookupRows: PersistentList<LookupRow> = persistentListOf(),
 ) : ViewState
 
 internal sealed class ScanBarcodeViewEffect : ViewEffect {

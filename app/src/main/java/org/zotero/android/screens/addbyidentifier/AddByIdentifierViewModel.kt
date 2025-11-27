@@ -3,6 +3,11 @@ package org.zotero.android.screens.addbyidentifier
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableSet
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -10,6 +15,7 @@ import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.emptyImmutableSet
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.navigation.phone.ARG_ADD_BY_IDENTIFIER
 import org.zotero.android.architecture.require
@@ -136,7 +142,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
         updateState {
             copy(
                 restoreLookupState = restoreLookupState,
-                collectionKeys = collectionKeys,
+                collectionKeys = collectionKeys.toImmutableSet(),
                 libraryId = libraryId,
                 hasDarkBackground = hasDarkBackground,
             )
@@ -336,7 +342,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
             }
         }
         updateState {
-            copy(lookupRows = rowsList)
+            copy(lookupRows = rowsList.toPersistentList())
         }
         closeAfterUpdateIfNeeded()
 
@@ -408,7 +414,7 @@ internal class AddByIdentifierViewModel @Inject constructor(
             }
         }
         updateState {
-            copy(lookupRows = rows)
+            copy(lookupRows = rows.toPersistentList())
         }
     }
 
@@ -430,12 +436,12 @@ internal class AddByIdentifierViewModel @Inject constructor(
 
 internal data class AddByIdentifierViewState(
     val identifierText: String = "",
-    val collectionKeys: Set<String> = emptySet(),
+    val collectionKeys: ImmutableSet<String> = emptyImmutableSet(),
     val libraryId: LibraryIdentifier = LibraryIdentifier.group(0),
     val restoreLookupState: Boolean = false,
     val hasDarkBackground: Boolean = false,
     val lookupState: AddByIdentifierViewModel.State = AddByIdentifierViewModel.State.waitingInput,
-    val lookupRows: List<LookupRow> = emptyList(),
+    val lookupRows: ImmutableList<LookupRow> = persistentListOf(),
 ) : ViewState
 
 internal sealed class AddByIdentifierViewEffect : ViewEffect {

@@ -6,6 +6,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -59,7 +62,7 @@ internal class AddNoteViewModel @Inject constructor(
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.AddNote) {
             viewModelScope.launch {
                 updateState {
-                    copy(tags = tagPickerResult.tags)
+                    copy(tags = tagPickerResult.tags.toPersistentList())
                 }
             }
         }
@@ -77,7 +80,7 @@ internal class AddNoteViewModel @Inject constructor(
                     copy(
                         title = this@AddNoteViewModel.addOrEditNoteArgs.title,
                         text = this@AddNoteViewModel.initialText,
-                        tags = this@AddNoteViewModel.initialTags
+                        tags = this@AddNoteViewModel.initialTags.toPersistentList()
                     )
                 }
             }
@@ -186,7 +189,7 @@ internal class AddNoteViewModel @Inject constructor(
 internal data class AddNoteViewState(
     val title: AddOrEditNoteArgs.TitleData? = null,
     val text: String = "",
-    var tags: List<Tag> = emptyList(),
+    var tags: PersistentList<Tag> = persistentListOf(),
     val backHandlerInterceptionEnabled: Boolean = true,
 ) : ViewState {
     fun formattedTags(): String {
