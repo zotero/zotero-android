@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +38,7 @@ import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTa
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.files.FileStore
+import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 import timber.log.Timber
 import java.io.File
@@ -64,7 +64,7 @@ internal class DashboardActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeAndTranslucency()
 
         KeyboardVisibilityEvent.setEventListener(
             this,

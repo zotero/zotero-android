@@ -15,7 +15,10 @@ import org.zotero.android.uicomponents.Strings
 @Composable
 internal fun PdfAnnotationEditPageTopBar(viewModel: PdfAnnotationEditPageViewModel) {
     TopAppBar(
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
         title = {
             Text(
                 text = stringResource(Strings.pdf_annotation_popover_page_label_title),

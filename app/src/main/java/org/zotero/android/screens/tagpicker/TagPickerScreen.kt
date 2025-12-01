@@ -1,8 +1,12 @@
 package org.zotero.android.screens.tagpicker
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -10,6 +14,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.tagpicker.row.TagPickerCreateTagRow
@@ -37,12 +42,15 @@ internal fun TagPickerScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 TagPickerTopBar(
                     onCancelClicked = onBack,
                     onSave = viewModel::onSave,
                     viewState = viewState,
+                    scrollBehavior = scrollBehavior,
                 )
             },
         ) {
@@ -84,6 +92,9 @@ internal fun TagPickerScreen(
                                 onTap = onSearchAction,
                             )
                         }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
                     }
                 }
 

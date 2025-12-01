@@ -235,6 +235,7 @@ class PdfReaderViewModel @Inject constructor(
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private lateinit var fragmentManager: FragmentManager
     private var isTablet: Boolean = false
+    private var backgroundColor: androidx.compose.ui.graphics.Color? = null
 
     private val handler = Handler(context.mainLooper)
 
@@ -417,6 +418,7 @@ class PdfReaderViewModel @Inject constructor(
         containerId: Int,
         fragmentManager: FragmentManager,
         isTablet: Boolean,
+        backgroundColor: androidx.compose.ui.graphics.Color,
     ) {
         initFileUris(uri)
         restartDisableForceScreenOnTimer()
@@ -424,6 +426,7 @@ class PdfReaderViewModel @Inject constructor(
         this.fragmentManager = fragmentManager
         this.containerId = containerId
         this.annotationMaxSideSize = annotationMaxSideSize
+        this.backgroundColor = backgroundColor
 
         searchResultHighlighter = SearchResultHighlighter(context)
 

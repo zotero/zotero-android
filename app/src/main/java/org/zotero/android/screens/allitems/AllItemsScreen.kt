@@ -3,6 +3,7 @@ package org.zotero.android.screens.allitems
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,10 +148,13 @@ internal fun AllItemsScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 AllItemsTopBar(
+                    scrollBehavior = scrollBehavior,
                     viewState = viewState,
                     viewModel = viewModel,
                     layoutType = layoutType,

@@ -1,7 +1,11 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.share.sharecollectionpicker.rows.ShareCollectionRowItem
 import org.zotero.android.screens.share.sharecollectionpicker.rows.shareCollectionRecursiveItem
@@ -42,6 +46,9 @@ internal fun ShareCollectionsPickerTable(
                     collectionItems = listOfCollectionsWithChildren,
                 )
             }
+        }
+        item {
+            Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
         }
     }
 }

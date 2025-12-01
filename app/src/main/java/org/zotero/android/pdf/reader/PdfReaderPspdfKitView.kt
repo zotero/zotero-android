@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.activity.compose.LocalActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +27,7 @@ fun PdfReaderPspdfKitView(
     val fragmentManager = activity.supportFragmentManager
     val layoutType = CustomLayoutSize.calculateLayoutType()
     vMInterface.annotationMaxSideSize = annotationMaxSideSize
+    val backgroundColor = MaterialTheme.colorScheme.surfaceContainer
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -39,6 +41,7 @@ fun PdfReaderPspdfKitView(
 
             vMInterface.init(
                 isTablet = layoutType.isTablet(),
+                backgroundColor = backgroundColor,
                 uri = uri,
                 containerId = fragmentContainerView.id,
                 fragmentManager = fragmentManager,

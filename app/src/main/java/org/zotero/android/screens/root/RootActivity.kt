@@ -3,11 +3,11 @@ package org.zotero.android.screens.root
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.architecture.Screen
+import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
 import org.zotero.android.screens.dashboard.DashboardActivity
 import org.zotero.android.screens.onboarding.OnboardingActivity
 import org.zotero.android.screens.share.ShareActivity
@@ -18,7 +18,7 @@ class RootActivity : BaseActivity(), Screen<RootViewState, RootViewEffect> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeAndTranslucency()
 
         viewModel.init(this.intent)
         viewModel.observeViewChanges(this)

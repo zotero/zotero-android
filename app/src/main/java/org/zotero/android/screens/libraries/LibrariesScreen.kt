@@ -2,6 +2,7 @@ package org.zotero.android.screens.libraries
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,9 +52,12 @@ internal fun LibrariesScreen(
             }
         }
 
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 LibrariesTopBar(
+                    scrollBehavior = scrollBehavior,
                     onSettingsTapped = onSettingsTapped,
                 )
             },

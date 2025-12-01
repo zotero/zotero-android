@@ -11,6 +11,8 @@ import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +32,7 @@ import org.zotero.android.uicomponents.textinput.AppSearchBarM3
 internal fun AllItemsPhoneAppSearchBar(
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel,
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     var isInSearchMode by remember { mutableStateOf(false) }
 
@@ -40,6 +43,11 @@ internal fun AllItemsPhoneAppSearchBar(
         ) { searchModeActive ->
             if (!searchModeActive) {
                 TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    scrollBehavior = scrollBehavior,
                     title = {
                         Text(
                             text = viewState.collectionName,

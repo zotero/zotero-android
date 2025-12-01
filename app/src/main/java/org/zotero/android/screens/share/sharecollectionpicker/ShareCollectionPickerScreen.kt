@@ -1,5 +1,6 @@
 package org.zotero.android.screens.share.sharecollectionpicker
 
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,9 +34,12 @@ internal fun ShareCollectionPickerScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 ShareCollectionPickerTopBar(
+                    scrollBehavior = scrollBehavior,
                     onBack = onBack,
                 )
             },

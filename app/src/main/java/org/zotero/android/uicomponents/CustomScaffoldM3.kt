@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import org.zotero.android.uicomponents.snackbar.CustomSnackbarHost
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 
@@ -20,12 +22,19 @@ fun CustomScaffoldM3(
     snackbarMessage: SnackbarMessage? = null,
     topBar: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit = {},
+    scrollBehavior: TopAppBarScrollBehavior? = null,
 //    topBarColor: Color = MaterialTheme.colorScheme.surface,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable (PaddingValues) -> Unit
 ) {
+
+    var newModifier: Modifier = modifier
+
+    if (scrollBehavior != null) {
+        newModifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+    }
     Scaffold(
-        modifier = modifier,
+        modifier = newModifier,
         topBar = topBar,
 //        topBar = {
 //            val modifierTopBar = Modifier
@@ -45,8 +54,9 @@ fun CustomScaffoldM3(
         containerColor = containerColor,
         content = { it ->
 //            Box(modifier = Modifier.background(containerColor)) {
+
                 Box(modifier = Modifier
-                    .padding(it)
+                    .padding(top = it.calculateTopPadding())
 //                    .background(containerColor)
                 ) {
                     content(it)

@@ -1,9 +1,9 @@
 package org.zotero.android.screens.itemdetails
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -105,7 +105,9 @@ internal fun ItemDetailsScreen(
 
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 if (viewState.isEditing) {
                     ItemDetailsEditingTopBar(
@@ -117,6 +119,7 @@ internal fun ItemDetailsScreen(
                     ItemDetailsTopBar(
                         onViewOrEditClicked = viewModel::onSaveOrEditClicked,
                         onCancelOrBackClicked = viewModel::onCancelOrBackClicked,
+                        scrollBehavior = scrollBehavior,
                     )
                 }
             },

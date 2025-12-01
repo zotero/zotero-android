@@ -11,6 +11,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -23,6 +25,7 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun ShareScreenTopBar(
+    scrollBehavior: TopAppBarScrollBehavior,
     onCancelClicked: () -> Unit,
     onSave: () -> Unit,
     isLeftButtonEnabled: Boolean,
@@ -33,6 +36,11 @@ internal fun ShareScreenTopBar(
     when (attachmentError) {
         is AttachmentState.Error.quotaLimit, is AttachmentState.Error.webDavFailure, is AttachmentState.Error.apiFailure -> {
             TopAppBar(
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                ),
                 title = {
                 },
                 navigationIcon = {
@@ -54,6 +62,11 @@ internal fun ShareScreenTopBar(
 
         else -> {
             TopAppBar(
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+                ),
                 title = {
                 },
                 navigationIcon = {

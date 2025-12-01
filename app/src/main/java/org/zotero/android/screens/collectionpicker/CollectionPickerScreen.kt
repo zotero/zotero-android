@@ -1,5 +1,6 @@
 package org.zotero.android.screens.collectionpicker
 
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,11 +36,14 @@ internal fun CollectionPickerScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 CollectionPickerTopBar(
                     title = viewState.title,
                     multipleSelectionAllowed = viewState.multipleSelectionAllowed,
+                    scrollBehavior = scrollBehavior,
                     onBackClicked = onBack,
                     onAdd = viewModel::confirmSelection,
                 )

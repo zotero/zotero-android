@@ -1,5 +1,6 @@
 package org.zotero.android.screens.allitems
 
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import org.zotero.android.architecture.ui.CustomLayoutSize
 
@@ -8,6 +9,7 @@ internal fun AllItemsTopBar(
     viewState: AllItemsViewState,
     viewModel: AllItemsViewModel,
     layoutType: CustomLayoutSize.LayoutType,
+    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     if (viewState.isEditing) {
         AllItemsEditingTopBar(
@@ -22,7 +24,7 @@ internal fun AllItemsTopBar(
         if (layoutType.isTablet()) {
             AllItemsTabletSearchBar(viewState, viewModel)
         } else {
-            AllItemsPhoneAppSearchBar(viewState, viewModel)
+            AllItemsPhoneAppSearchBar(viewState, viewModel, scrollBehavior)
         }
     }
 

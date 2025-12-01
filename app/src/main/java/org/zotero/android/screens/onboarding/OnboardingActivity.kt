@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
+import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
 import org.zotero.android.screens.login.LoginActivity
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
@@ -15,7 +15,7 @@ internal class OnboardingActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeAndTranslucency()
 
         setContent {
             AppThemeM3 {

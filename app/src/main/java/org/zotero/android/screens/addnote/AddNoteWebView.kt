@@ -10,6 +10,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ internal fun BoxScope.AddNoteWebView(viewModel: AddNoteViewModel, isKeyboardShow
     AndroidView(
         modifier = Modifier
             .align(Alignment.TopCenter)
+            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
             .padding(bottom = bottomPadding),
         factory = { context ->
             val webView = WebView(context)

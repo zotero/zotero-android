@@ -7,6 +7,8 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +64,7 @@ internal fun PdfReaderPspdfKitBox(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
             .onSizeChanged { layoutSize ->
                 val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
                 anchoredDraggableState.updateAnchors(

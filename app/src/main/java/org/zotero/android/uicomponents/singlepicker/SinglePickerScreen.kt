@@ -1,8 +1,12 @@
 package org.zotero.android.uicomponents.singlepicker
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,10 +25,13 @@ fun SinglePickerScreen(
         val pickerArgs = ScreenArguments.singlePickerArgs
         val singlePickerState = pickerArgs.singlePickerState
         val layoutType = CustomLayoutSize.calculateLayoutType()
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 SinglePickerTopBar(
                     title = pickerArgs.title,
+                    scrollBehavior = scrollBehavior,
                     onCancel = onCloseClicked
                 )
             },
@@ -46,6 +53,9 @@ fun SinglePickerScreen(
                                 .getDefault()
                                 .post(SinglePickerResult(option.id, pickerArgs.callPoint))
                         })
+                }
+                item {
+                    Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
                 }
             }
         }

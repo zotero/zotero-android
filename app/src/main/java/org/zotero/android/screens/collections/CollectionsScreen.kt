@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,11 +69,13 @@ internal fun CollectionsScreen(
                 else -> {}
             }
         }
-
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 CollectionsTopBar(
                     libraryName = viewState.libraryName,
+                    scrollBehavior = scrollBehavior,
                     navigateToLibraries = viewModel::navigateToLibraries,
                     onAdd = viewModel::onAdd,
                 )

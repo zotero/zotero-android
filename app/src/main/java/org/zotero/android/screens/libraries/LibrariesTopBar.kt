@@ -9,6 +9,8 @@ import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
@@ -19,9 +21,15 @@ import org.zotero.android.uicomponents.Strings
 
 @Composable
 internal fun LibrariesTopBar(
+    scrollBehavior: TopAppBarScrollBehavior,
     onSettingsTapped: () -> Unit,
 ) {
     TopAppBar(
+        scrollBehavior = scrollBehavior,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+        ),
         title = {
             Text(
                 text = stringResource(id = Strings.toolbar_libraries),

@@ -1,6 +1,7 @@
 package org.zotero.android.pdf.reader
 
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.FragmentManager
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import org.zotero.android.pdf.cache.AnnotationPreviewMemoryCache
@@ -23,6 +24,7 @@ interface PdfReaderVMInterface {
         containerId: Int,
         fragmentManager: FragmentManager,
         isTablet: Boolean,
+        backgroundColor: Color,
     )
 
     fun onTagsClicked(annotation: PDFAnnotation)

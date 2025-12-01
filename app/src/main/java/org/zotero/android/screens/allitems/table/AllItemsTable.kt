@@ -1,10 +1,13 @@
 package org.zotero.android.screens.allitems.table
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -33,9 +36,9 @@ internal fun AllItemsTable(
             modifier = Modifier.fillMaxSize(),
             state = lazyListState,
         ) {
-            itemsIndexed(
-                items = itemCellModels, key = { _, item -> item.hashCode() }
-            ) { index, item ->
+            items(
+                items = itemCellModels, key = { item -> item.hashCode() }
+            ) { item ->
                 Box(modifier = Modifier.animateItem()) {
                     ItemRow(
                         cellModel = item,
@@ -47,6 +50,9 @@ internal fun AllItemsTable(
                         isItemSelected = isItemSelected,
                     )
                 }
+            }
+            item {
+                Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
             }
         }
 

@@ -1,8 +1,11 @@
 package org.zotero.android.screens.settings.cite
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,6 +38,9 @@ internal fun SettingsCiteCitationStylesSection(
                 title = stringResource(id = Strings.settings_cite_get_more_styles),
                 onItemTapped = viewModel::navigateToCiteSearch
             )
+        }
+        item {
+            Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
         }
     }
 }

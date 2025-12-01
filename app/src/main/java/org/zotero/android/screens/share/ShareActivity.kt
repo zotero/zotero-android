@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
+import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
 import org.zotero.android.screens.share.navigation.ShareRootNavigation
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 import javax.inject.Inject
@@ -19,7 +19,7 @@ internal class ShareActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdgeAndTranslucency()
         shareRawAttachmentLoader.loadFromIntent(intent)
         setContent {
             AppThemeM3 {

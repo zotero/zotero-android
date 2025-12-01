@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,12 +38,15 @@ internal fun FilterScreenPhone(
         }
     }
     AppThemeM3 {
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 FilterTopBar(
                     onDone = viewModel::onDone,
                     viewState = viewState,
                     viewModel = viewModel,
+                    scrollBehavior = scrollBehavior,
                 )
             },
             bottomBar = {

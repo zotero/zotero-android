@@ -1,5 +1,6 @@
 package org.zotero.android.screens.settings.csllocalepicker
 
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,9 +29,12 @@ internal fun SettingsCslLocalePickerScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 SettingsCslLocalePickerTopBar(
+                    scrollBehavior = scrollBehavior,
                     onBack = onBack,
                 )
             },

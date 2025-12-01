@@ -1,5 +1,6 @@
 package org.zotero.android.screens.settings.cite
 
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,9 +34,12 @@ internal fun SettingsCiteScreen(
                 }
             }
         }
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
         CustomScaffoldM3(
+            scrollBehavior = scrollBehavior,
             topBar = {
                 SettingsCiteTopBar(
+                    scrollBehavior = scrollBehavior,
                     onBack = onBack,
                 )
             },

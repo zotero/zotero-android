@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,6 +30,7 @@ internal fun BoxScope.AddNoteTagSelector(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .fillMaxWidth()
+            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
             .height(48.dp)
             .background(color = MaterialTheme.colorScheme.surfaceContainer)
             .padding(horizontal = 16.dp)

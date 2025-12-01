@@ -1,11 +1,14 @@
 package org.zotero.android.screens.itemdetails
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -43,6 +46,9 @@ internal fun ItemDetailsEditScreen(
             NewSettingsDivider()
         }
         itemDetailsEditDataRows(viewState, viewModel, reorderState)
+        item {
+            Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
+        }
     }
 }
 
