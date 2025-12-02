@@ -7,7 +7,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
@@ -31,12 +30,12 @@ internal fun PdfReaderSidebar(
 ) {
     val selectorOptions = sliderOptions.map {
         stringResource(id = it.optionStringId)
-
     }
 
     val selectedOption = viewState.sidebarSliderSelectedOption
 
-    SecondaryTabRow(selectedTabIndex = selectedOption.ordinal) {
+    SecondaryTabRow(
+        selectedTabIndex = selectedOption.ordinal) {
         selectorOptions.forEachIndexed { index, selectorOption ->
             val isSelected = selectedOption.ordinal == index
             Tab(
@@ -49,7 +48,7 @@ internal fun PdfReaderSidebar(
                     Text(
                         text = selectorOption,
                         color = textColor,
-                        style = MaterialTheme.typography.titleSmall.copy(fontSize = 11.sp),
+                        style = MaterialTheme.typography.titleSmall,
                     )
 
                 },

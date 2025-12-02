@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
-import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebarDivider
 import org.zotero.android.pdf.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.pdf.reader.sidebar.sectionVerticalPadding
 import org.zotero.android.uicomponents.Strings
@@ -31,7 +31,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
     val areTagsPresent = annotation.tags.isNotEmpty()
     val shouldDisplayTagsSection = (isSelected || areTagsPresent) && annotation.isZoteroAnnotation
     if (shouldDisplayTagsSection) {
-        SidebarDivider()
+        PdfReaderSidebarDivider()
     }
     if (shouldDisplayTagsSection) {
         Box(modifier = Modifier
@@ -50,7 +50,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
                         .sectionHorizontalPadding(),
                     text = annotation.tags.joinToString(separator = ", ") { it.name },
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
                 Text(

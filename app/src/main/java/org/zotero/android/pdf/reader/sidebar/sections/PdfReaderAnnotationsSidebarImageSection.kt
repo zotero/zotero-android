@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
-import org.zotero.android.pdf.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.pdf.reader.sidebar.sectionVerticalPadding
 
 @Composable
@@ -21,7 +20,6 @@ internal fun PdfReaderAnnotationsSidebarImageSection(
     if (cachedBitmap != null) {
         Image(
             modifier = Modifier
-                .sectionHorizontalPadding()
                 .sectionVerticalPadding()
                 .fillMaxWidth()
                 .heightIn(max = vMInterface.annotationMaxSideSize.pxToDp()),

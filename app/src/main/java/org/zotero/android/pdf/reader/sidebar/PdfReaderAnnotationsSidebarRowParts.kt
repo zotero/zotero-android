@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 internal fun Modifier.sectionHorizontalPadding(): Modifier {
-    return this.padding(horizontal = 8.dp)
+    return this.padding(horizontal = 16.dp)
 }
 
 internal fun Modifier.sectionVerticalPadding(): Modifier {

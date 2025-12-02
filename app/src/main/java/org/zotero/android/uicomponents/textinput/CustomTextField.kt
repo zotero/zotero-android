@@ -157,6 +157,7 @@ fun CustomTextField(
     errorText: String? = null,
     focusRequester: FocusRequester = remember { FocusRequester() },
     hintColor: Color = Color.Unspecified,
+    hintTextStyle: TextStyle = CustomTheme.typography.default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     maxCharacters: Int = Int.MAX_VALUE,
@@ -238,7 +239,7 @@ fun CustomTextField(
                     showHint = showHint,
                     hint = hint,
                     hintColor = hintColor,
-                    textStyle = textStyle,
+                    textStyle = hintTextStyle,
                     innerTextField = innerTextField
                 )
             }

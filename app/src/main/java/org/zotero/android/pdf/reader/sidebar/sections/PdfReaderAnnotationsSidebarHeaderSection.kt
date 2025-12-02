@@ -53,7 +53,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(24.dp),
             painter = painterResource(id = icon),
             contentDescription = null,
             colorFilter = ColorFilter.tint(annotationColor),

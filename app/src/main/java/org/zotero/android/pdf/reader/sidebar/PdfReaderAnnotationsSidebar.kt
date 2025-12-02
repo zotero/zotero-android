@@ -49,127 +49,124 @@ internal fun PdfReaderAnnotationsSidebar(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer),
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .windowInsetsPadding(NavigationBarDefaults.windowInsets),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
+        LazyColumn(
+            state = annotationsLazyListState,
+            verticalArrangement = Arrangement.Absolute.spacedBy(16.dp),
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            PdfSidebarSearchBar(
-                searchValue = viewState.annotationSearchTerm,
-                onSearch = vMInterface::onAnnotationSearch,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyColumn(
-                state = annotationsLazyListState,
-                verticalArrangement = Arrangement.Absolute.spacedBy(13.dp),
-            ) {
-                itemsIndexed(
-                    items = viewState.sortedKeys,
-                ) { _, key ->
-                    val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
-                    val isSelected = viewState.isAnnotationSelected(annotation.key)
-                    val horizontalPadding = if (isSelected && annotation.isZoteroAnnotation) 13.dp else 16.dp
-                    val roundedCornerShape = RoundedCornerShape(10.dp)
-                    var rowModifier: Modifier = Modifier
-                        .padding(horizontal = horizontalPadding)
-                        .clip(shape = roundedCornerShape)
-                        .background(MaterialTheme.colorScheme.surface)
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                PdfSidebarSearchBar(
+                    searchValue = viewState.annotationSearchTerm,
+                    onSearch = vMInterface::onAnnotationSearch,
+                )
+            }
+            itemsIndexed(
+                items = viewState.sortedKeys,
+            ) { _, key ->
+                val annotation = vMInterface.annotation(key) ?: return@itemsIndexed
+                val isSelected = viewState.isAnnotationSelected(annotation.key)
+                val roundedCornerShape = RoundedCornerShape(14.dp)
+                var rowModifier: Modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .clip(shape = roundedCornerShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
 
-                    if (isSelected) {
-                        rowModifier = rowModifier.border(
-                            width = 3.dp,
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = roundedCornerShape
+                if (isSelected) {
+                    rowModifier = rowModifier.border(
+                        width = 3.dp,
+                        color = MaterialTheme.colorScheme.secondary,
+                        shape = roundedCornerShape
+                    )
+                }
+
+                Column(
+                    modifier = rowModifier
+                        .safeClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { vMInterface.selectAnnotation(key) },
                         )
+                ) {
+                    val annotationColor =
+                        Color(annotation.displayColor.toColorInt())
+                    val loadPreview = {
+                        val preview =
+                            vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)
+                        if (preview == null) {
+                            vMInterface.loadAnnotationPreviews(listOf(annotation.key))
+                        }
+                        preview
                     }
 
-                    Column(
-                        modifier = rowModifier
-                            .safeClickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { vMInterface.selectAnnotation(key) },
+                    PdfReaderAnnotationsSidebarHeaderSection(
+                        annotation = annotation,
+                        annotationColor = annotationColor,
+                        viewState = viewState,
+                        vMInterface = vMInterface,
+                    )
+                    PdfReaderSidebarDivider()
+
+                    when (annotation.type) {
+                        AnnotationType.note -> {
+                            PdfReaderAnnotationsSidebarNoteRow(
+                                annotation = annotation,
+                                vMInterface = vMInterface,
+                                viewState = viewState,
                             )
-                    ) {
-                        val annotationColor =
-                            Color(annotation.displayColor.toColorInt())
-                        val loadPreview = {
-                            val preview =
-                                vMInterface.annotationPreviewMemoryCache.getBitmap(annotation.key)
-                            if (preview == null) {
-                                vMInterface.loadAnnotationPreviews(listOf(annotation.key))
-                            }
-                            preview
                         }
 
-                        PdfReaderAnnotationsSidebarHeaderSection(
-                            annotation = annotation,
-                            annotationColor = annotationColor,
-                            viewState = viewState,
-                            vMInterface = vMInterface,
-                        )
-                        SidebarDivider()
+                        AnnotationType.highlight -> {
+                            PdfReaderAnnotationsSidebarHighlightRow(
+                                annotation = annotation,
+                                annotationColor = annotationColor,
+                                vMInterface = vMInterface,
+                                viewState = viewState,
+                            )
+                        }
 
-                        when (annotation.type) {
-                            AnnotationType.note -> {
-                                PdfReaderAnnotationsSidebarNoteRow(
-                                    annotation = annotation,
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                )
-                            }
+                        AnnotationType.ink -> {
+                            PdfReaderAnnotationsSidebarInkRow(
+                                vMInterface = vMInterface,
+                                viewState = viewState,
+                                annotation = annotation,
+                                loadPreview = loadPreview,
+                            )
+                        }
 
-                            AnnotationType.highlight -> {
-                                PdfReaderAnnotationsSidebarHighlightRow(
-                                    annotation = annotation,
-                                    annotationColor = annotationColor,
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                )
-                            }
+                        AnnotationType.image -> {
+                            PdfReaderAnnotationsSidebarImageRow(
+                                annotation = annotation,
+                                loadPreview = loadPreview,
+                                vMInterface = vMInterface,
+                                viewState = viewState,
+                            )
+                        }
 
-                            AnnotationType.ink -> {
-                                PdfReaderAnnotationsSidebarInkRow(
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                    annotation = annotation,
-                                    loadPreview = loadPreview,
-                                )
-                            }
+                        AnnotationType.text -> {
+                            PdfReaderAnnotationsSidebarFreeTextRow(
+                                vMInterface = vMInterface,
+                                viewState = viewState,
+                                annotation = annotation,
+                                loadPreview = loadPreview,
+                            )
+                        }
 
-                            AnnotationType.image -> {
-                                PdfReaderAnnotationsSidebarImageRow(
-                                    annotation = annotation,
-                                    loadPreview = loadPreview,
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                )
-                            }
-
-                            AnnotationType.text -> {
-                                PdfReaderAnnotationsSidebarFreeTextRow(
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                    annotation = annotation,
-                                    loadPreview = loadPreview,
-                                )
-                            }
-                            AnnotationType.underline -> {
-                                PdfReaderAnnotationsSidebarUnderlineRow(
-                                    annotation = annotation,
-                                    annotationColor = annotationColor,
-                                    vMInterface = vMInterface,
-                                    viewState = viewState,
-                                )
-                            }
+                        AnnotationType.underline -> {
+                            PdfReaderAnnotationsSidebarUnderlineRow(
+                                annotation = annotation,
+                                annotationColor = annotationColor,
+                                vMInterface = vMInterface,
+                                viewState = viewState,
+                            )
                         }
                     }
                 }
-                item {
-                    Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
-                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(layoutType.calculateAllItemsBottomPanelHeight()))
             }
         }
         PdfReaderBottomPanel(

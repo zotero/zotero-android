@@ -38,9 +38,11 @@ internal fun PdfReaderAnnotationsSidebarCommentSection(
             } else {
                 annotation.comment
             },
-            textStyle = MaterialTheme.typography.labelLarge,
+            textStyle = MaterialTheme.typography.bodyMedium,
+            textColor = MaterialTheme.colorScheme.onSurface,
             hint = stringResource(id = Strings.pdf_annotations_sidebar_add_comment),
             hintColor = MaterialTheme.colorScheme.primary,
+            hintTextStyle = MaterialTheme.typography.labelLarge,
             ignoreTabsAndCaretReturns = false,
             onValueChange = { vMInterface.onCommentTextChange(annotationKey = annotation.key, it) })
     } else if (annotation.comment.isNotBlank()) {
@@ -51,7 +53,7 @@ internal fun PdfReaderAnnotationsSidebarCommentSection(
                 .padding(top = if (shouldAddTopPadding) 8.dp else 0.dp),
             text = annotation.comment,
             color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }
