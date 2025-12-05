@@ -1,19 +1,21 @@
 package org.zotero.android.screens.allitems
 
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AppBarRow
-import androidx.compose.material3.AppBarRowScope
-import androidx.compose.material3.BottomAppBarDefaults
+import androidx.compose.material3.AppBarMenuState
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FlexibleBottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.Attachment
+import org.zotero.android.screens.allitems.data.AllItemsBottomPanelItem
+import org.zotero.android.screens.allitems.data.AllItemsBottomPanelItems
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 
@@ -24,13 +26,53 @@ internal fun AllItemsEditingBottomPanel(
 ) {
     val errorRedColor = MaterialTheme.colorScheme.error
 
+    var panelItems: List<AllItemsBottomPanelItem> = emptyList()
+    var overflowItems: List<AllItemsBottomPanelItem> = emptyList()
+
+    val size = viewState.selectedKeys?.size ?: 0
+    if (size == 1) {
+        val actions = editingSingleItemSelectedActions(
+            viewModel = viewModel,
+            viewState = viewState,
+            errorRedColor = errorRedColor
+        )
+        panelItems = actions.panelItems
+        overflowItems = actions.overflowItems
+    } else if (size > 1) {
+        val actions = editingMultipleItemsSelectedActions(
+            viewModel = viewModel,
+            viewState = viewState,
+            errorRedColor = errorRedColor
+        )
+        panelItems = actions.panelItems
+        overflowItems = actions.overflowItems
+    }
+
+    val maxItemsInPanel = 6
+    val paneItemsToDisplay = panelItems.take(maxItemsInPanel)
+    val extraOverflowItems =
+        if (panelItems.size > maxItemsInPanel) {
+            panelItems.subList(maxItemsInPanel, panelItems.size)
+        } else{
+            emptyList()
+        }
+
+    overflowItems = extraOverflowItems + overflowItems
+
+    val menuState = remember { AppBarMenuState() }
     FlexibleBottomAppBar(
-        horizontalArrangement = BottomAppBarDefaults.FlexibleFixedHorizontalArrangement,
-        contentPadding = PaddingValues(horizontal = 0.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        horizontalArrangement = Arrangement.SpaceBetween,
         content = {
-            AppBarRow(
-                overflowIndicator = { menuState ->
+            paneItemsToDisplay.forEach {
+                AllItemsBottomPanelAppbarContent(
+                    overflowTextResId = it.overflowTextResId,
+                    onClick = it.onClick,
+                    iconRes = it.iconRes,
+                    iconTint = it.iconTint
+                )
+            }
+            if (overflowItems.isNotEmpty()) {
+                Box {
                     IconButton(
                         onClick = {
                             if (menuState.isExpanded) {
@@ -42,207 +84,267 @@ internal fun AllItemsEditingBottomPanel(
                     ) {
                         Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Overflow")
                     }
+
+                    DropdownMenu(
+                        expanded = menuState.isExpanded,
+                        onDismissRequest = { menuState.dismiss() },
+                    ) {
+                        overflowItems
+                            .forEach { item ->
+                                AllItemsBottomPanelMenuContent(
+                                    onClick = item.onClick,
+                                    iconRes = item.iconRes,
+                                    iconTint = item.iconTint,
+                                    overflowTextResId = item.overflowTextResId,
+                                    textColor = item.textColor
+                                )
+                            }
+                    }
+
                 }
-            ) {
-                val size = viewState.selectedKeys?.size ?: 0
-                if (size == 1) {
-                    editingSingleItemSelectedActions(
-                        viewModel = viewModel,
-                        viewState = viewState,
-                        errorRedColor = errorRedColor
-                    )
-                } else if (size > 1) {
-                    editingMultipleItemsSelectedActions(
-                        viewModel = viewModel,
-                        viewState = viewState,
-                        errorRedColor = errorRedColor
-                    )
-                }
+
             }
+
         })
 }
 
-private fun AppBarRowScope.editingMultipleItemsSelectedActions(
+private fun editingMultipleItemsSelectedActions(
     viewModel: AllItemsViewModel,
     viewState: AllItemsViewState,
     errorRedColor: Color
-) {
+): AllItemsBottomPanelItems {
+    val panelItems = mutableListOf<AllItemsBottomPanelItem>()
+    val overflowItems = mutableListOf<AllItemsBottomPanelItem>()
+
     if (viewState.isCollectionTrash) {
-        allItemsBottomPanelItem(
-            iconRes = Drawables.restore_trash,
-            overflowTextResId = Strings.restore,
-            onClick = { viewModel.onTrashRestore() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.restore_trash,
+                overflowTextResId = Strings.restore,
+                onClick = { viewModel.onTrashRestore() })
+        )
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.delete_24px,
-            overflowTextResId = Strings.delete,
-            iconTint = errorRedColor,
-            textColor = errorRedColor,
-            onClick = { viewModel.onTrashDelete() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.delete_24px,
+                overflowTextResId = Strings.delete,
+                iconTint = errorRedColor,
+                textColor = errorRedColor,
+                onClick = { viewModel.onTrashDelete() })
+        )
 
-        DownloadAndRemoveAttachmentBlock(
+        downloadAndRemoveAttachmentBlock(
             viewModel = viewModel,
+            panelItems = panelItems,
+            overflowItems = overflowItems
         )
     } else {
-        allItemsBottomPanelItem(
-            iconRes = Drawables.create_new_folder_24px,
-            overflowTextResId = Strings.items_action_add_to_collection,
-            onClick = { viewModel.onAddToCollection() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.create_new_folder_24px,
+                overflowTextResId = Strings.items_action_add_to_collection,
+                onClick = { viewModel.onAddToCollection() })
+        )
 
         if (viewState.isCollectionACollection) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.remove_from_collection,
-                overflowTextResId = Strings.items_action_remove_from_collection,
-                onClick = { viewModel.onRemoveFromCollection() }
+            overflowItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.remove_from_collection,
+                    overflowTextResId = Strings.items_action_remove_from_collection,
+                    onClick = { viewModel.onRemoveFromCollection() })
             )
         }
 
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.delete_24px,
-            overflowTextResId = Strings.move_to_trash,
-            iconTint = errorRedColor,
-            textColor = errorRedColor,
-            onClick = { viewModel.onMoveToTrash() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.delete_24px,
+                overflowTextResId = Strings.move_to_trash,
+                iconTint = errorRedColor,
+                textColor = errorRedColor,
+                onClick = { viewModel.onMoveToTrash() })
+        )
 
         if (viewModel.shouldIncludeCopyCitationAndBibliographyButtons()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.cite,
-                overflowTextResId = Strings.citation_copy_citation,
-                onClick = { viewModel.onCopyCitation() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.cite,
+                    overflowTextResId = Strings.citation_copy_citation,
+                    onClick = { viewModel.onCopyCitation() })
+            )
 
-            allItemsBottomPanelItem(
-                iconRes = Drawables.bibliography,
-                overflowTextResId = Strings.citation_copy_bibliography,
-                onClick = { viewModel.onCopyBibliography() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.bibliography,
+                    overflowTextResId = Strings.citation_copy_bibliography,
+                    onClick = { viewModel.onCopyBibliography() })
+            )
         }
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.share,
-            overflowTextResId = Strings.share,
-            onClick = { viewModel.onShare() }
-        )
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.share,
+                overflowTextResId = Strings.share,
+                onClick = { viewModel.onShare() }
+            ))
 
-
-        DownloadAndRemoveAttachmentBlock(
+        downloadAndRemoveAttachmentBlock(
             viewModel = viewModel,
+            panelItems = panelItems,
+            overflowItems = overflowItems
         )
     }
-
+    return AllItemsBottomPanelItems(panelItems = panelItems, overflowItems = overflowItems)
 
 }
 
-private fun AppBarRowScope.DownloadAndRemoveAttachmentBlock(
+private fun downloadAndRemoveAttachmentBlock(
     viewModel: AllItemsViewModel,
+    panelItems: MutableList<AllItemsBottomPanelItem>,
+    overflowItems: MutableList<AllItemsBottomPanelItem>
 ) {
-    allItemsBottomPanelItem(
-        iconRes = Drawables.download_24px,
-        overflowTextResId = Strings.items_action_download,
-        onClick = { viewModel.onDownloadSelectedAttachments() })
+    panelItems.add(
+        AllItemsBottomPanelItem(
+            iconRes = Drawables.download_24px,
+            overflowTextResId = Strings.items_action_download,
+            onClick = { viewModel.onDownloadSelectedAttachments() })
+    )
 
-    allItemsBottomPanelItem(
-        iconRes = Drawables.file_download_off_24px,
-        overflowTextResId = Strings.items_action_remove_download,
-        onClick = { viewModel.onRemoveSelectedAttachments() })
+    overflowItems.add(
+        AllItemsBottomPanelItem(
+            iconRes = Drawables.file_download_off_24px,
+            overflowTextResId = Strings.items_action_remove_download,
+            onClick = { viewModel.onRemoveSelectedAttachments() })
+    )
 }
 
 
-private fun AppBarRowScope.editingSingleItemSelectedActions(
+private fun editingSingleItemSelectedActions(
     viewModel: AllItemsViewModel,
     viewState: AllItemsViewState,
     errorRedColor: Color,
-) {
-    if (viewState.isCollectionTrash) {
-        allItemsBottomPanelItem(
-            iconRes = Drawables.restore_trash,
-            overflowTextResId = Strings.restore,
-            onClick = { viewModel.onTrashRestore() })
+): AllItemsBottomPanelItems {
+    val panelItems = mutableListOf<AllItemsBottomPanelItem>()
+    val overflowItems = mutableListOf<AllItemsBottomPanelItem>()
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.delete_24px,
-            overflowTextResId = Strings.delete,
-            iconTint = errorRedColor,
-            textColor = errorRedColor,
-            onClick = { viewModel.onTrashDelete() })
+    if (viewState.isCollectionTrash) {
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.restore_trash,
+                overflowTextResId = Strings.restore,
+                onClick = { viewModel.onTrashRestore() })
+        )
+
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.delete_24px,
+                overflowTextResId = Strings.delete,
+                iconTint = errorRedColor,
+                textColor = errorRedColor,
+                onClick = { viewModel.onTrashDelete() })
+        )
     } else {
-        allItemsBottomPanelItem(
-            iconRes = Drawables.create_new_folder_24px,
-            overflowTextResId = Strings.items_action_add_to_collection,
-            onClick = { viewModel.onAddToCollection() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.create_new_folder_24px,
+                overflowTextResId = Strings.items_action_add_to_collection,
+                onClick = { viewModel.onAddToCollection() })
+        )
 
         if (viewModel.shouldIncludeRemoveFromCollectionButton()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.remove_from_collection,
-                overflowTextResId = Strings.items_action_remove_from_collection,
-                onClick = { viewModel.onRemoveFromCollection() })
+            overflowItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.remove_from_collection,
+                    overflowTextResId = Strings.items_action_remove_from_collection,
+                    onClick = { viewModel.onRemoveFromCollection() })
+            )
         }
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.delete_24px,
-            overflowTextResId = Strings.move_to_trash,
-            iconTint = errorRedColor,
-            textColor = errorRedColor,
-            onClick = { viewModel.onMoveToTrash() })
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.delete_24px,
+                overflowTextResId = Strings.move_to_trash,
+                iconTint = errorRedColor,
+                textColor = errorRedColor,
+                onClick = { viewModel.onMoveToTrash() })
+        )
 
         if (viewModel.shouldIncludeCopyCitationAndBibliographyButtons()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.cite,
-                overflowTextResId = Strings.citation_copy_citation,
-                onClick = { viewModel.onCopyCitation() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.cite,
+                    overflowTextResId = Strings.citation_copy_citation,
+                    onClick = { viewModel.onCopyCitation() })
+            )
 
-            allItemsBottomPanelItem(
-                iconRes = Drawables.bibliography,
-                overflowTextResId = Strings.citation_copy_bibliography,
-                onClick = { viewModel.onCopyBibliography() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.bibliography,
+                    overflowTextResId = Strings.citation_copy_bibliography,
+                    onClick = { viewModel.onCopyBibliography() })
+            )
         }
 
-        allItemsBottomPanelItem(
-            iconRes = Drawables.share,
-            overflowTextResId = Strings.share,
-            onClick = { viewModel.onShare() }
+        panelItems.add(
+            AllItemsBottomPanelItem(
+                iconRes = Drawables.share,
+                overflowTextResId = Strings.share,
+                onClick = { viewModel.onShare() })
         )
 
         if (viewModel.shouldIncludeRetrieveMetadataButton()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.retrieve_metadata_24px,
-                overflowTextResId = Strings.items_action_retrieve_metadata,
-                onClick = { viewModel.onShowRetrieveDialog() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.retrieve_metadata_24px,
+                    overflowTextResId = Strings.items_action_retrieve_metadata,
+                    onClick = { viewModel.onShowRetrieveDialog() })
+            )
         }
 
         if (viewModel.shouldIncludeCreateParentButton()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.add_24px,
-                overflowTextResId = Strings.items_action_create_parent,
-                onClick = { viewModel.onCreateDialog() })
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.add_24px,
+                    overflowTextResId = Strings.items_action_create_parent,
+                    onClick = { viewModel.onCreateDialog() })
+            )
         }
         val attachmentFileLocation = viewModel.getAttachmentFileLocation()
         if (attachmentFileLocation != null) {
             when (attachmentFileLocation) {
                 Attachment.FileLocation.local -> {
-                    allItemsBottomPanelItem(
-                        iconRes = Drawables.file_download_off_24px,
-                        overflowTextResId = Strings.items_action_remove_download,
-                        onClick = { viewModel.onRemoveDownload() })
+                    overflowItems.add(
+                        AllItemsBottomPanelItem(
+                            iconRes = Drawables.file_download_off_24px,
+                            overflowTextResId = Strings.items_action_remove_download,
+                            onClick = { viewModel.onRemoveDownload() })
+                    )
 
                 }
 
                 Attachment.FileLocation.remote -> {
-                    allItemsBottomPanelItem(
-                        iconRes = Drawables.download_24px,
-                        overflowTextResId = Strings.items_action_download,
-                        onClick = { viewModel.onDownload() })
+                    panelItems.add(
+                        AllItemsBottomPanelItem(
+                            iconRes = Drawables.download_24px,
+                            overflowTextResId = Strings.items_action_download,
+                            onClick = { viewModel.onDownload() })
+                    )
                 }
 
                 Attachment.FileLocation.localAndChangedRemotely -> {
-                    allItemsBottomPanelItem(
-                        iconRes = Drawables.download_24px,
-                        overflowTextResId = Strings.items_action_download,
-                        onClick = { viewModel.onDownload() })
+                    panelItems.add(
+                        AllItemsBottomPanelItem(
+                            iconRes = Drawables.download_24px,
+                            overflowTextResId = Strings.items_action_download,
+                            onClick = { viewModel.onDownload() })
+                    )
 
-                    allItemsBottomPanelItem(
-                        iconRes = Drawables.file_download_off_24px,
-                        overflowTextResId = Strings.items_action_remove_download,
-                        onClick = { viewModel.onRemoveDownload() })
+                    overflowItems.add(
+                        AllItemsBottomPanelItem(
+                            iconRes = Drawables.file_download_off_24px,
+                            overflowTextResId = Strings.items_action_remove_download,
+                            onClick = { viewModel.onRemoveDownload() })
+                    )
                 }
 
                 Attachment.FileLocation.remoteMissing -> {
@@ -252,12 +354,15 @@ private fun AppBarRowScope.editingSingleItemSelectedActions(
         }
 
         if (viewModel.shouldIncludeDuplicateButton()) {
-            allItemsBottomPanelItem(
-                iconRes = Drawables.content_copy_24px,
-                overflowTextResId = Strings.items_action_duplicate,
-                onClick = { viewModel.onDuplicate() })
+            overflowItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.content_copy_24px,
+                    overflowTextResId = Strings.items_action_duplicate,
+                    onClick = { viewModel.onDuplicate() })
+            )
         }
 
     }
+    return AllItemsBottomPanelItems(panelItems = panelItems, overflowItems = overflowItems)
 
 }

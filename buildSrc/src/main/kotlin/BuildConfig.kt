@@ -4,7 +4,7 @@ object BuildConfig {
     const val compileSdkVersion = 35
     const val targetSdk = 35
 
-    const val versionCode = 212 // Must be updated on every build
+    const val versionCode = 213 // Must be updated on every build
     val version = Version(
         major = 1,
         minor = 0,

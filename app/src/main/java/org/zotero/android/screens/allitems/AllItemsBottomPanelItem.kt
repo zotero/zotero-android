@@ -1,7 +1,5 @@
 package org.zotero.android.screens.allitems
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
@@ -9,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.AppBarRowScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,61 +25,64 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
-internal fun AppBarRowScope.allItemsBottomPanelItem(
-    @DrawableRes iconRes: Int,
-    @StringRes overflowTextResId: Int,
-    iconTint: Color? = null,
-    textColor: Color? = null,
-    onClick: () -> Unit
+@Composable
+internal fun AllItemsBottomPanelAppbarContent(
+    overflowTextResId: Int,
+    onClick: () -> Unit,
+    iconRes: Int,
+    iconTint: Color?
 ) {
-    customItem(
-        appbarContent = {
-            TooltipBox(
-                positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
-                tooltip = {
-                    PlainTooltip() { Text(stringResource(overflowTextResId)) }
-                },
-                state = rememberTooltipState()
-            ) {
-                IconButton(onClick = onClick) {
-                    Icon(
-                        painter = painterResource(iconRes),
-                        contentDescription = null,
-                        tint = decideIconTintToUse(iconTint),
-                    )
-                }
-
-            }
+    TooltipBox(
+        positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
+        tooltip = {
+            PlainTooltip() { Text(stringResource(overflowTextResId)) }
         },
-        menuContent = {
-            Row(
-                modifier = Modifier
-                    .widthIn(min = 160.dp)
-                    .heightIn(min = 48.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onClick
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = decideIconTintToUse(iconTint),
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(overflowTextResId),
-                    color = decideTextColorToUse(textColor),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
+        state = rememberTooltipState()
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = decideIconTintToUse(iconTint),
+            )
+        }
 
-        },
-    )
+    }
+}
+
+@Composable
+internal fun AllItemsBottomPanelMenuContent(
+    onClick: () -> Unit,
+    iconRes: Int,
+    iconTint: Color?,
+    overflowTextResId: Int,
+    textColor: Color?
+) {
+    Row(
+        modifier = Modifier
+            .widthIn(min = 160.dp)
+            .heightIn(min = 48.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Spacer(modifier = Modifier.width(12.dp))
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = decideIconTintToUse(iconTint),
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = stringResource(overflowTextResId),
+            color = decideTextColorToUse(textColor),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+    }
 }
 
 @Composable
