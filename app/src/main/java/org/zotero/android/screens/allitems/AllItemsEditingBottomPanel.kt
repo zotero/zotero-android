@@ -183,7 +183,7 @@ private fun editingMultipleItemsSelectedActions(
 
         panelItems.add(
             AllItemsBottomPanelItem(
-                iconRes = Drawables.share,
+                iconRes = Drawables.share_24,
                 overflowTextResId = Strings.share,
                 onClick = { viewModel.onShare() }
             ))
@@ -287,7 +287,7 @@ private fun editingSingleItemSelectedActions(
 
         panelItems.add(
             AllItemsBottomPanelItem(
-                iconRes = Drawables.share,
+                iconRes = Drawables.share_24,
                 overflowTextResId = Strings.share,
                 onClick = { viewModel.onShare() })
         )
@@ -295,7 +295,7 @@ private fun editingSingleItemSelectedActions(
         if (viewModel.shouldIncludeRetrieveMetadataButton()) {
             panelItems.add(
                 AllItemsBottomPanelItem(
-                    iconRes = Drawables.retrieve_metadata_24px,
+                    iconRes = Drawables.retrieve_metadata,
                     overflowTextResId = Strings.items_action_retrieve_metadata,
                     onClick = { viewModel.onShowRetrieveDialog() })
             )
@@ -304,7 +304,7 @@ private fun editingSingleItemSelectedActions(
         if (viewModel.shouldIncludeCreateParentButton()) {
             panelItems.add(
                 AllItemsBottomPanelItem(
-                    iconRes = Drawables.add_24px,
+                    iconRes = Drawables.note_add_24,
                     overflowTextResId = Strings.items_action_create_parent,
                     onClick = { viewModel.onCreateDialog() })
             )

@@ -228,8 +228,8 @@ internal fun PdfReaderTopBar(
                     state = rememberTooltipState()
                 ) {
                     IconWithPaddingM3(
-                        unselectedDrawableRes = Drawables.share,
-                        selectedDrawableRes = Drawables.share,
+                        unselectedDrawableRes = Drawables.share_24,
+                        selectedDrawableRes = Drawables.share_24,
                         onToggle = onShareButtonTapped,
                         isSelected = false
                     )
@@ -254,8 +254,8 @@ internal fun PdfReaderTopBar(
                 state = rememberTooltipState()
             ) {
                 IconWithPaddingM3(
-                    unselectedDrawableRes = Drawables.settings_24px,
-                    selectedDrawableRes = Drawables.settings_24px,
+                    unselectedDrawableRes = Drawables.match_case_24,
+                    selectedDrawableRes = Drawables.match_case_24,
                     onToggle = toPdfSettings,
                     isSelected = false
                 )

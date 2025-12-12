@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -15,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -88,8 +88,8 @@ private fun LoadingPart() {
 @Composable
 private fun ErrorMessagePart(errorMessage: String) {
     Image(
-        modifier = Modifier.size(16.dp),
-        painter = painterResource(id = Drawables.failure),
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error),
+        painter = painterResource(id = Drawables.cancel_20),
         contentDescription = null,
     )
     Spacer(modifier = Modifier.width(4.dp))
@@ -106,8 +106,8 @@ private fun ErrorMessagePart(errorMessage: String) {
 @Composable
 private fun SuccessMessagePart(successMessage: String) {
     Image(
-        modifier = Modifier.size(16.dp),
-        painter = painterResource(id = Drawables.success),
+        colorFilter = ColorFilter.tint(CustomPalette.Green),
+        painter = painterResource(id = Drawables.check_circle_20),
         contentDescription = null,
     )
     Spacer(modifier = Modifier.width(4.dp))
