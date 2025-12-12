@@ -70,7 +70,6 @@ private fun BoxScope.set(
             Set(progress = contentType.progress, showsStop = (style != Style.lookup))
             setMainImage(
                 asset = null,
-                shouldAccountForBadge = false,
                 mainIconSize = mainIconSize
             )
             setBadge(asset = null, badgeIconSize = badgeIconSize)
@@ -80,7 +79,6 @@ private fun BoxScope.set(
             Set(progress = null, showsStop = false)
             setMainImage(
                 asset = contentType.asset,
-                shouldAccountForBadge = false,
                 mainIconSize = mainIconSize
             )
             setBadge(asset = null, badgeIconSize = badgeIconSize)
@@ -90,7 +88,6 @@ private fun BoxScope.set(
             Set(progress = null, showsStop = false)
             setMainImage(
                 asset = contentType.main,
-                shouldAccountForBadge = true,
                 mainIconSize = mainIconSize
             )
             setBadge(asset = contentType.badge, badgeIconSize = badgeIconSize)
@@ -99,12 +96,12 @@ private fun BoxScope.set(
 }
 
 @Composable
-fun BoxScope.setMainImage(asset: Int?, shouldAccountForBadge: Boolean, mainIconSize: Dp) {
+fun BoxScope.setMainImage(asset: Int?, mainIconSize: Dp) {
     if (asset != null) {
         Image(
             modifier = Modifier
                 .size(mainIconSize)
-                .align(if (shouldAccountForBadge) Alignment.TopStart else Alignment.CenterStart),
+                .align(Alignment.TopStart),
             painter = painterResource(id = asset),
             contentDescription = null,
         )
