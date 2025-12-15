@@ -111,7 +111,7 @@ internal fun OnboardingScreen(
                             text = stringResource(onboardingPage.taglineRes),
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.titleSmallEmphasized
+                            style = MaterialTheme.typography.titleLargeEmphasized
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
