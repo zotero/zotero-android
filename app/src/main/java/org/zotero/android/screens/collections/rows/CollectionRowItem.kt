@@ -48,7 +48,8 @@ internal fun CollectionRowItem(
     val arrowIconAreaSize = 48.dp
     val mainIconSize = 28.dp
     val paddingBetweenIconAndText = 12.dp
-    val levelPaddingWithArrowIconAreaSize = levelPadding + arrowIconAreaSize
+    val paddingBetweenArrowAndIcon = 4.dp
+    val levelArrowAndExtraPadding = levelPadding + arrowIconAreaSize + paddingBetweenArrowAndIcon
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = rowModifier
@@ -60,7 +61,7 @@ internal fun CollectionRowItem(
             )
     ) {
         if (!hasChildren) {
-            Spacer(modifier = Modifier.width(levelPaddingWithArrowIconAreaSize))
+            Spacer(modifier = Modifier.width(levelArrowAndExtraPadding))
         } else {
             Spacer(modifier = Modifier.width(levelPadding))
             IconWithPadding(
@@ -74,6 +75,7 @@ internal fun CollectionRowItem(
                 shouldShowRipple = false,
                 tintColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.width(paddingBetweenArrowAndIcon))
         }
         Icon(
             modifier = Modifier.size(mainIconSize),
