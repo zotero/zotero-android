@@ -13,3 +13,6 @@
 [submodule "locales"]
 	path = locales
 	url = https://github.com/citation-style-language/locales.git
+[submodule "reader"]
+	path = reader
+	url = https://github.com/zotero/reader.git
