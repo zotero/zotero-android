@@ -76,3 +76,6 @@ app/src/main/assets/utilities/
 
 #CSL locales generated files:
 app/src/main/assets/cslLocales/
+
+#reader generated files:
+app/src/main/assets/reader/

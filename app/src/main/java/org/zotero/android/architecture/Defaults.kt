@@ -64,6 +64,7 @@ open class Defaults @Inject constructor(
     private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
+    private val lastHtmlEpubReaderCommitHash = "lastHtmlEpubReaderCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -513,6 +514,14 @@ open class Defaults @Inject constructor(
     ) {
         val json = dataMarshaller.marshal(mode)
         sharedPreferences.edit { putString(this@Defaults.exportOutputMode, json) }
+    }
+
+    fun getLastHtmlEpubReaderCommitHash(): String {
+        return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
+    }
+
+    fun setLastHtmlEpubReaderCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastHtmlEpubReaderCommitHash, newValue) }
     }
 
     fun reset() {
