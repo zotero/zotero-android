@@ -77,7 +77,7 @@ internal fun LoginScreen(
                     .widthIn(max = 400.dp)
                     .fillMaxHeight()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.Top,
             ) {
                 val focusManager = LocalFocusManager.current
                 val focusRequester = remember { FocusRequester() }
