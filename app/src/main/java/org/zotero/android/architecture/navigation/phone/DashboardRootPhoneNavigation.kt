@@ -44,6 +44,8 @@ import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.filter.FilterScreenPhone
+import org.zotero.android.screens.htmlepub.htmlEpubReaderNavScreensForPhone
+import org.zotero.android.screens.htmlepub.toHtmlEpubScreen
 import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.settings.settingsNavScreens
@@ -148,6 +150,11 @@ internal fun DashboardRootPhoneNavigation(
                     wasPspdfkitInitialized = wasPspdfkitInitialized
                 )
             },
+            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
+                navigation.toHtmlEpubScreen(
+                    htmlEpubParams = htmlEpubReaderArgs
+                )
+            },
             isTablet = false
         )
         itemDetailsScreen(
@@ -167,6 +174,11 @@ internal fun DashboardRootPhoneNavigation(
                     context = context,
                     wasPspdfkitInitialized = wasPspdfkitInitialized,
                     pdfScreenParams = pdfScreenParams
+                )
+            },
+            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
+                navigation.toHtmlEpubScreen(
+                    htmlEpubParams = htmlEpubReaderArgs
                 )
             },
         )
@@ -258,6 +270,9 @@ internal fun DashboardRootPhoneNavigation(
         ) {
             SingleCitationScreen(onBack = navigation::onBack)
         }
+        htmlEpubReaderNavScreensForPhone(
+            navigation = navigation,
+        )
     }
 }
 

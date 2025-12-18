@@ -46,6 +46,7 @@ fun NavGraphBuilder.allItemsScreen(
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
+    onShowHtmlOrEpub: (String) -> Unit,
     isTablet: Boolean
 ) {
     composable(
@@ -96,6 +97,7 @@ fun NavGraphBuilder.allItemsScreen(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onShowPdf = onShowPdf,
+            onShowHtmlOrEpub =  onShowHtmlOrEpub,
             navigateToCollectionsScreen = navigateToCollectionsScreen,
             navigateToAddOrEditNote = navigateToAddOrEditNote,
             navigateToItemDetails = navigateToItemDetails,
@@ -128,6 +130,7 @@ fun NavGraphBuilder.itemDetailsScreen(
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
     onShowPdf: (String) -> Unit,
+    onShowHtmlOrEpub: (String) -> Unit,
 ) {
 
     composable(
@@ -148,7 +151,8 @@ fun NavGraphBuilder.itemDetailsScreen(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = onPickFile,
-            onShowPdf = onShowPdf
+            onShowPdf = onShowPdf,
+            onShowHtmlOrEpub = onShowHtmlOrEpub,
         )
     }
 }

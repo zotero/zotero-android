@@ -36,6 +36,7 @@ internal fun TabletRightPaneNavigation(
     onPickFile: (callPoint: CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String) -> Unit,
+    onShowHtmlOrEpub: (String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
@@ -69,6 +70,7 @@ internal fun TabletRightPaneNavigation(
             navigateToSingleCitation = navigation::toSingleCitationDialog,
             navigateToCitationBibliographyExport = navigation::toCitBibExportNavigation,
             onShowPdf = onShowPdf,
+            onShowHtmlOrEpub = onShowHtmlOrEpub,
             isTablet = true,
         )
         itemDetailsScreen(
@@ -84,6 +86,7 @@ internal fun TabletRightPaneNavigation(
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(CallPoint.ItemDetails) },
             onShowPdf = onShowPdf,
+            onShowHtmlOrEpub = onShowHtmlOrEpub,
         )
         videoPlayerScreen()
         imageViewerScreen(onBack = navigation::onBack)

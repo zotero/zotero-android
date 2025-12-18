@@ -80,6 +80,7 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.filter.data.UpdateFiltersEvent
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
@@ -1241,6 +1242,18 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowCitationBibliographyExportEffect)
     }
 
+    private fun showHtmlEpub(file: File, key: String, parentKey: String?, library: Library) {
+        val uri = Uri.fromFile(file)
+        val htmlEpubReaderArgs = HtmlEpubReaderArgs(
+            key = key,
+            parentKey = parentKey,
+            library = library,
+            uri = uri,
+        )
+        val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
+        triggerEffect(AllItemsViewEffect.NavigateToHtmlEpubReaderScreen(params))
+    }
+
 
 }
 
@@ -1316,6 +1329,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
     data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
+    data class NavigateToHtmlEpubReaderScreen(val params: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
