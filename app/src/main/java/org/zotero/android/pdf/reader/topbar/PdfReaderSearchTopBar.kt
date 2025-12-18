@@ -70,5 +70,6 @@ private fun AppSearchBarM3Wrapper(
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,
         onBack = onBack,
+        focusOnScreenOpen = true,
     )
 }
