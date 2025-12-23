@@ -420,68 +420,70 @@ class PdfReaderViewModel @Inject constructor(
         isTablet: Boolean,
         backgroundColor: androidx.compose.ui.graphics.Color,
     ) {
-        initFileUris(uri)
-        restartDisableForceScreenOnTimer()
-        this.isTablet = isTablet
-        this.fragmentManager = fragmentManager
-        this.containerId = containerId
-        this.annotationMaxSideSize = annotationMaxSideSize
-        this.backgroundColor = backgroundColor
+        viewModelScope.launch {
+            initFileUris(uri)
+            restartDisableForceScreenOnTimer()
+            this@PdfReaderViewModel.isTablet = isTablet
+            this@PdfReaderViewModel.fragmentManager = fragmentManager
+            this@PdfReaderViewModel.containerId = containerId
+            this@PdfReaderViewModel.annotationMaxSideSize = annotationMaxSideSize
+            this@PdfReaderViewModel.backgroundColor = backgroundColor
 
-        searchResultHighlighter = SearchResultHighlighter(context)
+            searchResultHighlighter = SearchResultHighlighter(context)
 
-        if (this::pdfUiFragment.isInitialized) {
-            replaceFragment()
-            return
-        }
-
-        EventBus.getDefault().register(this)
-
-        initState()
-        startObservingTheme()
-        setupAnnotationCacheUpdateStream()
-        setupThumbnailCacheUpdateStream()
-        setupAnnotationSearchStateFlow()
-        setupOutlineSearchStateFlow()
-        setupCommentChangeFlow()
-        setupStorePageFlow()
-        setupAnnotationChangedDebouncerFlow()
-
-        val pdfSettings = defaults.getPDFSettings()
-        pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
-        val configuration = generatePdfConfiguration(pdfSettings)
-        this@PdfReaderViewModel.pdfUiFragment = PdfUiFragmentBuilder
-            .fromUri(context, this.dirtyUri)
-            .fragmentClass(CustomPdfUiFragment::class.java)
-            .configuration(configuration)
-            .build()
-        this@PdfReaderViewModel.pdfUiFragment.lifecycle.addObserver(object: DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) {
-                this@PdfReaderViewModel.pdfFragment = pdfUiFragment.pdfFragment!!
-                this@PdfReaderViewModel.pdfFragment.addDrawableProvider(searchResultHighlighter)
-                addDocumentListenerOnInit()
-                addOnAnnotationCreationModeChangeListener()
-                setOnPreparePopupToolbarListener()
-                addDocumentScrollListener()
+            if (this@PdfReaderViewModel::pdfUiFragment.isInitialized) {
+                replaceFragment()
+                return@launch
             }
 
-            override fun onDestroy(owner: LifecycleOwner) {
-                pdfUiFragment.lifecycle.removeObserver(this)
-            }
-        })
+            EventBus.getDefault().register(this@PdfReaderViewModel)
 
-        fragmentManager.commit {
-            add(containerId, this@PdfReaderViewModel.pdfUiFragment)
+            initState()
+            startObservingTheme()
+            setupAnnotationCacheUpdateStream()
+            setupThumbnailCacheUpdateStream()
+            setupAnnotationSearchStateFlow()
+            setupOutlineSearchStateFlow()
+            setupCommentChangeFlow()
+            setupStorePageFlow()
+            setupAnnotationChangedDebouncerFlow()
+
+            val pdfSettings = defaults.getPDFSettings()
+            pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
+            val configuration = generatePdfConfiguration(pdfSettings)
+            this@PdfReaderViewModel.pdfUiFragment = PdfUiFragmentBuilder
+                .fromUri(context, this@PdfReaderViewModel.dirtyUri)
+                .fragmentClass(CustomPdfUiFragment::class.java)
+                .configuration(configuration)
+                .build()
+            this@PdfReaderViewModel.pdfUiFragment.lifecycle.addObserver(object: DefaultLifecycleObserver {
+                override fun onStart(owner: LifecycleOwner) {
+                    this@PdfReaderViewModel.pdfFragment = pdfUiFragment.pdfFragment!!
+                    this@PdfReaderViewModel.pdfFragment.addDrawableProvider(searchResultHighlighter)
+                    addDocumentListenerOnInit()
+                    addOnAnnotationCreationModeChangeListener()
+                    setOnPreparePopupToolbarListener()
+                    addDocumentScrollListener()
+                }
+
+                override fun onDestroy(owner: LifecycleOwner) {
+                    pdfUiFragment.lifecycle.removeObserver(this)
+                }
+            })
+
+            fragmentManager.commit {
+                add(containerId, this@PdfReaderViewModel.pdfUiFragment)
+            }
         }
     }
 
-    private fun initFileUris(uri: Uri) {
-        this.originalUri = uri
+    private suspend fun initFileUris(uri: Uri) = withContext(dispatcher) {
+        this@PdfReaderViewModel.originalUri = uri
         val originalFile = File(uri.path)
         fileStore.readerDirtyPdfFolder().deleteRecursively()
         val dirtyFile = fileStore.pdfReaderDirtyFile(originalFile.name)
         FileUtils.copyFile(originalFile, dirtyFile)
-        this.dirtyUri = Uri.fromFile(dirtyFile)
+        this@PdfReaderViewModel.dirtyUri = Uri.fromFile(dirtyFile)
     }
 
     private fun addDocumentScrollListener() {
@@ -2148,15 +2150,6 @@ class PdfReaderViewModel @Inject constructor(
         annotationPreviewManager.cancelProcessing()
         annotationPreviewFileCache.cancelProcessing()
         clearThumbnailCaches()
-        if (this::document.isInitialized) {
-            document.annotationProvider
-                .getAllAnnotationsOfTypeAsync(AnnotationsConfig.supported)
-                .toList()
-                .blockingGet()
-                .forEach {
-                    this.document.annotationProvider.removeAnnotationFromPage(it)
-                }
-        }
 
         pdfUiFragment.activity?.let {
             WindowCompat.getInsetsController(it.window, it.window.decorView).show(
