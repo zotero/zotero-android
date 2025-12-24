@@ -594,4 +594,15 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun runningHtmlEpubReaderDirectory(): File {
+        val folderPath = File(getRootDirectory(), "runningHtmlEpubReader")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun runningHtmlEpubReaderUserFileSubDirectory(): File {
+        val folderPath = File(runningHtmlEpubReaderDirectory(), "userFile")
+        folderPath.mkdirs()
+        return folderPath
+    }
 }

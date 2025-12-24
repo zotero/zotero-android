@@ -2,6 +2,7 @@ package org.zotero.android.screens.htmlepub.reader
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,7 @@ import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import java.io.File
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timerTask
@@ -40,7 +42,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
 
-    private lateinit var originalUri: Uri
+    private lateinit var originalFile: File
+    private lateinit var readerDirectory: File
+    private lateinit var documentFile: File
+    private lateinit var readerFile: File
+
     private var isTablet: Boolean = false
 
     private var disableForceScreenOnTimer: Timer? = null
@@ -76,6 +82,15 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
         initState()
         startObservingTheme()
+
+        initialiseReader()
+
+    }
+
+    private fun initialiseReader() {
+        val readerUrl = fileStore.htmlEpubReaderDirectory()
+        readerUrl.copyRecursively(target = readerDirectory, overwrite = true)
+        originalFile.copyRecursively(target = documentFile, overwrite = true)
     }
 
     private fun initState() {
@@ -91,7 +106,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
 
     private fun initFileUris(uri: Uri) {
-        this.originalUri = uri
+        this.originalFile = uri.toFile()
+        this.readerDirectory = fileStore.runningHtmlEpubReaderDirectory()
+        this.documentFile = fileStore.runningHtmlEpubReaderUserFileSubDirectory()
+        this.readerFile = File(readerDirectory, "view.html")
     }
 
     fun restartDisableForceScreenOnTimer() {
