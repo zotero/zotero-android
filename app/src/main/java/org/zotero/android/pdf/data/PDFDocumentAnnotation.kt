@@ -25,7 +25,8 @@ data class PDFDocumentAnnotation(
     override val fontSize: Float?,
     override val rotation: Int?,
     override val sortIndex: String,
-    val dateModified: Date,
+    override val dateAdded: Date,
+    override val dateModified: Date,
     override val isZoteroAnnotation: Boolean
 ): PDFAnnotation {
     override fun isAuthor(currentUserId: Long): Boolean {
@@ -36,6 +37,10 @@ data class PDFDocumentAnnotation(
         get() {
             return AnnotationKey(key = this.key, type = AnnotationKey.Kind.document)
         }
+
+    override val isSyncable: Boolean
+        get() = false
+
     override val tags: List<Tag>
         get() = emptyList()
 

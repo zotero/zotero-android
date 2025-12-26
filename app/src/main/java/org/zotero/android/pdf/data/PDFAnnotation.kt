@@ -5,30 +5,18 @@ import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.reader.AnnotationKey
+import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
-import org.zotero.android.sync.Library
-import org.zotero.android.sync.Tag
 
-interface PDFAnnotation {
-    val key: String
+interface PDFAnnotation: ReaderAnnotation {
     val readerKey: AnnotationKey
-    val type: AnnotationType
-    val lineWidth: Float?
     val page: Int
-    val pageLabel: String
-    val comment: String
-    val color: String
-    val text: String?
-    val fontSize: Float?
     val rotation: Int?
-    val sortIndex: String
-    val tags: List<Tag>
     val isZoteroAnnotation: Boolean
+    val isSyncable: Boolean
 
-    fun editability(currentUserId: Long, library: Library): AnnotationEditability
     fun paths(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<List<PointF>>
     fun rects(boundingBoxConverter: AnnotationBoundingBoxConverter) : List<RectF>
-    fun isAuthor(currentUserId: Long): Boolean
 
     fun boundingBox(boundingBoxConverter: AnnotationBoundingBoxConverter): RectF {
         when (this.type) {
@@ -51,8 +39,6 @@ interface PDFAnnotation {
             }
         }
     }
-
-    fun author(displayName: String, username: String): String
 
     val displayColor: String get(){
         if (!color.startsWith("#")) {

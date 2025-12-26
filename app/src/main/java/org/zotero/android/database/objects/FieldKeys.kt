@@ -192,6 +192,67 @@ class FieldKeys {
                     }
                 }
 
+                fun extraPDFFields(type: AnnotationType): List<KeyBaseKeyPair> {
+                    when (type) {
+                        AnnotationType.highlight, AnnotationType.underline -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.pageIndex,
+                                    baseKey = Annotation.position
+                                )
+                            )
+                        }
+
+                        AnnotationType.ink -> {
+                            return listOf(
+                                KeyBaseKeyPair(
+                                    key = Annotation.pageLabel,
+                                    baseKey = null
+                                ),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.pageIndex,
+                                    baseKey = Annotation.position
+                                ),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.lineWidth,
+                                    baseKey = Annotation.position
+                                )
+                            )
+                        }
+
+                        AnnotationType.note, AnnotationType.image -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.pageIndex,
+                                    baseKey = Annotation.position
+                                )
+                            )
+
+                        }
+
+                        AnnotationType.text -> {
+                            return listOf(
+                                KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.pageIndex,
+                                    baseKey = Annotation.position
+                                ),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.fontSize,
+                                    baseKey = Annotation.position
+                                ),
+                                KeyBaseKeyPair(
+                                    key = Annotation.Position.rotation,
+                                    baseKey = Annotation.position
+                                )
+                            )
+                        }
+                    }
+                }
+
+
                 fun allPDFFields(type: AnnotationType): List<KeyBaseKeyPair> {
                     when(type) {
                         AnnotationType.highlight, AnnotationType.underline -> {
@@ -264,6 +325,19 @@ class FieldKeys {
                         }
                     }
                 }
+
+                fun extraHtmlEpubFields(type: AnnotationType): List<KeyBaseKeyPair> {
+                    return when (type) {
+                        AnnotationType.highlight, AnnotationType.underline, AnnotationType.note -> {
+                            listOf(KeyBaseKeyPair(key = Annotation.pageLabel, baseKey = null))
+                        }
+
+                        AnnotationType.ink, AnnotationType.image, AnnotationType.text -> {
+                            emptyList()
+                        }
+                    }
+                }
+
 
             }
         }

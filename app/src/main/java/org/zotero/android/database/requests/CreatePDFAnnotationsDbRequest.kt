@@ -3,29 +3,20 @@ package org.zotero.android.database.requests
 import android.graphics.PointF
 import android.graphics.RectF
 import io.realm.Realm
-import io.realm.kotlin.createObject
-import io.realm.kotlin.where
-import org.zotero.android.androidx.text.strippedRichTextTags
-import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.FieldKeys
-import org.zotero.android.database.objects.ItemTypes
-import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RItemField
-import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RPath
 import org.zotero.android.database.objects.RPathCoordinate
 import org.zotero.android.database.objects.RRect
-import org.zotero.android.database.objects.RUser
-import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.AnnotationBoundingBoxConverter
-import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.data.PDFDatabaseAnnotation
 import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import timber.log.Timber
 
 class CreatePDFAnnotationsDbRequest(
     private val attachmentKey: String,
@@ -34,80 +25,7 @@ class CreatePDFAnnotationsDbRequest(
     private val userId: Long,
     private val schemaController: SchemaController,
     private val boundingBoxConverter: AnnotationBoundingBoxConverter,
-) : DbRequest {
-    override val needsWrite: Boolean
-        get() = true
-
-    override fun process(database: Realm) {
-        val parent =
-            database.where<RItem>().key(this.attachmentKey, this.libraryId).findFirst() ?: return
-
-        for (annotation in this.annotations) {
-            create(annotation = annotation, parent = parent, database)
-        }
-    }
-
-    private fun create(annotation: PDFDocumentAnnotation, parent: RItem, database: Realm) {
-        var fromRestore = false
-        val item: RItem
-        val _item = database.where<RItem>().key(annotation.key, this.libraryId).findFirst()
-        if (_item != null) {
-            if (!_item.deleted) {
-                return
-            }
-
-            item = _item
-            item.deleted = false
-            fromRestore = true
-        } else {
-            // If item didn't exist, create it
-            item = database.createObject<RItem>()
-            item.key = annotation.key
-            item.rawType = ItemTypes.annotation
-            item.localizedType =
-                this.schemaController.localizedItemType(itemType = ItemTypes.annotation) ?: ""
-            item.libraryId = this.libraryId
-            item.dateAdded = annotation.dateModified
-        }
-
-        item.annotationType = annotation.type.name
-        item.syncState = ObjectSyncState.synced.name
-        item.changeType = UpdatableChangeType.user.name
-        item.htmlFreeContent = if (annotation.comment.isEmpty()) {
-            null
-        } else {
-            annotation.comment.strippedRichTextTags
-        }
-        item.dateModified = annotation.dateModified
-        item.parent = parent
-
-        if (annotation.isAuthor) {
-            item.createdBy = database.where<RUser>().equalTo("identifier", this.userId).findFirst()
-        }
-
-        val changes = mutableListOf(
-            RItemChanges.parent,
-            RItemChanges.fields,
-            RItemChanges.type,
-            RItemChanges.tags
-        )
-        addFields(annotation, item, database = database)
-        addRects(
-            rects = annotation.rects,
-            fromRestore = fromRestore,
-            item = item,
-            changes = changes,
-            database = database
-        )
-        addPaths(
-            paths = annotation.paths,
-            fromRestore = fromRestore,
-            item = item,
-            changes = changes,
-            database = database
-        )
-        item.changes.add(RObjectChange.create(changes = changes))
-    }
+) : CreateReaderAnnotationsDbRequest<PDFDocumentAnnotation>(attachmentKey = attachmentKey, libraryId = libraryId, annotations = annotations, userId = userId, schemaController = schemaController) {
 
     private fun addRects(
         rects: List<RectF>,
@@ -179,25 +97,15 @@ class CreatePDFAnnotationsDbRequest(
         changes.add(RItemChanges.paths)
     }
 
-    private fun addFields(annotation: PDFAnnotation, item: RItem, database: Realm) {
-        for (field in FieldKeys.Item.Annotation.allPDFFields(annotation.type)) {
+    override fun addFields(annotation: PDFDocumentAnnotation, item: RItem, database: Realm) {
+        super.addFields(annotation, item, database)
+
+        for (field in FieldKeys.Item.Annotation.extraPDFFields(annotation.type)) {
             val rField = database.createEmbeddedObject(RItemField::class.java, item, "fields")
             rField.key = field.key
             rField.baseKey = field.baseKey
             rField.changed = true
             when {
-                field.key == FieldKeys.Item.Annotation.type -> {
-                    rField.value = annotation.type.name
-                }
-
-                field.key == FieldKeys.Item.Annotation.color -> {
-                    rField.value = annotation.color
-                }
-
-                field.key == FieldKeys.Item.Annotation.comment -> {
-                    rField.value = annotation.comment
-                }
-
                 field.key == FieldKeys.Item.Annotation.Position.pageIndex && field.baseKey == FieldKeys.Item.Annotation.position -> {
                     rField.value = "${annotation.page}"
                 }
@@ -210,15 +118,6 @@ class CreatePDFAnnotationsDbRequest(
                     rField.value = annotation.pageLabel
                 }
 
-                field.key == FieldKeys.Item.Annotation.sortIndex -> {
-                    rField.value = annotation.sortIndex
-                    item.annotationSortIndex = annotation.sortIndex
-                }
-
-                field.key == FieldKeys.Item.Annotation.text -> {
-                    rField.value = annotation.text ?: ""
-                }
-
                 field.key == FieldKeys.Item.Annotation.Position.rotation && field.baseKey == FieldKeys.Item.Annotation.position -> {
                     rField.value = "${annotation.rotation ?: 0}"
                 }
@@ -226,8 +125,36 @@ class CreatePDFAnnotationsDbRequest(
                 field.key == FieldKeys.Item.Annotation.Position.fontSize && field.baseKey == FieldKeys.Item.Annotation.position -> {
                     rField.value = "${annotation.fontSize ?: 0}"
                 }
+
+                else -> {
+                    Timber.w("CreatePDFAnnotationsDbRequest: unknown field, assigning empty value - ${field.key}")
+                    rField.value = ""
+                }
             }
         }
+    }
+
+    override fun addAdditionalProperties(
+        annotation: PDFDocumentAnnotation,
+        fromRestore: Boolean,
+        item: RItem,
+        changes: MutableList<RItemChanges>,
+        database: Realm
+    ) {
+        addRects(
+            annotation.rects,
+            fromRestore = fromRestore,
+            item = item,
+            changes = changes,
+            database = database
+        )
+        addPaths(
+            annotation.paths,
+            fromRestore = fromRestore,
+            item = item,
+            changes = changes,
+            database = database
+        )
     }
 
 }
