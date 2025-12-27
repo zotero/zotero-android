@@ -21,7 +21,10 @@ internal fun PdfAnnotationCommentSection(
         modifier = Modifier
             .padding(horizontal = 16.dp),
         value = commentFocusText,
-        textStyle = MaterialTheme.typography.bodyLarge,
+        textStyle = MaterialTheme.typography.bodyMedium,
+        textColor = MaterialTheme.colorScheme.onSurface,
+        hintColor = MaterialTheme.colorScheme.primary,
+        hintTextStyle = MaterialTheme.typography.labelLarge,
         hint = if (enabled) {
             stringResource(id = Strings.pdf_annotations_sidebar_add_comment)
         } else {
