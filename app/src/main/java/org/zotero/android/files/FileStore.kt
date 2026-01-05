@@ -10,11 +10,10 @@ import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.internal.closeQuietly
-import org.apache.commons.codec.binary.Hex
-import org.apache.commons.codec.digest.DigestUtils
 import org.zotero.android.androidx.content.getFileSize
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.MimeType
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
@@ -297,7 +296,7 @@ class FileStore @Inject constructor (
 
     fun md5(file: File): String {
         val inputStream = FileInputStream(file)
-        val md5 = String(Hex.encodeHex(DigestUtils.md5(inputStream)))
+        val md5 = FileHelper.md5(inputStream)
         return md5
     }
 

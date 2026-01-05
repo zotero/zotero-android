@@ -139,9 +139,6 @@ object Libs {
 
     }
     object Commons {
-        const val io = "commons-io:commons-io:2.5"
-        const val codec = "commons-codec:commons-codec:1.15"
-        const val validator = "commons-validator:commons-validator:1.8.0"
         const val text = "org.apache.commons:commons-text:1.3"
     }
 }

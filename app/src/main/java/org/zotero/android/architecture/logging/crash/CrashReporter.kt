@@ -3,12 +3,12 @@ package org.zotero.android.architecture.logging.crash
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.apache.commons.io.FileUtils
 import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -34,7 +34,7 @@ class CrashReporter @Inject constructor(
             if (crashFile == null) {
                 return@launch
             }
-            val text = FileUtils.readFileToString(crashFile, "UTF-8")
+            val text = FileHelper.readFileToString(crashFile)
             val date = crashFile.name.toLongOrNull() ?: return@launch
             val submitResult = submit(text)
             if (submitResult !is CustomResult.GeneralSuccess) {
@@ -97,7 +97,7 @@ class CrashReporter @Inject constructor(
 
     private fun cleanup() {
         try {
-            FileUtils.deleteDirectory(fileStore.crashLoggingDirectory())
+            FileHelper.deleteFolder(fileStore.crashLoggingDirectory())
         } catch (error: Exception) {
             Timber.e(error, "CrashLogging: can't delete directory")
         }

@@ -2,8 +2,8 @@ package org.zotero.android.locales
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.apache.commons.io.FileUtils
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.ktx.unmarshalMap
 import org.zotero.android.screens.settings.csllocalepicker.data.ExportLocale
 import java.io.File
@@ -25,7 +25,7 @@ class ExportCslLocaleReader @Inject constructor(
         if (!localesUrl.exists()) {
             throw Error.bundledFileMissing
         }
-        val localesJsonContent = FileUtils.readFileToString(localesUrl, "UTF-8")
+        val localesJsonContent = FileHelper.readFileToString(localesUrl)
         val dictionary = gson.fromJson(localesJsonContent, JsonObject::class.java)
         val element = dictionary["language-names"]
         val codes =

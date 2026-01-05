@@ -73,7 +73,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FileUtils
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -115,6 +114,7 @@ import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.ktx.annotation
 import org.zotero.android.ktx.baseColor
 import org.zotero.android.ktx.isZoteroAnnotation
@@ -482,7 +482,7 @@ class PdfReaderViewModel @Inject constructor(
         val originalFile = File(uri.path)
         fileStore.readerDirtyPdfFolder().deleteRecursively()
         val dirtyFile = fileStore.pdfReaderDirtyFile(originalFile.name)
-        FileUtils.copyFile(originalFile, dirtyFile)
+        FileHelper.copyFile(originalFile, dirtyFile)
         this@PdfReaderViewModel.dirtyUri = Uri.fromFile(dirtyFile)
     }
 

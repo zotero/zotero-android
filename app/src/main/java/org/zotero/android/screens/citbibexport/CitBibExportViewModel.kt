@@ -6,7 +6,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.apache.commons.io.FileUtils
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseViewModel2
@@ -21,6 +20,7 @@ import org.zotero.android.citation.data.InvalidItemTypesException
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.requests.ReadStyleDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.screens.citbibexport.data.CitBibExportKind
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
@@ -320,7 +320,7 @@ internal class CitBibExportViewModel @Inject constructor(
     private fun save(html: String) {
         val file = fileStore.exportHtmlFile("Untitled.html")
         file.delete()
-        FileUtils.write(file, html, "UTF-8")
+        FileHelper.write(file, html)
         wasFileShared = true
         triggerEffect(CitBibExportViewEffect.ExportHtml(file))
     }

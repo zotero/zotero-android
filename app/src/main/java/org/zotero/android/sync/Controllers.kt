@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.apache.commons.io.FileUtils
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
@@ -21,6 +20,7 @@ import org.zotero.android.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.locales.CslLocalesLoader
 import org.zotero.android.locales.ExportCslLocaleReader
 import org.zotero.android.pdfworker.loader.PdfWorkerLoader
@@ -189,12 +189,12 @@ class Controllers @Inject constructor(
         backgroundUploadProcessor.cancelAllUploads()
         // TODO Cancel all background downloads
 
-        FileUtils.deleteDirectory(fileStore.cache())
-        FileUtils.deleteDirectory(fileStore.jsonCache)
-        FileUtils.deleteDirectory(fileStore.annotationPreviews)
-        FileUtils.deleteDirectory(fileStore.pageThumbnails)
-        FileUtils.deleteDirectory(fileStore.uploads)
-        FileUtils.deleteDirectory(fileStore.downloads)
+        FileHelper.deleteFolder(fileStore.cache())
+        FileHelper.deleteFolder(fileStore.jsonCache)
+        FileHelper.deleteFolder(fileStore.annotationPreviews)
+        FileHelper.deleteFolder(fileStore.pageThumbnails)
+        FileHelper.deleteFolder(fileStore.uploads)
+        FileHelper.deleteFolder(fileStore.downloads)
         isUserInitializedEventStream.emit(false)
         if (dbWrapperMain.isInitialized) {
             dbWrapperMain.clearDatabaseFiles()

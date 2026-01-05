@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FileUtils
 import org.zotero.android.androidx.content.longToast
 import org.zotero.android.androidx.content.toast
 import org.zotero.android.api.NonZoteroApi
@@ -35,6 +34,7 @@ import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.requests.InstallStyleDbRequest
 import org.zotero.android.database.requests.StoreStyleDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.screens.settings.ARG_SETTINGS_CITE_SEARCH
 import org.zotero.android.screens.settings.citesearch.data.SettingsCitSearchStyleDownloadedEventStream
 import org.zotero.android.screens.settings.citesearch.data.SettingsCiteSearchArgs
@@ -189,7 +189,7 @@ internal class SettingsCiteSearchViewModel @Inject constructor(
             is CustomResult.GeneralSuccess -> {
                 try {
                     val byteArray = networkResult.value!!.bytes()
-                    FileUtils.writeByteArrayToFile(file, byteArray)
+                    FileHelper.writeByteArrayToFile(file, byteArray)
                     val style = loadStyle(file)
                     if (style != null) {
                         process(style = style)
@@ -243,7 +243,7 @@ internal class SettingsCiteSearchViewModel @Inject constructor(
             is CustomResult.GeneralSuccess -> {
                 try {
                     val byteArray = networkResult.value!!.bytes()
-                    FileUtils.writeByteArrayToFile(file, byteArray)
+                    FileHelper.writeByteArrayToFile(file, byteArray)
 
                     val dependency = loadStyle(file)
 

@@ -4,13 +4,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.apache.commons.io.FileUtils
 import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -151,7 +151,7 @@ class DebugLogging @Inject constructor(
 
     private fun clearDebugDirectory() {
         try {
-            FileUtils.deleteDirectory(fileStore.debugLoggingDirectory())
+            FileHelper.deleteFolder(fileStore.debugLoggingDirectory())
         } catch (error: Exception) {
             Timber.e(error, "DebugLogging: can't delete directory")
         }
@@ -164,7 +164,7 @@ class DebugLogging @Inject constructor(
         try {
             val file = fileStore.debugLoggingDirectory()
             try {
-                FileUtils.deleteDirectory(file)
+                FileHelper.deleteFolder(file)
             } catch (e: Exception) {
                 //no-op
             }
@@ -217,7 +217,7 @@ class DebugLogging @Inject constructor(
         var allLogs = "\n\n" + DeviceInfoProvider.debugString + "\nTimestamp: $timestamp" + "\n\n\n"
         try {
             for (url in logs) {
-                val string = FileUtils.readFileToString(url, "UTF-8")
+                val string = FileHelper.readFileToString(url)
                 allLogs += string
             }
         } catch (e: Exception) {

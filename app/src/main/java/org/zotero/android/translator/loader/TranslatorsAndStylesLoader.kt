@@ -8,8 +8,6 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
 import org.joda.time.DateTime
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.NonZoteroApi
@@ -23,6 +21,7 @@ import org.zotero.android.database.requests.SyncRepoResponseDbRequest
 import org.zotero.android.database.requests.SyncStylesDbRequest
 import org.zotero.android.database.requests.SyncTranslatorsDbRequest
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.Unzipper
 import org.zotero.android.screens.share.data.TranslatorMetadata
 import org.zotero.android.styles.data.Style
@@ -32,7 +31,6 @@ import timber.log.Timber
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -182,7 +180,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
     ): Map<String, Any>? {
         val rawString: String
         try {
-            rawString = FileUtils.readFileToString(file, StandardCharsets.UTF_8)
+            rawString = FileHelper.readFileToString(file)
         } catch (e: Exception) {
             Timber.e(e, " can't create string from data")
             return null
@@ -364,7 +362,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
     ): Result {
         try {
             val inputStream = context.assets.open(resource)
-            val rawValue = IOUtils.toString(inputStream)
+            val rawValue = FileHelper.toString(inputStream)
             return map(rawValue.trim().trim { it == '\n' })
         } catch (e: Exception) {
             Timber.e(e)
@@ -431,7 +429,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
             if (toFile.exists()) {
                 toFile.delete()
             }
-            FileUtils.copyFile(file, toFile)
+            FileHelper.copyFile(file, toFile)
         }
     }
 
@@ -446,7 +444,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
             val style =  parser.parseXml() ?:continue
 
             stylesMetadata.add(style)
-            stylesData.add(style.filename to xml.toByteArray(Charsets.UTF_8))
+            stylesData.add(style.filename to FileHelper.toByteArray(xml))
         }
 
         return stylesMetadata to stylesData
@@ -597,7 +595,7 @@ class TranslatorsAndStylesLoader @Inject constructor(
 
         jsonMetadata += (newlines)
         jsonMetadata += (code)
-        return jsonMetadata.toByteArray()
+        return FileHelper.toByteArray(jsonMetadata)
     }
 
     private fun syncRepoResponse(
@@ -634,11 +632,11 @@ class TranslatorsAndStylesLoader @Inject constructor(
         Timber.i("TranslatorsAndStylesController: write updated translators")
         for ((index, metadata) in updateTranslatorMetadata.withIndex()) {
             val data = data(updateTranslators[index])
-            FileUtils.writeByteArrayToFile(fileStore.translator(filename = metadata.id), data)
+            FileHelper.writeByteArrayToFile(fileStore.translator(filename = metadata.id), data)
         }
         Timber.i("TranslatorsAndStylesController: write updated styles")
         for ((filename, data) in stylesData) {
-            FileUtils.writeByteArrayToFile(fileStore.style(filename), data)
+            FileHelper.writeByteArrayToFile(fileStore.style(filename), data)
         }
 
         Timber.i("TranslatorsAndStylesController: update db from repo")
