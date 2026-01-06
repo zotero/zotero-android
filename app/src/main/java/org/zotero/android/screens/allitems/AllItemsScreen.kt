@@ -134,7 +134,7 @@ internal fun AllItemsScreen(
                     val maybeIndex =
                         lazyListState.layoutInfo.visibleItemsInfo.firstOrNull()?.index
                     //Indices of the first visible item AFTER an update, so after the potential new item was added to the top.
-                    if (consumedEffect.shouldScrollToTop && ((1..2).contains(maybeIndex))) {
+                    if (((1..2).contains(maybeIndex))) {
                         lazyListState.scrollToItem(index = 0, scrollOffset = 0)
                     }
                 }

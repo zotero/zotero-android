@@ -360,7 +360,8 @@ internal class AllItemsViewModel @Inject constructor(
         viewModelScope.launch {
             val newItemCellModels = updatedItemCellModels ?: viewState.itemCellModels
             val maybeFirstItemAfterUpdate = newItemCellModels.firstOrNull()
-            val wasTheFirstItemRecentlyAdded = maybeFirstItemAfterUpdate != null && !viewState.itemCellModels.any { it.key ==  maybeFirstItemAfterUpdate.key}
+            val wasTheFirstItemRecentlyAdded =
+                maybeFirstItemAfterUpdate != null && !viewState.itemCellModels.any { it.key == maybeFirstItemAfterUpdate.key }
             updateState {
                 copy(
                     itemCellModels = newItemCellModels,
@@ -368,7 +369,9 @@ internal class AllItemsViewModel @Inject constructor(
                         ?: viewState.accessoryBeingDownloaded
                 )
             }
-            triggerEffect(AllItemsViewEffect.MaybeScrollToTop(shouldScrollToTop = wasTheFirstItemRecentlyAdded))
+            if (wasTheFirstItemRecentlyAdded) {
+                triggerEffect(AllItemsViewEffect.MaybeScrollToTop)
+            }
         }
 
     }
@@ -1319,7 +1322,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
-    data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
+    object MaybeScrollToTop : AllItemsViewEffect()
     object ShowSingleCitationEffect: AllItemsViewEffect()
     object ShowCitationBibliographyExportEffect: AllItemsViewEffect()
 

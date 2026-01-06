@@ -60,6 +60,7 @@ class AllItemsProcessor @Inject constructor(
     private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
     private val fileDownloader: AttachmentDownloader,
     private val fileCleanupController: AttachmentFileCleanupController,
+    private val onAttachmentFileDeletedEventStream: OnAttachmentFileDeletedEventStream
 ) {
     private lateinit var processorInterface: AllItemsProcessorInterface
 
@@ -119,24 +120,20 @@ class AllItemsProcessor @Inject constructor(
         }
     }
 
-    private val onAttachmentFileDeletedStateFlow = MutableStateFlow<EventBusConstants.AttachmentFileDeleted?>(null)
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(attachmentFileDeleted: EventBusConstants.AttachmentFileDeleted) {
-        onAttachmentFileDeletedStateFlow.tryEmit(attachmentFileDeleted)
+        onAttachmentFileDeletedEventStream.emitAsync(attachmentFileDeleted)
     }
 
     private fun setupOnAttachmentFileDeletedStateFlow() {
-        onAttachmentFileDeletedStateFlow
+        onAttachmentFileDeletedEventStream.flow()
             .debounce(100)
             .map {
-                if (it != null) {
                     resultsProcessorCoroutineScope?.launch {
                         limitedParallelismSemaphoreForWork.withPermit {
                             updateDeletedAttachmentFiles(it.notification)
                         }
                     }
-                }
             }
             .launchIn(listenersCoroutineScope)
     }
