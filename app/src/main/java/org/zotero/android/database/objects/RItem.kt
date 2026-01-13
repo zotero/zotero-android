@@ -18,11 +18,14 @@ import org.zotero.android.database.requests.baseKey
 import org.zotero.android.database.requests.key
 import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
+import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.helpers.formatter.sqlFormat
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LinkMode
+import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.Date
 
@@ -603,6 +606,102 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             }
             return parameters
         }
+
+    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, Map<String, Any>>?
+        get()
+    {
+        var type: AnnotationType? = null
+        val position = mutableMapOf<String, Any>()
+        var text: String? = null
+        var sortIndex: String? = null
+        var pageLabel: String? = null
+        var comment: String? = null
+        var color: String? = null
+        val unknown = mutableMapOf<String, String>()
+
+        for (field in this.fields) {
+            when {
+                field.baseKey == FieldKeys.Item.Annotation.position -> {
+                    if (field.value.firstOrNull() == '{') {
+                        position[field.key] = ZoteroApplication.instance.gson.fromJson(field.value, JsonObject::class.java)
+                    } else {
+                        position[field.key] = field.value
+                    }
+                }
+                field.key == FieldKeys.Item.Annotation.type && field.baseKey == null -> {
+                    try {
+                        type = AnnotationType.valueOf(field.value)
+                    } catch (_: Exception) {
+                        throw Exception("RItem: invalid annotation type when creating annotation, type=${field.value}")
+                    }
+                }
+                field.key == FieldKeys.Item.Annotation.text && field.baseKey == null -> {
+                    text = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.sortIndex && field.baseKey == null -> {
+                    sortIndex = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.pageLabel && field.baseKey == null -> {
+                    pageLabel = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.comment && field.baseKey == null -> {
+                    comment = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.color && field.baseKey == null -> {
+                    color = field.value
+                }
+                else -> {
+                    unknown[field.key] = field.value
+                }
+            }
+        }
+        if (type == null || sortIndex == null || position.isEmpty()) {
+            Timber.e("RItem: can't create html/epub annotation, type=${type};sortIndex=${sortIndex};position=${position}")
+            return null
+        }
+
+        val tags = this.tags!!.map { typedTag ->
+            val color = if ((typedTag.tag?.color ?: "").isEmpty()) null else typedTag.tag?.color
+            Tag(name = typedTag.tag?.name ?: "", color = color ?: "")
+        }
+
+        val json: MutableMap<String, Any> = mutableMapOf(
+            "id" to this.key,
+            "dateCreated" to iso8601WithFractionalSeconds.format(dateAdded),
+            "dateModified" to iso8601WithFractionalSeconds.format(dateModified),
+            "authorName" to (createdBy?.username ?: ""),
+            "type" to type.name,
+            "text" to (text ?: ""),
+            "sortIndex" to sortIndex,
+            "pageLabel" to (pageLabel ?: ""),
+            "comment" to (comment ?: ""),
+            "color" to (color ?: ""),
+            "position" to position,
+            "tags" to tags.map { arrayOf("name" to it.name, "color" to it.color) }
+        )
+        for ((key, value) in unknown.iterator()) {
+            json[key] = value
+        }
+
+        val annotation = HtmlEpubAnnotation(
+            key = this.key,
+            type = type,
+            pageLabel = pageLabel ?: "",
+            position = position,
+            author = createdBy?.username ?: "",
+            isAuthor = true,
+            color = color ?: "",
+            comment = comment ?: "",
+            text = text,
+            sortIndex = sortIndex,
+            dateAdded = dateAdded,
+            dateModified = dateModified,
+            tags = tags
+        )
+
+        return annotation to json
+    }
+
 
 }
 

@@ -1,14 +1,16 @@
 package org.zotero.android.screens.htmlepub.reader
 
 import android.content.Context
+import android.graphics.RectF
 import android.net.Uri
+import androidx.compose.ui.text.TextStyle
 import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.pspdfkit.internal.g3.json
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -55,7 +57,6 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
@@ -88,12 +89,16 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var userId: Long = 0L
     private var username: String = ""
     private var selectedTextParams: MutableMap<String, Any>? = null
-    private var annotations = mutableMapOf<String, HtmlEpubAnnotation>()
+    private var annotations = mutableMapOf<String, HtmlEpubAnnotation?>()
+    private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private var documentUpdate: DocumentUpdate? = null
+    private lateinit var textFont: TextStyle
 
     private var isTablet: Boolean = false
 
     private var disableForceScreenOnTimer: Timer? = null
+
+    private var annotationResults: RealmResults<RItem>? = null
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -117,7 +122,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
     fun init(
         uri: Uri,
         isTablet: Boolean,
+        textFont: TextStyle
     ) {
+        this.textFont = textFont
         initFileUris(uri)
         restartDisableForceScreenOnTimer()
         this.isTablet = isTablet
@@ -617,10 +624,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
         }
     }
-    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation>, String> {
+    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, String> {
         val sortedKeys = mutableListOf<String>()
         val annotation = mutableMapOf<String, HtmlEpubAnnotation>()
-        val jsons: MutableList<MutableMap<String, Any>> = mutableListOf()
+        val jsons: MutableList<Map<String, Any>> = mutableListOf()
         for (item in items) {
             val (annotation, json) = item.htmlEpubAnnotation ?: continue
             jsons.add(json)
@@ -630,6 +637,209 @@ class HtmlEpubReaderViewModel @Inject constructor(
         val jsonString = TranslatorHelper.encodeAsJSONForJavascript(this.gson, jsons)
         return Triple(sortedKeys, annotations, jsonString)
     }
+
+    fun update(
+        changeSet: OrderedCollectionChangeSet,
+        objects: RealmResults<RItem>
+    ) {
+        val frozenObjects = objects.freeze()
+        val deletions = changeSet.deletions
+        var insertions = changeSet.insertions
+        val modifications = changeSet.changes
+
+        if (deletions.isEmpty() && insertions.isEmpty() && modifications.isEmpty()) {
+            insertions = IntArray(frozenObjects.size) { it }
+        }
+        Timber.i("HtmlEpubReaderViewModel: annotations changed in database")
+        var keys = (viewState.snapshotKeys ?: viewState.sortedKeys).toMutableList()
+        var annotations = this.annotations
+        var texts = this.texts
+        var comments = viewState.comments.toMutableMap()
+        var selectionDeleted = false
+        var popoverWasInserted = false
+
+        var updatedKeys = mutableListOf<String>()
+        var updatedPdfAnnotations =  mutableListOf<Map<String, Any>>()
+        var deletedPdfAnnotations = mutableListOf<String>()
+        var insertedPdfAnnotations =  mutableListOf<Map<String, Any>>()
+
+        for (index in modifications) {
+            if (index >= keys.size) {
+                Timber.w(
+                    "HtmlEpubReaderViewModel: tried modifying index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications"
+                )
+                continue
+            }
+
+            val key = keys[index]
+            val item = objects.where().key(key).findFirst() ?: continue
+            val (annotation, json) = item.htmlEpubAnnotation ?: continue
+
+
+            Timber.w("HtmlEpubReaderViewModel: update Html/Epub annotation $key")
+            annotations[key] = annotation
+            updatedPdfAnnotations.add(json)
+
+            if (canUpdate(key = key, item = item)) {
+                Timber.i("HtmlEpubReaderViewModel: update sidebar key $key")
+                updatedKeys.add(key)
+
+                if (item.changeType == UpdatableChangeType.sync.name) {
+                    // Update comment if it's remote sync change
+                    Timber.i("HtmlEpubReaderViewModel: update comment")
+                    var textCacheTuple: Pair<String, Map<TextStyle, String>>?
+                    val comment: String?
+                    when (annotation.type) {
+                        AnnotationType.highlight, AnnotationType.underline -> {
+                            textCacheTuple = annotation.text?.let {
+                                it to mapOf(this.textFont to it)
+                            }
+                        }
+                        AnnotationType.note, AnnotationType.image, AnnotationType.ink, AnnotationType.text -> {
+                            textCacheTuple = null
+                        }
+
+                    }
+                    texts[key] = textCacheTuple
+                    when (annotation.type) {
+                        AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline -> {
+                            comment = annotation.comment //TODO comment attribute conversion
+                        }
+                        AnnotationType.ink, AnnotationType.text -> {
+                            comment = null
+                        }
+                    }
+                    comments[key] = comment
+                }
+            }
+        }
+
+        var shouldCancelUpdate = false
+
+        for (index in deletions.reversed()) {
+            if (index >= keys.size) {
+                Timber.w(
+                    "HtmlEpubReaderViewModel: tried removing index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications"
+                )
+                shouldCancelUpdate = true
+                break
+            }
+
+            val key = keys.removeAt(index)
+            annotations[key] = null
+            deletedPdfAnnotations.add(key)
+            Timber.i("HtmlEpubReaderViewModel: delete key $key")
+
+            if (viewState.selectedAnnotationKey == key) {
+                Timber.i("HtmlEpubReaderViewModel: deleted selected annotation")
+                selectionDeleted = true
+            }
+        }
+
+        if (shouldCancelUpdate) {
+            return
+        }
+
+        for (index in insertions) {
+            if (index > keys.size) {
+                Timber.w("HtmlEpubReaderViewModel: tried inserting index out of bounds! keys.count=${keys.size}; index=$index; deletions=$deletions; insertions=$insertions; modifications=$modifications")
+                shouldCancelUpdate = true
+                break
+            }
+
+            val item = objects[index]!!
+
+            val htmlEpubAnnotation = item.htmlEpubAnnotation
+            if (htmlEpubAnnotation == null) {
+                Timber.w("HtmlEpubReaderViewModel: tried adding invalid annotation")
+                shouldCancelUpdate = true
+                break
+            }
+            val (annotation, json) = htmlEpubAnnotation
+
+            keys.add(index, item.key)
+            annotations[item.key] = annotation
+            if (viewState.annotationPopoverKey == item.key) {
+                popoverWasInserted = true
+            }
+            Timber.i("HtmlEpubReaderViewModel: insert key ${item.key}")
+            when (item.changeType) {
+                UpdatableChangeType.sync.name, UpdatableChangeType.syncResponse.name -> {
+                    insertedPdfAnnotations.add(json)
+                    Timber.i("HtmlEpubReaderViewModel: insert Html/Epub annotation")
+                }
+            }
+        }
+        if (shouldCancelUpdate) {
+            return
+        }
+
+        updateState {
+            if (viewState.snapshotKeys == null) {
+                copy(sortedKeys = keys)
+            } else {
+                copy(snapshotKeys = keys)
+                copy(sortedKeys = filteredKeys(
+                    snapshot = keys,
+                    term = viewState.annotationSearchTerm,
+                    filter = viewState.annotationFilter
+                ))
+            }
+            copy(comments = comments)
+        }
+        this.annotations = annotations
+        this.documentUpdate = DocumentUpdate(
+            deletions = deletedPdfAnnotations,
+            insertions = insertedPdfAnnotations,
+            modifications = updatedPdfAnnotations
+        )
+        this.texts = texts
+        updateState {
+            copy(updatedAnnotationKeys = updatedKeys.filter { viewState.sortedKeys.contains(it) })
+        }
+        if (popoverWasInserted) {
+            //TODO show popover
+        }
+        if (selectionDeleted) {
+            _select(key = null, didSelectInDocument = true)
+            updateState {
+                copy(
+                    annotationPopoverKey = null,
+                    annotationPopoverRect = null
+                )
+            }
+            //TODO show popover
+        }
+        if ((viewState.snapshotKeys ?: viewState.sortedKeys).isEmpty()) {
+            updateState {
+                copy(sidebarEditingEnabled = false)
+            }
+        }
+    }
+
+    private fun startObservingAnnotationResults() {
+        this.annotationResults!!.addChangeListener { items, changeSet ->
+            when (changeSet.state) {
+                OrderedCollectionChangeSet.State.INITIAL -> {
+                    update(changeSet, items)
+
+                }
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
+                    update(changeSet, items)
+                }
+
+                OrderedCollectionChangeSet.State.ERROR -> {
+                    Timber.e(changeSet.error, "HtmlEpubReaderViewModel: could not load results")
+                }
+
+                else -> {
+                    //no-op
+                }
+            }
+        }
+    }
+
 
 }
 
@@ -650,11 +860,14 @@ data class HtmlEpubReaderViewState(
     val selectedAnnotationCommentActive: Boolean = false,
     val focusSidebarKey: String? = null,
     val focusDocumentKey: String? = null,
-    val comments: Map<String, String> = emptyMap(),
+    val comments: Map<String, String?> = emptyMap(),
     val snapshotKeys: List<String>? = null,
     val sortedKeys: List<String> = emptyList(),
     val annotationSearchTerm: String? = null,
-    var annotationFilter: AnnotationsFilter? = null,
+    val annotationFilter: AnnotationsFilter? = null,
+    val annotationPopoverKey: String? = null,
+    val annotationPopoverRect: RectF? = null,
+    val sidebarEditingEnabled: Boolean = false,
 ) : ViewState {
 }
 
