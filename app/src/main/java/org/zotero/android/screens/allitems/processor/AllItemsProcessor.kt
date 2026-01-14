@@ -391,6 +391,7 @@ class AllItemsProcessor @Inject constructor(
         val accessory = itemAccessories[item.key]
         val typeName = ""
         val cellModel = ItemCellModel.init(
+            dbWrapperMain = dbWrapperMain,
             item = item,
             accessory = cellAccessory(accessory),
             typeName = typeName
