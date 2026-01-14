@@ -3,10 +3,12 @@ package org.zotero.android.screens.allitems.table
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -33,7 +35,7 @@ internal fun AllItemsTable(
         onRefresh = onStartSync,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(bottom = BottomAppBarDefaults.FlexibleBottomAppBarHeight),
             state = lazyListState,
         ) {
             items(
