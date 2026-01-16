@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager
@@ -184,6 +186,7 @@ import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
@@ -220,7 +223,9 @@ class PdfReaderViewModel @Inject constructor(
     private var databaseAnnotations: RealmResults<RItem>? = null
     private lateinit var annotationBoundingBoxConverter: AnnotationBoundingBoxConverter
     private var containerId = 0
+    private lateinit var originalFile: File
     private lateinit var originalUri: Uri
+    private lateinit var dirtyFile: File
     private lateinit var dirtyUri: Uri
     private lateinit var pdfUiFragment: PdfUiFragment
     private lateinit var pdfFragment: PdfFragment
@@ -265,7 +270,7 @@ class PdfReaderViewModel @Inject constructor(
 
     val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
-        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -479,11 +484,12 @@ class PdfReaderViewModel @Inject constructor(
 
     private suspend fun initFileUris(uri: Uri) = withContext(dispatcher) {
         this@PdfReaderViewModel.originalUri = uri
-        val originalFile = File(uri.path)
+        this@PdfReaderViewModel.originalFile = uri.toFile()
         fileStore.readerDirtyPdfFolder().deleteRecursively()
         val dirtyFile = fileStore.pdfReaderDirtyFile(originalFile.name)
-        FileHelper.copyFile(originalFile, dirtyFile)
-        this@PdfReaderViewModel.dirtyUri = Uri.fromFile(dirtyFile)
+        FileHelper.copyFile(this@PdfReaderViewModel.originalFile, dirtyFile)
+        this@PdfReaderViewModel.dirtyFile = dirtyFile
+        this@PdfReaderViewModel.dirtyUri = dirtyFile.toUri()
     }
 
     private fun addDocumentScrollListener() {
@@ -3547,7 +3553,7 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onExportPdf() {
         dismissSharePopup()
-        triggerEffect(PdfReaderViewEffect.ExportPdf(File(this.originalUri.path)))
+        triggerEffect(PdfReaderViewEffect.ExportPdf(this.originalFile))
     }
 
     override fun onExportAnnotatedPdf() {
@@ -3559,7 +3565,7 @@ class PdfReaderViewModel @Inject constructor(
             withContext<Unit>(dispatcher) {
                 this@PdfReaderViewModel.document.saveIfModified()
             }
-            triggerEffect(PdfReaderViewEffect.ExportPdf(File(this@PdfReaderViewModel.dirtyUri.path)))
+            triggerEffect(PdfReaderViewEffect.ExportPdf(this@PdfReaderViewModel.dirtyFile))
             updateState {
                 copy(isExportingAnnotatedPdf = false)
             }

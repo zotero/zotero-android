@@ -1702,7 +1702,7 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, parentKey: String?, attachment: Attachment) {
-        val uri = Uri.fromFile(file)
+        val uri = file.toUri()
         val pdfReaderArgs = PdfReaderArgs(
             key = attachment.key,
             parentKey = parentKey,
@@ -1711,7 +1711,7 @@ class ItemDetailsViewModel @Inject constructor(
             preselectedAnnotationKey = null,
             uri = uri,
         )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
         triggerEffect(NavigateToPdfScreen(params))
     }
 

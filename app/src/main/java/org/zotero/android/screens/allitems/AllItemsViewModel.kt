@@ -281,7 +281,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = Uri.fromFile(file)
+        val uri = file.toUri()
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
             parentKey = parentKey,
@@ -290,7 +290,7 @@ internal class AllItemsViewModel @Inject constructor(
             preselectedAnnotationKey = null,
             uri = uri,
         )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
         triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params))
     }
 
