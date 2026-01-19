@@ -1146,8 +1146,8 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun shouldIncludeCopyCitationAndBibliographyButtons(): Boolean {
         val shouldNotInclude = getSelectedKeys().any { it ->
-            val item = allItemsProcessor.getResultByKey(it)!!
-            CitationController.invalidItemTypes.contains(item.rawType)
+            val item = allItemsProcessor.getResultByKey(it)
+            item != null && CitationController.invalidItemTypes.contains(item.rawType)
         }
 
         return !shouldNotInclude
@@ -1155,7 +1155,10 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun shouldIncludeRetrieveMetadataButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if (item == null) {
+            return false
+        }
 
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
@@ -1163,12 +1166,15 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun shouldIncludeCreateParentButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
-        return item.rawType == ItemTypes.attachment && item.parent == null
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        return item != null && item.rawType == ItemTypes.attachment && item.parent == null
     }
 
     fun getAttachmentFileLocation(): Attachment.FileLocation? {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if (item == null) {
+            return null
+        }
 
         val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
         if (accessory != null) {
@@ -1180,14 +1186,18 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun shouldIncludeRemoveFromCollectionButton(): Boolean {
         val identifier = this.collection.identifier
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val key = getSelectedKeys().first()
+        val item = allItemsProcessor.getResultByKey(key)
 
-        return (identifier is CollectionIdentifier.collection && item.collections?.where()
+        return (identifier is CollectionIdentifier.collection && item?.collections?.where()
             ?.key(identifier.key)?.findFirst() != null)
     }
 
     fun shouldIncludeDuplicateButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if(item == null) {
+            return false
+        }
         return item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment
     }
 
