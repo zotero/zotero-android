@@ -1040,8 +1040,8 @@ class PdfReaderViewModel @Inject constructor(
 
             override fun onAnnotationZOrderChanged(
                 p0: Int,
-                p1: MutableList<Annotation>,
-                p2: MutableList<Annotation>
+                p1: List<Annotation>,
+                p2: List<Annotation>
             ) {
                 //no-op
             }
