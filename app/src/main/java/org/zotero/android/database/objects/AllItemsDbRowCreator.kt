@@ -9,7 +9,7 @@ class AllItemsDbRowCreator {
 
     companion object {
 
-        fun createOrUpdate(item: RItem, database: Realm) {
+        fun createOrUpdate(item: RItem, database: Realm): AllItemsDbRow? {
             val dbRow = item.allItemsDbRow ?: database.createEmbeddedObject(AllItemsDbRow::class.java, item, "allItemsDbRow")
 
             val contentType = if (item.rawType == ItemTypes.attachment) item.fields.where().key(
@@ -24,6 +24,7 @@ class AllItemsDbRowCreator {
             dbRow.subtitle = subtitle(item = item)
             val hasNote = hasNote(item = item)
             dbRow.hasNote = hasNote
+            return dbRow
         }
 
         private fun subtitle(item: RItem): String {

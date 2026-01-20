@@ -3,8 +3,7 @@ package org.zotero.android.architecture.navigation
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import org.apache.commons.codec.binary.Base64
-import org.apache.commons.io.IOUtils
+import org.zotero.android.helpers.FileHelper
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
@@ -32,8 +31,8 @@ class NavigationParamsMarshaller @Inject constructor(
         stringToEncode: String,
         charset: Charset
     ): String {
-        val bytes = IOUtils.toByteArray(stringToEncode)
-        val encoded: ByteArray = Base64.encodeBase64(bytes)
+        val bytes = FileHelper.toByteArray(stringToEncode)
+        val encoded: ByteArray = FileHelper.encodeBase64(bytes)
         return String(encoded, charset)
     }
 
@@ -54,8 +53,8 @@ class NavigationParamsMarshaller @Inject constructor(
         encodedJson: String,
         charset: Charset
     ): String {
-        val bytes = IOUtils.toByteArray(encodedJson)
-        val decodedJson: ByteArray = Base64.decodeBase64(bytes)
+        val bytes = FileHelper.toByteArray(encodedJson)
+        val decodedJson: ByteArray = FileHelper.decodeBase64(bytes)
         return String(decodedJson, charset)
     }
 

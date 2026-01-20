@@ -83,7 +83,6 @@ fun BoxScope.DashboardTopLevelDialogs(
     }
 
     LongPressBottomSheetM3(
-        shouldIncludeBottomBarOffset = true,
         longPressOptionsHolder = viewState.longPressOptionsHolder,
         onCollapse = viewModel::dismissBottomSheet,
         onOptionClick = viewModel::onLongPressOptionsItemSelected

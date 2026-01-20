@@ -1,5 +1,5 @@
 {
-  "version": 33,
+  "version": 40,
   "itemTypes": [
     {
       "itemType": "annotation",
@@ -26,10 +26,19 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "eventPlace"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
+        },
+        {
+          "field": "url"
+        },
+        {
+          "field": "accessDate"
         },
         {
           "field": "archive"
@@ -38,16 +47,16 @@
           "field": "archiveLocation"
         },
         {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
+        },
+        {
           "field": "libraryCatalog"
         },
         {
           "field": "callNumber"
-        },
-        {
-          "field": "url"
-        },
-        {
-          "field": "accessDate"
         },
         {
           "field": "rights"
@@ -104,11 +113,11 @@
           "field": "numberOfVolumes"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "label",
           "baseField": "publisher"
+        },
+        {
+          "field": "place"
         },
         {
           "field": "date"
@@ -117,13 +126,19 @@
           "field": "runningTime"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
+        },
+        {
+          "field": "url"
+        },
+        {
+          "field": "accessDate"
         },
         {
           "field": "archive"
@@ -132,16 +147,16 @@
           "field": "archiveLocation"
         },
         {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
+        },
+        {
           "field": "libraryCatalog"
         },
         {
           "field": "callNumber"
-        },
-        {
-          "field": "url"
-        },
-        {
-          "field": "accessDate"
         },
         {
           "field": "rights"
@@ -156,13 +171,19 @@
           "primary": true
         },
         {
-          "creatorType": "contributor"
+          "creatorType": "originalCreator"
         },
         {
           "creatorType": "composer"
         },
         {
           "creatorType": "wordsBy"
+        },
+        {
+          "creatorType": "translator"
+        },
+        {
+          "creatorType": "contributor"
         }
       ]
     },
@@ -207,7 +228,10 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -217,6 +241,9 @@
         },
         {
           "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -259,16 +286,25 @@
           "field": "date"
         },
         {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
+        },
+        {
           "field": "url"
         },
         {
           "field": "accessDate"
         },
         {
-          "field": "language"
+          "field": "ISSN"
         },
         {
           "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -281,6 +317,9 @@
         {
           "creatorType": "author",
           "primary": true
+        },
+        {
+          "creatorType": "translator"
         },
         {
           "creatorType": "commenter"
@@ -315,25 +354,38 @@
           "field": "edition"
         },
         {
-          "field": "place"
+          "field": "date"
         },
         {
           "field": "publisher"
         },
         {
-          "field": "date"
+          "field": "place"
+        },
+        {
+          "field": "originalDate"
+        },
+        {
+          "field": "originalPublisher"
+        },
+        {
+          "field": "originalPlace"
+        },
+        {
+          "field": "format",
+          "baseField": "medium"
         },
         {
           "field": "numPages"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -342,10 +394,19 @@
           "field": "accessDate"
         },
         {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -408,25 +469,38 @@
           "field": "edition"
         },
         {
-          "field": "place"
+          "field": "date"
         },
         {
           "field": "publisher"
         },
         {
-          "field": "date"
+          "field": "place"
+        },
+        {
+          "field": "originalDate"
+        },
+        {
+          "field": "originalPublisher"
+        },
+        {
+          "field": "originalPlace"
+        },
+        {
+          "field": "format",
+          "baseField": "medium"
         },
         {
           "field": "pages"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -435,10 +509,19 @@
           "field": "accessDate"
         },
         {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -512,16 +595,22 @@
           "field": "history"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -565,26 +654,32 @@
           "field": "system"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "company",
           "baseField": "publisher"
+        },
+        {
+          "field": "place"
         },
         {
           "field": "programmingLanguage"
         },
         {
-          "field": "ISBN"
+          "field": "rights"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
-          "field": "rights"
+          "field": "accessDate"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "ISBN"
         },
         {
           "field": "archive"
@@ -599,7 +694,7 @@
           "field": "callNumber"
         },
         {
-          "field": "accessDate"
+          "field": "shortTitle"
         },
         {
           "field": "extra"
@@ -625,9 +720,6 @@
           "field": "abstractNote"
         },
         {
-          "field": "date"
-        },
-        {
           "field": "proceedingsTitle",
           "baseField": "publicationTitle"
         },
@@ -635,13 +727,25 @@
           "field": "conferenceName"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "publisher"
         },
         {
+          "field": "place"
+        },
+        {
+          "field": "date"
+        },
+        {
+          "field": "eventPlace"
+        },
+        {
           "field": "volume"
+        },
+        {
+          "field": "issue"
+        },
+        {
+          "field": "numberOfVolumes"
         },
         {
           "field": "pages"
@@ -650,7 +754,7 @@
           "field": "series"
         },
         {
-          "field": "language"
+          "field": "seriesNumber"
         },
         {
           "field": "DOI"
@@ -659,7 +763,7 @@
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -668,10 +772,19 @@
           "field": "accessDate"
         },
         {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -815,25 +928,25 @@
           "field": "edition"
         },
         {
-          "field": "place"
+          "field": "date"
         },
         {
           "field": "publisher"
         },
         {
-          "field": "date"
+          "field": "place"
         },
         {
           "field": "pages"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -846,6 +959,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -889,16 +1008,22 @@
           "field": "abstractNote"
         },
         {
-          "field": "publisher"
+          "field": "type"
         },
         {
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "publisher"
         },
         {
-          "field": "shortTitle"
+          "field": "place"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -911,6 +1036,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -958,13 +1089,19 @@
           "field": "date"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
         },
         {
           "field": "language"
@@ -980,6 +1117,9 @@
         {
           "creatorType": "author",
           "primary": true
+        },
+        {
+          "creatorType": "translator"
         },
         {
           "creatorType": "contributor"
@@ -1018,13 +1158,13 @@
           "field": "edition"
         },
         {
-          "field": "place"
+          "field": "date"
         },
         {
           "field": "publisher"
         },
         {
-          "field": "date"
+          "field": "place"
         },
         {
           "field": "pages"
@@ -1033,7 +1173,10 @@
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1042,13 +1185,16 @@
           "field": "accessDate"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1096,6 +1242,9 @@
           "baseField": "publisher"
         },
         {
+          "field": "place"
+        },
+        {
           "field": "date"
         },
         {
@@ -1110,10 +1259,10 @@
           "field": "runningTime"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1126,6 +1275,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1146,13 +1301,28 @@
           "primary": true
         },
         {
-          "creatorType": "contributor"
+          "creatorType": "producer"
         },
         {
           "creatorType": "scriptwriter"
         },
         {
-          "creatorType": "producer"
+          "creatorType": "castMember"
+        },
+        {
+          "creatorType": "host"
+        },
+        {
+          "creatorType": "guest"
+        },
+        {
+          "creatorType": "narrator"
+        },
+        {
+          "creatorType": "translator"
+        },
+        {
+          "creatorType": "contributor"
         }
       ]
     },
@@ -1177,16 +1347,22 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -1218,9 +1394,6 @@
           "field": "committee"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "publisher"
         },
         {
@@ -1247,16 +1420,25 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "place"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -1285,16 +1467,22 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -1326,17 +1514,23 @@
           "field": "abstractNote"
         },
         {
-          "field": "date"
-        },
-        {
           "field": "interviewMedium",
           "baseField": "medium"
         },
         {
-          "field": "language"
+          "field": "date"
         },
         {
-          "field": "shortTitle"
+          "field": "publisher"
+        },
+        {
+          "field": "place"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1349,6 +1543,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1392,16 +1592,31 @@
           "field": "publicationTitle"
         },
         {
+          "field": "publisher"
+        },
+        {
+          "field": "place"
+        },
+        {
+          "field": "date"
+        },
+        {
           "field": "volume"
         },
         {
           "field": "issue"
         },
         {
-          "field": "pages"
+          "field": "section"
         },
         {
-          "field": "date"
+          "field": "partNumber"
+        },
+        {
+          "field": "partTitle"
+        },
+        {
+          "field": "pages"
         },
         {
           "field": "series"
@@ -1416,16 +1631,10 @@
           "field": "journalAbbreviation"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "DOI"
         },
         {
-          "field": "ISSN"
-        },
-        {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1434,10 +1643,25 @@
           "field": "accessDate"
         },
         {
+          "field": "PMID"
+        },
+        {
+          "field": "PMCID"
+        },
+        {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1488,10 +1712,13 @@
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "eventPlace"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1504,6 +1731,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1524,10 +1757,13 @@
           "primary": true
         },
         {
+          "creatorType": "recipient"
+        },
+        {
           "creatorType": "contributor"
         },
         {
-          "creatorType": "recipient"
+          "creatorType": "translator"
         }
       ]
     },
@@ -1544,25 +1780,31 @@
           "field": "publicationTitle"
         },
         {
+          "field": "publisher"
+        },
+        {
+          "field": "place"
+        },
+        {
+          "field": "date"
+        },
+        {
           "field": "volume"
         },
         {
           "field": "issue"
         },
         {
-          "field": "date"
-        },
-        {
           "field": "pages"
-        },
-        {
-          "field": "language"
         },
         {
           "field": "ISSN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1575,6 +1817,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1619,6 +1867,10 @@
           "baseField": "type"
         },
         {
+          "field": "institution",
+          "baseField": "publisher"
+        },
+        {
           "field": "place"
         },
         {
@@ -1628,10 +1880,13 @@
           "field": "numPages"
         },
         {
-          "field": "language"
+          "field": "number"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1644,6 +1899,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1694,22 +1955,22 @@
           "field": "edition"
         },
         {
-          "field": "place"
+          "field": "publisher"
         },
         {
-          "field": "publisher"
+          "field": "place"
         },
         {
           "field": "date"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1722,6 +1983,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1762,13 +2029,22 @@
           "field": "publicationTitle"
         },
         {
+          "field": "publisher"
+        },
+        {
           "field": "place"
         },
         {
-          "field": "edition"
+          "field": "date"
         },
         {
-          "field": "date"
+          "field": "volume"
+        },
+        {
+          "field": "issue"
+        },
+        {
+          "field": "edition"
         },
         {
           "field": "section"
@@ -1777,13 +2053,13 @@
           "field": "pages"
         },
         {
-          "field": "language"
-        },
-        {
-          "field": "shortTitle"
-        },
-        {
           "field": "ISSN"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1796,6 +2072,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -1874,6 +2156,10 @@
           "baseField": "date"
         },
         {
+          "field": "priorityDate",
+          "baseField": "originalDate"
+        },
+        {
           "field": "references"
         },
         {
@@ -1881,16 +2167,22 @@
           "baseField": "status"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -1936,7 +2228,19 @@
           "field": "date"
         },
         {
+          "field": "publisher"
+        },
+        {
+          "field": "place"
+        },
+        {
           "field": "runningTime"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -1945,10 +2249,10 @@
           "field": "accessDate"
         },
         {
-          "field": "language"
+          "field": "shortTitle"
         },
         {
-          "field": "shortTitle"
+          "field": "language"
         },
         {
           "field": "rights"
@@ -1963,10 +2267,31 @@
           "primary": true
         },
         {
-          "creatorType": "contributor"
+          "creatorType": "guest"
         },
         {
-          "creatorType": "guest"
+          "creatorType": "producer"
+        },
+        {
+          "creatorType": "executiveProducer"
+        },
+        {
+          "creatorType": "seriesCreator"
+        },
+        {
+          "creatorType": "director"
+        },
+        {
+          "creatorType": "scriptwriter"
+        },
+        {
+          "creatorType": "castMember"
+        },
+        {
+          "creatorType": "translator"
+        },
+        {
+          "creatorType": "contributor"
         }
       ]
     },
@@ -2076,10 +2401,23 @@
           "field": "date"
         },
         {
+          "field": "meetingName"
+        },
+        {
           "field": "place"
         },
         {
-          "field": "meetingName"
+          "field": "series"
+        },
+        {
+          "field": "sessionTitle",
+          "baseField": "publicationTitle"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2088,10 +2426,10 @@
           "field": "accessDate"
         },
         {
-          "field": "language"
+          "field": "shortTitle"
         },
         {
-          "field": "shortTitle"
+          "field": "language"
         },
         {
           "field": "rights"
@@ -2106,7 +2444,16 @@
           "primary": true
         },
         {
+          "creatorType": "chair"
+        },
+        {
+          "creatorType": "organizer"
+        },
+        {
           "creatorType": "contributor"
+        },
+        {
+          "creatorType": "translator"
         }
       ]
     },
@@ -2132,11 +2479,11 @@
           "baseField": "medium"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "network",
           "baseField": "publisher"
+        },
+        {
+          "field": "place"
         },
         {
           "field": "date"
@@ -2145,10 +2492,10 @@
           "field": "runningTime"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2161,6 +2508,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -2177,23 +2530,38 @@
       ],
       "creatorTypes": [
         {
-          "creatorType": "director",
+          "creatorType": "creator",
           "primary": true
         },
         {
-          "creatorType": "scriptwriter"
+          "creatorType": "host"
+        },
+        {
+          "creatorType": "guest"
         },
         {
           "creatorType": "producer"
         },
         {
+          "creatorType": "executiveProducer"
+        },
+        {
+          "creatorType": "seriesCreator"
+        },
+        {
+          "creatorType": "director"
+        },
+        {
+          "creatorType": "scriptwriter"
+        },
+        {
           "creatorType": "castMember"
         },
         {
-          "creatorType": "contributor"
+          "creatorType": "translator"
         },
         {
-          "creatorType": "guest"
+          "creatorType": "contributor"
         }
       ]
     },
@@ -2215,26 +2583,32 @@
           "baseField": "type"
         },
         {
-          "field": "seriesTitle"
+          "field": "institution",
+          "baseField": "publisher"
         },
         {
           "field": "place"
         },
         {
-          "field": "institution",
-          "baseField": "publisher"
+          "field": "date"
         },
         {
-          "field": "date"
+          "field": "seriesTitle"
+        },
+        {
+          "field": "seriesNumber"
         },
         {
           "field": "pages"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "ISBN"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2243,10 +2617,19 @@
           "field": "accessDate"
         },
         {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -2265,6 +2648,9 @@
         {
           "creatorType": "author",
           "primary": true
+        },
+        {
+          "creatorType": "editor"
         },
         {
           "creatorType": "contributor"
@@ -2303,6 +2689,9 @@
           "field": "versionNumber"
         },
         {
+          "field": "edition"
+        },
+        {
           "field": "status"
         },
         {
@@ -2313,6 +2702,15 @@
         },
         {
           "field": "place"
+        },
+        {
+          "field": "partNumber"
+        },
+        {
+          "field": "partTitle"
+        },
+        {
+          "field": "ISBN"
         },
         {
           "field": "DOI"
@@ -2360,6 +2758,9 @@
           "primary": true
         },
         {
+          "creatorType": "editor"
+        },
+        {
           "creatorType": "contributor"
         }
       ]
@@ -2401,16 +2802,22 @@
           "field": "history"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "rights"
@@ -2453,13 +2860,22 @@
           "field": "date"
         },
         {
+          "field": "series"
+        },
+        {
+          "field": "seriesNumber"
+        },
+        {
           "field": "numPages"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "ISBN"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2468,10 +2884,19 @@
           "field": "accessDate"
         },
         {
+          "field": "ISSN"
+        },
+        {
           "field": "archive"
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -2518,11 +2943,11 @@
           "baseField": "medium"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "network",
           "baseField": "publisher"
+        },
+        {
+          "field": "place"
         },
         {
           "field": "date"
@@ -2531,10 +2956,10 @@
           "field": "runningTime"
         },
         {
-          "field": "language"
+          "field": "DOI"
         },
         {
-          "field": "shortTitle"
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2547,6 +2972,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -2567,19 +2998,34 @@
           "primary": true
         },
         {
-          "creatorType": "scriptwriter"
+          "creatorType": "producer"
         },
         {
-          "creatorType": "producer"
+          "creatorType": "executiveProducer"
+        },
+        {
+          "creatorType": "seriesCreator"
+        },
+        {
+          "creatorType": "scriptwriter"
         },
         {
           "creatorType": "castMember"
         },
         {
-          "creatorType": "contributor"
+          "creatorType": "host"
         },
         {
           "creatorType": "guest"
+        },
+        {
+          "creatorType": "narrator"
+        },
+        {
+          "creatorType": "translator"
+        },
+        {
+          "creatorType": "contributor"
         }
       ]
     },
@@ -2606,11 +3052,11 @@
           "field": "numberOfVolumes"
         },
         {
-          "field": "place"
-        },
-        {
           "field": "studio",
           "baseField": "publisher"
+        },
+        {
+          "field": "place"
         },
         {
           "field": "date"
@@ -2619,13 +3065,13 @@
           "field": "runningTime"
         },
         {
-          "field": "language"
-        },
-        {
           "field": "ISBN"
         },
         {
-          "field": "shortTitle"
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
@@ -2638,6 +3084,12 @@
         },
         {
           "field": "archiveLocation"
+        },
+        {
+          "field": "shortTitle"
+        },
+        {
+          "field": "language"
         },
         {
           "field": "libraryCatalog"
@@ -2654,17 +3106,35 @@
       ],
       "creatorTypes": [
         {
-          "creatorType": "director",
+          "creatorType": "creator",
           "primary": true
         },
         {
-          "creatorType": "scriptwriter"
+          "creatorType": "director"
         },
         {
           "creatorType": "producer"
         },
         {
+          "creatorType": "scriptwriter"
+        },
+        {
+          "creatorType": "executiveProducer"
+        },
+        {
           "creatorType": "castMember"
+        },
+        {
+          "creatorType": "host"
+        },
+        {
+          "creatorType": "guest"
+        },
+        {
+          "creatorType": "narrator"
+        },
+        {
+          "creatorType": "translator"
         },
         {
           "creatorType": "contributor"
@@ -2692,13 +3162,25 @@
           "field": "date"
         },
         {
-          "field": "shortTitle"
+          "field": "publisher"
+        },
+        {
+          "field": "place"
+        },
+        {
+          "field": "DOI"
+        },
+        {
+          "field": "citationKey"
         },
         {
           "field": "url"
         },
         {
           "field": "accessDate"
+        },
+        {
+          "field": "shortTitle"
         },
         {
           "field": "language"
@@ -2861,6 +3343,9 @@
         "chapter-number": [
           "session"
         ],
+        "citation-key": [
+          "citationKey"
+        ],
         "collection-number": [
           "seriesNumber"
         ],
@@ -2884,7 +3369,7 @@
           "edition"
         ],
         "event-place": [
-          "place"
+          "eventPlace"
         ],
         "event-title": [
           "meetingName",
@@ -2929,8 +3414,26 @@
         "number-of-volumes": [
           "numberOfVolumes"
         ],
+        "original-publisher": [
+          "originalPublisher"
+        ],
+        "original-publisher-place": [
+          "originalPlace"
+        ],
+        "part-number": [
+          "partNumber"
+        ],
+        "part-title": [
+          "partTitle"
+        ],
         "page": [
           "pages"
+        ],
+        "PMID": [
+          "PMID"
+        ],
+        "PMCID": [
+          "PMCID"
         ],
         "publisher": [
           "publisher"
@@ -2978,22 +3481,32 @@
       "date": {
         "accessed": "accessDate",
         "issued": "date",
-        "submitted": "filingDate"
+        "submitted": "filingDate",
+        "original-date": "originalDate"
       }
     },
     "names": {
       "author": "author",
       "bookAuthor": "container-author",
+      "chair": "chair",
       "castMember": "performer",
       "composer": "composer",
       "contributor": "contributor",
+      "creator": "author",
       "director": "director",
       "editor": "editor",
+      "executiveProducer": "executive-producer",
       "guest": "guest",
+      "host": "host",
       "interviewer": "interviewer",
+      "narrator": "narrator",
+      "originalCreator": "original-author",
+      "organizer": "organizer",
+      "podcaster": "host",
       "producer": "producer",
       "recipient": "recipient",
       "reviewedAuthor": "reviewed-author",
+      "seriesCreator": "series-creator",
       "seriesEditor": "collection-editor",
       "scriptwriter": "script-writer",
       "translator": "translator"
@@ -3084,6 +3597,7 @@
         "edition": "Edition",
         "encyclopediaTitle": "Encyclopedia Title",
         "episodeNumber": "Episode Number",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Filing Date",
         "firstPage": "First Page",
@@ -3117,11 +3631,19 @@
         "numberOfVolumes": "# of Volumes",
         "numPages": "# of Pages",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pages",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patent Number",
         "place": "Place",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Priority Numbers",
         "proceedingsTitle": "Proceedings Title",
         "programmingLanguage": "Prog. Language",
@@ -3145,6 +3667,7 @@
         "seriesText": "Series Text",
         "seriesTitle": "Series Title",
         "session": "Session",
+        "sessionTitle": "Session Title",
         "shortTitle": "Short Title",
         "status": "Status",
         "studio": "Studio",
@@ -3168,17 +3691,24 @@
         "bookAuthor": "Book Author",
         "cartographer": "Cartographer",
         "castMember": "Cast Member",
+        "chair": "Chair",
         "commenter": "Commenter",
         "composer": "Composer",
         "contributor": "Contributor",
         "cosponsor": "Cosponsor",
         "counsel": "Counsel",
+        "creator": "Skepper",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Guest",
+        "host": "Host",
         "interviewee": "Interview With",
         "interviewer": "Interviewer",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Podcaster",
         "presenter": "Presenter",
@@ -3187,6 +3717,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Scriptwriter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Series Editor",
         "sponsor": "Sponsor",
         "translator": "Translator",
@@ -3195,7 +3726,7 @@
     },
     "ar": {
       "itemTypes": {
-        "annotation": "تعليق",
+        "annotation": "التعليق التوضيحي",
         "artwork": "عمل فني",
         "attachment": "مرفق",
         "audioRecording": "تسجيل صوتي",
@@ -3204,9 +3735,9 @@
         "book": "كتاب",
         "bookSection": "قسم في كتاب",
         "case": "قضية",
-        "computerProgram": "Software",
+        "computerProgram": "البرنامج",
         "conferencePaper": "ورقة عمل في مؤتمر",
-        "dataset": "Dataset",
+        "dataset": "مجموعة البيانات",
         "dictionaryEntry": "كلمة في المعجم",
         "document": "مستند",
         "email": "بريد الكتروني",
@@ -3225,7 +3756,7 @@
         "note": "ملاحظة",
         "patent": "براءة الإختراع",
         "podcast": "تدوينة وسائطية",
-        "preprint": "Preprint",
+        "preprint": "ما قبل الطباعة",
         "presentation": "عرض تقديمي",
         "radioBroadcast": "بث إذاعي",
         "report": "تقرير",
@@ -3241,20 +3772,20 @@
         "accessDate": "تاريخ الدخول",
         "applicationNumber": "رقم الطلب",
         "archive": "الارشيف",
-        "archiveID": "Archive ID",
+        "archiveID": "معرّف الأرشيف",
         "archiveLocation": "الموقع في الأرشيف",
         "artworkMedium": "وسيط العمل الفني",
         "artworkSize": "حجم العمل الفني",
         "assignee": "المخول بالمهمة",
         "audioFileType": "نوع الملف الصوتي",
         "audioRecordingFormat": "صيغة التسجيل الصوتي",
-        "authority": "Authority",
+        "authority": "السلطة",
         "billNumber": "رقم مسودّة القانون",
         "blogTitle": "عنوان المدونة",
         "bookTitle": "عنوان الكتاب",
         "callNumber": "رقم الإسترجاع",
         "caseName": "اسم القضية",
-        "citationKey": "Citation Key",
+        "citationKey": "مفتاح الاستشهاد",
         "code": "التشفير",
         "codeNumber": "رقم الرمز",
         "codePages": "صفحات القانون",
@@ -3273,10 +3804,11 @@
         "distributor": "الموزع",
         "docketNumber": "رقم القضية",
         "documentNumber": "رقم المستند",
-        "DOI": "معرف الكائن الرقمي",
+        "DOI": "DOI",
         "edition": "الطبعة",
         "encyclopediaTitle": "عنوان الموسوعة",
         "episodeNumber": "رقم الموضوع",
+        "eventPlace": "Event Place",
         "extra": "معلومات إضافية",
         "filingDate": "تاريخ الايداع",
         "firstPage": "الصفحة الأولى",
@@ -3284,11 +3816,11 @@
         "forumTitle": "عنوان المنتدى",
         "genre": "النوع الأدبي",
         "history": "التاريخ",
-        "identifier": "Identifier",
+        "identifier": "المعرف",
         "institution": "المؤسسة",
         "interviewMedium": "وسيط المقابلة",
-        "ISBN": "تدمك",
-        "ISSN": "تدمد",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "العدد",
         "issueDate": "تاريخ الإصدار",
         "issuingAuthority": "مسئولية الاصدار",
@@ -3309,15 +3841,23 @@
         "number": "الرقم",
         "numberOfVolumes": "عدد المجلدات",
         "numPages": "عدد الصفحات",
-        "organization": "Organization",
+        "organization": "المنظمة",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "الصفحات",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "رقم البرائة",
         "place": "المكان",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "نوع الموضوع",
         "presentationType": "نوع العرض التقديمي",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "ارقام الأولوية",
         "proceedingsTitle": "عنوان ورقة العمل",
-        "programmingLanguage": "Prog. Language",
+        "programmingLanguage": "لغة البرمجة",
         "programTitle": "عنوان البرنامج",
         "publicationTitle": "عنوان المنشور",
         "publicLawNumber": "رقم القانون العام",
@@ -3327,8 +3867,8 @@
         "reporterVolume": "مجلد الأحكام",
         "reportNumber": "رقم التقرير",
         "reportType": "نوع التقرير",
-        "repository": "Repository",
-        "repositoryLocation": "Repo. Location",
+        "repository": "المستودع",
+        "repositoryLocation": "موقع المستودع",
         "rights": "الحقوق",
         "runningTime": "وقت التشغيل",
         "scale": "مقياس الرسم",
@@ -3338,8 +3878,9 @@
         "seriesText": "نص السلسلة",
         "seriesTitle": "عنوان السلسلة",
         "session": "الجلسة",
+        "sessionTitle": "Session Title",
         "shortTitle": "العنوان المختصر",
-        "status": "Status",
+        "status": "الحالة",
         "studio": "الأستوديو",
         "subject": "الموضوع",
         "system": "النظام",
@@ -3361,17 +3902,24 @@
         "bookAuthor": "مؤلف كتاب",
         "cartographer": "رسام الخريطة",
         "castMember": "عضو طاقم التمثيل",
+        "chair": "Chair",
         "commenter": "المعلق",
         "composer": "الملحن",
         "contributor": "اسم المشارك",
         "cosponsor": "الراعي المشارك",
         "counsel": "المستشار",
+        "creator": "المؤلف",
         "director": "المخرج",
         "editor": "المحرر",
+        "executiveProducer": "Executive Producer",
         "guest": "الضيف",
+        "host": "Host",
         "interviewee": "مقابلة مع",
         "interviewer": "المحاور",
         "inventor": "المخترع",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "الفنان",
         "podcaster": "المدون",
         "presenter": "المقدم",
@@ -3380,6 +3928,7 @@
         "recipient": "المتلقي",
         "reviewedAuthor": "مؤلف مراجع",
         "scriptwriter": "كاتب الحوار",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "محرر السلسلة",
         "sponsor": "الراعي",
         "translator": "المترجم",
@@ -3470,6 +4019,7 @@
         "edition": "Издание",
         "encyclopediaTitle": "Заглавие на енциклопедия",
         "episodeNumber": "Номер на епизод",
+        "eventPlace": "Event Place",
         "extra": "Допълнителни",
         "filingDate": "Дата на архивиране",
         "firstPage": "Първа страница",
@@ -3503,11 +4053,19 @@
         "numberOfVolumes": "Номера на томовете",
         "numPages": "брой страници",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Страници",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Номер на патент",
         "place": "Място",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Вид съобщението",
         "presentationType": "Вид",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Приоритетни номера",
         "proceedingsTitle": "Заглавие на протокол",
         "programmingLanguage": "Prog. Language",
@@ -3531,6 +4089,7 @@
         "seriesText": "Текст на поредицата",
         "seriesTitle": "Заглавие на поредицата",
         "session": "Сесия",
+        "sessionTitle": "Session Title",
         "shortTitle": "Късо заглавие",
         "status": "Status",
         "studio": "Студио",
@@ -3554,17 +4113,24 @@
         "bookAuthor": "Автор на книга",
         "cartographer": "Картограф",
         "castMember": "Член на Трупата",
+        "chair": "Chair",
         "commenter": "Коментатор",
         "composer": "Композитор",
         "contributor": "Сътрудник",
         "cosponsor": "Коспонсор",
         "counsel": "Адвокат",
+        "creator": "Създател",
         "director": "Режисьор",
         "editor": "Редактор",
+        "executiveProducer": "Executive Producer",
         "guest": "Гост",
+        "host": "Host",
         "interviewee": "Интервю с",
         "interviewer": "Интервюиращ",
         "inventor": "Откривател",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Изпълнител",
         "podcaster": "Автор на подкаст",
         "presenter": "Изнесен от",
@@ -3573,6 +4139,7 @@
         "recipient": "Получател",
         "reviewedAuthor": "Рецензиран Автор",
         "scriptwriter": "Сценарист",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Редактор на Поредицата",
         "sponsor": "Спонсор",
         "translator": "Преводач",
@@ -3663,6 +4230,7 @@
         "edition": "Embannadur",
         "encyclopediaTitle": "Titl hollouiziegezh",
         "episodeNumber": "Niver ar rann",
+        "eventPlace": "Event Place",
         "extra": "Traoù dibarr",
         "filingDate": "Deiziad leuniadur",
         "firstPage": "Pajenn gentañ",
@@ -3696,11 +4264,19 @@
         "numberOfVolumes": "# a levrennoù",
         "numPages": "# a bajennoù",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pajennoù",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Niver breved",
         "place": "Lec'h",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Doare embannadenn",
         "presentationType": "Doare",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Niver priorelezh",
         "proceedingsTitle": "Titl an aktoù",
         "programmingLanguage": "Yezh brogrammiñ",
@@ -3724,6 +4300,7 @@
         "seriesText": "Testenn an dastumad",
         "seriesTitle": "Titl an dastumad",
         "session": "Dalc'h",
+        "sessionTitle": "Session Title",
         "shortTitle": "Titl berr",
         "status": "Status",
         "studio": "Studio",
@@ -3747,17 +4324,24 @@
         "bookAuthor": "Aozer al levr",
         "cartographer": "Kartenner",
         "castMember": "Ezel ar c'homedianeta",
+        "chair": "Chair",
         "commenter": "Displeger",
         "composer": "Kompozer",
         "contributor": "Kendaoler",
         "cosponsor": "Ken-sponsor",
         "counsel": "Kuzulier",
+        "creator": "Krouer",
         "director": "Rener",
         "editor": "Embanner",
+        "executiveProducer": "Executive Producer",
         "guest": "Den pedet",
+        "host": "Host",
         "interviewee": "Aterset gant",
         "interviewer": "Aterser",
         "inventor": "Ijiner",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Jubenner",
         "podcaster": "Podskigner",
         "presenter": "Kinniger",
@@ -3766,6 +4350,7 @@
         "recipient": "Resever",
         "reviewedAuthor": "Aozer niverennet",
         "scriptwriter": "Skriver-skriptoù",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Embanner heuliadennoù",
         "sponsor": "Sponsor",
         "translator": "Troer",
@@ -3856,6 +4441,7 @@
         "edition": "Edició",
         "encyclopediaTitle": "Títol de l'enciclopèdia",
         "episodeNumber": "Número d'episodi",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Data de presentació",
         "firstPage": "Primera pàgina",
@@ -3889,11 +4475,19 @@
         "numberOfVolumes": "Nre. de volums",
         "numPages": "Nre. de pàgines",
         "organization": "Organització",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pàgines",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Número de patent",
         "place": "Lloc",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tipus d'escrit",
         "presentationType": "Tipus",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Números de prioritat",
         "proceedingsTitle": "Títol de la ponència",
         "programmingLanguage": "Llenguatge de prog.",
@@ -3917,6 +4511,7 @@
         "seriesText": "Text de la sèrie",
         "seriesTitle": "Títol de la sèrie",
         "session": "Sessió",
+        "sessionTitle": "Session Title",
         "shortTitle": "Títol curt",
         "status": "Estat",
         "studio": "Estudi",
@@ -3940,17 +4535,24 @@
         "bookAuthor": "Autor del llibre",
         "cartographer": "Cartògraf",
         "castMember": "Membre del repartiment",
+        "chair": "Chair",
         "commenter": "Comentarista",
         "composer": "Compositor",
         "contributor": "Col·laborador",
         "cosponsor": "Copatrocinador",
         "counsel": "Conseller",
+        "creator": "Creador",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Convidat",
+        "host": "Host",
         "interviewee": "Entrevistat",
         "interviewer": "Entrevistador",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Intèrpret",
         "podcaster": "Podcaster",
         "presenter": "Presentador",
@@ -3959,6 +4561,7 @@
         "recipient": "Receptor",
         "reviewedAuthor": "Autor revisat",
         "scriptwriter": "Guionista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor de la sèrie",
         "sponsor": "Esponsor",
         "translator": "Traductor",
@@ -4049,6 +4652,7 @@
         "edition": "Vydání",
         "encyclopediaTitle": "Jméno encyklopedie",
         "episodeNumber": "Číslo epizody",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Datum zápisu",
         "firstPage": "První strana",
@@ -4082,11 +4686,19 @@
         "numberOfVolumes": "Počet ročníků",
         "numPages": "# stran",
         "organization": "Organizace",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Rozsah",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Číslo patentů",
         "place": "Místo",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Typ příspěvku",
         "presentationType": "Typ",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Číslo priority",
         "proceedingsTitle": "Jméno sborníku",
         "programmingLanguage": "Prog. jazyk",
@@ -4110,6 +4722,7 @@
         "seriesText": "Text série",
         "seriesTitle": "Název série",
         "session": "Zasedání",
+        "sessionTitle": "Session Title",
         "shortTitle": "Krátký název",
         "status": "Status",
         "studio": "Studio",
@@ -4133,17 +4746,24 @@
         "bookAuthor": "Autor knihy",
         "cartographer": "Kartograf",
         "castMember": "Člen obsazení",
+        "chair": "Chair",
         "commenter": "Komentátor",
         "composer": "Skladatel",
         "contributor": "Přispěvatel",
         "cosponsor": "Spolusponzor",
         "counsel": "Právní zástupce",
+        "creator": "Tvůrce",
         "director": "Režisér",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Host",
+        "host": "Host",
         "interviewee": "Rozhovor s",
         "interviewer": "Tazatel",
         "inventor": "Vynálezce",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Účinkující",
         "podcaster": "Autor podcastu",
         "presenter": "Prezentující",
@@ -4152,6 +4772,7 @@
         "recipient": "Příjemce",
         "reviewedAuthor": "Autor revize",
         "scriptwriter": "Scénárista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor série",
         "sponsor": "Sponzor",
         "translator": "Překladatel",
@@ -4242,6 +4863,7 @@
         "edition": "Udgave",
         "encyclopediaTitle": "Leksikonets titel",
         "episodeNumber": "Afsnit nr.",
+        "eventPlace": "Event Place",
         "extra": "Ekstra",
         "filingDate": "Indlemmet d.",
         "firstPage": "Første side",
@@ -4275,11 +4897,19 @@
         "numberOfVolumes": "Antal bind",
         "numPages": "Antal sider",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Sider",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patentnummer",
         "place": "Sted",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Type (post)",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioritetsnumre",
         "proceedingsTitle": "Titel på proceedings",
         "programmingLanguage": "Prog. Language",
@@ -4303,6 +4933,7 @@
         "seriesText": "Serie: suppl. tekst",
         "seriesTitle": "Serietitel",
         "session": "Behandlet",
+        "sessionTitle": "Session Title",
         "shortTitle": "Forkortet titel",
         "status": "Status",
         "studio": "Studie",
@@ -4326,17 +4957,24 @@
         "bookAuthor": "Bogens forfatter",
         "cartographer": "Kartograf",
         "castMember": "Medvirkende",
+        "chair": "Chair",
         "commenter": "Kommentator",
         "composer": "Komponist",
         "contributor": "Anden bidragyder",
         "cosponsor": "Medforslagsstiller",
         "counsel": "Advokat",
+        "creator": "Ophav",
         "director": "Instruktør/Ophav",
         "editor": "Redaktør",
+        "executiveProducer": "Executive Producer",
         "guest": "Gæst",
+        "host": "Host",
         "interviewee": "Inverview med",
         "interviewer": "Interviewer",
         "inventor": "Opfinder",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Udøver",
         "podcaster": "Ophav til podcast",
         "presenter": "Forelæser/Ophav",
@@ -4345,6 +4983,7 @@
         "recipient": "Modtager",
         "reviewedAuthor": "Anmeldt forfatter",
         "scriptwriter": "Manuskriptforfatter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Seriens redaktør",
         "sponsor": "Forslagsstiller",
         "translator": "Oversætter",
@@ -4361,7 +5000,7 @@
         "blogPost": "Blog-Post",
         "book": "Buch",
         "bookSection": "Buchteil",
-        "case": "Fall",
+        "case": "Gerichtsentscheidung",
         "computerProgram": "Software",
         "conferencePaper": "Konferenz-Paper",
         "dataset": "Datensatz",
@@ -4411,7 +5050,7 @@
         "blogTitle": "Titel des Blogs",
         "bookTitle": "Buchtitel",
         "callNumber": "Signatur",
-        "caseName": "Name des Falls",
+        "caseName": "Titel",
         "citationKey": "Zitierschlüssel",
         "code": "Code",
         "codeNumber": "Codenummer",
@@ -4424,7 +5063,7 @@
         "court": "Gericht",
         "date": "Datum",
         "dateAdded": "Hinzugefügt am",
-        "dateDecided": "Beschlussdatum",
+        "dateDecided": "Entscheidungsdatum",
         "dateEnacted": "Datum des Inkrafttretens",
         "dateModified": "Geändert am",
         "dictionaryTitle": "Titel des Wörterbuchs",
@@ -4435,6 +5074,7 @@
         "edition": "Auflage",
         "encyclopediaTitle": "Titel der Enzyklopädie",
         "episodeNumber": "Nummer der Folge",
+        "eventPlace": "Veranstaltungsort",
         "extra": "Extra",
         "filingDate": "Datum der Einreichung",
         "firstPage": "Erste Seite",
@@ -4468,11 +5108,19 @@
         "numberOfVolumes": "Anzahl der Bände",
         "numPages": "Anzahl der Seiten",
         "organization": "Organisation",
+        "originalDate": "Ursprüngliches Datum",
+        "originalPlace": "Ursprünglicher Ort",
+        "originalPublisher": "Original Publisher",
         "pages": "Seiten",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patentnummer",
         "place": "Ort",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Art von Eintrag",
         "presentationType": "Art",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioritätsnummern",
         "proceedingsTitle": "Titel des Konferenzbandes",
         "programmingLanguage": "Programmiersprache",
@@ -4481,8 +5129,8 @@
         "publicLawNumber": "Öffentliche Gesetzesnummer",
         "publisher": "Verlag",
         "references": "Quellenangaben",
-        "reporter": "Gesetzessammlung",
-        "reporterVolume": "Nummer der Gesetzessammlung",
+        "reporter": "Entscheidungssammlung",
+        "reporterVolume": "Band",
         "reportNumber": "Nummer des Berichts",
         "reportType": "Art von Bericht",
         "repository": "Repositorium",
@@ -4496,6 +5144,7 @@
         "seriesText": "Reihe Text",
         "seriesTitle": "Titel der Reihe",
         "session": "Sitzung",
+        "sessionTitle": "Session Title",
         "shortTitle": "Kurztitel",
         "status": "Status",
         "studio": "Studio",
@@ -4519,17 +5168,24 @@
         "bookAuthor": "Buchautor",
         "cartographer": "Kartograph",
         "castMember": "Ensemble",
+        "chair": "Vorsitzende*r",
         "commenter": "Kommentator",
         "composer": "Komponist",
         "contributor": "Mitarbeiter",
         "cosponsor": "Mitunterzeichner",
         "counsel": "Anwalt",
+        "creator": "Ersteller",
         "director": "Regisseur",
         "editor": "Herausgeber",
+        "executiveProducer": "Executive Producer",
         "guest": "Gast",
+        "host": "Host",
         "interviewee": "Interview mit",
         "interviewer": "Interviewer",
         "inventor": "Erfinder",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Darsteller",
         "podcaster": "Podcaster",
         "presenter": "Vortragender",
@@ -4538,6 +5194,7 @@
         "recipient": "Empfänger",
         "reviewedAuthor": "Rezensierter Autor",
         "scriptwriter": "Drehbuchautor",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Hrsg. der Reihe",
         "sponsor": "Sponsor",
         "translator": "Übersetzer",
@@ -4628,6 +5285,7 @@
         "edition": "Έκδοση",
         "encyclopediaTitle": "Τίτλος Εγκυκλοπαίδειας",
         "episodeNumber": "Αριθμός Επεισοδίου",
+        "eventPlace": "Event Place",
         "extra": "Επιπλέον",
         "filingDate": "Filing Date",
         "firstPage": "Πρώτη Σελίδα",
@@ -4661,11 +5319,19 @@
         "numberOfVolumes": "# Τόμων",
         "numPages": "# από Σελίδες",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Σελίδες",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Αριθμός Ευρεσιτεχνίας",
         "place": "Τόπος",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "Τύπος",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Αριθμοί προτεραιότητας",
         "proceedingsTitle": "Proceedings Title",
         "programmingLanguage": "Γλώσσα προγραμ.",
@@ -4689,6 +5355,7 @@
         "seriesText": "Series Text",
         "seriesTitle": "Τίτλος Σειράς",
         "session": "Ενότητα",
+        "sessionTitle": "Session Title",
         "shortTitle": "Short Title",
         "status": "Status",
         "studio": "Στούντιο",
@@ -4712,17 +5379,24 @@
         "bookAuthor": "Συγγραφέας Βιβλίου",
         "cartographer": "Χαρτογράφος",
         "castMember": "Μέλος του καστ",
+        "chair": "Chair",
         "commenter": "Σχολιαστής",
         "composer": "Συνθέτης",
         "contributor": "Contributor",
         "cosponsor": "Συντονιστής",
         "counsel": "Counsel",
+        "creator": "Δημιουργός",
         "director": "Σκηνοθέτης",
         "editor": "Συντάκτης",
+        "executiveProducer": "Executive Producer",
         "guest": "Guest",
+        "host": "Host",
         "interviewee": "Συνέντευξη με",
         "interviewer": "Δημοσιογράφος",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Ερμηνευτής",
         "podcaster": "Podcaster",
         "presenter": "Παρουσιαστής",
@@ -4731,6 +5405,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Scriptwriter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Series Editor",
         "sponsor": "Sponsor",
         "translator": "Μετάφραση",
@@ -4821,6 +5496,7 @@
         "edition": "Edition",
         "encyclopediaTitle": "Encyclopedia Title",
         "episodeNumber": "Episode Number",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Filing Date",
         "firstPage": "First Page",
@@ -4854,11 +5530,19 @@
         "numberOfVolumes": "# of Volumes",
         "numPages": "# of Pages",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pages",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patent Number",
         "place": "Place",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Priority Numbers",
         "proceedingsTitle": "Proceedings Title",
         "programmingLanguage": "Prog. Language",
@@ -4882,6 +5566,7 @@
         "seriesText": "Series Text",
         "seriesTitle": "Series Title",
         "session": "Session",
+        "sessionTitle": "Session Title",
         "shortTitle": "Short Title",
         "status": "Status",
         "studio": "Studio",
@@ -4905,17 +5590,24 @@
         "bookAuthor": "Book Author",
         "cartographer": "Cartographer",
         "castMember": "Cast Member",
+        "chair": "Chair",
         "commenter": "Commenter",
         "composer": "Composer",
         "contributor": "Contributor",
         "cosponsor": "Cosponsor",
         "counsel": "Counsel",
+        "creator": "Creator",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Guest",
+        "host": "Host",
         "interviewee": "Interview With",
         "interviewer": "Interviewer",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Podcaster",
         "presenter": "Presenter",
@@ -4924,6 +5616,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Scriptwriter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Series Editor",
         "sponsor": "Sponsor",
         "translator": "Translator",
@@ -5014,6 +5707,7 @@
         "edition": "Edition",
         "encyclopediaTitle": "Encyclopedia Title",
         "episodeNumber": "Episode Number",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Filing Date",
         "firstPage": "First Page",
@@ -5047,11 +5741,19 @@
         "numberOfVolumes": "# of Volumes",
         "numPages": "# of Pages",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pages",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patent Number",
         "place": "Place",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Priority Numbers",
         "proceedingsTitle": "Proceedings Title",
         "programmingLanguage": "Prog. Language",
@@ -5066,7 +5768,7 @@
         "reportType": "Report Type",
         "repository": "Repository",
         "repositoryLocation": "Repo. Location",
-        "rights": "Rights",
+        "rights": "License",
         "runningTime": "Running Time",
         "scale": "Scale",
         "section": "Section",
@@ -5075,6 +5777,7 @@
         "seriesText": "Series Text",
         "seriesTitle": "Series Title",
         "session": "Session",
+        "sessionTitle": "Session Title",
         "shortTitle": "Short Title",
         "status": "Status",
         "studio": "Studio",
@@ -5098,17 +5801,24 @@
         "bookAuthor": "Book Author",
         "cartographer": "Cartographer",
         "castMember": "Cast Member",
+        "chair": "Chair",
         "commenter": "Commenter",
         "composer": "Composer",
         "contributor": "Contributor",
         "cosponsor": "Cosponsor",
         "counsel": "Counsel",
+        "creator": "Creator",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Guest",
+        "host": "Host",
         "interviewee": "Interview With",
         "interviewer": "Interviewer",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Podcaster",
         "presenter": "Presenter",
@@ -5117,6 +5827,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Scriptwriter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Series Editor",
         "sponsor": "Sponsor",
         "translator": "Translator",
@@ -5207,6 +5918,7 @@
         "edition": "Edición",
         "encyclopediaTitle": "Título de la enciclopedia",
         "episodeNumber": "Número de episodio",
+        "eventPlace": "Lugar del evento",
         "extra": "Adicional",
         "filingDate": "Fecha de solicitud",
         "firstPage": "Primera página",
@@ -5240,11 +5952,19 @@
         "numberOfVolumes": "Número de volúmenes",
         "numPages": "Número de páginas",
         "organization": "Organización",
+        "originalDate": "Fecha original",
+        "originalPlace": "Lugar original",
+        "originalPublisher": "Editor original",
         "pages": "Páginas",
+        "partNumber": "Número de la parte",
+        "partTitle": "Título de la parte",
         "patentNumber": "Número de patente",
         "place": "Lugar",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tipo de mensaje",
         "presentationType": "Tipo",
+        "priorityDate": "Fecha de prioridad",
         "priorityNumbers": "Números de prioridad",
         "proceedingsTitle": "Título de las actas",
         "programmingLanguage": "Lenguaje de programación",
@@ -5268,6 +5988,7 @@
         "seriesText": "Texto de la serie",
         "seriesTitle": "Título de la serie",
         "session": "Sesión",
+        "sessionTitle": "Título de la sesión",
         "shortTitle": "Título corto",
         "status": "Estado",
         "studio": "Estudio",
@@ -5291,17 +6012,24 @@
         "bookAuthor": "Autor del libro",
         "cartographer": "Cartógrafo",
         "castMember": "Miembro del reparto",
+        "chair": "Moderador",
         "commenter": "Comentador",
         "composer": "Compositor",
         "contributor": "Contribuidor",
         "cosponsor": "Copatrocinador",
         "counsel": "Consejero",
+        "creator": "Creador",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Productor ejecutivo",
         "guest": "Invitado",
+        "host": "Entidad anfitriona",
         "interviewee": "Entrevista con",
         "interviewer": "Entrevistador",
         "inventor": "Inventor",
+        "narrator": "Narrador",
+        "organizer": "Organizador",
+        "originalCreator": "Creador original",
         "performer": "Intérprete",
         "podcaster": "Podcaster",
         "presenter": "Presentador",
@@ -5310,6 +6038,7 @@
         "recipient": "Receptor",
         "reviewedAuthor": "Autor revisado",
         "scriptwriter": "Guionista",
+        "seriesCreator": "Creador de la serie",
         "seriesEditor": "Editor de la serie",
         "sponsor": "Patrocinador",
         "translator": "Traductor",
@@ -5327,9 +6056,9 @@
         "book": "Raamat",
         "bookSection": "Osa raamatust",
         "case": "Kaasus",
-        "computerProgram": "Software",
+        "computerProgram": "Tarkvara",
         "conferencePaper": "Ettekanne",
-        "dataset": "Dataset",
+        "dataset": "Andmestik",
         "dictionaryEntry": "Kirje sõnaraamatus",
         "document": "Dokument",
         "email": "E-mail",
@@ -5364,20 +6093,20 @@
         "accessDate": "Vaadatud",
         "applicationNumber": "Taotluse number",
         "archive": "Arhiiv",
-        "archiveID": "Archive ID",
+        "archiveID": "Arhiivi ID",
         "archiveLocation": "Asukoht arhiivis",
         "artworkMedium": "Kandja",
         "artworkSize": "Kunstiteose suurus",
         "assignee": "Ülesande täitja",
         "audioFileType": "Faili tüüp",
         "audioRecordingFormat": "Formaat",
-        "authority": "Authority",
+        "authority": "Autor",
         "billNumber": "Arvenumber",
         "blogTitle": "Blogi nimi",
         "bookTitle": "Raamatupealkiri",
         "callNumber": "Kohaviit",
         "caseName": "Kaasuse nimi",
-        "citationKey": "Citation Key",
+        "citationKey": "Viite võti",
         "code": "Koodeks",
         "codeNumber": "Koodeksinumber",
         "codePages": "Koodeksi leheküljed",
@@ -5400,6 +6129,7 @@
         "edition": "Trükk",
         "encyclopediaTitle": "Entsüklopeedia pealkiri",
         "episodeNumber": "Episoodi number",
+        "eventPlace": "Event Place",
         "extra": "Lisa",
         "filingDate": "Arhiveerimiskuupäev",
         "firstPage": "Esimene lehekülg",
@@ -5407,7 +6137,7 @@
         "forumTitle": "Foorumi/Listi pealkir",
         "genre": "Žanr",
         "history": "Ajalugu",
-        "identifier": "Identifier",
+        "identifier": "Identifikaator",
         "institution": "Asutus",
         "interviewMedium": "Kandja",
         "ISBN": "ISBN",
@@ -5432,12 +6162,20 @@
         "number": "Number",
         "numberOfVolumes": "# köidet",
         "numPages": "# lk",
-        "organization": "Organization",
+        "organization": "Organisatsioon",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Leheküljed",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patendi number",
         "place": "Koht",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Postituse tüüp",
         "presentationType": "Tüüp",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioriteedi numbrid",
         "proceedingsTitle": "Toimetise pealkiri",
         "programmingLanguage": "Prog. Language",
@@ -5450,7 +6188,7 @@
         "reporterVolume": "Raporteerija köide(?)",
         "reportNumber": "Raportinumber",
         "reportType": "Raportitüüp",
-        "repository": "Repository",
+        "repository": "Teek",
         "repositoryLocation": "Repo. Location",
         "rights": "Õigused",
         "runningTime": "Kestvus",
@@ -5461,8 +6199,9 @@
         "seriesText": "Seeria tekst",
         "seriesTitle": "Seeria pealkiri",
         "session": "Sessioon",
+        "sessionTitle": "Session Title",
         "shortTitle": "Lühendatud pealkiri",
-        "status": "Status",
+        "status": "Staatus",
         "studio": "Stuudio",
         "subject": "Subjekt",
         "system": "Süsteem",
@@ -5484,17 +6223,24 @@
         "bookAuthor": "Raamatu autor",
         "cartographer": "Kartograaf",
         "castMember": "Osatäitja",
+        "chair": "Chair",
         "commenter": "Kommentaator",
         "composer": "Helilooja",
         "contributor": "Kaastööline",
         "cosponsor": "Kaas-sponsor",
         "counsel": "Nõustaja",
+        "creator": "Autor",
         "director": "Režissöör",
         "editor": "Toimetaja",
+        "executiveProducer": "Executive Producer",
         "guest": "Külaline",
+        "host": "Host",
         "interviewee": "Intervjueeritav",
         "interviewer": "Intervjueerija",
         "inventor": "Leiutaja",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Esitaja",
         "podcaster": "Podcaster",
         "presenter": "Esitaja",
@@ -5503,6 +6249,7 @@
         "recipient": "Saaja",
         "reviewedAuthor": "Arvustatud autor",
         "scriptwriter": "Käsikirja autor",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Seeria toimetaja",
         "sponsor": "Sponsor",
         "translator": "Tõlkija",
@@ -5593,6 +6340,7 @@
         "edition": "Edizioa",
         "encyclopediaTitle": "Entziklopediaren izenburua",
         "episodeNumber": "Saio zbk.",
+        "eventPlace": "Event Place",
         "extra": "Estra",
         "filingDate": "Noiz aurkeztua",
         "firstPage": "Lehen orrialdea",
@@ -5626,11 +6374,19 @@
         "numberOfVolumes": "Ale kopurua",
         "numPages": "orr.kopurua",
         "organization": "Erakundea",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Orrialdeak",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patente zenbakia",
         "place": "Tokia",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Posta mota",
         "presentationType": "Mota",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Lehentasun zenbakiak",
         "proceedingsTitle": "Proceedings izenburua",
         "programmingLanguage": "Prog. lengoaia",
@@ -5654,6 +6410,7 @@
         "seriesText": "Serie-testua",
         "seriesTitle": "Serie-izenburua",
         "session": "Saioa",
+        "sessionTitle": "Session Title",
         "shortTitle": "Izenburu laburra",
         "status": "Egoera",
         "studio": "Estudioa",
@@ -5677,17 +6434,24 @@
         "bookAuthor": "Liburuaren autorea",
         "cartographer": "Kartografialaria",
         "castMember": "Aktorea",
+        "chair": "Chair",
         "commenter": "Esataria",
         "composer": "Konposatzailea",
         "contributor": "Kolaboratzaile",
         "cosponsor": "Laguntzailea",
         "counsel": "Kontseilua",
+        "creator": "Sortzailea",
         "director": "Zuzendaria",
         "editor": "Editore",
+        "executiveProducer": "Executive Producer",
         "guest": "Gonbidatua",
+        "host": "Host",
         "interviewee": "Elkarrizketatua",
         "interviewer": "Elkarrizketatzaile",
         "inventor": "Asmatzailea",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Antzezlea",
         "podcaster": "Podcast egilea",
         "presenter": "Aurkezlea",
@@ -5696,6 +6460,7 @@
         "recipient": "Hartzailea",
         "reviewedAuthor": "Berrikusitako autorea",
         "scriptwriter": "Gidoi-idazle",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Seriearen editore",
         "sponsor": "Babeslea",
         "translator": "Itzultzaile",
@@ -5782,10 +6547,11 @@
         "distributor": "‌توزیع‌کننده",
         "docketNumber": "شماره دفتر",
         "documentNumber": "شماره سند",
-        "DOI": "شناسه DOI",
+        "DOI": "DOI",
         "edition": "ویرایش",
         "encyclopediaTitle": "عنوان دانشنامه",
         "episodeNumber": "شماره اپیزود",
+        "eventPlace": "Event Place",
         "extra": "اطلاعات اضافه",
         "filingDate": "تاریخ بایگانی",
         "firstPage": "صفحه اول",
@@ -5796,8 +6562,8 @@
         "identifier": "Identifier",
         "institution": "موسسه",
         "interviewMedium": "رسانه",
-        "ISBN": "شابک",
-        "ISSN": "شابن",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "شماره",
         "issueDate": "تاریخ شماره",
         "issuingAuthority": "مرجع صادر کننده",
@@ -5819,11 +6585,19 @@
         "numberOfVolumes": "تعداد جلد",
         "numPages": "تعداد صفحه",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "صفحات",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "شماره ثبت اختراع",
         "place": "مکان",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "نوع پست",
         "presentationType": "نوع",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "شماره‌های اولویت",
         "proceedingsTitle": "عنوان مجموعه مقالات",
         "programmingLanguage": "Prog. Language",
@@ -5847,6 +6621,7 @@
         "seriesText": "متن مجموعه",
         "seriesTitle": "عنوان مجموعه",
         "session": "جلسه",
+        "sessionTitle": "Session Title",
         "shortTitle": "عنوان کوتاه",
         "status": "Status",
         "studio": "استودیو",
@@ -5870,17 +6645,24 @@
         "bookAuthor": "نویسنده کتاب",
         "cartographer": "نقشه‌کش",
         "castMember": "عضو گروه",
+        "chair": "Chair",
         "commenter": "مفسر",
         "composer": "آهنگساز",
         "contributor": "پدیدآور",
         "cosponsor": "پشتیبان دوم",
         "counsel": "مشاور",
+        "creator": "پدیدآورنده",
         "director": "کارگردان",
         "editor": "ویرایشگر",
+        "executiveProducer": "Executive Producer",
         "guest": "مهمان",
+        "host": "Host",
         "interviewee": "مصاحبه با",
         "interviewer": "مصاحبه‌گر",
         "inventor": "مخترع",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "مجری",
         "podcaster": "Podcaster",
         "presenter": "ارائه‌دهنده",
@@ -5889,6 +6671,7 @@
         "recipient": "گیرنده",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "نمایشنامه‌نویس",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "ویرایشگر مجموعه",
         "sponsor": "پشتیبان",
         "translator": "مترجم",
@@ -5979,6 +6762,7 @@
         "edition": "Painos",
         "encyclopediaTitle": "Tietosanakirjan otsake",
         "episodeNumber": "Jakson numero",
+        "eventPlace": "Tapahtumapaikka",
         "extra": "Ylim.",
         "filingDate": "Arkistointipäivä",
         "firstPage": "Ensimmäinen sivu",
@@ -6012,11 +6796,19 @@
         "numberOfVolumes": "Niteiden lkm.",
         "numPages": "Sivumäärä",
         "organization": "Organisaatio",
+        "originalDate": "Alkuperäinen päivämäärä",
+        "originalPlace": "Alkuperäinen paikkakunta",
+        "originalPublisher": "Alkuperäinen julkaisija",
         "pages": "Sivut",
+        "partNumber": "Osan numero",
+        "partTitle": "Osan nimi",
         "patentNumber": "Patenttinumero",
         "place": "Paikka",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tyyppi",
         "presentationType": "Tyyppi",
+        "priorityDate": "Etuoikeuspäivä",
         "priorityNumbers": "Etuoikeusnumerot",
         "proceedingsTitle": "Konferenssijulkaisun otsikko",
         "programmingLanguage": "Ohjelmointikieli",
@@ -6040,6 +6832,7 @@
         "seriesText": "Sarjan teksti",
         "seriesTitle": "Sarjan nimi",
         "session": "Istunto",
+        "sessionTitle": "Session nimi",
         "shortTitle": "Lyhyt nimi",
         "status": "Tila",
         "studio": "Studio",
@@ -6063,17 +6856,24 @@
         "bookAuthor": "Kirjan tekijä",
         "cartographer": "Kartoittaja",
         "castMember": "Näyttelijä",
+        "chair": "Puheenjohtaja",
         "commenter": "Kommentoija",
         "composer": "Säveltäjä",
         "contributor": "Muu tekijä",
         "cosponsor": "Osasponsori",
         "counsel": "Oikeusavustaja",
+        "creator": "Tekijä",
         "director": "Ohjaaja",
         "editor": "Toimittaja",
+        "executiveProducer": "Vastaava tuottaja",
         "guest": "Vieras",
+        "host": "Isäntä",
         "interviewee": "Haastattelussa",
         "interviewer": "Haastattelija",
         "inventor": "Keksijä",
+        "narrator": "Kertoja",
+        "organizer": "Järjestäjä",
+        "originalCreator": "Alkuperäistekijä",
         "performer": "Esiintyjä",
         "podcaster": "Podcastin tekijä",
         "presenter": "Esittäjä",
@@ -6082,6 +6882,7 @@
         "recipient": "Vastaanottaja",
         "reviewedAuthor": "Arvostelun kohde",
         "scriptwriter": "Käsikirjoittaja",
+        "seriesCreator": "Sarjan luoja",
         "seriesEditor": "Sarjan toimittaja",
         "sponsor": "Sponsori",
         "translator": "Kääntäjä",
@@ -6172,6 +6973,7 @@
         "edition": "Édition",
         "encyclopediaTitle": "Titre de l'encycl.",
         "episodeNumber": "N° de l'épisode",
+        "eventPlace": "Lieu de l'événement",
         "extra": "Extra",
         "filingDate": "Date de dépôt",
         "firstPage": "Première page",
@@ -6205,11 +7007,19 @@
         "numberOfVolumes": "Nb de volumes",
         "numPages": "Nb de pages",
         "organization": "Organisation",
+        "originalDate": "Date originale",
+        "originalPlace": "Lieu original",
+        "originalPublisher": "Éditeur original",
         "pages": "Pages",
+        "partNumber": "N° de partie",
+        "partTitle": "Titre de partie",
         "patentNumber": "N° de brevet",
         "place": "Lieu",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Type d'article",
         "presentationType": "Type",
+        "priorityDate": "Date de priorité",
         "priorityNumbers": "Numéros de priorité",
         "proceedingsTitle": "Titre des actes",
         "programmingLanguage": "Langage de programmation",
@@ -6233,6 +7043,7 @@
         "seriesText": "Texte de la coll.",
         "seriesTitle": "Titre de la coll.",
         "session": "Session",
+        "sessionTitle": "Titre de session",
         "shortTitle": "Titre abrégé",
         "status": "Statut",
         "studio": "Studio",
@@ -6256,17 +7067,24 @@
         "bookAuthor": "Auteur du livre",
         "cartographer": "Cartographe",
         "castMember": "Membre de la distribution",
+        "chair": "Chair",
         "commenter": "Commentateur",
         "composer": "Compositeur",
         "contributor": "Collaborateur",
         "cosponsor": "Co-parrain",
         "counsel": "Conseiller",
+        "creator": "Créateur",
         "director": "Metteur en scène",
         "editor": "Éditeur",
+        "executiveProducer": "Producteur exécutif",
         "guest": "Invité",
+        "host": "Hôte",
         "interviewee": "Interviewé",
         "interviewer": "Reporter",
         "inventor": "Inventeur",
+        "narrator": "Narrateur",
+        "organizer": "Organisateur",
+        "originalCreator": "Créateur original",
         "performer": "Interprète",
         "podcaster": "Diffuseur",
         "presenter": "Présentateur",
@@ -6275,6 +7093,7 @@
         "recipient": "Destinataire",
         "reviewedAuthor": "Auteur recensé",
         "scriptwriter": "Scénariste",
+        "seriesCreator": "Créateur de coll.",
         "seriesEditor": "Directeur de coll.",
         "sponsor": "Auteur",
         "translator": "Traducteur",
@@ -6365,6 +7184,7 @@
         "edition": "Edición",
         "encyclopediaTitle": "Título da enciclopedia",
         "episodeNumber": "Número de episodio",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Data de entrada en arquivo",
         "firstPage": "Primeira páxina",
@@ -6398,11 +7218,19 @@
         "numberOfVolumes": "Nº de tomos",
         "numPages": "Nº de Páxinas",
         "organization": "Organización",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Páxinas",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Número da patente",
         "place": "Lugar",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tipo de entrada",
         "presentationType": "Tipo",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Números de prioridade",
         "proceedingsTitle": "Título das medidas legais",
         "programmingLanguage": "Ling. de programación",
@@ -6426,6 +7254,7 @@
         "seriesText": "Texto da serie",
         "seriesTitle": "Título da serie",
         "session": "Sesión",
+        "sessionTitle": "Session Title",
         "shortTitle": "Título curto",
         "status": "Estado",
         "studio": "Estudio",
@@ -6449,17 +7278,24 @@
         "bookAuthor": "Autor do libro",
         "cartographer": "Cartógrafo",
         "castMember": "Membro do elenco",
+        "chair": "Chair",
         "commenter": "Comentarista",
         "composer": "Compositor",
         "contributor": "Colaborador",
         "cosponsor": "Copatrocinador",
         "counsel": "Avogado",
+        "creator": "Creador",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Invitado",
+        "host": "Host",
         "interviewee": "Entrevista con",
         "interviewer": "Entrevista",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Intérprete",
         "podcaster": "Fonte do podcast",
         "presenter": "Presentador",
@@ -6468,6 +7304,7 @@
         "recipient": "Receptor",
         "reviewedAuthor": "Autor reseñado",
         "scriptwriter": "Guionista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor da serie",
         "sponsor": "Patrocinador",
         "translator": "Tradutor",
@@ -6558,6 +7395,7 @@
         "edition": "מהדורה",
         "encyclopediaTitle": "שם אנציקלופדיה",
         "episodeNumber": "מספר פרק",
+        "eventPlace": "Event Place",
         "extra": "תוספת",
         "filingDate": "תאריך תיוק",
         "firstPage": "עמוד ראשון",
@@ -6568,7 +7406,7 @@
         "identifier": "Identifier",
         "institution": "מוסד",
         "interviewMedium": "אמצעי",
-        "ISBN": "מסת״ב",
+        "ISBN": "ISBN",
         "ISSN": "ISSN",
         "issue": "גיליון",
         "issueDate": "תאריך הנפקה",
@@ -6591,11 +7429,19 @@
         "numberOfVolumes": "מס׳ כרכים",
         "numPages": "מס׳ עמודים",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "עמודים",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "מספר פטנט",
         "place": "מקום",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "סוג",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "מספרי עדיפות",
         "proceedingsTitle": "כותרת תביעה",
         "programmingLanguage": "שפת פיתוח",
@@ -6619,6 +7465,7 @@
         "seriesText": "טקסט סדרה",
         "seriesTitle": "שם סדרה",
         "session": "מפגש",
+        "sessionTitle": "Session Title",
         "shortTitle": "כותרת קצרה",
         "status": "Status",
         "studio": "סטודיו",
@@ -6642,17 +7489,24 @@
         "bookAuthor": "כותב/ת הספר",
         "cartographer": "קרטוגרף",
         "castMember": "חבר בצוות המשתתפים",
+        "chair": "Chair",
         "commenter": "מגיב/ה",
         "composer": "מלחין",
         "contributor": "Contributor",
         "cosponsor": "תומך/ת",
         "counsel": "פרקליט",
+        "creator": "יוצר",
         "director": "במאי",
         "editor": "עורך",
+        "executiveProducer": "Executive Producer",
         "guest": "אורח",
+        "host": "Host",
         "interviewee": "ראיון עם",
         "interviewer": "מראיין",
         "inventor": "ממציא",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "מבצע",
         "podcaster": "שדרן או שדרנית הסכתים",
         "presenter": "מציג",
@@ -6661,6 +7515,7 @@
         "recipient": "נמען",
         "reviewedAuthor": "יוצר/ת סוקר/ת",
         "scriptwriter": "תסריטאי",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "עורך סדרה",
         "sponsor": "נותן חסות",
         "translator": "מתרגם",
@@ -6669,195 +7524,213 @@
     },
     "hr-HR": {
       "itemTypes": {
-        "annotation": "Annotation",
-        "artwork": "Artwork",
-        "attachment": "Attachment",
-        "audioRecording": "Audio Recording",
-        "bill": "Bill",
-        "blogPost": "Blog Post",
-        "book": "Book",
-        "bookSection": "Book Section",
-        "case": "Case",
+        "annotation": "Anotacija",
+        "artwork": "Umjetnički rad",
+        "attachment": "Prilog",
+        "audioRecording": "Zvučna snimka",
+        "bill": "Prijedlog zakona",
+        "blogPost": "Objava na blogu",
+        "book": "Knjiga",
+        "bookSection": "Dio knjige",
+        "case": "Slučaj",
         "computerProgram": "Software",
-        "conferencePaper": "Conference Paper",
+        "conferencePaper": "Konferencijski rad",
         "dataset": "Dataset",
-        "dictionaryEntry": "Dictionary Entry",
-        "document": "Document",
-        "email": "E-mail",
-        "encyclopediaArticle": "Encyclopedia Article",
+        "dictionaryEntry": "Stavka u rječniku",
+        "document": "Dokument",
+        "email": "E-pošta",
+        "encyclopediaArticle": "Enciklopedijski članak",
         "film": "Film",
-        "forumPost": "Forum Post",
-        "hearing": "Hearing",
-        "instantMessage": "Instant Message",
-        "interview": "Interview",
-        "journalArticle": "Journal Article",
-        "letter": "Letter",
-        "magazineArticle": "Magazine Article",
-        "manuscript": "Manuscript",
-        "map": "Map",
-        "newspaperArticle": "Newspaper Article",
-        "note": "Note",
+        "forumPost": "Objava na forumu",
+        "hearing": "Saslušanje",
+        "instantMessage": "Instantna poruka",
+        "interview": "Intervju",
+        "journalArticle": "Članak u časopisu",
+        "letter": "Pismo",
+        "magazineArticle": "Članak u magazinu",
+        "manuscript": "Rukopis",
+        "map": "Karta",
+        "newspaperArticle": "Članak u novinama",
+        "note": "Bilješka",
         "patent": "Patent",
         "podcast": "Podcast",
         "preprint": "Preprint",
-        "presentation": "Presentation",
-        "radioBroadcast": "Radio Broadcast",
-        "report": "Report",
+        "presentation": "Prezentacija",
+        "radioBroadcast": "Radijsko emitiranje",
+        "report": "Izvješće",
         "standard": "Standard",
-        "statute": "Statute",
-        "thesis": "Thesis",
-        "tvBroadcast": "TV Broadcast",
-        "videoRecording": "Video Recording",
-        "webpage": "Web Page"
+        "statute": "Statut",
+        "thesis": "Disertacija",
+        "tvBroadcast": "Televizijsko emitiranje",
+        "videoRecording": "Videosnimka",
+        "webpage": "Web-stranica"
       },
       "fields": {
-        "abstractNote": "Abstract",
-        "accessDate": "Accessed",
-        "applicationNumber": "Application Number",
-        "archive": "Archive",
-        "archiveID": "Archive ID",
-        "archiveLocation": "Loc. in Archive",
-        "artworkMedium": "Medium",
-        "artworkSize": "Artwork Size",
-        "assignee": "Assignee",
-        "audioFileType": "File Type",
+        "abstractNote": "Sažetak",
+        "accessDate": "Pristupljeno",
+        "applicationNumber": "Broj prijave",
+        "archive": "Arhiva",
+        "archiveID": "ID arhive",
+        "archiveLocation": "Lok. u arhivi",
+        "artworkMedium": "Medij",
+        "artworkSize": "Veličina umj. rada",
+        "assignee": "Nositelj prava",
+        "audioFileType": "Vrsta datoteke",
         "audioRecordingFormat": "Format",
         "authority": "Authority",
-        "billNumber": "Bill Number",
-        "blogTitle": "Blog Title",
-        "bookTitle": "Book Title",
-        "callNumber": "Call Number",
-        "caseName": "Case Name",
+        "billNumber": "Br. prijedloga zakona",
+        "blogTitle": "Naslov bloga",
+        "bookTitle": "Naslov knjige",
+        "callNumber": "Signatura",
+        "caseName": "Broj slučaja",
         "citationKey": "Citation Key",
-        "code": "Code",
-        "codeNumber": "Code Number",
-        "codePages": "Code Pages",
-        "codeVolume": "Code Volume",
-        "committee": "Committee",
-        "company": "Company",
-        "conferenceName": "Conference Name",
-        "country": "Country",
-        "court": "Court",
-        "date": "Date",
-        "dateAdded": "Date Added",
-        "dateDecided": "Date Decided",
-        "dateEnacted": "Date Enacted",
-        "dateModified": "Modified",
-        "dictionaryTitle": "Dictionary Title",
-        "distributor": "Distributor",
-        "docketNumber": "Docket Number",
-        "documentNumber": "Document Number",
+        "code": "Zakonik",
+        "codeNumber": "Br. u zakoniku",
+        "codePages": "Str. zakonika",
+        "codeVolume": "Svezak zakonika",
+        "committee": "Vijeće",
+        "company": "Tvrtka",
+        "conferenceName": "Naziv konferencije",
+        "country": "Država",
+        "court": "Sud",
+        "date": "Datum",
+        "dateAdded": "Datum dodavanja",
+        "dateDecided": "Datum donošenja odluke",
+        "dateEnacted": "Datum donošenja",
+        "dateModified": "Promijenjeno",
+        "dictionaryTitle": "Naslov rječnika",
+        "distributor": "Distributer",
+        "docketNumber": "Broj predmeta",
+        "documentNumber": "Br. dokumenta",
         "DOI": "DOI",
-        "edition": "Edition",
-        "encyclopediaTitle": "Encyclopedia Title",
-        "episodeNumber": "Episode Number",
-        "extra": "Extra",
-        "filingDate": "Filing Date",
-        "firstPage": "First Page",
+        "edition": "Izdanje",
+        "encyclopediaTitle": "Naslov enciklopedije",
+        "episodeNumber": "Br. epizode",
+        "eventPlace": "Event Place",
+        "extra": "Dodatno",
+        "filingDate": "Datum podnošenja",
+        "firstPage": "Prva stranica",
         "format": "Format",
-        "forumTitle": "Forum/Listserv Title",
-        "genre": "Genre",
-        "history": "History",
-        "identifier": "Identifier",
-        "institution": "Institution",
-        "interviewMedium": "Medium",
+        "forumTitle": "Naslov foruma/Listserva",
+        "genre": "Žanr",
+        "history": "Povijest",
+        "identifier": "Identifikator",
+        "institution": "Institucija",
+        "interviewMedium": "Medij",
         "ISBN": "ISBN",
         "ISSN": "ISSN",
-        "issue": "Issue",
-        "issueDate": "Issue Date",
-        "issuingAuthority": "Issuing Authority",
-        "itemType": "Item Type",
-        "journalAbbreviation": "Journal Abbr",
-        "label": "Label",
-        "language": "Language",
-        "legalStatus": "Legal Status",
-        "legislativeBody": "Legislative Body",
-        "letterType": "Type",
-        "libraryCatalog": "Library Catalog",
-        "manuscriptType": "Type",
-        "mapType": "Type",
-        "medium": "Medium",
-        "meetingName": "Meeting Name",
-        "nameOfAct": "Name of Act",
-        "network": "Network",
-        "number": "Number",
-        "numberOfVolumes": "# of Volumes",
-        "numPages": "# of Pages",
-        "organization": "Organization",
-        "pages": "Pages",
-        "patentNumber": "Patent Number",
-        "place": "Place",
-        "postType": "Post Type",
-        "presentationType": "Type",
-        "priorityNumbers": "Priority Numbers",
-        "proceedingsTitle": "Proceedings Title",
-        "programmingLanguage": "Prog. Language",
-        "programTitle": "Program Title",
-        "publicationTitle": "Publication",
-        "publicLawNumber": "Public Law Number",
-        "publisher": "Publisher",
-        "references": "References",
-        "reporter": "Reporter",
-        "reporterVolume": "Reporter Volume",
-        "reportNumber": "Report Number",
-        "reportType": "Report Type",
-        "repository": "Repository",
-        "repositoryLocation": "Repo. Location",
-        "rights": "Rights",
-        "runningTime": "Running Time",
-        "scale": "Scale",
-        "section": "Section",
-        "series": "Series",
-        "seriesNumber": "Series Number",
-        "seriesText": "Series Text",
-        "seriesTitle": "Series Title",
-        "session": "Session",
-        "shortTitle": "Short Title",
+        "issue": "Broj",
+        "issueDate": "Datum izdavanja",
+        "issuingAuthority": "Izdavačko tijelo",
+        "itemType": "Vrsta stavke",
+        "journalAbbreviation": "Skrać. naziv časop.",
+        "label": "Diskogr. kuća",
+        "language": "Jezik",
+        "legalStatus": "Pravni status",
+        "legislativeBody": "Zakonodavno tijelo",
+        "letterType": "Vrsta",
+        "libraryCatalog": "Katalog biblioteke",
+        "manuscriptType": "Vrsta",
+        "mapType": "Vrsta",
+        "medium": "Medij",
+        "meetingName": "Naziv sastanka",
+        "nameOfAct": "Naziv zakona",
+        "network": "Mreža",
+        "number": "Broj",
+        "numberOfVolumes": "# svezaka",
+        "numPages": "# stranica",
+        "organization": "Organizacija",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
+        "pages": "Stranice",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
+        "patentNumber": "Broj patenta",
+        "place": "Mjesto",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
+        "postType": "Vrsta objave",
+        "presentationType": "Vrsta",
+        "priorityDate": "Priority Date",
+        "priorityNumbers": "Br. prava prvenstva",
+        "proceedingsTitle": "Naslov zbornika radova",
+        "programmingLanguage": "Progr. jezik",
+        "programTitle": "Naslov programa",
+        "publicationTitle": "Publikacija",
+        "publicLawNumber": "Br. javn. zakona",
+        "publisher": "Izdavač",
+        "references": "Reference",
+        "reporter": "Zbirka sud. prakse",
+        "reporterVolume": "Svezak zbirke sudske prakse",
+        "reportNumber": "Broj izvješća",
+        "reportType": "Vrsta izvješća",
+        "repository": "Repozitorij",
+        "repositoryLocation": "Lokacija repozit.",
+        "rights": "Prava",
+        "runningTime": "Trajanje",
+        "scale": "Mjerilo",
+        "section": "Odjeljak",
+        "series": "Serija",
+        "seriesNumber": "Broj serije",
+        "seriesText": "Tekst serije",
+        "seriesTitle": "Naslov serije",
+        "session": "Sjednica",
+        "sessionTitle": "Session Title",
+        "shortTitle": "Kratki naslov",
         "status": "Status",
         "studio": "Studio",
-        "subject": "Subject",
-        "system": "System",
-        "thesisType": "Type",
-        "title": "Title",
-        "type": "Type",
-        "university": "University",
+        "subject": "Predmet",
+        "system": "Sustav",
+        "thesisType": "Vrsta",
+        "title": "Naslov",
+        "type": "Vrsta",
+        "university": "Sveučilište",
         "url": "URL",
-        "versionNumber": "Version",
+        "versionNumber": "Verzija",
         "videoRecordingFormat": "Format",
-        "volume": "Volume",
-        "websiteTitle": "Website Title",
-        "websiteType": "Website Type"
+        "volume": "Svezak",
+        "websiteTitle": "Naslov web-stranice",
+        "websiteType": "Vrsta web-stranice"
       },
       "creatorTypes": {
-        "artist": "Artist",
-        "attorneyAgent": "Attorney/Agent",
-        "author": "Author",
-        "bookAuthor": "Book Author",
-        "cartographer": "Cartographer",
-        "castMember": "Cast Member",
-        "commenter": "Commenter",
-        "composer": "Composer",
-        "contributor": "Contributor",
-        "cosponsor": "Cosponsor",
-        "counsel": "Counsel",
-        "director": "Director",
-        "editor": "Editor",
-        "guest": "Guest",
-        "interviewee": "Interview With",
-        "interviewer": "Interviewer",
-        "inventor": "Inventor",
-        "performer": "Performer",
+        "artist": "Umjetnik",
+        "attorneyAgent": "Odvjetnik/patentni zastupnik",
+        "author": "Autor",
+        "bookAuthor": "Autor knjige",
+        "cartographer": "Kartograf",
+        "castMember": "Član postave",
+        "chair": "Chair",
+        "commenter": "Komentator",
+        "composer": "Skladatelj",
+        "contributor": "Doprinositelj",
+        "cosponsor": "Susponzor",
+        "counsel": "Pravni zastupnik",
+        "creator": "Creator",
+        "director": "Redatelj",
+        "editor": "Urednik",
+        "executiveProducer": "Executive Producer",
+        "guest": "Gost",
+        "host": "Host",
+        "interviewee": "Intervju s",
+        "interviewer": "Intervjuer",
+        "inventor": "Izumitelj",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
+        "performer": "Izvođač",
         "podcaster": "Podcaster",
-        "presenter": "Presenter",
-        "producer": "Producer",
-        "programmer": "Programmer",
-        "recipient": "Recipient",
-        "reviewedAuthor": "Reviewed Author",
-        "scriptwriter": "Scriptwriter",
-        "seriesEditor": "Series Editor",
-        "sponsor": "Sponsor",
-        "translator": "Translator",
-        "wordsBy": "Words By"
+        "presenter": "Izlagač",
+        "producer": "Producent",
+        "programmer": "Programer",
+        "recipient": "Primatelj",
+        "reviewedAuthor": "Autor recenz. djela",
+        "scriptwriter": "Scenarist",
+        "seriesCreator": "Series Creator",
+        "seriesEditor": "Urednik serije",
+        "sponsor": "Sponzor",
+        "translator": "Prevoditelj",
+        "wordsBy": "Autor teksta"
       }
     },
     "hu-HU": {
@@ -6944,6 +7817,7 @@
         "edition": "Kiadás",
         "encyclopediaTitle": "Lexikon címe",
         "episodeNumber": "Epizód száma",
+        "eventPlace": "Event Place",
         "extra": "Egyéb",
         "filingDate": "Iktatás időpontja",
         "firstPage": "Első oldal",
@@ -6977,11 +7851,19 @@
         "numberOfVolumes": "Kötetek száma",
         "numPages": "Terjedelem",
         "organization": "Szervezet",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Oldalszám",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Szabadalom száma",
         "place": "Hely",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Bejegyzés típusa",
         "presentationType": "Típus",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Elsőbbségi sorrend",
         "proceedingsTitle": "Kiadvány címe",
         "programmingLanguage": "Prog. nyelv",
@@ -7005,6 +7887,7 @@
         "seriesText": "Sorozat szövege",
         "seriesTitle": "Sorozat címe",
         "session": "Ülésszak",
+        "sessionTitle": "Session Title",
         "shortTitle": "Rövid cím",
         "status": "Status",
         "studio": "Stúdió",
@@ -7028,17 +7911,24 @@
         "bookAuthor": "Könyv szerzője",
         "cartographer": "Térképész",
         "castMember": "Szereplő",
+        "chair": "Chair",
         "commenter": "Hozzászóló",
         "composer": "Zeneszerző",
         "contributor": "Közreműködő",
         "cosponsor": "Cosponsor",
         "counsel": "Ügyvéd",
+        "creator": "Szerző",
         "director": "Rendező",
         "editor": "Szerkesztő",
+        "executiveProducer": "Executive Producer",
         "guest": "Vendég",
+        "host": "Host",
         "interviewee": "Interjú alanya",
         "interviewer": "Interjú készítője",
         "inventor": "Feltaláló",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Előadó",
         "podcaster": "Podcaster",
         "presenter": "Előadó",
@@ -7047,6 +7937,7 @@
         "recipient": "Alperes",
         "reviewedAuthor": "Recenzált mű szerzője",
         "scriptwriter": "Forgatókönyvíró",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Sorozatszerkesztő",
         "sponsor": "Benyújtó",
         "translator": "Fordító",
@@ -7137,6 +8028,7 @@
         "edition": "Edisi",
         "encyclopediaTitle": "Judul Ensiklopedia",
         "episodeNumber": "Nomor Episode",
+        "eventPlace": "Event Place",
         "extra": "Ekstra",
         "filingDate": "Tanggal Pembuatan",
         "firstPage": "Halaman Pertama",
@@ -7170,11 +8062,19 @@
         "numberOfVolumes": "# Volume",
         "numPages": "# halaman",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Halaman",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Nomor Paten",
         "place": "Tempat",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Jenis Pos",
         "presentationType": "Jenis",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Nomor Prioritas",
         "proceedingsTitle": "Judul Rapat",
         "programmingLanguage": "Bahasa Pemrograman",
@@ -7198,6 +8098,7 @@
         "seriesText": "Teks Seri",
         "seriesTitle": "Judul Seri",
         "session": "Sesi",
+        "sessionTitle": "Session Title",
         "shortTitle": "Judul Singkat",
         "status": "Status",
         "studio": "Studio",
@@ -7221,17 +8122,24 @@
         "bookAuthor": "Penulis Buku",
         "cartographer": "Pembuat Peta",
         "castMember": "Pemain",
+        "chair": "Chair",
         "commenter": "Pemberi Komentar",
         "composer": "Komposer",
         "contributor": "Kontributor",
         "cosponsor": "Kosponsor",
         "counsel": "Advokat",
+        "creator": "Penyusun",
         "director": "Direktur",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Bintang Tamu",
+        "host": "Host",
         "interviewee": "Wawancara dengan",
         "interviewer": "Pewawancara",
         "inventor": "Penemu",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Podcaster",
         "presenter": "Presenter",
@@ -7240,6 +8148,7 @@
         "recipient": "Penerima",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Penulis Skrip",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor Seri",
         "sponsor": "Sponsor",
         "translator": "Penerjemah",
@@ -7330,6 +8239,7 @@
         "edition": "Útgáfa",
         "encyclopediaTitle": "Nafn alfræðirits",
         "episodeNumber": "Þáttur númer",
+        "eventPlace": "Event Place",
         "extra": "Viðbót",
         "filingDate": "Dagsetning skráningar",
         "firstPage": "Fyrsta síða",
@@ -7363,11 +8273,19 @@
         "numberOfVolumes": "Fjöldi binda",
         "numPages": "# síður",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Blaðsíður",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Einkaleyfi nr.",
         "place": "Staðsetning",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Póstsnið",
         "presentationType": "Tegund",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Forgangsnúmer",
         "proceedingsTitle": "Titill málstofu",
         "programmingLanguage": "Prog. Language",
@@ -7391,6 +8309,7 @@
         "seriesText": "Nafn eintaks í ritröð",
         "seriesTitle": "Titill ritraðar",
         "session": "Seta",
+        "sessionTitle": "Session Title",
         "shortTitle": "Stuttur titill",
         "status": "Status",
         "studio": "Stúdíó",
@@ -7414,17 +8333,24 @@
         "bookAuthor": "Höfundur bókar",
         "cartographer": "Kortagerð",
         "castMember": "Leikari",
+        "chair": "Chair",
         "commenter": "Athugasemdir",
         "composer": "Höfundur",
         "contributor": "Aðili að verki",
         "cosponsor": "Stuðningsþátttakandi",
         "counsel": "Ráðgjöf",
+        "creator": "Höfundur",
         "director": "Leikstjóri",
         "editor": "Ritstjóri",
+        "executiveProducer": "Executive Producer",
         "guest": "Gestur",
+        "host": "Host",
         "interviewee": "Viðtal við",
         "interviewer": "Hver tók viðtalið",
         "inventor": "Uppfinningamaður",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Leikari",
         "podcaster": "Hlaðvörpun",
         "presenter": "Kynnandi",
@@ -7433,6 +8359,7 @@
         "recipient": "Viðtakandi",
         "reviewedAuthor": "Yfirlestrarhöfundur",
         "scriptwriter": "Handritshöfundur",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Ritstjóri ritraðar",
         "sponsor": "Stuðningsaðili",
         "translator": "Þýðandi",
@@ -7523,6 +8450,7 @@
         "edition": "Edizione",
         "encyclopediaTitle": "Titolo enciclopedia",
         "episodeNumber": "Numero di episodio",
+        "eventPlace": "Luogo dell'evento",
         "extra": "Extra",
         "filingDate": "Data di sottomissione",
         "firstPage": "Prima pagina",
@@ -7556,11 +8484,19 @@
         "numberOfVolumes": "Numero di volumi",
         "numPages": "# di Pagine",
         "organization": "Organizzazione",
+        "originalDate": "Data originale",
+        "originalPlace": "Luogo originale",
+        "originalPublisher": "Editore originale",
         "pages": "Pagine",
+        "partNumber": "Numero della parte",
+        "partTitle": "Titolo della parte",
         "patentNumber": "Numero di brevetto",
         "place": "Luogo di edizione",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tipo di messaggio",
         "presentationType": "Tipo",
+        "priorityDate": "Data prioritaria",
         "priorityNumbers": "Numero di priorità",
         "proceedingsTitle": "Titolo degli atti",
         "programmingLanguage": "Linguaggio di progr.",
@@ -7584,6 +8520,7 @@
         "seriesText": "Testo della serie",
         "seriesTitle": "Titolo della serie",
         "session": "Sessione",
+        "sessionTitle": "Titolo della sessione",
         "shortTitle": "Titolo breve",
         "status": "Stato della pubblicazione",
         "studio": "Studio",
@@ -7607,17 +8544,24 @@
         "bookAuthor": "Autore del libro",
         "cartographer": "Cartografo",
         "castMember": "Componente del cast",
+        "chair": "Presidente",
         "commenter": "Commentatore",
         "composer": "Compositore",
         "contributor": "Collaboratore",
         "cosponsor": "Co-finanziatore",
         "counsel": "Consulente legale",
+        "creator": "Autore",
         "director": "Regista",
         "editor": "Curatore",
+        "executiveProducer": "Produttore esecutivo",
         "guest": "Ospite",
+        "host": "Conduttore",
         "interviewee": "Intervista con",
         "interviewer": "Intervistatore",
         "inventor": "Inventore",
+        "narrator": "Narratore",
+        "organizer": "Organizzatore",
+        "originalCreator": "Autore originale",
         "performer": "Esecutore",
         "podcaster": "Autore del podcast",
         "presenter": "Presentatore",
@@ -7626,6 +8570,7 @@
         "recipient": "Destinatario",
         "reviewedAuthor": "Autore recensito",
         "scriptwriter": "Sceneggiatore",
+        "seriesCreator": "Autore della serie",
         "seriesEditor": "Curatore della serie",
         "sponsor": "Finanziatore",
         "translator": "Traduttore",
@@ -7716,6 +8661,7 @@
         "edition": "版",
         "encyclopediaTitle": "百科事典名",
         "episodeNumber": "エピソードの番号",
+        "eventPlace": "Event Place",
         "extra": "その他",
         "filingDate": "出願日",
         "firstPage": "最初のページ",
@@ -7749,11 +8695,19 @@
         "numberOfVolumes": "巻数",
         "numPages": "#ページ",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "ページ数",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "特許番号",
         "place": "都市",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "書き込みの種類",
         "presentationType": "種類",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "優先番号",
         "proceedingsTitle": "紀要名",
         "programmingLanguage": "プログラミング言語",
@@ -7777,6 +8731,7 @@
         "seriesText": "叢書テキスト",
         "seriesTitle": "叢書名",
         "session": "セッション",
+        "sessionTitle": "Session Title",
         "shortTitle": "題名 (略)",
         "status": "ステータス",
         "studio": "スタジオ",
@@ -7800,17 +8755,24 @@
         "bookAuthor": "書籍著者名",
         "cartographer": "製図家",
         "castMember": "キャスト",
+        "chair": "Chair",
         "commenter": "評論家",
         "composer": "作曲家",
         "contributor": "寄稿者名",
         "cosponsor": "共同スポンサー",
         "counsel": "顧問弁護士",
+        "creator": "編著者名",
         "director": "監督",
         "editor": "編集者名",
+        "executiveProducer": "Executive Producer",
         "guest": "ゲスト",
+        "host": "Host",
         "interviewee": "インタビュー対象:",
         "interviewer": "インタビュアー",
         "inventor": "発明者名",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "演奏者",
         "podcaster": "ポッドキャスト送信者",
         "presenter": "発表者",
@@ -7819,6 +8781,7 @@
         "recipient": "受取人",
         "reviewedAuthor": "レビューされた著者",
         "scriptwriter": "脚本家",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "叢書編集者名",
         "sponsor": "スポンサー",
         "translator": "翻訳者名",
@@ -7905,10 +8868,11 @@
         "distributor": "ចែកចាយ",
         "docketNumber": "លេខសំណុំរឿង",
         "documentNumber": "លេខឯកសារ",
-        "DOI": "ឌីអូអាយ",
+        "DOI": "DOI",
         "edition": "កំណែតម្រូវ",
         "encyclopediaTitle": "ចំណងជើងសព្វវចនាធិប្បាយ",
         "episodeNumber": "លេខអង្គហេតុ",
+        "eventPlace": "Event Place",
         "extra": "បន្ថែម",
         "filingDate": "កាលបរិច្ឆេទតម្កល់",
         "firstPage": "ទំព័រទីមួយ",
@@ -7919,8 +8883,8 @@
         "identifier": "Identifier",
         "institution": "ស្ថាប័ន",
         "interviewMedium": "សារព័ត៌មាន",
-        "ISBN": "អាយអេសប៊ីអិន",
-        "ISSN": "អាយអេសអេសអិន",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "ចេញផ្សាយ",
         "issueDate": "កាលបរិច្ឆទចេញផ្សាយ",
         "issuingAuthority": "អាជ្ញាធរចេញផ្សាយ",
@@ -7942,11 +8906,19 @@
         "numberOfVolumes": "លេខវ៉ុល",
         "numPages": "លេខទំព័រ",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "ទំព័រ",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "លេខតត្តកម្ម",
         "place": "ទីតាំង",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "ប្រភេទផ្សាយ",
         "presentationType": "ប្រភេទ",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "លេខអាទិភាព",
         "proceedingsTitle": "ចំណងជើងនីតិវិធី",
         "programmingLanguage": "Prog. Language",
@@ -7970,6 +8942,7 @@
         "seriesText": "អត្ថបទលេខរៀង",
         "seriesTitle": "ចំណងជើងលេខរៀង",
         "session": "សម័យកាល",
+        "sessionTitle": "Session Title",
         "shortTitle": "ចំណងជើងខ្លី",
         "status": "Status",
         "studio": "ស្ថានីយថតសំឡេង",
@@ -7993,17 +8966,24 @@
         "bookAuthor": "អ្នកនិពន្ធសៀវភៅ",
         "cartographer": "អ្នករៀបចំប្លង់",
         "castMember": "តួសំដែង",
+        "chair": "Chair",
         "commenter": "អ្នកផ្តល់មតិយោបល់",
         "composer": "អ្នកនិពន្ធទំនុក",
         "contributor": "អ្នកចូលរួម",
         "cosponsor": "សហអ្នកឧបត្ថម្ភ",
         "counsel": "ក្រុមប្រឹក្សា",
+        "creator": "អ្នកនិពន្ធ",
         "director": "នាយក",
         "editor": "អ្នកកែតម្រូវ",
+        "executiveProducer": "Executive Producer",
         "guest": "ភ្ញៀវ",
+        "host": "Host",
         "interviewee": "សម្ភាសន៍ជាមួយ",
         "interviewer": "អ្នកសម្ភាសន៍",
         "inventor": "អ្នកបង្កើត",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "អ្នកសំដែង",
         "podcaster": "អ្នកថតសំឡេងផដខាស្ត៍",
         "presenter": "អ្នកអត្ថាធិប្បាយ",
@@ -8012,6 +8992,7 @@
         "recipient": "អ្នកទទួល",
         "reviewedAuthor": "អ្នកនិពន្ធត្រួតពិនិត្យ",
         "scriptwriter": "អ្នកសរសេរអត្ថបទ",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "អ្នកកែតម្រូវតាមលេខរៀង",
         "sponsor": "អ្នកឧបត្ថម្ភ",
         "translator": "អ្នកបកប្រែ",
@@ -8102,6 +9083,7 @@
         "edition": "판본",
         "encyclopediaTitle": "백과사전 명",
         "episodeNumber": "에피소드 번호",
+        "eventPlace": "Event Place",
         "extra": "추가사항",
         "filingDate": "Filing Date",
         "firstPage": "첫 페이지",
@@ -8135,11 +9117,19 @@
         "numberOfVolumes": "권수",
         "numPages": "총 페이지수",
         "organization": "조직",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "쪽",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "특허 번호",
         "place": "발행지",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "게시물 종류",
         "presentationType": "형식",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "우선 번호",
         "proceedingsTitle": "의사록",
         "programmingLanguage": "프로그래밍 언어",
@@ -8163,6 +9153,7 @@
         "seriesText": "시리즈 텍스트",
         "seriesTitle": "시리즈 제목",
         "session": "세션",
+        "sessionTitle": "Session Title",
         "shortTitle": "짧은 제목",
         "status": "상태",
         "studio": "스튜디오",
@@ -8186,17 +9177,24 @@
         "bookAuthor": "책 저자",
         "cartographer": "지도 제작자",
         "castMember": "출연자",
+        "chair": "Chair",
         "commenter": "비평가",
         "composer": "작곡가",
         "contributor": "공헌자",
         "cosponsor": "Cosponsor",
         "counsel": "회의",
+        "creator": "창작가",
         "director": "감독",
         "editor": "편집자",
+        "executiveProducer": "Executive Producer",
         "guest": "손님",
+        "host": "Host",
         "interviewee": "인터뷰：",
         "interviewer": "인터뷰진행자",
         "inventor": "발명자",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "연주자",
         "podcaster": "팟캐스터",
         "presenter": "제출자",
@@ -8205,6 +9203,7 @@
         "recipient": "수령인",
         "reviewedAuthor": "평론가",
         "scriptwriter": "각본가",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "시리즈 편집자",
         "sponsor": "후원자",
         "translator": "번역자",
@@ -8295,6 +9294,7 @@
         "edition": "Leidimo nr.",
         "encyclopediaTitle": "Enciklopedijos pavadinimas",
         "episodeNumber": "Epizodo numeris",
+        "eventPlace": "Event Place",
         "extra": "Papildoma",
         "filingDate": "Užpildymo data",
         "firstPage": "Pirmas puslapis",
@@ -8328,11 +9328,19 @@
         "numberOfVolumes": "Tomų skaičius",
         "numPages": "Puslapių kiekis",
         "organization": "Organizacija",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Puslapiai",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patento numeris",
         "place": "Vieta",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Pranešimo tipas",
         "presentationType": "Tipas",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioriteto numeris",
         "proceedingsTitle": "Konf. leidinio pavadinimas",
         "programmingLanguage": "Prog. kalba",
@@ -8356,6 +9364,7 @@
         "seriesText": "Serijos tekstas",
         "seriesTitle": "Serijos pavadinimas",
         "session": "Sesija",
+        "sessionTitle": "Session Title",
         "shortTitle": "Trumpas pavad.",
         "status": "Būsena",
         "studio": "Dirbtuvė/studija",
@@ -8379,17 +9388,24 @@
         "bookAuthor": "Knygos autorius",
         "cartographer": "Kartografas",
         "castMember": "Atlikėjas/artistas",
+        "chair": "Chair",
         "commenter": "Komentuotojas",
         "composer": "Kūrėjas/kompozitorius",
         "contributor": "Bendradarbis",
         "cosponsor": "Kitas rėmėjas",
         "counsel": "Advokatas",
+        "creator": "Autorius",
         "director": "Vadovas",
         "editor": "Redaktorius",
+        "executiveProducer": "Executive Producer",
         "guest": "Svečias",
+        "host": "Host",
         "interviewee": "Pokalbis su",
         "interviewer": "Apklausėjas",
         "inventor": "išradėjas",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Atlikėjas",
         "podcaster": "Transliuotojas",
         "presenter": "Vedėjas",
@@ -8398,6 +9414,7 @@
         "recipient": "Gavėjas",
         "reviewedAuthor": "Peržiūrėtas autorius",
         "scriptwriter": "Scenaristas",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Serijos sudarytojas",
         "sponsor": "Rėmėjas",
         "translator": "Vertėjas",
@@ -8488,6 +9505,7 @@
         "edition": "Edition",
         "encyclopediaTitle": "Encyclopedia Title",
         "episodeNumber": "Episode Number",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Filing Date",
         "firstPage": "First Page",
@@ -8521,11 +9539,19 @@
         "numberOfVolumes": "# of Volumes",
         "numPages": "# of Pages",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pages",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patent Number",
         "place": "Place",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Type",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Priority Numbers",
         "proceedingsTitle": "Proceedings Title",
         "programmingLanguage": "Prog. Language",
@@ -8549,6 +9575,7 @@
         "seriesText": "Series Text",
         "seriesTitle": "Series Title",
         "session": "Session",
+        "sessionTitle": "Session Title",
         "shortTitle": "Short Title",
         "status": "Status",
         "studio": "Studio",
@@ -8572,17 +9599,24 @@
         "bookAuthor": "Book Author",
         "cartographer": "Cartographer",
         "castMember": "Cast Member",
+        "chair": "Chair",
         "commenter": "Commenter",
         "composer": "Composer",
         "contributor": "Contributor",
         "cosponsor": "Cosponsor",
         "counsel": "Counsel",
+        "creator": "Creator",
         "director": "Director",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Guest",
+        "host": "Host",
         "interviewee": "Interview With",
         "interviewer": "Interviewer",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Podcaster",
         "presenter": "Presenter",
@@ -8591,6 +9625,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Reviewed Author",
         "scriptwriter": "Scriptwriter",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Series Editor",
         "sponsor": "Sponsor",
         "translator": "Translator",
@@ -8599,7 +9634,7 @@
     },
     "nb-NO": {
       "itemTypes": {
-        "annotation": "Markering",
+        "annotation": "Kommentar",
         "artwork": "Kunstverk",
         "attachment": "Vedlegg",
         "audioRecording": "Lydopptak",
@@ -8681,6 +9716,7 @@
         "edition": "Utgave",
         "encyclopediaTitle": "Oppslagverk",
         "episodeNumber": "Episodenummer",
+        "eventPlace": "Sted for begivenhet",
         "extra": "Ekstra",
         "filingDate": "Innleveringsdato",
         "firstPage": "Første side",
@@ -8714,11 +9750,19 @@
         "numberOfVolumes": "# av volumer",
         "numPages": "# av sider",
         "organization": "Organisasjon",
+        "originalDate": "Opprinnelig dato",
+        "originalPlace": "Opprinnelig sted",
+        "originalPublisher": "Opprinnelig utgiver",
         "pages": "Sider",
+        "partNumber": "Delnummer",
+        "partTitle": "Deltittel",
         "patentNumber": "Patentnummer",
         "place": "Sted",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Posttype",
         "presentationType": "Type",
+        "priorityDate": "Prioriteringsdato",
         "priorityNumbers": "Prioritetsnummer",
         "proceedingsTitle": "Sakstittel",
         "programmingLanguage": "Programmeringsspråk",
@@ -8742,6 +9786,7 @@
         "seriesText": "Serietekst",
         "seriesTitle": "Serietittel",
         "session": "Sesjon",
+        "sessionTitle": "Tittel for sesjon",
         "shortTitle": "Kort tittel",
         "status": "Status",
         "studio": "Studio",
@@ -8765,17 +9810,24 @@
         "bookAuthor": "Bokforfatter",
         "cartographer": "Kartograf",
         "castMember": "Skuespiller",
+        "chair": "Leder",
         "commenter": "Kommentator",
         "composer": "Komponist",
         "contributor": "Medforfatter",
         "cosponsor": "Medsponsor",
         "counsel": "Rådgiver",
+        "creator": "Opphaver",
         "director": "Instruktør",
         "editor": "Redaktør",
+        "executiveProducer": "Utøvende produsent",
         "guest": "Gjest",
+        "host": "Vert",
         "interviewee": "Intervju med",
         "interviewer": "Intervjuer",
         "inventor": "Oppfinner",
+        "narrator": "Forteller",
+        "organizer": "Organisator",
+        "originalCreator": "Opprinnelig skaper",
         "performer": "Utøver",
         "podcaster": "Podcaster",
         "presenter": "Presentatør",
@@ -8784,6 +9836,7 @@
         "recipient": "Mottaker",
         "reviewedAuthor": "Anmeldt forfatter",
         "scriptwriter": "Manusforfatter",
+        "seriesCreator": "Serieskaper",
         "seriesEditor": "Serieredaktør",
         "sponsor": "Sponsor",
         "translator": "Oversetter",
@@ -8874,6 +9927,7 @@
         "edition": "Druk",
         "encyclopediaTitle": "Encyclopedie-titel",
         "episodeNumber": "Afleveringsnummer",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Indieningsdatum",
         "firstPage": "Eerste pagina",
@@ -8907,11 +9961,19 @@
         "numberOfVolumes": "# delen",
         "numPages": "Aantal pagina's",
         "organization": "Organisatie",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pagina's",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patentnummer",
         "place": "Plaats",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Type post",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioriteitsnummers",
         "proceedingsTitle": "Titel notulen",
         "programmingLanguage": "Prog. taal",
@@ -8935,6 +9997,7 @@
         "seriesText": "Reeks (extra tekst)",
         "seriesTitle": "Titel van de reeks",
         "session": "Sessie",
+        "sessionTitle": "Session Title",
         "shortTitle": "Korte Titel",
         "status": "Status",
         "studio": "Studio",
@@ -8958,17 +10021,24 @@
         "bookAuthor": "Auteur van het boek",
         "cartographer": "Cartograaf",
         "castMember": "Cast-member",
+        "chair": "Chair",
         "commenter": "Commentator",
         "composer": "Componist",
         "contributor": "Coauteur",
         "cosponsor": "Cosponsor",
         "counsel": "Raad",
+        "creator": "Maker",
         "director": "Regisseur",
         "editor": "Redacteur",
+        "executiveProducer": "Executive Producer",
         "guest": "Gast",
+        "host": "Host",
         "interviewee": "Interview met",
         "interviewer": "Interviewer",
         "inventor": "Uitvinder",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Uitvoerder",
         "podcaster": "Podcaster",
         "presenter": "Presentator",
@@ -8977,6 +10047,7 @@
         "recipient": "Ontvanger",
         "reviewedAuthor": "Besproken auteur",
         "scriptwriter": "Tekstschrijver",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Redacteur van de reeks",
         "sponsor": "Sponsor",
         "translator": "Vertaler",
@@ -9067,6 +10138,7 @@
         "edition": "Utgåve",
         "encyclopediaTitle": "Oppslagverk",
         "episodeNumber": "Episodenummer",
+        "eventPlace": "Event Place",
         "extra": "Ekstra",
         "filingDate": "Arkiveringsdato",
         "firstPage": "Første side",
@@ -9100,11 +10172,19 @@
         "numberOfVolumes": "# av volum",
         "numPages": "Tal sider",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Sidetal",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patentnummer",
         "place": "Stad",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Posttype",
         "presentationType": "Type",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioritetnummer",
         "proceedingsTitle": "Sakstittel",
         "programmingLanguage": "Prog. Language",
@@ -9128,6 +10208,7 @@
         "seriesText": "Serietekst",
         "seriesTitle": "Serietittel",
         "session": "Sesjon",
+        "sessionTitle": "Session Title",
         "shortTitle": "Kort tittel",
         "status": "Status",
         "studio": "Studio",
@@ -9151,17 +10232,24 @@
         "bookAuthor": "Bokforfattar",
         "cartographer": "Kartograf",
         "castMember": "Skodespelar",
+        "chair": "Chair",
         "commenter": "Kommentator",
         "composer": "Komponist",
         "contributor": "Medforfatter",
         "cosponsor": "Medsponsor",
         "counsel": "Rådgjevar",
+        "creator": "Namn",
         "director": "Instruktør",
         "editor": "Redaktør",
+        "executiveProducer": "Executive Producer",
         "guest": "Gjest",
+        "host": "Host",
         "interviewee": "Intervju med",
         "interviewer": "Intervjuar",
         "inventor": "Oppfinnar",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Utøvar",
         "podcaster": "Podkastar",
         "presenter": "Presentatør",
@@ -9170,6 +10258,7 @@
         "recipient": "Mottakar",
         "reviewedAuthor": "Meld forfattar",
         "scriptwriter": "Manusforfattar",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Serieredaktør",
         "sponsor": "Sponsor",
         "translator": "Omsetjar",
@@ -9260,6 +10349,7 @@
         "edition": "Wydanie",
         "encyclopediaTitle": "Tytuł encyklopedii",
         "episodeNumber": "Numer odcinka",
+        "eventPlace": "Miejsce zdarzenia",
         "extra": "Dodatkowe",
         "filingDate": "Data wypełnienia",
         "firstPage": "Pierwsza strona",
@@ -9293,11 +10383,19 @@
         "numberOfVolumes": "Liczba tomów",
         "numPages": "Liczba stron",
         "organization": "Organizacja",
+        "originalDate": "Oryginalna data",
+        "originalPlace": "Oryginalne miejsce",
+        "originalPublisher": "Oryginalny wydawca",
         "pages": "Strony",
+        "partNumber": "Numer części",
+        "partTitle": "Tytuł części",
         "patentNumber": "Numer patentu",
         "place": "Miejsce",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Typ wpisu",
         "presentationType": "Typ",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Numery priorytetu",
         "proceedingsTitle": "Tytuł sprawozdania",
         "programmingLanguage": "Jęz. programowania",
@@ -9321,6 +10419,7 @@
         "seriesText": "Tekst serii",
         "seriesTitle": "Tytuł serii",
         "session": "Sesja",
+        "sessionTitle": "Tytuł sesji",
         "shortTitle": "Krótki tytuł",
         "status": "Stan",
         "studio": "Studio",
@@ -9344,17 +10443,24 @@
         "bookAuthor": "Autor książki",
         "cartographer": "Kartograf",
         "castMember": "Aktor",
+        "chair": "Chair",
         "commenter": "Komentator",
         "composer": "Kompozytor",
         "contributor": "Współautor",
         "cosponsor": "Współsponsor",
         "counsel": "Prawnik",
+        "creator": "Twórca",
         "director": "Reżyser",
         "editor": "Redaktor",
+        "executiveProducer": "Executive Producer",
         "guest": "Gość",
+        "host": "Host",
         "interviewee": "Wywiad z",
         "interviewer": "Prowadzący wywiad",
         "inventor": "Wynalazca",
+        "narrator": "Narrator",
+        "organizer": "Organizator",
+        "originalCreator": "Oryginalny twórca",
         "performer": "Odtwórca",
         "podcaster": "Autor podcastu",
         "presenter": "Prezenter",
@@ -9363,6 +10469,7 @@
         "recipient": "Odbiorca",
         "reviewedAuthor": "Autor recenzji",
         "scriptwriter": "Scenarzysta",
+        "seriesCreator": "Twórca serii",
         "seriesEditor": "Redaktor serii",
         "sponsor": "Fundator",
         "translator": "Tłumacz",
@@ -9453,6 +10560,7 @@
         "edition": "Número da edição",
         "encyclopediaTitle": "Título da enciclopédia",
         "episodeNumber": "Número do episódio",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Data de arquivamento",
         "firstPage": "Primeira página",
@@ -9486,11 +10594,19 @@
         "numberOfVolumes": "# de volumes",
         "numPages": "# de páginas",
         "organization": "Organização",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Páginas",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Número da Patente",
         "place": "Lugar",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tipo de envio",
         "presentationType": "Tipo",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Números prioritários",
         "proceedingsTitle": "Título dos anais",
         "programmingLanguage": "Linguagem de programação",
@@ -9514,6 +10630,7 @@
         "seriesText": "Texto da série",
         "seriesTitle": "Título da série",
         "session": "Sessão",
+        "sessionTitle": "Session Title",
         "shortTitle": "Título curto",
         "status": "Status",
         "studio": "Estúdio",
@@ -9537,17 +10654,24 @@
         "bookAuthor": "Autor do livro",
         "cartographer": "Cartógrafo",
         "castMember": "Membro do elenco",
+        "chair": "Chair",
         "commenter": "Comentarista",
         "composer": "Compositor",
         "contributor": "Contribuidor",
         "cosponsor": "Co-patrocinador",
         "counsel": "Conselho",
+        "creator": "Autor",
         "director": "Diretor",
         "editor": "Organizador",
+        "executiveProducer": "Executive Producer",
         "guest": "Convidado",
+        "host": "Host",
         "interviewee": "Entrevista com",
         "interviewer": "Entrevistador",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Ator",
         "podcaster": "Fonte do podcast",
         "presenter": "Apresentador",
@@ -9556,6 +10680,7 @@
         "recipient": "Destinatário",
         "reviewedAuthor": "Autor resenhado",
         "scriptwriter": "Roteirista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor da série",
         "sponsor": "Propositor",
         "translator": "Tradutor",
@@ -9646,6 +10771,7 @@
         "edition": "Edição",
         "encyclopediaTitle": "Título da Enciclopédia",
         "episodeNumber": "Número do Episódio",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Data de Arquivo",
         "firstPage": "Primeira Página",
@@ -9679,11 +10805,19 @@
         "numberOfVolumes": "N.º de Volumes",
         "numPages": "N.º de Páginas",
         "organization": "Organização",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Páginas",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Número de Patente",
         "place": "Local",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Pós-Tipo",
         "presentationType": "Tipo",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Números de Prioridade",
         "proceedingsTitle": "Título das Actas",
         "programmingLanguage": "Linguagem de Programação",
@@ -9707,6 +10841,7 @@
         "seriesText": "Texto da Série",
         "seriesTitle": "Título da Série",
         "session": "Sessão",
+        "sessionTitle": "Session Title",
         "shortTitle": "Título Curto",
         "status": "Status",
         "studio": "Estúdio",
@@ -9730,17 +10865,24 @@
         "bookAuthor": "Autor do Livro",
         "cartographer": "Cartógrafo",
         "castMember": "Membro do Elenco",
+        "chair": "Chair",
         "commenter": "Comentador",
         "composer": "Compositor",
         "contributor": "Colaborador",
         "cosponsor": "Co-patrocinador",
         "counsel": "Conselho",
+        "creator": "Criador",
         "director": "Realizador",
         "editor": "Editor",
+        "executiveProducer": "Executive Producer",
         "guest": "Convidado",
+        "host": "Host",
         "interviewee": "Entrevista Com",
         "interviewer": "Entrevistador",
         "inventor": "Inventor",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Performer",
         "podcaster": "Locutor de Emissão Pod",
         "presenter": "Apresentador",
@@ -9749,6 +10891,7 @@
         "recipient": "Receptor",
         "reviewedAuthor": "Autor Revisto",
         "scriptwriter": "Guionista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Editor da Série",
         "sponsor": "Patrocinador",
         "translator": "Tradutor",
@@ -9839,6 +10982,7 @@
         "edition": "Ediție",
         "encyclopediaTitle": "Titlu enciclopedie",
         "episodeNumber": "Număr episod",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Data completării",
         "firstPage": "Prima pagină",
@@ -9872,11 +11016,19 @@
         "numberOfVolumes": "Nr. de volume",
         "numPages": "Nr. de pagini",
         "organization": "Organizație",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Pagini",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Număr brevet",
         "place": "Loc",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Tip de comentariu",
         "presentationType": "Tip",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Numere de prioritate",
         "proceedingsTitle": "Titlu dare de seamă",
         "programmingLanguage": "Limbaj de programare",
@@ -9900,6 +11052,7 @@
         "seriesText": "Text colecție",
         "seriesTitle": "Titlu colecție",
         "session": "Sesiune",
+        "sessionTitle": "Session Title",
         "shortTitle": "Titlu scurt",
         "status": "Stare",
         "studio": "Studio",
@@ -9923,17 +11076,24 @@
         "bookAuthor": "Autor carte",
         "cartographer": "Cartograf",
         "castMember": "Membru în distribuție",
+        "chair": "Chair",
         "commenter": "Comentator",
         "composer": "Compozitor",
         "contributor": "Colaborator",
         "cosponsor": "Sponsor asociat",
         "counsel": "Consiliu",
+        "creator": "Creator",
         "director": "Director",
         "editor": "Editor (coord.)",
+        "executiveProducer": "Executive Producer",
         "guest": "Oaspete",
+        "host": "Host",
         "interviewee": "Interviu cu",
         "interviewer": "Interviu de",
         "inventor": "Inventator",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Interpret",
         "podcaster": "Autor multimedia",
         "presenter": "Prezentator",
@@ -9942,6 +11102,7 @@
         "recipient": "Recipient",
         "reviewedAuthor": "Autor recenzat",
         "scriptwriter": "Scriitor (de mână)",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Coordonator colecție",
         "sponsor": "Sponsor",
         "translator": "Traducător",
@@ -10028,10 +11189,11 @@
         "distributor": "Дистрибьютор",
         "docketNumber": "Номер выписки",
         "documentNumber": "Номер документа",
-        "DOI": "ЦИО/DOI",
+        "DOI": "DOI",
         "edition": "Издание",
         "encyclopediaTitle": "Назв. энцикл.",
         "episodeNumber": "Номер эпизода",
+        "eventPlace": "Event Place",
         "extra": "Дополнительно",
         "filingDate": "Дата заявки",
         "firstPage": "Первая стр.",
@@ -10065,11 +11227,19 @@
         "numberOfVolumes": "Кол-во томов",
         "numPages": "Число страниц",
         "organization": "Организация",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Страницы",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Номер патента",
         "place": "Место",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Тип сообщения",
         "presentationType": "Тип",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Номера приоритетов",
         "proceedingsTitle": "Назв. трудов",
         "programmingLanguage": "Прогр. яз.",
@@ -10093,6 +11263,7 @@
         "seriesText": "Текст серии",
         "seriesTitle": "Название серии",
         "session": "Сессия",
+        "sessionTitle": "Session Title",
         "shortTitle": "Краткое назв.",
         "status": "Статус",
         "studio": "Студия",
@@ -10116,17 +11287,24 @@
         "bookAuthor": "Автор книги",
         "cartographer": "Картограф",
         "castMember": "Актер",
+        "chair": "Chair",
         "commenter": "Комментатор",
         "composer": "Композитор",
         "contributor": "Контрибутор",
         "cosponsor": "Совм. спонсор",
         "counsel": "Советник",
+        "creator": "Автор",
         "director": "Режиссер",
         "editor": "Редактор",
+        "executiveProducer": "Executive Producer",
         "guest": "Гость",
+        "host": "Host",
         "interviewee": "Интервью с",
         "interviewer": "Интервьюер",
         "inventor": "Изобретатель",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Исполнитель",
         "podcaster": "Подкастер",
         "presenter": "Докладчик",
@@ -10135,6 +11313,7 @@
         "recipient": "Получатель",
         "reviewedAuthor": "Реценз. автор",
         "scriptwriter": "Сценарист",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Редактор серии",
         "sponsor": "Спонсор",
         "translator": "Переводчик",
@@ -10225,6 +11404,7 @@
         "edition": "Vydanie",
         "encyclopediaTitle": "Názov encyklopédie",
         "episodeNumber": "Číslo epizódy",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Dátum zápisu",
         "firstPage": "Prvá strana",
@@ -10258,11 +11438,19 @@
         "numberOfVolumes": "Počet zväzkov",
         "numPages": "Počet strán",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Strany",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Číslo patentu",
         "place": "Miesto",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Druh príspevku",
         "presentationType": "Typ prezentácie",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Čísla priority",
         "proceedingsTitle": "Názov zborníka",
         "programmingLanguage": "Program. jazyk",
@@ -10286,6 +11474,7 @@
         "seriesText": "Text edície",
         "seriesTitle": "Názov edície",
         "session": "Zasadnutie",
+        "sessionTitle": "Session Title",
         "shortTitle": "Krátky názov",
         "status": "Status",
         "studio": "Štúdio",
@@ -10309,17 +11498,24 @@
         "bookAuthor": "Autor knihy",
         "cartographer": "Kartograf",
         "castMember": "Účinkujúci",
+        "chair": "Chair",
         "commenter": "Komentátor",
         "composer": "Skladateľ",
         "contributor": "Prispievateľ",
         "cosponsor": "Spolusponzor",
         "counsel": "Právny zástupca",
+        "creator": "Autor",
         "director": "Režisér",
         "editor": "Zostavovateľ",
+        "executiveProducer": "Executive Producer",
         "guest": "Hosť",
+        "host": "Host",
         "interviewee": "Rozhovor s",
         "interviewer": "Spytujúci sa",
         "inventor": "Vynálezca",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Interpret",
         "podcaster": "Autor podcastu",
         "presenter": "Prezentujúci",
@@ -10328,6 +11524,7 @@
         "recipient": "Príjemca",
         "reviewedAuthor": "Recenzent",
         "scriptwriter": "Scenárista",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Zostavovateľ edície",
         "sponsor": "Navrhovateľ",
         "translator": "Prekladateľ",
@@ -10418,6 +11615,7 @@
         "edition": "Edicija",
         "encyclopediaTitle": "Naslov enciklopedije",
         "episodeNumber": "Številka epizode",
+        "eventPlace": "Event Place",
         "extra": "Dodatno",
         "filingDate": "Datum vknjižbe",
         "firstPage": "Naslovnica",
@@ -10451,11 +11649,19 @@
         "numberOfVolumes": "Št. letnikov",
         "numPages": "Št. strani",
         "organization": "Organizacija",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Strani",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Številka patenta",
         "place": "Kraj",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Vrsta objave",
         "presentationType": "Vrsta",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Številke prioritete",
         "proceedingsTitle": "Naslov zapisnika razprave",
         "programmingLanguage": "Programski jezik",
@@ -10479,6 +11685,7 @@
         "seriesText": "Besedilo zbirke",
         "seriesTitle": "Naslov zbirke",
         "session": "Zasedanje",
+        "sessionTitle": "Session Title",
         "shortTitle": "Kratki naslov",
         "status": "Stanje",
         "studio": "Studio",
@@ -10502,17 +11709,24 @@
         "bookAuthor": "Avtor knjige",
         "cartographer": "Kartograf",
         "castMember": "Nastopajoči",
+        "chair": "Chair",
         "commenter": "Komentator",
         "composer": "Skladatelj",
         "contributor": "Avtor prispevka",
         "cosponsor": "Sosponzor",
         "counsel": "Odvetnik",
+        "creator": "Ustvaril",
         "director": "Režiser",
         "editor": "Urednik",
+        "executiveProducer": "Executive Producer",
         "guest": "Gost",
+        "host": "Host",
         "interviewee": "Intervju z",
         "interviewer": "Intervju opravil",
         "inventor": "Izumitelj",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Izvajalec",
         "podcaster": "Avtor podcasta",
         "presenter": "Predstavitelj",
@@ -10521,6 +11735,7 @@
         "recipient": "Prejemnik",
         "reviewedAuthor": "Ocenjeni avtor",
         "scriptwriter": "Scenarist",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Urednik zbirke",
         "sponsor": "Sponzor",
         "translator": "Prevajalec",
@@ -10607,10 +11822,11 @@
         "distributor": "Дистрибутер",
         "docketNumber": "Докет број",
         "documentNumber": "Број документа",
-        "DOI": "ДОИ",
+        "DOI": "DOI",
         "edition": "Едиција",
         "encyclopediaTitle": "Наслов енциклопедије",
         "episodeNumber": "Број епизоде",
+        "eventPlace": "Event Place",
         "extra": "Додатни подаци",
         "filingDate": "Датум подношења",
         "firstPage": "Прва страница",
@@ -10621,8 +11837,8 @@
         "identifier": "Идентификатор",
         "institution": "Институција",
         "interviewMedium": "Медијум",
-        "ISBN": "ИСБН",
-        "ISSN": "ИССН",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "Брoj издања",
         "issueDate": "Датум издања",
         "issuingAuthority": "Издавач",
@@ -10644,11 +11860,19 @@
         "numberOfVolumes": "Бр. томова",
         "numPages": "Брoj страница",
         "organization": "Организација",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Странице",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Број патента",
         "place": "Место",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Врста поруке",
         "presentationType": "Врста",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Бројеви приоритета",
         "proceedingsTitle": "Наслов зборника",
         "programmingLanguage": "Прог. језик",
@@ -10672,6 +11896,7 @@
         "seriesText": "Текст серије",
         "seriesTitle": "Наслов серије",
         "session": "Сесија",
+        "sessionTitle": "Session Title",
         "shortTitle": "Скраћени наслов",
         "status": "Стање",
         "studio": "Студио",
@@ -10695,17 +11920,24 @@
         "bookAuthor": "Аутор књиге",
         "cartographer": "Картограф",
         "castMember": "Глумац",
+        "chair": "Chair",
         "commenter": "Коментатор",
         "composer": "Композитор",
         "contributor": "Сарадник",
         "cosponsor": "Коспонзор",
         "counsel": "Савет",
+        "creator": "Аутор",
         "director": "Директор",
         "editor": "Уредник",
+        "executiveProducer": "Executive Producer",
         "guest": "Гост",
+        "host": "Host",
         "interviewee": "Разговор са",
         "interviewer": "Водич интервјуа",
         "inventor": "Проналазач",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Извођач",
         "podcaster": "Подкастер",
         "presenter": "Презентер",
@@ -10714,6 +11946,7 @@
         "recipient": "Прималац",
         "reviewedAuthor": "Оцењени аутор",
         "scriptwriter": "Сценариста",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Уредник серије",
         "sponsor": "Спонзор",
         "translator": "Преводилац",
@@ -10804,6 +12037,7 @@
         "edition": "Upplaga",
         "encyclopediaTitle": "Uppslagsverkstitel",
         "episodeNumber": "Avsnittsnummer",
+        "eventPlace": "Event Place",
         "extra": "Extra",
         "filingDate": "Ansökningsdatum",
         "firstPage": "Första sida",
@@ -10837,11 +12071,19 @@
         "numberOfVolumes": "# volymer",
         "numPages": "# sidor",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Sidor",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patentnummer",
         "place": "Ort",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Källtyp",
         "presentationType": "Presentationstyp",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Prioritetsnummer",
         "proceedingsTitle": "Protokolltitel",
         "programmingLanguage": "Prog. språk",
@@ -10865,6 +12107,7 @@
         "seriesText": "Bokseries text",
         "seriesTitle": "Titel på bokserie",
         "session": "Session",
+        "sessionTitle": "Session Title",
         "shortTitle": "Kort titel",
         "status": "Status",
         "studio": "Studio",
@@ -10888,17 +12131,24 @@
         "bookAuthor": "Bokförfattare",
         "cartographer": "Kartograf",
         "castMember": "Skådespelare",
+        "chair": "Chair",
         "commenter": "Kommentator",
         "composer": "Kompositör",
         "contributor": "Medarbetare",
         "cosponsor": "Medsponsor",
         "counsel": "Handledare",
+        "creator": "Skapare",
         "director": "Regissör",
         "editor": "Redaktör",
+        "executiveProducer": "Executive Producer",
         "guest": "Gäst",
+        "host": "Host",
         "interviewee": "Intervju med",
         "interviewer": "Intervjuare",
         "inventor": "Uppfinnare",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Artist",
         "podcaster": "Poddsändare",
         "presenter": "Presentatör",
@@ -10907,6 +12157,7 @@
         "recipient": "Mottagare",
         "reviewedAuthor": "Recenserad författare",
         "scriptwriter": "Manusförfattare",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Redaktör för bokserie",
         "sponsor": "Förslagsläggare",
         "translator": "Översättare",
@@ -10993,10 +12244,11 @@
         "distributor": "பரப்பி",
         "docketNumber": "டாக்கெட் எண்",
         "documentNumber": "ஆவண எண்",
-        "DOI": "வதே",
+        "DOI": "DOI",
         "edition": "பதிப்பு",
         "encyclopediaTitle": "கலைக்களஞ்சிய தலைப்பு",
         "episodeNumber": "அத்தியாயம் எண்",
+        "eventPlace": "Event Place",
         "extra": "கூடுதல்",
         "filingDate": "தாக்கல் தேதி",
         "firstPage": "முதல் பக்கம்",
@@ -11007,8 +12259,8 @@
         "identifier": "அடையாளங்காட்டி",
         "institution": "நிறுவனம்",
         "interviewMedium": "சராசரி",
-        "ISBN": "ஐஎச்பிஎன்",
-        "ISSN": "ஐஎச்எச்என்",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "சிக்கல்",
         "issueDate": "வெளியீட்டு தேதி",
         "issuingAuthority": "அதிகாரம் வழங்குதல்",
@@ -11030,11 +12282,19 @@
         "numberOfVolumes": "# தொகுதிகள்",
         "numPages": "# பக்கங்கள்",
         "organization": "அமைப்பு",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "பக்கங்கள்",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "காப்புரிமை எண்",
         "place": "இடம்",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "இடுகை வகை",
         "presentationType": "வகை",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "முன்னுரிமை எண்கள்",
         "proceedingsTitle": "நடவடிக்கைகள் தலைப்பு",
         "programmingLanguage": "நிரலாக்க மொழி",
@@ -11058,6 +12318,7 @@
         "seriesText": "தொடர் உரை",
         "seriesTitle": "தொடர் தலைப்பு",
         "session": "அமர்வு",
+        "sessionTitle": "Session Title",
         "shortTitle": "குறுகிய தலைப்பு",
         "status": "நிலை",
         "studio": "கலைக்கூடம்",
@@ -11081,17 +12342,24 @@
         "bookAuthor": "புத்தக ஆசிரியர்",
         "cartographer": "நிலப்படத்தாளர்",
         "castMember": "நடிக உறுப்பினர்",
+        "chair": "Chair",
         "commenter": "வர்ணனையாளர்",
         "composer": "இசையமைப்பாளர்",
         "contributor": "பங்களிப்பாளர்",
         "cosponsor": "இணைபங்களிப்பாளர்",
         "counsel": "அறிவுரை",
+        "creator": "உருவாக்கியவர்",
         "director": "இயக்குனர்",
         "editor": "திருத்தி",
+        "executiveProducer": "Executive Producer",
         "guest": "விருந்தினர்",
+        "host": "Host",
         "interviewee": "உடன் நேர்காணல்",
         "interviewer": "நேர்காணல் செய்பவர்",
         "inventor": "கண்டுபிடிப்பாளர்",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "நடிகர்",
         "podcaster": "வலையொளியாளர்",
         "presenter": "தொகுப்பாளர்",
@@ -11100,6 +12368,7 @@
         "recipient": "பெறுநர்",
         "reviewedAuthor": "மதிப்பாய்வு செய்த ஆசிரியர்",
         "scriptwriter": "திரைக்கதை எழுத்தாளர்",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "தொடர் ஆசிரியர்",
         "sponsor": "ஒப்புரவாளர்",
         "translator": "மொழிபெயர்",
@@ -11190,6 +12459,7 @@
         "edition": "ครั้งที่พิมพ์",
         "encyclopediaTitle": "ชื่อสารานุกรม",
         "episodeNumber": "ตอนที่",
+        "eventPlace": "Event Place",
         "extra": "สิ่งที่เพิ่มเติม",
         "filingDate": "วันที่เข้าแฟ้ม",
         "firstPage": "หน้าแรก",
@@ -11223,11 +12493,19 @@
         "numberOfVolumes": "จำนวนเล่ม",
         "numPages": "จำนวนหน้า",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "เลขหน้า",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "หมายเลขสิทธิบัตร",
         "place": "สถานที่พิมพ์",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "ประเภทข้อความ",
         "presentationType": "ประเภท",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "หมายเลขลำดับก่อน",
         "proceedingsTitle": "ชื่อเอกสารการประชุม",
         "programmingLanguage": "Prog. Language",
@@ -11251,6 +12529,7 @@
         "seriesText": "หัวข้อชุด",
         "seriesTitle": "ชื่อชุด",
         "session": "สมัยประชุม",
+        "sessionTitle": "Session Title",
         "shortTitle": "ชื่อย่อเรื่อง",
         "status": "Status",
         "studio": "สตูดิโอ",
@@ -11274,17 +12553,24 @@
         "bookAuthor": "ผู้แต่งหนังสือ",
         "cartographer": "ผู้ทำแผนที่",
         "castMember": "นักแสดง",
+        "chair": "Chair",
         "commenter": "ผู้ออกความเห็น",
         "composer": "นักแต่งเพลง",
         "contributor": "ผู้ช่วยเหลือ",
         "cosponsor": "ผู้อุปถัมภ์ร่วม",
         "counsel": "ทนายความ",
+        "creator": "ผู้สร้างสรรค์",
         "director": "ผู้อำนวยการ",
         "editor": "บรรณาธิการ",
+        "executiveProducer": "Executive Producer",
         "guest": "ผู้รับเชิญ",
+        "host": "Host",
         "interviewee": "สัมภาษณ์กับ",
         "interviewer": "ผู้สัมภาษณ์",
         "inventor": "ผู้ประดิษฐ์",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "นักแสดง",
         "podcaster": "ผู้สร้างพอดคาสต์",
         "presenter": "ผู้นำเสนอ",
@@ -11293,6 +12579,7 @@
         "recipient": "ผู้รับ",
         "reviewedAuthor": "ผู้เขียนบทวิจารณ์",
         "scriptwriter": "ผู้เขียนบท",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "บรรณาธิการชุดย่อย",
         "sponsor": "ผู้อุปถัมภ์",
         "translator": "ผู้แปล",
@@ -11383,6 +12670,7 @@
         "edition": "Baskı",
         "encyclopediaTitle": "Ansiklopedi Başlığı",
         "episodeNumber": "Bölüm Numarası",
+        "eventPlace": "Event Place",
         "extra": "İlave",
         "filingDate": "Başvuru Tarihi",
         "firstPage": "İlk Sayfa",
@@ -11416,13 +12704,21 @@
         "numberOfVolumes": "Cilt Sayısı",
         "numPages": "Sayfa Sayısı",
         "organization": "Kurum",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Sayfa",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Patent Numarası",
         "place": "Yayın Yeri",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Post Türü",
         "presentationType": "Tür",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Rüçhan Numarası",
-        "proceedingsTitle": "Bildiriler Başlığı",
+        "proceedingsTitle": "Bildiriler Kitabı Başlığı",
         "programmingLanguage": "Prog. Dili",
         "programTitle": "Program Başlığı",
         "publicationTitle": "Yayın",
@@ -11444,6 +12740,7 @@
         "seriesText": "Dizi Metni",
         "seriesTitle": "Dizi Başlığı",
         "session": "Oturum",
+        "sessionTitle": "Session Title",
         "shortTitle": "Kısa Başlık",
         "status": "Durum",
         "studio": "Stüdyo",
@@ -11457,7 +12754,7 @@
         "versionNumber": "Sürüm",
         "videoRecordingFormat": "Biçim",
         "volume": "Cilt",
-        "websiteTitle": "Web sitesi Başlığı",
+        "websiteTitle": "Web Sitesi Başlığı",
         "websiteType": "Website Türü"
       },
       "creatorTypes": {
@@ -11467,17 +12764,24 @@
         "bookAuthor": "Kitap Yazarı",
         "cartographer": "Haritacı",
         "castMember": "Oyuncu",
+        "chair": "Chair",
         "commenter": "Yorumcu",
         "composer": "Besteci",
         "contributor": "Katkıda Bulunan",
         "cosponsor": "Birlikte Destekleyen",
         "counsel": "Avukat",
+        "creator": "Oluşturan",
         "director": "Yönetmen",
         "editor": "Editör",
+        "executiveProducer": "Executive Producer",
         "guest": "Konuk",
+        "host": "Host",
         "interviewee": "Görüşme Yapılan",
         "interviewer": "Görüşmeci",
         "inventor": "Buluş Sahibi",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Yorumcu",
         "podcaster": "Podcast yapan",
         "presenter": "Sunucu",
@@ -11486,6 +12790,7 @@
         "recipient": "Alıcı",
         "reviewedAuthor": "Eleştirilen Yazar",
         "scriptwriter": "Senaryo Yazarı",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Dizi Editörü",
         "sponsor": "Destekleyen",
         "translator": "Çevirmen",
@@ -11576,6 +12881,7 @@
         "edition": "Видання",
         "encyclopediaTitle": "Назва енцикл.",
         "episodeNumber": "Номер епізоду",
+        "eventPlace": "Event Place",
         "extra": "Додатково",
         "filingDate": "Дата заявки",
         "firstPage": "Перша стор.",
@@ -11609,11 +12915,19 @@
         "numberOfVolumes": "Кільк. томів",
         "numPages": "Кільк. сторінок",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Сторінки",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Номер патенту",
         "place": "Місце",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Тип повідомлення",
         "presentationType": "Тип",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Номер пріоритету",
         "proceedingsTitle": "Назва праць",
         "programmingLanguage": "Prog. Language",
@@ -11637,6 +12951,7 @@
         "seriesText": "Текст серії",
         "seriesTitle": "Назва серії",
         "session": "Сесія",
+        "sessionTitle": "Session Title",
         "shortTitle": "Скор. назва",
         "status": "Status",
         "studio": "Студія",
@@ -11660,17 +12975,24 @@
         "bookAuthor": "Автор книги",
         "cartographer": "Картограф",
         "castMember": "Актор",
+        "chair": "Chair",
         "commenter": "Коментатор",
         "composer": "Композитор",
         "contributor": "Співавтор",
         "cosponsor": "Спонсор",
         "counsel": "Радник",
+        "creator": "Автор",
         "director": "Режисер",
         "editor": "Редактор",
+        "executiveProducer": "Executive Producer",
         "guest": "Гість",
+        "host": "Host",
         "interviewee": "Співбесіда з",
         "interviewer": "Інтерв'юер",
         "inventor": "Винахідник",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Виконавець",
         "podcaster": "Підкастер",
         "presenter": "Доповідач",
@@ -11679,6 +13001,7 @@
         "recipient": "Отримувач",
         "reviewedAuthor": "Реценз. автор",
         "scriptwriter": "Сценарист",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Редактор серії",
         "sponsor": "Спонсор",
         "translator": "Перекладач",
@@ -11769,6 +13092,7 @@
         "edition": "Ấn bản",
         "encyclopediaTitle": "Tên của Bách Khoa Toàn Thư",
         "episodeNumber": "Số Hồi",
+        "eventPlace": "Event Place",
         "extra": "Phần bổ sung",
         "filingDate": "Filing Date",
         "firstPage": "Trang đầu",
@@ -11802,11 +13126,19 @@
         "numberOfVolumes": "Số Tập",
         "numPages": "# of Pages",
         "organization": "Organization",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "Trang",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "Số Bắng sáng chế",
         "place": "Nơi xuất bản",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "Kiểu Bài viết",
         "presentationType": "Kiểu",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "Số Ưu tiên",
         "proceedingsTitle": "Nhan đề của Kỷ yếu Hội nghị",
         "programmingLanguage": "Prog. Language",
@@ -11830,6 +13162,7 @@
         "seriesText": "Miêu tả Tùng thư",
         "seriesTitle": "Nhan đề của Tùng thư",
         "session": "Phiên",
+        "sessionTitle": "Session Title",
         "shortTitle": "Nhan đề thu gọn",
         "status": "Status",
         "studio": "Xưởng sản xuất",
@@ -11853,17 +13186,24 @@
         "bookAuthor": "Book Author",
         "cartographer": "Người vẽ bản đồ",
         "castMember": "Thành viên đoàn kịch",
+        "chair": "Chair",
         "commenter": "Bình luận viên",
         "composer": "Nhà soạn nhạc",
         "contributor": "Cộng tác viên",
         "cosponsor": "Cosponsor",
         "counsel": "Nhà tư vấn",
+        "creator": "Người tạo lập",
         "director": "Đạo diễn",
         "editor": "Biên tập viên",
+        "executiveProducer": "Executive Producer",
         "guest": "Khách mời",
+        "host": "Host",
         "interviewee": "Người được phỏng vấn",
         "interviewer": "Người phỏng vấn",
         "inventor": "Nhà phát minh",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "Người biểu diễn",
         "podcaster": "Podcaster",
         "presenter": "Dẫn chương trình",
@@ -11872,6 +13212,7 @@
         "recipient": "Người nhận",
         "reviewedAuthor": "Nhà phê bình/Người phản biện",
         "scriptwriter": "Tác giả Kịch bản",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "Biên tập viên của Tùng thư",
         "sponsor": "Tài trợ/Đỡ đầu",
         "translator": "Biên dịch viên",
@@ -11930,7 +13271,7 @@
         "archiveLocation": "存档位置",
         "artworkMedium": "艺术品媒介",
         "artworkSize": "艺术品尺寸",
-        "assignee": "受让人/所有权人",
+        "assignee": "专利权人",
         "audioFileType": "音频文件类型",
         "audioRecordingFormat": "音频格式",
         "authority": "主管机构",
@@ -11962,12 +13303,13 @@
         "edition": "版本",
         "encyclopediaTitle": "百科标题",
         "episodeNumber": "集数",
+        "eventPlace": "Event Place",
         "extra": "其他",
         "filingDate": "申请日期",
         "firstPage": "起始页",
         "format": "格式",
         "forumTitle": "论坛/列表服务标题",
-        "genre": "流派",
+        "genre": "分类",
         "history": "历史",
         "identifier": "识别符",
         "institution": "机构组织",
@@ -11995,17 +13337,25 @@
         "numberOfVolumes": "总卷数",
         "numPages": "总页数",
         "organization": "组织",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "页码",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "专利号",
         "place": "地点",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "帖子类型",
         "presentationType": "演稿类型",
-        "priorityNumbers": "优先申请号",
+        "priorityDate": "优先权日",
+        "priorityNumbers": "优先权号",
         "proceedingsTitle": "会议论文集标题",
         "programmingLanguage": "编程语言",
         "programTitle": "节目名称",
-        "publicationTitle": "刊名",
-        "publicLawNumber": "文件号",
+        "publicationTitle": "出版物",
+        "publicLawNumber": "公法编号",
         "publisher": "出版社",
         "references": "参考文献",
         "reporter": "报告系统",
@@ -12023,6 +13373,7 @@
         "seriesText": "系列描述",
         "seriesTitle": "系列标题",
         "session": "会期",
+        "sessionTitle": "Session Title",
         "shortTitle": "短标题",
         "status": "状态",
         "studio": "工作室",
@@ -12041,22 +13392,29 @@
       },
       "creatorTypes": {
         "artist": "艺术家",
-        "attorneyAgent": "律师/代理人",
+        "attorneyAgent": "代理师/机构",
         "author": "作者",
         "bookAuthor": "图书作者",
         "cartographer": "制图人",
         "castMember": "演员阵容",
+        "chair": "Chair",
         "commenter": "评论人",
         "composer": "创作者",
         "contributor": "贡献者",
         "cosponsor": "共同发起人",
         "counsel": "顾问",
+        "creator": "创建者",
         "director": "导演",
         "editor": "编辑",
+        "executiveProducer": "Executive Producer",
         "guest": "宾客",
+        "host": "主持人",
         "interviewee": "采访对象",
         "interviewer": "采访者",
         "inventor": "发明人",
+        "narrator": "Narrator",
+        "organizer": "组织者",
+        "originalCreator": "Original Creator",
         "performer": "表演者",
         "podcaster": "播客",
         "presenter": "报告人",
@@ -12065,6 +13423,7 @@
         "recipient": "接收者",
         "reviewedAuthor": "审稿人",
         "scriptwriter": "编剧",
+        "seriesCreator": "系列创作者",
         "seriesEditor": "丛书编辑",
         "sponsor": "发起人",
         "translator": "译者",
@@ -12155,6 +13514,7 @@
         "edition": "版本",
         "encyclopediaTitle": "百科全書書名",
         "episodeNumber": "劇集號碼",
+        "eventPlace": "Event Place",
         "extra": "額外增列",
         "filingDate": "歸檔日期",
         "firstPage": "起始頁",
@@ -12165,8 +13525,8 @@
         "identifier": "辨識符號",
         "institution": "機構",
         "interviewMedium": "媒介",
-        "ISBN": "國際標準書號(ISBN)",
-        "ISSN": "國際標準期刊號(ISSN)",
+        "ISBN": "ISBN",
+        "ISSN": "ISSN",
         "issue": "期號",
         "issueDate": "發刊日期",
         "issuingAuthority": "發行當局",
@@ -12188,11 +13548,19 @@
         "numberOfVolumes": "總卷數",
         "numPages": "頁數",
         "organization": "組織",
+        "originalDate": "Original Date",
+        "originalPlace": "Original Place",
+        "originalPublisher": "Original Publisher",
         "pages": "頁",
+        "partNumber": "Part Number",
+        "partTitle": "Part Title",
         "patentNumber": "專利號",
         "place": "所在地",
+        "PMCID": "PMCID",
+        "PMID": "PMID",
         "postType": "貼文類型",
         "presentationType": "類型",
+        "priorityDate": "Priority Date",
         "priorityNumbers": "優先權案號",
         "proceedingsTitle": "會議論文集標題",
         "programmingLanguage": "程式語言",
@@ -12216,6 +13584,7 @@
         "seriesText": "系列文",
         "seriesTitle": "系列標題",
         "session": "會議時程",
+        "sessionTitle": "Session Title",
         "shortTitle": "短名",
         "status": "狀態",
         "studio": "工作室",
@@ -12239,17 +13608,24 @@
         "bookAuthor": "書籍作者",
         "cartographer": "製圖者",
         "castMember": "演員陣容",
+        "chair": "Chair",
         "commenter": "評論家",
         "composer": "作曲者",
         "contributor": "貢獻者",
         "cosponsor": "共同贊助者",
         "counsel": "顧問",
+        "creator": "創作者",
         "director": "導演",
         "editor": "編輯者",
+        "executiveProducer": "Executive Producer",
         "guest": "來賓",
+        "host": "Host",
         "interviewee": "受訪者",
         "interviewer": "訪談者",
         "inventor": "發明人",
+        "narrator": "Narrator",
+        "organizer": "Organizer",
+        "originalCreator": "Original Creator",
         "performer": "表演者",
         "podcaster": "Podcast主講者",
         "presenter": "簡報者",
@@ -12258,6 +13634,7 @@
         "recipient": "領受者",
         "reviewedAuthor": "所評論的作者",
         "scriptwriter": "編劇",
+        "seriesCreator": "Series Creator",
         "seriesEditor": "系列編輯者",
         "sponsor": "贊助者",
         "translator": "翻譯者",

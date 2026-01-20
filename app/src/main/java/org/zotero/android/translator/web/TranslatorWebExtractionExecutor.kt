@@ -1,13 +1,13 @@
 package org.zotero.android.translator.web
 
-import org.zotero.android.translator.data.RawAttachment
-import org.zotero.android.translator.data.TranslationWebViewError
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.apache.commons.io.FileUtils
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
+import org.zotero.android.translator.data.RawAttachment
+import org.zotero.android.translator.data.TranslationWebViewError
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -31,7 +31,7 @@ class TranslatorWebExtractionExecutor @Inject constructor(
                 url = url,
                 onWebViewLoadPage = {
                     val extractionJsContent =
-                        FileUtils.readFileToString(
+                        FileHelper.readFileToString(
                             File(
                                 fileStore.translatorDirectory(),
                                 "webview_extraction.js"

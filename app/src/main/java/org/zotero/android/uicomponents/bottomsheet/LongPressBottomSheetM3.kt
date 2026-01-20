@@ -21,21 +21,14 @@ import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun LongPressBottomSheetM3(
-    shouldIncludeBottomBarOffset: Boolean = false,
     onCollapse: () -> Unit,
     longPressOptionsHolder: LongPressOptionsHolder? = null,
     onOptionClick: (LongPressOptionItem) -> Unit,
 ) {
     val shouldShow = longPressOptionsHolder != null
 
-    var modifier: Modifier = Modifier
-    if (shouldIncludeBottomBarOffset) {
-        modifier = modifier.windowInsetsPadding(BottomAppBarDefaults.windowInsets)
-    }
-
     if (shouldShow) {
         CustomModalBottomSheetM3(
-            modifier = modifier,
             sheetContent = {
                 LongPressBottomSheetContent(
                     longPressOptionsHolder = longPressOptionsHolder,
@@ -59,6 +52,7 @@ private fun BoxScope.LongPressBottomSheetContent(
 ) {
     Column(
         modifier = Modifier
+            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
             .align(Alignment.BottomCenter)
             .fillMaxWidth(1f),
     ) {

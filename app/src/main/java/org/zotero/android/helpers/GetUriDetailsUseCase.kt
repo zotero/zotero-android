@@ -10,7 +10,6 @@ import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.internal.closeQuietly
-import org.apache.commons.io.FileUtils
 import org.zotero.android.translator.data.AttachmentState
 import timber.log.Timber
 import java.io.File
@@ -57,7 +56,7 @@ class GetUriDetailsUseCase @Inject constructor(
 
         try {
             val uriInputStream = application.contentResolver.openInputStream(fromUri)!!
-            FileUtils.copyInputStreamToFile(uriInputStream, toFile)
+            FileHelper.copyInputStreamToFile(uriInputStream, toFile)
             uriInputStream.closeQuietly()
         } catch (error: Exception) {
             Timber.e(error, "GetUriDetailsUseCase: can't copy file")

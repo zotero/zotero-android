@@ -282,7 +282,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = Uri.fromFile(file)
+        val uri = file.toUri()
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
             parentKey = parentKey,
@@ -291,7 +291,7 @@ internal class AllItemsViewModel @Inject constructor(
             preselectedAnnotationKey = null,
             uri = uri,
         )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs)
+        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
         triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params))
     }
 
@@ -361,7 +361,8 @@ internal class AllItemsViewModel @Inject constructor(
         viewModelScope.launch {
             val newItemCellModels = updatedItemCellModels ?: viewState.itemCellModels
             val maybeFirstItemAfterUpdate = newItemCellModels.firstOrNull()
-            val wasTheFirstItemRecentlyAdded = maybeFirstItemAfterUpdate != null && !viewState.itemCellModels.any { it.key ==  maybeFirstItemAfterUpdate.key}
+            val wasTheFirstItemRecentlyAdded =
+                maybeFirstItemAfterUpdate != null && !viewState.itemCellModels.any { it.key == maybeFirstItemAfterUpdate.key }
             updateState {
                 copy(
                     itemCellModels = newItemCellModels,
@@ -369,7 +370,9 @@ internal class AllItemsViewModel @Inject constructor(
                         ?: viewState.accessoryBeingDownloaded
                 )
             }
-            triggerEffect(AllItemsViewEffect.MaybeScrollToTop(shouldScrollToTop = wasTheFirstItemRecentlyAdded))
+            if (wasTheFirstItemRecentlyAdded) {
+                triggerEffect(AllItemsViewEffect.MaybeScrollToTop)
+            }
         }
 
     }
@@ -1144,8 +1147,8 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun shouldIncludeCopyCitationAndBibliographyButtons(): Boolean {
         val shouldNotInclude = getSelectedKeys().any { it ->
-            val item = allItemsProcessor.getResultByKey(it)!!
-            CitationController.invalidItemTypes.contains(item.rawType)
+            val item = allItemsProcessor.getResultByKey(it)
+            item != null && CitationController.invalidItemTypes.contains(item.rawType)
         }
 
         return !shouldNotInclude
@@ -1153,7 +1156,10 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun shouldIncludeRetrieveMetadataButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if (item == null) {
+            return false
+        }
 
         val attachment = allItemsProcessor.attachment(item.key, null)
         val contentType = (attachment?.first?.type as? Attachment.Kind.file)?.contentType
@@ -1161,12 +1167,15 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun shouldIncludeCreateParentButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
-        return item.rawType == ItemTypes.attachment && item.parent == null
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        return item != null && item.rawType == ItemTypes.attachment && item.parent == null
     }
 
     fun getAttachmentFileLocation(): Attachment.FileLocation? {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if (item == null) {
+            return null
+        }
 
         val accessory = allItemsProcessor.getItemAccessoryByKey(item.key)
         if (accessory != null) {
@@ -1178,14 +1187,18 @@ internal class AllItemsViewModel @Inject constructor(
 
     fun shouldIncludeRemoveFromCollectionButton(): Boolean {
         val identifier = this.collection.identifier
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val key = getSelectedKeys().first()
+        val item = allItemsProcessor.getResultByKey(key)
 
-        return (identifier is CollectionIdentifier.collection && item.collections?.where()
+        return (identifier is CollectionIdentifier.collection && item?.collections?.where()
             ?.key(identifier.key)?.findFirst() != null)
     }
 
     fun shouldIncludeDuplicateButton(): Boolean {
-        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())!!
+        val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
+        if(item == null) {
+            return false
+        }
         return item.rawType != ItemTypes.note && item.rawType != ItemTypes.attachment
     }
 
@@ -1333,7 +1346,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()
-    data class MaybeScrollToTop(val shouldScrollToTop: Boolean) : AllItemsViewEffect()
+    object MaybeScrollToTop : AllItemsViewEffect()
     object ShowSingleCitationEffect: AllItemsViewEffect()
     object ShowCitationBibliographyExportEffect: AllItemsViewEffect()
 

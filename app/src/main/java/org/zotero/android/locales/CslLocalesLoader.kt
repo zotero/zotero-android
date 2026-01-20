@@ -1,9 +1,9 @@
 package org.zotero.android.locales
 
 import android.content.Context
-import org.apache.commons.io.IOUtils
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.Unzipper
 import timber.log.Timber
 import javax.inject.Inject
@@ -94,7 +94,7 @@ class CslLocalesLoader @Inject constructor(
     ): Result {
         try {
             val inputStream = context.assets.open(resource)
-            val rawValue = IOUtils.toString(inputStream)
+            val rawValue = FileHelper.toString(inputStream)
             return map(rawValue.trim().trim { it == '\n' })
         } catch (e: Exception) {
             Timber.e(e)
