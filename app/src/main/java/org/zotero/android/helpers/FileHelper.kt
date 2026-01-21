@@ -1,5 +1,7 @@
 package org.zotero.android.helpers
 
+import okhttp3.internal.closeQuietly
+import timber.log.Timber
 import java.io.File
 import java.io.InputStream
 import java.security.DigestInputStream
@@ -72,4 +74,44 @@ object FileHelper {
     fun decodeBase64(bytes: ByteArray): ByteArray {
         return Base64.decode(bytes)
     }
+
+    private val cachedMD5AndModificationDateByURL = mutableMapOf<String, Triple<String, Long, Long>>()
+
+    fun cachedMD5(file: File): String? {
+        var newModificationDate: Long = Long.MIN_VALUE
+        var newSize: Long = 0L
+        val modificationDate = file.lastModified()
+        if (modificationDate != 0L) {
+            newModificationDate = modificationDate
+        }
+        val size = file.length()
+        if (size != 0L) {
+            newSize = size
+        }
+        val kkk = cachedMD5AndModificationDateByURL[file.absolutePath]
+        if (kkk != null && newModificationDate == kkk.second && newSize == kkk.third) {
+            return kkk.first
+        }
+
+
+        val result = runCatching { md5(file) }
+        result.onSuccess { md5 ->
+            cachedMD5AndModificationDateByURL[file.absolutePath] =
+                Triple(md5, newModificationDate, newSize)
+        }
+        result.onFailure { e ->
+            cachedMD5AndModificationDateByURL.remove(file.absolutePath)
+            Timber.e(e)
+        }
+        return result.getOrNull()
+    }
+
+    fun md5(file: File): String {
+        val inputStream = file.inputStream()
+        val md5 = md5(inputStream)
+        inputStream.closeQuietly()
+        return md5
+    }
+
+
 }

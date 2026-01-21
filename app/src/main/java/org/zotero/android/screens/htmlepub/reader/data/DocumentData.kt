@@ -1,10 +1,10 @@
 package org.zotero.android.screens.htmlepub.reader.data
 
-import java.net.URL
+import java.io.File
 
 data class DocumentData(
     val type: String,
-    val url: URL,
+    val file: File,
     val annotationsJson: String,
     val page: Page?,
     val selectedAnnotationKey: String?,

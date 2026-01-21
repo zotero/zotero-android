@@ -11,8 +11,10 @@ import com.google.gson.Gson
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
+import io.realm.RealmObjectChangeListener
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -21,8 +23,10 @@ import org.greenrobot.eventbus.EventBus
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
@@ -39,16 +43,21 @@ import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
+import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.DocumentUpdate
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Page
 import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
+import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
@@ -79,8 +88,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val gson: Gson,
     private val dbWrapperMain: DbWrapperMain,
     private val dateParser: DateParser,
+    private val dispatchers: Dispatchers,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
+
+    private val mainCoroutineScope = CoroutineScope(dispatchers.main)
 
     private lateinit var originalFile: File
     private lateinit var readerDirectory: File
@@ -91,14 +103,17 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var selectedTextParams: MutableMap<String, Any>? = null
     private var annotations = mutableMapOf<String, HtmlEpubAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
-    private var documentUpdate: DocumentUpdate? = null
     private lateinit var textFont: TextStyle
 
     private var isTablet: Boolean = false
 
     private var disableForceScreenOnTimer: Timer? = null
 
-    private var annotationResults: RealmResults<RItem>? = null
+    private var item: RItem? = null
+    private var annotationItems: RealmResults<RItem>? = null
+
+    private var htmlEpubReaderWebCallChainExecutor: HtmlEpubReaderWebCallChainExecutor? = null
+
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -133,6 +148,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
         initState()
         startObservingTheme()
+        setupWebView()
 
         initialiseReader()
 
@@ -149,6 +165,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
         val readerUrl = fileStore.htmlEpubReaderDirectory()
         readerUrl.copyRecursively(target = readerDirectory, overwrite = true)
         originalFile.copyRecursively(target = documentFile, overwrite = true)
+
+        htmlEpubReaderWebCallChainExecutor?.start(this.readerFile)
+
     }
 
     private fun initState() {
@@ -322,7 +341,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    private fun saveAnnotationFromSelection(type: AnnotationType) {
+    private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
         val textParams = this.selectedTextParams?.get("annotation") as? Map<String, Any> ?: return
         val params = params(textParams, type = type) ?: return
         val annotations =
@@ -332,11 +351,19 @@ class HtmlEpubReaderViewModel @Inject constructor(
         for (annotation in annotations) {
             this.annotations[annotation.key] = annotation
         }
-        documentUpdate = DocumentUpdate(
+
+        val documentUpdate = DocumentUpdate(
             deletions = emptyList(),
             insertions = listOf(params),
             modifications = emptyList()
         )
+        htmlEpubReaderWebCallChainExecutor?.updateView(
+            modifications = documentUpdate.modifications,
+            insertions = documentUpdate.insertions,
+            deletions = documentUpdate.deletions
+        )
+
+
         createDatabaseAnnotations(annotations = annotations)
     }
 
@@ -626,7 +653,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
     fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, String> {
         val sortedKeys = mutableListOf<String>()
-        val annotation = mutableMapOf<String, HtmlEpubAnnotation>()
+        val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
         val jsons: MutableList<Map<String, Any>> = mutableListOf()
         for (item in items) {
             val (annotation, json) = item.htmlEpubAnnotation ?: continue
@@ -788,11 +815,20 @@ class HtmlEpubReaderViewModel @Inject constructor(
             copy(comments = comments)
         }
         this.annotations = annotations
-        this.documentUpdate = DocumentUpdate(
+        val documentUpdate = DocumentUpdate(
             deletions = deletedPdfAnnotations,
             insertions = insertedPdfAnnotations,
             modifications = updatedPdfAnnotations
         )
+
+        viewModelScope.launch {
+            htmlEpubReaderWebCallChainExecutor?.updateView(
+                modifications = documentUpdate.modifications,
+                insertions = documentUpdate.insertions,
+                deletions = documentUpdate.deletions
+            )
+        }
+
         this.texts = texts
         updateState {
             copy(updatedAnnotationKeys = updatedKeys.filter { viewState.sortedKeys.contains(it) })
@@ -817,8 +853,16 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+    private fun startObservingItem() {
+        this.item?.addChangeListener(RealmObjectChangeListener<RItem> { item, changeSet ->
+            if (changeSet?.changedFields?.contains("fields") == true && !changeSet.isDeleted) {
+                checkWhetherMd5Changed(item)
+            }
+        })
+    }
+
     private fun startObservingAnnotationResults() {
-        this.annotationResults!!.addChangeListener { items, changeSet ->
+        this.annotationItems?.addChangeListener { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
                     update(changeSet, items)
@@ -840,6 +884,108 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+
+        item?.removeAllChangeListeners()
+        annotationItems?.removeAllChangeListeners()
+
+        deinitialiseReader()
+        super.onCleared()
+    }
+
+    private fun deinitialiseReader() {
+        this.readerDirectory.deleteRecursively()
+    }
+
+    fun setupWebView() {
+        this.htmlEpubReaderWebCallChainExecutor = HtmlEpubReaderWebCallChainExecutor(
+            context = context,
+            dispatchers = dispatchers,
+            gson = gson,
+            fileStore = fileStore
+        )
+        this.htmlEpubReaderWebCallChainExecutor?.observable?.flow()
+            ?.onEach { result ->
+                process(result)
+            }
+            ?.launchIn(mainCoroutineScope)
+    }
+
+    private fun process(result: Result<HtmlEpubReaderWebData>) {
+        if (result is Result.Failure) {
+            val customException = (result.exception as? HtmlEpubReaderWebError)?: return
+            val errorMessage = when (customException) {
+                HtmlEpubReaderWebError.failedToInitializeWebView -> {
+                    Timber.e("HtmlEpubReaderViewModel: HtmlEpub Worker's JS failed to initialize")
+                    context.getString(Strings.retrieve_metadata_error_failed_to_initialize)
+                }
+            }
+            //TODO process error
+            return
+        }
+        val successValue = (result as Result.Success).value
+        when (successValue) {
+            HtmlEpubReaderWebData.loadDocument -> {
+                load()
+            }
+            is HtmlEpubReaderWebData.parseOutline -> {}
+            HtmlEpubReaderWebData.deselectSelectedAnnotation -> TODO()
+            is HtmlEpubReaderWebData.processDocumentSearchResults -> TODO()
+            is HtmlEpubReaderWebData.saveAnnotations -> TODO()
+            is HtmlEpubReaderWebData.selectAnnotationFromDocument -> TODO()
+            is HtmlEpubReaderWebData.setSelectedTextParams -> TODO()
+            is HtmlEpubReaderWebData.setViewState -> TODO()
+            is HtmlEpubReaderWebData.showUrl -> TODO()
+            HtmlEpubReaderWebData.toggleInterfaceVisibility -> TODO()
+        }
+    }
+
+    fun load() {
+        try {
+            val (item, annotationItems, rawPage) = loadItemAnnotationsAndPage() ?: return
+
+            if (checkWhetherMd5Changed(item)) {
+                return
+            }
+
+            val (sortedKeys, annotations, json) = processAnnotations(items = annotationItems)
+            val (type, page) = loadTypeAndPage(this.documentFile, rawPage = rawPage)
+            val documentData = DocumentData(
+                type = type,
+                file = this.documentFile,
+                annotationsJson = json,
+                page = page,
+                selectedAnnotationKey = viewState.selectedAnnotationKey
+            )
+
+            this.item = item
+            startObservingItem()
+            this.annotationItems = annotationItems
+            startObservingAnnotationResults()
+
+            this.annotations = annotations.toMutableMap()
+            updateState {
+                copy(sortedKeys = sortedKeys)
+            }
+            load(documentData)
+        } catch (e: Exception) {
+            Timber.e(e, "HtmlEpubReaderViewModel: could not load document")
+        }
+    }
+
+    fun load(documentData: DocumentData) {
+        //TODO
+    }
+
+    fun checkWhetherMd5Changed(item: RItem): Boolean {
+        val md5 = FileHelper.cachedMD5(this.originalFile)
+        if (md5 == null || item.backendMd5.isEmpty() || item.backendMd5 == md5) {
+            return false
+        }
+        //TODO show document changed alert
+        return true
+    }
 
 }
 

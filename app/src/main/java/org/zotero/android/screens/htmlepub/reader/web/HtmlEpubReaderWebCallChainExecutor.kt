@@ -17,6 +17,7 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
 import timber.log.Timber
+import java.io.File
 import kotlin.coroutines.resume
 
 class HtmlEpubReaderWebCallChainExecutor(
@@ -34,16 +35,13 @@ class HtmlEpubReaderWebCallChainExecutor(
 
     val observable = EventStream<Result<HtmlEpubReaderWebData>>(ZoteroApplication.instance.applicationScope)
 
-    private lateinit var fileUrl: String
-
-    fun start(fileUrl: String) {
-        this.fileUrl = fileUrl
+    fun start(file: File) {
         try {
             htmlEpubReaderWebViewHandler = HtmlEpubReaderWebViewHandler(
                 dispatchers = dispatchers,
                 context = context,
             )
-            initialize()
+            initialize(file)
             Timber.i("HtmlEpubReaderWebCallChainExecutor: initialization succeeded")
         } catch (e: Exception) {
             observable.emitAsync(
@@ -53,9 +51,11 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
-    private fun initialize() {
+    private fun initialize(file: File) {
+        val filePath = "file://" + file.absolutePath
+
         loadWebPage(
-            url = this.fileUrl,
+            url = filePath,
             onWebViewLoadPage = ::onIndexHtmlLoaded,
             processWebViewResponses = ::receiveMessage
         )
@@ -214,6 +214,18 @@ class HtmlEpubReaderWebCallChainExecutor(
     suspend fun deselectText() {
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript("javascript:window._view.selectAnnotations([]);") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun updateView(modifications: List<Map<String, Any>>, insertions: List<Map<String, Any>>, deletions: List<String>) {
+        val encodedDeletions = encodeAsJSONForJavascript(gson = this.gson, data = deletions)
+        val encodedInsertions = encodeAsJSONForJavascript(gson = this.gson, data = insertions)
+        val encodedModifications = encodeAsJSONForJavascript(gson = this.gson, data = modifications)
+
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("javascript:updateAnnotations({ deletions: '${encodedDeletions}', insertions: '${encodedInsertions}', modifications: ${encodedModifications}'});") {
                 cont.resume(Unit)
             }
         }

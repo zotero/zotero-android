@@ -20,6 +20,8 @@ import org.zotero.android.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
+import org.zotero.android.htmlepub.HtmlEpubReaderLoader
 import org.zotero.android.locales.CslLocalesLoader
 import org.zotero.android.locales.ExportCslLocaleReader
 import org.zotero.android.pdfworker.loader.PdfWorkerLoader
