@@ -860,6 +860,10 @@ internal class AllItemsViewModel @Inject constructor(
         stopEditing()
     }
 
+    fun onDownloadAll() {
+        allItemsProcessor.downloadAllAttachments()
+    }
+
     fun onRemoveSelectedAttachments() {
         allItemsProcessor.removeSelectedAttachments(getSelectedKeys())
         stopEditing()
