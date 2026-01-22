@@ -397,11 +397,43 @@ internal class SettingsAccountViewModel @Inject constructor(
 
     private fun isAllowedHttpHost(): Boolean {
         try {
-            val hostComponentsWithPort = sessionStorage.url.split(":")
-            val hostComponentsWithSlashes = hostComponentsWithPort.firstOrNull()?.split("/")
-            val host = hostComponentsWithSlashes?.firstOrNull()
-            if (host != null && (host.endsWith("local") || host.endsWith("home.arpa"))) {
+            var urlString = sessionStorage.url
+            if (!urlString.contains("://")) {
+                urlString = "http://$urlString"
+            }
+            val uri = java.net.URI(urlString)
+            var host = uri.host ?: return false
+
+            // Remove brackets for IPv6
+            if (host.startsWith("[") && host.endsWith("]")) {
+                host = host.substring(1, host.length - 1)
+            }
+
+            if (host.endsWith("local") || host.endsWith("home.arpa")) return true
+            if (host == "localhost") return true
+
+            // IPv6 checks
+            if (host.contains(":")) {
+                if (host == "::1") return true
+                // Link-local fe80::/10
+                if (host.startsWith("fe80:", ignoreCase = true)) return true
+                // ULA fc00::/7
+                if (host.startsWith("fc", ignoreCase = true) || host.startsWith("fd", ignoreCase = true)) return true
+                return false
+            }
+
+            // IPv4 checks
+            if (host.startsWith("10.") ||
+                host.startsWith("192.168.") ||
+                host.startsWith("127.") ||
+                host.startsWith("169.254.")) {
                 return true
+            }
+
+            // Check for 172.16.0.0/12
+            if (host.startsWith("172.")) {
+                val secondPart = host.split(".")[1].toIntOrNull()
+                if (secondPart != null && secondPart in 16..31) return true
             }
         } catch (e: Exception) {
             //no-op
