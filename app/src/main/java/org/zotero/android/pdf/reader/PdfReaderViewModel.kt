@@ -52,7 +52,6 @@ import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.PdfUiFragment
 import com.pspdfkit.ui.PdfUiFragmentBuilder
-import com.pspdfkit.ui.annotations.OnAnnotationSelectedListener
 import com.pspdfkit.ui.search.SearchResultHighlighter
 import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
@@ -735,9 +734,10 @@ class PdfReaderViewModel @Inject constructor(
             }
             false
         }
-        pdfFragment.addOnAnnotationSelectedListener(object : OnAnnotationSelectedListener {
+        pdfFragment.addOnAnnotationSelectedListener(object :
+            AnnotationManager.OnAnnotationSelectedListener {
             override fun onPrepareAnnotationSelection(
-                p0: AnnotationSelectionController?,
+                p0: AnnotationSelectionController,
                 annotation: Annotation,
                 p2: Boolean
             ): Boolean {
@@ -762,11 +762,10 @@ class PdfReaderViewModel @Inject constructor(
                     key = AnnotationKey(key = key, type = type),
                 )
             }
-
-            override fun onAnnotationDeselected(annotation: Annotation, reselected: Boolean) {
-                deselectSelectedAnnotation(annotation)
-            }
         })
+        pdfFragment.addOnAnnotationDeselectedListener { annotation, _ ->
+            deselectSelectedAnnotation(annotation)
+        }
     }
 
     private fun initState() {
@@ -2216,9 +2215,9 @@ class PdfReaderViewModel @Inject constructor(
 //            .setSelectedAnnotationResizeEnabled(false)
             .autosaveEnabled(false)
             .scrollbarsEnabled(true)
-            .defaultToolbarEnabled(false)
-            .documentTitleOverlayEnabled(false)
-            .stylusOnDetectionEnabled(true)
+            .disableDefaultToolbar()
+            .hideDocumentTitleOverlay()
+            .enableStylusOnDetection(true)
             .hideUserInterfaceWhenCreatingAnnotations(false)
             .setUserInterfaceViewMode(UserInterfaceViewMode.USER_INTERFACE_VIEW_MODE_MANUAL)
             .build()
