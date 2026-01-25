@@ -22,7 +22,8 @@
     <string name="scan_barcode_loading_translators">Loading translators… Please wait.</string>
 
     <string name="errors_settings_webdav_no_https_certificate">HTTPS error: Trust anchor for certification path not found</string>
-    <string name="errors_settings_webdav_local_http_host_not_allowed">Due to Android restrictions, HTTP can only be used when connecting to a .local and .home.arpa hostnames.</string>
+    <string name="errors_settings_webdav_local_http_host_not_allowed">Due to Android restrictions, HTTP can only be used when connecting to local IPs (IPv4/IPv6) or .local and .home.arpa hostnames.</string>
+    <string name="settings_webdav_http_public_network_warning">Warning: Using HTTP on a public network (like a coffee shop) is insecure. Your data and credentials could be intercepted.</string>
 
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
