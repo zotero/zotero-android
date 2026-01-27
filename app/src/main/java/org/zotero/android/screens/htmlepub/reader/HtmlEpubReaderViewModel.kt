@@ -8,6 +8,8 @@ import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
@@ -41,10 +43,12 @@ import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
+import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
@@ -55,6 +59,7 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
+import org.zotero.android.screens.htmlepub.reader.data.Outline
 import org.zotero.android.screens.htmlepub.reader.data.Page
 import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
@@ -100,7 +105,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private lateinit var readerFile: File
     private var userId: Long = 0L
     private var username: String = ""
-    private var selectedTextParams: MutableMap<String, Any>? = null
+    private var selectedTextParams: JsonObject? = null
     private var annotations = mutableMapOf<String, HtmlEpubAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private lateinit var textFont: TextStyle
@@ -135,11 +140,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     fun init(
-        uri: Uri,
         isTablet: Boolean,
         textFont: TextStyle
     ) {
         this.textFont = textFont
+        val uri = screenArgs.uri
         initFileUris(uri)
         restartDisableForceScreenOnTimer()
         this.isTablet = isTablet
@@ -210,24 +215,47 @@ class HtmlEpubReaderViewModel @Inject constructor(
         disableForceScreenOnTimer?.cancel()
     }
 
-    private fun parse(annotations: List<Map<String, Any>>, author: String, isAuthor: Boolean): List<HtmlEpubAnnotation> {
-        return annotations.mapNotNull { data ->
-            val id = data["id"] as? String ?: return@mapNotNull null
-            val dateAdded = (data["dateCreated"] as? String?)?.let { iso8601WithFractionalSeconds.parse(it) }
+    private fun parseOutline(data: JsonObject) {
+        val params = data["params"]?.asJsonObject ?: return
+        val outline = params["outline"]?.asJsonArray ?: return
+        val outlines = mutableListOf<Outline>()
+        for (item in outline) {
+            val outline = parseOutline2( item.asJsonObject) ?: continue
+            outlines.add(outline)
+        }
+        updateState {
+            copy(outlines = outlines)
+        }
+    }
+
+    fun parseOutline2(data: JsonObject): Outline? {
+        val title = data["title"]?.asString ?: return null
+        val location = data["location"]?.asJsonObject ?: return null
+        val rawChildren = data["items"]?.asJsonArray ?: return null
+        val children = rawChildren.mapNotNull { parseOutline2(it.asJsonObject) }
+        return Outline(title = title.trim().trim { it == '\n' }, location = location.asMap(), children = children)
+    }
+
+    private fun parse(annotations: JsonArray, author: String, isAuthor: Boolean): List<HtmlEpubAnnotation> {
+        return annotations.mapNotNull { dataAsJson ->
+            val data = dataAsJson.asJsonObject
+            val id = data["id"]?.asString ?: return@mapNotNull null
+            val dateAdded = (data["dateCreated"]?.asString)?.let { iso8601WithFractionalSeconds.parse(it) }
                 ?: return@mapNotNull null
 
-            val dateModified = (data["dateModified"] as? String)?.let{ iso8601WithFractionalSeconds.parse(it) }   ?: return@mapNotNull null
-            val color = data["color"] as? String ?: return@mapNotNull null
-            val comment = data["comment"] as? String ?: return@mapNotNull null
-            val pageLabel = data["pageLabel"] as? String   ?: return@mapNotNull null
-            val position = data["position"] as? Map<String, Any> ?: return@mapNotNull null
-            val sortIndex = data["sortIndex"] as? String ?: return@mapNotNull null
-            val text = data["text"] as? String ?: return@mapNotNull null
-            val type = (data["type"] as? String)?.let{AnnotationType.valueOf(it)} ?: return@mapNotNull null
-            val rawTags = data["tags"] as? List<Map<String, Any>> ?: return@mapNotNull null
-            val tags = rawTags.mapNotNull { data ->
-                val name = data["name"] as? String ?: return@mapNotNull null
-                val color = data["color"] as? String ?: return@mapNotNull null
+            val dateModified = (data["dateModified"]?.asString)?.let{ iso8601WithFractionalSeconds.parse(it) }   ?: return@mapNotNull null
+            val color = data["color"]?.asString ?: return@mapNotNull null
+            val comment = data["comment"]?.asString ?: return@mapNotNull null
+            val pageLabel = data["pageLabel"]?.asString   ?: return@mapNotNull null
+            val position = data["position"]?.asJsonObject ?: return@mapNotNull null
+            val sortIndex = data["sortIndex"]?.asString ?: return@mapNotNull null
+            val text = data["text"]?.asString ?: return@mapNotNull null
+            val type = (data["type"]?.asString)?.let{AnnotationType.valueOf(it)} ?: return@mapNotNull null
+            val rawTags = data["tags"]?.asJsonArray ?: return@mapNotNull null
+            val tags = rawTags.mapNotNull { dataAsJson ->
+                val data = dataAsJson.asJsonObject
+                val name = data["name"]?.asString ?: return@mapNotNull null
+                val color = data["color"]?.asString ?: return@mapNotNull null
                 Tag(name = name, color = color)
             }
             HtmlEpubAnnotation(
@@ -251,7 +279,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
 
-    fun params(textParams: Map<String, Any>, type: AnnotationType): Map<String, Any>? {
+    fun params(textParams: JsonObject, type: AnnotationType): JsonObject? {
         val color: String
         when(type) {
             AnnotationType.highlight -> {
@@ -266,15 +294,15 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
 
         val date = Date()
-        val params = textParams.toMutableMap()
-        params["id"] = KeyGenerator.newKey()
-        params["type"] = type.name
-        params["color"] = color
-        params["dateModified"] = iso8601WithFractionalSeconds.format(date)
-        params["dateCreated"] = iso8601WithFractionalSeconds.format(date)
-        params["tags"] = emptyList<String>()
-        params["pageLabel"] = ""
-        params["comment"] = ""
+        val params = textParams
+        params.addProperty("id",KeyGenerator.newKey())
+        params.addProperty("type", type.name)
+        params.addProperty("color", color)
+        params.addProperty("dateModified", iso8601WithFractionalSeconds.format(date))
+        params.addProperty("dateCreated", iso8601WithFractionalSeconds.format(date))
+        params.add("tags", JsonArray())
+        params.addProperty("pageLabel", "")
+        params.addProperty("comment", "")
         return params
     }
 
@@ -342,10 +370,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
-        val textParams = this.selectedTextParams?.get("annotation") as? Map<String, Any> ?: return
+        val textParams = this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
         val params = params(textParams, type = type) ?: return
+
+        val array = JsonArray()
+        array.add(params)
+
         val annotations =
-            parse(annotations = listOf(params), author = this.username, isAuthor = true)
+            parse(annotations = array, author = this.username, isAuthor = true)
         this.selectedTextParams = null
 
         for (annotation in annotations) {
@@ -353,9 +385,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
 
         val documentUpdate = DocumentUpdate(
-            deletions = emptyList(),
-            insertions = listOf(params),
-            modifications = emptyList()
+            deletions = JsonArray(),
+            insertions = array,
+            modifications = JsonArray()
         )
         htmlEpubReaderWebCallChainExecutor?.updateView(
             modifications = documentUpdate.modifications,
@@ -367,8 +399,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
         createDatabaseAnnotations(annotations = annotations)
     }
 
-    private fun saveAnnotations(params: Map<String, Any>) {
-        val rawAnnotations = params["annotations"] as? List<Map<String, Any>>
+    private fun saveAnnotations(params: JsonObject) {
+        val rawAnnotations = params["annotations"]?.asJsonArray
         if (rawAnnotations == null || rawAnnotations.isEmpty()) {
             Timber.e("HtmlEpubReaderViewModel: annotations missing or empty - ${params["annotations"] ?: emptyList<String>()}")
             return
@@ -392,6 +424,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
         createDatabaseAnnotations(annotations = annotations)
     }
+
+    fun selectAnnotationFromDocument(key: String) {
+        _select(key = key, didSelectInDocument = true)
+    }
+
 
     private fun _select(key: String?, didSelectInDocument: Boolean) {
         if (key == viewState.selectedAnnotationKey) else {
@@ -654,7 +691,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, String> {
         val sortedKeys = mutableListOf<String>()
         val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
-        val jsons: MutableList<Map<String, Any>> = mutableListOf()
+        val jsons = JsonArray()
         for (item in items) {
             val (annotation, json) = item.htmlEpubAnnotation ?: continue
             jsons.add(json)
@@ -685,10 +722,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
         var selectionDeleted = false
         var popoverWasInserted = false
 
-        var updatedKeys = mutableListOf<String>()
-        var updatedPdfAnnotations =  mutableListOf<Map<String, Any>>()
-        var deletedPdfAnnotations = mutableListOf<String>()
-        var insertedPdfAnnotations =  mutableListOf<Map<String, Any>>()
+        val updatedKeys = mutableListOf<String>()
+        val updatedPdfAnnotations = JsonArray()
+        val deletedPdfAnnotations = JsonArray()
+        val insertedPdfAnnotations = JsonArray()
 
         for (index in modifications) {
             if (index >= keys.size) {
@@ -929,16 +966,64 @@ class HtmlEpubReaderViewModel @Inject constructor(
             HtmlEpubReaderWebData.loadDocument -> {
                 load()
             }
-            is HtmlEpubReaderWebData.parseOutline -> {}
-            HtmlEpubReaderWebData.deselectSelectedAnnotation -> TODO()
-            is HtmlEpubReaderWebData.processDocumentSearchResults -> TODO()
-            is HtmlEpubReaderWebData.saveAnnotations -> TODO()
-            is HtmlEpubReaderWebData.selectAnnotationFromDocument -> TODO()
-            is HtmlEpubReaderWebData.setSelectedTextParams -> TODO()
-            is HtmlEpubReaderWebData.setViewState -> TODO()
+            is HtmlEpubReaderWebData.parseOutline -> {
+                parseOutline(successValue.params)
+            }
+            HtmlEpubReaderWebData.deselectSelectedAnnotation -> {
+                deselectSelectedAnnotation()
+            }
+            is HtmlEpubReaderWebData.processDocumentSearchResults -> {
+               //TODO
+            }
+            is HtmlEpubReaderWebData.saveAnnotations -> {
+                saveAnnotations(successValue.params)
+            }
+            is HtmlEpubReaderWebData.selectAnnotationFromDocument -> {
+                selectAnnotationFromDocument(successValue.key)
+            }
+            is HtmlEpubReaderWebData.setSelectedTextParams -> {
+                setSelectedTextParams(successValue.params)
+            }
+            is HtmlEpubReaderWebData.setViewState -> {
+                setViewState(successValue.params)
+            }
             is HtmlEpubReaderWebData.showUrl -> TODO()
             HtmlEpubReaderWebData.toggleInterfaceVisibility -> TODO()
         }
+    }
+
+    fun setViewState(params: JsonObject) {
+        val state = params["state"]?.asJsonObject ?: run {
+            Timber.e("HtmlEpubReaderViewModel: invalid params - $params")
+            return
+        }
+
+        val page: String
+        val scrollPercent = state["scrollYPercent"]
+        if (scrollPercent != null && scrollPercent.isJsonPrimitive) {
+            page = "${scrollPercent.asDouble.rounded(1)}"
+        } else if (state["cfi"]?.asString != null) {
+            page = state["cfi"].asString
+        } else {
+            return
+        }
+
+        val request = StorePageForItemDbRequest(key = viewState.key, libraryId = viewState.library.identifier, page = page)
+
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapperMain,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "HtmlEpubReaderViewModel: can't store page")
+                return@launch
+            }
+        }
+
+    }
+
+    private fun setSelectedTextParams(params: JsonObject) {
+        this.selectedTextParams = params
     }
 
     fun load() {
@@ -1014,6 +1099,8 @@ data class HtmlEpubReaderViewState(
     val annotationPopoverKey: String? = null,
     val annotationPopoverRect: RectF? = null,
     val sidebarEditingEnabled: Boolean = false,
+    var outlines: List<Outline> = emptyList(),
+    var outlineSearch: String = "",
 ) : ViewState {
 }
 

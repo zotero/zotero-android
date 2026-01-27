@@ -1,4 +1,5 @@
 package org.zotero.android.screens.htmlepub.reader.data
+import com.google.gson.JsonObject
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.AnnotationEditability
 import org.zotero.android.sync.Library
@@ -10,7 +11,7 @@ data class HtmlEpubAnnotation(
     override val key: String,
     override val type: AnnotationType,
     override val pageLabel: String,
-    val position: Map<String, Any>,
+    val position: JsonObject,
     val author: String,
     val isAuthor: Boolean,
     override val color: String,

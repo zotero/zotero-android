@@ -1,5 +1,6 @@
 package org.zotero.android.database.objects
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.realm.Realm
 import io.realm.RealmList
@@ -607,11 +608,11 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return parameters
         }
 
-    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, Map<String, Any>>?
+    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, JsonObject>?
         get()
     {
         var type: AnnotationType? = null
-        val position = mutableMapOf<String, Any>()
+        val position = JsonObject()
         var text: String? = null
         var sortIndex: String? = null
         var pageLabel: String? = null
@@ -623,9 +624,15 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             when {
                 field.baseKey == FieldKeys.Item.Annotation.position -> {
                     if (field.value.firstOrNull() == '{') {
-                        position[field.key] = ZoteroApplication.instance.gson.fromJson(field.value, JsonObject::class.java)
+                        position.add(
+                            field.key,
+                            ZoteroApplication.instance.gson.fromJson(
+                                field.value,
+                                JsonObject::class.java
+                            )
+                        )
                     } else {
-                        position[field.key] = field.value
+                        position.addProperty(field.key, field.value)
                     }
                 }
                 field.key == FieldKeys.Item.Annotation.type && field.baseKey == null -> {
@@ -665,22 +672,31 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             Tag(name = typedTag.tag?.name ?: "", color = color ?: "")
         }
 
-        val json: MutableMap<String, Any> = mutableMapOf(
-            "id" to this.key,
-            "dateCreated" to iso8601WithFractionalSeconds.format(dateAdded),
-            "dateModified" to iso8601WithFractionalSeconds.format(dateModified),
-            "authorName" to (createdBy?.username ?: ""),
-            "type" to type.name,
-            "text" to (text ?: ""),
-            "sortIndex" to sortIndex,
-            "pageLabel" to (pageLabel ?: ""),
-            "comment" to (comment ?: ""),
-            "color" to (color ?: ""),
-            "position" to position,
-            "tags" to tags.map { arrayOf("name" to it.name, "color" to it.color) }
-        )
+        val json: JsonObject = JsonObject().apply {
+            addProperty("id",this@RItem.key)
+            addProperty("dateCreated", iso8601WithFractionalSeconds.format(dateAdded))
+            addProperty("dateModified", iso8601WithFractionalSeconds.format(dateModified))
+            addProperty("authorName", (createdBy?.username ?: ""))
+            addProperty("type", type.name)
+            addProperty("text", (text ?: ""))
+            addProperty("sortIndex", sortIndex)
+            addProperty("pageLabel", (pageLabel ?: ""))
+            addProperty("comment", (comment ?: ""))
+            addProperty("color", (color ?: ""))
+            add("position", position)
+
+            val arr = JsonArray()
+             tags.forEach {
+                 arr.add(JsonObject().apply {
+                     addProperty("name", it.name)
+                     addProperty("color", it.color)
+                 })
+            }
+            add("tags", arr)
+        }
+
         for ((key, value) in unknown.iterator()) {
-            json[key] = value
+            json.addProperty(key, value)
         }
 
         val annotation = HtmlEpubAnnotation(

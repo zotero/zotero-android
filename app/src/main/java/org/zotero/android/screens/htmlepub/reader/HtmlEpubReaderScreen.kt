@@ -3,6 +3,7 @@ package org.zotero.android.screens.htmlepub.reader
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,11 +24,19 @@ internal fun HtmlEpubReaderScreen(
     onBack: () -> Unit,
     viewModel: HtmlEpubReaderViewModel = hiltViewModel(),
 ) {
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    val textFont = MaterialTheme.typography.bodyMedium
+    LaunchedEffect(key1 = viewModel) {
+        viewModel.init(isTablet = isTablet, textFont = textFont)
+    }
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
+
+
     ObserveLifecycleEvent { event ->
         when (event) {
             Lifecycle.Event.ON_STOP -> {
@@ -42,8 +51,6 @@ internal fun HtmlEpubReaderScreen(
         val window = activity.window
         val decorView = window.decorView
 
-        val params = viewModel.screenArgs
-        val uri = params.uri
         val layoutType = CustomLayoutSize.calculateLayoutType()
         val focusManager = LocalFocusManager.current
         LaunchedEffect(key1 = viewEffect) {

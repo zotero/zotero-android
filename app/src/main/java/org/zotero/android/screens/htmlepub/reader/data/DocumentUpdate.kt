@@ -1,7 +1,10 @@
 package org.zotero.android.screens.htmlepub.reader.data
 
+import com.google.gson.JsonArray
+
+
 data class DocumentUpdate(
-    val deletions: List<String>,
-    val insertions: List<Map<String, Any>>,
-    val modifications: List<Map<String, Any>>,
+    val deletions: JsonArray,
+    val insertions: JsonArray,
+    val modifications: JsonArray,
 )

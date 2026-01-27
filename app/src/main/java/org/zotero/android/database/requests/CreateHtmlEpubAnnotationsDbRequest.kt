@@ -1,6 +1,5 @@
 package org.zotero.android.database.requests
 
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import com.google.gson.Gson
 import io.realm.Realm
 import io.realm.kotlin.createObject
@@ -11,6 +10,7 @@ import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.RTypedTag.Kind
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
@@ -51,7 +51,7 @@ class CreateHtmlEpubAnnotationsDbRequest(
             rField.value = value
         }
 
-        for ((key, value) in annotation.position) {
+        for ((key, value) in annotation.position.entrySet()) {
             val rField = database.createEmbeddedObject(RItemField::class.java, item, "fields")
             rField.key = key
             rField.value = positionValueToString(value)

@@ -3,6 +3,7 @@ package org.zotero.android.screens.htmlepub.reader.web
 import android.content.Context
 import android.webkit.WebMessage
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -219,7 +220,7 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
-    suspend fun updateView(modifications: List<Map<String, Any>>, insertions: List<Map<String, Any>>, deletions: List<String>) {
+    suspend fun updateView(modifications: JsonArray, insertions: JsonArray, deletions: JsonArray) {
         val encodedDeletions = encodeAsJSONForJavascript(gson = this.gson, data = deletions)
         val encodedInsertions = encodeAsJSONForJavascript(gson = this.gson, data = insertions)
         val encodedModifications = encodeAsJSONForJavascript(gson = this.gson, data = modifications)
