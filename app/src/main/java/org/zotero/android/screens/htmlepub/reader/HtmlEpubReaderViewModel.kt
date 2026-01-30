@@ -3,6 +3,7 @@ package org.zotero.android.screens.htmlepub.reader
 import android.content.Context
 import android.graphics.RectF
 import android.net.Uri
+import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
 import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
@@ -141,7 +142,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun init(
         isTablet: Boolean,
-        textFont: TextStyle
+        textFont: TextStyle,
+        webView: WebView
     ) {
         this.textFont = textFont
         val uri = screenArgs.uri
@@ -149,11 +151,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         restartDisableForceScreenOnTimer()
         this.isTablet = isTablet
 
-        EventBus.getDefault().register(this)
+//        EventBus.getDefault().register(this)
 
         initState()
         startObservingTheme()
-        setupWebView()
+        setupWebView(webView)
 
         initialiseReader()
 
@@ -190,7 +192,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private fun initFileUris(uri: Uri) {
         this.originalFile = uri.toFile()
         this.readerDirectory = fileStore.runningHtmlEpubReaderDirectory()
-        this.documentFile = fileStore.runningHtmlEpubReaderUserFileSubDirectory()
+        this.documentFile = fileStore.runningHtmlEpubReaderUserFileSubDirectory(originalFile.extension)
         this.readerFile = File(readerDirectory, "view.html")
     }
 
@@ -935,12 +937,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.readerDirectory.deleteRecursively()
     }
 
-    fun setupWebView() {
+    fun setupWebView(webView: WebView) {
         this.htmlEpubReaderWebCallChainExecutor = HtmlEpubReaderWebCallChainExecutor(
             context = context,
             dispatchers = dispatchers,
             gson = gson,
-            fileStore = fileStore
+            fileStore = fileStore,
+            webView = webView,
         )
         this.htmlEpubReaderWebCallChainExecutor?.observable?.flow()
             ?.onEach { result ->
@@ -993,7 +996,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     fun setViewState(params: JsonObject) {
-        val state = params["state"]?.asJsonObject ?: run {
+        val state = params["state"]?.asJsonObject
+        if (state == null) {
             Timber.e("HtmlEpubReaderViewModel: invalid params - $params")
             return
         }
@@ -1053,15 +1057,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
             updateState {
                 copy(sortedKeys = sortedKeys)
             }
-            load(documentData)
+            viewModelScope.launch {
+                htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
+            }
         } catch (e: Exception) {
             Timber.e(e, "HtmlEpubReaderViewModel: could not load document")
         }
     }
 
-    fun load(documentData: DocumentData) {
-        //TODO
-    }
 
     fun checkWhetherMd5Changed(item: RItem): Boolean {
         val md5 = FileHelper.cachedMD5(this.originalFile)

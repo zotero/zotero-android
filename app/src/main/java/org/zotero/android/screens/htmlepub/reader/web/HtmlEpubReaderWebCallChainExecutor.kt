@@ -2,6 +2,7 @@ package org.zotero.android.screens.htmlepub.reader.web
 
 import android.content.Context
 import android.webkit.WebMessage
+import android.webkit.WebView
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.reflect.TypeToken
@@ -13,8 +14,10 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
+import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
+import org.zotero.android.screens.htmlepub.reader.data.Page
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
 import timber.log.Timber
@@ -26,6 +29,7 @@ class HtmlEpubReaderWebCallChainExecutor(
     private val dispatchers: Dispatchers,
     private val gson: Gson,
     private val fileStore: FileStore,
+    private val webView: WebView,
 ) {
 
     private lateinit var htmlEpubReaderWebViewHandler: HtmlEpubReaderWebViewHandler
@@ -41,6 +45,7 @@ class HtmlEpubReaderWebCallChainExecutor(
             htmlEpubReaderWebViewHandler = HtmlEpubReaderWebViewHandler(
                 dispatchers = dispatchers,
                 context = context,
+                webView = webView,
             )
             initialize(file)
             Timber.i("HtmlEpubReaderWebCallChainExecutor: initialization succeeded")
@@ -58,7 +63,7 @@ class HtmlEpubReaderWebCallChainExecutor(
         loadWebPage(
             url = filePath,
             onWebViewLoadPage = ::onIndexHtmlLoaded,
-            processWebViewResponses = ::receiveMessage
+            processWebViewResponses = ::receiveMessage,
         )
     }
 
@@ -183,7 +188,10 @@ class HtmlEpubReaderWebCallChainExecutor(
     }
 
     private fun onIndexHtmlLoaded() {
-       //TODO
+        observable.emitAsync(
+            Result.Success(
+                HtmlEpubReaderWebData.loadDocument)
+        )
     }
 
     suspend fun show(location: Map<String, Any>) {
@@ -232,15 +240,44 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
+    suspend fun loadDocument(data: DocumentData) {
+        Timber.i("HtmlEpubReaderViewModel: try creating view for ${data.type}; page = ${data.page}")
+        Timber.i("${data.file.absolutePath}")
+        var javascript = "createView({ type: '${data.type}', url: 'file://${data.file.absolutePath.replace("'", "\'")}', annotations: '${data.annotationsJson}'"
+        val key = data.selectedAnnotationKey
+        val page = data.page
+        if (key != null) {
+            javascript += ", location: {annotationID: '$key'}"
+        } else if (page != null){
+            when(page) {
+                is Page.html -> {
+                    javascript += ", viewState: {scrollYPercent: ${page.scrollYPercent}, scale: 1}"
+                }
+                is Page.epub -> {
+                    javascript += ", viewState: {cfi: '${page.cfi}'}"
+                }
+            }
+        }
+        javascript += "});"
+        println()
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+
+    }
+
+
     private fun loadWebPage(
         url: String,
         onWebViewLoadPage: () -> Unit,
-        processWebViewResponses: (message: WebMessage) -> Unit
+        processWebViewResponses: (message: WebMessage) -> Unit,
     ) {
         htmlEpubReaderWebViewHandler.load(
             url = url,
             onWebViewLoadPage = onWebViewLoadPage,
-            processWebViewResponses = processWebViewResponses
+            processWebViewResponses = processWebViewResponses,
         )
     }
 }

@@ -1,6 +1,9 @@
 package org.zotero.android.screens.htmlepub.reader
 
+import android.annotation.SuppressLint
 import android.view.MotionEvent
+import android.view.ViewGroup
+import android.webkit.WebView
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -24,12 +28,6 @@ internal fun HtmlEpubReaderScreen(
     onBack: () -> Unit,
     viewModel: HtmlEpubReaderViewModel = hiltViewModel(),
 ) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val isTablet = layoutType.isTablet()
-    val textFont = MaterialTheme.typography.bodyMedium
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.init(isTablet = isTablet, textFont = textFont)
-    }
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
@@ -51,7 +49,6 @@ internal fun HtmlEpubReaderScreen(
         val window = activity.window
         val decorView = window.decorView
 
-        val layoutType = CustomLayoutSize.calculateLayoutType()
         val focusManager = LocalFocusManager.current
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
@@ -82,7 +79,34 @@ internal fun HtmlEpubReaderScreen(
 
             },
         ) {
+            WebView(
+                viewModel = viewModel
+            )
         }
     }
 
+}
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun WebView(viewModel: HtmlEpubReaderViewModel) {
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    val textFont = MaterialTheme.typography.bodyMedium
+    AndroidView(
+        factory = { context ->
+            val webView = WebView(context)
+            webView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            webView.settings.javaScriptEnabled = true
+            webView.settings.allowFileAccess = true
+            webView.settings.allowContentAccess = true
+            viewModel.init(webView = webView, isTablet = isTablet, textFont = textFont)
+            webView
+        },
+        update = {
+        }
+    )
 }

@@ -18,10 +18,10 @@ import timber.log.Timber
 class HtmlEpubReaderWebViewHandler(
     dispatchers: Dispatchers,
     private val context: Context,
+    private val webView: WebView
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
-    private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
 
     var cookies: String? = null
@@ -29,9 +29,8 @@ class HtmlEpubReaderWebViewHandler(
     var referrer: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null) {
+    fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null,) {
         uiMainCoroutineScope.launch {
-            webView = WebView(context)
             webView.settings.javaScriptEnabled = true
             webView.settings.allowFileAccess = true
             webView.settings.allowFileAccessFromFileURLs = true
@@ -66,6 +65,8 @@ class HtmlEpubReaderWebViewHandler(
                             processWebViewResponses?.invoke(message)
                         }
                     })
+
+                    println()
                     //Passing to JS code the handle to our onMessage listener on kotlin side
                     webView.postWebMessage(
                         WebMessage("initPort", arrayOf(channel[1])),
