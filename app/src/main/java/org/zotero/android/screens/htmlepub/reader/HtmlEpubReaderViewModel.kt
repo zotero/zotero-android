@@ -217,6 +217,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
         disableForceScreenOnTimer?.cancel()
     }
 
+    private fun setTopBarVisibility(isVisible: Boolean) {
+        updateState {
+            copy(isTopBarVisible = isVisible)
+        }
+    }
+
     private fun parseOutline(data: JsonObject) {
         val params = data["params"]?.asJsonObject ?: return
         val outline = params["outline"]?.asJsonArray ?: return
@@ -1075,6 +1081,20 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return true
     }
 
+    fun hidePdfSearch() {
+        updateState {
+            copy(
+                showPdfSearch = false
+            )
+        }
+    }
+    fun togglePdfSearch() {
+        updateState {
+            copy(showPdfSearch = !showPdfSearch)
+        }
+
+    }
+
 }
 
 data class HtmlEpubReaderViewState(
@@ -1104,6 +1124,8 @@ data class HtmlEpubReaderViewState(
     val sidebarEditingEnabled: Boolean = false,
     var outlines: List<Outline> = emptyList(),
     var outlineSearch: String = "",
+    val isTopBarVisible: Boolean = true,
+    val showPdfSearch: Boolean = false,
 ) : ViewState {
 }
 

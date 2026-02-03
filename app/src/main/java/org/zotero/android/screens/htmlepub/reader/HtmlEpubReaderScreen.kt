@@ -5,6 +5,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.WebView
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -16,10 +17,15 @@ import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
+import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderSearchTopBar
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
@@ -48,6 +54,13 @@ internal fun HtmlEpubReaderScreen(
     AppThemeM3(darkTheme = viewState.isDark) {
         val window = activity.window
         val decorView = window.decorView
+        val systemBars = WindowInsetsCompat.Type.systemBars()
+        val insetsController = WindowCompat.getInsetsController(window, decorView)
+        if (viewState.isTopBarVisible) {
+            insetsController.show(systemBars)
+        } else {
+            insetsController.hide(systemBars)
+        }
 
         val focusManager = LocalFocusManager.current
         LaunchedEffect(key1 = viewEffect) {
@@ -68,6 +81,12 @@ internal fun HtmlEpubReaderScreen(
             }
         }
 
+        val htmlEpubReaderSearchViewModel: HtmlEpubReaderSearchViewModel = hiltViewModel()
+        val htmlEpubReaderSearchViewState by htmlEpubReaderSearchViewModel.viewStates.observeAsState(
+            HtmlEpubReaderSearchViewState()
+        )
+        val layoutType = CustomLayoutSize.calculateLayoutType()
+
         CustomScaffoldM3(
             modifier = Modifier.pointerInteropFilter {
                 when (it.action) {
@@ -76,6 +95,22 @@ internal fun HtmlEpubReaderScreen(
                 false
             },
             topBar = {
+                AnimatedContent(
+                    targetState = viewState.isTopBarVisible,
+                    label = ""
+                ) { isTopBarVisible ->
+                    if (isTopBarVisible) {
+                        if (viewState.showPdfSearch && !layoutType.isTablet()) {
+                            HtmlEpubReaderSearchTopBar(
+                                viewState = htmlEpubReaderSearchViewState,
+                                viewModel = htmlEpubReaderSearchViewModel,
+                                togglePdfSearch = viewModel::togglePdfSearch
+                            )
+                        } else {
+                          //TODO
+                        }
+                    }
+                }
 
             },
         ) {
