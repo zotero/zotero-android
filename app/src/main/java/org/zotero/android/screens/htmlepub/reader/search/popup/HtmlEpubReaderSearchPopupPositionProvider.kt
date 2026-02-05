@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupPositionProvider
 
 @Composable
-internal fun pdfReaderSearchPopupPositionProvider() = object : PopupPositionProvider {
+internal fun htmlEpubReaderSearchPopupPositionProvider() = object : PopupPositionProvider {
     val localDensity = LocalDensity.current
     override fun calculatePosition(
         anchorBounds: IntRect,

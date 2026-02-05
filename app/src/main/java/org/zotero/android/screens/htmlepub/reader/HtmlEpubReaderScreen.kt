@@ -26,6 +26,7 @@ import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
 import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderSearchTopBar
+import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderTopBar
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
@@ -107,16 +108,36 @@ internal fun HtmlEpubReaderScreen(
                                 togglePdfSearch = viewModel::togglePdfSearch
                             )
                         } else {
-                          //TODO
+                            HtmlEpubReaderTopBar(
+                                onBack = onBack,
+                                onShowHideSideBar = viewModel::toggleSideBar,
+                                toPdfSettings = viewModel::navigateToPdfSettings,
+                                showPdfSearch = viewState.showPdfSearch,
+                                toggleToolbarButton = viewModel::toggleToolbarButton,
+                                isToolbarButtonSelected = viewState.showCreationToolbar,
+                                showSideBar = viewState.showSideBar,
+                                onShowHidePdfSearch = viewModel::togglePdfSearch,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
+                                htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
+                            )
                         }
                     }
                 }
 
             },
         ) {
-            WebView(
-                viewModel = viewModel
-            )
+            if (layoutType.isTablet()) {
+                //TODO
+            } else {
+                HtmlEpubReaderPhoneMode(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
+                    htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
+                )
+            }
         }
     }
 
@@ -124,7 +145,7 @@ internal fun HtmlEpubReaderScreen(
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun WebView(viewModel: HtmlEpubReaderViewModel) {
+internal fun WebView(viewModel: HtmlEpubReaderViewModel) {
     val layoutType = CustomLayoutSize.calculateLayoutType()
     val isTablet = layoutType.isTablet()
     val textFont = MaterialTheme.typography.bodyMedium

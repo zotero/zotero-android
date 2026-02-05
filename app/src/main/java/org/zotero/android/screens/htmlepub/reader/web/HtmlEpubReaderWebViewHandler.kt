@@ -36,6 +36,9 @@ class HtmlEpubReaderWebViewHandler(
             webView.settings.allowFileAccessFromFileURLs = true
             webView.settings.allowUniversalAccessFromFileURLs = true
             webView.settings.allowContentAccess = true
+            webView.settings.javaScriptCanOpenWindowsAutomatically = true
+            webView.setFocusable(true);
+            webView.setFocusableInTouchMode(true);
 
             webView.webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {

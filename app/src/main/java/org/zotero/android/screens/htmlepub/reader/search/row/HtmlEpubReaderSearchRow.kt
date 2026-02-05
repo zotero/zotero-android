@@ -31,12 +31,15 @@ internal fun HtmlEpubReaderSearchRow(
                 onClick = onItemTapped,
             )
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(Strings.page) + " ${searchItem.pageNumber + 1}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (searchItem.pageNumber != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(Strings.page) + " ${searchItem.pageNumber + 1}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             modifier = Modifier,

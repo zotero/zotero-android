@@ -9,17 +9,17 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import org.zotero.android.pdf.reader.PdfReaderVMInterface
-import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchScreen
-import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewModel
-import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
+import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchScreen
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
 import org.zotero.android.uicomponents.CustomScaffoldM3
 
 @Composable
-internal fun PdfReaderSearchPopup(
-    viewModel: PdfReaderVMInterface,
-    pdfReaderSearchViewModel: PdfReaderSearchViewModel,
-    pdfReaderSearchViewState: PdfReaderSearchViewState,
+internal fun HtmlEpubReaderSearchPopup(
+    viewModel: HtmlEpubReaderViewModel,
+    htmlEpubReaderSearchViewModel: HtmlEpubReaderSearchViewModel,
+    htmlEpubReaderSearchViewState: HtmlEpubReaderSearchViewState,
 ) {
     Popup(
         properties = PopupProperties(
@@ -28,7 +28,7 @@ internal fun PdfReaderSearchPopup(
             focusable = true
         ),
         onDismissRequest = viewModel::hidePdfSearch,
-        popupPositionProvider = pdfReaderSearchPopupPositionProvider(),
+        popupPositionProvider = htmlEpubReaderSearchPopupPositionProvider(),
 
         ) {
         CustomScaffoldM3(
@@ -41,10 +41,10 @@ internal fun PdfReaderSearchPopup(
                 ),
             topBar = {},
         ) {
-            PdfReaderSearchScreen(
+            HtmlEpubReaderSearchScreen(
                 onBack = viewModel::hidePdfSearch,
-                viewModel = pdfReaderSearchViewModel,
-                viewState = pdfReaderSearchViewState
+                viewModel = htmlEpubReaderSearchViewModel,
+                viewState = htmlEpubReaderSearchViewState
             )
         }
     }

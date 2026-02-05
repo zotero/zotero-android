@@ -19,6 +19,7 @@ import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -63,6 +64,9 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Outline
 import org.zotero.android.screens.htmlepub.reader.data.Page
 import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
+import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
+import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
+import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchTermEventStream
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
@@ -95,6 +99,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val dateParser: DateParser,
     private val dispatchers: Dispatchers,
+    private val htmlEpubReaderSearchResultsEventStream: HtmlEpubReaderSearchResultsEventStream,
+    private val htmlEpubReaderSearchTermEventStream: HtmlEpubReaderSearchTermEventStream,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
 
@@ -126,6 +132,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
     }
 
+    private var htmlEpubReaderSearchTermCancellable: Job? = null
     private var pdfReaderThemeCancellable: Job? = null
 
     private fun startObservingTheme() {
@@ -136,6 +143,22 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     copy(isDark = isDark)
                 }
                 triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun startObservingSearchTerm() {
+        this.htmlEpubReaderSearchTermCancellable = htmlEpubReaderSearchTermEventStream.flow()
+            .drop(1)
+            .onEach { data ->
+                val string = data?.term ?: ""
+                if (string.isEmpty()) {
+                    htmlEpubReaderWebCallChainExecutor?.clearSearch()
+                    htmlEpubReaderSearchResultsEventStream.emitAsync(HtmlEpubReaderSearchResultsData(null))
+                    return@onEach
+                }
+
+                htmlEpubReaderWebCallChainExecutor?.search(string)
             }
             .launchIn(viewModelScope)
     }
@@ -155,6 +178,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
         initState()
         startObservingTheme()
+        startObservingSearchTerm()
         setupWebView(webView)
 
         initialiseReader()
@@ -982,7 +1006,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 deselectSelectedAnnotation()
             }
             is HtmlEpubReaderWebData.processDocumentSearchResults -> {
-               //TODO
+                htmlEpubReaderSearchResultsEventStream.emitAsync(
+                    HtmlEpubReaderSearchResultsData(
+                        successValue.params
+                    )
+                )
             }
             is HtmlEpubReaderWebData.saveAnnotations -> {
                 saveAnnotations(successValue.params)
@@ -1000,6 +1028,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
             HtmlEpubReaderWebData.toggleInterfaceVisibility -> TODO()
         }
     }
+
+
 
     fun setViewState(params: JsonObject) {
         val state = params["state"]?.asJsonObject
@@ -1095,6 +1125,32 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     }
 
+    fun toggleSideBar() {
+        val newShowSideBarState = !viewState.showSideBar
+        updateState {
+            copy(showSideBar = newShowSideBarState)
+        }
+        val selectedAnnotationKey = viewState.selectedAnnotationKey
+        if (newShowSideBarState && selectedAnnotationKey != null) {
+            val index = viewState.sortedKeys.indexOf(selectedAnnotationKey)
+            triggerEffect(
+                HtmlEpubReaderViewEffect.ScrollSideBar(index)
+            )
+        }
+    }
+
+    fun toggleToolbarButton() {
+        updateState {
+            copy(showCreationToolbar = !viewState.showCreationToolbar)
+        }
+        //TODO
+    }
+
+    fun navigateToPdfSettings() {
+       //TODO
+
+    }
+
 }
 
 data class HtmlEpubReaderViewState(
@@ -1126,6 +1182,8 @@ data class HtmlEpubReaderViewState(
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
     val showPdfSearch: Boolean = false,
+    val showSideBar: Boolean = false,
+    val showCreationToolbar: Boolean = false,
 ) : ViewState {
 }
 
@@ -1134,4 +1192,5 @@ sealed class HtmlEpubReaderViewEffect : ViewEffect {
     object DisableForceScreenOn : HtmlEpubReaderViewEffect()
     object EnableForceScreenOn : HtmlEpubReaderViewEffect()
     object ScreenRefresh: HtmlEpubReaderViewEffect()
+    data class ScrollSideBar(val scrollToIndex: Int): HtmlEpubReaderViewEffect()
 }

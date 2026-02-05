@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com">
+    <item
+        android:id="@+id/action_custom_one"
+        android:title="Custom Action 1" />
+    <item
+        android:id="@+id/action_custom_two"
+        android:title="Custom Action 2" />
+</menu>

@@ -20,6 +20,7 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Page
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
+import org.zotero.android.translator.helper.TranslatorHelper.encodeStringToBase64Binary
 import timber.log.Timber
 import java.io.File
 import kotlin.coroutines.resume
@@ -212,6 +213,16 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
+    suspend fun search(term: String) {
+        val encodedPayload = encodeStringToBase64Binary(term)
+
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("search({ term: '${encodedPayload}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
     suspend fun clearSearch() {
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript("javascript:window._view.find();") {
@@ -243,7 +254,7 @@ class HtmlEpubReaderWebCallChainExecutor(
     suspend fun loadDocument(data: DocumentData) {
         Timber.i("HtmlEpubReaderViewModel: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
-        var javascript = "createView({ type: '${data.type}', url: 'file://${data.file.absolutePath.replace("'", "\'")}', annotations: '${data.annotationsJson}'"
+        var javascript = "javascript:createView({ type: '${data.type}', url: 'file://${data.file.absolutePath.replace("'", "\'")}', annotations: '${data.annotationsJson}'"
         val key = data.selectedAnnotationKey
         val page = data.page
         if (key != null) {
