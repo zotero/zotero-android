@@ -23,8 +23,9 @@ internal fun HtmlEpubReaderPhoneMode(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        WebView(
-            viewModel = viewModel
+        HtmlEpubReaderBox(
+            viewState = viewState,
+            viewModel = viewModel,
         )
         AnimatedContent(targetState = viewState.showPdfSearch, transitionSpec = {
             htmlEpubReaderPdfSearchTransitionSpec()

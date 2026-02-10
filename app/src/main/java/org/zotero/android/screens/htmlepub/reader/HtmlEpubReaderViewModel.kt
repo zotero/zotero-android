@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
@@ -49,12 +48,14 @@ import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
+import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
+import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.DocumentUpdate
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
@@ -126,6 +127,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private var htmlEpubReaderWebCallChainExecutor: HtmlEpubReaderWebCallChainExecutor? = null
 
+    var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -184,9 +186,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
         initialiseReader()
 
         this.toolColors = mutableMapOf(
-            AnnotationTool.HIGHLIGHT to defaults.getHighlightColorHex(),
-            AnnotationTool.NOTE to defaults.getNoteColorHex(),
-            AnnotationTool.UNDERLINE to defaults.getUnderlineColorHex(),
+            AnnotationTool.highlight to defaults.getHighlightColorHex(),
+            AnnotationTool.note to defaults.getNoteColorHex(),
+            AnnotationTool.underline to defaults.getUnderlineColorHex(),
         )
         this.userId = sessionDataEventStream.currentValue()!!.userId
         this.username = defaults.getUsername()
@@ -272,7 +274,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return annotations.mapNotNull { dataAsJson ->
             val data = dataAsJson.asJsonObject
             val id = data["id"]?.asString ?: return@mapNotNull null
-            val dateAdded = (data["dateCreated"]?.asString)?.let { iso8601WithFractionalSeconds.parse(it) }
+            val dateAdded = (data["dateCreated"]?.asString)?.let {
+                println()
+                iso8601WithFractionalSeconds.parse(it)
+            }
                 ?: return@mapNotNull null
 
             val dateModified = (data["dateModified"]?.asString)?.let{ iso8601WithFractionalSeconds.parse(it) }   ?: return@mapNotNull null
@@ -309,16 +314,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
-
     fun params(textParams: JsonObject, type: AnnotationType): JsonObject? {
         val color: String
         when(type) {
             AnnotationType.highlight -> {
-                color = toolColors[AnnotationTool.HIGHLIGHT] ?: defaults.getHighlightColorHex()
+                color = toolColors[AnnotationTool.highlight] ?: defaults.getHighlightColorHex()
             }
             AnnotationType.underline -> {
-                color = toolColors[AnnotationTool.UNDERLINE] ?: defaults.getUnderlineColorHex()
+                color = toolColors[AnnotationTool.underline] ?: defaults.getUnderlineColorHex()
             }
             AnnotationType.note, AnnotationType.image, AnnotationType.ink, AnnotationType.text -> {
                 return null
@@ -330,8 +333,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
         params.addProperty("id",KeyGenerator.newKey())
         params.addProperty("type", type.name)
         params.addProperty("color", color)
-        params.addProperty("dateModified", iso8601WithFractionalSeconds.format(date))
-        params.addProperty("dateCreated", iso8601WithFractionalSeconds.format(date))
+        params.addProperty("dateModified", iso8601DateFormatV3.format(date))
+        params.addProperty("dateCreated", iso8601DateFormatV3.format(date))
         params.add("tags", JsonArray())
         params.addProperty("pageLabel", "")
         params.addProperty("comment", "")
@@ -580,17 +583,51 @@ class HtmlEpubReaderViewModel @Inject constructor(
             copy(comments = mutable)
         }
     }
-    private fun toggle(tool: AnnotationTool) {
-        if (viewState.activeTool == tool) {
+    fun toggle(toolSet: AnnotationTool) {
+        if (viewState.activeTool == toolSet) {
             updateState {
                 copy(activeTool = null)
             }
         } else {
             updateState {
-                copy(activeTool = tool)
+                copy(activeTool = toolSet)
             }
         }
+        val tool = viewState.activeTool
+        val color = tool?.let { this.toolColors[it] }
+
+        if (tool != null && color != null) {
+            setTool(tool to color)
+        } else {
+            setTool(null)
+        }
     }
+
+    private fun setTool(data: Pair<AnnotationTool, String>?) {
+        viewModelScope.launch {
+            if (data == null) {
+                htmlEpubReaderWebCallChainExecutor?.clearTool()
+                return@launch
+            }
+            val (tool, color) = data
+
+            var toolName: String
+            when(tool) {
+                AnnotationTool.highlight -> {
+                    toolName = "highlight"
+                }
+                AnnotationTool.note -> {
+                    toolName = "note"
+                }
+                AnnotationTool.underline -> {
+                    toolName = "underline"
+                }
+            }
+            htmlEpubReaderWebCallChainExecutor?.setTool(toolName, color)
+
+        }
+    }
+
 
     private fun filterAnnotations(term: String?, filter: AnnotationsFilter?) {
         if (term == null && filter == null) {
@@ -1143,7 +1180,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
         updateState {
             copy(showCreationToolbar = !viewState.showCreationToolbar)
         }
-        //TODO
+        val tool = viewState.activeTool ?: return
+        toggle(tool)
     }
 
     fun navigateToPdfSettings() {

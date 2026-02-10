@@ -22,7 +22,7 @@ val iso8601DateFormat: SimpleDateFormat
 //TODO use correct format
 val iso8601WithFractionalSeconds: SimpleDateFormat
     @SuppressLint("SimpleDateFormat")
-    get() = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").apply {
+    get() = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 

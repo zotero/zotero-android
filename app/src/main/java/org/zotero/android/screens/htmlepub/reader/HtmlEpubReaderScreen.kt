@@ -1,13 +1,9 @@
 package org.zotero.android.screens.htmlepub.reader
 
-import android.annotation.SuppressLint
 import android.view.MotionEvent
-import android.view.ViewGroup
-import android.webkit.WebView
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -141,28 +136,4 @@ internal fun HtmlEpubReaderScreen(
         }
     }
 
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-internal fun WebView(viewModel: HtmlEpubReaderViewModel) {
-    val layoutType = CustomLayoutSize.calculateLayoutType()
-    val isTablet = layoutType.isTablet()
-    val textFont = MaterialTheme.typography.bodyMedium
-    AndroidView(
-        factory = { context ->
-            val webView = WebView(context)
-            webView.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            webView.settings.javaScriptEnabled = true
-            webView.settings.allowFileAccess = true
-            webView.settings.allowContentAccess = true
-            viewModel.init(webView = webView, isTablet = isTablet, textFont = textFont)
-            webView
-        },
-        update = {
-        }
-    )
 }

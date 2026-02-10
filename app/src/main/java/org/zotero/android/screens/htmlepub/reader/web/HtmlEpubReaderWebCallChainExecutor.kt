@@ -132,12 +132,12 @@ class HtmlEpubReaderWebCallChainExecutor(
                             }
                         }
                         "onSetSelectionPopup" -> {
-                            val params = data["params"].asJsonObject
-                            observable.emitAsync(
-                                Result.Success(
-                                    HtmlEpubReaderWebData.setSelectedTextParams(params)
-                                )
-                            )
+//                            val params = data["params"].asJsonObject
+//                            observable.emitAsync(
+//                                Result.Success(
+//                                    HtmlEpubReaderWebData.setSelectedTextParams(params)
+//                                )
+//                            )
                         }
                         "onChangeViewState" -> {
                             val params = data["params"].asJsonObject
@@ -213,11 +213,28 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
+    suspend fun setTool(toolName: String, colorHex: String) {
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("setTool({ type: '$toolName', color: '$colorHex' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+
     suspend fun search(term: String) {
         val encodedPayload = encodeStringToBase64Binary(term)
 
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript("search({ term: '${encodedPayload}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun clearTool() {
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("clearTool();") {
                 cont.resume(Unit)
             }
         }
