@@ -44,6 +44,8 @@ import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
+import android.view.KeyEvent
+
 @AndroidEntryPoint
 internal class DashboardActivity : BaseActivity() {
 
@@ -189,6 +191,23 @@ internal class DashboardActivity : BaseActivity() {
             }
         }
 
+    }
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                // Post event to navigate to next page
+                Timber.d("VOLUME up")
+                EventBus.getDefault().post(EventBusConstants.PdfReaderNavigateNextPage)
+                true
+            }
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                // Post event to navigate to previous page
+                Timber.d("VOLUME down")
+                EventBus.getDefault().post(EventBusConstants.PdfReaderNavigatePreviousPage)
+                true
+            }
+            else -> super.onKeyDown(keyCode, event)
+        }
     }
 
     private fun showAppChooserExcludingZoteroApp(intent: Intent) {

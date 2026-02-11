@@ -387,6 +387,16 @@ class PdfReaderViewModel @Inject constructor(
         searchResultHighlighter.setSearchResults(result.searchResult)
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.PdfReaderNavigateNextPage) {
+        pdfFragment.setPageIndex(pdfFragment.pageIndex + 1, false)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.PdfReaderNavigatePreviousPage) {
+        pdfFragment.setPageIndex(pdfFragment.pageIndex - 1, false)
+    }
+
     private fun update(pdfSettings: PDFSettings) {
         defaults.setPDFSettings(pdfSettings)
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
