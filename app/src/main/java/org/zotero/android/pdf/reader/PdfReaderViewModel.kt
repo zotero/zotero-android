@@ -389,12 +389,28 @@ class PdfReaderViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.PdfReaderNavigateNextPage) {
-        pdfFragment.setPageIndex(pdfFragment.pageIndex + 1, false)
+        val zoomArea = RectF()
+        val currentPageIndex = pdfFragment.pageIndex
+        val check_worked = pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
+        if (!check_worked) {
+                pdfFragment.setPageIndex(currentPageIndex + 1, false)
+                return
+        }
+        pdfFragment.setPageIndex(currentPageIndex + 1, false)
+        pdfFragment.zoomTo(zoomArea, currentPageIndex + 1, 0)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.PdfReaderNavigatePreviousPage) {
-        pdfFragment.setPageIndex(pdfFragment.pageIndex - 1, false)
+        val zoomArea = RectF()
+        val currentPageIndex = pdfFragment.pageIndex
+        val check_worked = pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
+        if (!check_worked) {
+                pdfFragment.setPageIndex(currentPageIndex - 1, false)
+                return
+        }
+        pdfFragment.setPageIndex(currentPageIndex - 1, false)
+        pdfFragment.zoomTo(zoomArea, currentPageIndex - 1, 0)
     }
 
     private fun update(pdfSettings: PDFSettings) {
