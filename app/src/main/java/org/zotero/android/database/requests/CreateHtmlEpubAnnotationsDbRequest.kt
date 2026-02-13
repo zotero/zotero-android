@@ -1,6 +1,9 @@
 package org.zotero.android.database.requests
 
 import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -61,14 +64,14 @@ class CreateHtmlEpubAnnotationsDbRequest(
     }
 
 
-    fun positionValueToString(value: Any): String {
-        if (value is String) {
-            return value
+    fun positionValueToString(jsonElement: JsonElement): String {
+        if (jsonElement is JsonPrimitive) {
+            return jsonElement.asString
         }
-        if (value is Map<*, *>) {
-            return gson.toJson(value)
+        if (jsonElement is JsonObject) {
+            return gson.toJson(jsonElement)
         }
-        return "$value"
+        return "${jsonElement.asString}"
     }
 
     override fun addTags(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {

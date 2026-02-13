@@ -4,6 +4,7 @@ import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +60,8 @@ internal fun HtmlEpubReaderScreen(
         }
 
         val focusManager = LocalFocusManager.current
+        val annotationsLazyListState = rememberLazyListState()
+        val layoutType = CustomLayoutSize.calculateLayoutType()
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
                 is HtmlEpubReaderViewEffect.NavigateBack -> {
@@ -81,7 +84,6 @@ internal fun HtmlEpubReaderScreen(
         val htmlEpubReaderSearchViewState by htmlEpubReaderSearchViewModel.viewStates.observeAsState(
             HtmlEpubReaderSearchViewState()
         )
-        val layoutType = CustomLayoutSize.calculateLayoutType()
 
         CustomScaffoldM3(
             modifier = Modifier.pointerInteropFilter {
@@ -131,6 +133,8 @@ internal fun HtmlEpubReaderScreen(
                     viewModel = viewModel,
                     htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
                     htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
+                    layoutType = layoutType,
+                    annotationsLazyListState = annotationsLazyListState
                 )
             }
         }
