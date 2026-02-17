@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubReaderSidebarDivider
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionVerticalPadding
@@ -23,13 +23,13 @@ import org.zotero.android.uicomponents.foundation.debounceClickable
 
 @Composable
 internal fun HtmlEpubReaderAnnotationsSidebarTagsSection(
-    annotation: PDFAnnotation,
+    annotation: HtmlEpubAnnotation,
     viewState: HtmlEpubReaderViewState,
     viewModel: HtmlEpubReaderViewModel,
 ) {
     val isSelected = viewState.isAnnotationSelected(annotation.key)
     val areTagsPresent = annotation.tags.isNotEmpty()
-    val shouldDisplayTagsSection = (isSelected || areTagsPresent) && annotation.isZoteroAnnotation
+    val shouldDisplayTagsSection = (isSelected || areTagsPresent)
     if (shouldDisplayTagsSection) {
         HtmlEpubReaderSidebarDivider()
     }

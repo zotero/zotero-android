@@ -13,14 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.data.PDFAnnotation
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionVerticalPadding
 
 @Composable
 internal fun HtmlEpubReaderAnnotationsSidebarUnderlineTextSection(
     annotationColor: Color,
-    annotation: PDFAnnotation,
+    annotation: HtmlEpubAnnotation,
 ) {
     Box(
         modifier = Modifier

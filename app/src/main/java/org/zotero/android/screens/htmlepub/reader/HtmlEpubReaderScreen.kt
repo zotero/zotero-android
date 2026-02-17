@@ -29,6 +29,7 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 @Composable
 internal fun HtmlEpubReaderScreen(
     onBack: () -> Unit,
+    navigateToPdfFilter: () -> Unit,
     viewModel: HtmlEpubReaderViewModel = hiltViewModel(),
 ) {
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
@@ -74,6 +75,9 @@ internal fun HtmlEpubReaderScreen(
 
                 is HtmlEpubReaderViewEffect.EnableForceScreenOn -> {
                     currentView.keepScreenOn = true
+                }
+                is HtmlEpubReaderViewEffect.ShowPdfFilters -> {
+                    navigateToPdfFilter()
                 }
 
                 else -> {}

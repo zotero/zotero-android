@@ -21,20 +21,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.AnnotationType
-import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun HtmlEpubReaderAnnotationsSidebarHeaderSection(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
-    annotation: PDFAnnotation,
+    annotation: HtmlEpubAnnotation,
     annotationColor: Color,
 ) {
     val title = stringResource(Strings.page) + " " + annotation.pageLabel
@@ -68,7 +67,6 @@ internal fun HtmlEpubReaderAnnotationsSidebarHeaderSection(
         )
         Spacer(modifier = Modifier.weight(1f))
         if (viewState.isAnnotationSelected(annotation.key)) {
-            if (annotation.isZoteroAnnotation) {
                 Image(
                     modifier = Modifier
                         .size(22.dp)
@@ -81,16 +79,6 @@ internal fun HtmlEpubReaderAnnotationsSidebarHeaderSection(
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurfaceVariant),
                 )
-            }
-        }
-        if (!annotation.isZoteroAnnotation) {
-            Image(
-                modifier = Modifier
-                    .size(22.dp),
-                painter = painterResource(id = Drawables.ic_lock_solid),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(CustomTheme.colors.disabledContent),
-            )
         }
     }
 }

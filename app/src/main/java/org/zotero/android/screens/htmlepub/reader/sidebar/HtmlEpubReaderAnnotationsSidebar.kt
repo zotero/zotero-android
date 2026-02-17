@@ -124,6 +124,8 @@ internal fun HtmlEpubReaderAnnotationsSidebar(
                                 viewState = viewState,
                             )
                         }
+
+                        else -> {}
                     }
                 }
             }

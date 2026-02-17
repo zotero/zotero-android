@@ -62,5 +62,9 @@ internal fun HtmlEpubReaderSidebar(
                 layoutType = layoutType,
             )
         }
+
+        else -> {
+
+        }
     }
 }

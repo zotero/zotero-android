@@ -8,9 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
@@ -19,10 +19,10 @@ import org.zotero.android.uicomponents.textinput.CustomTextField
 internal fun HtmlEpubReaderAnnotationsSidebarCommentSection(
     viewState: HtmlEpubReaderViewState,
     viewModel: HtmlEpubReaderViewModel,
-    annotation: PDFAnnotation,
+    annotation: HtmlEpubAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
-    if (viewState.isAnnotationSelected(annotation.key) && annotation.isZoteroAnnotation) {
+    if (viewState.isAnnotationSelected(annotation.key)) {
         CustomTextField(
             modifier = Modifier
                 .sectionHorizontalPadding()

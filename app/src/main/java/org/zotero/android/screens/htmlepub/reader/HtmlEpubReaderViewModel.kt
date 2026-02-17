@@ -18,8 +18,11 @@ import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
@@ -27,6 +30,7 @@ import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.Result
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -35,6 +39,7 @@ import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
@@ -51,14 +56,15 @@ import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.ktx.rounded
-import org.zotero.android.pdf.data.AnnotationsFilter
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArgs
 import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.DocumentUpdate
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotationsFilter
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
@@ -68,6 +74,7 @@ import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchTermEventStream
+import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
@@ -116,6 +123,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var selectedTextParams: JsonObject? = null
     private var annotations = mutableMapOf<String, HtmlEpubAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
+    private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
+    private val onAnnotationSearchStateFlow = MutableStateFlow("")
     private lateinit var textFont: TextStyle
 
     private var isTablet: Boolean = false
@@ -181,6 +190,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
         initState()
         startObservingTheme()
         startObservingSearchTerm()
+        setupCommentChangeFlow()
+        setupAnnotationSearchStateFlow()
         setupWebView(webView)
 
         initialiseReader()
@@ -466,7 +477,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
 
     private fun _select(key: String?, didSelectInDocument: Boolean) {
-        if (key == viewState.selectedAnnotationKey) else {
+        if (key == viewState.selectedAnnotationKey) {
             return
         }
         val existing = viewState.selectedAnnotationKey
@@ -629,13 +640,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
 
-    private fun filterAnnotations(term: String?, filter: AnnotationsFilter?) {
-        if (term == null && filter == null) {
+    private fun filterAnnotations(term: String, filter: HtmlEpubAnnotationsFilter?) {
+        if (term.isEmpty() && filter == null) {
             val snapshot = viewState.snapshotKeys ?: return
             updateState {
                 copy(
                     snapshotKeys = null,
-                    annotationSearchTerm = null,
+                    annotationSearchTerm = "",
                     annotationFilter = null,
                     sortedKeys = snapshot,
                 )
@@ -661,7 +672,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     }
 
-    private fun filteredKeys(snapshot: List<String>, term: String?, filter: AnnotationsFilter?): List<String> {
+    private fun filteredKeys(snapshot: List<String>, term: String?, filter: HtmlEpubAnnotationsFilter?): List<String> {
         if (term == null && filter == null) {
             return snapshot
         }
@@ -682,7 +693,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 annotation.tags.any { it.name.contains(term, ignoreCase = true) }
     }
 
-    private fun filter(annotation: HtmlEpubAnnotation, filter: AnnotationsFilter?): Boolean {
+    private fun filter(annotation: HtmlEpubAnnotation, filter: HtmlEpubAnnotationsFilter?): Boolean {
         if (filter == null) {
             return true
         }
@@ -1186,8 +1197,126 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun navigateToPdfSettings() {
        //TODO
-
     }
+
+
+    fun annotation(key: String): HtmlEpubAnnotation? {
+        return this.annotations[key]
+    }
+
+    fun onCommentFocusFieldChange(annotationKey: String) {
+        val annotation =
+            annotation(annotationKey)
+                ?: return
+        selectAnnotationFromDocument(key = annotationKey)
+
+        updateState {
+            copy(
+                commentFocusKey = annotationKey,
+                commentFocusText = annotation.comment
+            )
+        }
+    }
+
+    fun onCommentTextChange(annotationKey: String, comment: String) {
+        updateState {
+            copy(commentFocusText = comment)
+        }
+        onCommentChangeFlow.tryEmit(annotationKey to comment)
+    }
+
+    private fun setupCommentChangeFlow() {
+        onCommentChangeFlow
+            .debounce(500)
+            .map { data ->
+                if (data != null) {
+                    setComment(data.first, data.second)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun searchAnnotations(term: String) {
+        val trimmedTerm = term.trim().trim { it == '\n' }
+        filterAnnotations(term = trimmedTerm, filter = viewState.filter)
+    }
+
+    fun onAnnotationSearch(text: String) {
+        updateState {
+            copy(annotationSearchTerm = text)
+        }
+        onAnnotationSearchStateFlow.tryEmit(text)
+    }
+
+    private fun setupAnnotationSearchStateFlow() {
+        onAnnotationSearchStateFlow
+            .debounce(150)
+            .map { text ->
+                searchAnnotations(text)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onMoreOptionsForItemClicked() {
+        //TODO
+    }
+
+    fun onTagsClicked(annotation: HtmlEpubAnnotation) {
+        //TODO
+    }
+
+    fun selectAnnotation(key: String) {
+        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
+            _select(key = key, didSelectInDocument = false)
+        }
+    }
+
+    fun setSidebarSliderSelectedOption(optionOrdinal: Int) {
+        val option = HtmlEpubReaderSliderOptions.entries[optionOrdinal]
+        updateState {
+            copy(sidebarSliderSelectedOption = option)
+        }
+    }
+
+    fun showFilterPopup() {
+        val colors = mutableSetOf<String>()
+        val tags = mutableSetOf<Tag>()
+
+        val processAnnotation: (HtmlEpubAnnotation) -> Unit = { annotation ->
+            colors.add(annotation.color)
+            for (tag in annotation.tags) {
+                tags.add(tag)
+            }
+        }
+
+        for (annotation in this.annotations.values) {
+            processAnnotation(annotation!!)
+        }
+
+        val sortedTags = tags.sortedWith { lTag, rTag ->
+            if (lTag.color.isEmpty() == rTag.color.isEmpty()) {
+                return@sortedWith lTag.name.compareTo(other = rTag.name, ignoreCase = true)
+            }
+            if (!lTag.color.isEmpty() && rTag.color.isEmpty()) {
+                return@sortedWith 1
+            }
+            -1
+        }
+
+        val sortedColors = mutableListOf<String>()
+        AnnotationsConfig.allColors.forEach { color ->
+            if (colors.contains(color)) {
+                sortedColors.add(color)
+            }
+        }
+        ScreenArguments.htmlEpubFilterArgs = HtmlEpubFilterArgs(
+            filter = viewState.filter,
+            availableColors = sortedColors,
+            availableTags = sortedTags
+        )
+        triggerEffect(HtmlEpubReaderViewEffect.ShowPdfFilters)
+    }
+
 
 }
 
@@ -1211,8 +1340,8 @@ data class HtmlEpubReaderViewState(
     val comments: Map<String, String?> = emptyMap(),
     val snapshotKeys: List<String>? = null,
     val sortedKeys: List<String> = emptyList(),
-    val annotationSearchTerm: String? = null,
-    val annotationFilter: AnnotationsFilter? = null,
+    val annotationSearchTerm: String = "",
+    val annotationFilter: HtmlEpubAnnotationsFilter? = null,
     val annotationPopoverKey: String? = null,
     val annotationPopoverRect: RectF? = null,
     val sidebarEditingEnabled: Boolean = false,
@@ -1222,7 +1351,14 @@ data class HtmlEpubReaderViewState(
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
+    val commentFocusKey: String? = null,
+    val commentFocusText: String = "",
+    val filter: HtmlEpubAnnotationsFilter? = null,
+    val sidebarSliderSelectedOption: HtmlEpubReaderSliderOptions = HtmlEpubReaderSliderOptions.Annotations,
 ) : ViewState {
+    fun isAnnotationSelected(annotationKey: String): Boolean {
+        return this.selectedAnnotationKey == annotationKey
+    }
 }
 
 sealed class HtmlEpubReaderViewEffect : ViewEffect {
@@ -1231,4 +1367,5 @@ sealed class HtmlEpubReaderViewEffect : ViewEffect {
     object EnableForceScreenOn : HtmlEpubReaderViewEffect()
     object ScreenRefresh: HtmlEpubReaderViewEffect()
     data class ScrollSideBar(val scrollToIndex: Int): HtmlEpubReaderViewEffect()
+    object ShowPdfFilters : HtmlEpubReaderViewEffect()
 }

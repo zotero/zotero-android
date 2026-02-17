@@ -40,11 +40,4 @@ interface PDFAnnotation: ReaderAnnotation {
         }
     }
 
-    val displayColor: String get(){
-        if (!color.startsWith("#")) {
-            return "#" + this.color
-        }
-        return this.color
-    }
-
 }
