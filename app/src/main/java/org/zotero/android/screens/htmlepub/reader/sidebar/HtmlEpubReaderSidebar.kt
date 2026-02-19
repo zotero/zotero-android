@@ -11,9 +11,11 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Annotations
+import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Outline
 
 private val sliderOptions = listOf(
     Annotations,
+    Outline
 )
 
 @Composable
@@ -63,8 +65,12 @@ internal fun HtmlEpubReaderSidebar(
             )
         }
 
-        else -> {
-
+        Outline -> {
+            HtmlEpubReaderOutlineSidebar(
+                viewModel = viewModel,
+                viewState = viewState,
+                layoutType = layoutType,
+            )
         }
     }
 }

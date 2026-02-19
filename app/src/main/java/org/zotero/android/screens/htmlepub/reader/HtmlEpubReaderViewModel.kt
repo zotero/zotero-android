@@ -74,6 +74,7 @@ import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchTermEventStream
+import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubOutline
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
 import org.zotero.android.sync.DateParser
@@ -124,6 +125,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var annotations = mutableMapOf<String, HtmlEpubAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
+    private val onOutlineSearchStateFlow = MutableStateFlow("")
     private val onAnnotationSearchStateFlow = MutableStateFlow("")
     private lateinit var textFont: TextStyle
 
@@ -137,6 +139,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var htmlEpubReaderWebCallChainExecutor: HtmlEpubReaderWebCallChainExecutor? = null
 
     var toolColors: MutableMap<AnnotationTool, String> = mutableMapOf()
+
+    var outlines: MutableList<HtmlEpubOutline> = mutableListOf()
+
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -190,8 +195,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         initState()
         startObservingTheme()
         startObservingSearchTerm()
+
         setupCommentChangeFlow()
         setupAnnotationSearchStateFlow()
+        setupOutlineSearchStateFlow()
+
         setupWebView(webView)
 
         initialiseReader()
@@ -260,17 +268,125 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+    private fun loadOutlines() {
+        createSnapshot("")
+        updateState { copy(isOutlineEmpty = this@HtmlEpubReaderViewModel.outlines.isEmpty()) }
+    }
+
+    private fun createSnapshot(search: String) {
+        val snapshot = mutableListOf<HtmlEpubOutline>()
+        append(outlines = this.outlines, parent = null, snapshot = snapshot, search = search)
+        if (snapshot.size == 1) {
+            updateState {
+                copy(
+                    outlineSnapshot = snapshot,
+                    outlineExpandedNodes = setOf(snapshot[0].id)
+                )
+            }
+        } else {
+            updateState {
+                copy(
+                    outlineSnapshot = snapshot,
+                    outlineExpandedNodes = emptySet()
+                )
+            }
+        }
+    }
+
+    private fun append(
+        outlines: List<HtmlEpubOutline>,
+        parent: HtmlEpubOutline?,
+        snapshot: MutableList<HtmlEpubOutline>,
+        search: String
+    ) {
+        val rows = mutableListOf<HtmlEpubOutline>()
+        for (element in outlines) {
+            if (search.isEmpty()) {
+                val outline = HtmlEpubOutline(
+                    id = element.id,
+                    title = element.title,
+                    location = element.location,
+                    children = mutableListOf(),
+                    isActive = true,
+                )
+                rows.add(outline)
+                continue
+            }
+
+            val elementContainsSearch = outline(element, search)
+            val childContainsSearch = child(element.children, search)
+
+            if (!elementContainsSearch && !childContainsSearch) {
+                continue
+            }
+
+            val outline = element.copy(isActive = elementContainsSearch)
+            rows.add(outline)
+        }
+        if (parent == null) {
+            snapshot.addAll(rows)
+        } else {
+            parent.children.addAll(rows)
+        }
+
+        for ((idx, element) in outlines.withIndex()) {
+            val children = element.children
+
+            if (search.isEmpty()) {
+                append(
+                    outlines = children,
+                    parent = rows[idx],
+                    snapshot = snapshot,
+                    search = search
+                )
+                continue
+            }
+
+            val index = rows.indexOfFirst { row ->
+                row.title == element.title
+
+            }
+            if (index == -1) {
+                continue
+            }
+
+            append(outlines = children, parent = rows[index], snapshot = snapshot, search = search)
+        }
+    }
+
+    private fun child(children: List<HtmlEpubOutline>, string: String): Boolean {
+        if (children.isEmpty()) {
+            return false
+        }
+
+        for (child in children) {
+            if (outline(child, string)) {
+                return true
+            }
+
+            val children = child.children
+
+            if (children != null && child(children, string)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun outline(outline: HtmlEpubOutline, string: String): Boolean {
+        return (outline.title).contains(string, ignoreCase = true)
+    }
+
     private fun parseOutline(data: JsonObject) {
         val params = data["params"]?.asJsonObject ?: return
         val outline = params["outline"]?.asJsonArray ?: return
         val outlines = mutableListOf<Outline>()
         for (item in outline) {
-            val outline = parseOutline2( item.asJsonObject) ?: continue
+            val outline = parseOutline2(item.asJsonObject) ?: continue
             outlines.add(outline)
         }
-        updateState {
-            copy(outlines = outlines)
-        }
+        this.outlines = outlines.map { HtmlEpubOutline(it, isActive = true) }.toMutableList()
     }
 
     fun parseOutline2(data: JsonObject): Outline? {
@@ -278,7 +394,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
         val location = data["location"]?.asJsonObject ?: return null
         val rawChildren = data["items"]?.asJsonArray ?: return null
         val children = rawChildren.mapNotNull { parseOutline2(it.asJsonObject) }
-        return Outline(title = title.trim().trim { it == '\n' }, location = location.asMap(), children = children)
+        return Outline(
+            title = title.trim().trim { it == '\n' },
+            location = location.asMap(),
+            children = children,
+            isActive = true,
+        )
     }
 
     private fun parse(annotations: JsonArray, author: String, isAuthor: Boolean): List<HtmlEpubAnnotation> {
@@ -1049,6 +1170,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
             is HtmlEpubReaderWebData.parseOutline -> {
                 parseOutline(successValue.params)
+                loadOutlines()
             }
             HtmlEpubReaderWebData.deselectSelectedAnnotation -> {
                 deselectSelectedAnnotation()
@@ -1317,6 +1439,54 @@ class HtmlEpubReaderViewModel @Inject constructor(
         triggerEffect(HtmlEpubReaderViewEffect.ShowPdfFilters)
     }
 
+    fun onOutlineSearch(search: String) {
+        if (search == viewState.outlineSearchTerm) {
+            return
+        }
+        updateState {
+            copy(outlineSearchTerm = search)
+        }
+        onOutlineSearchStateFlow.tryEmit(search)
+    }
+
+    private fun searchOutlines(search: String) {
+        createSnapshot(search = search)
+    }
+
+    private fun setupOutlineSearchStateFlow() {
+        onOutlineSearchStateFlow
+            .drop(1)
+            .debounce(150)
+            .map { text ->
+                searchOutlines(text)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onOutlineItemTapped(outline: HtmlEpubOutline) {
+        viewModelScope.launch {
+            if (!outline.isActive) {
+                return@launch
+            }
+            htmlEpubReaderWebCallChainExecutor?.show(location = outline.location)
+            if (!isTablet) {
+                toggleSideBar()
+            }
+        }
+
+    }
+
+    fun onOutlineItemChevronTapped(outline: HtmlEpubOutline) {
+        val expandedNodes = viewState.outlineExpandedNodes
+        val newState = if (expandedNodes.contains(outline.id)) {
+            expandedNodes - outline.id
+        } else {
+            expandedNodes + outline.id
+        }
+        updateState {
+            copy(outlineExpandedNodes = newState)
+        }
+    }
 
 }
 
@@ -1345,7 +1515,6 @@ data class HtmlEpubReaderViewState(
     val annotationPopoverKey: String? = null,
     val annotationPopoverRect: RectF? = null,
     val sidebarEditingEnabled: Boolean = false,
-    var outlines: List<Outline> = emptyList(),
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
     val showPdfSearch: Boolean = false,
@@ -1355,9 +1524,18 @@ data class HtmlEpubReaderViewState(
     val commentFocusText: String = "",
     val filter: HtmlEpubAnnotationsFilter? = null,
     val sidebarSliderSelectedOption: HtmlEpubReaderSliderOptions = HtmlEpubReaderSliderOptions.Annotations,
+    val isOutlineEmpty: Boolean = false,
+    val outlineSearchTerm: String = "",
+    val outlineExpandedNodes: Set<String> = emptySet(),
+    val outlineSnapshot: List<HtmlEpubOutline> = emptyList(),
 ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey
+    }
+
+    fun isOutlineSectionCollapsed(id: String): Boolean {
+        val isCollapsed = !outlineExpandedNodes.contains(id)
+        return isCollapsed
     }
 }
 
