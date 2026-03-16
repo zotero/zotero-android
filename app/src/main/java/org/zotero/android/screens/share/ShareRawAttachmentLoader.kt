@@ -39,8 +39,11 @@ class ShareRawAttachmentLoader @Inject constructor() {
     private fun loadFromIntentExtras(bundleExtras: Bundle) {
         val urlPath = bundleExtras.getString(Intent.EXTRA_TEXT)
         if (urlPath != null) {
-            loadedAttachment = Result.Success(RawAttachment.remoteUrl(urlPath))
-            return
+            val listOfUrls = extractUrls(urlPath)
+            if (listOfUrls.isNotEmpty()) {
+                loadedAttachment = Result.Success(RawAttachment.remoteUrl(listOfUrls[0]))
+                return
+            }
         }
         val fileContentUri = bundleExtras.getSupportParcelable(Intent.EXTRA_STREAM, Uri::class.java)
         if (fileContentUri != null) {
@@ -48,6 +51,13 @@ class ShareRawAttachmentLoader @Inject constructor() {
             return
         }
         loadedAttachment = Result.Failure(AttachmentState.Error.cantLoadWebData)
+    }
+
+    fun extractUrls(text: String): List<String> {
+        val urlPattern = Regex(
+            """(https?://)?(www\.)?[\w-]+(\.[\w-]+)+\.?(:\d+)?(/[\w\-._~:/?#\[\]@!$&'()*+,;=]*)?"""
+        )
+        return urlPattern.findAll(text).map { it.value }.toList()
     }
 
     fun getLoadedAttachmentResult(): RawAttachment {
