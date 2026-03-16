@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
@@ -22,6 +23,7 @@ import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.citation.CitationControllerPreviewHeightUpdateEventStream
 import org.zotero.android.citation.CitationSession
 import org.zotero.android.sync.LibraryIdentifier
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -99,26 +101,33 @@ internal class SingleCitationViewModel @Inject constructor(
     }
 
     fun preload() = viewModelScope.launch {
-        val session = citationController.startSession(
-            itemIds = this@SingleCitationViewModel.itemIds,
-            libraryId = this@SingleCitationViewModel.libraryId,
-            styleId = this@SingleCitationViewModel.styleId,
-            localeId = this@SingleCitationViewModel.localeId
-        )
-        this@SingleCitationViewModel.citationSession = session
+        try {
+            val session = citationController.startSession(
+                itemIds = this@SingleCitationViewModel.itemIds,
+                libraryId = this@SingleCitationViewModel.libraryId,
+                styleId = this@SingleCitationViewModel.styleId,
+                localeId = this@SingleCitationViewModel.localeId
+            )
+            this@SingleCitationViewModel.citationSession = session
 
-        val previewText = citationController.citation(
-            session = session,
-            label = viewState.locator,
-            locator = viewState.locatorValue,
-            omitAuthor = viewState.omitAuthor,
-            format = Format.html,
-            showInWebView = true
-        )
+            val previewText = citationController.citation(
+                session = session,
+                label = viewState.locator,
+                locator = viewState.locatorValue,
+                omitAuthor = viewState.omitAuthor,
+                format = Format.html,
+                showInWebView = true
+            )
 
-        updateState {
-            copy(preview = previewText)
+            updateState {
+                copy(preview = previewText)
+            }
+        }catch (e: Exception) {
+            Timber.e(e, "SingleCitationViewModel: can't create single citation")
+            context.longToast(e.toString())
+            triggerEffect(SingleCitationViewEffect.OnBack)
         }
+
     }
 
     fun onCopyTapped() {

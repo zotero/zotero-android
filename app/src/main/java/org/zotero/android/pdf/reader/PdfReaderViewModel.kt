@@ -81,6 +81,7 @@ import org.json.JSONObject
 import org.zotero.android.ZoteroApplication
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
@@ -168,6 +169,7 @@ import org.zotero.android.pdf.reader.sidebar.data.ThumbnailPreviewMemoryCache
 import org.zotero.android.pdf.reader.sidebar.data.ThumbnailsPreviewFileCache
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsChangeResult
+import org.zotero.android.screens.citation.singlecitation.SingleCitationViewEffect
 import org.zotero.android.screens.citation.singlecitation.data.SingleCitationArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
@@ -3601,24 +3603,28 @@ class PdfReaderViewModel @Inject constructor(
             val citationController = citationControllerProvider.get()
             val libraryId = viewState.library.identifier
             val selectedItemKeys = setOf(viewState.parentKey!!)
-            val session = citationController.startSession(
-                itemIds = selectedItemKeys,
-                libraryId = libraryId,
-                styleId = styleId,
-                localeId = localeId
-            )
-            val html = citationController.bibliography(session, format = Format.html)
-            val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
-                html to null
-            } else {
-                html to citationController.bibliography(session = session, format = Format.text)
+            try {
+                val session = citationController.startSession(
+                    itemIds = selectedItemKeys,
+                    libraryId = libraryId,
+                    styleId = styleId,
+                    localeId = localeId
+                )
+                val html = citationController.bibliography(session, format = Format.html)
+                val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
+                    html to null
+                } else {
+                    html to citationController.bibliography(session = session, format = Format.text)
+                }
+                if (resultPair.second != null) {
+                    context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+                } else {
+                    context.copyPlainTextToClipboard(resultPair.first)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "PdfReaderViewModel: can't create bibliography")
+                context.longToast(e.toString())
             }
-            if (resultPair.second != null) {
-                context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
-            } else {
-                context.copyPlainTextToClipboard(resultPair.first)
-            }
-
             updateState {
                 copy(isGeneratingBibliography = false)
             }

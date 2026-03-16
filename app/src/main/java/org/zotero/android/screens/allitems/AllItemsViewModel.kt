@@ -25,6 +25,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -1076,24 +1077,28 @@ internal class AllItemsViewModel @Inject constructor(
         val styleId = defaults.getQuickCopyStyleId()
         val localeId = defaults.getQuickCopyCslLocaleId()
         val citationController = citationControllerProvider.get()
-        val session = citationController.startSession(
-            itemIds = selectedItemKeys,
-            libraryId = this@AllItemsViewModel.library.identifier,
-            styleId = styleId,
-            localeId = localeId
-        )
-        val html = citationController.bibliography(session, format = Format.html)
-        val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
-            html to null
-        } else {
-            html to citationController.bibliography(session = session, format = Format.text)
+        try {
+            val session = citationController.startSession(
+                itemIds = selectedItemKeys,
+                libraryId = this@AllItemsViewModel.library.identifier,
+                styleId = styleId,
+                localeId = localeId
+            )
+            val html = citationController.bibliography(session, format = Format.html)
+            val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
+                html to null
+            } else {
+                html to citationController.bibliography(session = session, format = Format.text)
+            }
+            if (resultPair.second != null) {
+                context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+            } else {
+                context.copyPlainTextToClipboard(resultPair.first)
+            }
+        }catch (e: Exception) {
+            Timber.e(e, "PdfReaderViewModel: can't create bibliography")
+            context.longToast(e.toString())
         }
-        if (resultPair.second != null) {
-            context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
-        } else {
-            context.copyPlainTextToClipboard(resultPair.first)
-        }
-
         updateState {
             copy(isGeneratingBibliography = false)
         }
@@ -1207,42 +1212,49 @@ internal class AllItemsViewModel @Inject constructor(
         val exportAsHtml = defaults.isQuickCopyAsHtml()
 
         val citationController = citationControllerProvider.get()
+        try {
+            val session = citationController.startSession(
+                itemIds = itemIds,
+                libraryId = this@AllItemsViewModel.library.identifier,
+                styleId = styleId,
+                localeId = localeId
+            )
+            val locator: String = locatorsList[0]
+            val locatorValue = ""
 
-        val session = citationController.startSession(
-            itemIds = itemIds,
-            libraryId = this@AllItemsViewModel.library.identifier,
-            styleId = styleId,
-            localeId = localeId
-        )
-        val locator: String = locatorsList[0]
-        val locatorValue = ""
+            val preview = citationController.citation(
+                session = session,
+                label = locator,
+                locator = locatorValue,
+                omitAuthor = false,
+                format = Format.html,
+                showInWebView = true
+            )
 
-        val preview = citationController.citation(
-            session = session,
-            label = locator,
-            locator = locatorValue,
-            omitAuthor = false,
-            format = Format.html,
-            showInWebView = true
-        )
+            if (preview.isEmpty()) {
+                return@withContext
+            }
 
-        if (preview.isEmpty()) {
-            return@withContext
+            if (exportAsHtml) {
+                context.copyPlainTextToClipboard(preview)
+                return@withContext
+            }
+            val text = citationController.citation(
+                session = session,
+                label = locator,
+                locator = locatorValue,
+                omitAuthor = false,
+                format = Format.text,
+                showInWebView = false
+            )
+            context.copyHtmlToClipboard(preview, text = text)
+        }catch (e: Exception) {
+            Timber.e(e, "AllItemsViewModel: can't copy multiple citations")
+            viewModelScope.launch {
+                context.longToast(e.toString())
+            }
         }
 
-        if (exportAsHtml) {
-            context.copyPlainTextToClipboard(preview)
-            return@withContext
-        }
-        val text = citationController.citation(
-            session = session,
-            label = locator,
-            locator = locatorValue,
-            omitAuthor = false,
-            format = Format.text,
-            showInWebView = false
-        )
-        context.copyHtmlToClipboard(preview, text = text)
     }
 
     fun onShare() {
