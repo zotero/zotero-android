@@ -1,6 +1,7 @@
 package org.zotero.android.pdf.reader.plainreader
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.pspdfkit.configuration.PdfConfiguration
@@ -15,12 +16,11 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
 import org.zotero.android.pdf.ARG_PDF_PLAIN_READER_SCREEN
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
-import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,13 +29,13 @@ class PdfPlainReaderViewModel @Inject constructor(
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
     private val defaults: Defaults,
     private val context: Context,
-    private val navigationParamsMarshaller: NavigationParamsMarshaller,
-    stateHandle: SavedStateHandle,
+    private val stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfPlainReaderViewState, PdfPlainReaderViewEffect>(PdfPlainReaderViewState()) {
 
-    private val screenArgs: PdfPlainReaderArgs by lazy {
-        val argsEncoded = stateHandle.get<String>(ARG_PDF_PLAIN_READER_SCREEN).require()
-        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    private val screenFileArgs: File by lazy {
+        val decodedFileString = stateHandle.get<String>(ARG_PDF_PLAIN_READER_SCREEN).require()
+        val file = File(decodedFileString)
+        file
     }
 
     fun init(
@@ -57,7 +57,7 @@ class PdfPlainReaderViewModel @Inject constructor(
             .themeMode(themeMode)
             .build()
 
-        val document = PdfDocumentLoader.openDocument(this.context, screenArgs.uri)
+        val document = PdfDocumentLoader.openDocument(this.context, screenFileArgs.toUri())
         pdfReaderView.setDocument(document, configuration)
         pdfReaderView.show()
 

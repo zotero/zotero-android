@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader.modes
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -30,14 +29,12 @@ internal fun PdfReaderPhoneMode(
     annotationsLazyListState: LazyListState,
     thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
-    uri: Uri,
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
         PdfReaderPspdfKitBox(
-            uri = uri,
             viewState = viewState,
             vMInterface = vMInterface
         )

@@ -6,7 +6,6 @@ import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPage
 import org.zotero.android.pdf.colorpicker.data.PdfReaderColorPickerArgs
 import org.zotero.android.pdf.pdffilter.data.PdfFilterArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
-import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
 import org.zotero.android.pdf.settings.data.PdfSettingsArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.allitems.data.AllItemsArgs
@@ -49,7 +48,6 @@ object ScreenArguments {
     lateinit var pdfReaderColorPickerArgs: PdfReaderColorPickerArgs
     lateinit var shareCollectionPickerArgs: ShareCollectionPickerArgs
     lateinit var pdfReaderSearchArgs: PdfReaderSearchArgs
-    lateinit var pdfPlainReaderArgs: PdfPlainReaderArgs
     lateinit var singleCitationArgs: SingleCitationArgs
     lateinit var citBibExportArgs: CitBibExportArgs
     lateinit var settingsCslLocalePickerArgs: SettingsCslLocalePickerArgs

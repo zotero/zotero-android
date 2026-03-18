@@ -1,7 +1,6 @@
 package org.zotero.android.pdf.reader
 
 import android.content.res.Resources
-import android.net.Uri
 import android.util.TypedValue
 import android.widget.FrameLayout
 import androidx.activity.compose.LocalActivity
@@ -19,7 +18,6 @@ import timber.log.Timber
 
 @Composable
 fun PdfReaderPspdfKitView(
-    uri: Uri,
     vMInterface: PdfReaderVMInterface
 ) {
     val activity = LocalActivity.current as? AppCompatActivity ?: return
@@ -42,7 +40,6 @@ fun PdfReaderPspdfKitView(
             vMInterface.init(
                 isTablet = layoutType.isTablet(),
                 backgroundColor = backgroundColor,
-                uri = uri,
                 containerId = fragmentContainerView.id,
                 fragmentManager = fragmentManager,
                 annotationMaxSideSize = annotationMaxSideSize

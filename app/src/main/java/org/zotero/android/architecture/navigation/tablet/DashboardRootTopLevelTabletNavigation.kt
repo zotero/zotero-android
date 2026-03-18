@@ -1,7 +1,6 @@
 
 package org.zotero.android.architecture.navigation.tablet
 
-import android.net.Uri
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -58,11 +57,12 @@ internal fun DashboardRootTopLevelTabletNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             viewEffect = viewEffect,
-            onShowPdf = { pdfScreenParams ->
+            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
                 navigation.toPdfScreen(
                     context = context,
                     wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenParams = pdfScreenParams
+                    pdfScreenParams = pdfScreenParams,
+                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
             toAddOrEditNote = navigation::toAddOrEditNote,
@@ -94,7 +94,7 @@ private fun NavGraphBuilder.dashboardScreen(
     collectionDefaultValue: String,
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
-    onShowPdf: (String) -> Unit,
+    onShowPdf: (String, String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,

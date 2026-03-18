@@ -282,17 +282,16 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = file.toUri()
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
             parentKey = parentKey,
             library = library,
             page = null,
             preselectedAnnotationKey = null,
-            uri = uri,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
-        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params))
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params, encodedFilePath))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1340,7 +1339,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
+    data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()

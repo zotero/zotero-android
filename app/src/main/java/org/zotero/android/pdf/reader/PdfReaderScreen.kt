@@ -39,7 +39,7 @@ internal fun PdfReaderScreen(
     onExportPdf: (file: File) -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: (args: String) -> Unit,
-    navigateToPdfPlainReader: (args: String) -> Unit,
+    navigateToPdfPlainReader: (String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
@@ -73,8 +73,6 @@ internal fun PdfReaderScreen(
             insetsController.hide(systemBars)
         }
 
-        val params = viewModel.screenArgs
-        val uri = params.uri
         val annotationsLazyListState = rememberLazyListState()
         val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -142,7 +140,7 @@ internal fun PdfReaderScreen(
 
                 is PdfReaderViewEffect.ShowPdfPlainReader -> {
                     viewModel.removeFragment()
-                    navigateToPdfPlainReader(consumedEffect.params)
+                    navigateToPdfPlainReader(consumedEffect.encodedFilPath)
                 }
 
                 is PdfReaderViewEffect.ShowPdfColorPicker -> {
@@ -222,7 +220,6 @@ internal fun PdfReaderScreen(
                     annotationsLazyListState = annotationsLazyListState,
                     thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
-                    uri = uri,
                 )
             } else {
                 PdfReaderPhoneMode(
@@ -233,7 +230,6 @@ internal fun PdfReaderScreen(
                     annotationsLazyListState = annotationsLazyListState,
                     thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
-                    uri = uri,
                 )
             }
         }

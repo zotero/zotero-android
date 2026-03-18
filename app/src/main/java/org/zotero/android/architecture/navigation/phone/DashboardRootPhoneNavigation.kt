@@ -141,11 +141,12 @@ internal fun DashboardRootPhoneNavigation(
             navigateToScanBarcode = navigation::toScanBarcode,
             navigateToSingleCitation = navigation::toSingleCitation,
             navigateToCitationBibliographyExport = navigation::toCitBibExport,
-            onShowPdf = { pdfScreenParams ->
+            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
                 navigation.toPdfScreen(
                     context = context,
                     pdfScreenParams = pdfScreenParams,
-                    wasPspdfkitInitialized = wasPspdfkitInitialized
+                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
             isTablet = false
@@ -162,11 +163,12 @@ internal fun DashboardRootPhoneNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-            onShowPdf = { pdfScreenParams ->
+            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
                 navigation.toPdfScreen(
                     context = context,
                     wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenParams = pdfScreenParams
+                    pdfScreenParams = pdfScreenParams,
+                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
         )

@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader.modes
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +24,6 @@ internal fun PdfReaderTabletMode(
     annotationsLazyListState: LazyListState,
     thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
-    uri: Uri,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = viewState.showSideBar, transitionSpec = {
@@ -56,7 +54,6 @@ internal fun PdfReaderTabletMode(
         }
 
         PdfReaderPspdfKitBox(
-            uri = uri,
             viewState = viewState,
             vMInterface = vMInterface,
         )
