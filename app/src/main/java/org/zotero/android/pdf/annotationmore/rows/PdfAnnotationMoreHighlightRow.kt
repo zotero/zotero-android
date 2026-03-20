@@ -14,13 +14,16 @@ internal fun PdfAnnotationMoreHighlightRow(
     viewState: PdfAnnotationMoreViewState,
     viewModel: PdfAnnotationMoreViewModel,
 ) {
-    val annotationColor =
-        Color(viewState.color.toColorInt())
-    PdfAnnotationMoreHighlightText(
-        annotationColor = annotationColor,
-        viewState = viewState,
-        onValueChange = viewModel::onHighlightTextValueChange,
-    )
-    NewSettingsDivider()
-    PdfAnnotationMoreColorPicker(viewState, viewModel)
+    val colorHex = viewState.color?.colorHex
+    if (colorHex != null) {
+        val annotationColor =
+            Color(viewState.color.colorHex.toColorInt())
+        PdfAnnotationMoreHighlightText(
+            annotationColor = annotationColor,
+            viewState = viewState,
+            onValueChange = viewModel::onHighlightTextValueChange,
+        )
+        NewSettingsDivider()
+        PdfAnnotationMoreColorPicker(viewState, viewModel)
+    }
 }

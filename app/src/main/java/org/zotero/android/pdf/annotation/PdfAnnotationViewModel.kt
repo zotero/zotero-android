@@ -12,6 +12,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -22,6 +23,8 @@ import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationDeleteResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationFontSizeResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationSizeResult
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
+import org.zotero.android.pdf.data.PageColorLabelsMode
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -33,6 +36,7 @@ import javax.inject.Inject
 internal class PdfAnnotationViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+    private val defaults: Defaults,
 ) : BaseViewModel2<PdfAnnotationViewState, PdfAnnotationViewEffect>(PdfAnnotationViewState()) {
 
     private var isDeletingAnnotation = false
@@ -60,14 +64,17 @@ internal class PdfAnnotationViewModel @Inject constructor(
         }
         startObservingTheme()
 
+        val isColorLabelsEnabled = defaults.getPDFSettings().colorLabelsMode == PageColorLabelsMode.ON
+
         val annotation = args.selectedAnnotation!!
 
         val colors = AnnotationsConfig.colors(annotation.type)
-        val selectedColor = annotation.color
+        val selectedColor = PdfReaderColor.findByColorHex(colors = colors, hex = annotation.color)
         updateState {
             copy(
                 color = selectedColor,
                 colors = colors.toImmutableList(),
+                isColorLabelsEnabled = isColorLabelsEnabled,
                 annotation = annotation,
                 tags = args.selectedAnnotation.tags.toImmutableList(),
                 commentFocusText = annotation.comment,
@@ -130,7 +137,7 @@ internal class PdfAnnotationViewModel @Inject constructor(
         }
     }
 
-    fun onColorSelected(color: String) {
+    fun onColorSelected(color: PdfReaderColor) {
         updateState {
             copy(color = color)
         }
@@ -201,8 +208,9 @@ internal data class PdfAnnotationViewState(
     val annotation: org.zotero.android.pdf.data.PDFAnnotation? = null,
     val tags: ImmutableList<Tag> = persistentListOf(),
     val commentFocusText: String = "",
-    val color: String = "",
-    val colors: ImmutableList<String> = persistentListOf(),
+    val color: PdfReaderColor? = null,
+    val isColorLabelsEnabled: Boolean = false,
+    val colors: ImmutableList<PdfReaderColor> = persistentListOf(),
     val fontSize: Float = 12f,
     val size: Float = 1.0f,
 ) : ViewState

@@ -14,13 +14,17 @@ internal fun PdfAnnotationMoreUnderlineRow(
     viewState: PdfAnnotationMoreViewState,
     viewModel: PdfAnnotationMoreViewModel,
 ) {
-    val annotationColor =
-        Color(viewState.color.toColorInt())
-    PdfAnnotationMoreUnderlineText(
-        annotationColor = annotationColor,
-        viewState = viewState,
-        onValueChange = viewModel::onUnderlineTextValueChange,
-    )
-    NewSettingsDivider()
-    PdfAnnotationMoreColorPicker(viewState, viewModel)
+    val colorHex = viewState.color?.colorHex
+    if (colorHex != null) {
+        val annotationColor =
+            Color(viewState.color.colorHex.toColorInt())
+        PdfAnnotationMoreUnderlineText(
+            annotationColor = annotationColor,
+            viewState = viewState,
+            onValueChange = viewModel::onUnderlineTextValueChange,
+        )
+        NewSettingsDivider()
+        PdfAnnotationMoreColorPicker(viewState, viewModel)
+    }
+
 }

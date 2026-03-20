@@ -145,6 +145,7 @@ import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.data.PDFDatabaseAnnotation
 import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.pdf.data.PDFSettings
+import org.zotero.android.pdf.data.PageColorLabelsMode
 import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
@@ -291,7 +292,7 @@ class PdfReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationMoreSaveResult) {
         set(
-            color = result.color,
+            color = result.color.colorHex,
             lineWidth = result.lineWidth,
             fontSize = result.fontSize,
             pageLabel = result.pageLabel,
@@ -339,7 +340,7 @@ class PdfReaderViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: PdfAnnotationColorResult) {
-        setColor(key = result.annotationKey, color = result.color)
+        setColor(key = result.annotationKey, color = result.color.colorHex)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -2178,6 +2179,10 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     private fun generatePdfConfiguration(pdfSettings: PDFSettings): PdfActivityConfiguration {
+        updateState {
+            copy(isColorLabelsEnabled = pdfSettings.colorLabelsMode == PageColorLabelsMode.ON)
+        }
+
         if (!PSPDFKitPreferences.get(context).isAnnotationCreatorSet) {
             PSPDFKitPreferences.get(context).setAnnotationCreator(viewState.displayName)
         }
@@ -3699,6 +3704,7 @@ data class PdfReaderViewState(
     val showSingleCitationScreen: Boolean = false,
     val isGeneratingBibliography: Boolean = false,
     val isExportingAnnotatedPdf: Boolean = false,
+    val isColorLabelsEnabled: Boolean = false,
 ) : ViewState {
 
     fun isAnnotationSelected(annotationKey: String): Boolean {

@@ -1,3 +1,5 @@
 package org.zotero.android.pdf.annotation.data
 
-data class PdfAnnotationColorResult(val annotationKey: String, val color: String)
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
+
+data class PdfAnnotationColorResult(val annotationKey: String, val color: PdfReaderColor)

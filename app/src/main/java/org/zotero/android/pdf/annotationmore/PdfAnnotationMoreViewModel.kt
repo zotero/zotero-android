@@ -9,6 +9,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -19,6 +20,8 @@ import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreDeleteResult
 import org.zotero.android.pdf.annotationmore.data.PdfAnnotationMoreSaveResult
 import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageArgs
 import org.zotero.android.pdf.annotationmore.editpage.data.PdfAnnotationEditPageResult
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
+import org.zotero.android.pdf.data.PageColorLabelsMode
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.pdf.reader.AnnotationKey
@@ -28,6 +31,7 @@ import javax.inject.Inject
 internal class PdfAnnotationMoreViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+    private val defaults: Defaults,
 ) : BaseViewModel2<PdfAnnotationMoreViewState, PdfAnnotationMoreViewEffect>(
     PdfAnnotationMoreViewState()
 ) {
@@ -50,6 +54,8 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
         }
         startObservingTheme()
 
+        val isColorLabelsEnabled = defaults.getPDFSettings().colorLabelsMode == PageColorLabelsMode.ON
+
         val annotation = args.selectedAnnotation!!
 
         val colors = AnnotationsConfig.colors(annotation.type)
@@ -57,8 +63,9 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
             copy(
                 key = annotation.readerKey,
                 type = annotation.type,
-                color = annotation.color,
+                color = PdfReaderColor.findByColorHex(colors = colors, hex = annotation.color),
                 colors = colors,
+                isColorLabelsEnabled = isColorLabelsEnabled,
                 lineWidth = annotation.lineWidth ?: 1.0f,
                 fontSize = annotation.fontSize ?: 12f,
                 highlightText = annotation.text ?: "",
@@ -94,7 +101,7 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun onColorSelected(color: String) {
+    fun onColorSelected(color: PdfReaderColor) {
         updateState {
             copy(color = color)
         }
@@ -130,7 +137,7 @@ internal class PdfAnnotationMoreViewModel @Inject constructor(
         EventBus.getDefault().post(
             PdfAnnotationMoreSaveResult(
                 key = viewState.key!!,
-                color = viewState.color,
+                color = viewState.color!!,
                 lineWidth = viewState.lineWidth,
                 fontSize = viewState.fontSize,
                 pageLabel = viewState.pageLabel,
@@ -173,14 +180,15 @@ internal data class PdfAnnotationMoreViewState(
     val isDark: Boolean = false,
     val key: AnnotationKey? = null,
     val type: AnnotationType? = null,
-    val color: String = "",
-    val colors: List<String> = emptyList(),
+    val color: PdfReaderColor? = null,
+    val colors: List<PdfReaderColor> = emptyList(),
     val lineWidth: Float = 1.0f,
     val fontSize: Float = 12f,
     val pageLabel: String = "",
     val updateSubsequentLabels: Boolean = false,
     val highlightText: String = "",
     val underlineText: String = "",
+    val isColorLabelsEnabled: Boolean = false,
 ) : ViewState
 
 internal sealed class PdfAnnotationMoreViewEffect : ViewEffect {

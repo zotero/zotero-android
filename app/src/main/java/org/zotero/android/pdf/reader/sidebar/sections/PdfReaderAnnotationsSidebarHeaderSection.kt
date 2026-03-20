@@ -21,6 +21,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
@@ -37,7 +39,8 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
     annotation: PDFAnnotation,
     annotationColor: Color,
 ) {
-    val title = stringResource(Strings.page) + " " + annotation.pageLabel
+    val title =
+        stringResource(Strings.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
         AnnotationType.note -> Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight
@@ -66,9 +69,23 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(modifier = Modifier.weight(1f))
+        if (viewState.isColorLabelsEnabled) {
+            val colors = AnnotationsConfig.colors(annotation.type)
+            val pdfReaderColor = PdfReaderColor.findByColorHex(colors = colors, hex = annotation.color)
+            val colorTextPart = "${pdfReaderColor?.colorName}(${pdfReaderColor?.colorHex?.uppercase()})"
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = colorTextPart,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
         if (viewState.isAnnotationSelected(annotation.key)) {
             if (annotation.isZoteroAnnotation) {
+                Spacer(modifier = Modifier.weight(1f))
                 Image(
                     modifier = Modifier
                         .size(22.dp)
@@ -84,6 +101,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
             }
         }
         if (!annotation.isZoteroAnnotation) {
+            Spacer(modifier = Modifier.weight(1f))
             Image(
                 modifier = Modifier
                     .size(22.dp),

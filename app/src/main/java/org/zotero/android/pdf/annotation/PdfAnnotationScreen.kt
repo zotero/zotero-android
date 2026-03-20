@@ -36,6 +36,7 @@ import org.zotero.android.pdf.annotation.row.PdfAnnotationInkRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationNoteRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationTextRow
 import org.zotero.android.pdf.annotation.row.PdfAnnotationUnderlineRow
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
@@ -73,6 +74,7 @@ internal fun PdfAnnotationScreen(
         }
         val stateAnnotation = viewState.annotation
         val selectedColor = viewState.color
+        val  isColorLabelsEnabled = viewState.isColorLabelsEnabled
         PdfAnnotationPart(
             stateAnnotation = stateAnnotation,
             onDone = viewModel::onDone,
@@ -82,6 +84,7 @@ internal fun PdfAnnotationScreen(
             onColorSelected = viewModel::onColorSelected,
             colors = viewState.colors,
             selectedColor = selectedColor,
+            isColorLabelsEnabled = isColorLabelsEnabled,
             tags = viewState.tags,
             onTagsClicked = viewModel::onTagsClicked,
             commentFocusText = viewState.commentFocusText,
@@ -101,9 +104,10 @@ internal fun PdfAnnotationPart(
     fontSize: Float,
     onFontSizeDecrease: () -> Unit,
     onFontSizeIncrease: () -> Unit,
-    onColorSelected: (String) -> Unit,
-    colors: List<String>,
-    selectedColor: String,
+    onColorSelected: (PdfReaderColor) -> Unit,
+    colors: List<PdfReaderColor>,
+    selectedColor: PdfReaderColor?,
+    isColorLabelsEnabled: Boolean,
     tags: List<Tag>,
     onTagsClicked: () -> Unit,
     commentFocusText: String,
@@ -139,7 +143,8 @@ internal fun PdfAnnotationPart(
                     colors = colors,
                     commentFocusText = commentFocusText,
                     tags = tags,
-                    onTagsClicked = onTagsClicked
+                    onTagsClicked = onTagsClicked,
+                    isColorLabelsEnabled = isColorLabelsEnabled
                 )
 
                 AnnotationType.highlight -> PdfAnnotationHighlightRow(
@@ -150,7 +155,8 @@ internal fun PdfAnnotationPart(
                     colors = colors,
                     commentFocusText = commentFocusText,
                     tags = tags,
-                    onTagsClicked = onTagsClicked
+                    onTagsClicked = onTagsClicked,
+                    isColorLabelsEnabled = isColorLabelsEnabled
                 )
 
                 AnnotationType.ink -> PdfAnnotationInkRow(
@@ -171,7 +177,8 @@ internal fun PdfAnnotationPart(
                     colors = colors,
                     commentFocusText = commentFocusText,
                     tags = tags,
-                    onTagsClicked = onTagsClicked
+                    onTagsClicked = onTagsClicked,
+                    isColorLabelsEnabled = isColorLabelsEnabled
                 )
                 AnnotationType.underline -> PdfAnnotationUnderlineRow(
                     annotation = annotation,
@@ -181,7 +188,8 @@ internal fun PdfAnnotationPart(
                     colors = colors,
                     commentFocusText = commentFocusText,
                     tags = tags,
-                    onTagsClicked = onTagsClicked
+                    onTagsClicked = onTagsClicked,
+                    isColorLabelsEnabled = isColorLabelsEnabled
                 )
                 AnnotationType.text -> PdfAnnotationTextRow(
                     annotation = annotation,
@@ -192,7 +200,8 @@ internal fun PdfAnnotationPart(
                     colors = colors,
                     selectedColor = selectedColor,
                     tags = tags,
-                    onTagsClicked = onTagsClicked
+                    onTagsClicked = onTagsClicked,
+                    isColorLabelsEnabled = isColorLabelsEnabled
                 )
             }
         }

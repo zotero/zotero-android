@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import org.zotero.android.pdf.annotation.blocks.PdfAnnotationColorPicker
 import org.zotero.android.pdf.annotation.sections.PdfAnnotationCommentSection
 import org.zotero.android.pdf.annotation.sections.PdfAnnotationTagsSection
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
@@ -11,9 +12,10 @@ import org.zotero.android.sync.Tag
 @Composable
 internal fun PdfAnnotationNoteRow(
     annotation: PDFAnnotation,
-    colors: List<String>,
-    onColorSelected: (color: String) -> Unit,
-    selectedColor: String,
+    colors: List<PdfReaderColor>,
+    onColorSelected: (color: PdfReaderColor) -> Unit,
+    selectedColor: PdfReaderColor?,
+    isColorLabelsEnabled: Boolean,
     tags: List<Tag>,
     onTagsClicked: () -> Unit,
     commentFocusText: String,
@@ -30,7 +32,8 @@ internal fun PdfAnnotationNoteRow(
         PdfAnnotationColorPicker(
             colors = colors,
             onColorSelected = onColorSelected,
-            selectedColor = selectedColor
+            selectedColor = selectedColor,
+            isColorLabelsEnabled = isColorLabelsEnabled
         )
         NewSettingsDivider()
         PdfAnnotationTagsSection(

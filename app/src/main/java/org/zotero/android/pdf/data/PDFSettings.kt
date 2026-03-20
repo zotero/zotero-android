@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.data
 
-
 enum class PageScrollMode {
  JUMP, CONTINUOUS
 }
@@ -23,6 +22,10 @@ enum class PageAppearanceMode {
     LIGHT, DARK, AUTOMATIC
 }
 
+enum class PageColorLabelsMode {
+    OFF, ON
+}
+
 
 data class PDFSettings(
     var transition: PageScrollMode,
@@ -30,6 +33,7 @@ data class PDFSettings(
     var direction: PageScrollDirection,
     var pageFitting: PageFitting,
     var appearanceMode: PageAppearanceMode,
+    var colorLabelsMode: PageColorLabelsMode,
     var idleTimerDisabled: Boolean,
 ) {
     companion object {
@@ -40,6 +44,7 @@ data class PDFSettings(
                 direction = PageScrollDirection.HORIZONTAL,
                 pageFitting = PageFitting.FIT,
                 appearanceMode = PageAppearanceMode.AUTOMATIC,
+                colorLabelsMode = PageColorLabelsMode.OFF,
                 idleTimerDisabled = false
             )
         }

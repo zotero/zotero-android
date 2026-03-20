@@ -49,5 +49,11 @@ internal fun PdfSettingsTable(
             selectedOption = viewState.selectedAppearanceOption,
             optionSelected = viewModel::onOptionSelected
         )
+        pdfSettingsSettingRow(
+            titleResId = Strings.pdf_settings_color_labels,
+            options = viewState.colorLabelsOptions,
+            selectedOption = viewState.selectedColorLabelOption,
+            optionSelected = viewModel::onOptionSelected
+        )
     }
 }

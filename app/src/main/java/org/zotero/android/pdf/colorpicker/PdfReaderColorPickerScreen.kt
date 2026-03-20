@@ -62,7 +62,8 @@ internal fun PdfReaderColorPickerScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(0.7f).fillMaxWidth(),
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
             ) {
                 ColorPicker(viewState, viewModel)
@@ -104,16 +105,26 @@ private fun ColorPicker(
     viewState: PdfReaderColorPickerViewState,
     viewModel: PdfReaderColorPickerViewModel
 ) {
-    val selectedColor = viewState.selectedColor
-    if (selectedColor != null) {
-        FlowRow(
-            modifier = Modifier.padding(horizontal = 10.dp),
-        ) {
-            viewState.colors.forEach { listColorHex ->
-                FilterCircle(
-                    hex = listColorHex,
-                    isSelected = listColorHex == selectedColor,
-                    onClick = { viewModel.onColorSelected(listColorHex) })
+    Column {
+        val selectedColor = viewState.selectedColor
+        if (selectedColor != null) {
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 10.dp),
+            ) {
+                viewState.colors.forEach { itemColor ->
+                    FilterCircle(
+                        hex = itemColor.colorHex,
+                        isSelected = itemColor == selectedColor,
+                        onClick = { viewModel.onColorSelected(itemColor) })
+                }
+            }
+            if (viewState.isColorLabelsEnabled) {
+                Text(
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                    text = "${selectedColor.colorName}(${selectedColor.colorHex.uppercase()})",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
             }
         }
     }

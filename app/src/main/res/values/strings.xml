@@ -71,5 +71,8 @@
 
     <string name="items_generating_cit">Generating Citation</string>
 
+    <string name="pdf_settings_color_labels">Color Labels</string>
+    <string name="pdf_settings_color_labels_on">On</string>
+    <string name="pdf_settings_color_labels_off">Off</string>
 
 </resources>

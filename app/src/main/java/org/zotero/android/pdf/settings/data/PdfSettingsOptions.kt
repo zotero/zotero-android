@@ -21,4 +21,7 @@ enum class PdfSettingsOptions(@StringRes val optionStringId: Int) {
     AppearanceLight(Strings.pdf_settings_appearance_light_mode),
     AppearanceDark(Strings.pdf_settings_appearance_dark_mode),
     AppearanceAutomatic(Strings.pdf_settings_appearance_auto),
+
+    ColorLabelsOn(Strings.pdf_settings_color_labels_on),
+    ColorLabelsOff(Strings.pdf_settings_color_labels_off),
 }

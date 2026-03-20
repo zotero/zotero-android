@@ -1,10 +1,11 @@
 package org.zotero.android.pdf.annotationmore.data
 
+import org.zotero.android.pdf.colorpicker.data.PdfReaderColor
 import org.zotero.android.pdf.reader.AnnotationKey
 
 data class PdfAnnotationMoreSaveResult(
     val key: AnnotationKey,
-    val color: String,
+    val color: PdfReaderColor,
     val lineWidth: Float,
     val fontSize: Float,
     val pageLabel: String,

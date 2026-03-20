@@ -15,6 +15,7 @@ import org.zotero.android.architecture.require
 import org.zotero.android.pdf.ARG_PDF_SETTINGS_SCREEN
 import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.pdf.data.PageAppearanceMode
+import org.zotero.android.pdf.data.PageColorLabelsMode
 import org.zotero.android.pdf.data.PageFitting
 import org.zotero.android.pdf.data.PageLayoutMode
 import org.zotero.android.pdf.data.PageScrollDirection
@@ -67,7 +68,8 @@ internal class PdfSettingsViewModel @Inject constructor(
                     selectedAppearanceOption = convert(pdfSettings.appearanceMode),
                     selectedPageFittingOption = convert(pdfSettings.pageFitting),
                     selectedPageModeOption = convert(pdfSettings.pageMode),
-                    selectedScrollDirectionOption = convert(pdfSettings.direction)
+                    selectedScrollDirectionOption = convert(pdfSettings.direction),
+                    selectedColorLabelOption = convert(pdfSettings.colorLabelsMode)
                 )
             }
         }
@@ -78,7 +80,13 @@ internal class PdfSettingsViewModel @Inject constructor(
             PageScrollDirection.HORIZONTAL -> PdfSettingsOptions.ScrollDirectionHorizontal
             PageScrollDirection.VERTICAL -> PdfSettingsOptions.ScrollDirectionVertical
         }
+    }
 
+    private fun convert(direction: PageColorLabelsMode): PdfSettingsOptions {
+        return when (direction) {
+            PageColorLabelsMode.ON -> PdfSettingsOptions.ColorLabelsOn
+            PageColorLabelsMode.OFF -> PdfSettingsOptions.ColorLabelsOff
+        }
     }
 
     private fun convert(pageMode: PageLayoutMode): PdfSettingsOptions {
@@ -140,6 +148,12 @@ internal class PdfSettingsViewModel @Inject constructor(
                     copy(selectedAppearanceOption = option)
                 }
             }
+
+            PdfSettingsOptions.ColorLabelsOn, PdfSettingsOptions.ColorLabelsOff -> {
+                updateState {
+                    copy(selectedColorLabelOption = option)
+                }
+            }
         }
         updatePdfSettings(option)
 
@@ -194,6 +208,12 @@ internal class PdfSettingsViewModel @Inject constructor(
             PdfSettingsOptions.AppearanceAutomatic -> {
                 pdfSettings.appearanceMode = PageAppearanceMode.AUTOMATIC
             }
+            PdfSettingsOptions.ColorLabelsOff -> {
+                pdfSettings.colorLabelsMode = PageColorLabelsMode.OFF
+            }
+            PdfSettingsOptions.ColorLabelsOn -> {
+                pdfSettings.colorLabelsMode = PageColorLabelsMode.ON
+            }
         }
     }
 
@@ -213,6 +233,7 @@ internal data class PdfSettingsViewState(
     val selectedScrollDirectionOption: PdfSettingsOptions = PdfSettingsOptions.ScrollDirectionHorizontal,
     val selectedPageFittingOption: PdfSettingsOptions = PdfSettingsOptions.PageFittingFit,
     val selectedAppearanceOption: PdfSettingsOptions = PdfSettingsOptions.AppearanceAutomatic,
+    val selectedColorLabelOption: PdfSettingsOptions = PdfSettingsOptions.ColorLabelsOff,
     val isDark: Boolean = false,
 ) : ViewState {
 
@@ -237,6 +258,11 @@ internal data class PdfSettingsViewState(
         PdfSettingsOptions.AppearanceLight,
         PdfSettingsOptions.AppearanceDark,
         PdfSettingsOptions.AppearanceAutomatic
+    )
+
+    val colorLabelsOptions = listOf(
+        PdfSettingsOptions.ColorLabelsOn,
+        PdfSettingsOptions.ColorLabelsOff,
     )
 
 }
