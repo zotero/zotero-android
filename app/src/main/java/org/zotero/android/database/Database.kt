@@ -1,6 +1,7 @@
 package org.zotero.android.database
 
 import io.realm.DynamicRealm
+import io.realm.DynamicRealmObject
 import io.realm.FieldAttribute
 import io.realm.RealmConfiguration
 import io.realm.RealmMigration
@@ -32,6 +33,7 @@ import org.zotero.android.database.objects.RUser
 import org.zotero.android.database.objects.RVersions
 import org.zotero.android.database.objects.RWebDavDeletion
 import org.zotero.android.database.requests.key
+import org.zotero.android.sync.LinkMode
 import java.io.File
 import java.util.Date
 
@@ -139,21 +141,38 @@ class Database {
                     continue
                 }
 
-                val rawType = item.getString("rawType")
-                val fields = item.getList("fields")
-
-                val contentType = if (rawType == ItemTypes.attachment) fields.where().key(
-                    FieldKeys.Item.Attachment.contentType
-                ).findFirst()?.getString("value") else null
                 dbRow.setString(
-                    "typeIconName", ItemTypes.iconName(
-                        rawType = rawType,
-                        contentType = contentType
-                    )
+                    "typeIconName", typeIconName(item)
                 )
             }
 
         }
+
+        private fun typeIconName(item: DynamicRealmObject): String {
+            val rawType = item.getString("rawType")
+            val fields = item.getList("fields")
+
+            var data: ItemTypes.AttachmentData? = null
+            if (rawType == ItemTypes.attachment) {
+                val contentType = fields.where().key(FieldKeys.Item.Attachment.contentType)
+                    .findFirst()?.getString("value")
+                if (contentType != null) {
+                    val linkMode =
+                        fields.where().key(FieldKeys.Item.Attachment.linkMode).findFirst()?.getString("value")
+                            ?.let {
+                                LinkMode.from(it)
+                            }
+                    if (linkMode != null) {
+                        data = ItemTypes.AttachmentData(
+                            contentType = contentType,
+                            linked = linkMode == LinkMode.linkedFile
+                        )
+                    }
+                }
+            }
+            return ItemTypes.iconName(rawType, attachmentData = data)
+        }
+
 
         fun bundledDataConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()

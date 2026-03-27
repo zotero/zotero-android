@@ -14,6 +14,7 @@ import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
 import timber.log.Timber
+import java.util.Date
 import kotlin.math.roundToInt
 
 data class PDFDatabaseAnnotation(
@@ -78,9 +79,17 @@ data class PDFDatabaseAnnotation(
             val rotation = item.fields.where().key(FieldKeys.Item.Annotation.Position.rotation).findFirst()?.value?.toDoubleOrNull() ?: return null
             return rotation.roundToInt()
         }
+    override val isSyncable: Boolean
+        get() = true
 
     override val sortIndex: String
         get() = this.item.annotationSortIndex
+
+    override val dateAdded: Date
+        get() = item.dateAdded
+
+    override val dateModified: Date
+        get() = item.dateModified
 
     override val tags: List<Tag>
         get() {
@@ -105,7 +114,7 @@ data class PDFDatabaseAnnotation(
                 if (!library.metadataEditable) {
                     return AnnotationEditability.notEditable
                 }
-                return if (isAuthor(currentUserId = currentUserId)) AnnotationEditability.editable else AnnotationEditability.deletable
+                return if (isAuthor(currentUserId = currentUserId)) AnnotationEditability.editable else AnnotationEditability.notEditable
             }
         }
     }

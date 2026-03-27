@@ -16,6 +16,12 @@ import org.zotero.android.screens.collectionpicker.data.CollectionPickerArgs
 import org.zotero.android.screens.collections.data.CollectionsArgs
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
 import org.zotero.android.screens.filter.data.FilterArgs
+import org.zotero.android.screens.htmlepub.annotation.data.HtmlEpubAnnotationArgs
+import org.zotero.android.screens.htmlepub.annotationmore.data.HtmlEpubAnnotationMoreArgs
+import org.zotero.android.screens.htmlepub.annotationmore.editpage.data.HtmlEpubAnnotationEditPageArgs
+import org.zotero.android.screens.htmlepub.colorpicker.data.HtmlEpubReaderColorPickerArgs
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArgs
+import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchArgs
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
@@ -52,6 +58,12 @@ object ScreenArguments {
     lateinit var citBibExportArgs: CitBibExportArgs
     lateinit var settingsCslLocalePickerArgs: SettingsCslLocalePickerArgs
     lateinit var settingsStylePickerArgs: SettingsStylePickerArgs
+    lateinit var htmlEpubReaderSearchArgs: HtmlEpubReaderSearchArgs
+    lateinit var htmlEpubFilterArgs: HtmlEpubFilterArgs
+    lateinit var htmlEpubAnnotationMoreArgs: HtmlEpubAnnotationMoreArgs
+    lateinit var htmlEpubAnnotationEditPageArgs: HtmlEpubAnnotationEditPageArgs
+    lateinit var htmlEpubReaderColorPickerArgs: HtmlEpubReaderColorPickerArgs
+    lateinit var htmlEpubAnnotationArgs: HtmlEpubAnnotationArgs
 
     var allItemsCollectionsLibsNavDirectionLeftToRight = true
 }

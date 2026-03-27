@@ -31,6 +31,7 @@ internal fun ItemDetailsScreen(
     onBack: () -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String, String) -> Unit,
+    onShowHtmlOrEpub: (String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onPickFile: () -> Unit,
 ) {
@@ -77,6 +78,10 @@ internal fun ItemDetailsScreen(
 
                 is ItemDetailsViewEffect.NavigateToPdfScreen -> {
                     onShowPdf(consumedEffect.params, consumedEffect.encodedFilePath)
+                }
+
+                is ItemDetailsViewEffect.NavigateToHtmlEpubReaderScreen -> {
+                    onShowHtmlOrEpub(consumedEffect.params)
                 }
 
                 is ItemDetailsViewEffect.OpenWebpage -> {

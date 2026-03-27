@@ -26,7 +26,7 @@ class AttachmentCreator {
     }
 
     companion object {
-        private val mainAttachmentContentTypes = setOf("text/html", "application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain")
+        private val mainAttachmentContentTypes = setOf("text/html", "application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain", "application/epub+zip")
 
         fun mainAttachment(item: RItem, fileStorage: FileStore, defaults: Defaults): Attachment? {
             if (item.rawType == ItemTypes.attachment) {
@@ -462,10 +462,11 @@ class AttachmentCreator {
         private fun priority(contentType: String): Int {
             return when (contentType) {
                 "application/pdf" -> 0
-                "text/html" -> 1
-                "image/gif", "image/jpeg", "image/png" -> 2
-                "text/plain" -> 3
-                else -> 4
+                "application/epub+zip" -> 1
+                "text/html" -> 2
+                "image/gif", "image/jpeg", "image/png" -> 3
+                "text/plain" -> 4
+                else -> 5
             }
         }
     }

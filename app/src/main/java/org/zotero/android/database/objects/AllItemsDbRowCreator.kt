@@ -4,6 +4,7 @@ import io.realm.Realm
 import org.zotero.android.database.requests.isTrash
 import org.zotero.android.database.requests.items
 import org.zotero.android.database.requests.key
+import org.zotero.android.sync.LinkMode
 
 class AllItemsDbRowCreator {
 
@@ -12,19 +13,35 @@ class AllItemsDbRowCreator {
         fun createOrUpdate(item: RItem, database: Realm): AllItemsDbRow? {
             val dbRow = item.allItemsDbRow ?: database.createEmbeddedObject(AllItemsDbRow::class.java, item, "allItemsDbRow")
 
-            val contentType = if (item.rawType == ItemTypes.attachment) item.fields.where().key(
-                FieldKeys.Item.Attachment.contentType
-            ).findFirst()?.value else null
-
-            dbRow.typeIconName = ItemTypes.iconName(
-                rawType = item.rawType,
-                contentType = contentType
-            )
+            val typeIconName = typeIconName(item)
+            dbRow.typeIconName = typeIconName
             dbRow.title = item.displayTitle
             dbRow.subtitle = subtitle(item = item)
             val hasNote = hasNote(item = item)
             dbRow.hasNote = hasNote
             return dbRow
+        }
+
+        private fun typeIconName(item: RItem): String {
+            var data: ItemTypes.AttachmentData? = null
+            if (item.rawType == ItemTypes.attachment) {
+                val contentType = item.fields.where().key(FieldKeys.Item.Attachment.contentType)
+                    .findFirst()?.value
+                if (contentType != null) {
+                    val linkMode =
+                        item.fields.where().key(FieldKeys.Item.Attachment.linkMode).findFirst()
+                            ?.let {
+                                LinkMode.from(it.value)
+                            }
+                    if (linkMode != null) {
+                        data = ItemTypes.AttachmentData(
+                            contentType = contentType,
+                            linked = linkMode == LinkMode.linkedFile
+                        )
+                    }
+                }
+            }
+            return ItemTypes.iconName(item.rawType, attachmentData = data)
         }
 
         private fun subtitle(item: RItem): String {

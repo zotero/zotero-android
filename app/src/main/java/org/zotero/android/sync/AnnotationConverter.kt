@@ -330,6 +330,8 @@ class AnnotationConverter {
             val comment = annotation.contents?.let { it.trim().trim { it == '\n' } } ?: ""
             val sortIndex = sortIndex(annotation, boundingBoxConverter = boundingBoxConverter)
             val date = Date()
+            val dateAdded = annotation.createdDate ?: date
+            val dateModified = annotation.modifiedDate ?: date
 
             val author: String
             if (isAuthor) {
@@ -400,7 +402,8 @@ class AnnotationConverter {
                 text = text,
                 fontSize = fontSize,
                 rotation = rotation,
-                dateModified = date,
+                dateAdded = dateAdded,
+                dateModified = dateModified,
                 sortIndex = sortIndex,
                 author = author,
                 isAuthor = isAuthor,

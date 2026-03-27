@@ -1,5 +1,6 @@
 package org.zotero.android.database.objects
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.realm.Realm
 import io.realm.RealmList
@@ -18,11 +19,14 @@ import org.zotero.android.database.requests.baseKey
 import org.zotero.android.database.requests.key
 import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
+import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.helpers.formatter.sqlFormat
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LinkMode
+import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.Date
 
@@ -603,6 +607,117 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             }
             return parameters
         }
+
+    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, JsonObject>?
+        get()
+    {
+        var type: AnnotationType? = null
+        val position = JsonObject()
+        var text: String? = null
+        var sortIndex: String? = null
+        var pageLabel: String? = null
+        var comment: String? = null
+        var color: String? = null
+        val unknown = mutableMapOf<String, String>()
+
+        for (field in this.fields) {
+            when {
+                field.baseKey == FieldKeys.Item.Annotation.position -> {
+                    if (field.value.firstOrNull() == '{') {
+                        position.add(
+                            field.key,
+                            ZoteroApplication.instance.gson.fromJson(
+                                field.value,
+                                JsonObject::class.java
+                            )
+                        )
+                    } else {
+                        position.addProperty(field.key, field.value)
+                    }
+                }
+                field.key == FieldKeys.Item.Annotation.type && field.baseKey == null -> {
+                    try {
+                        type = AnnotationType.valueOf(field.value)
+                    } catch (_: Exception) {
+                        throw Exception("RItem: invalid annotation type when creating annotation, type=${field.value}")
+                    }
+                }
+                field.key == FieldKeys.Item.Annotation.text && field.baseKey == null -> {
+                    text = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.sortIndex && field.baseKey == null -> {
+                    sortIndex = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.pageLabel && field.baseKey == null -> {
+                    pageLabel = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.comment && field.baseKey == null -> {
+                    comment = field.value
+                }
+                field.key == FieldKeys.Item.Annotation.color && field.baseKey == null -> {
+                    color = field.value
+                }
+                else -> {
+                    unknown[field.key] = field.value
+                }
+            }
+        }
+        if (type == null || sortIndex == null || position.isEmpty()) {
+            Timber.e("RItem: can't create html/epub annotation, type=${type};sortIndex=${sortIndex};position=${position}")
+            return null
+        }
+
+        val tags = this.tags!!.map { typedTag ->
+            val color = if ((typedTag.tag?.color ?: "").isEmpty()) null else typedTag.tag?.color
+            Tag(name = typedTag.tag?.name ?: "", color = color ?: "")
+        }
+
+        val json: JsonObject = JsonObject().apply {
+            addProperty("id",this@RItem.key)
+            addProperty("dateCreated", iso8601WithFractionalSeconds.format(dateAdded))
+            addProperty("dateModified", iso8601WithFractionalSeconds.format(dateModified))
+            addProperty("authorName", (createdBy?.username ?: ""))
+            addProperty("type", type.name)
+            addProperty("text", (text ?: ""))
+            addProperty("sortIndex", sortIndex)
+            addProperty("pageLabel", (pageLabel ?: ""))
+            addProperty("comment", (comment ?: ""))
+            addProperty("color", (color ?: ""))
+            add("position", position)
+
+            val arr = JsonArray()
+             tags.forEach {
+                 arr.add(JsonObject().apply {
+                     addProperty("name", it.name)
+                     addProperty("color", it.color)
+                 })
+            }
+            add("tags", arr)
+        }
+
+        for ((key, value) in unknown.iterator()) {
+            json.addProperty(key, value)
+        }
+
+        val annotation = HtmlEpubAnnotation(
+            key = this.key,
+            type = type,
+            pageLabel = pageLabel ?: "",
+            position = position,
+            author = createdBy?.username ?: "",
+            isAuthor = true,
+            color = color ?: "",
+            comment = comment ?: "",
+            text = text,
+            sortIndex = sortIndex,
+            dateAdded = dateAdded,
+            dateModified = dateModified,
+            tags = tags
+        )
+
+        return annotation to json
+    }
+
 
 }
 

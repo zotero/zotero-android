@@ -1,0 +1,181 @@
+package org.zotero.android.screens.htmlepub.annotationmore
+
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.ScreenArguments
+import org.zotero.android.architecture.ViewEffect
+import org.zotero.android.architecture.ViewState
+import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
+import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.screens.htmlepub.annotationmore.data.HtmlEpubAnnotationMoreArgs
+import org.zotero.android.screens.htmlepub.annotationmore.data.HtmlEpubAnnotationMoreDeleteResult
+import org.zotero.android.screens.htmlepub.annotationmore.data.HtmlEpubAnnotationMoreSaveResult
+import org.zotero.android.screens.htmlepub.annotationmore.editpage.data.HtmlEpubAnnotationEditPageArgs
+import org.zotero.android.screens.htmlepub.annotationmore.editpage.data.HtmlEpubAnnotationEditPageResult
+import javax.inject.Inject
+
+@HiltViewModel
+internal class HtmlEpubAnnotationMoreViewModel @Inject constructor(
+    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
+    private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+) : BaseViewModel2<HtmlEpubAnnotationMoreViewState, HtmlEpubAnnotationMoreViewEffect>(
+    HtmlEpubAnnotationMoreViewState()
+) {
+
+    private lateinit var args: HtmlEpubAnnotationMoreArgs
+    private var pdfReaderThemeCancellable: Job? = null
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: HtmlEpubAnnotationEditPageResult) {
+        updateState {
+            copy(pageLabel = result.pageLabel)
+        }
+    }
+
+    fun init(args: HtmlEpubAnnotationMoreArgs) = initOnce {
+        this.args = args
+        EventBus.getDefault().register(this)
+        updateState {
+            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+        }
+        startObservingTheme()
+
+        val annotation = args.selectedAnnotation!!
+
+        val colors = AnnotationsConfig.colors(annotation.type)
+        updateState {
+            copy(
+                key = annotation.key,
+                type = annotation.type,
+                color = annotation.color,
+                colors = colors,
+                fontSize = annotation.fontSize ?: 12f,
+                highlightText = annotation.text ?: "",
+                pageLabel = annotation.pageLabel,
+                underlineText = annotation.text ?: "",
+            )
+        }
+    }
+
+    fun setOsTheme(isDark: Boolean) {
+        pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+    }
+
+    private fun startObservingTheme() {
+        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .onEach { data ->
+                updateState {
+                    copy(isDark = data!!.isDark)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onPageClicked() {
+        ScreenArguments.htmlEpubAnnotationEditPageArgs = HtmlEpubAnnotationEditPageArgs(
+            pageLabel = viewState.pageLabel,
+        )
+        triggerEffect(HtmlEpubAnnotationMoreViewEffect.NavigateToPageEditScreen)
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
+    }
+
+    fun onColorSelected(color: String) {
+        updateState {
+            copy(color = color)
+        }
+    }
+
+    fun onDeleteAnnotation() {
+        EventBus.getDefault().post(
+            HtmlEpubAnnotationMoreDeleteResult(
+                key = viewState.key!!,
+            )
+        )
+        triggerEffect(HtmlEpubAnnotationMoreViewEffect.Back)
+    }
+
+    fun onSave() {
+        val text = when(viewState.type) {
+            AnnotationType.highlight -> {
+                viewState.highlightText
+            }
+            AnnotationType.underline -> {
+                viewState.underlineText
+            }
+            else -> {
+                ""
+            }
+        }
+        EventBus.getDefault().post(
+            HtmlEpubAnnotationMoreSaveResult(
+                key = viewState.key!!,
+                type = viewState.type!!,
+                color = viewState.color,
+                lineWidth = viewState.lineWidth,
+                pageLabel = viewState.pageLabel,
+                updateSubsequentLabels = viewState.updateSubsequentLabels,
+                text = text
+            )
+        )
+        triggerEffect(HtmlEpubAnnotationMoreViewEffect.Back)
+
+    }
+
+    fun onFontSizeDecrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize - 0.5f)
+        }
+
+    }
+
+    fun onFontSizeIncrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize + 0.5f)
+        }
+    }
+
+    fun onUnderlineTextValueChange(newText: String) {
+        updateState {
+            copy(underlineText = newText)
+        }
+    }
+
+    fun onHighlightTextValueChange(newText: String) {
+        updateState {
+            copy(highlightText = newText)
+        }
+    }
+
+}
+
+internal data class HtmlEpubAnnotationMoreViewState(
+    val isDark: Boolean = false,
+    val key: String? = null,
+    val type: AnnotationType? = null,
+    val color: String = "",
+    val colors: List<String> = emptyList(),
+    val lineWidth: Float = 1.0f,
+    val fontSize: Float = 12f,
+    val pageLabel: String = "",
+    val updateSubsequentLabels: Boolean = false,
+    val highlightText: String = "",
+    val underlineText: String = "",
+) : ViewState
+
+internal sealed class HtmlEpubAnnotationMoreViewEffect : ViewEffect {
+    object NavigateToPageEditScreen : HtmlEpubAnnotationMoreViewEffect()
+    object Back : HtmlEpubAnnotationMoreViewEffect()
+}
