@@ -41,7 +41,7 @@ internal class SettingsPageTurningViewModel @Inject constructor(
             updateState {
                 copy(
                     pageTurning = defaults.isButtonPageTurning(),
-                    keepZoom = defaults.isButtonPageTurning()
+                    keepZoom = defaults.isKeepZoom()
                 )
             }
         }

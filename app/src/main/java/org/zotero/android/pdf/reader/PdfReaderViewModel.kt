@@ -411,6 +411,7 @@ class PdfReaderViewModel @Inject constructor(
             return
         }
         pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
+        // Double page changing is needed otherwise there is an ugly jump.
         pdfFragment.setPageIndex(currentPageIndex + pageOffset, false)
         if (defaults.isKeepZoom()) {
             pdfFragment.zoomTo(zoomArea, currentPageIndex + pageOffset, 0)
