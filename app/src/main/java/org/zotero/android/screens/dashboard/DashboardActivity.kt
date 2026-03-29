@@ -193,21 +193,15 @@ internal class DashboardActivity : BaseActivity() {
 
     }
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        Timber.d("DEBUGBOOX KeyCode: $keyCode, ScanCode: ${event?.scanCode}, Action: ${event?.action}")
-        Timber.d("DEBUGBOOX page turning enabled? ${defaults.isButtonPageTurning()}")
         if (!defaults.isButtonPageTurning()) {
             return super.onKeyDown(keyCode, event)
         }
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                // Post event to navigate to next page
-                Timber.d("DEBUGBOOX VOLUME up")
                 EventBus.getDefault().post(EventBusConstants.PdfReaderNavigateNextPage)
                 true
             }
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                // Post event to navigate to previous page
-                Timber.d("DEBUGBOOX VOLUME down")
                 EventBus.getDefault().post(EventBusConstants.PdfReaderNavigatePreviousPage)
                 true
             }
