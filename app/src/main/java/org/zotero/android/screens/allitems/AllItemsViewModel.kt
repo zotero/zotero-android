@@ -25,6 +25,7 @@ import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
@@ -80,6 +81,7 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.filter.data.UpdateFiltersEvent
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
@@ -250,7 +252,17 @@ internal class AllItemsViewModel @Inject constructor(
                             )
                         }
 
-                        "text/html", "text/plain" -> {
+                        "text/html", "application/epub+zip" -> {
+                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
+                            showHtmlEpub(
+                                file = file,
+                                key = attachment.key,
+                                parentKey = parentKey,
+                                library = library
+                            )
+                        }
+
+                        "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                             triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
@@ -280,18 +292,19 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
 
+
+
     private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = file.toUri()
         val pdfReaderArgs = PdfReaderArgs(
             key = key,
             parentKey = parentKey,
             library = library,
             page = null,
             preselectedAnnotationKey = null,
-            uri = uri,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(pdfReaderArgs, StandardCharsets.UTF_8)
-        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params))
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(AllItemsViewEffect.NavigateToPdfScreen(params, encodedFilePath))
     }
 
     private fun openFile(file: File, mime: String) {
@@ -1076,24 +1089,28 @@ internal class AllItemsViewModel @Inject constructor(
         val styleId = defaults.getQuickCopyStyleId()
         val localeId = defaults.getQuickCopyCslLocaleId()
         val citationController = citationControllerProvider.get()
-        val session = citationController.startSession(
-            itemIds = selectedItemKeys,
-            libraryId = this@AllItemsViewModel.library.identifier,
-            styleId = styleId,
-            localeId = localeId
-        )
-        val html = citationController.bibliography(session, format = Format.html)
-        val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
-            html to null
-        } else {
-            html to citationController.bibliography(session = session, format = Format.text)
+        try {
+            val session = citationController.startSession(
+                itemIds = selectedItemKeys,
+                libraryId = this@AllItemsViewModel.library.identifier,
+                styleId = styleId,
+                localeId = localeId
+            )
+            val html = citationController.bibliography(session, format = Format.html)
+            val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
+                html to null
+            } else {
+                html to citationController.bibliography(session = session, format = Format.text)
+            }
+            if (resultPair.second != null) {
+                context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+            } else {
+                context.copyPlainTextToClipboard(resultPair.first)
+            }
+        }catch (e: Exception) {
+            Timber.e(e, "PdfReaderViewModel: can't create bibliography")
+            context.longToast(e.toString())
         }
-        if (resultPair.second != null) {
-            context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
-        } else {
-            context.copyPlainTextToClipboard(resultPair.first)
-        }
-
         updateState {
             copy(isGeneratingBibliography = false)
         }
@@ -1207,42 +1224,49 @@ internal class AllItemsViewModel @Inject constructor(
         val exportAsHtml = defaults.isQuickCopyAsHtml()
 
         val citationController = citationControllerProvider.get()
+        try {
+            val session = citationController.startSession(
+                itemIds = itemIds,
+                libraryId = this@AllItemsViewModel.library.identifier,
+                styleId = styleId,
+                localeId = localeId
+            )
+            val locator: String = locatorsList[0]
+            val locatorValue = ""
 
-        val session = citationController.startSession(
-            itemIds = itemIds,
-            libraryId = this@AllItemsViewModel.library.identifier,
-            styleId = styleId,
-            localeId = localeId
-        )
-        val locator: String = locatorsList[0]
-        val locatorValue = ""
+            val preview = citationController.citation(
+                session = session,
+                label = locator,
+                locator = locatorValue,
+                omitAuthor = false,
+                format = Format.html,
+                showInWebView = true
+            )
 
-        val preview = citationController.citation(
-            session = session,
-            label = locator,
-            locator = locatorValue,
-            omitAuthor = false,
-            format = Format.html,
-            showInWebView = true
-        )
+            if (preview.isEmpty()) {
+                return@withContext
+            }
 
-        if (preview.isEmpty()) {
-            return@withContext
+            if (exportAsHtml) {
+                context.copyPlainTextToClipboard(preview)
+                return@withContext
+            }
+            val text = citationController.citation(
+                session = session,
+                label = locator,
+                locator = locatorValue,
+                omitAuthor = false,
+                format = Format.text,
+                showInWebView = false
+            )
+            context.copyHtmlToClipboard(preview, text = text)
+        }catch (e: Exception) {
+            Timber.e(e, "AllItemsViewModel: can't copy multiple citations")
+            viewModelScope.launch {
+                context.longToast(e.toString())
+            }
         }
 
-        if (exportAsHtml) {
-            context.copyPlainTextToClipboard(preview)
-            return@withContext
-        }
-        val text = citationController.citation(
-            session = session,
-            label = locator,
-            locator = locatorValue,
-            omitAuthor = false,
-            format = Format.text,
-            showInWebView = false
-        )
-        context.copyHtmlToClipboard(preview, text = text)
     }
 
     fun onShare() {
@@ -1252,6 +1276,18 @@ internal class AllItemsViewModel @Inject constructor(
         )
 
         triggerEffect(AllItemsViewEffect.ShowCitationBibliographyExportEffect)
+    }
+
+    private fun showHtmlEpub(file: File, key: String, parentKey: String?, library: Library) {
+        val uri = Uri.fromFile(file)
+        val htmlEpubReaderArgs = HtmlEpubReaderArgs(
+            key = key,
+            parentKey = parentKey,
+            library = library,
+            uri = uri,
+        )
+        val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
+        triggerEffect(AllItemsViewEffect.NavigateToHtmlEpubReaderScreen(params))
     }
 
 
@@ -1328,7 +1364,8 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     data class ShowZoteroWebView(val url: String): AllItemsViewEffect()
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
-    data class NavigateToPdfScreen(val params: String) : AllItemsViewEffect()
+    data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : AllItemsViewEffect()
+    data class NavigateToHtmlEpubReaderScreen(val params: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()

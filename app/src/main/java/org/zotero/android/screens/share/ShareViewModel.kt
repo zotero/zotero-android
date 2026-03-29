@@ -150,12 +150,19 @@ internal class ShareViewModel @Inject constructor(
                     libraries = Libraries.all,
                     retryAttempt = 0
                 )
-                val rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
+                var rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
 
                 val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
-                    var networkResult: Response<*>? = nonZoteroApi.sendHead(rawAttachmentType.url)
-                    if (networkResult?.code() == 405) {
+                    val redirectDetectorResponse = nonZoteroNoRedirectApi.sendWebViewGet(rawAttachmentType.url, emptyMap())
+                    var networkResult: Response<*>?
+                    if (redirectDetectorResponse.code() in 301..399) {
                         networkResult = nonZoteroApi.sendWebViewGet(rawAttachmentType.url, emptyMap())
+                        rawAttachmentType = rawAttachmentType.copy(url = networkResult.raw().request.url.toString())
+                    } else {
+                        networkResult = nonZoteroApi.sendHead(rawAttachmentType.url)
+                        if (networkResult.code() == 405) {
+                            networkResult = nonZoteroApi.sendWebViewGet(rawAttachmentType.url, emptyMap())
+                        }
                     }
                     networkResult
                 } else {

@@ -243,9 +243,19 @@ private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
                 linkType == Attachment.FileLinkType.linkedFile -> {
                     return when (style) {
                         Style.detail, Style.shareExtension, Style.lookup -> {
-                            return when (contentType) {
-                                "application/pdf" -> Drawables.attachment_detail_linked_pdf
-                                else -> Drawables.attachment_detail_linked_document
+                            when(contentType) {
+                                "application/pdf" -> {
+                                   return Drawables.item_type_pdflinked
+                                }
+                                "text/html" -> {
+                                    return Drawables.item_type_webpagelinked
+                                }
+                                "application/epub+zip" -> {
+                                    return Drawables.item_type_epub_linked
+                                }
+                                else -> {
+                                    return Drawables.attachment_detail_linked_document
+                                }
                             }
                         }
                         Style.list -> {
@@ -276,7 +286,6 @@ private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
                                 }
                             }
                         }
-
                         "application/pdf" -> {
                             when (style) {
                                 Style.detail, Style.shareExtension, Style.lookup -> {
@@ -287,6 +296,28 @@ private fun mainAsset(attachmentType: Attachment.Kind, style: Style): Int {
                                 }
                             }
                         }
+                        "text/html" -> {
+                            when (style) {
+                                Style.detail, Style.shareExtension, Style.lookup -> {
+                                    Drawables.item_type_webpagesnapshot
+                                }
+
+                                Style.list -> {
+                                    Drawables.attachment_list_web_page_snapshot
+                                }
+                            }
+                        }
+                        "application/epub+zip" -> {
+                                when (style) {
+                                    Style.detail, Style.shareExtension, Style.lookup -> {
+                                        Drawables.item_type_epub
+                                    }
+                                    Style.list -> {
+                                        Drawables.attachment_list_epub
+                                    }
+                                }
+                            }
+
                         else -> {
                             when (style) {
                                 Style.detail, Style.shareExtension, Style.lookup -> {

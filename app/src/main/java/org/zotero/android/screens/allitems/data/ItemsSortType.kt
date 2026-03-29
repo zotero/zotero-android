@@ -140,7 +140,7 @@ data class ItemsSortType(
                 }
                 Field.year -> {
                     return arrayOf(
-                        "hasPublisher",
+                        "hasParsedYear",
                         "parsedYear",
                         "sortTitle"
                     ) to arrayOf(Sort.DESCENDING, getCurrentSort(), Sort.ASCENDING)

@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader
 
-import android.net.Uri
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -26,7 +25,6 @@ import org.zotero.android.screens.allitems.GeneratingBibliographyLoadingIndicato
 
 @Composable
 internal fun PdfReaderPspdfKitBox(
-    uri: Uri,
     vMInterface: PdfReaderVMInterface,
     viewState: PdfReaderViewState
 ) {
@@ -77,7 +75,7 @@ internal fun PdfReaderPspdfKitBox(
                 )
             }
     ) {
-        PdfReaderPspdfKitView(uri = uri, vMInterface = vMInterface)
+        PdfReaderPspdfKitView(vMInterface = vMInterface)
         if (viewState.showCreationToolbar) {
             PdfReaderAnnotationCreationToolbar(
                 viewState = viewState,

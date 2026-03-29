@@ -24,7 +24,9 @@ internal fun ShareRecognizeItemSection(retrieveMetadataState: RetrieveMetadataSt
             iconSize = 22.dp,
             typeIconName = ItemTypes.iconName(
                 rawType = ItemTypes.attachment,
-                contentType = "pdf"
+                attachmentData = ItemTypes.AttachmentData(
+                    contentType = "pdf", linked = false
+                )
             )
         )
     }

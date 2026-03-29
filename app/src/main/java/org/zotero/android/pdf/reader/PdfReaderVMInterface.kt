@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader
 
-import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.FragmentManager
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -19,7 +18,6 @@ interface PdfReaderVMInterface {
     var toolColors: MutableMap<AnnotationTool, String>
 
     fun init(
-        uri: Uri,
         annotationMaxSideSize: Int,
         containerId: Int,
         fragmentManager: FragmentManager,

@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -52,7 +51,6 @@ import com.pspdfkit.preferences.PSPDFKitPreferences
 import com.pspdfkit.ui.PdfFragment
 import com.pspdfkit.ui.PdfUiFragment
 import com.pspdfkit.ui.PdfUiFragmentBuilder
-import com.pspdfkit.ui.annotations.OnAnnotationSelectedListener
 import com.pspdfkit.ui.search.SearchResultHighlighter
 import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
@@ -84,6 +82,7 @@ import org.json.JSONObject
 import org.zotero.android.ZoteroApplication
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
+import org.zotero.android.androidx.content.longToast
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
 import org.zotero.android.architecture.BaseViewModel2
@@ -125,6 +124,7 @@ import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.key
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.ARG_PDF_SCREEN
+import org.zotero.android.pdf.ARG_PDF_SCREEN_ENCODED_FILE_PATH_ARG
 import org.zotero.android.pdf.annotation.data.PdfAnnotationArgs
 import org.zotero.android.pdf.annotation.data.PdfAnnotationColorResult
 import org.zotero.android.pdf.annotation.data.PdfAnnotationCommentResult
@@ -160,7 +160,6 @@ import org.zotero.android.pdf.reader.AnnotationKey.Kind
 import org.zotero.android.pdf.reader.pdfsearch.data.OnPdfReaderSearch
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchArgs
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchResultSelected
-import org.zotero.android.pdf.reader.plainreader.data.PdfPlainReaderArgs
 import org.zotero.android.pdf.reader.sidebar.data.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderOutlineOptionsWithChildren
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions
@@ -218,7 +217,7 @@ class PdfReaderViewModel @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
     private val progressHandler: SyncProgressHandler,
     private val fileStore: FileStore,
-    stateHandle: SavedStateHandle,
+    private val stateHandle: SavedStateHandle,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -226,7 +225,6 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var annotationBoundingBoxConverter: AnnotationBoundingBoxConverter
     private var containerId = 0
     private lateinit var originalFile: File
-    private lateinit var originalUri: Uri
     private lateinit var dirtyFile: File
     private lateinit var dirtyUri: Uri
     private lateinit var pdfUiFragment: PdfUiFragment
@@ -274,9 +272,15 @@ class PdfReaderViewModel @Inject constructor(
     @Inject
     lateinit var citationControllerProvider: Provider<CitationController>
 
-    val screenArgs: PdfReaderArgs by lazy {
+    private val screenArgs: PdfReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_PDF_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)
+    }
+
+    private val screenFileArgs: File by lazy {
+        val filePathString = stateHandle.get<String>(ARG_PDF_SCREEN_ENCODED_FILE_PATH_ARG).require()
+        val file = File(filePathString)
+        file
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -449,7 +453,6 @@ class PdfReaderViewModel @Inject constructor(
     data class OnPageChangedEvent(val pageIndex: Int)
 
     override fun init(
-        uri: Uri,
         annotationMaxSideSize: Int,
         containerId: Int,
         fragmentManager: FragmentManager,
@@ -457,7 +460,7 @@ class PdfReaderViewModel @Inject constructor(
         backgroundColor: androidx.compose.ui.graphics.Color,
     ) {
         viewModelScope.launch {
-            initFileUris(uri)
+            initFileUris()
             restartDisableForceScreenOnTimer()
             this@PdfReaderViewModel.isTablet = isTablet
             this@PdfReaderViewModel.fragmentManager = fragmentManager
@@ -516,11 +519,10 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    private suspend fun initFileUris(uri: Uri) = withContext(dispatcher) {
-        this@PdfReaderViewModel.originalUri = uri
-        this@PdfReaderViewModel.originalFile = uri.toFile()
+    private suspend fun initFileUris() = withContext(dispatcher) {
+        this@PdfReaderViewModel.originalFile = screenFileArgs
         fileStore.readerDirtyPdfFolder().deleteRecursively()
-        val dirtyFile = fileStore.pdfReaderDirtyFile(originalFile.name)
+        val dirtyFile = fileStore.pdfReaderDirtyFile(this@PdfReaderViewModel.originalFile.name)
         FileHelper.copyFile(this@PdfReaderViewModel.originalFile, dirtyFile)
         this@PdfReaderViewModel.dirtyFile = dirtyFile
         this@PdfReaderViewModel.dirtyUri = dirtyFile.toUri()
@@ -769,9 +771,10 @@ class PdfReaderViewModel @Inject constructor(
             }
             false
         }
-        pdfFragment.addOnAnnotationSelectedListener(object : OnAnnotationSelectedListener {
+        pdfFragment.addOnAnnotationSelectedListener(object :
+            AnnotationManager.OnAnnotationSelectedListener {
             override fun onPrepareAnnotationSelection(
-                p0: AnnotationSelectionController?,
+                p0: AnnotationSelectionController,
                 annotation: Annotation,
                 p2: Boolean
             ): Boolean {
@@ -796,11 +799,10 @@ class PdfReaderViewModel @Inject constructor(
                     key = AnnotationKey(key = key, type = type),
                 )
             }
-
-            override fun onAnnotationDeselected(annotation: Annotation, reselected: Boolean) {
-                deselectSelectedAnnotation(annotation)
-            }
         })
+        pdfFragment.addOnAnnotationDeselectedListener { annotation, _ ->
+            deselectSelectedAnnotation(annotation)
+        }
     }
 
     private fun initState() {
@@ -2250,9 +2252,9 @@ class PdfReaderViewModel @Inject constructor(
 //            .setSelectedAnnotationResizeEnabled(false)
             .autosaveEnabled(false)
             .scrollbarsEnabled(true)
-            .defaultToolbarEnabled(false)
-            .documentTitleOverlayEnabled(false)
-            .stylusOnDetectionEnabled(true)
+            .disableDefaultToolbar()
+            .hideDocumentTitleOverlay()
+            .enableStylusOnDetection(true)
             .hideUserInterfaceWhenCreatingAnnotations(false)
             .setUserInterfaceViewMode(UserInterfaceViewMode.USER_INTERFACE_VIEW_MODE_MANUAL)
             .build()
@@ -2484,9 +2486,8 @@ class PdfReaderViewModel @Inject constructor(
     }
 
     fun navigateToPlainReader() {
-        val pdfPlainReaderArgs = PdfPlainReaderArgs(this.originalUri)
-        val params = navigationParamsMarshaller.encodeObjectToBase64(pdfPlainReaderArgs)
-        triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader(params))
+        val encodedFilePath = Uri.encode(this.originalFile.absolutePath)
+        triggerEffect(PdfReaderViewEffect.ShowPdfPlainReader(encodedFilePath))
 
     }
 
@@ -3636,24 +3637,28 @@ class PdfReaderViewModel @Inject constructor(
             val citationController = citationControllerProvider.get()
             val libraryId = viewState.library.identifier
             val selectedItemKeys = setOf(viewState.parentKey!!)
-            val session = citationController.startSession(
-                itemIds = selectedItemKeys,
-                libraryId = libraryId,
-                styleId = styleId,
-                localeId = localeId
-            )
-            val html = citationController.bibliography(session, format = Format.html)
-            val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
-                html to null
-            } else {
-                html to citationController.bibliography(session = session, format = Format.text)
+            try {
+                val session = citationController.startSession(
+                    itemIds = selectedItemKeys,
+                    libraryId = libraryId,
+                    styleId = styleId,
+                    localeId = localeId
+                )
+                val html = citationController.bibliography(session, format = Format.html)
+                val resultPair: Pair<String, String?> = if (defaults.isQuickCopyAsHtml()) {
+                    html to null
+                } else {
+                    html to citationController.bibliography(session = session, format = Format.text)
+                }
+                if (resultPair.second != null) {
+                    context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
+                } else {
+                    context.copyPlainTextToClipboard(resultPair.first)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "PdfReaderViewModel: can't create bibliography")
+                context.longToast(e.toString())
             }
-            if (resultPair.second != null) {
-                context.copyHtmlToClipboard(resultPair.first, text = resultPair.second!!)
-            } else {
-                context.copyPlainTextToClipboard(resultPair.first)
-            }
-
             updateState {
                 copy(isGeneratingBibliography = false)
             }
@@ -3750,7 +3755,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object EnableForceScreenOn : PdfReaderViewEffect()
     object ShowPdfFilters : PdfReaderViewEffect()
     data class ShowPdfSettings(val params: String) : PdfReaderViewEffect()
-    data class ShowPdfPlainReader(val params: String): PdfReaderViewEffect()
+    data class ShowPdfPlainReader(val encodedFilPath: String): PdfReaderViewEffect()
     object ShowPdfAnnotationMore: PdfReaderViewEffect()
     object ShowPdfColorPicker: PdfReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): PdfReaderViewEffect()

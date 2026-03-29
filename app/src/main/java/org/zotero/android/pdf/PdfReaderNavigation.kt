@@ -31,6 +31,7 @@ import org.zotero.android.screens.citation.singlecitation.SingleCitationScreen
 import java.io.File
 
 internal const val ARG_PDF_SCREEN = "pdfScreenArgs"
+internal const val ARG_PDF_SCREEN_ENCODED_FILE_PATH_ARG = "pdfScreenEncodedFilePathArg"
 internal const val ARG_PDF_SETTINGS_SCREEN = "pdfSettingsScreen"
 internal const val ARG_PDF_PLAIN_READER_SCREEN = "pdfPlainReaderScreen"
 
@@ -160,7 +161,7 @@ private fun NavGraphBuilder.pdfScreen(
     onExportPdf: (file: File) -> Unit,
     navigateToPdfFilter: () -> Unit,
     navigateToPdfSettings: (args: String) -> Unit,
-    navigateToPdfPlainReader: (args: String) -> Unit,
+    navigateToPdfPlainReader: (String) -> Unit,
     navigateToPdfColorPicker: () -> Unit,
     navigateToPdfAnnotation: () -> Unit,
     navigateToPdfAnnotationMore: () -> Unit,
@@ -168,9 +169,10 @@ private fun NavGraphBuilder.pdfScreen(
     navigateToSingleCitationScreen: () -> Unit,
 ) {
     composable(
-        route = "${PdfReaderDestinations.PDF_SCREEN}/{$ARG_PDF_SCREEN}",
+        route = "${PdfReaderDestinations.PDF_SCREEN}/{$ARG_PDF_SCREEN}?uri={$ARG_PDF_SCREEN_ENCODED_FILE_PATH_ARG}",
         arguments = listOf(
             navArgument(ARG_PDF_SCREEN) { type = NavType.StringType },
+            navArgument(ARG_PDF_SCREEN_ENCODED_FILE_PATH_ARG) { type = NavType.StringType },
         ),
     ) {
         PdfReaderScreen(
@@ -203,9 +205,10 @@ fun ZoteroNavigation.toPdfScreen(
     context: Context,
     wasPspdfkitInitialized: Boolean,
     pdfScreenParams: String,
+    pdfScreenEncodedFilePathParam: String,
 ) {
     if (wasPspdfkitInitialized) {
-        navController.navigate("${PdfReaderDestinations.PDF_SCREEN}/$pdfScreenParams")
+        navController.navigate("${PdfReaderDestinations.PDF_SCREEN}/$pdfScreenParams?uri=$pdfScreenEncodedFilePathParam")
     } else {
         context.longToast("Unable to open a PDF. PSPDFKIT was not initialized")
     }
@@ -223,8 +226,8 @@ private fun ZoteroNavigation.toSingleCitationScreen() {
     navController.navigate(PdfReaderDestinations.SINGLE_CITATION_PICKER_DIALOG)
 }
 
-private fun ZoteroNavigation.toPdfPlainReader(args: String) {
-    navController.navigate("${PdfReaderDestinations.PDF_PLAIN_READER}/$args")
+private fun ZoteroNavigation.toPdfPlainReader(encodedFilPath: String) {
+    navController.navigate("${PdfReaderDestinations.PDF_PLAIN_READER}/$encodedFilPath")
 }
 
 private fun ZoteroNavigation.toPdfAnnotationNavigation() {

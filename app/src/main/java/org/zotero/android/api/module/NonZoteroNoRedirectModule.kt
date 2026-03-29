@@ -8,6 +8,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.zotero.android.api.NonZoteroNoRedirectApi
 import org.zotero.android.api.annotations.ForNonZoteroNoRedirectsApi
+import org.zotero.android.api.interceptors.DetectRedirectInterceptor
 import org.zotero.android.api.interceptors.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -48,7 +49,9 @@ object NonZoteroNoRedirectModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .followRedirects(false)
+            .followSslRedirects(false)
             .addInterceptor(HttpLoggingInterceptor.createInterceptor(Level.BASIC))
+            .addInterceptor(DetectRedirectInterceptor())
             .build()
     }
 

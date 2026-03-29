@@ -2,7 +2,7 @@ object Libs {
 
     const val androidJUnitRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-    const val nutrient = "io.nutrient:nutrient:10.10.1"
+    const val nutrient = "com.pspdfkit:pspdfkit:2024.4.0"
     const val googleServices = "com.google.gms:google-services:4.4.3"
     const val realmGradlePlugin = "io.realm:realm-gradle-plugin:10.19.0"
     const val materialDesign = "com.google.android.material:material:1.12.0"

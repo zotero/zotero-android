@@ -44,6 +44,8 @@ import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.filter.FilterScreenPhone
+import org.zotero.android.screens.htmlepub.htmlEpubReaderNavScreensForPhone
+import org.zotero.android.screens.htmlepub.toHtmlEpubScreen
 import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.settings.settingsNavScreens
@@ -141,11 +143,17 @@ internal fun DashboardRootPhoneNavigation(
             navigateToScanBarcode = navigation::toScanBarcode,
             navigateToSingleCitation = navigation::toSingleCitation,
             navigateToCitationBibliographyExport = navigation::toCitBibExport,
-            onShowPdf = { pdfScreenParams ->
+            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
                 navigation.toPdfScreen(
                     context = context,
                     pdfScreenParams = pdfScreenParams,
-                    wasPspdfkitInitialized = wasPspdfkitInitialized
+                    wasPspdfkitInitialized = wasPspdfkitInitialized,
+                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
+                )
+            },
+            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
+                navigation.toHtmlEpubScreen(
+                    htmlEpubParams = htmlEpubReaderArgs
                 )
             },
             isTablet = false
@@ -162,11 +170,17 @@ internal fun DashboardRootPhoneNavigation(
             onOpenFile = onOpenFile,
             onOpenWebpage = onOpenWebpage,
             onPickFile = { onPickFile(EventBusConstants.FileWasSelected.CallPoint.ItemDetails) },
-            onShowPdf = { pdfScreenParams ->
+            onShowPdf = { pdfScreenParams, pdfScreenEncodedFilePathParam ->
                 navigation.toPdfScreen(
                     context = context,
                     wasPspdfkitInitialized = wasPspdfkitInitialized,
-                    pdfScreenParams = pdfScreenParams
+                    pdfScreenParams = pdfScreenParams,
+                    pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
+                )
+            },
+            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
+                navigation.toHtmlEpubScreen(
+                    htmlEpubParams = htmlEpubReaderArgs
                 )
             },
         )
@@ -258,6 +272,11 @@ internal fun DashboardRootPhoneNavigation(
         ) {
             SingleCitationScreen(onBack = navigation::onBack)
         }
+        htmlEpubReaderNavScreensForPhone(
+            navigation = navigation,
+            navigateToTagPicker = navigation::toTagPicker,
+            onOpenWebpage = onOpenWebpage,
+        )
     }
 }
 

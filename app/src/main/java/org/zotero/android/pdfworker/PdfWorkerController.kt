@@ -140,7 +140,7 @@ class PdfWorkerController @Inject constructor(
         val contentType = getContentTypeFromResponse(itemResponse) ?: ""
         val typeIconName = ItemTypes.iconName(
             rawType = itemResponse.rawType,
-            contentType = contentType
+            attachmentData = ItemTypes.AttachmentData(contentType = contentType, linked = false)
         )
         return Pair(title, typeIconName)
     }

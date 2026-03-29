@@ -9,6 +9,9 @@ data class TagPickerResult(val tags: List<Tag>, val callPoint: CallPoint) {
         AddNote,
         PdfReaderScreen,
         PdfReaderAnnotationScreen,
-        ShareScreen
+        ShareScreen,
+        HtmlEpubReaderScreen,
+        HtmlEpubReaderAnnotationScreen,
+        HtmlEpubFilter,
     }
 }
