@@ -391,26 +391,28 @@ class PdfReaderViewModel @Inject constructor(
     fun onEvent(event: EventBusConstants.PdfReaderNavigateNextPage) {
         val zoomArea = RectF()
         val currentPageIndex = pdfFragment.pageIndex
-        val check_worked = pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
-        if (!check_worked) {
-                pdfFragment.setPageIndex(currentPageIndex + 1, false)
-                return
+        if (currentPageIndex == pdfFragment.pageCount-1) {
+            return
         }
+        pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
         pdfFragment.setPageIndex(currentPageIndex + 1, false)
-        pdfFragment.zoomTo(zoomArea, currentPageIndex + 1, 0)
+        if (defaults.isKeepZoom()) {
+            pdfFragment.zoomTo(zoomArea, currentPageIndex + 1, 0)
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: EventBusConstants.PdfReaderNavigatePreviousPage) {
         val zoomArea = RectF()
         val currentPageIndex = pdfFragment.pageIndex
-        val check_worked = pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
-        if (!check_worked) {
-                pdfFragment.setPageIndex(currentPageIndex - 1, false)
-                return
+        if (currentPageIndex == 0) {
+            return
         }
+        pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
         pdfFragment.setPageIndex(currentPageIndex - 1, false)
-        pdfFragment.zoomTo(zoomArea, currentPageIndex - 1, 0)
+        if (defaults.isKeepZoom()) {
+            pdfFragment.zoomTo(zoomArea, currentPageIndex - 1, 0)
+        }
     }
 
     private fun update(pdfSettings: PDFSettings) {
