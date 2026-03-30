@@ -20,6 +20,16 @@ internal fun SettingsAccountFileSyncingWebDavItems(
     SettingsAccountFileSyncingUsernameItem(viewModel = viewModel, viewState = viewState)
     Spacer(modifier = Modifier.height(12.dp))
     SettingsAccountFileSyncingPasswordItem(viewModel = viewModel, viewState = viewState)
+    
+    // Warning for HTTP on local network
+    if (viewState.scheme == org.zotero.android.webdav.data.WebDavScheme.http) {
+        Spacer(modifier = Modifier.height(12.dp))
+        org.zotero.android.uicomponents.NewSettingsText(
+            text = androidx.compose.ui.res.stringResource(id = org.zotero.android.uicomponents.Strings.settings_webdav_http_public_network_warning),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.error
+        )
+    }
+
     if (viewState.isVerifyingWebDav) {
         SettingsAccountFileSyncingVerificationInProgressItem(
             viewModel = viewModel,
