@@ -74,6 +74,8 @@ open class Defaults @Inject constructor(
     private val webDavUrl = "webDavUrl"
     private val webDavScheme = "webDavScheme"
     private val webDavPassword = "webDavPassword"
+    private val buttonPageTurning = "buttonPageTurning"
+    private val keepZoom = "keepZoom"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -518,6 +520,22 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(this@Defaults.exportOutputMode, json) }
     }
 
+    fun setButtonPageTurning(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(buttonPageTurning, newValue) }
+    }
+
+    fun isButtonPageTurning(): Boolean {
+        return sharedPreferences.getBoolean(buttonPageTurning, false)
+    }
+
+    fun setKeepZoom(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(keepZoom, newValue) }
+    }
+
+    fun isKeepZoom(): Boolean {
+        return sharedPreferences.getBoolean(keepZoom, false)
+    }
+    
     fun getLastHtmlEpubReaderCommitHash(): String {
         return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
     }
@@ -570,6 +588,9 @@ open class Defaults @Inject constructor(
         setQuickCopyStyleId("http://www.zotero.org/styles/chicago-notes-bibliography")
         setExportOutputMethod(CitBibExportOutputMethod.copy)
         setExportOutputMode(CitBibExportOutputMode.bibliography)
+
+        setButtonPageTurning(true)
+        setKeepZoom(false)
     }
 
 }

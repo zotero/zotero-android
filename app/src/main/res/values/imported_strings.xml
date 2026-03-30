@@ -343,6 +343,9 @@
     <string name="settings_full_sync_start">Start Full Sync Debugging</string>
     <string name="settings_full_sync_other_in_progress">Sync is already in progress. Wait for it to finish.</string>
     <string name="settings_full_sync_in_progress">A full sync is in progress. Wait for it to finish and post the Debug ID to the Zotero Forums.</string>
+    <string name="settings_page_turning_title">Page turning</string>
+    <string name="settings_page_turning_button">Page turning using volume up/down</string>
+    <string name="settings_keep_zoom_button">Keep zoom position on page turning</string>
     <string name="shareext_save">Save to Zotero</string>
     <string name="shareext_decoding_attachment">Searching for items</string>
     <string name="shareext_translation_item_selection">Choose an item</string>
