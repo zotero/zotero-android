@@ -47,6 +47,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                 dispatchers = dispatchers,
                 context = context,
                 webView = webView,
+                fileStore = fileStore,
             )
             initialize(file)
             Timber.i("HtmlEpubReaderWebCallChainExecutor: initialization succeeded")
@@ -296,7 +297,7 @@ class HtmlEpubReaderWebCallChainExecutor(
     suspend fun loadDocument(data: DocumentData) {
         Timber.i("HtmlEpubReaderViewModel: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
-        var javascript = "javascript:createView({ type: '${data.type}', url: 'file://${data.file.absolutePath.replace("'", "\'")}', annotations: '${data.annotationsJson}'"
+        var javascript = "javascript:createView({ type: '${data.type}', url: 'https://appassets.androidplatform.net/local/${data.file.name}', annotations: '${data.annotationsJson}'"
         val key = data.selectedAnnotationKey
         val page = data.page
         if (key != null) {

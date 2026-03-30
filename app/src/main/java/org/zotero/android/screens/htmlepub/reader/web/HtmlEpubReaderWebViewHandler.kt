@@ -8,17 +8,22 @@ import android.webkit.WebChromeClient
 import android.webkit.WebMessage
 import android.webkit.WebMessagePort
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewAssetLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.files.FileStore
 import timber.log.Timber
+
 
 class HtmlEpubReaderWebViewHandler(
     dispatchers: Dispatchers,
     private val context: Context,
-    private val webView: WebView
+    private val webView: WebView,
+    private val fileStore: FileStore,
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
@@ -29,7 +34,11 @@ class HtmlEpubReaderWebViewHandler(
     var referrer: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
-    fun load(url: String, onWebViewLoadPage: () -> Unit, processWebViewResponses: ((message: WebMessage) -> Unit)? = null,) {
+    fun load(
+        url: String,
+        onWebViewLoadPage: () -> Unit,
+        processWebViewResponses: ((message: WebMessage) -> Unit)? = null
+    ) {
         uiMainCoroutineScope.launch {
             webView.settings.javaScriptEnabled = true
             webView.settings.allowFileAccess = true
@@ -50,7 +59,18 @@ class HtmlEpubReaderWebViewHandler(
                     return super.onConsoleMessage(consoleMessage)
                 }
             }
+            val assetLoader = WebViewAssetLoader.Builder()
+                .addPathHandler("/local/", WebViewAssetLoader.InternalStoragePathHandler(context, fileStore.runningHtmlEpubReaderDirectory()))
+                .build()
             webView.webViewClient = object : WebViewClient() {
+                override fun shouldInterceptRequest(
+                    view: WebView?,
+                    request: WebResourceRequest
+                ): WebResourceResponse? {
+                    val url = request.url ?: return null
+                    return assetLoader.shouldInterceptRequest(url)
+                }
+
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
                     request: WebResourceRequest?
