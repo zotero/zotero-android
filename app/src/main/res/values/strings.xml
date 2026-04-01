@@ -71,5 +71,7 @@
 
     <string name="items_generating_cit">Generating Citation</string>
 
+    <string name="errors_login_session_timed_out">Login session timed out</string>
+
 
 </resources>

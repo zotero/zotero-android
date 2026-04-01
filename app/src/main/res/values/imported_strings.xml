@@ -64,11 +64,6 @@
     <string name="onboarding_share">&lt;b&gt;Tap to collect&lt;/b&gt; articles and books directly from the web, including their PDFs and full metadata.</string>
     <string name="onboarding_sign_in">Sign In</string>
     <string name="onboarding_create_account">Sign Up</string>
-    <string name="login_username">Username</string>
-    <string name="login_password">Password</string>
-    <string name="login_email">Email</string>
-    <string name="login_repeat_password">Repeat password</string>
-    <string name="login_forgot_password">Forgot Password?</string>
     <string name="libraries_my_library">My Library</string>
     <string name="libraries_group_libraries">Group Libraries</string>
     <string name="libraries_delete_question">Do you really want to delete “%s”?</string>
@@ -373,9 +368,6 @@
     <string name="errors_attachments_too_many_requests">Our server is limiting your access. Try waiting for a while.</string>
     <string name="errors_attachments_forbidden_webdav">You don’t have permission to access %s on the WebDAV server.</string>
     <string name="errors_attachments_generic_filename">the file</string>
-    <string name="errors_login_invalid_password">Invalid password</string>
-    <string name="errors_login_invalid_username">Invalid username</string>
-    <string name="errors_login_invalid_credentials">Invalid username or password</string>
     <string name="errors_libraries_cantLoad">Unable to load libraries</string>
     <string name="errors_collections_empty_name">Please enter a collection name</string>
     <string name="errors_collections_save_failed">Unable to save collection</string>

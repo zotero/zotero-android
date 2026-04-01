@@ -1,6 +1,5 @@
 package org.zotero.android.sync
 
-import org.zotero.android.database.requests.InitializeCustomLibrariesDbRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -14,8 +13,10 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.CleanupUnusedTags
-import org.zotero.android.files.FileStore
+import org.zotero.android.database.requests.InitializeCustomLibrariesDbRequest
+import org.zotero.android.websocket.APIWebSocketController
 import org.zotero.android.websocket.ChangeWsResponse
+import org.zotero.android.websocket.ChangeWsResponseKindEventStream
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,11 +30,10 @@ class UserControllers @Inject constructor(
     private val objectUserChangeEventStream: ObjectUserChangeEventStream,
     private val applicationScope: ApplicationScope,
     private val dispatchers: Dispatchers,
-    private val webSocketController: WebSocketController,
+    private val webSocketController: APIWebSocketController,
     private val changeWsResponseKindEventStream: ChangeWsResponseKindEventStream,
     private val fileDownloader: AttachmentDownloader,
     private val defaults: Defaults,
-    private val fileStore: FileStore
 ) {
 
     private lateinit var changeObserver: ObjectUserChangeObserver
@@ -44,8 +44,8 @@ class UserControllers @Inject constructor(
 
     var isControllerInitialized: Boolean = false
 
-    fun init(userId: Long) {
-        createDbStorage(userId)
+    fun init(userId: Long, sessionId: String?) {
+        createDbStorage(userId = userId, sessionId = sessionId)
         syncController.init(
             userId = userId,
             syncDelayIntervals = DelayIntervals.sync,
@@ -107,8 +107,8 @@ class UserControllers @Inject constructor(
                 }
             }
         }.launchIn(applicationScope)
-
-        this.webSocketController.connect(apiKey = apiKey, completed = ::onWebSocketConnectionEstablished)
+        this.webSocketController.init()
+        this.webSocketController.connect(subscriptionValue = apiKey, completed = ::onWebSocketConnectionEstablished)
 
     }
 
@@ -124,15 +124,12 @@ class UserControllers @Inject constructor(
 
     fun disableSync(apiKey: String?) {
         this.syncScheduler.cancelSync()
-        this.webSocketController.disconnect(apiKey = apiKey)
+        this.webSocketController.disconnect(subscriptionValue = apiKey)
         runningSyncJob?.cancel()
     }
 
-    private fun createDbStorage(userId: Long) {
-        dbWrapperMain.initWithMainConfiguration(userId)
+    private fun createDbStorage(userId: Long, sessionId: String?) {
+        dbWrapperMain.initWithMainConfiguration(userId, sessionId)
     }
 
-    fun maybeReconnectWebsockets() {
-        webSocketController.maybeReconnect(completed = ::onWebSocketConnectionEstablished)
-    }
 }

@@ -14,8 +14,8 @@ class DbWrapperMain @Inject constructor(
     lateinit var config: RealmConfiguration
     var isInitialized = false
 
-    fun initWithMainConfiguration(userId: Long) {
-        val dbFile = fileStore.dbFile(userId)
+    fun initWithMainConfiguration(userId: Long, sessionId: String?) {
+        val dbFile = fileStore.dbFile(userId, sessionId)
         this.config = Database.mainConfiguration(dbFile = dbFile)
         this.realmDbStorage = RealmDbStorage(config = config)
         isInitialized = true

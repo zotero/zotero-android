@@ -10,7 +10,9 @@ data class WsResponse(
 
         topicAdded("topicAdded"),
         topicRemoved("topicRemoved"),
-        topicUpdated("topicUpdated");
+        topicUpdated("topicUpdated"),
+
+        loginComplete("loginComplete");
 
         companion object {
             private val map = entries.associateBy(Event::n)

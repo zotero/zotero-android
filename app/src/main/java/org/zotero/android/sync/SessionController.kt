@@ -4,6 +4,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.core.StateEventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.files.FileStore
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,23 +24,32 @@ class SessionController @Inject constructor(
     fun initializeSession() {
         val apiToken = this.defaults.getApiToken()
         val userId = this.defaults.getUserId()
+        val sessionId = defaults.getSessionId()
 
         this.isInitialized = true
 
         val token = apiToken
         if (token != null && userId > 0L) {
-            this.sessionDataEventStream.emit(SessionData(userId, token))
+            this.sessionDataEventStream.emit(SessionData(
+                userId = userId,
+                apiToken = token,
+                sessionId = sessionId
+            )
+            )
         } else {
             this.sessionDataEventStream.emit(null)
         }
     }
 
     fun register(userId: Long, username: String, displayName: String, apiToken: String) {
+        val sessionId = UUID.randomUUID().toString()
+
         this.defaults.setUserId(userId)
         this.defaults.setUsername(username)
         this.defaults.setDisplayName(displayName)
+        this.defaults.setSessionId(sessionId)
         this.defaults.setApiToken(apiToken)
-        this.sessionDataEventStream.emit(SessionData(userId, apiToken))
+        this.sessionDataEventStream.emit(SessionData(userId, apiToken, sessionId))
         this.isInitialized = true
     }
 
@@ -54,4 +64,4 @@ class SessionController @Inject constructor(
 class SessionDataEventStream @Inject constructor(applicationScope: ApplicationScope) :
     StateEventStream<SessionData?>(applicationScope, null)
 
-data class SessionData(val userId: Long, val apiToken: String)
+data class SessionData(val userId: Long, val apiToken: String, val sessionId: String?)

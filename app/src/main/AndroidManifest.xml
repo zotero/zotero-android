@@ -83,11 +83,6 @@
         </activity>
 
         <activity
-            android:exported="false"
-            android:name=".screens.login.LoginActivity"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
             android:name=".sample.ui.SampleActivity"
             android:exported="false"
             android:launchMode="singleTop"
