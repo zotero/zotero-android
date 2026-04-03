@@ -146,6 +146,9 @@ internal class LoginViewModel @Inject constructor(
                             CheckLoginSessionResponse.Status.cancelled -> {
                                 stopSessionMonitoring(token)
                                 reset()
+                                viewModelScope.launch {
+                                    triggerEffect(LoginViewEffect.NavigateBack)
+                                }
                             }
                         }
                     }
