@@ -63,7 +63,7 @@ class APIWebSocketController @Inject constructor(
 
                 }
 
-                WsResponse.Event.connected, WsResponse.Event.subscriptionCreated, WsResponse.Event.subscriptionDeleted, WsResponse.Event.loginComplete -> {
+                WsResponse.Event.connected, WsResponse.Event.subscriptionCreated, WsResponse.Event.subscriptionDeleted, WsResponse.Event.loginComplete, WsResponse.Event.loginCancelled -> {
                     //no-op
                 }
             }

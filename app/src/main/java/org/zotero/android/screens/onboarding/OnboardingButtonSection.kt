@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.CustomFilledButton
 import org.zotero.android.uicomponents.button.CustomOutlineButton
@@ -21,7 +22,7 @@ import org.zotero.android.uicomponents.button.CustomTextButton
 @Composable
 internal fun OnboardingButtonSection(
     pagerState: PagerState,
-    onSignInClick: () -> Unit,
+    onSignInOrSignUpClick: (RequestKind) -> Unit,
     uriHandler: UriHandler,
 ) {
     Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -38,7 +39,9 @@ internal fun OnboardingButtonSection(
                 .widthIn(max = 400.dp)
                 .height(56.dp),
             text = stringResource(id = Strings.onboarding_sign_in),
-            onClick = onSignInClick
+            onClick = {
+                onSignInOrSignUpClick(RequestKind.login)
+            }
         )
         Spacer(modifier = Modifier.height(16.dp))
         CustomOutlineButton(
@@ -47,7 +50,7 @@ internal fun OnboardingButtonSection(
                 .widthIn(max = 400.dp)
                 .height(56.dp),
             text = stringResource(id = Strings.onboarding_create_account), onClick = {
-                uriHandler.openUri("https://www.zotero.org/user/register?app=1")
+                onSignInOrSignUpClick(RequestKind.createAccount)
             })
         Spacer(modifier = Modifier.height(8.dp))
         CustomTextButton(

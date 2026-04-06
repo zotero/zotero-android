@@ -8,10 +8,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogDynamicHeight
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.login.LoginScreen
+import org.zotero.android.screens.login.data.LoginScreenArgs
+import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 @Composable
@@ -46,16 +49,16 @@ private fun OnboardingRootNavHost(
         startDestination = OnboardingRootDestinations.ONBOARDING_SCREEN,
     ) {
 
-        val onSignInClick: () -> Unit = {
+        val onSignInOrSignUpClick: (RequestKind) -> Unit = {
             if (layoutType.isTablet()) {
-                navigation.toLoginDialog()
+                navigation.toLoginDialog(it)
             } else {
-                navigation.toLoginScreen()
+                navigation.toLoginScreen(it)
             }
         }
 
         onboardingScreen(
-            onSignInClick = onSignInClick,
+            onSignInOrSignUpClick = onSignInOrSignUpClick,
         )
         if (layoutType.isTablet()) {
             loginDialog(onBack = navController::popBackStack, navigateToDashboard = navigateToDashboard)
@@ -66,14 +69,14 @@ private fun OnboardingRootNavHost(
 }
 
 private fun NavGraphBuilder.onboardingScreen(
-    onSignInClick: () -> Unit,
+    onSignInOrSignUpClick: (RequestKind) -> Unit,
 ) {
     composable(
         route = OnboardingRootDestinations.ONBOARDING_SCREEN,
         arguments = listOf(),
     ) {
         OnboardingScreen(
-            onSignInClick = onSignInClick,
+            onSignInOrSignUpClick = onSignInOrSignUpClick,
         )
     }
 }
@@ -101,11 +104,13 @@ private fun NavGraphBuilder.loginDialog(
     }
 }
 
-private fun ZoteroNavigation.toLoginScreen() {
+private fun ZoteroNavigation.toLoginScreen(requestKind: RequestKind) {
+    ScreenArguments.loginScreenArgs = LoginScreenArgs(requestKind)
     navController.navigate(OnboardingRootDestinations.LOGIN_SCREEN)
 }
 
-private fun ZoteroNavigation.toLoginDialog() {
+private fun ZoteroNavigation.toLoginDialog(requestKind: RequestKind) {
+    ScreenArguments.loginScreenArgs = LoginScreenArgs(requestKind)
     navController.navigate(OnboardingRootDestinations.LOGIN_DIALOG)
 }
 

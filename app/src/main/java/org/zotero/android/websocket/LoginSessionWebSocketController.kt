@@ -7,7 +7,7 @@ import org.zotero.android.api.mappers.WsResponseMapper
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.websocket.mappers.LoginCompleteWsResponseMapper
-import org.zotero.android.websocket.responses.LoginCompleteWsResponse
+import org.zotero.android.websocket.responses.LoginWsResponse
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,7 +21,7 @@ class LoginSessionWebSocketController @Inject constructor(
     dispatcher = dispatcher,
     transport = transport,
 ) {
-    val loginObservable: EventStream<LoginCompleteWsResponse> = EventStream(applicationScope)
+    val loginObservable: EventStream<LoginWsResponse.Kind> = EventStream(applicationScope)
 
     companion object {
         fun topic(sessionToken: String): String {
@@ -59,9 +59,9 @@ class LoginSessionWebSocketController @Inject constructor(
         try {
             val event = wsResponseMapper.fromString(textToParse).event
             when (event) {
-                WsResponse.Event.loginComplete -> {
+                WsResponse.Event.loginComplete, WsResponse.Event.loginCancelled -> {
                     val response = loginCompleteWsResponseMapper.fromString(textToParse)
-                    loginObservable.emitAsync(response)
+                    loginObservable.emitAsync(response.kind)
                 }
 
                 WsResponse.Event.topicAdded, WsResponse.Event.topicRemoved, WsResponse.Event.topicUpdated, WsResponse.Event.connected, WsResponse.Event.subscriptionCreated, WsResponse.Event.subscriptionDeleted -> {

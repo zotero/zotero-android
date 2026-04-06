@@ -19,10 +19,12 @@ import org.zotero.android.api.AuthApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.screens.login.data.LoginError
+import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.screens.login.data.SessionStatus
 import org.zotero.android.sync.SessionController
 import org.zotero.android.uicomponents.Strings
@@ -31,6 +33,7 @@ import org.zotero.android.websocket.LoginSessionWebSocketController
 import org.zotero.android.websocket.mappers.CheckLoginSessionResponseMapper
 import org.zotero.android.websocket.mappers.CreateLoginSessionResponseMapper
 import org.zotero.android.websocket.responses.CheckLoginSessionResponse
+import org.zotero.android.websocket.responses.LoginWsResponse
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -45,6 +48,7 @@ internal class LoginViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
 ) : BaseViewModel2<LoginViewState, LoginViewEffect>(LoginViewState()) {
 
+    var requestKind: RequestKind? = null
     var sessionStatus: SessionStatus? = null
     var sessionToken: String? = null
     var loginUrl: String? = null
@@ -56,15 +60,19 @@ internal class LoginViewModel @Inject constructor(
 
     fun init(webView: WebView) {
         this.webView = webView
+
+        val screenArgs = ScreenArguments.loginScreenArgs
+        val requestKind = screenArgs.requestKind
         viewModelScope.launch {
-            login()
+            login(requestKind)
         }
     }
 
-    private suspend fun login() {
+    private suspend fun login(kind: RequestKind) {
         if (this.sessionStatus != null) {
             return
         }
+        this.requestKind = kind
         this.sessionStatus = SessionStatus.creating
         this.sessionToken = null
         this.loginUrl = null
@@ -74,17 +82,29 @@ internal class LoginViewModel @Inject constructor(
         }
 
         if (result is CustomResult.GeneralSuccess) {
-            val createLoginSessionResponse = createLoginSessionResponseMapper.fromJson(result.value!!)
+            val createLoginSessionResponse =
+                createLoginSessionResponseMapper.fromJson(result.value!!)
+
+            val finalUrl: String = when (kind) {
+                RequestKind.login -> {
+                    createLoginSessionResponse.loginUrl + "&app=1"
+                }
+
+                RequestKind.createAccount -> {
+                    "https://www.zotero.org/user/register?app=1&session=${createLoginSessionResponse.sessionToken}"
+                }
+            }
+
             this.sessionStatus = SessionStatus.checking
             this.sessionToken = createLoginSessionResponse.sessionToken
-            this.loginUrl = createLoginSessionResponse.loginUrl + "&app=1"
+            this.loginUrl = finalUrl
             this.webView?.loadUrl(this.loginUrl!!)
             startStreaming(sessionToken!!)
             startSessionPolling(sessionToken!!)
         } else {
             this.sessionStatus = null
             result as CustomResult.GeneralError
-            val errorText = loginError(result).localizedDescription(context)
+            val errorText = loginError(result).localizedDescription
             Timber.e("LoginViewModel: could not create login session: $errorText")
             showError(errorText)
         }
@@ -103,7 +123,7 @@ internal class LoginViewModel @Inject constructor(
             }
         }
         this.sessionStatus = null
-        showError(loginError(error).localizedDescription(context))
+        showError(loginError(error).localizedDescription)
         stopSessionMonitoring(token)
     }
 
@@ -111,7 +131,6 @@ internal class LoginViewModel @Inject constructor(
     private fun startSessionPolling(
         token: String,
     ) {
-        val timeOutTargetMs: Long = System.currentTimeMillis() + (10 * 60 * 1000L)
         pollingDisposable = CoroutineScope(dispatchers.io).launch {
             try {
                 while (isActive) {
@@ -152,9 +171,6 @@ internal class LoginViewModel @Inject constructor(
                             }
                         }
                     }
-                    if (System.currentTimeMillis() > timeOutTargetMs) {
-                        throw LoginError.sessionTimedOut
-                    }
                     delay(3_000)
                 }
             } catch (e: Exception) {
@@ -176,10 +192,19 @@ internal class LoginViewModel @Inject constructor(
                 if (this.sessionStatus != SessionStatus.checking) {
                     return@onEach
                 }
-                this.sessionStatus = SessionStatus.completed
-                stopSessionMonitoring(token)
-                sessionController.register(userId = response.userId, username = response.username, displayName = "", apiToken = response.apiKey)
-                triggerEffect(LoginViewEffect.NavigateToDashboard)
+                when (response) {
+                    is LoginWsResponse.Kind.complete -> {
+                        this.sessionStatus = SessionStatus.completed
+                        stopSessionMonitoring(token)
+                        sessionController.register(userId = response.userId, username = response.username, displayName = "", apiToken = response.apiKey)
+                        triggerEffect(LoginViewEffect.NavigateToDashboard)
+                    }
+                    is LoginWsResponse.Kind.cancelled -> {
+                        stopSessionMonitoring(token)
+                        reset()
+                        triggerEffect(LoginViewEffect.NavigateBack)
+                    }
+                }
             }.launchIn(viewModelScope)
 
         webSocketController.init()
@@ -201,6 +226,7 @@ internal class LoginViewModel @Inject constructor(
         this.sessionStatus = null
         this.sessionToken = null
         this.loginUrl = null
+        this.requestKind = null
     }
 
     private fun showError(errorText: String?) = viewModelScope.launch {
@@ -247,9 +273,6 @@ internal class LoginViewModel @Inject constructor(
             }
 
             is CustomResult.GeneralError.CodeError -> {
-                if (error.throwable is LoginError.sessionTimedOut) {
-                    return error.throwable
-                }
                 return LoginError.unknown(error.throwable)
             }
         }

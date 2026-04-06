@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 
@@ -61,7 +62,7 @@ private val onboardingPages =
 
 @Composable
 internal fun OnboardingScreen(
-    onSignInClick: () -> Unit,
+    onSignInOrSignUpClick: (RequestKind) -> Unit,
 ) {
     val whiteColor = Color.White
     val blackColor = Color.Black
@@ -127,7 +128,7 @@ internal fun OnboardingScreen(
             Spacer(modifier = Modifier.weight(1f))
             OnboardingButtonSection(
                 pagerState = pagerState,
-                onSignInClick = onSignInClick,
+                onSignInOrSignUpClick = onSignInOrSignUpClick,
                 uriHandler = uriHandler
             )
         }
