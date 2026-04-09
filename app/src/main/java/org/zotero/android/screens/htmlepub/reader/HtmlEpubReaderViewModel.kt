@@ -942,12 +942,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun loadItemAnnotationsAndPage(): Triple<RItem, RealmResults<RItem>, String>? {
         try {
+            val defaultPageValue = defaultPageValue(this.documentFile.extension.lowercase())
             val itemRequest =
                 ReadItemDbRequest(libraryId = viewState.library.identifier, key = viewState.key)
             val item = dbWrapperMain.realmDbStorage.perform(request = itemRequest)
             val pageIndexRequest = ReadDocumentDataDbRequest(
                 attachmentKey = viewState.key,
-                libraryId = viewState.library.identifier
+                libraryId = viewState.library.identifier,
+                defaultPageValue = defaultPageValue,
             )
             val pageIndex = dbWrapperMain.realmDbStorage.perform(request = pageIndexRequest)
             val annotationsRequest = ReadAnnotationsDbRequest(
@@ -962,14 +964,28 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+
+    private fun defaultPageValue(ext: String): String {
+        when(ext) {
+            "epub" -> {
+                return "_start"
+            }
+            "html", "htm" -> {
+                return "0"
+            }
+            else -> {
+                return ""
+            }
+        }
+    }
+
     fun loadTypeAndPage(file: File, rawPage: String): Pair<String, Page?> {
         when (this.documentFile.extension.lowercase()) {
             "epub" -> {
-                val cfi = if(rawPage.isEmpty()) "_start" else rawPage
-                return "epub" to Page.epub(cfi = cfi)
+                return "epub" to Page.epub(cfi = rawPage)
             }
             "html", "htm" -> {
-                val scrollYPercent = (rawPage.ifEmpty { "0" }).toDoubleOrNull()
+                val scrollYPercent = rawPage.toDoubleOrNull()
                 if (scrollYPercent != null) {
                     return "snapshot" to Page.html(scrollYPercent = scrollYPercent)
                 } else {
