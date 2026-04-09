@@ -1,11 +1,12 @@
 package org.zotero.android.screens.htmlepub.reader.data
 
+import com.google.gson.JsonArray
 import java.io.File
 
 data class DocumentData(
     val type: String,
     val file: File,
-    val annotationsJson: String,
+    val annotationsJson: JsonArray,
     val page: Page?,
     val selectedAnnotationKey: String?,
 ) {

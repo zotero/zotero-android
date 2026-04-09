@@ -62,6 +62,7 @@ import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
+import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
@@ -109,7 +110,6 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
-import org.zotero.android.translator.helper.TranslatorHelper
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
@@ -519,11 +519,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
             val data = dataAsJson.asJsonObject
             val id = data["id"]?.asString ?: return@mapNotNull null
             val dateAdded = (data["dateCreated"]?.asString)?.let {
-                iso8601DateFormatV3.parse(it)
+                iso8601WithFractionalSeconds.parse(it)
             }
                 ?: return@mapNotNull null
 
-            val dateModified = (data["dateModified"]?.asString)?.let{ iso8601DateFormatV3.parse(it) }   ?: return@mapNotNull null
+            val dateModified = (data["dateModified"]?.asString)?.let{ iso8601WithFractionalSeconds.parse(it) }   ?: return@mapNotNull null
             val color = data["color"]?.asString ?: return@mapNotNull null
             val comment = data["comment"]?.asString ?: return@mapNotNull null
             val pageLabel = data["pageLabel"]?.asString   ?: return@mapNotNull null
@@ -998,7 +998,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
         }
     }
-    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, String> {
+    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, JsonArray> {
         val sortedKeys = mutableListOf<String>()
         val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
         val jsons = JsonArray()
@@ -1008,8 +1008,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             sortedKeys.add(annotation.key)
             annotations[item.key] = annotation
         }
-        val jsonString = TranslatorHelper.encodeAsJSONForJavascript(this.gson, jsons)
-        return Triple(sortedKeys, annotations, jsonString)
+        return Triple(sortedKeys, annotations, jsons)
     }
 
     fun update(
