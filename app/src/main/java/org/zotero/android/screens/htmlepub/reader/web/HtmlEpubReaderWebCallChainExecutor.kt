@@ -14,6 +14,9 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
+import org.zotero.android.screens.htmlepub.reader.CreateReaderLocation
+import org.zotero.android.screens.htmlepub.reader.CreateReaderViewOptions
+import org.zotero.android.screens.htmlepub.reader.CreateReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
@@ -305,22 +308,29 @@ class HtmlEpubReaderWebCallChainExecutor(
     suspend fun loadDocument(data: DocumentData) {
         Timber.i("HtmlEpubReaderViewModel: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
-        var javascript = "javascript:createView({ type: '${data.type}', url: 'https://appassets.androidplatform.net/local/${data.file.name}', annotations: '${data.annotationsJson}'"
+        val createReaderViewOptions = CreateReaderViewOptions(
+            type = data.type,
+            url = "https://appassets.androidplatform.net/local/${data.file.name}",
+            annotations = data.annotationsJson
+        )
+
         val key = data.selectedAnnotationKey
         val page = data.page
         if (key != null) {
-            javascript += ", location: {annotationID: '$key'}"
-        } else if (page != null){
+            createReaderViewOptions.location = CreateReaderLocation(annotationID = key)
+        } else if (page != null) {
             when(page) {
                 is Page.html -> {
-                    javascript += ", viewState: {scrollYPercent: ${page.scrollYPercent}, scale: 1}"
+                    createReaderViewOptions.viewState = CreateReaderViewState(scrollYPercent = page.scrollYPercent, scale = 1.0)
                 }
                 is Page.epub -> {
-                    javascript += ", viewState: {cfi: '${page.cfi}'}"
+                    createReaderViewOptions.viewState = CreateReaderViewState(cfi = page.cfi)
                 }
             }
         }
-        javascript += "});"
+
+        val toJson = encodeAsJSONForJavascript(this.gson, createReaderViewOptions)
+        val javascript = "javascript:createView('${toJson}');"
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
