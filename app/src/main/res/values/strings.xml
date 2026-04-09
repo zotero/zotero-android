@@ -70,5 +70,7 @@
     <string name="pdf_reader_toolbar">Toolbar</string>
 
     <string name="items_generating_cit">Generating Citation</string>
+    <string name="translate">Translate</string>
+    <string name="web_search">Web search</string>
 
 </resources>

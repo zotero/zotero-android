@@ -49,7 +49,8 @@ internal fun HtmlEpubReaderPhoneMode(
                             detectTapGestures {
                                 //Prevent tap to be propagated to composables behind this screen.
                             }
-                        }) {
+                        }
+                ) {
                     HtmlEpubReaderSidebar(
                         viewState = viewState,
                         viewModel = viewModel,

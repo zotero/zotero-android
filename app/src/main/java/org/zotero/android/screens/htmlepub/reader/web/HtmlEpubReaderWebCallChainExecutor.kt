@@ -108,9 +108,13 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 return@launch
                             }
 
-                            val rectArray = params["rect"].asJsonArray.map { it.asDouble }
+//                            val rectArray = params["rect"].asJsonArray.map { it.asDouble }
                             val key = params["annotation"].asJsonObject["id"].asString
-
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.selectAnnotationFromDocument(key)
+                                )
+                            )
 
                             //TODO send the event with rect, accommodating for nav and status bar space.
                         }
@@ -150,12 +154,16 @@ class HtmlEpubReaderWebCallChainExecutor(
                             }
                         }
                         "onSetSelectionPopup" -> {
-//                            val params = data["params"].asJsonObject
-//                            observable.emitAsync(
-//                                Result.Success(
-//                                    HtmlEpubReaderWebData.setSelectedTextParams(params)
-//                                )
-//                            )
+                            val dParams = data["params"]
+                            if (dParams == null || dParams.isJsonNull) {
+                                return@launch
+                            }
+                            val params = dParams.asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.setSelectedTextParams(params)
+                                )
+                            )
                         }
                         "onChangeViewState" -> {
                             val params = data["params"].asJsonObject

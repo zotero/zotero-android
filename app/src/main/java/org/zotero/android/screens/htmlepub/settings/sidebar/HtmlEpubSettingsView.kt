@@ -41,7 +41,8 @@ internal fun HtmlEpubSettingsView(
                         detectTapGestures {
                             //Prevent tap to be propagated to composables behind this screen.
                         }
-                    }) {
+                    }
+            ) {
                 val args = viewState.htmlEpubSettingsArgs
                 if (args != null) {
                     HtmlEpubSettingsScreen(

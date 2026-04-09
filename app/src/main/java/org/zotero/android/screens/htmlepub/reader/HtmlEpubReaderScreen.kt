@@ -133,12 +133,16 @@ internal fun HtmlEpubReaderScreen(
         )
 
         CustomScaffoldM3(
-            modifier = Modifier.pointerInteropFilter {
+            modifier = Modifier
+                .pointerInteropFilter {
                 when (it.action) {
-                    MotionEvent.ACTION_DOWN -> viewModel.restartDisableForceScreenOnTimer()
+                    MotionEvent.ACTION_DOWN -> {
+                        viewModel.restartDisableForceScreenOnTimer()
+                    }
                 }
                 false
-            },
+            }
+            ,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
