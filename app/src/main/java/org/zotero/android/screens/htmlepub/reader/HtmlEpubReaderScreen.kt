@@ -141,8 +141,8 @@ internal fun HtmlEpubReaderScreen(
                     }
                 }
                 false
-            }
-            ,
+            },
+            shouldIncludeTopBarAndNavBarPaddings = false,
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,

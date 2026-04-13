@@ -18,6 +18,7 @@ import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 @Composable
 fun CustomScaffoldM3(
     modifier: Modifier = Modifier,
+    shouldIncludeTopBarAndNavBarPaddings: Boolean = true,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     snackbarMessage: SnackbarMessage? = null,
     topBar: @Composable () -> Unit,
@@ -55,12 +56,13 @@ fun CustomScaffoldM3(
         content = { it ->
 //            Box(modifier = Modifier.background(containerColor)) {
 
-                Box(modifier = Modifier
-                    .padding(top = it.calculateTopPadding())
-//                    .background(containerColor)
-                ) {
-                    content(it)
-                }
+            var modifier: Modifier = Modifier
+            if (shouldIncludeTopBarAndNavBarPaddings) {
+                modifier = modifier.padding(top = it.calculateTopPadding())
+            }
+            Box(modifier = modifier) {
+                content(it)
+            }
 //            }
         },
     )

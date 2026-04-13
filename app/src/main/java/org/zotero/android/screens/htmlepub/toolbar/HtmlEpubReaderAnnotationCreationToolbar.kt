@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults.rememberTooltipPositionProvider
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -95,6 +97,8 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
             modifier = Modifier
                 .width(48.dp)
                 .height(520.dp)
+                .statusBarsPadding()
+                .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
                 .padding(start = 16.dp, top = 16.dp)
                 .background(
                     color = snapAreaBackgroundColor,
@@ -110,6 +114,8 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
                 .align(Alignment.TopEnd)
                 .width(48.dp)
                 .height(520.dp)
+                .statusBarsPadding()
+                .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
                 .padding(end = 16.dp, top = 16.dp)
                 .background(
                     color = snapAreaBackgroundColor,
@@ -138,6 +144,8 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
                 interactionSource = draggableInteractionSource
             )
             .height(520.dp)
+            .statusBarsPadding()
+            .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
             .padding(start = 16.dp, top = 16.dp)
             .background(
                 color = snapAreaBackgroundColor,
