@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -44,7 +45,7 @@ internal class AddNoteViewModel @Inject constructor(
 
     private lateinit var port: WebMessagePort
 
-    private var isSaveDuringExit: Boolean = false
+    private var webViewSaveDeferred: CompletableDeferred<Unit>? = null
 
     lateinit var initialText: String
     lateinit var initialTags: List<Tag>
@@ -71,7 +72,7 @@ internal class AddNoteViewModel @Inject constructor(
     fun init() = initOnce {
         EventBus.getDefault().register(this)
 
-        dbWrapperMain.realmDbStorage.perform {coordinatorAction ->
+        dbWrapperMain.realmDbStorage.perform { coordinatorAction ->
             val note = ReadNoteDbRequest(addOrEditNoteArgs.key).process(coordinatorAction.realm)
             initialText = note?.text ?: ""
             initialTags = note?.tags ?: listOf()
@@ -122,9 +123,7 @@ internal class AddNoteViewModel @Inject constructor(
             if (parsedMessage.message.value != null) {
                 updateNoteText(parsedMessage.message.value)
             }
-            if (isSaveDuringExit) {
-                saveAndExit()
-            }
+            webViewSaveDeferred?.complete(Unit)
         }
     }
 
@@ -155,24 +154,9 @@ internal class AddNoteViewModel @Inject constructor(
         this.port = port
     }
 
-    fun onDoneClicked() {
-        this.isSaveDuringExit = true
-        updateState {
-            copy(backHandlerInterceptionEnabled = false)
-        }
-        //Port might not be initialized by this point if user were to return to AddNoteScreen after a while, when app was loaded off memory and then very quickly tapped back button.
-        //We skip saving message in this case because note was saved before that, when user visited screen last time.
-        if (this::port.isInitialized) {
-            this.port.postMessage(generateForceSaveMessage())
-        } else {
-            triggerEffect(AddNoteViewEffect.NavigateBack)
-        }
-    }
-
-    private fun saveAndExit() {
+    private fun saveNote() {
         val text = viewState.text
         if (initialText != text || initialTags != viewState.tags) {
-            println()
             EventBus.getDefault().post(
                 SaveNoteAction(
                     text = text,
@@ -182,7 +166,17 @@ internal class AddNoteViewModel @Inject constructor(
                 )
             )
         }
-        triggerEffect(AddNoteViewEffect.NavigateBack)
+    }
+
+    fun onStop() = viewModelScope.launch {
+        //Port might not be initialized by this point if user were to return to AddNoteScreen after a while, when app was loaded off memory and then very quickly tapped back button.
+        //We skip saving message in this case because note was saved before that, when user visited screen last time.
+        if (this@AddNoteViewModel::port.isInitialized) {
+            webViewSaveDeferred = CompletableDeferred()
+            this@AddNoteViewModel.port.postMessage(generateForceSaveMessage())
+            webViewSaveDeferred?.await()
+            saveNote()
+        }
     }
 }
 
@@ -190,7 +184,6 @@ internal data class AddNoteViewState(
     val title: AddOrEditNoteArgs.TitleData? = null,
     val text: String = "",
     var tags: PersistentList<Tag> = persistentListOf(),
-    val backHandlerInterceptionEnabled: Boolean = true,
 ) : ViewState {
     fun formattedTags(): String {
         return tags.joinToString(separator = ", ") { it.name }
@@ -198,7 +191,7 @@ internal data class AddNoteViewState(
 }
 
 internal sealed class AddNoteViewEffect : ViewEffect {
-    object NavigateBack: AddNoteViewEffect()
-    object NavigateToTagPickerScreen: AddNoteViewEffect()
-    object RefreshUI: AddNoteViewEffect()
+    object NavigateBack : AddNoteViewEffect()
+    object NavigateToTagPickerScreen : AddNoteViewEffect()
+    object RefreshUI : AddNoteViewEffect()
 }

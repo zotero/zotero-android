@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -17,7 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
+import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
@@ -44,11 +45,15 @@ internal fun AddNoteScreen(
                 isKeyboardShown = isOpen
             }
         }
+        ObserveLifecycleEvent { event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.onStop()
+                }
 
-        BackHandler(
-            enabled = viewState.backHandlerInterceptionEnabled,
-            onBack = { viewModel.onDoneClicked() }
-        )
+                else -> {}
+            }
+        }
 
         LaunchedEffect(key1 = viewEffect) {
             when (viewEffect?.consume()) {
@@ -64,7 +69,7 @@ internal fun AddNoteScreen(
         CustomScaffoldM3(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             topBar = {
-                AddNoteTopBar(titleData = viewState.title, onBack = viewModel::onDoneClicked)
+                AddNoteTopBar(titleData = viewState.title, onBack = onBack)
             },
         ) {
             Box {
