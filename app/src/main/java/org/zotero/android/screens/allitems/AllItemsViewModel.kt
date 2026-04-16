@@ -252,27 +252,21 @@ internal class AllItemsViewModel @Inject constructor(
                             )
                         }
 
-                        "text/html", "text/plain" -> {
+                        "text/html", "application/epub+zip" -> {
+                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
+                            showHtmlEpub(
+                                file = file,
+                                key = attachment.key,
+                                parentKey = parentKey,
+                                library = library
+                            )
+                        }
+
+                        "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                             triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
                         }
-
-//                        "text/html", "application/epub+zip" -> {
-//                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
-//                            showHtmlEpub(
-//                                file = file,
-//                                key = attachment.key,
-//                                parentKey = parentKey,
-//                                library = library
-//                            )
-//                        }
-//
-//                        "text/plain" -> {
-//                            val url = file.toUri().toString()
-//                            val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
-//                            triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
-//                        }
                         else -> {
                             if (contentType.contains("image")) {
                                 showImageFile(file)
@@ -755,7 +749,7 @@ internal class AllItemsViewModel @Inject constructor(
         var collectionKey: String? = null
         when(this.collection.identifier) {
             is CollectionIdentifier.collection ->
-            collectionKey = this.collection.identifier.keyGet
+                collectionKey = this.collection.identifier.keyGet
             else -> {
                 //no-op
             }
@@ -959,7 +953,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAddToCollection() {
-       showCollectionPicker(getSelectedKeys())
+        showCollectionPicker(getSelectedKeys())
     }
 
     fun showRemoveFromCollectionQuestion(itemsKeys: Set<String>) {

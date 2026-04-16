@@ -1673,24 +1673,19 @@ class ItemDetailsViewModel @Inject constructor(
                     "application/pdf" -> {
                         showPdf(file = file, parentKey = parentKey, attachment = attachment)
                     }
-                    "text/html", "text/plain" -> {
+                    "text/html", "application/epub+zip" -> {
+                        Timber.i("ItemDetailsViewModel: show HTML / EPUB ${attachment.key}")
+                        showHtmlEpub(
+                            file = file,
+                            parentKey = parentKey,
+                            attachment = attachment
+                        )
+                    }
+                    "text/plain" -> {
                         val url = file.toUri().toString()
                         val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                         triggerEffect(ItemDetailsViewEffect.ShowZoteroWebView(encodedUrl))
                     }
-//                    "text/html", "application/epub+zip" -> {
-//                        Timber.i("ItemDetailsViewModel: show HTML / EPUB ${attachment.key}")
-//                        showHtmlEpub(
-//                            file = file,
-//                            parentKey = parentKey,
-//                            attachment = attachment
-//                        )
-//                    }
-//                    "text/plain" -> {
-//                        val url = file.toUri().toString()
-//                        val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
-//                        triggerEffect(ItemDetailsViewEffect.ShowZoteroWebView(encodedUrl))
-//                    }
                     else -> {
                         if (contentType.contains("image")) {
                             showImageFile(file)
