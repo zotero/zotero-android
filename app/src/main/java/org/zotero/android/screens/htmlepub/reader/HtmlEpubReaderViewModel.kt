@@ -940,26 +940,31 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return oldComment == newComment
     }
 
-    fun loadItemAnnotationsAndPage(): Triple<RItem, RealmResults<RItem>, String>? {
+    private fun loadRawPage(): String {
+        val defaultPageValue = defaultPageValue(this.documentFile.extension.lowercase())
+        val pageIndexRequest = ReadDocumentDataDbRequest(
+            attachmentKey = viewState.key,
+            libraryId = viewState.library.identifier,
+            defaultPageValue = defaultPageValue,
+        )
+        val pageIndex = dbWrapperMain.realmDbStorage.perform(request = pageIndexRequest)
+        return pageIndex
+    }
+
+    fun loadItemAnnotations(): Pair<RItem, RealmResults<RItem>>? {
         try {
-            val defaultPageValue = defaultPageValue(this.documentFile.extension.lowercase())
             val itemRequest =
                 ReadItemDbRequest(libraryId = viewState.library.identifier, key = viewState.key)
             val item = dbWrapperMain.realmDbStorage.perform(request = itemRequest)
-            val pageIndexRequest = ReadDocumentDataDbRequest(
-                attachmentKey = viewState.key,
-                libraryId = viewState.library.identifier,
-                defaultPageValue = defaultPageValue,
-            )
-            val pageIndex = dbWrapperMain.realmDbStorage.perform(request = pageIndexRequest)
+
             val annotationsRequest = ReadAnnotationsDbRequest(
                 attachmentKey = viewState.key,
                 libraryId = viewState.library.identifier
             )
             val items = dbWrapperMain.realmDbStorage.perform(request = annotationsRequest)
-            return Triple(item, items, pageIndex)
+            return item to items
         } catch (error: Exception) {
-            Timber.e("HtmlEpubReaderViewModel: can't load annotations")
+            Timber.e(error, "HtmlEpubReaderViewModel: can't load annotations")
             return null
         }
     }
@@ -973,16 +978,22 @@ class HtmlEpubReaderViewModel @Inject constructor(
             "html", "htm" -> {
                 return "0"
             }
+            "pdf" -> {
+                return "0"
+            }
             else -> {
                 return ""
             }
         }
     }
 
-    fun loadTypeAndPage(file: File, rawPage: String): Pair<String, Page?> {
+    fun loadTypeAndPage(rawPage: String): Pair<String, Page?> {
         when (this.documentFile.extension.lowercase()) {
             "epub" -> {
                 return "epub" to Page.epub(cfi = rawPage)
+            }
+            "pdf" -> {
+                return "pdf" to Page.pdf(pageIndex = rawPage.toInt())
             }
             "html", "htm" -> {
                 val scrollYPercent = rawPage.toDoubleOrNull()
@@ -1003,12 +1014,26 @@ class HtmlEpubReaderViewModel @Inject constructor(
         val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
         val jsons = JsonArray()
         for (item in items) {
-            val (annotation, json) = item.htmlEpubAnnotation ?: continue
+            val (annotation, json) = generateAnnotationJsonForReader(item) ?: continue
             jsons.add(json)
             sortedKeys.add(annotation.key)
             annotations[item.key] = annotation
         }
         return Triple(sortedKeys, annotations, jsons)
+    }
+
+    private fun generateAnnotationJsonForReader(item: RItem): Pair<HtmlEpubAnnotation, JsonObject>? {
+        return when (val extension = this.documentFile.extension.lowercase()) {
+            "epub", "html", "htm" -> {
+                item.htmlEpubAnnotation
+            }
+            "pdf" -> {
+                item.pdfAnnotation
+            }
+            else -> {
+                throw RuntimeException("Unknown extension $extension")
+            }
+        }
     }
 
     fun update(
@@ -1046,8 +1071,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
             val key = keys[index]
             val item = objects.where().key(key).findFirst() ?: continue
-            val (annotation, json) = item.htmlEpubAnnotation ?: continue
-
+            val (annotation, json) = generateAnnotationJsonForReader(item) ?: continue
 
             Timber.w("HtmlEpubReaderViewModel: update Html/Epub annotation $key")
             annotations[key] = annotation
@@ -1121,7 +1145,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
             val item = objects[index]!!
 
-            val htmlEpubAnnotation = item.htmlEpubAnnotation
+            val htmlEpubAnnotation =  generateAnnotationJsonForReader(item)
             if (htmlEpubAnnotation == null) {
                 Timber.w("HtmlEpubReaderViewModel: tried adding invalid annotation")
                 shouldCancelUpdate = true
@@ -1212,7 +1236,21 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.annotationItems?.addChangeListener { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
-                    update(changeSet, items)
+                    viewModelScope.launch {
+                        val rawPage = loadRawPage()
+                        val (type, page) = loadTypeAndPage(rawPage = rawPage)
+                        val (sortedKeys, annotations, json) = processAnnotations(items = items)
+                        val documentData = DocumentData(
+                            type = type,
+                            file = this@HtmlEpubReaderViewModel.documentFile,
+                            annotationsJson = json,
+                            page = page,
+                            selectedAnnotationKey = viewState.selectedAnnotationKey
+                        )
+                        htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
+                        restoreWebViewState()
+                    }
+//                    update(changeSet, items)
                 }
 
                 OrderedCollectionChangeSet.State.UPDATE -> {
@@ -1351,22 +1389,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun load() {
         try {
-            val (item, annotationItems, rawPage) = loadItemAnnotationsAndPage() ?: return
+            val (item, annotationItems) = loadItemAnnotations() ?: return
 
             if (checkWhetherMd5Changed(item)) {
                 return
             }
-
-            val (sortedKeys, annotations, json) = processAnnotations(items = annotationItems)
-            val (type, page) = loadTypeAndPage(this.documentFile, rawPage = rawPage)
-            val documentData = DocumentData(
-                type = type,
-                file = this.documentFile,
-                annotationsJson = json,
-                page = page,
-                selectedAnnotationKey = viewState.selectedAnnotationKey
-            )
-
 
             this.item?.removeAllChangeListeners()
             this.item = item
@@ -1380,10 +1407,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
 //            updateState {
 //                copy(sortedKeys = sortedKeys)
 //            }
-            viewModelScope.launch {
-                htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
-                restoreWebViewState()
-            }
         } catch (e: Exception) {
             Timber.e(e, "HtmlEpubReaderViewModel: could not load document")
         }

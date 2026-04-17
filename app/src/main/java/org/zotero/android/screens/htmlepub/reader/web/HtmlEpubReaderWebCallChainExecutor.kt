@@ -158,7 +158,10 @@ class HtmlEpubReaderWebCallChainExecutor(
                         }
                         "onSetSelectionPopup" -> {
                             val dParams = data["params"]
-                            if (dParams == null || dParams.isJsonNull) {
+                            if (dParams == null
+                                || dParams.isJsonNull
+                                || (dParams.isJsonObject && dParams.asJsonObject.isEmpty)
+                            ) {
                                 return@launch
                             }
                             val params = dParams.asJsonObject
@@ -325,6 +328,9 @@ class HtmlEpubReaderWebCallChainExecutor(
                 }
                 is Page.epub -> {
                     createReaderViewOptions.viewState = CreateReaderViewState(cfi = page.cfi)
+                }
+                is Page.pdf -> {
+                    createReaderViewOptions.viewState = CreateReaderViewState(pageIndex = page.pageIndex)
                 }
             }
         }

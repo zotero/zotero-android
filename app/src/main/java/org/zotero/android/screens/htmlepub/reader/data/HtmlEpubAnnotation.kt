@@ -7,6 +7,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Tag
 import java.util.Date
 
+//TODO rename this to something like ZoteroReaderAnnotation. It now unites html,epub and pdf
 data class HtmlEpubAnnotation(
     override val key: String,
     override val type: AnnotationType,
