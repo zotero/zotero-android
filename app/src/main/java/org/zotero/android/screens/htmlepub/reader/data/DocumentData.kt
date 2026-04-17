@@ -15,4 +15,5 @@ data class DocumentData(
 sealed interface Page {
     data class html(val scrollYPercent: Double): Page
     data class epub(val cfi: String): Page
+    data class pdf(val pageIndex: Int): Page
 }

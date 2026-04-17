@@ -1,12 +1,17 @@
 package org.zotero.android.screens.htmlepub.reader.sidebar
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
@@ -30,8 +35,8 @@ internal fun HtmlEpubReaderSidebar(
     }
 
     val selectedOption = viewState.sidebarSliderSelectedOption
-
     SecondaryTabRow(
+        modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets).padding(top = 24.dp),
         selectedTabIndex = selectedOption.ordinal) {
         selectorOptions.forEachIndexed { index, selectorOption ->
             val isSelected = selectedOption.ordinal == index

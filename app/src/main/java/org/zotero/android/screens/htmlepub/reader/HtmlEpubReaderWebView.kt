@@ -1,8 +1,13 @@
 package org.zotero.android.screens.htmlepub.reader
 
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderCustomWebView
@@ -14,6 +19,9 @@ fun HtmlEpubReaderWebView(viewModel: HtmlEpubReaderViewModel) {
     val isTablet = layoutType.isTablet()
     val textFont = MaterialTheme.typography.bodyMedium
     AndroidView(
+        modifier = Modifier
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+            .padding(top = 36.dp), //TODO figure out appropriate padding
         factory = { context ->
             val webView = HtmlEpubReaderCustomWebView(context)
             webView.layoutParams = ViewGroup.LayoutParams(
