@@ -32,6 +32,14 @@ object AnnotationsConfig {
         AnnotationType.UNDERLINE,
         AnnotationType.FREETEXT,
     )
+    val supportedV2: EnumSet<org.zotero.android.database.objects.AnnotationType> = EnumSet.of(
+        org.zotero.android.database.objects.AnnotationType.note,
+        org.zotero.android.database.objects.AnnotationType.highlight,
+        org.zotero.android.database.objects.AnnotationType.image,
+        org.zotero.android.database.objects.AnnotationType.ink,
+        org.zotero.android.database.objects.AnnotationType.underline,
+        org.zotero.android.database.objects.AnnotationType.text,
+    )
     const val keyKey = "Zotero:Key"
     val noteAnnotationSize = Pair(22F, 22F)
     const val imageAnnotationLineWidth = 2F
