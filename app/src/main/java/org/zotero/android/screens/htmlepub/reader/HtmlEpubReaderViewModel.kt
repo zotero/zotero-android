@@ -16,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.pspdfkit.annotations.SquareAnnotation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
@@ -63,7 +64,9 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
+import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.rounded
+import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
@@ -81,7 +84,6 @@ import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArg
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterResult
 import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.DocumentData
-import org.zotero.android.screens.htmlepub.reader.data.DocumentUpdate
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotationsFilter
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
@@ -103,6 +105,7 @@ import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsChangeR
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationColorGenerator
+import org.zotero.android.sync.AnnotationConverterV2
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
@@ -514,7 +517,22 @@ class HtmlEpubReaderViewModel @Inject constructor(
         )
     }
 
-    private fun parse(annotations: JsonArray, author: String, isAuthor: Boolean): List<HtmlEpubAnnotation> {
+    private fun parsePdfJson(pdfAnnotations: JsonArray, author: String, isAuthor: Boolean): List<PDFDocumentAnnotation>  {
+        return pdfAnnotations.mapNotNull { pdfAnnotation ->
+            if (pdfAnnotation is SquareAnnotation && !pdfAnnotation.isZoteroAnnotation) {
+                return@mapNotNull null
+            }
+            val annotation = AnnotationConverterV2.annotation(
+                data = pdfAnnotation.asJsonObject,
+                author = author,
+                isAuthor = isAuthor,
+            )
+            annotation
+
+        }
+    }
+
+    private fun parseHtmlEpubJson(annotations: JsonArray, author: String, isAuthor: Boolean): List<HtmlEpubAnnotation> {
         return annotations.mapNotNull { dataAsJson ->
             val data = dataAsJson.asJsonObject
             val id = data["id"]?.asString ?: return@mapNotNull null
@@ -584,7 +602,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return params
     }
 
-    private fun createDatabaseAnnotations(annotations: List<HtmlEpubAnnotation>) {
+    private fun createHtmlEpubDatabaseAnnotations(annotations: List<HtmlEpubAnnotation>) {
         val request = CreateHtmlEpubAnnotationsDbRequest(
             attachmentKey = viewState.key,
             libraryId = viewState.library.identifier,
@@ -647,34 +665,34 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
-        val textParams = this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
-        val params = params(textParams, type = type) ?: return
-
-        val array = JsonArray()
-        array.add(params)
-
-        val annotations =
-            parse(annotations = array, author = this.username, isAuthor = true)
-        this.selectedTextParams = null
-
-        for (annotation in annotations) {
-            this.annotations[annotation.key] = annotation
-        }
-
-        val documentUpdate = DocumentUpdate(
-            deletions = JsonArray(),
-            insertions = array,
-            modifications = JsonArray()
-        )
-        htmlEpubReaderWebCallChainExecutor?.updateView(
-            modifications = documentUpdate.modifications,
-            insertions = documentUpdate.insertions,
-            deletions = documentUpdate.deletions
-        )
-
-        createDatabaseAnnotations(annotations = annotations)
-    }
+//    private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
+//        val textParams = this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
+//        val params = params(textParams, type = type) ?: return
+//
+//        val array = JsonArray()
+//        array.add(params)
+//
+//        val annotations =
+//            parse(annotations = array, author = this.username, isAuthor = true)
+//        this.selectedTextParams = null
+//
+//        for (annotation in annotations) {
+//            this.annotations[annotation.key] = annotation
+//        }
+//
+//        val documentUpdate = DocumentUpdate(
+//            deletions = JsonArray(),
+//            insertions = array,
+//            modifications = JsonArray()
+//        )
+//        htmlEpubReaderWebCallChainExecutor?.updateView(
+//            modifications = documentUpdate.modifications,
+//            insertions = documentUpdate.insertions,
+//            deletions = documentUpdate.deletions
+//        )
+//
+//        createDatabaseAnnotations(annotations = annotations)
+//    }
 
     private fun saveAnnotations(params: JsonObject) {
         val rawAnnotations = params["annotations"]?.asJsonArray
@@ -682,13 +700,19 @@ class HtmlEpubReaderViewModel @Inject constructor(
             Timber.e("HtmlEpubReaderViewModel: annotations missing or empty - ${params["annotations"] ?: emptyList<String>()}")
             return
         }
+        val annotations = if (isCurrentFilePdf()) {
+            parsePdfJson(pdfAnnotations = rawAnnotations, author = this.username, isAuthor = true)
+        } else {
+            parseHtmlEpubJson(annotations = rawAnnotations, author = this.username, isAuthor = true)
+        }
 
-        val annotations =
-            parse(annotations = rawAnnotations, author = this.username, isAuthor = true)
 
         if (annotations.isEmpty()) {
             Timber.e("HtmlEpubReaderViewModel: could not parse annotations")
             return
+        }
+        if (annotations.size == 1) {
+            ignoreDbCallbackOnReaderInsertionItemKey = annotations[0].key
         }
 
         // Disable annotation tool & select annotation
@@ -696,7 +720,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         if (annotation != null && viewState.activeTool != null) {
             toggle(viewState.activeTool!!)
         }
-        createDatabaseAnnotations(annotations = annotations)
+        if (isCurrentFilePdf()) {
+//            createPdfDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
+        } else {
+            createHtmlEpubDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
+        }
     }
 
     fun selectAnnotationFromDocument(key: String) {
@@ -1009,7 +1037,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
         }
     }
-    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, JsonArray> {
+    fun generateReaderInitJsonFromInitialAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, JsonArray> {
         val sortedKeys = mutableListOf<String>()
         val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
         val jsons = JsonArray()
@@ -1022,13 +1050,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return Triple(sortedKeys, annotations, jsons)
     }
 
-    private fun generateAnnotationJsonForReader(item: RItem): Pair<HtmlEpubAnnotation, JsonObject>? {
+    private fun isCurrentFilePdf(): Boolean {
         return when (val extension = this.documentFile.extension.lowercase()) {
             "epub", "html", "htm" -> {
-                item.htmlEpubAnnotation
+                false
             }
             "pdf" -> {
-                item.pdfAnnotation
+                true
             }
             else -> {
                 throw RuntimeException("Unknown extension $extension")
@@ -1036,9 +1064,23 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+    private fun generateAnnotationJsonForReader(item: RItem): Pair<HtmlEpubAnnotation, JsonObject>? {
+        val isCurrentFilePdf = isCurrentFilePdf()
+        return if (isCurrentFilePdf) {
+            item.pdfAnnotation
+        } else {
+            item.htmlEpubAnnotation
+        }
+    }
+
+    //When user adds new annotation via reader it gets added to DB, which triggers this callback
+    //We need to skip it's execution otherwise it will trigger unnecessary reader update, whichc already has the correct state.
+    private var ignoreDbCallbackOnReaderInsertionItemKey : String? = null
+
     fun update(
         changeSet: OrderedCollectionChangeSet,
-        objects: RealmResults<RItem>
+        objects: RealmResults<RItem>,
+        isInitial: Boolean,
     ) {
         val frozenObjects = objects.freeze()
         val deletions = changeSet.deletions
@@ -1144,6 +1186,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             val item = objects[index]!!
+            if (item.key == ignoreDbCallbackOnReaderInsertionItemKey) {
+                ignoreDbCallbackOnReaderInsertionItemKey = null
+                continue
+            }
 
             val htmlEpubAnnotation =  generateAnnotationJsonForReader(item)
             if (htmlEpubAnnotation == null) {
@@ -1178,28 +1224,43 @@ class HtmlEpubReaderViewModel @Inject constructor(
             if (viewState.snapshotKeys == null) {
                 copy(sortedKeys = keys)
             } else {
-                copy(snapshotKeys = keys)
-                copy(sortedKeys = filteredKeys(
-                    snapshot = keys,
-                    term = viewState.annotationSearchTerm,
-                    filter = viewState.annotationFilter
-                ))
+                copy(
+                    snapshotKeys = keys,
+                    sortedKeys = filteredKeys(
+                        snapshot = keys,
+                        term = viewState.annotationSearchTerm,
+                        filter = viewState.annotationFilter
+                    )
+                )
             }
         }
         this.annotations = annotations
         this.comments = comments
-        val documentUpdate = DocumentUpdate(
-            deletions = deletedPdfAnnotations,
-            insertions = insertedPdfAnnotations,
-            modifications = updatedPdfAnnotations
-        )
-        println()
         viewModelScope.launch {
-            htmlEpubReaderWebCallChainExecutor?.updateView(
-                modifications = documentUpdate.modifications,
-                insertions = documentUpdate.insertions,
-                deletions = documentUpdate.deletions
-            )
+            if (isInitial) {
+                val rawPage = loadRawPage()
+                val (type, page) = loadTypeAndPage(rawPage = rawPage)
+                val (sortedKeys, annotations, json) = generateReaderInitJsonFromInitialAnnotations(
+                    items = objects
+                )
+                val documentData = DocumentData(
+                    type = type,
+                    file = this@HtmlEpubReaderViewModel.documentFile,
+                    annotationsJson = json,
+                    page = page,
+                    selectedAnnotationKey = viewState.selectedAnnotationKey
+                )
+                htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
+                restoreWebViewState()
+            } else {
+                viewModelScope.launch {
+                    htmlEpubReaderWebCallChainExecutor?.updateView(
+                        modifications = updatedPdfAnnotations,
+                        insertions = insertedPdfAnnotations,
+                        deletions = deletedPdfAnnotations
+                    )
+                }
+            }
         }
 
         this.texts = texts
@@ -1236,25 +1297,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.annotationItems?.addChangeListener { items, changeSet ->
             when (changeSet.state) {
                 OrderedCollectionChangeSet.State.INITIAL -> {
-                    viewModelScope.launch {
-                        val rawPage = loadRawPage()
-                        val (type, page) = loadTypeAndPage(rawPage = rawPage)
-                        val (sortedKeys, annotations, json) = processAnnotations(items = items)
-                        val documentData = DocumentData(
-                            type = type,
-                            file = this@HtmlEpubReaderViewModel.documentFile,
-                            annotationsJson = json,
-                            page = page,
-                            selectedAnnotationKey = viewState.selectedAnnotationKey
-                        )
-                        htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
-                        restoreWebViewState()
-                    }
-//                    update(changeSet, items)
+                    update(changeSet, items, isInitial = true)
                 }
 
                 OrderedCollectionChangeSet.State.UPDATE -> {
-                    update(changeSet, items)
+                    update(changeSet, items, isInitial = false)
                 }
 
                 OrderedCollectionChangeSet.State.ERROR -> {
@@ -1790,7 +1837,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
 
     private fun openAnnotationDialog() {
-        var showAnnotationPopup = !viewState.showSideBar && viewState.selectedAnnotationKey != null
+        val showAnnotationPopup = !viewState.showSideBar && viewState.selectedAnnotationKey != null
         if (showAnnotationPopup) {
             annotationEditReaderKey = viewState.selectedAnnotationKey
             val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
@@ -1936,17 +1983,17 @@ class HtmlEpubReaderViewModel @Inject constructor(
     fun onHighlight() {
         dismissActionMenu()
 
-        viewModelScope.launch {
-            saveAnnotationFromSelection(AnnotationType.highlight)
-        }
+//        viewModelScope.launch {
+//            saveAnnotationFromSelection(AnnotationType.highlight)
+//        }
     }
 
     fun onUnderline() {
         dismissActionMenu()
 
-        viewModelScope.launch {
-            saveAnnotationFromSelection(AnnotationType.underline)
-        }
+//        viewModelScope.launch {
+//            saveAnnotationFromSelection(AnnotationType.underline)
+//        }
     }
 
 }
