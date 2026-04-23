@@ -483,7 +483,14 @@ class AnnotationConverter {
         }
 
         fun sortIndex(pageIndex: Int, textOffset: Int, minY: Int): String {
-            return String.format(Locale.getDefault() ,"%05d|%06d|%05d", pageIndex, textOffset, max(0, minY))
+            val format = String.format(
+                Locale.US,
+                "%05d|%06d|%05d",
+                pageIndex,
+                textOffset,
+                max(0, minY)
+            )
+            return format
         }
 
         private fun createName(displayName: String, username: String): String {
