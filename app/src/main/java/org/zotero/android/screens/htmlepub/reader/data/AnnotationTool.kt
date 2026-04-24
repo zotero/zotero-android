@@ -4,4 +4,8 @@ enum class AnnotationTool {
     note,
     highlight,
     underline,
+    image,
+    ink,
+    text,
+    eraser
 }
