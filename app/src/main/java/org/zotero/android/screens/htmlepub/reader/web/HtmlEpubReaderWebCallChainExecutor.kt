@@ -253,9 +253,10 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
-    suspend fun setTool(toolName: String, colorHex: String) {
+    suspend fun setTool(toolName: String, colorHex: String? = null, size: Float? = null) {
         return suspendCancellableCoroutine { cont ->
-            htmlEpubReaderWebViewHandler.evaluateJavascript("setTool({ type: '$toolName', color: '$colorHex' });") {
+            val javascript = "setTool({ type: '$toolName', color: '$colorHex',  size: '$size' });"
+            htmlEpubReaderWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }
         }
