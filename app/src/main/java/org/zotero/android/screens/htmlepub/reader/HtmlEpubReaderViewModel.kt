@@ -16,7 +16,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.pspdfkit.annotations.SquareAnnotation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
@@ -64,7 +63,6 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
-import org.zotero.android.ktx.isZoteroAnnotation
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.data.PDFDocumentAnnotation
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
@@ -91,7 +89,6 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Outline
 import org.zotero.android.screens.htmlepub.reader.data.Page
-import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultSelected
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
@@ -104,7 +101,6 @@ import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsArgs
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsChangeResult
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
-import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverterV2
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
@@ -174,6 +170,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private var selectedTextParamsText: String = ""
 
+    var activeLineWidth: Float = 0.0f
+    var activeEraserSize: Float = 0.0f
+    var activeFontSize: Float = 0.0f
+
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
@@ -217,7 +217,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
         viewModelScope.launch {
             setToolOptions(
                 hex = result.colorHex,
-                tool = result.annotationTool
+                tool = result.annotationTool,
+                size = result.size
             )
         }
     }
@@ -310,11 +311,19 @@ class HtmlEpubReaderViewModel @Inject constructor(
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
 
+        this.activeLineWidth = defaults.getActiveLineWidth()
+        this.activeEraserSize = defaults.getActiveEraserSize()
+        this.activeFontSize = defaults.getActiveFontSize()
+
         updateState {
             copy(toolColors = mapOf(
                 AnnotationTool.highlight to defaults.getHighlightColorHex(),
                 AnnotationTool.note to defaults.getNoteColorHex(),
                 AnnotationTool.underline to defaults.getUnderlineColorHex(),
+
+                AnnotationTool.ink to defaults.getInkColorHex(),
+                AnnotationTool.text to defaults.getTextColorHex(),
+                AnnotationTool.image to defaults.getSquareColorHex(),
             ))
         }
         this.userId = sessionDataEventStream.currentValue()!!.userId
@@ -519,16 +528,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun parsePdfJson(pdfAnnotations: JsonArray, author: String, isAuthor: Boolean): List<PDFDocumentAnnotation>  {
         return pdfAnnotations.mapNotNull { pdfAnnotation ->
-            if (pdfAnnotation is SquareAnnotation && !pdfAnnotation.isZoteroAnnotation) {
-                return@mapNotNull null
-            }
             val annotation = AnnotationConverterV2.annotation(
                 data = pdfAnnotation.asJsonObject,
                 author = author,
                 isAuthor = isAuthor,
+                lineWidthFromUser = 2.0f//TODO fix
             )
             annotation
-
         }
     }
 
@@ -543,7 +549,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
             val dateModified = (data["dateModified"]?.asString)?.let{ iso8601WithFractionalSeconds.parse(it) }   ?: return@mapNotNull null
             val color = data["color"]?.asString ?: return@mapNotNull null
-            val comment = data["comment"]?.asString ?: return@mapNotNull null
+            val comment = data["comment"]?.asString ?: return@mapNotNull null //TODO solve
             val pageLabel = data["pageLabel"]?.asString   ?: return@mapNotNull null
             val position = data["position"]?.asJsonObject ?: return@mapNotNull null
             val sortIndex = data["sortIndex"]?.asString ?: return@mapNotNull null
@@ -706,7 +712,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
             parseHtmlEpubJson(annotations = rawAnnotations, author = this.username, isAuthor = true)
         }
 
-
         if (annotations.isEmpty()) {
             Timber.e("HtmlEpubReaderViewModel: could not parse annotations")
             return
@@ -721,10 +726,23 @@ class HtmlEpubReaderViewModel @Inject constructor(
             toggle(viewState.activeTool!!)
         }
         if (isCurrentFilePdf()) {
-//            createPdfDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
+            createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
         } else {
             createHtmlEpubDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
         }
+    }
+
+    private fun createPdfDatabaseAnnotations(annotations: List<PDFDocumentAnnotation>) {
+//        val request = CreatePDFAnnotationsDbRequest(
+//            attachmentKey = viewState.key,
+//            libraryId = viewState.library.identifier,
+//            annotations = annotations,
+//            userId = viewState.userId,
+//            schemaController = this.schemaController,
+//            boundingBoxConverter = this.annotationBoundingBoxConverter
+//        )
+//        dbWrapperMain.realmDbStorage.perform(request)
+
     }
 
     fun selectAnnotationFromDocument(key: String) {
@@ -819,65 +837,23 @@ class HtmlEpubReaderViewModel @Inject constructor(
         _select(key = null, didSelectInDocument = false)
     }
 
-    fun parseAndCacheIfNeededAttributedComment(annotation: ReaderAnnotation): String? {
-        val comment = annotation.comment
-        if (comment.isEmpty()) {
-            return null
+    fun toggle(tool: AnnotationTool) {
+        viewModelScope.launch {
+            val color = viewState.toolColors[tool]
+            toggle(annotationTool = tool, colorHex = color)
         }
-        val attributedComment = this.comments[annotation.key]
-        if (attributedComment != null) {
-            return attributedComment
-        }
-
-        parseAndCacheComment(key = annotation.key, comment = comment)
-        return this.comments[annotation.key]
     }
 
-    private fun parseAndCacheComment(key: String, comment: String) {
-        this.comments[key] = comment
-    }
-    fun toggle(toolSet: AnnotationTool) {
-        if (viewState.activeTool == toolSet) {
+    private suspend fun toggle(annotationTool: AnnotationTool, colorHex: String?) {
+        if (viewState.activeTool == annotationTool) {
             updateState {
                 copy(activeTool = null)
             }
-        } else {
-            updateState {
-                copy(activeTool = toolSet)
-            }
+            htmlEpubReaderWebCallChainExecutor?.clearTool()
+            return
         }
-        val tool = viewState.activeTool
-        val color = tool?.let { viewState.toolColors[it] }
+        updateAnnotationToolDrawColorAndSize(annotationTool = annotationTool, colorHex = colorHex)
 
-        if (tool != null && color != null) {
-            setTool(tool to color)
-        } else {
-            setTool(null)
-        }
-    }
-
-    private fun setTool(data: Pair<AnnotationTool, String>?) {
-        viewModelScope.launch {
-            if (data == null) {
-                htmlEpubReaderWebCallChainExecutor?.clearTool()
-                return@launch
-            }
-            val (tool, color) = data
-
-            var toolName: String
-            when(tool) {
-                AnnotationTool.highlight -> {
-                    toolName = "highlight"
-                }
-                AnnotationTool.note -> {
-                    toolName = "note"
-                }
-                AnnotationTool.underline -> {
-                    toolName = "underline"
-                }
-            }
-            htmlEpubReaderWebCallChainExecutor?.setTool(toolName, color)
-        }
     }
 
 
@@ -1050,7 +1026,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return Triple(sortedKeys, annotations, jsons)
     }
 
-    private fun isCurrentFilePdf(): Boolean {
+    fun isCurrentFilePdf(): Boolean {
         return when (val extension = this.documentFile.extension.lowercase()) {
             "epub", "html", "htm" -> {
                 false
@@ -1140,10 +1116,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     }
                     texts[key] = textCacheTuple
                     when (annotation.type) {
-                        AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline -> {
+                        AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline, AnnotationType.ink -> {
                             comment = annotation.comment //TODO comment attribute conversion
                         }
-                        AnnotationType.ink, AnnotationType.text -> {
+                        AnnotationType.text -> {
                             comment = null
                         }
                     }
@@ -1467,7 +1443,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         val tool = viewState.activeTool
         val color = tool?.let { viewState.toolColors[it] }
         if (tool != null && color != null) {
-            setTool(tool to color)
+            updateAnnotationToolDrawColorAndSize(annotationTool = tool, colorHex = color)
         }
         if (!savedSearchTerm.isEmpty()) {
             delay(400)
@@ -1803,37 +1779,137 @@ class HtmlEpubReaderViewModel @Inject constructor(
         triggerEffect(HtmlEpubReaderViewEffect.ShowHtmlEpubColorPicker)
     }
 
-    private fun setToolOptions(hex: String?, tool: AnnotationTool) {
+    private suspend fun setToolOptions(hex: String?, size: Float?, tool: AnnotationTool) {
+        if (hex != null) {
+            when (tool) {
+                AnnotationTool.highlight -> {
+                    defaults.setHighlightColorHex(hex)
+                }
+                AnnotationTool.note -> {
+                    defaults.setNoteColorHex(hex)
+                }
+                AnnotationTool.image -> {
+                    defaults.setSquareColorHex(hex)
+                }
+                AnnotationTool.ink -> {
+                    defaults.setInkColorHex(hex)
+                }
+                AnnotationTool.text -> {
+                    defaults.setTextColorHex(hex)
+                }
+                AnnotationTool.underline -> {
+                    defaults.setUnderlineColorHex(hex)
+                }
+
+                AnnotationTool.eraser -> {
+                    //no-op
+                }
+            }
+        }
+        if (size != null) {
+            when (tool) {
+                AnnotationTool.eraser -> {
+                    defaults.setActiveEraserSize(size)
+                }
+                AnnotationTool.ink -> {
+                    defaults.setActiveLineWidth(size)
+                }
+                AnnotationTool.text -> {
+                    defaults.setActiveFontSize(size)
+                }
+                else -> {
+                    //no-op
+                }
+            }
+        }
         if (hex != null) {
             updateState {
                 copy(toolColors = viewState.toolColors + (tool to hex))
             }
         }
-        var drawColor: Int? = null
-        if (hex != null) {
-            val type: AnnotationType? = when(tool) {
-                AnnotationTool.highlight -> {
-                    AnnotationType.highlight
+        if (size != null) {
+            when (tool) {
+                AnnotationTool.ink -> {
+                    this.activeLineWidth = size
                 }
-
-                AnnotationTool.underline -> {
-                    AnnotationType.underline
+                AnnotationTool.eraser -> {
+                    this.activeEraserSize = size
                 }
-
+                AnnotationTool.text -> {
+                    this.activeFontSize = size
+                }
                 else -> {
-                    null
+                    //no-op
                 }
             }
-
-            val (_color, _, bM) = AnnotationColorGenerator.color(
-                colorHex = hex,
-                type = type,
-                isDarkMode = viewState.isDark
-            )
-            drawColor = _color
-            setTool(tool to hex)
         }
+        updateAnnotationToolDrawColorAndSize(annotationTool = tool, colorHex = hex)
     }
+
+    private suspend fun updateAnnotationToolDrawColorAndSize(
+        annotationTool: AnnotationTool,
+        colorHex: String? = null
+    ) {
+        htmlEpubReaderWebCallChainExecutor?.clearTool()
+
+        when (annotationTool) {
+            AnnotationTool.ink -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "ink",
+                    colorHex = colorHex!!,
+                    size = this.activeLineWidth
+                )
+            }
+
+            AnnotationTool.text -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "text",
+                    colorHex = colorHex!!,
+                    size = this.activeFontSize
+                )
+            }
+
+            AnnotationTool.highlight -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "highlight",
+                    colorHex = colorHex!!,
+                )
+            }
+
+            AnnotationTool.note -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "note",
+                    colorHex = colorHex!!,
+                )
+            }
+
+            AnnotationTool.image -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "image",
+                    colorHex = colorHex!!,
+                )
+            }
+
+            AnnotationTool.underline -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "underline",
+                    colorHex = colorHex!!,
+                )
+            }
+
+            AnnotationTool.eraser -> {
+                htmlEpubReaderWebCallChainExecutor?.setTool(
+                    toolName = "eraser",
+                    size = this.activeEraserSize
+                )
+            }
+        }
+        updateState {
+            copy(activeTool = annotationTool)
+        }
+        triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
+    }
+
 
 
     private fun openAnnotationDialog() {

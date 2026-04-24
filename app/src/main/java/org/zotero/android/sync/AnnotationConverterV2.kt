@@ -1,15 +1,9 @@
 package org.zotero.android.sync
 import android.graphics.PointF
 import android.graphics.RectF
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.pspdfkit.annotations.Annotation
 import com.pspdfkit.annotations.FreeTextAnnotation
-import com.pspdfkit.annotations.HighlightAnnotation
-import com.pspdfkit.annotations.InkAnnotation
-import com.pspdfkit.annotations.NoteAnnotation
-import com.pspdfkit.annotations.SquareAnnotation
-import com.pspdfkit.annotations.TextMarkupAnnotation
-import com.pspdfkit.annotations.UnderlineAnnotation
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
@@ -28,6 +22,7 @@ class AnnotationConverterV2 {
             data: JsonObject,
             author: String,
             isAuthor: Boolean,
+            lineWidthFromUser: Float? = null,
         ): PDFDocumentAnnotation? {
             val type = (data["type"]?.asString)?.let{AnnotationType.valueOf(it)} ?: return null
 
@@ -36,7 +31,7 @@ class AnnotationConverterV2 {
             }
             val key = data["id"]?.asString ?: return null
             val pageLabel = data["pageLabel"]?.asString   ?: return null
-            val comment = data["comment"]?.asString?.let { it.trim().trim { it == '\n' } } ?: ""
+//            val comment = data["comment"]?.asString?.let { it.trim().trim { it == '\n' } } ?: ""
             val sortIndex = data["sortIndex"]?.asString ?: return null
             val dateAdded = (data["dateCreated"]?.asString)?.let {
                 iso8601WithFractionalSeconds.parse(it)
@@ -45,73 +40,53 @@ class AnnotationConverterV2 {
                 (data["dateModified"]?.asString)?.let {
                     iso8601WithFractionalSeconds.parse(it)
                 } ?: return null
+            val color = data["color"]?.asString ?: return null
+//            val text = data["text"]?.asString ?: return null
+            val position = data["position"]?.asJsonObject ?: return null
 
-            println()
-            //
+            val rects: List<RectF>
+            var text: String? = null
+            val paths: List<List<PointF>>
+            var lineWidth: Float? = null
+            var fontSize: Float? = null
+            var rotation: Int? = null
 
-            //            val color = data["color"]?.asString ?: return@mapNotNull null
-            //
-            //            val position = data["position"]?.asJsonObject ?: return@mapNotNull null
-            //            val text = data["text"]?.asString ?: return@mapNotNull null
-            //            val type = (data["type"]?.asString)?.let{AnnotationType.valueOf(it)} ?: return@mapNotNull null
-            //            val rawTags = data["tags"]?.asJsonArray ?: return@mapNotNull null
-            //            val tags = rawTags.mapNotNull { dataAsJson ->
-            //                val data = dataAsJson.asJsonObject
-            //                val name = data["name"]?.asString ?: return@mapNotNull null
-            //                val color = data["color"]?.asString ?: return@mapNotNull null
-            //                Tag(name = name, color = color)
-            //            }
+            when (type) {
+                AnnotationType.ink -> {
+                    rects = emptyList()
+                    paths = pathsForInk(position["paths"].asJsonArray)
+                    lineWidth = lineWidthFromUser!!
+                }
+                AnnotationType.image -> {
+                    rects = rectsForSquare(position["rects"].asJsonArray)
+                    paths = emptyList()
+                }
+                AnnotationType.note -> {
+                    rects = rectsForNote(position["rects"].asJsonArray)
+                    paths = emptyList()
+                }
 
-            return null
+                AnnotationType.underline -> {
+                    rects = rectsUnderlineAndHightlight(position["rects"].asJsonArray)
+                    text = data["text"]?.asString
+                    paths = emptyList()
+                }
 
-//            val rects: List<RectF>
-//            var text: String? = null
-//            val paths: List<List<PointF>>
-//            var lineWidth: Float? = null
-//            var fontSize: Float? = null
-//            var rotation: Int? = null
-//
-//            val noteAnnotation = annotation as? NoteAnnotation
-//            val highlightAnnotation = annotation as? HighlightAnnotation
-//            val squareAnnotation = annotation as? SquareAnnotation
-//            val inkAnnotation = annotation as? InkAnnotation
-//            val underlineAnnotation = annotation as? UnderlineAnnotation
-//            val freeTextAnnotation = annotation as? FreeTextAnnotation
-//            if (noteAnnotation != null) {
-//                type = AnnotationType.note
-//                rects = rects(noteAnnotation)
-//                paths = emptyList()
-//            } else if (highlightAnnotation != null) {
-//                type = AnnotationType.highlight
-//                rects = rectsUnderlineAndHightlight(highlightAnnotation)
-//                text = highlightAnnotation.highlightedText
-//                paths = emptyList()
-//            } else if (squareAnnotation != null) {
-//                type = AnnotationType.image
-//                rects = rects(squareAnnotation)
-//                paths = emptyList()
-//            } else if (inkAnnotation != null) {
-//                type = AnnotationType.ink
-//                rects = emptyList()
-//                paths = paths(inkAnnotation)
-//                lineWidth = inkAnnotation.lineWidth
-//            } else if (underlineAnnotation != null) {
-//                type = AnnotationType.underline
-//                rects = rectsUnderlineAndHightlight(underlineAnnotation)
-//                text = underlineAnnotation.highlightedText
-//                paths = emptyList()
-//            } else if (freeTextAnnotation != null) {
-//                type = AnnotationType.text
+                AnnotationType.highlight -> {
+                    rects = rectsUnderlineAndHightlight(position["rects"].asJsonArray)
+                    text = data["text"]?.asString
+                    paths = emptyList()
+                }
+                AnnotationType.text -> {
 //                fontSize = annotation.textSize
 //                rotation = annotation.rotation
-//                paths = emptyList()
+                paths = emptyList()
 //                rects = rects(freeTextAnnotation)
-//            }
-//
-//            else {
-//                return null
-//            }
-//
+                }
+
+            }
+            return null
+
 //            return PDFDocumentAnnotation(
 //                key = key,
 //                type = type,
@@ -134,25 +109,34 @@ class AnnotationConverterV2 {
 //            )
         }
 
-        private fun rects(annotation: NoteAnnotation): List<RectF> {
-            return listOf(
+        private fun rectsForNote(annotation: JsonArray): List<RectF> {
+            val rectsJsonArray = annotation.asJsonArray[0].asJsonArray
+            return listOf( RectF(
+                /* left = */ rectsJsonArray[0].asFloat,
+                /* top = */ rectsJsonArray[1].asFloat,
+                /* right = */ rectsJsonArray[2].asFloat,
+                /* bottom = */ rectsJsonArray[3].asFloat
+            ))
+        }
+        private fun rectsUnderlineAndHightlight(annotation: JsonArray) : List<RectF> {
+            return annotation.asJsonArray.map {
+                val rectsJsonArray = it.asJsonArray
                 RectF(
-                    /* left = */
-                    annotation.boundingBox.left,
-                    /* top = */
-                    annotation.boundingBox.bottom + AnnotationsConfig.noteAnnotationSize.first,
-                    /* right = */
-                    annotation.boundingBox.left + AnnotationsConfig.noteAnnotationSize.second,
-                    /* bottom = */
-                    annotation.boundingBox.bottom,
+                    /* left = */ rectsJsonArray[0].asFloat,
+                    /* top = */ rectsJsonArray[1].asFloat,
+                    /* right = */ rectsJsonArray[2].asFloat,
+                    /* bottom = */ rectsJsonArray[3].asFloat
                 )
-            )
+            }
         }
-        private fun rectsUnderlineAndHightlight(highlightAndUnderlineAnnotation: TextMarkupAnnotation) : List<RectF> {
-            return (highlightAndUnderlineAnnotation.rects ?: listOf(highlightAndUnderlineAnnotation.boundingBox))
-        }
-        private fun rects(annotation: SquareAnnotation) : List<RectF>  {
-            return listOf(annotation.boundingBox)
+        private fun rectsForSquare(annotation: JsonArray) : List<RectF>  {
+            val rectsJsonArray = annotation.asJsonArray[0].asJsonArray
+            return listOf( RectF(
+                /* left = */ rectsJsonArray[0].asFloat,
+                /* top = */ rectsJsonArray[1].asFloat,
+                /* right = */ rectsJsonArray[2].asFloat,
+                /* bottom = */ rectsJsonArray[3].asFloat
+            ))
         }
 
         private fun rects(annotation: FreeTextAnnotation) : List<RectF>  {
@@ -181,30 +165,34 @@ class AnnotationConverterV2 {
 //            return listOf(boundingBox)
         }
 
-        fun paths(annotation: InkAnnotation): List<List<PointF>> {
-            return annotation.lines.map { lines ->
-                lines.map { group ->
-                    group.rounded(3)
+        fun pathsForInk(outerArray: JsonArray): List<List<PointF>> {
+            return outerArray.map { lines ->
+                lines.asJsonArray.chunked(2).map { coordinatePair ->
+                    val (x, y) = coordinatePair
+                    PointF(
+                        x.asFloat.rounded(3),
+                        y.asFloat.rounded(3)
+                    )
                 }
             }
         }
 
-        fun rects(annotation: Annotation): List<RectF>? {
-            when(annotation) {
-                is NoteAnnotation -> {
-                    rects(annotation)
-                }
-                is HighlightAnnotation, is UnderlineAnnotation -> {
-                    rectsUnderlineAndHightlight(annotation as TextMarkupAnnotation)
-                }
-                is SquareAnnotation -> {
-                    rects(annotation)
-                }
-                is FreeTextAnnotation -> {
-                    return rects(annotation)
-                }
-            }
-            return null
-        }
+//        fun rects(annotation: Annotation): List<RectF>? {
+//            when(annotation) {
+//                is NoteAnnotation -> {
+//                    rects(annotation)
+//                }
+//                is HighlightAnnotation, is UnderlineAnnotation -> {
+//                    rectsUnderlineAndHightlight(annotation as TextMarkupAnnotation)
+//                }
+//                is SquareAnnotation -> {
+//                    rects(annotation)
+//                }
+//                is FreeTextAnnotation -> {
+//                    return rects(annotation)
+//                }
+//            }
+//            return null
+//        }
     }
 }

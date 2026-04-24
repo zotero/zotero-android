@@ -68,6 +68,45 @@ private val htmlEpubReaderToolsList = listOf(
     ),
 )
 
+private val pdfReaderToolsList = listOf(
+    HtmlEpubReaderTool(
+        type = AnnotationTool.highlight,
+        title = Strings.pdf_annotation_toolbar_highlight,
+        image = Drawables.annotate_highlight,
+        isHidden = false
+    ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.underline,
+        title = Strings.pdf_annotation_toolbar_underline,
+        image = Drawables.annotate_underline,
+        isHidden = false
+    ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.note,
+        title = Strings.pdf_annotation_toolbar_note,
+        image = Drawables.annotate_note,
+        isHidden = false
+    ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.text,
+        title = Strings.pdf_annotation_toolbar_text,
+        image = Drawables.annotate_text,
+        isHidden = false
+    ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.image,
+        title = Strings.pdf_annotation_toolbar_image,
+        image = Drawables.annotate_area,
+        isHidden = false
+    ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.ink,
+        title = Strings.pdf_annotation_toolbar_ink,
+        image = Drawables.annotate_ink,
+        isHidden = false
+    ),
+)
+
 @Composable
 internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
     viewState: HtmlEpubReaderViewState,
@@ -155,7 +194,14 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
-            htmlEpubReaderToolsList.forEach { tool ->
+            val toolsList =
+            if (viewModel.isCurrentFilePdf()) {
+                pdfReaderToolsList
+            } else {
+                htmlEpubReaderToolsList
+            }
+
+            toolsList.forEach { tool ->
                 if (!tool.isHidden) {
                     TooltipBox(
                         positionProvider = rememberTooltipPositionProvider(

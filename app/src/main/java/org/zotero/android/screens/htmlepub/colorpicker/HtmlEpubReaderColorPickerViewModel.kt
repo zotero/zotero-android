@@ -20,7 +20,6 @@ import javax.inject.Inject
 
 var queuedUpHtmlEpubReaderColorPickerResult: HtmlEpubReaderColorPickerResult? = null
 
-
 @HiltViewModel
 internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
@@ -58,6 +57,7 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
             updateState {
                 copy(
                     selectedColor = selectedColor,
+                    size = colorPickerArgs.size,
                 )
             }
         }
@@ -68,6 +68,9 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
             AnnotationTool.note -> AnnotationsConfig.colors(AnnotationType.note)
             AnnotationTool.highlight -> AnnotationsConfig.colors(AnnotationType.highlight)
             AnnotationTool.underline -> AnnotationsConfig.colors(AnnotationType.underline)
+            AnnotationTool.ink -> AnnotationsConfig.colors(AnnotationType.ink)
+            AnnotationTool.image -> AnnotationsConfig.colors(AnnotationType.image)
+            AnnotationTool.text -> AnnotationsConfig.colors(AnnotationType.text)
             else -> listOf()
         }
     }
@@ -88,6 +91,7 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
     private fun updateQueueResult() {
         queuedUpHtmlEpubReaderColorPickerResult = HtmlEpubReaderColorPickerResult(
             colorHex = viewState.selectedColor,
+            size = viewState.size,
             annotationTool = ScreenArguments.htmlEpubReaderColorPickerArgs.tool
         )
     }
@@ -99,10 +103,19 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
         super.onCleared()
     }
 
+      fun onSizeChanged(newSize: Float) {
+        updateState {
+            copy(size = newSize)
+        }
+        updateQueueResult()
+
+    }
+
 }
 
 internal data class HtmlEpubReaderColorPickerViewState(
     val selectedColor: String? = null,
+    val size: Float? = null,
     val colors: List<String> = emptyList(),
     val isDark: Boolean = false,
 ) : ViewState

@@ -5,5 +5,6 @@ import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 
 data class HtmlEpubReaderColorPickerResult(
     val colorHex: String? = null,
-    val annotationTool: AnnotationTool
+    val annotationTool: AnnotationTool,
+    val size: Float? = null,
 )
