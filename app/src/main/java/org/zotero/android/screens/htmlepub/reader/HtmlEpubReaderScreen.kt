@@ -21,6 +21,8 @@ import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.screens.htmlepub.annotation.sidebar.HtmlEpubAnnotationNavigationView
 import org.zotero.android.screens.htmlepub.annotationmore.sidebar.HtmlEpubAnnotationMoreNavigationView
+import org.zotero.android.screens.htmlepub.colorpicker.HtmlEpubReaderColorPickerView
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.HtmlEpubFilterView
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
 import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderSearchTopBar
@@ -197,6 +199,8 @@ internal fun HtmlEpubReaderScreen(
         HtmlEpubAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)
         HtmlEpubAnnotationNavigationView(viewState = viewState, viewModel = viewModel)
         HtmlEpubSettingsView(viewState = viewState, viewModel = viewModel)
+        HtmlEpubReaderColorPickerView(viewState = viewState, viewModel = viewModel)
+        HtmlEpubFilterView(viewState = viewState, viewModel = viewModel)
     }
 
 }
