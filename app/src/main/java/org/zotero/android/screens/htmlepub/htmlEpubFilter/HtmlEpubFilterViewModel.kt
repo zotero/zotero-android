@@ -15,6 +15,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArgs
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterResult
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotationsFilter
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -47,14 +48,13 @@ internal class HtmlEpubFilterViewModel @Inject constructor(
 
     }
 
-    fun init() = initOnce {
+    fun init(args: HtmlEpubFilterArgs) = initOnce {
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
         }
         startObservingTheme()
 
         EventBus.getDefault().register(this)
-        val args = ScreenArguments.htmlEpubFilterArgs
 
         updateState {
             copy(
@@ -126,8 +126,6 @@ internal class HtmlEpubFilterViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
-
-
 }
 
 internal data class HtmlEpubFilterViewState(
