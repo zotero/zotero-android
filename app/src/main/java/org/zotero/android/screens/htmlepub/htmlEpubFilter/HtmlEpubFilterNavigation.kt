@@ -1,5 +1,6 @@
 package org.zotero.android.screens.htmlepub.htmlEpubFilter
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -7,39 +8,61 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.zotero.android.architecture.navigation.ZoteroNavigation
+import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArgs
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 
 @Composable
-internal fun HtmlEpubFilterNavigation() {
+internal fun HtmlEpubFilterNavigation(
+    args: HtmlEpubFilterArgs,
+    onBack: () -> Unit
+) {
     val navController = rememberNavController()
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val navigation = remember(navController) {
         ZoteroNavigation(navController, dispatcher)
     }
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val isTablet = layoutType.isTablet()
+    if (!isTablet) {
+        BackHandler(onBack = {
+            onBack()
+        })
+    }
     ZoteroNavHost(
         navController = navController,
         startDestination = HtmlEpubFilterDestinations.HTML_EPUB_FILTER_SCREEN,
     ) {
-        htmlEpubFilterNavScreens(navigation = navigation)
+        htmlEpubFilterNavScreens(args = args, navigation = navigation)
     }
 }
 
 internal fun NavGraphBuilder.htmlEpubFilterNavScreens(
     navigation: ZoteroNavigation,
+    args: HtmlEpubFilterArgs,
 ) {
-    htmlEpubFilterScreen(onBack = navigation::onBack, navigateToTagPicker = navigation::toTagPicker)
+    htmlEpubFilterScreen(
+        args = args,
+        onBack = navigation::onBack,
+        navigateToTagPicker = navigation::toTagPicker
+    )
     tagPickerScreen(onBack = navigation::onBack)
 }
 
 private fun NavGraphBuilder.htmlEpubFilterScreen(
+    args: HtmlEpubFilterArgs,
     onBack: () -> Unit,
     navigateToTagPicker: () -> Unit,
 ) {
     composable(
         route = HtmlEpubFilterDestinations.HTML_EPUB_FILTER_SCREEN,
     ) {
-        HtmlEpubFilterScreen(onBack = onBack, navigateToTagPicker = navigateToTagPicker)
+        HtmlEpubFilterScreen(
+            args = args,
+            onBack = onBack,
+            navigateToTagPicker = navigateToTagPicker
+        )
     }
 }
 

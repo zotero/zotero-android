@@ -671,35 +671,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-//    private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
-//        val textParams = this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
-//        val params = params(textParams, type = type) ?: return
-//
-//        val array = JsonArray()
-//        array.add(params)
-//
-//        val annotations =
-//            parse(annotations = array, author = this.username, isAuthor = true)
-//        this.selectedTextParams = null
-//
-//        for (annotation in annotations) {
-//            this.annotations[annotation.key] = annotation
-//        }
-//
-//        val documentUpdate = DocumentUpdate(
-//            deletions = JsonArray(),
-//            insertions = array,
-//            modifications = JsonArray()
-//        )
-//        htmlEpubReaderWebCallChainExecutor?.updateView(
-//            modifications = documentUpdate.modifications,
-//            insertions = documentUpdate.insertions,
-//            deletions = documentUpdate.deletions
-//        )
-//
-//        createDatabaseAnnotations(annotations = annotations)
-//    }
-
     private fun saveAnnotations(params: JsonObject) {
         val rawAnnotations = params["annotations"]?.asJsonArray
         if (rawAnnotations == null || rawAnnotations.isEmpty()) {
@@ -1606,12 +1577,22 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 sortedColors.add(color)
             }
         }
-        ScreenArguments.htmlEpubFilterArgs = HtmlEpubFilterArgs(
+
+        val args = HtmlEpubFilterArgs(
             filter = viewState.annotationFilter,
             availableColors = sortedColors,
             availableTags = sortedTags
         )
-        triggerEffect(HtmlEpubReaderViewEffect.ShowPdfFilters)
+
+        ScreenArguments.htmlEpubFilterArgs = args
+        if (isTablet) {
+            triggerEffect(HtmlEpubReaderViewEffect.ShowPdfFilters)
+        } else {
+            updateState {
+                copy(htmlEpubFilterArgs = args)
+            }
+        }
+
     }
 
     fun onOutlineSearch(search: String) {
@@ -1769,14 +1750,20 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun showToolOptions() {
         val tool = viewState.activeTool ?: return
-
         val colorHex = viewState.toolColors[tool]
 
-        ScreenArguments.htmlEpubReaderColorPickerArgs = HtmlEpubReaderColorPickerArgs(
+        val args = HtmlEpubReaderColorPickerArgs(
             tool = tool,
             colorHex = colorHex,
         )
-        triggerEffect(HtmlEpubReaderViewEffect.ShowHtmlEpubColorPicker)
+        ScreenArguments.htmlEpubReaderColorPickerArgs = args
+        if (isTablet) {
+            triggerEffect(HtmlEpubReaderViewEffect.ShowHtmlEpubAnnotationMore)
+        } else {
+            updateState {
+                copy(htmlEpubReaderColorPickerArgs = args)
+            }
+        }
     }
 
     private suspend fun setToolOptions(hex: String?, size: Float?, tool: AnnotationTool) {
@@ -1991,6 +1978,22 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+    fun hideHtmlEpubReaderColorPickerView() {
+        updateState {
+            copy(
+                htmlEpubReaderColorPickerArgs = null
+            )
+        }
+    }
+
+    fun hideHtmlEpubFilterView() {
+        updateState {
+            copy(
+                htmlEpubFilterArgs = null
+            )
+        }
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: HtmlEpubSettingsChangeResult) {
         viewModelScope.launch {
@@ -2058,18 +2061,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun onHighlight() {
         dismissActionMenu()
-
-//        viewModelScope.launch {
-//            saveAnnotationFromSelection(AnnotationType.highlight)
-//        }
     }
 
     fun onUnderline() {
         dismissActionMenu()
-
-//        viewModelScope.launch {
-//            saveAnnotationFromSelection(AnnotationType.underline)
-//        }
     }
 
 }
@@ -2112,6 +2107,8 @@ data class HtmlEpubReaderViewState(
     val htmlEpubAnnotationMoreArgs: HtmlEpubAnnotationMoreArgs? = null,
     val htmlEpubAnnotationArgs: HtmlEpubAnnotationArgs? = null,
     val htmlEpubSettingsArgs: HtmlEpubSettingsArgs? = null,
+    val htmlEpubReaderColorPickerArgs: HtmlEpubReaderColorPickerArgs? = null,
+    val htmlEpubFilterArgs: HtmlEpubFilterArgs? = null,
     val toolColors: Map<AnnotationTool, String> = emptyMap()
 
 ) : ViewState {

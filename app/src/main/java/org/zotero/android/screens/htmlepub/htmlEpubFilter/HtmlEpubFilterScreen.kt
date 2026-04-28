@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArgs
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -47,9 +48,10 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 internal fun HtmlEpubFilterScreen(
     onBack: () -> Unit,
     navigateToTagPicker: () -> Unit,
+    args: HtmlEpubFilterArgs,
     viewModel: HtmlEpubFilterViewModel = hiltViewModel(),
 ) {
-    viewModel.init()
+    viewModel.init(args)
 
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubFilterViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()

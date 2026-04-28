@@ -20,7 +20,6 @@ import org.zotero.android.screens.htmlepub.annotationmore.HtmlEpubAnnotationMore
 import org.zotero.android.screens.htmlepub.annotationmore.toHtmlEpubAnnotationMoreScreen
 import org.zotero.android.screens.htmlepub.colorpicker.HtmlEpubReaderColorPickerScreen
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.HtmlEpubFilterNavigation
-import org.zotero.android.screens.htmlepub.htmlEpubFilter.htmlEpubFilterNavScreens
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.toHtmlEpubFilterScreen
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderScreen
 
@@ -50,7 +49,10 @@ internal fun NavGraphBuilder.htmlEpubReaderNavScreensForTablet(
             .width(400.dp),
         route = HtmlEpubDestinations.HTML_EPUB_FILTER_NAVIGATION,
     ) {
-        HtmlEpubFilterNavigation()
+        HtmlEpubFilterNavigation(
+            args = ScreenArguments.htmlEpubFilterArgs,
+            onBack = navigation::onBack
+        )
     }
 
     dialogFixedDimens(
@@ -82,7 +84,10 @@ internal fun NavGraphBuilder.htmlEpubReaderNavScreensForTablet(
             .width(300.dp),
         route = HtmlEpubDestinations.HTML_EPUB_COLOR_PICKER,
     ) {
-        HtmlEpubReaderColorPickerScreen(onBack = { navController.popBackStack() })
+        HtmlEpubReaderColorPickerScreen(
+            args = ScreenArguments.htmlEpubReaderColorPickerArgs,
+            onBack = navigation::onBack,
+        )
     }
 
     dialogFixedDimens(
@@ -113,8 +118,6 @@ internal fun NavGraphBuilder.htmlEpubReaderNavScreensForPhone(
         navigateToHtmlEpubSettings = navigation::toHtmlEpubSettings,
         onOpenWebpage = onOpenWebpage,
     )
-    htmlEpubFilterNavScreens(navigation)
-    htmlEpubColorPicker(navigation)
 }
 private fun NavGraphBuilder.htmlEpubReaderScreen(
     onBack: () -> Unit,
@@ -170,15 +173,6 @@ private fun ZoteroNavigation.toHtmlEpubAnnotationMoreNavigation() {
 
 private fun ZoteroNavigation.toHtmlEpubColorPicker() {
     navController.navigate(HtmlEpubDestinations.HTML_EPUB_COLOR_PICKER)
-}
-
-private fun NavGraphBuilder.htmlEpubColorPicker(navigation: ZoteroNavigation) {
-    composable(
-        route = HtmlEpubDestinations.HTML_EPUB_COLOR_PICKER,
-        arguments = listOf(),
-    ) {
-        HtmlEpubReaderColorPickerScreen(onBack = navigation::onBack)
-    }
 }
 
 private fun ZoteroNavigation.toHtmlEpubFilterNavigation() {

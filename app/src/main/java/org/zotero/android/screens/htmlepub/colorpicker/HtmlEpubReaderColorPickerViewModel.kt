@@ -14,17 +14,20 @@ import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.screens.htmlepub.colorpicker.data.HtmlEpubReaderColorPickerArgs
 import org.zotero.android.screens.htmlepub.colorpicker.data.HtmlEpubReaderColorPickerResult
 import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import javax.inject.Inject
-
-var queuedUpHtmlEpubReaderColorPickerResult: HtmlEpubReaderColorPickerResult? = null
 
 @HiltViewModel
 internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
 ) : BaseViewModel2<HtmlEpubReaderColorPickerViewState, HtmlEpubReaderColorPickerViewEffect>(HtmlEpubReaderColorPickerViewState()) {
+
+    private val screenArgs: HtmlEpubReaderColorPickerArgs by lazy {
+        ScreenArguments.htmlEpubReaderColorPickerArgs
+    }
 
     private var pdfReaderThemeCancellable: Job? = null
 
@@ -38,16 +41,16 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun init() {
+    fun init(args: HtmlEpubReaderColorPickerArgs?) {
+        val loadedArgs = args ?: screenArgs
         initOnce {
             updateState {
                 copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
             startObservingTheme()
-            val colorPickerArgs = ScreenArguments.htmlEpubReaderColorPickerArgs
-            val selectedColor = colorPickerArgs.colorHex
+            val selectedColor = loadedArgs.colorHex
             if (selectedColor != null) {
-                val colors = colors(colorPickerArgs.tool)
+                val colors = colors(loadedArgs.tool)
                 updateState {
                     copy(
                         colors = colors,
@@ -57,7 +60,7 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
             updateState {
                 copy(
                     selectedColor = selectedColor,
-                    size = colorPickerArgs.size,
+                    size = loadedArgs.size,
                 )
             }
         }
@@ -83,32 +86,22 @@ internal class HtmlEpubReaderColorPickerViewModel @Inject constructor(
         updateState {
             copy(selectedColor = hex)
         }
-        updateQueueResult()
-        triggerEffect(HtmlEpubReaderColorPickerViewEffect.NavigateBack)
-
-    }
-
-    private fun updateQueueResult() {
-        queuedUpHtmlEpubReaderColorPickerResult = HtmlEpubReaderColorPickerResult(
-            colorHex = viewState.selectedColor,
-            size = viewState.size,
-            annotationTool = ScreenArguments.htmlEpubReaderColorPickerArgs.tool
-        )
-    }
-
-    override fun onCleared() {
-        if (queuedUpHtmlEpubReaderColorPickerResult != null) {
-            EventBus.getDefault().post(queuedUpHtmlEpubReaderColorPickerResult)
-        }
-        super.onCleared()
     }
 
       fun onSizeChanged(newSize: Float) {
         updateState {
             copy(size = newSize)
         }
-        updateQueueResult()
+    }
 
+    fun sendColorPickerResult() {
+        EventBus.getDefault().post(
+            HtmlEpubReaderColorPickerResult(
+                colorHex = viewState.selectedColor,
+                size = viewState.size,
+                annotationTool = ScreenArguments.htmlEpubReaderColorPickerArgs.tool
+            )
+        )
     }
 
 }
@@ -120,6 +113,4 @@ internal data class HtmlEpubReaderColorPickerViewState(
     val isDark: Boolean = false,
 ) : ViewState
 
-internal sealed class HtmlEpubReaderColorPickerViewEffect : ViewEffect {
-    object NavigateBack : HtmlEpubReaderColorPickerViewEffect()
-}
+internal sealed class HtmlEpubReaderColorPickerViewEffect : ViewEffect

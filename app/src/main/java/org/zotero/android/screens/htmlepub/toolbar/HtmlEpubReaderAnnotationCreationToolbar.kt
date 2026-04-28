@@ -105,6 +105,12 @@ private val pdfReaderToolsList = listOf(
         image = Drawables.annotate_ink,
         isHidden = false
     ),
+    HtmlEpubReaderTool(
+        type = AnnotationTool.eraser,
+        title = Strings.pdf_annotation_toolbar_eraser,
+        image = Drawables.annotate_eraser,
+        isHidden = false
+    )
 )
 
 @Composable

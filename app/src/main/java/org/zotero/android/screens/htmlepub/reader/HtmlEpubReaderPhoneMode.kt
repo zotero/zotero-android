@@ -5,9 +5,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -36,6 +42,9 @@ internal fun HtmlEpubReaderPhoneMode(
         )
 
         AnimatedContent(
+            modifier = Modifier
+                .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()),
             targetState = viewState.showSideBar,
             transitionSpec = {
                 htmlEpubReaderSidebarTransitionSpec()

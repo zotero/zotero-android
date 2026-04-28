@@ -3,7 +3,6 @@ import android.graphics.PointF
 import android.graphics.RectF
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.pspdfkit.annotations.FreeTextAnnotation
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
@@ -24,14 +23,13 @@ class AnnotationConverterV2 {
             isAuthor: Boolean,
             lineWidthFromUser: Float? = null,
         ): PDFDocumentAnnotation? {
-            val type = (data["type"]?.asString)?.let{AnnotationType.valueOf(it)} ?: return null
-
+            val type = (data["type"]?.asString)?.let { AnnotationType.valueOf(it) } ?: return null
             if (!AnnotationsConfig.supportedV2.contains(type)) {
                 return null
             }
             val key = data["id"]?.asString ?: return null
-            val pageLabel = data["pageLabel"]?.asString   ?: return null
-//            val comment = data["comment"]?.asString?.let { it.trim().trim { it == '\n' } } ?: ""
+            val pageLabel = data["pageLabel"]?.asString ?: return null
+            val comment = data["comment"]?.asString?.let { it.trim().trim { it == '\n' } } ?: ""
             val sortIndex = data["sortIndex"]?.asString ?: return null
             val dateAdded = (data["dateCreated"]?.asString)?.let {
                 iso8601WithFractionalSeconds.parse(it)
@@ -41,8 +39,8 @@ class AnnotationConverterV2 {
                     iso8601WithFractionalSeconds.parse(it)
                 } ?: return null
             val color = data["color"]?.asString ?: return null
-//            val text = data["text"]?.asString ?: return null
             val position = data["position"]?.asJsonObject ?: return null
+            val page = position["pageIndex"]?.asInt ?: 0
 
             val rects: List<RectF>
             var text: String? = null
@@ -57,10 +55,12 @@ class AnnotationConverterV2 {
                     paths = pathsForInk(position["paths"].asJsonArray)
                     lineWidth = lineWidthFromUser!!
                 }
+
                 AnnotationType.image -> {
                     rects = rectsForSquare(position["rects"].asJsonArray)
                     paths = emptyList()
                 }
+
                 AnnotationType.note -> {
                     rects = rectsForNote(position["rects"].asJsonArray)
                     paths = emptyList()
@@ -77,36 +77,34 @@ class AnnotationConverterV2 {
                     text = data["text"]?.asString
                     paths = emptyList()
                 }
+
                 AnnotationType.text -> {
-//                fontSize = annotation.textSize
-//                rotation = annotation.rotation
-                paths = emptyList()
-//                rects = rects(freeTextAnnotation)
+                    fontSize = position["fontSize"].asFloat
+                    rotation = position["rotation"].asInt
+                    paths = emptyList()
+                    rects = rectsForText(position["rects"].asJsonArray)
                 }
-
             }
-            return null
-
-//            return PDFDocumentAnnotation(
-//                key = key,
-//                type = type,
-//                page = page,
-//                pageLabel = pageLabel,
-//                rects = rects,
-//                paths = paths,
-//                lineWidth = lineWidth,
-//                color = color,
-//                comment = comment,
-//                text = text,
-//                fontSize = fontSize,
-//                rotation = rotation,
-//                dateAdded = ItemsSortType.Field.dateAdded,
-//                dateModified = ItemsSortType.Field.dateModified,
-//                sortIndex = sortIndex,
-//                author = author,
-//                isAuthor = isAuthor,
-//                isZoteroAnnotation = annotation.isZoteroAnnotation
-//            )
+            return PDFDocumentAnnotation(
+                key = key,
+                type = type,
+                page = page,
+                pageLabel = pageLabel,
+                rects = rects,
+                paths = paths,
+                lineWidth = lineWidth,
+                color = color,
+                comment = comment,
+                text = text,
+                fontSize = fontSize,
+                rotation = rotation,
+                dateAdded = dateAdded,
+                dateModified = dateModified,
+                sortIndex = sortIndex,
+                author = author,
+                isAuthor = isAuthor,
+                isZoteroAnnotation = true
+            )
         }
 
         private fun rectsForNote(annotation: JsonArray): List<RectF> {
@@ -139,30 +137,14 @@ class AnnotationConverterV2 {
             ))
         }
 
-        private fun rects(annotation: FreeTextAnnotation) : List<RectF>  {
-            return listOf(annotation.boundingBox)
-//            if (annotation.rotation <= 0) {
-//                return listOf(
-//                    annotation.boundingBox
-//                )
-//            }
-//
-//            val tempAnnotation = FreeTextAnnotation(
-//                annotation.pageIndex,
-//                annotation.boundingBox,
-//                annotation.contents
-//            )
-//            tempAnnotation.textSize = annotation.textSize
-//            tempAnnotation.fontName = annotation.fontName
-//            tempAnnotation.setRotation(annotation.rotation)
-//
-//            val originalRotation = tempAnnotation.rotation
-//            val oldBox = tempAnnotation.boundingBox
-//            println(oldBox)
-//            tempAnnotation.setRotation(0)
-//            val boundingBox = tempAnnotation.boundingBox
-////            tempAnnotation.setRotation(originalRotation)
-//            return listOf(boundingBox)
+        private fun rectsForText(annotation: JsonArray) : List<RectF>  {
+            val rectsJsonArray = annotation.asJsonArray[0].asJsonArray
+            return listOf( RectF(
+                /* left = */ rectsJsonArray[0].asFloat,
+                /* top = */ rectsJsonArray[1].asFloat,
+                /* right = */ rectsJsonArray[2].asFloat,
+                /* bottom = */ rectsJsonArray[3].asFloat
+            ))
         }
 
         fun pathsForInk(outerArray: JsonArray): List<List<PointF>> {

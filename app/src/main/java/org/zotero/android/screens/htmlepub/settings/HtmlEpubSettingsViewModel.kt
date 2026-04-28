@@ -30,7 +30,7 @@ internal class HtmlEpubSettingsViewModel @Inject constructor(
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubSettingsViewState, HtmlEpubSettingsViewEffect>(HtmlEpubSettingsViewState()) {
-//
+
     private val screenArgs: HtmlEpubSettingsArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_SETTINGS_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded, StandardCharsets.UTF_8)

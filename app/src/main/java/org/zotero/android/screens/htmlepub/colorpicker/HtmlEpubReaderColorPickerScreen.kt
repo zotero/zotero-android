@@ -1,5 +1,6 @@
 package org.zotero.android.screens.htmlepub.colorpicker
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -18,7 +19,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.screens.htmlepub.colorpicker.data.HtmlEpubReaderColorPickerArgs
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
@@ -41,22 +42,24 @@ import java.util.Locale
 internal fun HtmlEpubReaderColorPickerScreen(
     onBack: () -> Unit,
     viewModel: HtmlEpubReaderColorPickerViewModel = hiltViewModel(),
+    args: HtmlEpubReaderColorPickerArgs?,
 ) {
-    viewModel.init()
+    val sendParamsAndBack: () -> Unit = {
+        viewModel.sendColorPickerResult()
+        onBack()
+    }
+
+    BackHandler(onBack = {
+        sendParamsAndBack()
+    })
+    viewModel.init(args)
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubReaderColorPickerViewState())
-    val viewEffect by viewModel.viewEffects.observeAsState()
     AppThemeM3(darkTheme = viewState.isDark) {
-        LaunchedEffect(key1 = viewEffect) {
-            when (viewEffect?.consume()) {
-                HtmlEpubReaderColorPickerViewEffect.NavigateBack -> onBack()
-                null -> Unit
-            }
-        }
         CustomScaffoldM3(
             topBar = {
                 HtmlEpubReaderColorPickerTopBar(
-                    onDone = onBack,
+                    onDone = sendParamsAndBack,
                 )
             },
         ) {
