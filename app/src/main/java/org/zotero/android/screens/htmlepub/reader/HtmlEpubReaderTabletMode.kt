@@ -19,6 +19,7 @@ internal fun HtmlEpubReaderTabletMode(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
     annotationsLazyListState: LazyListState,
+    thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
@@ -35,6 +36,7 @@ internal fun HtmlEpubReaderTabletMode(
                         viewModel = viewModel,
                         viewState = viewState,
                         annotationsLazyListState = annotationsLazyListState,
+                        thumbnailsLazyListState = thumbnailsLazyListState,
                         layoutType = layoutType,
                     )
                 }
