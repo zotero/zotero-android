@@ -20,6 +20,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
 import io.realm.RealmResults
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,6 +51,7 @@ import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
+import org.zotero.android.database.objects.FieldKeys.Item.Annotation.Position.Companion.pageIndex
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CreateHtmlEpubAnnotationsDbRequest
@@ -93,8 +97,13 @@ import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSear
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchTermEventStream
+import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubThumbnailPreviewCacheUpdatedEventStream
+import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubThumbnailPreviewManager
+import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubThumbnailPreviewMemoryCache
+import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubThumbnailsPreviewFileCache
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubOutline
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
+import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderThumbnailRow
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainExecutor
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettings
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsArgs
@@ -133,6 +142,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val htmlEpubReaderSearchResultsEventStream: HtmlEpubReaderSearchResultsEventStream,
     private val htmlEpubReaderSearchTermEventStream: HtmlEpubReaderSearchTermEventStream,
+    private val thumbnailPreviewCacheUpdatedEventStream: HtmlEpubThumbnailPreviewCacheUpdatedEventStream,
+    private val thumbnailsPreviewFileCache: HtmlEpubThumbnailsPreviewFileCache,
+    val thumbnailPreviewMemoryCache: HtmlEpubThumbnailPreviewMemoryCache,
+    private val thumbnailPreviewManager: HtmlEpubThumbnailPreviewManager,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
 
@@ -174,6 +187,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
     var activeEraserSize: Float = 0.0f
     var activeFontSize: Float = 0.0f
 
+    private var currentPdfPageIndex = 0
+
+    var annotationMaxSideSize = 0
+
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
@@ -191,7 +208,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: HtmlEpubAnnotationScreenClosed) {
-        deselectSelectedAnnotation()
+        viewModelScope.launch {
+            _select(null, false)
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -256,7 +275,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
         removeAnnotation(key)
     }
 
-
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
             .onEach { data ->
@@ -264,6 +282,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 updateState {
                     copy(isDark = isDark)
                 }
+                thumbnailPreviewMemoryCache.clear()
                 triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
@@ -286,7 +305,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun initEveryTime( webView: WebView) {
+    fun initEveryTime(webView: WebView, annotationMaxSideSize: Int) {
+        this.annotationMaxSideSize = annotationMaxSideSize
         restartDisableForceScreenOnTimer()
         setupWebView(webView)
         initialiseReader()
@@ -310,6 +330,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         setupCommentChangeFlow()
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
+        setupThumbnailCacheUpdateStream()
 
         this.activeLineWidth = defaults.getActiveLineWidth()
         this.activeEraserSize = defaults.getActiveEraserSize()
@@ -716,12 +737,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     }
 
-    fun selectAnnotationFromDocument(key: String) {
+    private suspend fun selectAnnotationFromDocument(key: String) {
         _select(key = key, didSelectInDocument = true)
     }
 
 
-    private fun _select(key: String?, didSelectInDocument: Boolean) {
+    private suspend fun _select(key: String?, didSelectInDocument: Boolean) {
         if (key == viewState.selectedAnnotationKey) {
             return
         }
@@ -733,23 +754,36 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 }
             }
         }
+
         if (key == null) {
             updateState {
                 copy(selectedAnnotationKey = null)
             }
+            selectAndFocusAnnotationInDocument()
             openAnnotationDialog()
             return
         }
+
         updateState {
             copy(selectedAnnotationKey = key)
         }
+
         if (!didSelectInDocument) {
-            selectInDocument(key)
+//            selectInDocument(key)
+            val annotation = annotation(key)
+            if (annotation != null) {
+                updateState {
+                    copy(
+                        focusDocumentLocationAnnotationKey = key
+                    )
+                }
+            }
         } else {
             updateState {
                 copy(focusSidebarKey = key)
             }
         }
+        selectAndFocusAnnotationInDocument()
         openAnnotationDialog()
     }
 
@@ -804,8 +838,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    fun deselectSelectedAnnotation() {
-        _select(key = null, didSelectInDocument = false)
+    private fun deselectSelectedAnnotation() {
+        updateState {
+            copy(selectedAnnotationKey = null)
+        }
     }
 
     fun toggle(tool: AnnotationTool) {
@@ -1043,6 +1079,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         var texts = this.texts
         var comments = this.comments
         var selectionDeleted = false
+        var selectKey: String? = null
         var popoverWasInserted = false
 
         val updatedKeys = mutableListOf<String>()
@@ -1153,6 +1190,17 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
             Timber.i("HtmlEpubReaderViewModel: insert key ${item.key}")
             when (item.changeType) {
+                UpdatableChangeType.user.name -> {
+                    //TODO check if sidebar is visible
+                    val sidebarVisible = false
+                    val isNote =
+                        annotation.type == AnnotationType.note
+                    if (!viewState.sidebarEditingEnabled && (sidebarVisible || isNote)) {
+                        selectKey = item.key
+                        Timber.i("select new annotation")
+                    }
+
+                }
                 UpdatableChangeType.sync.name, UpdatableChangeType.syncResponse.name -> {
                     insertedPdfAnnotations.add(json)
                     Timber.i("HtmlEpubReaderViewModel: insert Html/Epub annotation")
@@ -1208,28 +1256,37 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     )
                 }
             }
+
+            this@HtmlEpubReaderViewModel.texts = texts
+            if (popoverWasInserted) {
+                //TODO show popover
+            }
+
+            val key = selectKey
+            if (key != null) {
+                _select(key = key, didSelectInDocument = true)
+            } else if (selectionDeleted) {
+                _select(key = null, didSelectInDocument = true)
+            }
+
+//        if (selectionDeleted) {
+//            _select(key = null, didSelectInDocument = true)
+//            updateState {
+//                copy(
+//                    annotationPopoverKey = null,
+//                    annotationPopoverRect = null
+//                )
+//            }
+//            //TODO show popover
+//        }
+            if ((viewState.snapshotKeys ?: viewState.sortedKeys).isEmpty()) {
+                updateState {
+                    copy(sidebarEditingEnabled = false)
+                }
+            }
+            triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
         }
 
-        this.texts = texts
-        if (popoverWasInserted) {
-            //TODO show popover
-        }
-        if (selectionDeleted) {
-            _select(key = null, didSelectInDocument = true)
-            updateState {
-                copy(
-                    annotationPopoverKey = null,
-                    annotationPopoverRect = null
-                )
-            }
-            //TODO show popover
-        }
-        if ((viewState.snapshotKeys ?: viewState.sortedKeys).isEmpty()) {
-            updateState {
-                copy(sidebarEditingEnabled = false)
-            }
-        }
-        triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
     }
 
     private fun startObservingItem() {
@@ -1268,6 +1325,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
         item?.removeAllChangeListeners()
         annotationItems?.removeAllChangeListeners()
 
+        thumbnailPreviewManager.deleteAll(
+            key = viewState.key,
+            libraryId = viewState.library.identifier
+        )
+        clearThumbnailCaches()
+
         deinitialiseReader()
         super.onCleared()
     }
@@ -1291,7 +1354,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             ?.launchIn(mainCoroutineScope)
     }
 
-    private fun process(result: Result<HtmlEpubReaderWebData>) {
+    private suspend fun process(result: Result<HtmlEpubReaderWebData>) {
         if (result is Result.Failure) {
             val customException = (result.exception as? HtmlEpubReaderWebError)?: return
             val errorMessage = when (customException) {
@@ -1337,7 +1400,34 @@ class HtmlEpubReaderViewModel @Inject constructor(
             is HtmlEpubReaderWebData.showUrl -> {
                 showUrl(successValue.url)
             }
-            HtmlEpubReaderWebData.toggleInterfaceVisibility -> decideTopBarAndBottomBarVisibility()
+            HtmlEpubReaderWebData.toggleInterfaceVisibility -> {
+                decideTopBarAndBottomBarVisibility()
+            }
+            is HtmlEpubReaderWebData.onInitThumbnails -> {
+                onInitThumbnails(successValue.thumbnailsJsonArray)
+            }
+            is HtmlEpubReaderWebData.onRenderThumbnail -> {
+                val thumbnailJsonObject = successValue.thumbnailJsonObject
+                val pageIndex = thumbnailJsonObject["pageIndex"].asInt
+                val encodedImageBase64String = thumbnailJsonObject["image"].asString
+
+                thumbnailPreviewManager.store(
+                    pageIndex = pageIndex,
+                    key = viewState.key,
+                    encodedImageBase64String = encodedImageBase64String,
+                    libraryId = viewState.library.identifier,
+                    isDark = viewState.isDark,
+                )
+            }
+            is HtmlEpubReaderWebData.onSetPageLabels -> {
+                onSetPageLabels(successValue.pageLabelsJsonArray)
+            }
+        }
+    }
+
+    private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
+        updateState {
+            copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
     }
 
@@ -1349,13 +1439,21 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
 
         val page: String
+
+        val pageIndex = state["pageIndex"]
         val scrollPercent = state["scrollYPercent"]
-        if (scrollPercent != null && scrollPercent.isJsonPrimitive) {
+        if (pageIndex != null && pageIndex.isJsonPrimitive) {
+            page = pageIndex.asString
+        } else if (scrollPercent != null && scrollPercent.isJsonPrimitive) {
             page = "${scrollPercent.asDouble.rounded(1)}"
         } else if (state["cfi"]?.asString != null) {
             page = state["cfi"].asString
         } else {
             return
+        }
+
+        if (isCurrentFilePdf()) {
+            this.currentPdfPageIndex = page.toInt()
         }
 
         val request = StorePageForItemDbRequest(key = viewState.key, libraryId = viewState.library.identifier, page = page)
@@ -1367,6 +1465,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
             ).ifFailure {
                 Timber.e(it, "HtmlEpubReaderViewModel: can't store page")
                 return@launch
+            }
+            if (isCurrentFilePdf()) {
+                triggerEffect(HtmlEpubReaderViewEffect.ScrollThumbnailListToIndex(page.toInt()))
+                val row = viewState.thumbnailRows.getOrNull(page.toInt())
+                updateState {
+                    copy(selectedThumbnail = row)
+                }
             }
         }
 
@@ -1407,9 +1512,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     suspend fun restoreWebViewState() {
-        if (viewState.selectedAnnotationKey != null) {
-            selectInDocument(viewState.selectedAnnotationKey!!)
-        }
+//        if (viewState.selectedAnnotationKey != null) {
+//            selectInDocument(viewState.selectedAnnotationKey!!)
+//        focusDocumentLocation = location,
+//        }
 
         val tool = viewState.activeTool
         val color = tool?.let { viewState.toolColors[it] }
@@ -1473,16 +1579,18 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     fun onCommentFocusFieldChange(annotationKey: String) {
-        val annotation =
-            annotation(annotationKey)
-                ?: return
-        selectAnnotationFromDocument(key = annotationKey)
+        viewModelScope.launch {
+            val annotation =
+                annotation(annotationKey)
+                    ?: return@launch
+            selectAnnotationFromDocument(key = annotationKey)
 
-        updateState {
-            copy(
-                commentFocusKey = annotationKey,
-                commentFocusText = annotation.comment
-            )
+            updateState {
+                copy(
+                    commentFocusKey = annotationKey,
+                    commentFocusText = annotation.comment
+                )
+            }
         }
     }
 
@@ -1516,26 +1624,31 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     fun onTagsClicked(annotation: HtmlEpubAnnotation) {
-        selectAnnotationFromDocument(key = annotation.key)
+        viewModelScope.launch {
+            selectAnnotationFromDocument(key = annotation.key)
 
-        val selected = annotation.tags.map { it.name }.toSet()
+            val selected = annotation.tags.map { it.name }.toSet()
 
-        this.annotationEditReaderKey = annotation.key
+            this@HtmlEpubReaderViewModel.annotationEditReaderKey = annotation.key
 
-        ScreenArguments.tagPickerArgs = TagPickerArgs(
-            libraryId = viewState.library.identifier,
-            selectedTags = selected,
-            tags = emptyList(),
-            callPoint = TagPickerResult.CallPoint.HtmlEpubReaderScreen,
-        )
+            ScreenArguments.tagPickerArgs = TagPickerArgs(
+                libraryId = viewState.library.identifier,
+                selectedTags = selected,
+                tags = emptyList(),
+                callPoint = TagPickerResult.CallPoint.HtmlEpubReaderScreen,
+            )
 
-        triggerEffect(HtmlEpubReaderViewEffect.NavigateToTagPickerScreen)
+            triggerEffect(HtmlEpubReaderViewEffect.NavigateToTagPickerScreen)
+        }
+
     }
 
     fun selectAnnotation(key: String) {
-        if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
-             setCommentActive(true)
-            _select(key = key, didSelectInDocument = false)
+        viewModelScope.launch {
+            if (!viewState.sidebarEditingEnabled && key != viewState.selectedAnnotationKey) {
+                setCommentActive(true)
+                _select(key = key, didSelectInDocument = false)
+            }
         }
     }
 
@@ -1624,13 +1737,44 @@ class HtmlEpubReaderViewModel @Inject constructor(
             if (!outline.isActive) {
                 return@launch
             }
-            htmlEpubReaderWebCallChainExecutor?.show(location = outline.location)
+            focus(location = outline.location)
             if (!isTablet) {
                 toggleSideBar()
             }
         }
-
     }
+
+    private suspend fun selectAndFocusAnnotationInDocument() {
+        val selectedKey = viewState.selectedAnnotationKey
+        val annotation = selectedKey?.let { annotation(it) }
+        if (annotation != null) {
+            val location = viewState.focusDocumentLocationAnnotationKey
+            if (location != null) {
+                focus(selectedKey)
+            } else if (annotation.type != AnnotationType.ink
+                || viewState.activeTool != AnnotationTool.ink
+            ) {
+                select(selectedKey)
+            }
+        } else {
+            select(null)
+        }
+    }
+
+    private suspend fun select(
+        annotationKey: String?,
+    ) {
+        if (annotationKey != null) {
+            if (viewState.selectedAnnotationKey != annotationKey) {
+                selectInDocument(annotationKey)
+            }
+        } else {
+            //TODO may need to check whether some annotation is actually selected in reader
+            //Otherwise might lead to callback loop
+            htmlEpubReaderWebCallChainExecutor?.deselectText()
+        }
+    }
+
 
     fun onOutlineItemChevronTapped(outline: HtmlEpubOutline) {
         val expandedNodes = viewState.outlineExpandedNodes
@@ -2067,6 +2211,119 @@ class HtmlEpubReaderViewModel @Inject constructor(
         dismissActionMenu()
     }
 
+    fun selectThumbnail(row: HtmlEpubReaderThumbnailRow) {
+        updateState {
+            copy(selectedThumbnail = row)
+        }
+        viewModelScope.launch {
+            val location = mapOf("pageNumber" to pageIndex)
+            scrollIfNeeded(location, false) {}
+        }
+    }
+
+    private suspend fun scrollIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {
+        if (isCurrentFilePdf() && this.currentPdfPageIndex.toString() == location["pageNumber"] as String) {
+            completion()
+            return
+        }
+        if (!animated) {
+            htmlEpubReaderWebCallChainExecutor?.show(location = location)
+            completion()
+            return
+        }
+        htmlEpubReaderWebCallChainExecutor?.show(location = location)
+        completion()
+    }
+
+    private suspend fun focus(location: Map<String, Any>) {
+        scrollIfNeeded(location, animated = true, completion = {})
+    }
+
+    private suspend fun focus(
+        annotationKey: String,
+    ) {
+//        scrollIfNeeded(pageIndex, true) {
+             select(annotationKey = annotationKey)
+//        }
+    }
+
+    private fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
+        val thumbnailRows = thumbnailsJsonArray.asJsonArray.map {
+            val obj = it.asJsonObject
+            val width = obj["width"].asInt
+            val height = obj["height"].asInt
+            HtmlEpubReaderThumbnailRow(
+                width = width,
+                height = height,
+            )
+        }
+//        delay(5000)
+//        renderThumbnails(thumbnailIndices)
+
+//        val rows = mutableListOf<PdfReaderThumbnailRow>()
+//        for (i in 0..<document.pageCount) {
+//            rows.add(
+//                PdfReaderThumbnailRow(
+//                    pageIndex = i,
+//                    title = this.document.getPageLabel(i, true)
+//                )
+//            )
+//        }
+        updateState {
+            copy(thumbnailRows = thumbnailRows.toImmutableList())
+        }
+    }
+
+    private fun setupThumbnailCacheUpdateStream() {
+        thumbnailPreviewCacheUpdatedEventStream.flow()
+            .onEach { pageIndex ->
+                val existingRow = viewState.thumbnailRows.getOrNull(pageIndex)
+                if (existingRow != null) {
+                    val updatedRow = existingRow.copyAndUpdateLoadedState()
+                    val modifiedList = viewState.thumbnailRows.toMutableList()
+                    val indexToReplace = modifiedList.indexOf(existingRow)
+                    modifiedList[indexToReplace] = updatedRow
+                    updateState {
+                        copy(thumbnailRows = modifiedList.toImmutableList())
+                    }
+                }
+                triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun loadThumbnailPreviews(pageIndex: Int) = viewModelScope.launch {
+        val isDark = viewState.isDark
+        val libraryId = viewState.library.identifier
+
+        if (thumbnailPreviewMemoryCache.getBitmap(pageIndex) != null) {
+            return@launch
+        }
+        if (thumbnailPreviewManager.hasThumbnail(
+                page = pageIndex,
+                key = viewState.key,
+                libraryId = libraryId,
+                isDark = isDark
+            )
+        ) {
+            thumbnailsPreviewFileCache.preview(
+                pageIndex = pageIndex,
+                key = viewState.key,
+                libraryId = libraryId,
+                isDark = isDark
+            )
+        } else {
+            htmlEpubReaderWebCallChainExecutor?.renderThumbnails(listOf(pageIndex))
+        }
+
+    }
+
+    private fun clearThumbnailCaches() {
+        thumbnailPreviewManager.cancelProcessing()
+        thumbnailsPreviewFileCache.cancelProcessing()
+        thumbnailPreviewMemoryCache.clear()
+    }
+
 }
 
 data class HtmlEpubReaderViewState(
@@ -2109,9 +2366,13 @@ data class HtmlEpubReaderViewState(
     val htmlEpubSettingsArgs: HtmlEpubSettingsArgs? = null,
     val htmlEpubReaderColorPickerArgs: HtmlEpubReaderColorPickerArgs? = null,
     val htmlEpubFilterArgs: HtmlEpubFilterArgs? = null,
-    val toolColors: Map<AnnotationTool, String> = emptyMap()
+    val toolColors: Map<AnnotationTool, String> = emptyMap(),
+    val selectedThumbnail: HtmlEpubReaderThumbnailRow? = null,
+    val focusDocumentLocationAnnotationKey: String? = null,
+    val thumbnailRows: ImmutableList<HtmlEpubReaderThumbnailRow> = persistentListOf(),
+    val pageLabels: List<String> = emptyList()
 
-) : ViewState {
+    ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey
     }
@@ -2119,6 +2380,10 @@ data class HtmlEpubReaderViewState(
     fun isOutlineSectionCollapsed(id: String): Boolean {
         val isCollapsed = !outlineExpandedNodes.contains(id)
         return isCollapsed
+    }
+
+    fun isThumbnailSelected(row: HtmlEpubReaderThumbnailRow): Boolean {
+        return this.selectedThumbnail == row
     }
 }
 
@@ -2135,4 +2400,5 @@ sealed class HtmlEpubReaderViewEffect : ViewEffect {
     data class ShowHtmlEpubSettings(val params: String) : HtmlEpubReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): HtmlEpubReaderViewEffect()
     data class OpenWebpage(val url: String) : HtmlEpubReaderViewEffect()
+    data class ScrollThumbnailListToIndex(val scrollToIndex: Int): HtmlEpubReaderViewEffect()
 }

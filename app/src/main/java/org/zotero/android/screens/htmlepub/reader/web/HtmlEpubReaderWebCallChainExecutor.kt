@@ -94,6 +94,36 @@ class HtmlEpubReaderWebCallChainExecutor(
 //                            )
                         }
 
+                        "onInitThumbnails" -> {
+                            val params = data["params"].asJsonObject
+                            val thumbnailsJsonArray = params["thumbnails"].asJsonArray
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.onInitThumbnails(thumbnailsJsonArray)
+                                )
+                            )
+                        }
+
+                        "onRenderThumbnail" -> {
+                            val params = data["params"].asJsonObject
+                            val thumbnailJsonObject = params["thumbnail"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.onRenderThumbnail(thumbnailJsonObject)
+                                )
+                            )
+                        }
+
+                        "onSetPageLabels" -> {
+                            val params = data["params"].asJsonObject
+                            val pageLabelsJsonArray = params["pageLabels"].asJsonArray
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.onSetPageLabels(pageLabelsJsonArray)
+                                )
+                            )
+                        }
+
                         "onSaveAnnotations" -> {
                             val params = data["params"].asJsonObject
                             Timber.i("HtmlEpubReaderWebCallChainExecutor: $params")
@@ -262,6 +292,14 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
+    suspend fun renderThumbnails(thumbnailIndices: List<Int>) {
+        return suspendCancellableCoroutine { cont ->
+            val json = gson.toJson(thumbnailIndices)
+            htmlEpubReaderWebViewHandler.evaluateJavascript("renderThumbnails($json)") {
+                cont.resume(Unit)
+            }
+        }
+    }
 
     suspend fun search(term: String) {
         val encodedPayload = encodeStringToBase64Binary(term)

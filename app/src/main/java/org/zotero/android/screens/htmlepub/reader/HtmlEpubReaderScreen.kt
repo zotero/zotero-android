@@ -72,6 +72,7 @@ internal fun HtmlEpubReaderScreen(
 
         val focusManager = LocalFocusManager.current
         val annotationsLazyListState = rememberLazyListState()
+        val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
@@ -123,6 +124,14 @@ internal fun HtmlEpubReaderScreen(
 
                 is HtmlEpubReaderViewEffect.OpenWebpage -> {
                     onOpenWebpage(consumedEffect.url)
+                }
+
+                is HtmlEpubReaderViewEffect.ScrollThumbnailListToIndex -> {
+                    val visibleItemsInfo = thumbnailsLazyListState.layoutInfo.visibleItemsInfo
+                    val scrollToIndex = consumedEffect.scrollToIndex
+                    if (visibleItemsInfo.isNotEmpty() && (scrollToIndex < visibleItemsInfo.first().index || scrollToIndex > visibleItemsInfo.last().index)) {
+                        thumbnailsLazyListState.animateScrollToItem(index = scrollToIndex)
+                    }
                 }
 
                 else -> {}
@@ -183,6 +192,7 @@ internal fun HtmlEpubReaderScreen(
                     viewModel = viewModel,
                     viewState = viewState,
                     annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
                 )
             } else {
@@ -191,8 +201,9 @@ internal fun HtmlEpubReaderScreen(
                     viewModel = viewModel,
                     htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
                     htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
+                    annotationsLazyListState = annotationsLazyListState,
+                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
-                    annotationsLazyListState = annotationsLazyListState
                 )
             }
         }
