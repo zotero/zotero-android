@@ -1,5 +1,6 @@
 package org.zotero.android.screens.htmlepub.reader.data
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 
 sealed interface HtmlEpubReaderWebData {
@@ -14,4 +15,8 @@ sealed interface HtmlEpubReaderWebData {
     data class parseOutline(val params: JsonObject) : HtmlEpubReaderWebData
     data class processDocumentSearchResults(val params: JsonObject) : HtmlEpubReaderWebData
     object toggleInterfaceVisibility : HtmlEpubReaderWebData
+
+    data class onInitThumbnails(val thumbnailsJsonArray: JsonArray) : HtmlEpubReaderWebData
+    data class onRenderThumbnail(val thumbnailJsonObject: JsonObject) : HtmlEpubReaderWebData
+    data class onSetPageLabels(val pageLabelsJsonArray: JsonArray) : HtmlEpubReaderWebData
 }
