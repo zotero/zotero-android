@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
 <resources>
-    <string name="close">Close</string>
-    <string name="delete">Delete</string>
-    <string name="edit">Edit</string>
+    <string name="close">إغلاق</string>
+    <string name="delete">حذف</string>
+    <string name="edit">تحرير</string>
     <string name="last_updated">Last Updated</string>
     <string name="name">Name</string>
     <string name="save">Save</string>
@@ -127,7 +127,6 @@
     <string name="items_filters_tags">Tags</string>
     <string name="items_toolbar_saved">Saved %1$d / %2$d</string>
     <string name="items_toolbar_downloaded">Downloaded %1$d / %2$d</string>
-    <string name="items_toolbar_failed">Failed %d</string>
     <string name="items_generating_bib">Generating Bibliography</string>
     <string name="items_creator_summary_and">%1$s and %2$s</string>
     <string name="items_creator_summary_etal">%s et al.</string>
@@ -281,7 +280,6 @@
     <string name="settings_sync_file_syncing_type_message">Sync attachment files in My Library using</string>
     <string name="settings_sync_account">Account</string>
     <string name="settings_sync_manage_account">Manage Account</string>
-    <string name="settings_sync_account_settings">Account Settings</string>
     <string name="settings_sync_delete_account">Delete Account</string>
     <string name="settings_sync_username">Username</string>
     <string name="settings_sync_password">Password</string>
@@ -396,7 +394,6 @@
     <string name="errors_sync_toolbar_conflict_retry_limit">Remote sync in progress. Please try again in a few minutes.</string>
     <string name="errors_sync_toolbar_group_permissions">You don’t have permission to edit groups.</string>
     <string name="errors_sync_toolbar_internet_connection">Unable to connect to the network. Please try again.</string>
-    <string name="errors_sync_toolbar_unexpected_my_library_last_read_deletions">Sync received unexpected last read settings deletions for My Library.</string>
     <string name="errors_sync_toolbar_personal_quota_reached">You have reached your Zotero Storage quota. Some files were not uploaded. Other Zotero data will continue to sync.\n\nSee your zotero.org account settings for additional storage options.</string>
     <string name="errors_sync_toolbar_group_quota_reached">The group “%s” has reached its Zotero Storage quota. Some files were not uploaded. Other Zotero data will continue to sync.\n\nThe group owner can increase the group’s storage capacity from their storage settings on zotero.org.</string>
     <string name="errors_sync_toolbar_insufficient_space">You have insufficient space on your WebDAV server. Some files were not uploaded. Other Zotero data will continue to sync.</string>

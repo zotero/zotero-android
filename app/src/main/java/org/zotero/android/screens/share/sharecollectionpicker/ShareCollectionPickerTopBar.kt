@@ -26,7 +26,7 @@ internal fun ShareCollectionPickerTopBar(
         ),
         title = {
             Text(
-                text = stringResource(Strings.collection_picker_select_collection),
+                text = stringResource(Strings.items_collections_select_prompt),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
+<resources>
+    <plurals name="items_collections_selected">
+        <item quantity="one">U përzgjodh 1 Koleksion</item>
+        <item quantity="other">U përzgjodhën %d Koleksione</item>
+    </plurals>
+    <plurals name="items_delete_question">
+        <item quantity="one">Jeni i sigurt se doni të fshihet objekti i përzgjedhur?</item>
+        <item quantity="other">Jeni i sigurt se doni të fshihen objektet e përzgjedhur?</item>
+    </plurals>
+    <plurals name="items_remove_from_collection_question">
+        <item quantity="one">Jeni i sigurt se doni të hiqet nga ky koleksion objekti i përzgjedhur?</item>
+        <item quantity="other">Jeni i sigurt se doni të hiqen nga ky koleksion objektet e përzgjedhur?</item>
+    </plurals>
+    <plurals name="items_toolbar_filter">
+        <item quantity="one">Filtro 1 objekt</item>
+        <item quantity="other">Filtro %d objekte</item>
+    </plurals>
+    <plurals name="pdf_search_matches">
+        <item quantity="one">U gjet 1 përkim</item>
+        <item quantity="other">U gjetën %d përkime</item>
+    </plurals>
+    <plurals name="settings_storage_files_size_and_unit">
+        <item quantity="one">1 kartelë</item>
+        <item quantity="other">%d kartela</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_errors">
+        <item quantity="one">1 problem</item>
+        <item quantity="other">%d probleme</item>
+    </plurals>
+    <plurals name="tag_picker_tags_selected">
+        <item quantity="one">U përzgjodh 1 etiketë</item>
+        <item quantity="other">U përzgjodhën %d etiketa</item>
+    </plurals>
+    <plurals name="tag_picker_confirm_deletion">
+        <item quantity="one">Jeni i sigurt se doni të fshihet 1 etiketë automatike në këtë bibliotekë?\n\nKy veprim s’mund të zhbëhet.</item>
+        <item quantity="other">Jeni i sigurt se doni të fshihen %d etiketa automatike në këtë bibliotekë?\n\nKy veprim s’mund të zhbëhet.</item>
+    </plurals>
+    <plurals name="settings_lines_logged">
+        <item quantity="one">U regjistrua 1 rresht</item>
+        <item quantity="other">U regjistruan %d rreshta</item>
+    </plurals>
+    <plurals name="settings_lines">
+        <item quantity="one">1 rresht</item>
+        <item quantity="other">%d rreshta</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_webdav_error2">
+        <item quantity="one">S’u fshi dot 1 kartelë nga shërbyesi juaj WebDAV</item>
+        <item quantity="other">S’u fshinë dot %d kartela nga shërbyesi juaj WebDAV</item>
+    </plurals>
+    <plurals name="settings_general_after_x_days">
+        <item quantity="one">Pas 1 Dite</item>
+        <item quantity="other">Pas %d Ditësh</item>
+    </plurals>
+</resources>

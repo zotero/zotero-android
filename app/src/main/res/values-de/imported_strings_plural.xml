@@ -2,12 +2,12 @@
 <!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
 <resources>
     <plurals name="items_collections_selected">
-        <item quantity="one">1 Collection Selected</item>
-        <item quantity="other">%d Collections Selected</item>
+        <item quantity="one">%d ausgewählte Sammlungen</item>
+        <item quantity="other">%d ausgewählte Sammlungen</item>
     </plurals>
     <plurals name="items_delete_question">
-        <item quantity="one">Are you sure you want to delete the selected item?</item>
-        <item quantity="other">Are you sure you want to delete the selected items?</item>
+        <item quantity="one">Wollen Sie die ausgewählten Einträge wirklich löschen?</item>
+        <item quantity="other">Wollen Sie die ausgewählten Einträge wirklich löschen?</item>
     </plurals>
     <plurals name="items_remove_from_collection_question">
         <item quantity="one">Are you sure you want to remove the selected item from this collection?</item>

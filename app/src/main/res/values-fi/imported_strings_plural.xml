@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
+<resources>
+    <plurals name="items_collections_selected">
+        <item quantity="one">1 kokoelma valittu</item>
+        <item quantity="other">%d kokoelmaa valittu</item>
+    </plurals>
+    <plurals name="items_delete_question">
+        <item quantity="one">Haluatko varmasti poistaa valitun nimikkeen?</item>
+        <item quantity="other">Haluatko varmasti poistaa valitut nimikkeet?</item>
+    </plurals>
+    <plurals name="items_remove_from_collection_question">
+        <item quantity="one">Haluatko varmasti poistaa valitun nimikkeen tästä kokoelmasta?</item>
+        <item quantity="other">Haluatko varmasti poistaa valitut nimikkeet tästä kokoelmasta?</item>
+    </plurals>
+    <plurals name="items_toolbar_filter">
+        <item quantity="one">Suodatin: 1 kohde</item>
+        <item quantity="other">Suodatin: %d kohdetta</item>
+    </plurals>
+    <plurals name="pdf_search_matches">
+        <item quantity="one">1 hakuosuma löydetty</item>
+        <item quantity="other">%d hakuosumaa löydetty</item>
+    </plurals>
+    <plurals name="settings_storage_files_size_and_unit">
+        <item quantity="one">1 tiedosto</item>
+        <item quantity="other">%d tiedostoa</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_errors">
+        <item quantity="one">1 ongelma</item>
+        <item quantity="other">%d ongelmaa</item>
+    </plurals>
+    <plurals name="tag_picker_tags_selected">
+        <item quantity="one">1 avainsana valittu</item>
+        <item quantity="other">%d avainsanaa valittu</item>
+    </plurals>
+    <plurals name="tag_picker_confirm_deletion">
+        <item quantity="one">Haluatko varmasti poistaa 1 automaattisen avainsanan tästä kirjastosta?\n\nTätä toimintoa ei voi perua.</item>
+        <item quantity="other">Haluatko varmasti poistaa %d automaattista avainsanaa tästä kirjastosta?\n\nTätä toimintoa ei voi perua.</item>
+    </plurals>
+    <plurals name="settings_lines_logged">
+        <item quantity="one">1 rivi lokitettu</item>
+        <item quantity="other">%d riviä lokitettu</item>
+    </plurals>
+    <plurals name="settings_lines">
+        <item quantity="one">1 rivi</item>
+        <item quantity="other">%d riviä</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_webdav_error2">
+        <item quantity="one">WebDAV-palvelimelta ei voitu poistaa yhtä tiedostoa</item>
+        <item quantity="other">WebDAV-palvelimelta ei voitu poistaa %d tiedostoa</item>
+    </plurals>
+    <plurals name="settings_general_after_x_days">
+        <item quantity="one">1 päivän jälkeen</item>
+        <item quantity="other">%d päivän jälkeen</item>
+    </plurals>
+</resources>
