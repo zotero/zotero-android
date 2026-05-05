@@ -27,6 +27,7 @@ internal fun SettingsScreen(
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
     toCiteScreen: () -> Unit,
+    toPageTurningScreen: () -> Unit,
     toQuickCopyScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -74,6 +75,10 @@ internal fun SettingsScreen(
                 NewSettingsItem(
                     title = stringResource(id = Strings.settings_cite_title),
                     onItemTapped = toCiteScreen,
+                )
+                NewSettingsItem(
+                    title = stringResource(id = Strings.settings_page_turning_title),
+                    onItemTapped = toPageTurningScreen,
                 )
                 NewSettingsItem(
                     title = stringResource(id = Strings.settings_debug),
