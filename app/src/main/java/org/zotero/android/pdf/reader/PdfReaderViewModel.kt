@@ -855,7 +855,8 @@ class PdfReaderViewModel @Inject constructor(
                 pageStr = coordinator.perform(
                     request = ReadDocumentDataDbRequest(
                         attachmentKey = key,
-                        libraryId = library.identifier
+                        libraryId = library.identifier,
+                        defaultPageValue = "0",
                     )
                 )
                 results = coordinator.perform(

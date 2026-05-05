@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import org.zotero.android.screens.htmlepub.reader.web.actionmenu.HtmlEpubActionMenuPopup
 import org.zotero.android.screens.htmlepub.toolbar.HtmlEpubReaderAnnotationCreationToolbar
 
 
@@ -73,6 +74,14 @@ internal fun HtmlEpubReaderBox(
                 )
             }
     ) {
+        val selectedTextParamsRects = viewState.selectedTextParamsRects
+        if (selectedTextParamsRects != null) {
+            HtmlEpubActionMenuPopup(
+                selectedTextParamsRects = selectedTextParamsRects,
+                viewModel = viewModel,
+            )
+        }
+
         HtmlEpubReaderWebView(viewModel)
         if (viewState.showCreationToolbar) {
             HtmlEpubReaderAnnotationCreationToolbar(

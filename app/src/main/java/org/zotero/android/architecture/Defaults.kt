@@ -22,6 +22,7 @@ open class Defaults @Inject constructor(
 ) {
     private val sharedPrefsFile = "ZoteroPrefs"
     private val userId = "userId"
+    private val sessionId = "sessionId"
     private val name = "name"
     private val username = "username"
     private val displayName = "displayName"
@@ -158,6 +159,14 @@ open class Defaults @Inject constructor(
 
     fun setUserId(str: Long) {
         sharedPreferences.edit { putLong(userId, str) }
+    }
+
+    fun setSessionId(str: String?) {
+        sharedPreferences.edit { putString(sessionId, str) }
+    }
+
+    fun getSessionId(): String? {
+        return sharedPreferences.getString(sessionId, null)
     }
 
     fun setName(str: String) {
@@ -563,6 +572,7 @@ open class Defaults @Inject constructor(
         setUsername("")
         setDisplayName("")
         setUserId(0L)
+        setSessionId(null)
         setShowSubcollectionItems(false)
         setApiToken(null)
         setItemsSortType(ItemsSortType.default)

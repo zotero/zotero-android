@@ -6,12 +6,8 @@
     <!-- Unrecoverable error when loading list -->
     <string name="error_list_load_check_crash_logs">Something went wrong, check the crash logs</string>
 
-    <string name="back_button">Back</string>
     <string name="collection_was_deleted">This collection has been deleted. Do you want to revert it?</string>
     <string name="toolbar_libraries">Libraries</string>
-
-    <!-- This is shown when user selected 0 collections. Unfortunately "zero" option from items.collections_selected in imported_strings.xml doesn't work. It's a bug of Android -->
-    <string name="collection_picker_select_collection">Select a Collection</string>
 
     <!-- This is a name of a notification channel used when showing a notification for file upload during Sharing -->
     <string name="share_upload_channel_name">Share File Upload Notification</string>
@@ -70,6 +66,15 @@
     <string name="pdf_reader_toolbar">Toolbar</string>
 
     <string name="items_generating_cit">Generating Citation</string>
+    <string name="translate">Translate</string>
+    <string name="web_search">Web search</string>
 
+    <string name="errors_logging_content_reading">Log files could not be found</string>
+    <string name="errors_shareext_parsing_error">Error parsing translator response</string>
+    <string name="errors_shareext_incompatible_item">No data returned</string>
+    <string name="errors_shareext_javascript_failed">JS call failed</string>
+    <string name="errors_shareext_missing_base_files">Translator missing</string>
+    <string name="errors_shareext_missing_file">Could not find file to upload</string>
+    <string name="errors_shareext_background_uploader_failure">Background uploader not initialized</string>
 
 </resources>

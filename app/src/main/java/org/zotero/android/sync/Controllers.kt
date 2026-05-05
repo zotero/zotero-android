@@ -162,7 +162,7 @@ class Controllers @Inject constructor(
 
     private fun set(data: SessionData, isLogin: Boolean) {
         try {
-            userControllers.init(userId = data.userId)
+            userControllers.init(userId = data.userId, sessionId = data.sessionId)
             if (isLogin) {
                 userControllers.enableSync(apiKey = data.apiToken)
             }
@@ -208,7 +208,6 @@ class Controllers @Inject constructor(
         if (!this.didInitialize) {
             return
         }
-        userControllers.maybeReconnectWebsockets()
 //        startApp()
     }
 

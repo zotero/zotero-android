@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
+<resources>
+    <plurals name="items_collections_selected">
+        <item quantity="one">1 Colección seleccionada</item>
+        <item quantity="many">%d Colecciones seleccionadas</item>
+        <item quantity="other">%d Colecciones seleccionadas</item>
+    </plurals>
+    <plurals name="items_delete_question">
+        <item quantity="one">¿Estás seguro que quieres eliminar el elemento seleccionado?</item>
+        <item quantity="many">¿Estás seguro que quieres eliminar los elementos seleccionados?</item>
+        <item quantity="other">¿Estás seguro que quieres eliminar los elementos seleccionados?</item>
+    </plurals>
+    <plurals name="items_remove_from_collection_question">
+        <item quantity="one">¿Estás seguro que quieres eliminar el elemento seleccionado de esta colección?</item>
+        <item quantity="many">¿Estás seguro que quieres eliminar los elementos seleccionados de esta colección?</item>
+        <item quantity="other">¿Estás seguro que quieres eliminar los elementos seleccionados de esta colección?</item>
+    </plurals>
+    <plurals name="items_toolbar_filter">
+        <item quantity="one">Filtro: 1 elemento</item>
+        <item quantity="many">Filtro: %d elementos</item>
+        <item quantity="other">Filtro: %d elementos</item>
+    </plurals>
+    <plurals name="pdf_search_matches">
+        <item quantity="one">Se encontró 1 coincidencia</item>
+        <item quantity="many">Se encontraron %d coincidencias</item>
+        <item quantity="other">Se encontraron %d coincidencias</item>
+    </plurals>
+    <plurals name="settings_storage_files_size_and_unit">
+        <item quantity="one">1 archivo</item>
+        <item quantity="many">%d archivos</item>
+        <item quantity="other">%d archivos</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_errors">
+        <item quantity="one">1 problema</item>
+        <item quantity="many">%d problemas</item>
+        <item quantity="other">%d problemas</item>
+    </plurals>
+    <plurals name="tag_picker_tags_selected">
+        <item quantity="one">1 etiqueta seleccionada</item>
+        <item quantity="many">%d etiquetas seleccionadas</item>
+        <item quantity="other">%d etiquetas seleccionadas</item>
+    </plurals>
+    <plurals name="tag_picker_confirm_deletion">
+        <item quantity="one">¿Estás seguro que quieres eliminar 1 etiqueta automática en esta librería?\n\nEsta acción no se puede deshacer.</item>
+        <item quantity="many">¿Estás seguro que quieres eliminar %d etiquetas automáticas en esta librería?\n\nEsta acción no se puede deshacer.</item>
+        <item quantity="other">¿Estás seguro que quieres eliminar %d etiquetas automáticas en esta librería?\n\nEsta acción no se puede deshacer.</item>
+    </plurals>
+    <plurals name="settings_lines_logged">
+        <item quantity="one">1 línea registrada</item>
+        <item quantity="many">%d líneas registradas</item>
+        <item quantity="other">%d líneas registradas</item>
+    </plurals>
+    <plurals name="settings_lines">
+        <item quantity="one">1 línea</item>
+        <item quantity="many">%d líneas</item>
+        <item quantity="other">%d líneas</item>
+    </plurals>
+    <plurals name="errors_sync_toolbar_webdav_error2">
+        <item quantity="one">No se pudo eliminar 1 archivo de tu servidor WebDAV</item>
+        <item quantity="many">No se pudieron eliminar %d archivos de tu servidor WebDAV</item>
+        <item quantity="other">No se pudieron eliminar %d archivos de tu servidor WebDAV</item>
+    </plurals>
+    <plurals name="settings_general_after_x_days">
+        <item quantity="one">Después de 1 día</item>
+        <item quantity="many">Después de %d días</item>
+        <item quantity="other">Después de %d días</item>
+    </plurals>
+</resources>

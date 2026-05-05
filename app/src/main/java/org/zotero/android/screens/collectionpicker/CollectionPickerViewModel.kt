@@ -136,7 +136,7 @@ internal class CollectionPickerViewModel @Inject constructor(
 
     private fun updateTitle(selectedCount: Int) {
         val title = if (selectedCount == 0) {
-            context.resources.getString(Strings.collection_picker_select_collection)
+            context.resources.getString(Strings.items_collections_select_prompt)
         } else {
             context.resources.getQuantityString(
                 Plurals.items_collections_selected,

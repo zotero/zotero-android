@@ -1,6 +1,11 @@
 package org.zotero.android.screens.htmlepub.reader
 
+import android.app.Activity
+import android.app.SearchManager
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.RectF
 import android.net.Uri
 import android.webkit.WebView
@@ -105,7 +110,6 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
-import org.zotero.android.translator.helper.TranslatorHelper
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
@@ -164,6 +168,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: String? = null
 
     private var savedSearchTerm = ""
+
+    private var selectedTextParamsText: String = ""
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -513,7 +519,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
             val data = dataAsJson.asJsonObject
             val id = data["id"]?.asString ?: return@mapNotNull null
             val dateAdded = (data["dateCreated"]?.asString)?.let {
-                println()
                 iso8601WithFractionalSeconds.parse(it)
             }
                 ?: return@mapNotNull null
@@ -667,7 +672,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
             insertions = documentUpdate.insertions,
             deletions = documentUpdate.deletions
         )
-
 
         createDatabaseAnnotations(annotations = annotations)
     }
@@ -938,12 +942,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun loadItemAnnotationsAndPage(): Triple<RItem, RealmResults<RItem>, String>? {
         try {
+            val defaultPageValue = defaultPageValue(this.documentFile.extension.lowercase())
             val itemRequest =
                 ReadItemDbRequest(libraryId = viewState.library.identifier, key = viewState.key)
             val item = dbWrapperMain.realmDbStorage.perform(request = itemRequest)
             val pageIndexRequest = ReadDocumentDataDbRequest(
                 attachmentKey = viewState.key,
-                libraryId = viewState.library.identifier
+                libraryId = viewState.library.identifier,
+                defaultPageValue = defaultPageValue,
             )
             val pageIndex = dbWrapperMain.realmDbStorage.perform(request = pageIndexRequest)
             val annotationsRequest = ReadAnnotationsDbRequest(
@@ -958,14 +964,28 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
+
+    private fun defaultPageValue(ext: String): String {
+        when(ext) {
+            "epub" -> {
+                return "_start"
+            }
+            "html", "htm" -> {
+                return "0"
+            }
+            else -> {
+                return ""
+            }
+        }
+    }
+
     fun loadTypeAndPage(file: File, rawPage: String): Pair<String, Page?> {
         when (this.documentFile.extension.lowercase()) {
             "epub" -> {
-                val cfi = if(rawPage.isEmpty()) "_start" else rawPage
-                return "epub" to Page.epub(cfi = cfi)
+                return "epub" to Page.epub(cfi = rawPage)
             }
             "html", "htm" -> {
-                val scrollYPercent = (rawPage.ifEmpty { "0" }).toDoubleOrNull()
+                val scrollYPercent = rawPage.toDoubleOrNull()
                 if (scrollYPercent != null) {
                     return "snapshot" to Page.html(scrollYPercent = scrollYPercent)
                 } else {
@@ -978,7 +998,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
         }
     }
-    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, String> {
+    fun processAnnotations(items: RealmResults<RItem>): Triple<List<String>, Map<String, HtmlEpubAnnotation?>, JsonArray> {
         val sortedKeys = mutableListOf<String>()
         val annotations = mutableMapOf<String, HtmlEpubAnnotation>()
         val jsons = JsonArray()
@@ -988,8 +1008,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             sortedKeys.add(annotation.key)
             annotations[item.key] = annotation
         }
-        val jsonString = TranslatorHelper.encodeAsJSONForJavascript(this.gson, jsons)
-        return Triple(sortedKeys, annotations, jsonString)
+        return Triple(sortedKeys, annotations, jsons)
     }
 
     fun update(
@@ -1323,6 +1342,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun setSelectedTextParams(params: JsonObject) {
         this.selectedTextParams = params
+        val rects = params["rect"].asJsonArray
+        this.selectedTextParamsText = (params["annotation"].asJsonObject)["text"].asString
+        updateState {
+            copy(selectedTextParamsRects = rects)
+        }
     }
 
     fun load() {
@@ -1840,9 +1864,72 @@ class HtmlEpubReaderViewModel @Inject constructor(
         triggerEffect(HtmlEpubReaderViewEffect.OpenWebpage(url))
     }
 
+    fun dismissActionMenu() {
+        updateState {
+            copy(selectedTextParamsRects = null)
+        }
+        viewModelScope.launch {
+            htmlEpubReaderWebCallChainExecutor?.deselectText()
+        }
+    }
+
+    fun onCopy() {
+        dismissActionMenu()
+
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("Copied Text", selectedTextParamsText)
+        clipboard.setPrimaryClip(clip)
+    }
+
+    fun onShare(localActivity: Activity?) {
+        dismissActionMenu()
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, selectedTextParamsText)
+        }
+        localActivity?.startActivity(Intent.createChooser(intent, "Share text"))
+    }
+    fun onTranslate(localActivity: Activity?) {
+        dismissActionMenu()
+
+        val intent = Intent(Intent.ACTION_PROCESS_TEXT)
+        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, selectedTextParamsText)
+        intent.putExtra(
+            Intent.EXTRA_PROCESS_TEXT_READONLY,
+            false
+        )
+        intent.setType("text/plain")
+        localActivity?.startActivity(intent)
+    }
+    fun onWebSearch(localActivity: Activity?) {
+        dismissActionMenu()
+
+        val intent = Intent(Intent.ACTION_WEB_SEARCH)
+        intent.putExtra(SearchManager.QUERY, selectedTextParamsText)
+        localActivity?.startActivity(intent)
+    }
+
+    fun onHighlight() {
+        dismissActionMenu()
+
+        viewModelScope.launch {
+            saveAnnotationFromSelection(AnnotationType.highlight)
+        }
+    }
+
+    fun onUnderline() {
+        dismissActionMenu()
+
+        viewModelScope.launch {
+            saveAnnotationFromSelection(AnnotationType.underline)
+        }
+    }
+
 }
 
 data class HtmlEpubReaderViewState(
+    val selectedTextParamsRects: JsonArray? = null,
     val key: String = "",
     val parentKey: String? = null,
     val library: Library = Library(

@@ -38,7 +38,8 @@ internal fun HtmlEpubAnnotationNavigationView(
                         detectTapGestures {
                             //Prevent tap to be propagated to composables behind this screen.
                         }
-                    }) {
+                    }
+            ) {
                 val args = viewState.htmlEpubAnnotationArgs
                 if (args != null) {
                     HtmlEpubAnnotationNavigation(

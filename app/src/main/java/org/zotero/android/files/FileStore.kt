@@ -65,10 +65,16 @@ class FileStore @Inject constructor (
         initializeDirectories()
     }
 
-    fun dbFile(userId: Long): File {
+    fun dbFile(userId: Long, sessionId: String?): File {
+        val name: String = if (!sessionId.isNullOrEmpty()) {
+            "maindb_${userId}_${sessionId}.realm"
+        } else {
+            "maindb_$userId.realm"
+        }
         val dbDir = File(getRootDirectory(), "database")
         dbDir.mkdirs()
-        return File(dbDir, "maindb_$userId.realm")
+        return File(dbDir, name)
+
     }
 
     fun bundledDataDbFile(): File {

@@ -1,79 +1,235 @@
 package org.zotero.android.screens.login
 
+import android.content.Context
+import android.webkit.WebView
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.zotero.android.ZoteroApplication
+import org.zotero.android.api.AuthApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.repositories.AccountRepository
+import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.screens.login.LoginViewEffect.NavigateToDashboard
+import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.screens.login.data.LoginError
+import org.zotero.android.screens.login.data.RequestKind
+import org.zotero.android.screens.login.data.SessionStatus
+import org.zotero.android.sync.SessionController
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
+import org.zotero.android.websocket.LoginSessionWebSocketController
+import org.zotero.android.websocket.mappers.CheckLoginSessionResponseMapper
+import org.zotero.android.websocket.mappers.CreateLoginSessionResponseMapper
+import org.zotero.android.websocket.responses.CheckLoginSessionResponse
+import org.zotero.android.websocket.responses.LoginWsResponse
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 internal class LoginViewModel @Inject constructor(
-    private val accountRepository: AccountRepository
+    private val authApi: AuthApi,
+    private val context: Context,
+    private val createLoginSessionResponseMapper: CreateLoginSessionResponseMapper,
+    private val checkLoginSessionResponseMapper: CheckLoginSessionResponseMapper,
+    private val webSocketController: LoginSessionWebSocketController,
+    private val sessionController: SessionController,
+    private val dispatchers: Dispatchers,
 ) : BaseViewModel2<LoginViewState, LoginViewEffect>(LoginViewState()) {
 
-    fun init() = initOnce {
+    var requestKind: RequestKind? = null
+    var sessionStatus: SessionStatus? = null
+    var sessionToken: String? = null
+    var loginUrl: String? = null
 
-    }
+    private var loginSocketMessageDisposable: Job? = null
+    private var pollingDisposable: Job? = null
 
-    fun onUsernameChanged(text: String) {
-        updateState {
-            copy(username = text)
+    var webView: WebView? = null
+
+    fun init(webView: WebView) {
+        this.webView = webView
+
+        val screenArgs = ScreenArguments.loginScreenArgs
+        val requestKind = screenArgs.requestKind
+        viewModelScope.launch {
+            login(requestKind)
         }
     }
 
-    fun onPasswordChanged(text: String) {
-        updateState {
-            copy(password = text)
+    private suspend fun login(kind: RequestKind) {
+        if (this.sessionStatus != null) {
+            return
         }
-    }
+        this.requestKind = kind
+        this.sessionStatus = SessionStatus.creating
+        this.sessionToken = null
+        this.loginUrl = null
 
-    fun onSignInClicked() = viewModelScope.launch {
-        val trimmedUsername = viewState.username.trim()
-        val trimmedPassword = viewState.password.trim()
-
-        if (trimmedUsername.isEmpty()) {
-            showErrorRes(Strings.errors_login_invalid_username)
-            return@launch
+        val result = safeApiCall {
+            authApi.createLoginSessionRequest()
         }
 
-        if (trimmedPassword.isEmpty()) {
-            showErrorRes(Strings.errors_login_invalid_password)
-            return@launch
-        }
+        if (result is CustomResult.GeneralSuccess) {
+            val createLoginSessionResponse =
+                createLoginSessionResponseMapper.fromJson(result.value!!)
 
-        updateState {
-            copy(isLoading = true)
-        }
+            val finalUrl: String = when (kind) {
+                RequestKind.login -> {
+                    createLoginSessionResponse.loginUrl + "&app=1"
+                }
 
-        val networkResult =
-            accountRepository.login(username = trimmedUsername, password = trimmedPassword)
-
-        if (networkResult !is CustomResult.GeneralSuccess) {
-            updateState {
-                copy(isLoading = false)
+                RequestKind.createAccount -> {
+                    "https://www.zotero.org/user/register?app=1&session=${createLoginSessionResponse.sessionToken}"
+                }
             }
-            val error = networkResult as CustomResult.GeneralError.NetworkError
-            if (error.isNoNetworkError()) {
-                showErrorRes(Strings.errors_sync_toolbar_internet_connection)
-            } else if (error.httpCode == 403) {
-                showErrorRes(Strings.errors_login_invalid_credentials)
-            } else {
-                showError(error.stringResponse)
-            }
+
+            this.sessionStatus = SessionStatus.checking
+            this.sessionToken = createLoginSessionResponse.sessionToken
+            this.loginUrl = finalUrl
+            this.webView?.loadUrl(this.loginUrl!!)
+            startStreaming(sessionToken!!)
+            startSessionPolling(sessionToken!!)
         } else {
-            triggerEffect(NavigateToDashboard)
+            this.sessionStatus = null
+            result as CustomResult.GeneralError
+            val errorText = loginError(result).localizedDescription
+            Timber.e("LoginViewModel: could not create login session: $errorText")
+            showError(errorText)
         }
     }
 
-    private fun showError(errorText: String?) {
+    private fun handleStartSessionPollingError(error: CustomResult.GeneralError, token: String) {
+        when(error) {
+            is CustomResult.GeneralError.CodeError -> {
+                if(error.throwable is CancellationException) {
+                    return
+                }
+                Timber.e(error.throwable,"LoginViewModel: could not poll login session")
+            }
+            is CustomResult.GeneralError.NetworkError -> {
+                Timber.e("LoginViewModel: could not poll login session: ${error.stringResponse}")
+            }
+        }
+        this.sessionStatus = null
+        showError(loginError(error).localizedDescription)
+        stopSessionMonitoring(token)
+    }
+
+
+    private fun startSessionPolling(
+        token: String,
+    ) {
+        pollingDisposable = CoroutineScope(dispatchers.io).launch {
+            try {
+                while (isActive) {
+                    val jsonResponse =
+                        safeApiCall {
+                            authApi.checkLoginSessionRequest(token)
+                        }
+                    if (jsonResponse is CustomResult.GeneralSuccess) {
+                        val response =
+                            checkLoginSessionResponseMapper.fromJson(jsonResponse.value!!)
+                        when (response.status) {
+                            CheckLoginSessionResponse.Status.pending -> {
+                                //no-op
+                            }
+
+                            is CheckLoginSessionResponse.Status.completed -> {
+                                if (this@LoginViewModel.sessionStatus == SessionStatus.checking) {
+                                    this@LoginViewModel.sessionStatus = SessionStatus.completed
+                                    stopSessionMonitoring(token)
+                                    sessionController.register(
+                                        userId = response.status.userId,
+                                        username = response.status.username,
+                                        displayName = "",
+                                        apiToken = response.status.apiKey
+                                    )
+                                }
+                                viewModelScope.launch {
+                                    triggerEffect(LoginViewEffect.NavigateToDashboard)
+                                }
+                            }
+
+                            CheckLoginSessionResponse.Status.cancelled -> {
+                                stopSessionMonitoring(token)
+                                reset()
+                                viewModelScope.launch {
+                                    triggerEffect(LoginViewEffect.NavigateBack)
+                                }
+                            }
+                        }
+                    }
+                    delay(3_000)
+                }
+            } catch (e: Exception) {
+                handleStartSessionPollingError(
+                    error = CustomResult.GeneralError.CodeError(e),
+                    token = token
+                )
+            }
+        }
+    }
+
+    private fun startStreaming(token: String) {
+        val topic = LoginSessionWebSocketController.topic( token)
+        this.loginSocketMessageDisposable = webSocketController.loginObservable
+            .flow()
+            .filter({ it.topic == topic })
+            .take(1)
+            .onEach { response ->
+                if (this.sessionStatus != SessionStatus.checking) {
+                    return@onEach
+                }
+                when (response) {
+                    is LoginWsResponse.Kind.complete -> {
+                        this.sessionStatus = SessionStatus.completed
+                        stopSessionMonitoring(token)
+                        sessionController.register(userId = response.userId, username = response.username, displayName = "", apiToken = response.apiKey)
+                        triggerEffect(LoginViewEffect.NavigateToDashboard)
+                    }
+                    is LoginWsResponse.Kind.cancelled -> {
+                        stopSessionMonitoring(token)
+                        reset()
+                        triggerEffect(LoginViewEffect.NavigateBack)
+                    }
+                }
+            }.launchIn(viewModelScope)
+
+        webSocketController.init()
+        webSocketController.connect(token)
+
+    }
+
+    private fun stopSessionMonitoring(token: String?) {
+        pollingDisposable?.cancel()
+        pollingDisposable = null
+
+        loginSocketMessageDisposable?.cancel()
+        loginSocketMessageDisposable = null
+
+        webSocketController.disconnect(token)
+    }
+
+    private fun reset() {
+        this.sessionStatus = null
+        this.sessionToken = null
+        this.loginUrl = null
+        this.requestKind = null
+    }
+
+    private fun showError(errorText: String?) = viewModelScope.launch {
         if (errorText != null) {
             updateState {
                 copy(
@@ -101,13 +257,57 @@ internal class LoginViewModel @Inject constructor(
         updateState { copy(snackbarMessage = null) }
     }
 
+    private fun loginError(error: CustomResult.GeneralError): LoginError {
+        when (error) {
+            is CustomResult.GeneralError.NetworkError -> {
+                if (error.isNoNetworkError()) {
+                    return LoginError.serverError(context.getString(Strings.errors_sync_toolbar_internet_connection))
+                } else {
+                    val stringResponse = error.stringResponse
+                    return if (!stringResponse.isNullOrEmpty()) {
+                        LoginError.serverError(stringResponse)
+                    } else {
+                        LoginError.serverError("Unknown network error")
+                    }
+                }
+            }
+
+            is CustomResult.GeneralError.CodeError -> {
+                return LoginError.unknown(error.throwable)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        stopSessionMonitoring(this.sessionToken)
+        cancelLoginSessionIfNeeded()
+    }
+
+    private fun cancelLoginSessionIfNeeded() = CoroutineScope(dispatchers.main).launch {
+        if (this@LoginViewModel.sessionStatus != SessionStatus.checking) {
+            return@launch
+        }
+        val token = this@LoginViewModel.sessionToken
+        if (token == null) {
+            reset()
+            return@launch
+        }
+        this@LoginViewModel.sessionStatus = SessionStatus.cancelling
+
+        val response = safeApiCall { authApi.submitCancelLoginSessionRequest(token)}
+        if (response is CustomResult.GeneralSuccess) {
+            Timber.i("LoginViewModel: cancelled session")
+            reset()
+        } else {
+            response as CustomResult.GeneralError
+            Timber.w("LoginViewModel: could not cancel session - ${loginError(response)}")
+            reset()
+        }
+    }
 }
 
 internal data class LoginViewState(
-    val username: String = "",
-    val password: String = "",
     val snackbarMessage: SnackbarMessage? = null,
-    val isLoading: Boolean = false,
 ) : ViewState
 
 internal sealed class LoginViewEffect : ViewEffect {

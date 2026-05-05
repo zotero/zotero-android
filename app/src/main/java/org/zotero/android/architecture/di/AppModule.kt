@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.SupervisorJob
+import org.zotero.android.api.module.AuthApiModule
 import org.zotero.android.api.module.NonZoteroApiModule
 import org.zotero.android.api.module.NonZoteroNoRedirectModule
 import org.zotero.android.api.module.WebSocketApiModule
@@ -23,6 +24,7 @@ import javax.inject.Singleton
     includes = [
         JsonModule::class,
         ZoteroApiModule::class,
+        AuthApiModule::class,
         ZoteroNoRedirectModule::class,
         NonZoteroApiModule::class,
         NonZoteroNoRedirectModule::class,

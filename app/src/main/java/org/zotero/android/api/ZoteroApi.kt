@@ -3,8 +3,6 @@ package org.zotero.android.api
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
-import org.zotero.android.api.pojo.login.LoginRequest
-import org.zotero.android.api.pojo.login.LoginResponse
 import org.zotero.android.api.pojo.sync.DeletionsResponse
 import org.zotero.android.api.pojo.sync.GroupResponse
 import retrofit2.http.Body
@@ -21,9 +19,6 @@ import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 interface ZoteroApi {
-
-    @POST("/keys")
-    suspend fun loginUser(@Body body: LoginRequest): retrofit2.Response<LoginResponse>
 
     @GET("/keys/current")
     suspend fun getKeys(): retrofit2.Response<JsonObject>

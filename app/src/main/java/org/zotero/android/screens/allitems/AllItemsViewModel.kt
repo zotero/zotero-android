@@ -252,21 +252,27 @@ internal class AllItemsViewModel @Inject constructor(
                             )
                         }
 
-                        "text/html", "application/epub+zip" -> {
-                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
-                            showHtmlEpub(
-                                file = file,
-                                key = attachment.key,
-                                parentKey = parentKey,
-                                library = library
-                            )
-                        }
-
-                        "text/plain" -> {
+                        "text/html", "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                             triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
                         }
+
+//                        "text/html", "application/epub+zip" -> {
+//                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
+//                            showHtmlEpub(
+//                                file = file,
+//                                key = attachment.key,
+//                                parentKey = parentKey,
+//                                library = library
+//                            )
+//                        }
+//
+//                        "text/plain" -> {
+//                            val url = file.toUri().toString()
+//                            val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+//                            triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
+//                        }
                         else -> {
                             if (contentType.contains("image")) {
                                 showImageFile(file)
@@ -291,8 +297,6 @@ internal class AllItemsViewModel @Inject constructor(
         ScreenArguments.imageViewerArgs = ImageViewerArgs(Uri.fromFile(file), file.name)
         triggerEffect(AllItemsViewEffect.ShowImageViewer)
     }
-
-
 
     private fun showPdf(file: File, key: String, parentKey: String?, library: Library) {
         val pdfReaderArgs = PdfReaderArgs(

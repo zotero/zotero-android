@@ -7,7 +7,7 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 import org.zotero.android.architecture.BaseActivity
 import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
-import org.zotero.android.screens.login.LoginActivity
+import org.zotero.android.screens.dashboard.DashboardActivity
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @AndroidEntryPoint
@@ -19,11 +19,9 @@ internal class OnboardingActivity : BaseActivity() {
 
         setContent {
             AppThemeM3 {
-                OnboardingScreen(
-                    onSignInClick = {
-                        startActivity(LoginActivity.getIntent(this))
-                    },
-                )
+                OnboardingRootNavigation(navigateToDashboard = {
+                    startActivity(DashboardActivity.getIntentClearTask(this))
+                })
             }
         }
     }
