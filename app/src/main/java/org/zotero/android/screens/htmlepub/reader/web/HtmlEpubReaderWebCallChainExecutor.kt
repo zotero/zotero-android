@@ -9,9 +9,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.zotero.android.ZoteroApplication
 import org.zotero.android.architecture.Result
-import org.zotero.android.architecture.core.EventStream
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
 import org.zotero.android.screens.htmlepub.reader.CreateReaderLocation
@@ -34,6 +32,7 @@ class HtmlEpubReaderWebCallChainExecutor(
     private val gson: Gson,
     private val fileStore: FileStore,
     private val webView: WebView,
+    private val observable: HtmlEpubReaderWebCallChainEventStream
 ) {
 
     private lateinit var htmlEpubReaderWebViewHandler: HtmlEpubReaderWebViewHandler
@@ -41,8 +40,6 @@ class HtmlEpubReaderWebCallChainExecutor(
     private val limitedParallelismDispatcher =
         kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
-
-    val observable = EventStream<Result<HtmlEpubReaderWebData>>(ZoteroApplication.instance.applicationScope)
 
     fun start(file: File) {
         try {

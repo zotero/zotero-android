@@ -19,8 +19,8 @@ internal fun HtmlEpubReaderTabletMode(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
     annotationsLazyListState: LazyListState,
-    thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
+    annotationMaxSideSize: Int,
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(targetState = viewState.showSideBar, transitionSpec = {
@@ -36,8 +36,8 @@ internal fun HtmlEpubReaderTabletMode(
                         viewModel = viewModel,
                         viewState = viewState,
                         annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState = thumbnailsLazyListState,
                         layoutType = layoutType,
+                        annotationMaxSideSize = annotationMaxSideSize,
                     )
                 }
             }

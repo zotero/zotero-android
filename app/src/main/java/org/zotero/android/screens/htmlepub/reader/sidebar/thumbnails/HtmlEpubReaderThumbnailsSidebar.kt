@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar
+package org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,32 +15,55 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.androidx.content.pxToDp
-import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
-import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
 internal fun HtmlEpubReaderThumbnailsSidebar(
-    viewModel: HtmlEpubReaderViewModel,
-    viewState: HtmlEpubReaderViewState,
-    thumbnailsLazyListState: LazyListState,
+    viewModel: HtmlEpubThumbnailsViewModel = hiltViewModel(),
+    annotationMaxSideSize: Int,
+    currentPage:Int,
 ) {
+    val viewState by viewModel.viewStates.observeAsState(HtmlEpubThumbnailsViewState())
+    val viewEffect by viewModel.viewEffects.observeAsState()
+    val thumbnailsLazyListState = rememberLazyListState()
+
+    viewModel.initOnce(currentPage)
+    viewModel.initEveryTime()
+
+    LaunchedEffect(key1 = viewEffect) {
+        when (val consumedEffect = viewEffect?.consume()) {
+            is HtmlEpubThumbnailsViewEffect.ScrollThumbnailListToIndex -> {
+                val visibleItemsInfo = thumbnailsLazyListState.layoutInfo.visibleItemsInfo
+                val scrollToIndex = consumedEffect.scrollToIndex
+                if (visibleItemsInfo.isNotEmpty() && (scrollToIndex < visibleItemsInfo.first().index || scrollToIndex > visibleItemsInfo.last().index)) {
+                    thumbnailsLazyListState.animateScrollToItem(index = scrollToIndex)
+                }
+            }
+            else -> {
+                //no-op
+            }
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -54,14 +77,14 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
             state = thumbnailsLazyListState,
             verticalArrangement = Arrangement.Absolute.spacedBy(16.dp),
         ) {
-            itemsIndexed(
-                items = viewState.thumbnailRows
-            ) { index, row ->
+            items(
+                viewState.numOfPages
+            ) { index ->
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val isSelected = viewState.isThumbnailSelected(row)
+                    val isSelected = viewState.isThumbnailSelected(index)
                     val horizontalPadding = if (isSelected) 13.dp else 16.dp
                     var rowModifier: Modifier = Modifier
                         .padding(horizontal = horizontalPadding)
@@ -82,25 +105,18 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = {
-                                    viewModel.selectThumbnail(row)
+                                    viewModel.selectThumbnail(index)
                                 },
                             )
                     ) {
-                        val loadPreview =  {
-                            val preview =
-                                viewModel.thumbnailPreviewMemoryCache.getBitmap(index)
-                            if (preview == null) {
-                                viewModel.loadThumbnailPreviews(index)
-                            }
-                            preview
-                        }
-                        val cachedBitmap = loadPreview()
+                        val cachedBitmap =  viewState.thumbnailCache[index]
                         if (cachedBitmap == null) {
+                            viewModel.requestThumbnail(index)
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
                                     .fillMaxWidth(fraction = 0.7f)
-                                    .height(viewModel.annotationMaxSideSize.pxToDp()),
+                                    .height(annotationMaxSideSize.pxToDp()),
                             ) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(48.dp),
@@ -112,8 +128,8 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
                             Image(
                                 modifier = Modifier
                                     .fillMaxWidth(fraction = 0.7f)
-                                    .height(viewModel.annotationMaxSideSize.pxToDp()),
-                                bitmap = cachedBitmap!!.asImageBitmap(),
+                                    .height(annotationMaxSideSize.pxToDp()),
+                                bitmap = cachedBitmap.asImageBitmap(),
                                 contentDescription = null,
                             )
                         }

@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar
+package org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.cache
 
 import android.graphics.Bitmap
 import android.util.LruCache
@@ -7,7 +7,6 @@ import javax.inject.Singleton
 
 @Singleton
 class HtmlEpubThumbnailPreviewMemoryCache @Inject constructor(
-    private val eventStream: HtmlEpubThumbnailPreviewCacheUpdatedEventStream
 ){
     private val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
     private val cacheSize = maxMemory / 2
@@ -17,16 +16,16 @@ class HtmlEpubThumbnailPreviewMemoryCache @Inject constructor(
         }
     }
 
-    fun addToCache(key: Int, bitmap: Bitmap) {
-        memoryCache.put(key, bitmap)
-        eventStream.emitAsync(key)
-    }
-
-    fun getBitmap(pageIndex: Int): Bitmap? {
-        return memoryCache.get(pageIndex)
+    fun addToCache(pagesToBitmapsList: List<Pair<Int, Bitmap>>): Map<Int, Bitmap> {
+        pagesToBitmapsList.forEach {
+            memoryCache.put(it.first, it.second)
+        }
+        return memoryCache.snapshot()
     }
 
     fun clear() {
         memoryCache.evictAll()
     }
+
+
 }

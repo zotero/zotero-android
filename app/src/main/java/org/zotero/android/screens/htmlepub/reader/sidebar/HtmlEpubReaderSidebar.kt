@@ -18,6 +18,7 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Annotations
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Outline
+import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.HtmlEpubReaderThumbnailsSidebar
 
 private val htmlEpubSliderOptions = listOf(
     Annotations,
@@ -36,7 +37,7 @@ internal fun HtmlEpubReaderSidebar(
     viewState: HtmlEpubReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
     annotationsLazyListState: LazyListState,
-    thumbnailsLazyListState: LazyListState,
+    annotationMaxSideSize: Int,
 ) {
     val selectorOptions =
         if (viewModel.isCurrentFilePdf()) {
@@ -78,9 +79,8 @@ internal fun HtmlEpubReaderSidebar(
     when (selectedOption) {
         HtmlEpubReaderSliderOptions.Thumbnails -> {
             HtmlEpubReaderThumbnailsSidebar(
-                viewModel = viewModel,
-                viewState = viewState,
-                thumbnailsLazyListState = thumbnailsLazyListState,
+                annotationMaxSideSize = annotationMaxSideSize,
+                currentPage = viewState.currentPdfPageIndex
             )
         }
         Annotations -> {

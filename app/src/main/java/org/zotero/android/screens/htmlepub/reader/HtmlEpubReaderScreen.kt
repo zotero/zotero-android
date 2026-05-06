@@ -1,5 +1,7 @@
 package org.zotero.android.screens.htmlepub.reader
 
+import android.content.res.Resources
+import android.util.TypedValue
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
@@ -11,12 +13,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.screens.htmlepub.annotation.sidebar.HtmlEpubAnnotationNavigationView
@@ -30,6 +34,7 @@ import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderTopBar
 import org.zotero.android.screens.htmlepub.settings.sidebar.HtmlEpubSettingsView
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
+import timber.log.Timber
 
 @Composable
 internal fun HtmlEpubReaderScreen(
@@ -70,9 +75,10 @@ internal fun HtmlEpubReaderScreen(
             insetsController.hide(systemBars)
         }
 
+        val annotationMaxSideSize = annotationMaxSideSize()
+
         val focusManager = LocalFocusManager.current
         val annotationsLazyListState = rememberLazyListState()
-        val thumbnailsLazyListState = rememberLazyListState()
         val layoutType = CustomLayoutSize.calculateLayoutType()
         LaunchedEffect(key1 = viewEffect) {
             when (val consumedEffect = viewEffect?.consume()) {
@@ -124,14 +130,6 @@ internal fun HtmlEpubReaderScreen(
 
                 is HtmlEpubReaderViewEffect.OpenWebpage -> {
                     onOpenWebpage(consumedEffect.url)
-                }
-
-                is HtmlEpubReaderViewEffect.ScrollThumbnailListToIndex -> {
-                    val visibleItemsInfo = thumbnailsLazyListState.layoutInfo.visibleItemsInfo
-                    val scrollToIndex = consumedEffect.scrollToIndex
-                    if (visibleItemsInfo.isNotEmpty() && (scrollToIndex < visibleItemsInfo.first().index || scrollToIndex > visibleItemsInfo.last().index)) {
-                        thumbnailsLazyListState.animateScrollToItem(index = scrollToIndex)
-                    }
                 }
 
                 else -> {}
@@ -192,8 +190,8 @@ internal fun HtmlEpubReaderScreen(
                     viewModel = viewModel,
                     viewState = viewState,
                     annotationsLazyListState = annotationsLazyListState,
-                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
+                    annotationMaxSideSize = annotationMaxSideSize
                 )
             } else {
                 HtmlEpubReaderPhoneMode(
@@ -202,8 +200,8 @@ internal fun HtmlEpubReaderScreen(
                     htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
                     htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
                     annotationsLazyListState = annotationsLazyListState,
-                    thumbnailsLazyListState = thumbnailsLazyListState,
                     layoutType = layoutType,
+                    annotationMaxSideSize = annotationMaxSideSize
                 )
             }
         }
@@ -214,4 +212,28 @@ internal fun HtmlEpubReaderScreen(
         HtmlEpubFilterView(viewState = viewState, viewModel = viewModel)
     }
 
+}
+
+@Composable
+private fun annotationMaxSideSize(): Int {
+    val layoutType = CustomLayoutSize.calculateLayoutType()
+    val context = LocalContext.current
+    val outValue = TypedValue()
+    context.resources.getValue(R.dimen.pdf_sidebar_width_percent, outValue, true)
+    val sidebarWidthPercentage = outValue.float
+    val metricsWidthPixels = Resources.getSystem().displayMetrics.widthPixels
+    val annotationSize = metricsWidthPixels * sidebarWidthPercentage
+    val result = annotationSize.toInt()
+    if (result <= 0) {
+        val errorMessage = "HtmlEpubReaderWebView annotationMaxSideSize is $result" +
+                ".sidebarWidthPercentage = $sidebarWidthPercentage" +
+                ".metricsWidthPixels = $metricsWidthPixels"
+        Timber.e(errorMessage)
+        return if (layoutType.isTablet()) {
+            480
+        } else {
+            1080
+        }
+    }
+    return result
 }
