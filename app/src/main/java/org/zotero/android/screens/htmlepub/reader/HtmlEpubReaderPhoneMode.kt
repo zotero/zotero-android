@@ -30,8 +30,8 @@ internal fun HtmlEpubReaderPhoneMode(
     htmlEpubReaderSearchViewState: HtmlEpubReaderSearchViewState,
     htmlEpubReaderSearchViewModel: HtmlEpubReaderSearchViewModel,
     annotationsLazyListState: LazyListState,
-    thumbnailsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
+    annotationMaxSideSize: Int,
 ) {
     Box(
         modifier = Modifier
@@ -65,8 +65,8 @@ internal fun HtmlEpubReaderPhoneMode(
                         viewState = viewState,
                         viewModel = viewModel,
                         annotationsLazyListState = annotationsLazyListState,
-                        thumbnailsLazyListState =  thumbnailsLazyListState,
                         layoutType = layoutType,
+                        annotationMaxSideSize = annotationMaxSideSize,
                     )
                 }
             }

@@ -82,7 +82,7 @@ internal fun HtmlEpubReaderBox(
             )
         }
 
-        HtmlEpubReaderWebView(viewModel)
+        HtmlEpubReaderWebView(viewModel = viewModel)
         if (viewState.showCreationToolbar) {
             HtmlEpubReaderAnnotationCreationToolbar(
                 viewState = viewState,
