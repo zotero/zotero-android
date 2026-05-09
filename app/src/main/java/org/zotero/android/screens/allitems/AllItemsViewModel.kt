@@ -1322,13 +1322,14 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
 
-    fun onAppUpdateDownloadButtonTapped(){
+    fun onAppUpdateDownloadButtonTapped() {
         updateState {
             copy(shouldShowAppUpdateBanner = false)
         }
+        triggerEffect(AllItemsViewEffect.OpenWebpage("https://www.zotero.org/download/android/"))
     }
 
-    fun onAppUpdateLaterButtonTapped(){
+    fun onAppUpdateLaterButtonTapped() {
         defaults.setDoNotShowAppUpdateBannerBeforeTime(DateTime().plusDays(1).millis)
         updateState {
             copy(shouldShowAppUpdateBanner = false)
