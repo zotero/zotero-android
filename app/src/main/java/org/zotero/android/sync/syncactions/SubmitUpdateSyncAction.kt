@@ -4,7 +4,7 @@ import com.google.gson.JsonObject
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
@@ -59,20 +59,20 @@ class SubmitUpdateSyncAction(
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + objectType.apiPath
 
-        val networkResult = safeApiCall {
-            val jsonBody: String
-            when (objectType) {
-                SyncObject.settings ->
-                    jsonBody = gson.toJson(this.parameters.first())
+        val jsonBody: String
+        when (objectType) {
+            SyncObject.settings ->
+                jsonBody = gson.toJson(this.parameters.first())
 
-                else ->
-                    jsonBody = gson.toJson(this.parameters)
-            }
+            else ->
+                jsonBody = gson.toJson(this.parameters)
+        }
 
-            val headers = mutableMapOf<String, String>()
-            this.sinceVersion?.let {
-                headers.put("If-Unmodified-Since-Version", it.toString())
-            }
+        val headers = mutableMapOf<String, String>()
+        this.sinceVersion?.let {
+            headers.put("If-Unmodified-Since-Version", it.toString())
+        }
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 
@@ -128,20 +128,20 @@ class SubmitUpdateSyncAction(
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + objectType.apiPath
 
-        val networkResult = safeApiCall {
-            val jsonBody: String
-            when (objectType) {
-                SyncObject.settings ->
-                    jsonBody = gson.toJson(this.parameters.first())
+        val jsonBody: String
+        when (objectType) {
+            SyncObject.settings ->
+                jsonBody = gson.toJson(this.parameters.first())
 
-                else ->
-                    jsonBody = gson.toJson(this.parameters)
-            }
+            else ->
+                jsonBody = gson.toJson(this.parameters)
+        }
 
-            val headers = mutableMapOf<String, String>()
-            this.sinceVersion?.let {
-                headers.put("If-Unmodified-Since-Version", it.toString())
-            }
+        val headers = mutableMapOf<String, String>()
+        this.sinceVersion?.let {
+            headers.put("If-Unmodified-Since-Version", it.toString())
+        }
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 

@@ -8,6 +8,7 @@ sealed class CustomResult<out T> {
         open class NetworkError(
             open val httpCode: Int,
             open val stringResponse: String?,
+            open val headers: Headers,
         ) : GeneralError() {
             companion object {
                 const val NO_INTERNET_CONNECTION_HTTP_CODE = -1
@@ -33,7 +34,8 @@ sealed class CustomResult<out T> {
         data class UnacceptableStatusCode(
             override val httpCode: Int,
             override val stringResponse: String?,
-        ) : NetworkError(httpCode, stringResponse)
+            override val headers: Headers,
+        ) : NetworkError(httpCode, stringResponse, headers)
 
         data class CodeError(val throwable: Throwable) : GeneralError()
     }
@@ -64,4 +66,19 @@ sealed class CustomResult<out T> {
             else -> null
         }
     }
+
+    val getHeaders: Headers get() {
+        return when (this) {
+            is NetworkSuccess -> {
+                this.headers
+            }
+
+            is GeneralError.NetworkError -> {
+                this.headers
+            }
+
+            else -> Headers.EMPTY
+        }
+    }
+
 }

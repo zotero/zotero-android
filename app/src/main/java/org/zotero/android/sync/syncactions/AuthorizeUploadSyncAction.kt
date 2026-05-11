@@ -4,11 +4,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.syncactions.architecture.SyncAction
-
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 
@@ -25,17 +24,18 @@ class AuthorizeUploadSyncAction(
     suspend fun result(): CustomResult<AuthorizeUploadResponse> =
         withContext(Dispatchers.IO) {
             this@AuthorizeUploadSyncAction.run {
-                val networkResult = safeApiCall {
-                    val headers = mutableMapOf<String, String>()
-                    val md5 = oldMd5
-                    if (md5 != null) {
-                        headers.put("If-Match", md5)
-                    } else {
-                        headers.put("If-None-Match", "*")
-                    }
-                    val url =
-                        BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) +
-                                "/items/" + this.key + "/file"
+                val headers = mutableMapOf<String, String>()
+                val md5 = oldMd5
+                if (md5 != null) {
+                    headers.put("If-Match", md5)
+                } else {
+                    headers.put("If-None-Match", "*")
+                }
+                val url =
+                    BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) +
+                            "/items/" + this.key + "/file"
+
+                val networkResult = safeApiCallForZoteroSync {
                     zoteroApi.authorizeUpload(
                         url = url,
                         headers = headers,

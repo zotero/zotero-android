@@ -2,7 +2,7 @@ package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
@@ -27,22 +27,23 @@ class SubmitDeletionSyncAction(
     suspend fun result(): CustomResult<Pair<Int, Boolean>> {
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + this.objectS.apiPath
-        val networkResult = safeApiCall {
-            val joinedKeys = this.keys.joinToString(separator = ",")
 
-            val parameters = mutableMapOf<String, String>()
-            when (this.objectS) {
-                SyncObject.collection ->
-                    parameters["collectionKey"] = joinedKeys
+        val joinedKeys = this.keys.joinToString(separator = ",")
 
-                SyncObject.item, SyncObject.trash ->
-                    parameters["itemKey"] = joinedKeys
+        val parameters = mutableMapOf<String, String>()
+        when (this.objectS) {
+            SyncObject.collection ->
+                parameters["collectionKey"] = joinedKeys
 
-                SyncObject.search ->
-                    parameters["searchKey"] = joinedKeys
+            SyncObject.item, SyncObject.trash ->
+                parameters["itemKey"] = joinedKeys
 
-                SyncObject.settings -> {}
-            }
+            SyncObject.search ->
+                parameters["searchKey"] = joinedKeys
+
+            SyncObject.settings -> {}
+        }
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.submitDeletionsRequest(
                 url = url,
                 queryMap = parameters,
