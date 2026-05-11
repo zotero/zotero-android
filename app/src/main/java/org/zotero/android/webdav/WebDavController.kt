@@ -202,7 +202,7 @@ class WebDavController @Inject constructor(
 
         val httpCode = networkResult.resultHttpCode
         if (!listOf(200, 204, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode!!, null)
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode!!, null, networkResult.getHeaders)
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {
@@ -231,7 +231,7 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 201, 204).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
     }
 
@@ -270,7 +270,7 @@ class WebDavController @Inject constructor(
         return if (listOf(207, 404).contains(httpCode)) {
             return networkResult
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
     }
 
@@ -282,7 +282,7 @@ class WebDavController @Inject constructor(
 
         val httpCode = networkResult.resultHttpCode
         if (!((200..<300).toList() + 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
 
         return if (httpCode == 404) {
@@ -320,7 +320,7 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 204, 404).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
     }
 
@@ -331,7 +331,7 @@ class WebDavController @Inject constructor(
         val httpCode = networkResult.resultHttpCode
 
         if (!listOf(200, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
 
         if (httpCode == 404) {
@@ -353,7 +353,7 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 201, 204).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
     }
 
@@ -444,7 +444,7 @@ class WebDavController @Inject constructor(
         val httpCode = networkResult.resultHttpCode
 
         if (!listOf(200, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
 
         if (httpCode == 404) {
@@ -486,7 +486,7 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 204, 404).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null, networkResult.getHeaders)
         }
     }
 
