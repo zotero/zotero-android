@@ -289,10 +289,9 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
-    suspend fun renderThumbnails(thumbnailIndices: List<Int>) {
+    suspend fun renderThumbnails(index: Int) {
         return suspendCancellableCoroutine { cont ->
-            val json = gson.toJson(thumbnailIndices)
-            htmlEpubReaderWebViewHandler.evaluateJavascript("renderThumbnails($json)") {
+            htmlEpubReaderWebViewHandler.evaluateJavascript("renderThumbnails([$index])") {
                 cont.resume(Unit)
             }
         }
