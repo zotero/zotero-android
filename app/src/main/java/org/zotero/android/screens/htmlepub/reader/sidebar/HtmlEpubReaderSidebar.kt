@@ -80,7 +80,8 @@ internal fun HtmlEpubReaderSidebar(
         HtmlEpubReaderSliderOptions.Thumbnails -> {
             HtmlEpubReaderThumbnailsSidebar(
                 annotationMaxSideSize = annotationMaxSideSize,
-                currentPage = viewState.currentPdfPageIndex
+                currentPage = viewState.currentPdfPageIndex,
+                numOfPages = viewState.numOfPages
             )
         }
         Annotations -> {

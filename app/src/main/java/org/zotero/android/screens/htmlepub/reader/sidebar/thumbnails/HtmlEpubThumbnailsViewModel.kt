@@ -6,8 +6,9 @@ import com.google.gson.JsonArray
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -19,10 +20,10 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
-import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubRequestThumbnailRenderEventStream
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubScrollReaderIfNeededEvent
 import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.cache.HtmlEpubThumbnailPreviewCacheSnapshotEventStream
 import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainEventStream
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,27 +32,31 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
     private val thumbnailPreviewManager: HtmlEpubThumbnailPreviewManager,
     private val webCallChainEventStream: HtmlEpubReaderWebCallChainEventStream,
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
-    private val htmlEpubRequestThumbnailRenderEventStream: HtmlEpubRequestThumbnailRenderEventStream,
     private val dispatchers: Dispatchers,
 ) : BaseViewModel2<HtmlEpubThumbnailsViewState, HtmlEpubThumbnailsViewEffect>(HtmlEpubThumbnailsViewState()) {
-
-    private val mainCoroutineScope = CoroutineScope(dispatchers.main)
 
     private var pdfReaderThemeCancellable: Job? = null
 
     fun initOnce(numberOfPages: Int) = initOnce {
-        viewModelScope.launch {
-            thumbnailPreviewManager.init(numberOfPages)
-            startObservingTheme()
-            setupWebCallChainEventStream()
-            setupThumbnailCacheUpdateStream()
-            updateState {
-                copy(numOfPages = numberOfPages)
-            }
-        }
+        initNumOfPages(numberOfPages)
+        startObservingTheme()
+        setupWebCallChainEventStream()
+        setupThumbnailCacheUpdateStream()
     }
 
-    fun initEveryTime() {
+    private fun initNumOfPages(numberOfPages: Int) {
+//        if (numberOfPages == 0 || numberOfPages == viewState.numOfPages) {
+//            return
+//        }
+        thumbnailPreviewManager.init(numOfPages = numberOfPages, viewModelScope = viewModelScope)
+        val thumbnailCache = thumbnailPreviewManager.generateEmptySnapshot().toImmutableList()
+        println()
+        updateState {
+            copy(
+                numOfPages = numberOfPages,
+                thumbnailCache = thumbnailCache
+            )
+        }
 
     }
 
@@ -60,19 +65,16 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             .onEach { result ->
                 process(result)
             }
-            .launchIn(mainCoroutineScope)
+            .launchIn(viewModelScope)
     }
 
-    private suspend fun process(result: org.zotero.android.architecture.Result<HtmlEpubReaderWebData>) {
+    private suspend fun process(result: Result<HtmlEpubReaderWebData>) {
         if (result !is Result.Success) {
             return
         }
 
         val successValue = result.value
         when (successValue) {
-            is HtmlEpubReaderWebData.onInitThumbnails -> {
-                // no-op
-            }
             is HtmlEpubReaderWebData.onRenderThumbnail -> {
                 thumbnailPreviewManager.store(
                     successValue.thumbnailJsonObject
@@ -90,15 +92,12 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
     private fun setupThumbnailCacheUpdateStream() {
         thumbnailPreviewCacheUpdatedEventStream.flow()
             .onEach { cacheSnapshot ->
+                Timber.d("HtmlEpubThumbnailProcessing: thumbnailCache updated")
                 updateState {
                     copy(thumbnailCache = cacheSnapshot)
                 }
             }
             .launchIn(viewModelScope)
-    }
-
-    fun requestThumbnail(pageIndex: Int)  {
-        htmlEpubRequestThumbnailRenderEventStream.emitAsync(pageIndex)
     }
 
     fun selectThumbnail(page: Int) {
@@ -110,21 +109,29 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
     }
 
     fun onPageChange(page: Int) {
-        if (viewState.selectedThumbnailPage == page) {
-            return
+        viewModelScope.launch {
+            if (viewState.selectedThumbnailPage == page) {
+                return@launch
+            }
+//            delay(100)
+            updateState {
+                copy(selectedThumbnailPage = page)
+            }
+            triggerEffect(HtmlEpubThumbnailsViewEffect.ScrollThumbnailListToIndex(page))
         }
-        triggerEffect(HtmlEpubThumbnailsViewEffect.ScrollThumbnailListToIndex(page))
-        updateState {
-            copy(selectedThumbnailPage = page)
-        }
+
+
     }
 
     override fun onCleared() {
-        clearThumbnailCaches()
+//        clearThumbnailCaches()
     }
 
     private fun clearThumbnailCaches() {
         thumbnailPreviewManager.cancelProcessing()
+        viewState.selectedThumbnailPage?.let {
+            thumbnailPreviewManager.requestThumbnail(it)
+        }
     }
 
     private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
@@ -135,11 +142,16 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .drop(1)
             .onEach { data ->
                 clearThumbnailCaches()
 //                triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
+    }
+
+    fun requestThumbnail(centerIndex: Int) {
+        thumbnailPreviewManager.requestThumbnail(centerIndex)
     }
 }
 

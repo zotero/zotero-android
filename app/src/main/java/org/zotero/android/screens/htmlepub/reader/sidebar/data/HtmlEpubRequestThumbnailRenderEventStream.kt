@@ -7,4 +7,4 @@ import javax.inject.Singleton
 
 @Singleton
 class HtmlEpubRequestThumbnailRenderEventStream @Inject constructor(applicationScope: ApplicationScope) :
-    EventStream<Int>(applicationScope)
+    EventStream<List<Int>>(applicationScope)

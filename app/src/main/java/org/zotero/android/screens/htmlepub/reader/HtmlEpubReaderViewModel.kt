@@ -301,9 +301,14 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun startObservingRequestThumbnailRender() {
         htmlEpubRequestThumbnailRenderEventStream.flow()
-            .onEach { pageIndex ->
-                htmlEpubReaderWebCallChainExecutor?.renderThumbnails(listOf(pageIndex))
+            .onEach { pageIndices ->
+                Timber.d("HtmlEpubThumbnailProcessing: requesting thumbnails on scroll: ${pageIndices}")
+//                htmlEpubReaderWebCallChainExecutor?.renderThumbnails(pageIndices)
+                for (i in pageIndices) {
+                    htmlEpubReaderWebCallChainExecutor?.renderThumbnails(i)
+                }
             }
+
             .launchIn(viewModelScope)
     }
 
@@ -1367,6 +1372,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
             HtmlEpubReaderWebData.loadDocument -> {
                 load()
             }
+            is HtmlEpubReaderWebData.onInitThumbnails -> {
+                onInitThumbnails(successValue.thumbnailsJsonArray)
+            }
+
             is HtmlEpubReaderWebData.parseOutline -> {
                 parseOutline(successValue.params)
                 loadOutlines()
@@ -1428,6 +1437,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
 
         if (isCurrentFilePdf()) {
+            println()
             updateState {
                 copy(currentPdfPageIndex = page.toInt())
             }
@@ -1453,6 +1463,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.selectedTextParamsText = (params["annotation"].asJsonObject)["text"].asString
         updateState {
             copy(selectedTextParamsRects = rects)
+        }
+    }
+
+    fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
+        updateState {
+            copy(numOfPages = thumbnailsJsonArray.size())
         }
     }
 
@@ -2252,7 +2268,7 @@ data class HtmlEpubReaderViewState(
     val toolColors: Map<AnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
     val currentPdfPageIndex: Int = 0,
-
+    val numOfPages: Int = 0,
 
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {

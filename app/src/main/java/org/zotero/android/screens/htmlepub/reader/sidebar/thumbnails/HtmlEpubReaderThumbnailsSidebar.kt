@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,19 +37,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
+import kotlin.math.abs
 
 @Composable
 internal fun HtmlEpubReaderThumbnailsSidebar(
     viewModel: HtmlEpubThumbnailsViewModel = hiltViewModel(),
     annotationMaxSideSize: Int,
     currentPage:Int,
+    numOfPages: Int,
 ) {
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubThumbnailsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val thumbnailsLazyListState = rememberLazyListState()
 
-    viewModel.initOnce(currentPage)
-    viewModel.initEveryTime()
+    viewModel.initOnce(numOfPages)
+    viewModel.onPageChange(currentPage)
+
+    LaunchedEffect(thumbnailsLazyListState) {
+        listenToScroll(thumbnailsLazyListState, viewModel)
+    }
 
     LaunchedEffect(key1 = viewEffect) {
         when (val consumedEffect = viewEffect?.consume()) {
@@ -109,9 +117,8 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
                                 },
                             )
                     ) {
-                        val cachedBitmap =  viewState.thumbnailCache[index]
+                        val cachedBitmap =  viewState.thumbnailCache.getOrNull(index)
                         if (cachedBitmap == null) {
-                            viewModel.requestThumbnail(index)
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
@@ -145,6 +152,32 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
             item {
                 Spacer(modifier = Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets))
             }
+        }
+    }
+}
+
+private suspend fun listenToScroll(
+    thumbnailsLazyListState: LazyListState,
+    viewModel: HtmlEpubThumbnailsViewModel
+) {
+    snapshotFlow {
+        val layoutInfo = thumbnailsLazyListState.layoutInfo
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        if (visibleItems.isEmpty()) {
+            null
+        } else {
+            val viewportCenter =
+                (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+
+            visibleItems.minByOrNull { item ->
+                val itemCenter = item.offset + item.size / 2
+                abs(itemCenter - viewportCenter)
+            }?.index
+        }
+    }.collect { centerIndex ->
+        if (centerIndex != null) {
+            viewModel.requestThumbnail(centerIndex)
         }
     }
 }
