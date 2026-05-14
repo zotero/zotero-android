@@ -17,6 +17,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchScreen
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
@@ -55,6 +56,8 @@ internal fun HtmlEpubReaderPhoneMode(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+                        .padding(top = 24.dp)
                         .pointerInput(Unit) {
                             detectTapGestures {
                                 //Prevent tap to be propagated to composables behind this screen.

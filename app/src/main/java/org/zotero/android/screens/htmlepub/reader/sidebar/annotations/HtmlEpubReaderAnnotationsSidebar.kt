@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,10 +30,11 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderBottomPanel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubSidebarSearchBar
+import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubReaderSidebarDivider
+import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections.HtmlEpubReaderAnnotationsSidebarHeaderSection
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarHighlightRow
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarNoteRow
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarUnderlineRow
-import org.zotero.android.screens.htmlepub.reader.sidebar.sections.HtmlEpubReaderAnnotationsSidebarHeaderSection
 import org.zotero.android.uicomponents.foundation.safeClickable
 
 @Composable
