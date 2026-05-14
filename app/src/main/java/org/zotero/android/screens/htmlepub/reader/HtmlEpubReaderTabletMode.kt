@@ -5,8 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,8 @@ internal fun HtmlEpubReaderTabletMode(
                     modifier = Modifier
                         .fillMaxHeight()
                         .width(330.dp)
+                        .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+                        .padding(top = 64.dp)
                 ) {
                     HtmlEpubReaderSidebar(
                         viewModel = viewModel,

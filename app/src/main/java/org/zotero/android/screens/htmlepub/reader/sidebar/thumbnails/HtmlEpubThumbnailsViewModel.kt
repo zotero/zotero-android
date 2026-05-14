@@ -2,12 +2,12 @@ package org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails
 
 import android.graphics.Bitmap
 import androidx.lifecycle.viewModelScope
-import com.google.gson.JsonArray
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -17,7 +17,6 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubScrollReaderIfNeededEvent
@@ -32,7 +31,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
     private val thumbnailPreviewManager: HtmlEpubThumbnailPreviewManager,
     private val webCallChainEventStream: HtmlEpubReaderWebCallChainEventStream,
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
-    private val dispatchers: Dispatchers,
 ) : BaseViewModel2<HtmlEpubThumbnailsViewState, HtmlEpubThumbnailsViewEffect>(HtmlEpubThumbnailsViewState()) {
 
     private var pdfReaderThemeCancellable: Job? = null
@@ -50,7 +48,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 //        }
         thumbnailPreviewManager.init(numOfPages = numberOfPages, viewModelScope = viewModelScope)
         val thumbnailCache = thumbnailPreviewManager.generateEmptySnapshot().toImmutableList()
-        println()
         updateState {
             copy(
                 numOfPages = numberOfPages,
@@ -80,9 +77,7 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
                     successValue.thumbnailJsonObject
                 )
             }
-            is HtmlEpubReaderWebData.onSetPageLabels -> {
-                onSetPageLabels(successValue.pageLabelsJsonArray)
-            }
+
             else -> {
                 //no-op
             }
@@ -100,23 +95,27 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private var ignoreChangeByReaderUntil: Long = 0L
+
     fun selectThumbnail(page: Int) {
+        ignoreChangeByReaderUntil = System.currentTimeMillis() + 1000
         updateState {
             copy(selectedThumbnailPage = page)
         }
-        val location = mapOf("pageNumber" to page)
+        val location = mapOf("pageNumber" to page.toString())
         EventBus.getDefault().post(HtmlEpubScrollReaderIfNeededEvent(location))
     }
 
-    fun onPageChange(page: Int) {
+    fun onPageChangedByReader(page: Int) {
         viewModelScope.launch {
-            if (viewState.selectedThumbnailPage == page) {
+            val currentTimeMillis = System.currentTimeMillis()
+            if (viewState.selectedThumbnailPage == page || currentTimeMillis < ignoreChangeByReaderUntil) {
                 return@launch
             }
-//            delay(100)
             updateState {
                 copy(selectedThumbnailPage = page)
             }
+            delay(200)
             triggerEffect(HtmlEpubThumbnailsViewEffect.ScrollThumbnailListToIndex(page))
         }
 
@@ -131,12 +130,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
         thumbnailPreviewManager.cancelProcessing()
         viewState.selectedThumbnailPage?.let {
             thumbnailPreviewManager.requestThumbnail(it)
-        }
-    }
-
-    private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
-        updateState {
-            copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
     }
 
@@ -157,7 +150,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 
 internal data class HtmlEpubThumbnailsViewState(
     val numOfPages: Int = 0,
-    val pageLabels: List<String> = emptyList(),
     val thumbnailCache: ImmutableList<Bitmap?> = persistentListOf(),
     val selectedThumbnailPage: Int? = null,
 ) : ViewState {

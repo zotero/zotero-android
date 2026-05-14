@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier

@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar.sections
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,7 +24,6 @@ import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
-import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable

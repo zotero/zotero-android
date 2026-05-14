@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Color
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
-import org.zotero.android.screens.htmlepub.reader.sidebar.sections.HtmlEpubReaderAnnotationsSidebarHighlightedTextSection
-import org.zotero.android.screens.htmlepub.reader.sidebar.sections.HtmlEpubReaderAnnotationsSidebarTagsAndCommentsSection
+import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections.HtmlEpubReaderAnnotationsSidebarHighlightedTextSection
+import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections.HtmlEpubReaderAnnotationsSidebarTagsAndCommentsSection
 
 @Composable
 internal fun HtmlEpubReaderAnnotationsSidebarHighlightRow(

@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar.sections
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,11 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
-import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
-import org.zotero.android.screens.htmlepub.reader.sidebar.sectionVerticalPadding
 
 @Composable
-internal fun HtmlEpubReaderAnnotationsSidebarHighlightedTextSection(
+internal fun HtmlEpubReaderAnnotationsSidebarUnderlineTextSection(
     annotationColor: Color,
     annotation: HtmlEpubAnnotation,
 ) {

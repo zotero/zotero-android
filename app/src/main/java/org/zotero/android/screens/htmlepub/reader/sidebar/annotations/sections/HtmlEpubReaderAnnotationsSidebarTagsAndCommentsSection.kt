@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar.sections
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections
 
 import androidx.compose.runtime.Composable
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel

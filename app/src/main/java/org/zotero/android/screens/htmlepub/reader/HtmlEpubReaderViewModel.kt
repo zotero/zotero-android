@@ -1376,6 +1376,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
             is HtmlEpubReaderWebData.onInitThumbnails -> {
                 onInitThumbnails(successValue.thumbnailsJsonArray)
             }
+            is HtmlEpubReaderWebData.onSetPageLabels -> {
+                onSetPageLabels(successValue.pageLabelsJsonArray)
+            }
 
             is HtmlEpubReaderWebData.parseOutline -> {
                 parseOutline(successValue.params)
@@ -1470,6 +1473,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
     fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
         updateState {
             copy(numOfPages = thumbnailsJsonArray.size())
+        }
+    }
+
+    private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
+        updateState {
+            copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
     }
 
@@ -2199,10 +2208,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private suspend fun scrollReaderIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {
-        if (isCurrentFilePdf() && viewState.currentPdfPageIndex.toString() == location["pageNumber"] as String) {
-            completion()
-            return
-        }
+//        val locationsPage = location["pageNumber"] ?: location["pageIndex"]
+//        if (isCurrentFilePdf() && viewState.currentPdfPageIndex.toString() == locationsPage as String) {
+//            completion()
+//            return
+//        }
         if (!animated) {
             htmlEpubReaderWebCallChainExecutor?.show(location = location)
             completion()
@@ -2270,7 +2280,7 @@ data class HtmlEpubReaderViewState(
     val focusDocumentLocationAnnotationKey: String? = null,
     val currentPdfPageIndex: Int = 0,
     val numOfPages: Int = 0,
-
+    val pageLabels: List<String> = emptyList(),
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey

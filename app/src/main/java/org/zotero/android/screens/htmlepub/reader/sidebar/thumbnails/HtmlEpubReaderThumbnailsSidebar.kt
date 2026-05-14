@@ -45,13 +45,14 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
     annotationMaxSideSize: Int,
     currentPage:Int,
     numOfPages: Int,
+    pageLabels: List<String>,
 ) {
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubThumbnailsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val thumbnailsLazyListState = rememberLazyListState()
 
-    viewModel.initOnce(numOfPages)
-    viewModel.onPageChange(currentPage)
+    viewModel.initOnce(numberOfPages = numOfPages)
+    viewModel.onPageChangedByReader(currentPage)
 
     LaunchedEffect(thumbnailsLazyListState) {
         listenToScroll(thumbnailsLazyListState, viewModel)
@@ -143,7 +144,7 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = viewState.pageLabels.getOrNull(index) ?: "Loading...",
+                        text = pageLabels.getOrNull(index) ?: "Loading...",
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyLarge,
                     )

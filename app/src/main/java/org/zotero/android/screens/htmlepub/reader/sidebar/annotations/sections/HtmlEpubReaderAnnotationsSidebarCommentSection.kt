@@ -1,4 +1,4 @@
-package org.zotero.android.screens.htmlepub.reader.sidebar.sections
+package org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
-import org.zotero.android.screens.htmlepub.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 
