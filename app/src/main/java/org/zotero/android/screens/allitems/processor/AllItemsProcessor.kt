@@ -773,6 +773,21 @@ class AllItemsProcessor @Inject constructor(
         fileDownloader.batchDownload(attachments = attachments)
     }
 
+    fun downloadAllAttachments() {
+        val currentResults = this.results ?: return
+        val attachments: MutableList<Pair<Attachment, String?>> = mutableListOf()
+        for (item in currentResults) {
+            val key = item.key
+            val accessory = itemAccessories[key] ?: accessory(item) ?: continue
+            val attachment = accessory.attachmentGet ?: continue
+            val parentKey = if (attachment.key == key) null else key
+            attachments.add(Pair(attachment, parentKey))
+        }
+        if (attachments.isNotEmpty()) {
+            fileDownloader.batchDownload(attachments = attachments)
+        }
+    }
+
     fun removeSelectedAttachments(ids: Set<String>) {
         ids.forEach { it ->
             val attachment = attachment(it, null) ?: return@forEach
