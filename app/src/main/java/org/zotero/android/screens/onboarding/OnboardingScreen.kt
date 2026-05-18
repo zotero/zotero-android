@@ -21,6 +21,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,9 +33,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.architecture.ui.CustomLayoutSize
-import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 
@@ -62,8 +65,22 @@ private val onboardingPages =
 
 @Composable
 internal fun OnboardingScreen(
-    onSignInOrSignUpClick: (RequestKind) -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel(),
+    navigateToLogin: (String) -> Unit,
 ) {
+
+    val viewState by viewModel.viewStates.observeAsState(OnboardingViewState())
+    val viewEffect by viewModel.viewEffects.observeAsState()
+
+    LaunchedEffect(key1 = viewEffect) {
+        when (val consumedEffect = viewEffect?.consume()) {
+            null -> Unit
+            is OnboardingViewEffect.ShowLoginEffect -> {
+                navigateToLogin(consumedEffect.screenArgs)
+            }
+        }
+    }
+
     val whiteColor = Color.White
     val blackColor = Color.Black
     val backgroundColor = if (isSystemInDarkTheme()) blackColor else whiteColor
@@ -128,8 +145,9 @@ internal fun OnboardingScreen(
             Spacer(modifier = Modifier.weight(1f))
             OnboardingButtonSection(
                 pagerState = pagerState,
-                onSignInOrSignUpClick = onSignInOrSignUpClick,
-                uriHandler = uriHandler
+                uriHandler = uriHandler,
+                onSignInClick = viewModel::navigateToSignIn,
+                onSignUpClick = viewModel::navigateToSignUp,
             )
         }
 

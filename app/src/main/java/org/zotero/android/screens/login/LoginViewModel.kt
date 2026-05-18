@@ -2,6 +2,7 @@ package org.zotero.android.screens.login
 
 import android.content.Context
 import android.webkit.WebView
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -19,13 +20,16 @@ import org.zotero.android.api.AuthApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.BaseViewModel2
-import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.require
 import org.zotero.android.screens.login.data.LoginError
+import org.zotero.android.screens.login.data.LoginScreenArgs
 import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.screens.login.data.SessionStatus
+import org.zotero.android.screens.onboarding.ARG_LOGIN_SCREEN_SCREEN
 import org.zotero.android.sync.SessionController
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
@@ -46,7 +50,14 @@ internal class LoginViewModel @Inject constructor(
     private val webSocketController: LoginSessionWebSocketController,
     private val sessionController: SessionController,
     private val dispatchers: Dispatchers,
+    private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    stateHandle: SavedStateHandle,
 ) : BaseViewModel2<LoginViewState, LoginViewEffect>(LoginViewState()) {
+
+    val screenArgs: LoginScreenArgs by lazy {
+        val argsEncoded = stateHandle.get<String>(ARG_LOGIN_SCREEN_SCREEN).require()
+        navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    }
 
     var requestKind: RequestKind? = null
     var sessionStatus: SessionStatus? = null
@@ -61,7 +72,6 @@ internal class LoginViewModel @Inject constructor(
     fun init(webView: WebView) {
         this.webView = webView
 
-        val screenArgs = ScreenArguments.loginScreenArgs
         val requestKind = screenArgs.requestKind
         viewModelScope.launch {
             login(requestKind)

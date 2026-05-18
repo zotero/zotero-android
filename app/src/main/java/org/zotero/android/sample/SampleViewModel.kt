@@ -11,7 +11,7 @@ import org.zotero.android.sample.usecase.SampleUseCase
 import javax.inject.Inject
 
 @HiltViewModel
-internal class MainViewModel @Inject constructor(
+internal class SampleViewModel @Inject constructor(
     private val sampleUseCase: SampleUseCase
 ) : BaseViewModel2<SampleViewState, SampleViewEffect>(SampleViewState()) {
 
