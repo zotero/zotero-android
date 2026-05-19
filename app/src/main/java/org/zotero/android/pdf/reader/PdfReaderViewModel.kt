@@ -65,6 +65,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
@@ -250,6 +252,10 @@ class PdfReaderViewModel @Inject constructor(
     var activeEraserSize: Float = 0.0f
     var activeFontSize: Float = 0.0f
 
+    private val pageTurnChannel = Channel<Int>(
+        capacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     private var toolHistory = mutableListOf<AnnotationTool>()
 
     private lateinit var searchResultHighlighter: SearchResultHighlighter
@@ -391,6 +397,31 @@ class PdfReaderViewModel @Inject constructor(
         searchResultHighlighter.setSearchResults(result.searchResult)
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.PdfReaderNavigateNextPage) {
+        pageTurnChannel.trySend(1)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.PdfReaderNavigatePreviousPage) {
+        pageTurnChannel.trySend(-1)
+    }
+
+    fun changePage(pageOffset: Int) {
+        val zoomArea = RectF()
+        val currentPageIndex = pdfFragment.pageIndex
+        if (0 > currentPageIndex+pageOffset ||
+            currentPageIndex+pageOffset >= pdfFragment.pageCount) {
+            return
+        }
+        pdfFragment.getVisiblePdfRect(zoomArea, currentPageIndex)
+        // Double page changing is needed otherwise there is an ugly jump.
+        pdfFragment.setPageIndex(currentPageIndex + pageOffset, false)
+        if (defaults.isKeepZoom()) {
+            pdfFragment.zoomTo(zoomArea, currentPageIndex + pageOffset, 0)
+        }
+    }
+
     private fun update(pdfSettings: PDFSettings) {
         defaults.setPDFSettings(pdfSettings)
         pdfReaderThemeDecider.setPdfPageAppearanceMode(pdfSettings.appearanceMode)
@@ -481,6 +512,9 @@ class PdfReaderViewModel @Inject constructor(
 
             fragmentManager.commit {
                 add(containerId, this@PdfReaderViewModel.pdfUiFragment)
+            }
+            for (pageChange in pageTurnChannel) {
+                changePage(pageChange)
             }
         }
     }
