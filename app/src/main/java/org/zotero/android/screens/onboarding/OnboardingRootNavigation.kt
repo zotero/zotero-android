@@ -60,11 +60,8 @@ private fun OnboardingRootNavHost(
         onboardingScreen(
             navigateToLogin = navigateToLogin,
         )
-        if (layoutType.isTablet()) {
-            loginDialog(onBack = navController::popBackStack, navigateToDashboard = navigateToDashboard)
-        } else {
-            loginScreen(onBack = navigation::onBack, navigateToDashboard = navigateToDashboard)
-        }
+        loginDialog(onBack = navController::popBackStack, navigateToDashboard = navigateToDashboard)
+        loginScreen(onBack = navigation::onBack, navigateToDashboard = navigateToDashboard)
     }
 }
 
