@@ -1,7 +1,7 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.database.requests.StoreGroupDbRequest
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 
@@ -11,7 +11,7 @@ class FetchAndStoreGroupSyncAction(
     val userId: Long,
 ) : SyncAction() {
     suspend fun result(): CustomResult<Unit> {
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.groupRequest(identifier = identifier)
         }
         if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {

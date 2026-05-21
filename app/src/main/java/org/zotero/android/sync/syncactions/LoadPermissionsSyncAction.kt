@@ -1,14 +1,14 @@
 package org.zotero.android.sync.syncactions
 
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 import org.zotero.android.sync.syncactions.data.KeyResponse
 
 class LoadPermissionsSyncAction : SyncAction() {
 
     suspend fun result(): CustomResult<KeyResponse> {
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.getKeys()
         }
 

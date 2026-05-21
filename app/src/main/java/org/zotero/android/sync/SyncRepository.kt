@@ -2,7 +2,7 @@ package org.zotero.android.sync
 
 import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.SyncGroupVersionsDbRequest
@@ -14,7 +14,7 @@ class SyncRepository @Inject constructor(
     private val defaults: Defaults,
 ) {
     suspend fun processSyncGroupVersions(): CustomResult<Pair<List<Int>, List<Pair<Int, String>>>> {
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.groupVersionsRequest(userId = defaults.getUserId())
         }
 

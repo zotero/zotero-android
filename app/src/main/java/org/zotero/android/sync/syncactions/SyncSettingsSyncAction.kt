@@ -2,10 +2,9 @@ package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.database.requests.StoreSettingsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
-
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 
@@ -19,7 +18,7 @@ class SyncSettingsSyncAction(
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/settings"
 
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.settingsRequest(
                 url = url,
                 since = sinceVersion,
