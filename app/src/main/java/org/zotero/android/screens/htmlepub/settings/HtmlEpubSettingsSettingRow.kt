@@ -17,7 +17,6 @@ import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.settings.data.MultiSelectorOption
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsOptions
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 internal fun LazyListScope.htmlEpubSettingsSettingRow(
     @StringRes titleResId: Int,
@@ -36,7 +36,7 @@ internal fun LazyListScope.htmlEpubSettingsSettingRow(
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = stringResource(id = titleResId),
+                text = safeStringResource(id = titleResId),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -45,7 +45,7 @@ internal fun LazyListScope.htmlEpubSettingsSettingRow(
             val optionsList = options.map { opt ->
                 MultiSelectorOption(
                     ordinal = opt.ordinal,
-                    optionString = stringResource(id = opt.optionStringId)
+                    optionString = safeStringResource(id = opt.optionStringId)
                 )
             }
             Row(

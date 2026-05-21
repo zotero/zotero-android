@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
 import org.zotero.android.uicomponents.Plurals
-import org.zotero.android.uicomponents.foundation.quantityStringResource
+import org.zotero.android.uicomponents.foundation.safeQuantityStringResource
 
 @Composable
 internal fun HtmlEpubReaderSearchFoundMatchesRow(viewState: HtmlEpubReaderSearchViewState) {
@@ -20,7 +20,7 @@ internal fun HtmlEpubReaderSearchFoundMatchesRow(viewState: HtmlEpubReaderSearch
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = quantityStringResource(
+            text = safeQuantityStringResource(
                 id = Plurals.pdf_search_matches, viewState.searchResults.size
             ),
             style = MaterialTheme.typography.labelMedium,

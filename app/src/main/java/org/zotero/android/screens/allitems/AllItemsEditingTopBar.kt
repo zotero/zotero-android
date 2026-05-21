@@ -9,9 +9,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 fun AllItemsEditingTopBar(
@@ -26,7 +26,7 @@ fun AllItemsEditingTopBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         title = {
             Text(
-                text = stringResource(
+                text = safeStringResource(
                     id = Strings.tag_picker_title,
                     selectedKeysSize
                 ),
@@ -47,7 +47,7 @@ fun AllItemsEditingTopBar(
             if (isCollectionTrash) {
                 TextButton(onClick = onEmptyTrash) {
                     Text(
-                        text = stringResource(Strings.collections_empty_trash),
+                        text = safeStringResource(Strings.collections_empty_trash),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelLarge
                     )
@@ -56,7 +56,7 @@ fun AllItemsEditingTopBar(
 
             TextButton(onClick = toggleSelectionState) {
                 Text(
-                    text = if (allSelected) stringResource(Strings.items_deselect_all) else stringResource(
+                    text = if (allSelected) safeStringResource(Strings.items_deselect_all) else safeStringResource(
                         Strings.items_select_all
                     ),
                     color = MaterialTheme.colorScheme.primary,

@@ -5,11 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.textinput.SearchViewM3
 
 
@@ -35,7 +35,7 @@ internal fun FilterTagsSearchBar(
 
     SearchViewM3(
         horizontalPadding = horizontalPadding,
-        hint = stringResource(id = Strings.searchbar_placeholder),
+        hint = safeStringResource(id = Strings.searchbar_placeholder),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

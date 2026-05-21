@@ -2,13 +2,13 @@ package org.zotero.android.architecture.navigation
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.dashboard.ChangedItemsDeletedAlert
 import org.zotero.android.screens.dashboard.ConflictResolutionDialogs
 import org.zotero.android.screens.dashboard.CrashLoggingDialogs
 import org.zotero.android.screens.dashboard.DashboardViewModel
 import org.zotero.android.screens.dashboard.DashboardViewState
 import org.zotero.android.screens.dashboard.DebugLoggingDialogs
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressBottomSheetM3
 import org.zotero.android.uicomponents.modal.CustomAlertDialogM3
@@ -65,15 +65,15 @@ fun BoxScope.DashboardTopLevelDialogs(
     val deleteGroupDialogData = viewState.deleteGroupDialogData
     if (deleteGroupDialogData != null) {
         CustomAlertDialogM3(
-            title = stringResource(id = Strings.delete),
-            description = stringResource(
+            title = safeStringResource(id = Strings.delete),
+            description = safeStringResource(
                 id = Strings.libraries_delete_question, deleteGroupDialogData.name
             ),
             dismissButton = CustomAlertDialogM3ActionConfig(
-                text = stringResource(id = Strings.no),
+                text = safeStringResource(id = Strings.no),
             ),
             confirmButton = CustomAlertDialogM3ActionConfig(
-                text = stringResource(id = Strings.yes),
+                text = safeStringResource(id = Strings.yes),
                 textColor = CustomPalette.ErrorRed,
                 onClick = { viewModel.deleteNonLocalGroup(deleteGroupDialogData.id) }
             ),

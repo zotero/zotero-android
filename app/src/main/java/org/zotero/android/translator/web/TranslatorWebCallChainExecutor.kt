@@ -17,6 +17,7 @@ import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper
 import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -169,7 +170,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
                         translatorActionEventStream.emitAsync(
                             Result.Success(
                                 TranslatorAction.reportProgress(
-                                    context.getString(Strings.shareext_translation_item_selection)
+                                    context.getSafeString(Strings.shareext_translation_item_selection)
                                 )
                             )
                         )
@@ -179,7 +180,7 @@ class TranslatorWebCallChainExecutor @Inject constructor(
                         translatorActionEventStream.emitAsync(
                             Result.Success(
                                 TranslatorAction.reportProgress(
-                                    context.getString(
+                                    context.getSafeString(
                                         Strings.shareext_translation_translating_with,
                                         name
                                     )

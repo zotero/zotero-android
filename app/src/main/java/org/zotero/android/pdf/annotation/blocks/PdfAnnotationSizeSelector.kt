@@ -10,8 +10,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import java.util.Locale
 
@@ -28,7 +28,7 @@ internal fun PdfAnnotationSizeSelector(
     ) {
         Text(
             modifier = Modifier.padding(end = 10.dp),
-            text = stringResource(id = Strings.size),
+            text = safeStringResource(id = Strings.size),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge,
         )

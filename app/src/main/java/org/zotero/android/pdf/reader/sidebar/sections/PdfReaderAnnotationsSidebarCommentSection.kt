@@ -6,12 +6,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.sectionHorizontalPadding
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 
@@ -40,7 +40,7 @@ internal fun PdfReaderAnnotationsSidebarCommentSection(
             },
             textStyle = MaterialTheme.typography.bodyMedium,
             textColor = MaterialTheme.colorScheme.onSurface,
-            hint = stringResource(id = Strings.pdf_annotations_sidebar_add_comment),
+            hint = safeStringResource(id = Strings.pdf_annotations_sidebar_add_comment),
             hintColor = MaterialTheme.colorScheme.primary,
             hintTextStyle = MaterialTheme.typography.labelLarge,
             ignoreTabsAndCaretReturns = false,

@@ -16,11 +16,11 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -52,7 +52,7 @@ internal fun ShareScreenTopBar(
                         colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
                     ) {
                         Text(
-                            text = stringResource(Strings.done),
+                            text = safeStringResource(Strings.done),
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -104,7 +104,7 @@ internal fun ShareScreenTopBar(
                             colors = ButtonDefaults.filledTonalButtonColors(containerColor = containerColor),
                         ) {
                             Text(
-                                text = stringResource(Strings.shareext_save),
+                                text = safeStringResource(Strings.shareext_save),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 style = MaterialTheme.typography.labelLarge
                             )

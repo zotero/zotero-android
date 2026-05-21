@@ -15,11 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun BoxScope.AddNoteTagSelector(
@@ -42,7 +42,7 @@ internal fun BoxScope.AddNoteTagSelector(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(id = Strings.items_filters_tags) + ":",
+            text = safeStringResource(id = Strings.items_filters_tags) + ":",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
         )

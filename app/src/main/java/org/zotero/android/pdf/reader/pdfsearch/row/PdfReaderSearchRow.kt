@@ -11,9 +11,9 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.reader.pdfsearch.data.PdfReaderSearchItem
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
 
@@ -33,7 +33,7 @@ internal fun PdfReaderSearchRow(
     ) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(Strings.page) + " ${searchItem.pageNumber + 1}",
+            text = safeStringResource(Strings.page) + " ${searchItem.pageNumber + 1}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun HtmlEpubAnnotationMoreTopBar(
@@ -30,7 +31,7 @@ internal fun HtmlEpubAnnotationMoreTopBar(
         ),
         title = {
             Text(
-                text = stringResource(Strings.pdf_annotation_popover_title),
+                text = safeStringResource(Strings.pdf_annotation_popover_title),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

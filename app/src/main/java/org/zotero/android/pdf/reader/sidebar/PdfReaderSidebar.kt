@@ -6,13 +6,13 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Annotations
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Outline
 import org.zotero.android.pdf.reader.sidebar.data.PdfReaderSliderOptions.Thumbnails
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 private val sliderOptions = listOf(
     Thumbnails,
@@ -29,7 +29,7 @@ internal fun PdfReaderSidebar(
     thumbnailsLazyListState: LazyListState,
 ) {
     val selectorOptions = sliderOptions.map {
-        stringResource(id = it.optionStringId)
+        safeStringResource(id = it.optionStringId)
     }
 
     val selectedOption = viewState.sidebarSliderSelectedOption

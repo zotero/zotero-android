@@ -31,6 +31,7 @@ import org.zotero.android.screens.settings.stylepicker.data.SettingsStylePickerA
 import org.zotero.android.styles.data.Style
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -112,7 +113,7 @@ internal class CitBibExportViewModel @Inject constructor(
                 style = Style(
                     identifier = "",
                     dependencyId = null,
-                    title = context.getString(Strings.unknown),
+                    title = context.getSafeString(Strings.unknown),
                     updated = Date(),
                     href = "",
                     filename = "",

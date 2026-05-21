@@ -12,6 +12,7 @@ import org.zotero.android.sync.SyncActionError
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.translator.data.TranslationWebViewError
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,22 +25,22 @@ class ShareErrorProcessor @Inject constructor(
     fun errorMessage(error: AttachmentState.Error): String? {
         return when (error) {
             AttachmentState.Error.apiFailure -> {
-                context.getString(Strings.errors_shareext_api_error)
+                context.getSafeString(Strings.errors_shareext_api_error)
             }
 
             AttachmentState.Error.cantLoadSchema -> {
-                context.getString(Strings.errors_shareext_cant_load_schema)
+                context.getSafeString(Strings.errors_shareext_cant_load_schema)
             }
 
             AttachmentState.Error.cantLoadWebData -> {
-                context.getString(Strings.errors_shareext_cant_load_data)
+                context.getSafeString(Strings.errors_shareext_cant_load_data)
             }
 
             AttachmentState.Error.downloadFailed -> {
-                context.getString(Strings.errors_shareext_download_failed)
+                context.getSafeString(Strings.errors_shareext_download_failed)
             }
             AttachmentState.Error.proxiedUrlsNotSupported -> {
-                context.getString(Strings.errors_shareext_proxied_urls_not_supported)
+                context.getSafeString(Strings.errors_shareext_proxied_urls_not_supported)
             }
 
             AttachmentState.Error.downloadedFileNotPdf -> {
@@ -47,15 +48,15 @@ class ShareErrorProcessor @Inject constructor(
             }
 
             AttachmentState.Error.expired -> {
-                context.getString(Strings.errors_shareext_unknown)
+                context.getSafeString(Strings.errors_shareext_unknown)
             }
 
             AttachmentState.Error.fileMissing -> {
-                context.getString(Strings.errors_shareext_missing_file)
+                context.getSafeString(Strings.errors_shareext_missing_file)
             }
 
             AttachmentState.Error.itemsNotFound -> {
-                context.getString(Strings.errors_shareext_items_not_found)
+                context.getSafeString(Strings.errors_shareext_items_not_found)
             }
 
             AttachmentState.Error.md5Missing -> {
@@ -67,13 +68,13 @@ class ShareErrorProcessor @Inject constructor(
             }
 
             is AttachmentState.Error.parseError -> {
-                context.getString(Strings.errors_shareext_parsing_error)
+                context.getSafeString(Strings.errors_shareext_parsing_error)
             }
 
             is AttachmentState.Error.quotaLimit -> {
                 when (error.libraryIdentifier) {
                     is LibraryIdentifier.custom -> {
-                        context.getString(Strings.errors_shareext_personal_quota_reached)
+                        context.getSafeString(Strings.errors_shareext_personal_quota_reached)
                     }
 
                     is LibraryIdentifier.group -> {
@@ -81,7 +82,7 @@ class ShareErrorProcessor @Inject constructor(
                         val group =
                             dbWrapperMain.realmDbStorage.perform(ReadGroupDbRequest(identifier = groupId))
                         val groupName = group?.name ?: "$groupId"
-                        return context.getString(
+                        return context.getSafeString(
                             Strings.errors_shareext_group_quota_reached,
                             groupName
                         )
@@ -90,33 +91,33 @@ class ShareErrorProcessor @Inject constructor(
             }
 
             is AttachmentState.Error.schemaError -> {
-                context.getString(Strings.errors_shareext_schema_error)
+                context.getSafeString(Strings.errors_shareext_schema_error)
             }
 
             AttachmentState.Error.unknown -> {
-                context.getString(Strings.errors_shareext_unknown)
+                context.getSafeString(Strings.errors_shareext_unknown)
             }
 
             AttachmentState.Error.webDavFailure -> {
-                context.getString(Strings.errors_shareext_webdav_error)
+                context.getSafeString(Strings.errors_shareext_webdav_error)
             }
 
             AttachmentState.Error.webDavNotVerified -> {
-                context.getString(Strings.errors_shareext_webdav_not_verified)
+                context.getSafeString(Strings.errors_shareext_webdav_not_verified)
             }
 
             is AttachmentState.Error.webViewError -> {
                 return when (error.error) {
                     TranslationWebViewError.cantFindFile -> {
-                        context.getString(Strings.errors_shareext_missing_base_files)
+                        context.getSafeString(Strings.errors_shareext_missing_base_files)
                     }
 
                     TranslationWebViewError.incompatibleItem -> {
-                        context.getString(Strings.errors_shareext_incompatible_item)
+                        context.getSafeString(Strings.errors_shareext_incompatible_item)
                     }
 
                     TranslationWebViewError.javascriptCallMissingResult -> {
-                        context.getString(Strings.errors_shareext_javascript_failed)
+                        context.getSafeString(Strings.errors_shareext_javascript_failed)
                     }
 
                     TranslationWebViewError.noSuccessfulTranslators -> {
@@ -124,11 +125,11 @@ class ShareErrorProcessor @Inject constructor(
                     }
 
                     TranslationWebViewError.webExtractionMissingData -> {
-                        context.getString(Strings.errors_shareext_response_missing_data)
+                        context.getSafeString(Strings.errors_shareext_response_missing_data)
                     }
 
                     TranslationWebViewError.webExtractionMissingJs -> {
-                        context.getString(Strings.errors_shareext_missing_base_files)
+                        context.getSafeString(Strings.errors_shareext_missing_base_files)
                     }
                 }
             }

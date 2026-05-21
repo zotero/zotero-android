@@ -1,16 +1,16 @@
 package org.zotero.android.screens.share.sections
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import org.zotero.android.screens.share.rows.ShareCollectionOptionRow
 import org.zotero.android.screens.share.data.CollectionPickerState
 import org.zotero.android.screens.share.data.RecentData
 import org.zotero.android.screens.share.rows.ShareCollectionErrorRow
 import org.zotero.android.screens.share.rows.ShareCollectionMoreRow
+import org.zotero.android.screens.share.rows.ShareCollectionOptionRow
 import org.zotero.android.screens.share.rows.ShareCollectionProgressRow
+import org.zotero.android.sync.Collection
 import org.zotero.android.sync.Library
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.sync.Collection
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareCollectionsSection(
@@ -24,7 +24,7 @@ internal fun ShareCollectionsSection(
     )
     when (collectionPickerState) {
         CollectionPickerState.failed -> {
-            ShareCollectionErrorRow(title = stringResource(id = Strings.shareext_sync_error))
+            ShareCollectionErrorRow(title = safeStringResource(id = Strings.shareext_sync_error))
         }
 
         CollectionPickerState.loading -> {

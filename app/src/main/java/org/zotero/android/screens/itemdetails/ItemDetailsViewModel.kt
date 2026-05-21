@@ -121,6 +121,7 @@ import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
+import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.uicomponents.reorder.move
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
@@ -1259,7 +1260,7 @@ class ItemDetailsViewModel @Inject constructor(
                 schemaController
             ),
             showSaveButton = false,
-            title = context.getString(Strings.item_type),
+            title = context.getSafeString(Strings.item_type),
             callPoint = SinglePickerResult.CallPoint.ItemDetails
         )
         triggerEffect(ShowItemTypePickerEffect)

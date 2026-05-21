@@ -9,9 +9,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareCollectionPickerTopBar(
@@ -26,7 +26,7 @@ internal fun ShareCollectionPickerTopBar(
         ),
         title = {
             Text(
-                text = stringResource(Strings.items_collections_select_prompt),
+                text = safeStringResource(Strings.items_collections_select_prompt),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

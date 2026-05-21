@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.appupdate.MaybeShowAppUpdateBanner
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -19,6 +18,7 @@ import org.zotero.android.screens.allitems.table.AllItemsTable
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.error.FullScreenError
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.loading.BaseLceBox
 import org.zotero.android.uicomponents.loading.CircularLoading
 import org.zotero.android.uicomponents.themem3.AppThemeM3
@@ -179,7 +179,7 @@ internal fun AllItemsScreen(
                 error = { _ ->
                     FullScreenError(
                         modifier = Modifier.align(Alignment.Center),
-                        errorTitle = stringResource(id = Strings.error_list_load_check_crash_logs),
+                        errorTitle = safeStringResource(id = Strings.error_list_load_check_crash_logs),
                     )
                 },
                 loading = {
@@ -225,7 +225,7 @@ internal fun AllItemsScreen(
                 }
             }
         }
-        val bottomSheetTitle = stringResource(id = Strings.item_type)
+        val bottomSheetTitle = safeStringResource(id = Strings.item_type)
         AllItemsAddBottomSheet(
             onScanBarcode = viewModel::onScanBarcode,
             onAddFile = onPickFile,

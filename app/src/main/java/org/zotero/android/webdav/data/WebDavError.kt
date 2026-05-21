@@ -4,6 +4,7 @@ import android.content.Context
 import org.zotero.android.ZoteroApplication
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 
 sealed class WebDavError {
     sealed class Verification : Exception()  {
@@ -22,34 +23,34 @@ sealed class WebDavError {
             val context = ZoteroApplication.instance
             return when(this) {
                 fileMissingAfterUpload -> {
-                    context.getString(Strings.errors_settings_webdav_file_missing_after_upload)
+                    context.getSafeString(Strings.errors_settings_webdav_file_missing_after_upload)
                 }
                 invalidUrl -> {
-                    context.getString(Strings.errors_settings_webdav_invalid_url)
+                    context.getSafeString(Strings.errors_settings_webdav_invalid_url)
                 }
                 noPassword -> {
-                    context.getString(Strings.errors_settings_webdav_no_password)
+                    context.getSafeString(Strings.errors_settings_webdav_no_password)
                 }
                 noUrl -> {
-                    context.getString(Strings.errors_settings_webdav_no_url)
+                    context.getSafeString(Strings.errors_settings_webdav_no_url)
                 }
                 noUsername -> {
-                    context.getString(Strings.errors_settings_webdav_no_username)
+                    context.getSafeString(Strings.errors_settings_webdav_no_username)
                 }
                 nonExistentFileNotMissing -> {
-                    context.getString(Strings.errors_settings_webdav_non_existent_file_not_missing)
+                    context.getSafeString(Strings.errors_settings_webdav_non_existent_file_not_missing)
                 }
                 notDav -> {
-                    context.getString(Strings.errors_settings_webdav_not_dav)
+                    context.getSafeString(Strings.errors_settings_webdav_not_dav)
                 }
                 parentDirNotFound -> {
-                    context.getString(Strings.errors_settings_webdav_parent_dir_not_found)
+                    context.getSafeString(Strings.errors_settings_webdav_parent_dir_not_found)
                 }
                 is zoteroDirNotFound -> {
-                    context.getString(Strings.errors_settings_webdav_zotero_dir_not_found)
+                    context.getSafeString(Strings.errors_settings_webdav_zotero_dir_not_found)
                 }
                 localHttpWebdavHostNotAllowed -> {
-                    context.getString(Strings.errors_settings_webdav_local_http_host_not_allowed)
+                    context.getSafeString(Strings.errors_settings_webdav_local_http_host_not_allowed)
                 }
             }
         }
@@ -100,24 +101,24 @@ sealed class WebDavError {
         ): String? {
                 when (error.httpCode) {
                     401 -> {
-                        return context.getString(Strings.errors_settings_webdav_unauthorized)
+                        return context.getSafeString(Strings.errors_settings_webdav_unauthorized)
                     }
                     400 -> {
                         return error.stringResponse
                     }
                     403 -> {
-                        return context.getString(Strings.errors_settings_webdav_forbidden)
+                        return context.getSafeString(Strings.errors_settings_webdav_forbidden)
                     }
 
                 }
             if (error.isNoNetworkError()) {
-                return context.getString(Strings.errors_settings_webdav_internet_connection)
+                return context.getSafeString(Strings.errors_settings_webdav_internet_connection)
             }
             if (error.isNoCertificateFound()) {
-                return context.getString(Strings.errors_settings_webdav_no_https_certificate)
+                return context.getSafeString(Strings.errors_settings_webdav_no_https_certificate)
             }
 
-            return context.getString(Strings.errors_settings_webdav_host_not_found)
+            return context.getSafeString(Strings.errors_settings_webdav_host_not_found)
         }
 
     }

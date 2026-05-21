@@ -11,10 +11,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewModel
 import org.zotero.android.pdf.reader.pdfsearch.PdfReaderSearchViewState
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.AppSearchBarM3
 
@@ -65,7 +65,7 @@ private fun AppSearchBarM3Wrapper(
     }
 
     AppSearchBarM3(
-        hint = stringResource(id = Strings.pdf_search_title),
+        hint = safeStringResource(id = Strings.pdf_search_title),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

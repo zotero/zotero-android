@@ -6,11 +6,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import org.zotero.android.screens.share.ShareViewModel
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -38,7 +38,7 @@ internal fun ShareFailureLabel(
 
             else -> {
                 if (!hasItem) {
-                    message += "\n" + stringResource(id = Strings.errors_shareext_failed_additional)
+                    message += "\n" + safeStringResource(id = Strings.errors_shareext_failed_additional)
                 }
                 textAlignment = TextAlign.Center
             }

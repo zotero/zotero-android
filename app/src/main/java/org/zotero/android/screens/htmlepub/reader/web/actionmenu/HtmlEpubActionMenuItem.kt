@@ -17,9 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -29,7 +29,7 @@ internal fun HtmlEpubActionMenuAppbarContentItem(
 ) {
     TextButton(onClick = onClick) {
         Text(
-            text = stringResource(overflowTextResId),
+            text = safeStringResource(overflowTextResId),
             color = CustomTheme.colors.primaryContent,
             style = MaterialTheme.typography.bodyLarge
         )
@@ -54,7 +54,7 @@ internal fun HtmlEpubActionMenuContentItem(
     ) {
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = stringResource(overflowTextResId),
+            text = safeStringResource(overflowTextResId),
             color = CustomTheme.colors.primaryContent,
             style = MaterialTheme.typography.bodyLarge
         )

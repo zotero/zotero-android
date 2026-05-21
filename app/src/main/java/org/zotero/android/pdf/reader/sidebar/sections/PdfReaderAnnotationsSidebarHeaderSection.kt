@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.AnnotationType
@@ -25,6 +24,7 @@ import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.sectionHorizontalPadding
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -37,7 +37,7 @@ internal fun PdfReaderAnnotationsSidebarHeaderSection(
     annotation: PDFAnnotation,
     annotationColor: Color,
 ) {
-    val title = stringResource(Strings.page) + " " + annotation.pageLabel
+    val title = safeStringResource(Strings.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
         AnnotationType.note -> Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight

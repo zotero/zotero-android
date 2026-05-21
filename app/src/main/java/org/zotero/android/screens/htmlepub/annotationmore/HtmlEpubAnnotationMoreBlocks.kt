@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +33,7 @@ import androidx.core.graphics.toColorInt
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.textinput.CustomTextField
 import org.zotero.android.uicomponents.theme.CustomPalette
 import java.util.Locale
@@ -198,7 +198,7 @@ internal fun HtmlEpubAnnotationMorePageButton(
     ) {
         Text(
             modifier = Modifier.padding(start = 16.dp),
-            text = stringResource(Strings.page_number),
+            text = safeStringResource(Strings.page_number),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
         )

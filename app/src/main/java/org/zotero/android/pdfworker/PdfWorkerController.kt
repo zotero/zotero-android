@@ -39,6 +39,7 @@ import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -204,7 +205,7 @@ class PdfWorkerController @Inject constructor(
             val errorMessage = when (customException) {
                 PdfWorkerRecognizeError.failedToInitializePdfWorker -> {
                     Timber.e("PdfWorkerController: Pdf Worker's JS failed to initialize")
-                    context.getString(Strings.retrieve_metadata_error_failed_to_initialize)
+                    context.getSafeString(Strings.retrieve_metadata_error_failed_to_initialize)
                 }
                 is PdfWorkerRecognizeError.recognizeFailed -> {
                     Timber.e("PdfWorkerController: recognizeFailed: ${customException.errorMessage}")

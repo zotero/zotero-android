@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
@@ -34,6 +33,7 @@ import org.zotero.android.screens.htmlepub.annotationmore.HtmlEpubAnnotationFilt
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.theme.CustomPalette
 import java.util.Locale
 
@@ -160,7 +160,7 @@ internal fun HtmlEpubAnnotationSizeSelector(
     ) {
         Text(
             modifier = Modifier.padding(end = 10.dp),
-            text = stringResource(id = Strings.size),
+            text = safeStringResource(id = Strings.size),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge,
         )

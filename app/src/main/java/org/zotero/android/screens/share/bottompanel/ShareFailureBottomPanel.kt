@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.share.ShareViewModel
 import org.zotero.android.screens.share.data.ItemPickerState
 import org.zotero.android.translator.data.AttachmentState
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareFailureBottomPanel(
@@ -38,7 +38,7 @@ internal fun ShareFailureBottomPanel(
         } else {
             when (state) {
                 AttachmentState.decoding -> {
-                    message = stringResource(id = Strings.shareext_decoding_attachment)
+                    message = safeStringResource(id = Strings.shareext_decoding_attachment)
                     showActivityIndicator = true
                 }
 

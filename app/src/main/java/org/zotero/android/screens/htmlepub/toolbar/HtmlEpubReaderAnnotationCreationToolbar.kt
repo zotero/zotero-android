@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.launchIn
@@ -45,6 +44,7 @@ import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderTool
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import kotlin.math.roundToInt
 
 private val htmlEpubReaderToolsList = listOf(
@@ -165,7 +165,7 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
                         tooltip = {
                             PlainTooltip() {
                                 Text(
-                                    text = stringResource(tool.title)
+                                    text = safeStringResource(tool.title)
                                 )
                             }
                         },
@@ -199,7 +199,7 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.cancel
                             )
                         )

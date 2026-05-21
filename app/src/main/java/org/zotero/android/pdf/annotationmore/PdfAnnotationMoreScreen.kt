@@ -21,7 +21,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.database.objects.AnnotationType
@@ -34,6 +33,7 @@ import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreInkRow
 import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreNoteRow
 import org.zotero.android.pdf.annotationmore.rows.PdfAnnotationMoreUnderlineRow
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -172,7 +172,7 @@ private fun DeleteButton(viewModel: PdfAnnotationMoreViewModel) {
     ) {
         Text(
             modifier = Modifier.padding(horizontal = 16.dp),
-            text = stringResource(Strings.pdf_annotation_popover_delete),
+            text = safeStringResource(Strings.pdf_annotation_popover_delete),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodyLarge,
         )

@@ -27,6 +27,7 @@ import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchVie
 import org.zotero.android.screens.htmlepub.reader.search.popup.HtmlEpubReaderSearchPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.icon.IconWithPaddingM3
 
 @Composable
@@ -71,7 +72,7 @@ internal fun HtmlEpubReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.pdf_reader_sidebar
                             )
                         )
@@ -98,7 +99,7 @@ internal fun HtmlEpubReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.pdf_reader_toolbar
                             )
                         )
@@ -124,7 +125,7 @@ internal fun HtmlEpubReaderTopBar(
                         tooltip = {
                             PlainTooltip() {
                                 Text(
-                                    stringResource(
+                                    safeStringResource(
                                         Strings.searchbar_placeholder
                                     )
                                 )
@@ -157,7 +158,7 @@ internal fun HtmlEpubReaderTopBar(
                     tooltip = {
                         PlainTooltip() {
                             Text(
-                                stringResource(
+                                safeStringResource(
                                     Strings.searchbar_placeholder
                                 )
                             )
@@ -184,7 +185,7 @@ internal fun HtmlEpubReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.settings_title
                             )
                         )

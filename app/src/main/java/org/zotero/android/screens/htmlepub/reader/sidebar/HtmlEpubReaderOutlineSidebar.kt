@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -37,6 +36,7 @@ import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubOutline
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceCombinedClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.icon.IconWithPadding
 import org.zotero.android.uicomponents.misc.NewDivider
 import org.zotero.android.uicomponents.theme.CustomPalette
@@ -58,7 +58,7 @@ internal fun HtmlEpubReaderOutlineSidebar(
         ) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
-                text = stringResource(id = Strings.pdf_sidebar_no_outline),
+                text = safeStringResource(id = Strings.pdf_sidebar_no_outline),
                 color = CustomPalette.SystemGray,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
             )

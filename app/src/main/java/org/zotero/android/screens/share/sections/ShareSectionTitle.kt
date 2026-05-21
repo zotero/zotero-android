@@ -9,8 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareSectionTitle(
@@ -23,7 +23,7 @@ internal fun ShareSectionTitle(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(id = titleId),
+            text = safeStringResource(id = titleId),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

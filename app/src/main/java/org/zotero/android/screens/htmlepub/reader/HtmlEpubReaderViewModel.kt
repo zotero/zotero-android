@@ -111,6 +111,7 @@ import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -1265,7 +1266,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             val errorMessage = when (customException) {
                 HtmlEpubReaderWebError.failedToInitializeWebView -> {
                     Timber.e("HtmlEpubReaderViewModel: HtmlEpub Worker's JS failed to initialize")
-                    context.getString(Strings.retrieve_metadata_error_failed_to_initialize)
+                    context.getSafeString(Strings.retrieve_metadata_error_failed_to_initialize)
                 }
             }
             //TODO process error

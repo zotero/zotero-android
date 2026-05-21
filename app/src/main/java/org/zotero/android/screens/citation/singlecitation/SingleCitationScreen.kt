@@ -9,7 +9,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.citation.singlecitation.components.SingleCitationDropBoxAndEditFieldItem
@@ -19,6 +18,7 @@ import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.screens.settings.elements.NewSettingsSectionTitle
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.themem3.AppThemeM3
 
 @Composable
@@ -58,7 +58,7 @@ internal fun SingleCitationScreen(
             ) {
                 SingleCitationDropBoxAndEditFieldItem(viewState, viewModel)
                 SingleCitationSwitchItem(
-                    title = stringResource(Strings.citation_omit_author),
+                    title = safeStringResource(Strings.citation_omit_author),
                     isChecked = viewState.omitAuthor,
                     onCheckedChange = viewModel::onOmitAuthor
                 )

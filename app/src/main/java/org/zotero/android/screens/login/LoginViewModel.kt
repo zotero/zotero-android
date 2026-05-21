@@ -32,6 +32,7 @@ import org.zotero.android.screens.login.data.SessionStatus
 import org.zotero.android.screens.onboarding.ARG_LOGIN_SCREEN_SCREEN
 import org.zotero.android.sync.SessionController
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.uicomponents.snackbar.SnackbarMessage
 import org.zotero.android.websocket.LoginSessionWebSocketController
 import org.zotero.android.websocket.mappers.CheckLoginSessionResponseMapper
@@ -256,7 +257,7 @@ internal class LoginViewModel @Inject constructor(
         updateState {
             copy(
                 snackbarMessage = SnackbarMessage.ErrorMessageString(
-                    message = ZoteroApplication.instance.applicationContext.getString(errorRes),
+                    message = ZoteroApplication.instance.applicationContext.getSafeString(errorRes),
                     onDismiss = ::dismissSnackbar
                 )
             )
@@ -271,7 +272,7 @@ internal class LoginViewModel @Inject constructor(
         when (error) {
             is CustomResult.GeneralError.NetworkError -> {
                 if (error.isNoNetworkError()) {
-                    return LoginError.serverError(context.getString(Strings.errors_sync_toolbar_internet_connection))
+                    return LoginError.serverError(context.getSafeString(Strings.errors_sync_toolbar_internet_connection))
                 } else {
                     val stringResponse = error.stringResponse
                     return if (!stringResponse.isNullOrEmpty()) {

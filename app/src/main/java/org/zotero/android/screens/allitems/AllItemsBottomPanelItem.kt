@@ -22,8 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun AllItemsBottomPanelAppbarContent(
@@ -35,7 +35,7 @@ internal fun AllItemsBottomPanelAppbarContent(
     TooltipBox(
         positionProvider = rememberTooltipPositionProvider(TooltipAnchorPosition.Above, 4.dp),
         tooltip = {
-            PlainTooltip() { Text(stringResource(overflowTextResId)) }
+            PlainTooltip() { Text(safeStringResource(overflowTextResId)) }
         },
         state = rememberTooltipState()
     ) {
@@ -77,7 +77,7 @@ internal fun AllItemsBottomPanelMenuContent(
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = stringResource(overflowTextResId),
+            text = safeStringResource(overflowTextResId),
             color = decideTextColorToUse(textColor),
             style = MaterialTheme.typography.bodyLarge
         )

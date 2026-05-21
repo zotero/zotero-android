@@ -11,10 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.controls.CustomSwitch
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun DownloadFilesPart(
@@ -30,7 +30,7 @@ internal fun DownloadFilesPart(
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             modifier = Modifier.weight(1f),
-            text = stringResource(id = Strings.items_filters_downloads),
+            text = safeStringResource(id = Strings.items_filters_downloads),
             maxLines = 1,
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge

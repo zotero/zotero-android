@@ -8,7 +8,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 
@@ -21,7 +21,7 @@ internal fun PdfAnnotationEditPageTopBar(viewModel: PdfAnnotationEditPageViewMod
         ),
         title = {
             Text(
-                text = stringResource(Strings.pdf_annotation_popover_page_label_title),
+                text = safeStringResource(Strings.pdf_annotation_popover_page_label_title),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )
