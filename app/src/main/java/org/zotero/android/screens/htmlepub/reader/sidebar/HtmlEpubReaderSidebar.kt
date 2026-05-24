@@ -15,8 +15,6 @@ import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.HtmlEpubRe
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Annotations
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Outline
-import org.zotero.android.uicomponents.foundation.safeStringResource
-import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.HtmlEpubReaderThumbnailsSidebar
 
 private val htmlEpubSliderOptions = listOf(
     Annotations,
