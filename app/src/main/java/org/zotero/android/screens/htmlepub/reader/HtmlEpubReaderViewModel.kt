@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.RectF
 import android.net.Uri
 import android.webkit.WebView
@@ -20,6 +21,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
 import io.realm.RealmResults
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -93,6 +97,8 @@ import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSear
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchTermEventStream
+import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.HtmlEpubAnnotationBitmapManager
+import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.cache.HtmlEpubAnnotationBitmapCacheSnapshotEventStream
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubOutline
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubRequestThumbnailRenderEventStream
@@ -139,6 +145,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val htmlEpubReaderSearchTermEventStream: HtmlEpubReaderSearchTermEventStream,
     private val webCallChainEventStream: HtmlEpubReaderWebCallChainEventStream,
     private val htmlEpubRequestThumbnailRenderEventStream: HtmlEpubRequestThumbnailRenderEventStream,
+    private val annotationBitmapManager: HtmlEpubAnnotationBitmapManager,
+    private val annotationBitmapCacheSnapshotEventStream: HtmlEpubAnnotationBitmapCacheSnapshotEventStream,
+
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
 
@@ -273,14 +282,32 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .drop(1)
             .onEach { data ->
                 val isDark = data!!.isDark
                 updateState {
                     copy(isDark = isDark)
                 }
+                clearAnnotationsBitmapCache()
                 triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun setupAnnotationsBitmapCacheUpdateStream() {
+        annotationBitmapCacheSnapshotEventStream.flow()
+            .onEach { cacheSnapshot ->
+                Timber.d("HtmlEpubThumbnailProcessing: thumbnailCache updated")
+                updateState {
+                    copy(annotationsBitmapCache = cacheSnapshot)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+
+    private fun clearAnnotationsBitmapCache() {
+        annotationBitmapManager.cancelProcessing()
     }
 
     private fun startObservingSearchTerm() {
@@ -339,6 +366,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
 
+        setupAnnotationsBitmapCacheUpdateStream()
+        initAnnotationManager()
+
         this.activeLineWidth = defaults.getActiveLineWidth()
         this.activeEraserSize = defaults.getActiveEraserSize()
         this.activeFontSize = defaults.getActiveFontSize()
@@ -356,6 +386,16 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
         this.userId = sessionDataEventStream.currentValue()!!.userId
         this.username = defaults.getUsername()
+    }
+
+    private fun initAnnotationManager() {
+        annotationBitmapManager.init(viewModelScope)
+        val annotationsBitmapCache = annotationBitmapManager.generateEmptySnapshot().toPersistentMap()
+        updateState {
+            copy(
+                annotationsBitmapCache = annotationsBitmapCache
+            )
+        }
     }
 
     private fun initialiseReader() {
@@ -728,6 +768,20 @@ class HtmlEpubReaderViewModel @Inject constructor(
             createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
         } else {
             createHtmlEpubDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
+        }
+
+
+        rawAnnotations.forEach {
+            val data = it.asJsonObject
+            val key = data["id"]?.asString
+            val imageBase64 = data["image"]?.asString
+            if (key != null && imageBase64 != null) {
+                annotationBitmapManager.store(
+                    key = key,
+                    encodedImageBase64String = imageBase64
+                )
+            }
+
         }
     }
 
@@ -2281,6 +2335,7 @@ data class HtmlEpubReaderViewState(
     val currentPdfPageIndex: Int = 0,
     val numOfPages: Int = 0,
     val pageLabels: List<String> = emptyList(),
+    val annotationsBitmapCache: PersistentMap<String, Bitmap> = persistentMapOf(),
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey

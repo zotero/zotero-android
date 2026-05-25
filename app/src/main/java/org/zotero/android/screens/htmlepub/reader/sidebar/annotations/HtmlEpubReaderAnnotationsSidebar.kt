@@ -32,7 +32,10 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubSidebarSearchBar
 import org.zotero.android.screens.htmlepub.reader.sidebar.HtmlEpubReaderSidebarDivider
 import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.sections.HtmlEpubReaderAnnotationsSidebarHeaderSection
+import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarFreeTextRow
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarHighlightRow
+import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarImageRow
+import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarInkRow
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarNoteRow
 import org.zotero.android.screens.htmlepub.reader.sidebar.rows.HtmlEpubReaderAnnotationsSidebarUnderlineRow
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -43,6 +46,7 @@ internal fun HtmlEpubReaderAnnotationsSidebar(
     viewState: HtmlEpubReaderViewState,
     layoutType: CustomLayoutSize.LayoutType,
     annotationsLazyListState: LazyListState,
+    annotationMaxSideSize: Int,
 ) {
     Box(
         modifier = Modifier
@@ -99,6 +103,7 @@ internal fun HtmlEpubReaderAnnotationsSidebar(
                     )
                     HtmlEpubReaderSidebarDivider()
 
+                    val cachedBitmap = viewState.annotationsBitmapCache[key]
                     when (annotation.type) {
                         AnnotationType.note -> {
                             HtmlEpubReaderAnnotationsSidebarNoteRow(
@@ -126,7 +131,33 @@ internal fun HtmlEpubReaderAnnotationsSidebar(
                             )
                         }
 
-                        else -> {}
+                        AnnotationType.image -> {
+                            HtmlEpubReaderAnnotationsSidebarImageRow(
+                                annotation = annotation,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                annotationMaxSideSize = annotationMaxSideSize,
+                                cachedBitmap = cachedBitmap,
+                            )
+                        }
+                        AnnotationType.ink -> {
+                            HtmlEpubReaderAnnotationsSidebarInkRow(
+                                annotation = annotation,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                annotationMaxSideSize = annotationMaxSideSize,
+                                cachedBitmap = cachedBitmap,
+                            )
+                        }
+                        AnnotationType.text -> {
+                            HtmlEpubReaderAnnotationsSidebarFreeTextRow(
+                                annotation = annotation,
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                annotationMaxSideSize = annotationMaxSideSize,
+                                cachedBitmap = cachedBitmap,
+                            )
+                        }
                     }
                 }
             }

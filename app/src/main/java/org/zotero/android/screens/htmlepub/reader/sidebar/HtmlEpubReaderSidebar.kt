@@ -7,7 +7,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
@@ -15,6 +14,8 @@ import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.HtmlEpubRe
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Annotations
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Outline
+import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.HtmlEpubReaderThumbnailsSidebar
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 private val htmlEpubSliderOptions = listOf(
     Annotations,
@@ -85,6 +86,7 @@ internal fun HtmlEpubReaderSidebar(
                 viewState = viewState,
                 annotationsLazyListState = annotationsLazyListState,
                 layoutType = layoutType,
+                annotationMaxSideSize = annotationMaxSideSize,
             )
         }
 

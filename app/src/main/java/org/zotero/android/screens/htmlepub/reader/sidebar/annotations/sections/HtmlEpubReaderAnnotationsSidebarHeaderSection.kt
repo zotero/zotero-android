@@ -39,10 +39,10 @@ internal fun HtmlEpubReaderAnnotationsSidebarHeaderSection(
     val icon = when (annotation.type) {
         AnnotationType.note -> Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight
+        AnnotationType.image -> Drawables.annotate_area
+        AnnotationType.ink -> Drawables.annotate_ink
         AnnotationType.underline -> Drawables.annotate_underline
-        else -> {
-            Drawables.annotate_text
-        }
+        AnnotationType.text -> Drawables.annotate_text
     }
     Row(
         modifier = Modifier
