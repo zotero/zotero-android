@@ -14,7 +14,7 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
-
+//Must be singleton, used everywhere.
 @Singleton
 open class Defaults @Inject constructor(
     private val context: Context,

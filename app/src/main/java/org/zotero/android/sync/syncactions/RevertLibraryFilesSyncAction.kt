@@ -1,23 +1,36 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.pojo.sync.ItemResponse
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.DeleteObjectsDbRequest
 import org.zotero.android.database.requests.ReadAllAttachmentUploadsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.StoreItemsResponse
-
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileReader
 
-class RevertLibraryFilesSyncAction(
-    private val libraryId: LibraryIdentifier,
-) : SyncAction() {
+class RevertLibraryFilesSyncAction @AssistedInject constructor(
+    @Assisted private val libraryId: LibraryIdentifier,
+
+    private val dbWrapperMain: DbWrapperMain,
+    private val fileStore: FileStore,
+    private val gson: Gson,
+    private val itemResponseMapper: ItemResponseMapper,
+    private val schemaController: SchemaController,
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
+) {
 
     fun result() {
         Timber.i("RevertLibraryFilesSyncAction: revert files to upload")
@@ -63,10 +76,8 @@ class RevertLibraryFilesSyncAction(
                 )
             )
             Timber.e("RevertLibraryFilesSyncAction: restore cached objects")
-            val request = StoreItemsDbResponseRequest(
+            val request = storeItemsDbResponseRequestFactory.create(
                 responses = cachedResponses,
-                schemaController = this.schemaController,
-                dateParser = this.dateParser,
                 preferResponseData = true,
                 denyIncorrectCreator = true,
             )
@@ -107,6 +118,11 @@ class RevertLibraryFilesSyncAction(
                 newFile.delete()
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(libraryId: LibraryIdentifier): RevertLibraryFilesSyncAction
     }
 
 }

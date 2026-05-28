@@ -60,6 +60,7 @@ class SessionController @Inject constructor(
     }
 }
 
+//Must be a singleton as it's getting filled with data on app start and then data is retrieved on other screens
 @Singleton
 class SessionDataEventStream @Inject constructor(applicationScope: ApplicationScope) :
     StateEventStream<SessionData?>(applicationScope, null)

@@ -35,7 +35,6 @@ import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.addbyidentifier.IdentifierLookupController.LookupData
 import org.zotero.android.screens.addbyidentifier.data.IdentifierLookupMode
 import org.zotero.android.sync.AttachmentCreator
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
@@ -54,11 +53,12 @@ class PdfWorkerController @Inject constructor(
     private val itemResponseMapper: ItemResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
     private val creatorResponseMapper: CreatorResponseMapper,
-    private val dateParser: DateParser,
     private val schemaController: SchemaController,
     private val dbWrapperMain: DbWrapperMain,
     private val defaults: Defaults,
-    private val identifierLookupController: IdentifierLookupController
+    private val identifierLookupController: IdentifierLookupController,
+    private val linkAttachmentToParentItemDbRequestFactory: LinkAttachmentToParentItemDbRequest.Factory,
+    private val createTranslatedItemsDbRequestFactory: CreateTranslatedItemsDbRequest.Factory,
 ) {
 
     private val mainCoroutineScope = CoroutineScope(dispatchers.main)
@@ -186,10 +186,7 @@ class PdfWorkerController @Inject constructor(
         libraryIdentifier: LibraryIdentifier,
     ) {
         dbWrapperMain.realmDbStorage.perform(
-            LinkAttachmentToParentItemDbRequest(
-                schemaController = this.schemaController,
-                fileStore = this.fileStore,
-                dateParser = this.dateParser,
+            linkAttachmentToParentItemDbRequestFactory.create(
                 libraryId = libraryIdentifier,
                 itemKey = itemKey,
                 parentItemKey = createdItem.key
@@ -289,12 +286,10 @@ class PdfWorkerController @Inject constructor(
         itemKey: String,
     ) {
         val createdItem = dbWrapperMain.realmDbStorage.perform(
-            CreateTranslatedItemsDbRequest(
+            createTranslatedItemsDbRequestFactory.create(
                 responses = listOf(
                     item
                 ),
-                schemaController = schemaController,
-                dateParser = dateParser
             )
         )[0]
         updateItemAndPostProgress(

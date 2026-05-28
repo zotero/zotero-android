@@ -1,5 +1,9 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RPageIndex
@@ -7,13 +11,14 @@ import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 
-class MarkForResyncSyncAction(
-    val keys: List<String>,
-    val objectS: SyncObject,
-    val libraryId: LibraryIdentifier,
-): SyncAction() {
+class MarkForResyncSyncAction @AssistedInject constructor(
+    @Assisted("keys") private val keys: List<String>,
+    @Assisted("objectS") private val objectS: SyncObject,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+
+    private val dbWrapperMain: DbWrapperMain,
+) {
     fun result() {
         val request = when (this.objectS) {
             SyncObject.collection ->
@@ -30,4 +35,14 @@ class MarkForResyncSyncAction(
         }
         dbWrapperMain.realmDbStorage.perform(request = request)
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("keys") keys: List<String>,
+            @Assisted("objectS") objectS: SyncObject,
+            @Assisted("libraryId") libraryId: LibraryIdentifier
+        ): MarkForResyncSyncAction
+    }
+
 }

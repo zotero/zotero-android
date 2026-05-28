@@ -4,6 +4,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -17,11 +20,12 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
-class CreateHtmlEpubAnnotationsDbRequest(
-    private val attachmentKey: String,
-    private val libraryId: LibraryIdentifier,
-    private val annotations: List<HtmlEpubAnnotation>,
-    private val userId: Long,
+class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
+    @Assisted("attachmentKey") private val attachmentKey: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("annotations") private val annotations: List<HtmlEpubAnnotation>,
+    @Assisted("userId") private val userId: Long,
+
     private val schemaController: SchemaController,
     private val gson: Gson,
 ) : CreateReaderAnnotationsDbRequest<HtmlEpubAnnotation>(
@@ -31,6 +35,7 @@ class CreateHtmlEpubAnnotationsDbRequest(
     userId = userId,
     schemaController = schemaController,
     ) {
+
     override fun addFields(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
         super.addFields(annotation, item, database)
 
@@ -86,4 +91,15 @@ class CreateHtmlEpubAnnotationsDbRequest(
             rTypedTag.tag = rTag
         }
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("attachmentKey") attachmentKey: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("annotations") annotations: List<HtmlEpubAnnotation>,
+            @Assisted("userId") userId: Long,
+        ): CreateHtmlEpubAnnotationsDbRequest
+    }
+
 }

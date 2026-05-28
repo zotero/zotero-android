@@ -1,15 +1,22 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.DeleteWebDavDeletionsDbRequest
 import org.zotero.android.database.requests.ReadWebDavDeletionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.syncactions.architecture.SyncAction
+import org.zotero.android.webdav.WebDavController
 import timber.log.Timber
 
-class DeleteWebDavFilesSyncAction(
-    private val libraryId: LibraryIdentifier
-) : SyncAction() {
+class DeleteWebDavFilesSyncAction @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+
+    private val webDavController: WebDavController,
+    private val dbWrapperMain: DbWrapperMain,
+) {
     suspend fun result(): CustomResult<Set<String>> {
         val loadDeletionsResult = loadDeletions()
         if (loadDeletionsResult !is CustomResult.GeneralSuccess) {
@@ -57,5 +64,11 @@ class DeleteWebDavFilesSyncAction(
             Timber.e(error, "DeleteWebDavFilesSyncAction: could not delete webdav deletions")
             return CustomResult.GeneralError.CodeError(error)
         }
+    }
+
+
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted("libraryId") libraryId: LibraryIdentifier): DeleteWebDavFilesSyncAction
     }
 }

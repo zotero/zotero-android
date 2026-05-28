@@ -8,7 +8,7 @@ import java.io.FileWriter
 import java.io.PrintWriter
 import javax.inject.Inject
 import javax.inject.Singleton
-
+//Must be singleton, as its being used by ZoteroApplication Class
 @Singleton
 class CrashFileWriter @Inject constructor(
     private val fileStore: FileStore

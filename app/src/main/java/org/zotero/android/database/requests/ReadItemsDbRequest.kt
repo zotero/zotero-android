@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.RealmResults
@@ -13,14 +16,15 @@ import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 
-class ReadItemsDbRequest(
-    val libraryId: LibraryIdentifier,
-    val collectionId: CollectionIdentifier,
-    val filters: List<ItemsFilter> = emptyList(),
-    val sortType: ItemsSortType? = null,
-    val searchTextComponents: List<String> = emptyList(),
+class ReadItemsDbRequest @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("collectionId") private val collectionId: CollectionIdentifier,
+    @Assisted("filters") private val filters: List<ItemsFilter> = emptyList(),
+    @Assisted("sortType") private val sortType: ItemsSortType? = null,
+    @Assisted("searchTextComponents") private val searchTextComponents: List<String> = emptyList(),
+    @Assisted("isAsync") private val isAsync: Boolean,
+
     val defaults: Defaults,
-    val isAsync: Boolean,
 ) : DbResponseRequest<RealmResults<RItem>> {
 
     override val needsWrite: Boolean
@@ -92,6 +96,19 @@ class ReadItemsDbRequest(
         }
         return keys
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("collectionId") collectionId: CollectionIdentifier,
+            @Assisted("filters") filters: List<ItemsFilter> = emptyList(),
+            @Assisted("sortType") sortType: ItemsSortType? = null,
+            @Assisted("searchTextComponents") searchTextComponents: List<String> = emptyList(),
+            @Assisted("isAsync") isAsync: Boolean,
+        ): ReadItemsDbRequest
+    }
+
 }
 
 class ReadItemsWithKeysDbRequest(

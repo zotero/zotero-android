@@ -108,6 +108,7 @@ internal class ShareViewModel @Inject constructor(
     private val pdfWorkerController: PdfWorkerController,
     private val nonZoteroApi: NonZoteroApi,
     private val nonZoteroNoRedirectApi: NonZoteroNoRedirectApi,
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -1016,10 +1017,8 @@ internal class ShareViewModel @Inject constructor(
             val (parameters, changeUuids) = shareItemSubmitter.createItem(
                 item,
                 libraryId = libraryId,
-                schemaController = schemaController,
-                dateParser = dateParser
             )
-            val result = SubmitUpdateSyncAction(
+            val result = submitUpdateSyncActionFactory.create(
                 parameters = listOf(parameters),
                 changeUuids = changeUuids,
                 sinceVersion = null,

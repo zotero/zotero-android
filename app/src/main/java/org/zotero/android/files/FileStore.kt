@@ -31,6 +31,7 @@ import javax.inject.Singleton
 /**
  * Used to store objects and object trees in files.
  */
+//Must be singleton, used everywhere.
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,

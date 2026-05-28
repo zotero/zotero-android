@@ -1,5 +1,6 @@
 package org.zotero.android.sync
 
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
@@ -18,56 +19,47 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailError
 import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import timber.log.Timber
 import java.util.Date
+import javax.inject.Inject
 
-object ItemDetailDataCreator {
+@ViewModelScoped
+class ItemDetailDataCreator @Inject constructor(
+    private val schemaController: SchemaController,
+    private val urlDetector: UrlDetector,
+    private val dateParser: DateParser,
+    private val fileStorage: FileStore,
+    private val defaults: Defaults,
+) {
 
     sealed class Kind {
-        data class new(val itemType: String, val child: Attachment?): Kind()
-        data class existing(val item: RItem, val ignoreChildren: Boolean): Kind()
+        data class new(val itemType: String, val child: Attachment?) : Kind()
+        data class existing(val item: RItem, val ignoreChildren: Boolean) : Kind()
     }
 
     fun createData(
         type: Kind,
-        schemaController: SchemaController,
-        defaults: Defaults,
-        dateParser: DateParser,
-        fileStorage: FileStore,
-        urlDetector: UrlDetector,
         doiDetector: (String) -> Boolean
-    ): ItemDetailCreateDataResult{
+    ): ItemDetailCreateDataResult {
         when (type) {
             is Kind.new ->
-            return creationData(
-                itemType = type.itemType,
-                child = type.child,
-                schemaController = schemaController,
-                dateParser = dateParser,
-                urlDetector = urlDetector,
-                doiDetector = doiDetector
-            )
+                return creationData(
+                    itemType = type.itemType,
+                    child = type.child,
+                    doiDetector = doiDetector
+                )
+
             is Kind.existing ->
-            return itemData(
-                item = type.item,
-                ignoreChildren = type.ignoreChildren,
-                schemaController = schemaController,
-                defaults = defaults,
-                fileStorage = fileStorage,
-                urlDetector = urlDetector,
-                doiDetector = doiDetector,
-                dateParser = dateParser
-            )
+                return itemData(
+                    item = type.item,
+                    ignoreChildren = type.ignoreChildren,
+                    doiDetector = doiDetector,
+                )
         }
     }
 
     private fun itemData(
         item: RItem,
         ignoreChildren: Boolean,
-        schemaController: SchemaController,
-        dateParser: DateParser,
-        fileStorage: FileStore,
-        urlDetector: UrlDetector,
         doiDetector: (String) -> Boolean,
-        defaults: Defaults,
     )
             : ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(item.rawType)
@@ -91,9 +83,6 @@ object ItemDetailDataCreator {
 
         val (fieldIds, fields, _) = fieldData(
             itemType = item.rawType,
-            schemaController = schemaController,
-            dateParser = dateParser,
-            urlDetector = urlDetector,
             doiDetector = doiDetector,
             getExistingData = { key, _ ->
                 return@fieldData null to values[key]
@@ -181,9 +170,6 @@ object ItemDetailDataCreator {
     private fun creationData(
         itemType: String,
         child: Attachment?,
-        schemaController: SchemaController,
-        dateParser: DateParser,
-        urlDetector: UrlDetector,
         doiDetector: (String) -> Boolean
     ): ItemDetailCreateDataResult {
         val localizedType = schemaController.localizedItemType(itemType)
@@ -194,14 +180,12 @@ object ItemDetailDataCreator {
 
         val (fieldIds, fields, hasAbstract) = fieldData(
             itemType = itemType,
-            schemaController = schemaController,
-            dateParser = dateParser,
-            urlDetector = urlDetector,
             doiDetector = doiDetector
         )
-            val date = Date()
-            val attachments: List<Attachment> = child?.let { listOf(it)} ?: emptyList()
-            val data = ItemDetailData(title = "",
+        val date = Date()
+        val attachments: List<Attachment> = child?.let { listOf(it) } ?: emptyList()
+        val data = ItemDetailData(
+            title = "",
             type = itemType,
             isAttachment = (itemType == ItemTypes.attachment),
             localizedType = localizedType,
@@ -211,16 +195,14 @@ object ItemDetailDataCreator {
             fieldIds = fieldIds,
             abstract = if (hasAbstract) "" else null,
             dateModified = date,
-            dateAdded = date)
+            dateAdded = date
+        )
 
-            return ItemDetailCreateDataResult(data, attachments, emptyList(), emptyList())
-        }
+        return ItemDetailCreateDataResult(data, attachments, emptyList(), emptyList())
+    }
 
     fun fieldData(
         itemType: String,
-        schemaController: SchemaController,
-        dateParser: DateParser,
-        urlDetector: UrlDetector,
         doiDetector: (String) -> Boolean,
         getExistingData: ((String, String?) -> Pair<String?, String?>)? = null
     ): Triple<List<String>, Map<String, ItemDetailField>, Boolean> {
@@ -228,7 +210,7 @@ object ItemDetailDataCreator {
         if (fieldSchemas == null) {
             throw ItemDetailError.typeNotSupported(itemType)
         }
-        val fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
+        val fieldKeys = fieldSchemas.map { it.field }.toMutableList()
         val abstractIndex = fieldKeys.indexOf(FieldKeys.Item.abstractN)
 
         if (abstractIndex != -1) {
@@ -254,7 +236,7 @@ object ItemDetailDataCreator {
             val name = existingName ?: schemaController.localizedField(key) ?: ""
             val value = existingValue ?: ""
             val isTappable =
-                isTappable(key = key, value = value, urlDetector = urlDetector, doiDetector = doiDetector)
+                isTappable(key = key, value = value, doiDetector = doiDetector)
             var additionalInfo: Map<ItemDetailField.AdditionalInfoKey, String>? = null
 
             if (key == FieldKeys.Item.date || baseField == FieldKeys.Item.date) {
@@ -272,26 +254,31 @@ object ItemDetailDataCreator {
                         fullDateWithDashesUtc.parse(value)!!
                     }
                     additionalInfo = mapOf(
-                        ItemDetailField.AdditionalInfoKey.formattedDate to dateFormatItemDetails().format(date),
-                        ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date))
+                        ItemDetailField.AdditionalInfoKey.formattedDate to dateFormatItemDetails().format(
+                            date
+                        ),
+                        ItemDetailField.AdditionalInfoKey.formattedEditDate to sqlFormat.format(date)
+                    )
                 }
             }
 
 
-            fields[key] = ItemDetailField(key = key,
+            fields[key] = ItemDetailField(
+                key = key,
                 baseField = baseField,
                 name = name,
                 value = value,
                 isTitle = false,
-            isTappable = isTappable,
-            additionalInfo = additionalInfo)
+                isTappable = isTappable,
+                additionalInfo = additionalInfo
+            )
         }
 
         return Triple(fieldKeys, fields, (abstractIndex != -1))
     }
 
-    fun isTappable(key: String, value: String, urlDetector: UrlDetector, doiDetector: (String) -> Boolean): Boolean {
-        return when(key) {
+    fun isTappable(key: String, value: String, doiDetector: (String) -> Boolean): Boolean {
+        return when (key) {
             FieldKeys.Item.doi ->
                 doiDetector(value)
 
@@ -303,7 +290,10 @@ object ItemDetailDataCreator {
         }
     }
 
-    fun filteredFieldKeys(fieldKeys: List<String>, fields: Map<String, ItemDetailField>): List<String> {
+    fun filteredFieldKeys(
+        fieldKeys: List<String>,
+        fields: Map<String, ItemDetailField>
+    ): List<String> {
         val newFieldKeys = mutableListOf<String>()
         fieldKeys.forEach { key ->
             if (!(fields[key]?.value ?: "").isEmpty()) {
@@ -313,12 +303,12 @@ object ItemDetailDataCreator {
         return newFieldKeys
     }
 
-    fun allFieldKeys(itemType: String, schemaController: SchemaController): List<String> {
+    fun allFieldKeys(itemType: String): List<String> {
         val fieldSchemas = schemaController.fields(itemType)
         if (fieldSchemas == null) {
             return emptyList()
         }
-        val fieldKeys = fieldSchemas.map{ it.field }.toMutableList()
+        val fieldKeys = fieldSchemas.map { it.field }.toMutableList()
         val indexOfAbstract = fieldKeys.indexOf(FieldKeys.Item.abstractN)
         if (indexOfAbstract != -1) {
             fieldKeys.removeAt(indexOfAbstract)
@@ -333,4 +323,9 @@ object ItemDetailDataCreator {
 
 }
 
-data class ItemDetailCreateDataResult(val itemData: ItemDetailData, val attachments: List<Attachment>, val notes: List<Note>, val tags: List<Tag>)
+data class ItemDetailCreateDataResult(
+    val itemData: ItemDetailData,
+    val attachments: List<Attachment>,
+    val notes: List<Note>,
+    val tags: List<Tag>
+)

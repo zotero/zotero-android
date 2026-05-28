@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.ItemResponse
@@ -8,13 +11,11 @@ import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
-import org.zotero.android.sync.DateParser
-import org.zotero.android.sync.SchemaController
 
-class CreateBackendItemDbRequest(
-    private val item: ItemResponse,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
+class CreateBackendItemDbRequest @AssistedInject constructor(
+    @Assisted private val item: ItemResponse,
+
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
 ) : DbResponseRequest<RItem> {
     override val needsWrite: Boolean
         get() = true
@@ -22,10 +23,8 @@ class CreateBackendItemDbRequest(
     override fun process(database: Realm): RItem {
         val libraryId = this.item.library.libraryId ?: throw DbError.objectNotFound
 
-        StoreItemsDbResponseRequest(
+        storeItemsDbResponseRequestFactory.create(
             responses = listOf(this.item),
-            schemaController = this.schemaController,
-            dateParser = this.dateParser,
             preferResponseData = true,
             denyIncorrectCreator = false
         )
@@ -47,6 +46,11 @@ class CreateBackendItemDbRequest(
 
         return item
 
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(item: ItemResponse): CreateBackendItemDbRequest
     }
 
 }

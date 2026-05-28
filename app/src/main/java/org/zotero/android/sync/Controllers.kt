@@ -38,6 +38,9 @@ import javax.inject.Singleton
 @Singleton
 class IsUserInitializedEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<Boolean>(applicationScope)
+
+//Must be singleton, as its being used by ZoteroApplication Class
+@Singleton
 class Controllers @Inject constructor(
     dispatchers: Dispatchers,
     private val sessionDataEventStream: SessionDataEventStream,

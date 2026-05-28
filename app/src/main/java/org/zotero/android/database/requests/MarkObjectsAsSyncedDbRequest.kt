@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmModel
 import io.realm.kotlin.where
@@ -134,12 +137,13 @@ class MarkCollectionAsSyncedAndUpdateDbRequest(
     }
 }
 
-class MarkItemAsSyncedAndUpdateDbRequest (
-    val libraryId: LibraryIdentifier,
-    val response: ItemResponse,
-    val changeUuids: List<String>,
-    val schemaController: SchemaController,
-    val dateParser: DateParser,
+class MarkItemAsSyncedAndUpdateDbRequest @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("response") private val response: ItemResponse,
+    @Assisted("changeUuids") private val changeUuids: List<String>,
+
+    private val schemaController: SchemaController,
+    private val dateParser: DateParser,
 ): DbRequest {
 
     override val needsWrite: Boolean
@@ -240,6 +244,16 @@ class MarkItemAsSyncedAndUpdateDbRequest (
 
         item.updateDerivedTitles()
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("response") response: ItemResponse,
+            @Assisted("changeUuids") changeUuids: List<String>
+        ): MarkItemAsSyncedAndUpdateDbRequest
+    }
+
 }
 
 class MarkSearchAsSyncedAndUpdateDbRequest(

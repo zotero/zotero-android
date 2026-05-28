@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.kotlin.where
@@ -10,10 +13,11 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 
-class ReadAllAttachmentsFromCollectionDbRequest(
+class ReadAllAttachmentsFromCollectionDbRequest @AssistedInject constructor(
+    @Assisted("collectionId") private val collectionId: CollectionIdentifier,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+
     private val defaults: Defaults,
-    private val collectionId: CollectionIdentifier,
-    private val libraryId: LibraryIdentifier,
 ) : DbResponseRequest<RealmResults<RItem>> {
     override val needsWrite: Boolean
         get() = false
@@ -51,5 +55,13 @@ class ReadAllAttachmentsFromCollectionDbRequest(
             keys = keys.union(selfAndSubcollectionKeys(key = child.key, database = database))
         }
         return keys
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("collectionId") collectionId: CollectionIdentifier,
+            @Assisted("libraryId") libraryId: LibraryIdentifier
+        ): ReadAllAttachmentsFromCollectionDbRequest
     }
 }

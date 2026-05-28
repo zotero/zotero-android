@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be a singleton as entire app constantly uses it for navigation
 @Singleton
 class NavigationParamsMarshaller @Inject constructor(
     val gson: Gson,

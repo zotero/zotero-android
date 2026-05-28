@@ -3,6 +3,9 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
@@ -30,20 +33,21 @@ import java.util.concurrent.atomic.AtomicInteger
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
-class SyncBatchProcessor(
-    val batches: List<DownloadBatch>,
-    val userId: Long,
-    val zoteroApi: ZoteroApi,
-    val dbWrapperMain: DbWrapperMain,
-    val fileStore: FileStore,
-    val itemResponseMapper: ItemResponseMapper,
-    val collectionResponseMapper: CollectionResponseMapper,
-    val searchResponseMapper: SearchResponseMapper,
-    val schemaController: SchemaController,
-    val dateParser: DateParser,
-    val gson: Gson,
-    val progress: (Int) -> Unit,
-    val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+class SyncBatchProcessor @AssistedInject constructor(
+    @Assisted("batches") private val batches: List<DownloadBatch>,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("progress") private val progress: (Int) -> Unit,
+    @Assisted("completion") private val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+
+    private val zoteroApi: ZoteroApi,
+    private val dbWrapperMain: DbWrapperMain,
+    private val fileStore: FileStore,
+    private val itemResponseMapper: ItemResponseMapper,
+    private val collectionResponseMapper: CollectionResponseMapper,
+    private val searchResponseMapper: SearchResponseMapper,
+    private val schemaController: SchemaController,
+    private val gson: Gson,
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
     val dispatchers: Dispatchers,
 ) {
 
@@ -226,10 +230,8 @@ class SyncBatchProcessor(
 
                 storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
 
-                val request = StoreItemsDbResponseRequest(
+                val request = storeItemsDbResponseRequestFactory.create(
                     responses = items,
-                    schemaController = this.schemaController,
-                    dateParser = this.dateParser,
                     preferResponseData = true,
                     denyIncorrectCreator = true,
                 )
@@ -291,6 +293,16 @@ class SyncBatchProcessor(
 
     fun cancelAllOperations() {
         resultsProcessorCoroutineScope.cancel()
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("batches") batches: List<DownloadBatch>,
+            @Assisted("userId") userId: Long,
+            @Assisted("progress") progress: (Int) -> Unit,
+            @Assisted("completion") completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+        ): SyncBatchProcessor
     }
 
 }

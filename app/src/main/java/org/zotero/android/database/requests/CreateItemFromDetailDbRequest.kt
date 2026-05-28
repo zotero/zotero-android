@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -28,14 +31,15 @@ import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.UUID
 
-class CreateItemFromDetailDbRequest(
-    private val key: String,
-    private val libraryId: LibraryIdentifier,
-    private val collectionKey: String?,
-    private val data: ItemDetailData,
-    private val attachments: List<Attachment>,
-    private val notes: List<Note>,
-    private val tags: List<Tag>,
+class CreateItemFromDetailDbRequest @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("collectionKey") private val collectionKey: String?,
+    @Assisted("data") private val data: ItemDetailData,
+    @Assisted("attachments") private val attachments: List<Attachment>,
+    @Assisted("notes") private val notes: List<Note>,
+    @Assisted("tags") private val tags: List<Tag>,
+
     private val fileStore: FileStore,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
@@ -167,6 +171,18 @@ class CreateItemFromDetailDbRequest(
         item.changeType = UpdatableChangeType.user.name
         AllItemsDbRowCreator.createOrUpdate(item, database)
         return item
+    }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("collectionKey") collectionKey: String?,
+            @Assisted("data") data: ItemDetailData,
+            @Assisted("attachments") attachments: List<Attachment>,
+            @Assisted("notes") notes: List<Note>,
+            @Assisted("tags") tags: List<Tag>
+        ): CreateItemFromDetailDbRequest
     }
 }

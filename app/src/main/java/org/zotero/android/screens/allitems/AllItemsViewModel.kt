@@ -125,6 +125,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val dispatchers: Dispatchers,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val updateSuggestionUseCase: UpdateSuggestionUseCase,
+    private val createAttachmentsDbRequestFactory: CreateAttachmentsDbRequest.Factory,
     private val defaults: Defaults,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
@@ -494,7 +495,12 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
         val type = schemaController.localizedItemType(ItemTypes.attachment) ?: ""
-        val request = CreateAttachmentsDbRequest(attachments = attachments, parentKey = null, localizedType = type, collections = collections, fileStore = fileStore)
+        val request = createAttachmentsDbRequestFactory.create(
+            attachments = attachments,
+            parentKey = null,
+            localizedType = type,
+            collections = collections
+        )
 
         val result = perform(dbWrapperMain, invalidateRealm = true, request = request).ifFailure {
             Timber.e(it,"ItemsActionHandler: can't add attachment")

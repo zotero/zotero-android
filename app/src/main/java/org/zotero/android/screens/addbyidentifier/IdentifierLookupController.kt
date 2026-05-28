@@ -60,6 +60,7 @@ class IdentifierLookupController @Inject constructor(
     private val defaults: Defaults,
     private val translatorLoadedEventStream: TranslatorLoadedEventStream,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
+    private val createTranslatedItemsDbRequestFactory: CreateTranslatedItemsDbRequest.Factory,
 ) {
 
     private lateinit var lookupMode: IdentifierLookupMode
@@ -295,10 +296,8 @@ class IdentifierLookupController @Inject constructor(
             ) {
                 when (this.lookupMode) {
                     is IdentifierLookupMode.normal -> {
-                        val request = CreateTranslatedItemsDbRequest(
+                        val request = createTranslatedItemsDbRequestFactory.create(
                             responses = listOf(response),
-                            schemaController = schemaController,
-                            dateParser = dateParser
                         )
                         dbWrapperMain.realmDbStorage.perform(request = request)
                         changeLookup(
@@ -321,10 +320,8 @@ class IdentifierLookupController @Inject constructor(
                         }
                     }
                     is IdentifierLookupMode.identifyAndSaveParentItem -> {
-                        val request = CreateTranslatedItemsDbRequest(
+                        val request = createTranslatedItemsDbRequestFactory.create(
                             responses = listOf(response),
-                            schemaController = this.schemaController,
-                            dateParser = this.dateParser
                         )
                         val listOfCreatedItems = dbWrapperMain.realmDbStorage.perform(request = request)
                         changeLookup(

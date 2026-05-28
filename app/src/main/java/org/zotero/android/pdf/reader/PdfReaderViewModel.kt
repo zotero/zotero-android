@@ -175,11 +175,9 @@ import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.AnnotationSplitter
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
@@ -209,13 +207,13 @@ class PdfReaderViewModel @Inject constructor(
     private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
     private val thumbnailPreviewCacheUpdatedEventStream: ThumbnailPreviewCacheUpdatedEventStream,
     override val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val dispatcher: CoroutineDispatcher,
     private val progressHandler: SyncProgressHandler,
     private val fileStore: FileStore,
     private val stateHandle: SavedStateHandle,
+    private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+    private val createPDFAnnotationsDbRequestFactory: CreatePDFAnnotationsDbRequest.Factory,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
 
     private var liveAnnotations: RealmResults<RItem>? = null
@@ -1145,11 +1143,10 @@ class PdfReaderViewModel @Inject constructor(
                         baseKey = FieldKeys.Item.Annotation.position
                     ) to "${inkAnnotation.lineWidth.rounded(3)}"
                 )
-                val request = EditItemFieldsDbRequest(
+                val request = editItemFieldsDbRequestFactory.create(
                     key = key,
                     libraryId = viewState.library.identifier,
                     fieldValues = values,
-                    dateParser = this.dateParser,
                 )
                 requests.add(request)
             }
@@ -1211,11 +1208,10 @@ class PdfReaderViewModel @Inject constructor(
                     baseKey = null
                 ) to annotation.baseColor
             )
-            val request = EditItemFieldsDbRequest(
+            val request = editItemFieldsDbRequestFactory.create(
                 key = key,
                 libraryId = viewState.library.identifier,
                 fieldValues = values,
-                dateParser = this.dateParser,
             )
             requests.add(request)
         }
@@ -1227,11 +1223,10 @@ class PdfReaderViewModel @Inject constructor(
                     baseKey = null
                 ) to (annotation.contents ?: "")
             )
-            val request = EditItemFieldsDbRequest(
+            val request = editItemFieldsDbRequestFactory.create(
                 key = key,
                 libraryId = viewState.library.identifier,
                 fieldValues = values,
-                dateParser = this.dateParser,
             )
             requests.add(request)
         }
@@ -2895,12 +2890,11 @@ class PdfReaderViewModel @Inject constructor(
                 isDark = viewState.isDark,
             )
         }
-        val request = CreatePDFAnnotationsDbRequest(
+        val request = createPDFAnnotationsDbRequestFactory.create(
             attachmentKey = viewState.key,
             libraryId = viewState.library.identifier,
             annotations = documentAnnotations,
             userId = viewState.userId,
-            schemaController = this.schemaController,
             boundingBoxConverter = this.annotationBoundingBoxConverter
         )
         dbWrapperMain.realmDbStorage.perform(request)
@@ -3278,11 +3272,10 @@ class PdfReaderViewModel @Inject constructor(
             ) to pageLabel,
             KeyBaseKeyPair(key = FieldKeys.Item.Annotation.text, baseKey = null) to text
         )
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = key,
             libraryId = viewState.library.identifier,
             fieldValues = values,
-            dateParser = this.dateParser
         )
 
         dbWrapperMain.realmDbStorage.perform(request)

@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.database.DbRequest
@@ -13,13 +16,14 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 
-class EditTypeItemDetailDbRequest(
-    private val key: String,
-    private val libraryId: LibraryIdentifier,
-    private val type: String,
-    private val fields: List<ItemDetailField>,
-    private val creatorIds: List<String>,
-    private val creators: Map<String, ItemDetailCreator>,
+class EditTypeItemDetailDbRequest @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("type") private val type: String,
+    @Assisted("fields") private val fields: List<ItemDetailField>,
+    @Assisted("creatorIds") private val creatorIds: List<String>,
+    @Assisted("creators") private val creators: Map<String, ItemDetailCreator>,
+
     private val dateParser: DateParser,
 ) : DbRequest {
     override val needsWrite: Boolean
@@ -33,7 +37,7 @@ class EditTypeItemDetailDbRequest(
         val changes: MutableList<RItemChanges> = mutableListOf(RItemChanges.type)
 
         update(fields = fields, item = item, changes = changes, database = database)
-        update(creatorIds = creatorIds, creators =  creators, item = item, changes = changes, database = database)
+        update(creatorIds = creatorIds, creators =  creators, item = item, changes = changes)
         item.changes.add(RObjectChange.create(changes = changes))
     }
 
@@ -105,7 +109,6 @@ class EditTypeItemDetailDbRequest(
         creators: Map<String, ItemDetailCreator>,
         item: RItem,
         changes: MutableList<RItemChanges>,
-        database: Realm
     ) {
         val toRemove = item.creators.where()
             .not()
@@ -131,5 +134,17 @@ class EditTypeItemDetailDbRequest(
         if (changes.contains(RItemChanges.creators)) {
             item.updateCreatorSummary()
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("type") type: String,
+            @Assisted("fields") fields: List<ItemDetailField>,
+            @Assisted("creatorIds") creatorIds: List<String>,
+            @Assisted("creators") creators: Map<String, ItemDetailCreator>
+        ): EditTypeItemDetailDbRequest
     }
 }

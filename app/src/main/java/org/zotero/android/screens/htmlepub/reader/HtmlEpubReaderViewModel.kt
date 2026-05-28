@@ -111,11 +111,9 @@ import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsChangeR
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationConverterV2
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
@@ -136,11 +134,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val sessionDataEventStream: SessionDataEventStream,
     private val fileStore: FileStore,
-    private val schemaController: SchemaController,
     private val gson: Gson,
     private val dbWrapperMain: DbWrapperMain,
-    private val dateParser: DateParser,
     private val dispatchers: Dispatchers,
+    private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+    private val createHtmlEpubAnnotationsDbRequestFactory: CreateHtmlEpubAnnotationsDbRequest.Factory,
+
     private val htmlEpubReaderSearchResultsEventStream: HtmlEpubReaderSearchResultsEventStream,
     private val htmlEpubReaderSearchTermEventStream: HtmlEpubReaderSearchTermEventStream,
     private val webCallChainEventStream: HtmlEpubReaderWebCallChainEventStream,
@@ -677,13 +676,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private fun createHtmlEpubDatabaseAnnotations(annotations: List<HtmlEpubAnnotation>) {
-        val request = CreateHtmlEpubAnnotationsDbRequest(
+        val request = createHtmlEpubAnnotationsDbRequestFactory.create(
             attachmentKey = viewState.key,
             libraryId = viewState.library.identifier,
             annotations = annotations,
             userId = this.userId,
-            schemaController = schemaController,
-            gson = gson,
         )
         viewModelScope.launch {
             perform(
@@ -877,7 +874,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.comments[key] = comment
 
         val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to htmlComment)
-        val request = EditItemFieldsDbRequest(key = key, libraryId = viewState.library.identifier, fieldValues = values, dateParser = this.dateParser)
+        val request = editItemFieldsDbRequestFactory.create(
+            key = key,
+            libraryId = viewState.library.identifier,
+            fieldValues = values,
+        )
 
         viewModelScope.launch {
             perform(
@@ -1889,11 +1890,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
             ) to "${lineWidth.rounded(3)}"
 
         )
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = key,
             libraryId = viewState.library.identifier,
             fieldValues = values,
-            dateParser = this.dateParser
         )
 
         viewModelScope.launch {
@@ -2130,8 +2130,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private fun setColor(color: String, key: String) {
-        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to color)
-        val request = EditItemFieldsDbRequest(key =  key, libraryId = viewState.library.identifier, fieldValues = values, dateParser = dateParser)
+        val values =
+            mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to color)
+        val request = editItemFieldsDbRequestFactory.create(
+            key = key,
+            libraryId = viewState.library.identifier,
+            fieldValues = values,
+        )
 
         viewModelScope.launch {
             perform(
