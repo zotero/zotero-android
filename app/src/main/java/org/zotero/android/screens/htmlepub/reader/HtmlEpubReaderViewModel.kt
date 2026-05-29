@@ -64,6 +64,7 @@ import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.ktx.rounded
+import kotlin.math.roundToInt
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.ARG_HTML_EPUB_READER_SCREEN
@@ -81,6 +82,7 @@ import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterArg
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.data.HtmlEpubFilterResult
 import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.DocumentData
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderDocumentType
 import org.zotero.android.screens.htmlepub.reader.data.DocumentUpdate
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotationsFilter
@@ -170,6 +172,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var savedSearchTerm = ""
 
     private var selectedTextParamsText: String = ""
+
+    private var containerInsets = ContainerInsets()
+    private var isDocumentLoaded = false
 
     val screenArgs: HtmlEpubReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_HTML_EPUB_READER_SCREEN).require()
@@ -329,11 +334,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun initState() {
         val params = this.screenArgs
+        val type = HtmlEpubReaderDocumentType.fromContentType(params.contentType)
         updateState {
             copy(
                 key = params.key,
                 parentKey = params.parentKey,
                 library = params.library,
+                type = type,
             )
         }
     }
@@ -370,6 +377,48 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private fun setTopBarVisibility(isVisible: Boolean) {
         updateState {
             copy(isTopBarVisible = isVisible)
+        }
+    }
+
+    /**
+     * Tells the reader how much space its content is offset by within the window.
+     * Values are in CSS pixels (== dp).
+     */
+    fun onReaderInsetsChanged(
+        top: Int,
+        right: Int,
+        bottom: Int,
+        left: Int,
+        reserveInsideReader: Boolean,
+    ) {
+        if (viewState.containerInsetTop != top || viewState.containerInsetLeft != left) {
+            updateState {
+                copy(containerInsetTop = top, containerInsetLeft = left)
+            }
+        }
+        if (!reserveInsideReader) {
+            return
+        }
+        val newInsets = ContainerInsets(top = top, right = right, bottom = bottom, left = left)
+        if (newInsets == containerInsets) {
+            return
+        }
+        containerInsets = newInsets
+        sendContainerInsets()
+    }
+
+    private fun sendContainerInsets() {
+        if (!isDocumentLoaded) {
+            return
+        }
+        val insets = containerInsets
+        viewModelScope.launch {
+            htmlEpubReaderWebCallChainExecutor?.setContainerInsets(
+                top = insets.top,
+                right = insets.right,
+                bottom = insets.bottom,
+                left = insets.left,
+            )
         }
     }
 
@@ -942,7 +991,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     fun loadItemAnnotationsAndPage(): Triple<RItem, RealmResults<RItem>, String>? {
         try {
-            val defaultPageValue = defaultPageValue(this.documentFile.extension.lowercase())
+            val defaultPageValue = defaultPageValue(viewState.type)
             val itemRequest =
                 ReadItemDbRequest(libraryId = viewState.library.identifier, key = viewState.key)
             val item = dbWrapperMain.realmDbStorage.perform(request = itemRequest)
@@ -965,36 +1014,24 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
 
-    private fun defaultPageValue(ext: String): String {
-        when(ext) {
-            "epub" -> {
-                return "_start"
-            }
-            "html", "htm" -> {
-                return "0"
-            }
-            else -> {
-                return ""
-            }
+    private fun defaultPageValue(type: HtmlEpubReaderDocumentType): String {
+        return when (type) {
+            HtmlEpubReaderDocumentType.EPUB -> "_start"
+            HtmlEpubReaderDocumentType.SNAPSHOT -> "0"
         }
     }
 
-    fun loadTypeAndPage(file: File, rawPage: String): Pair<String, Page?> {
-        when (this.documentFile.extension.lowercase()) {
-            "epub" -> {
-                return "epub" to Page.epub(cfi = rawPage)
-            }
-            "html", "htm" -> {
+    fun loadTypeAndPage(type: HtmlEpubReaderDocumentType, rawPage: String): Pair<String, Page?> {
+        return when (type) {
+            HtmlEpubReaderDocumentType.EPUB -> "epub" to Page.epub(cfi = rawPage)
+            HtmlEpubReaderDocumentType.SNAPSHOT -> {
                 val scrollYPercent = rawPage.toDoubleOrNull()
                 if (scrollYPercent != null) {
-                    return "snapshot" to Page.html(scrollYPercent = scrollYPercent)
+                    "snapshot" to Page.html(scrollYPercent = scrollYPercent)
                 } else {
                     Timber.e("HtmlEpubReaderViewModel: incompatible lastIndexPage stored for ${viewState.key} - $rawPage")
-                    return "snapshot" to null
+                    "snapshot" to null
                 }
-            }
-            else -> {
-                throw Error.incompatibleDocument
             }
         }
     }
@@ -1245,6 +1282,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     fun setupWebView(webView: WebView) {
+        isDocumentLoaded = false
         this.htmlEpubReaderWebCallChainExecutor = HtmlEpubReaderWebCallChainExecutor(
             context = context,
             dispatchers = dispatchers,
@@ -1302,6 +1340,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
             is HtmlEpubReaderWebData.setViewState -> {
                 setViewState(successValue.params)
             }
+            is HtmlEpubReaderWebData.setViewStats -> {
+                setViewStats(successValue.params)
+            }
             is HtmlEpubReaderWebData.showUrl -> {
                 showUrl(successValue.url)
             }
@@ -1340,6 +1381,38 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     }
 
+    private fun setViewStats(params: JsonObject) {
+        val stats = params["stats"]?.takeIf { it.isJsonObject }?.asJsonObject
+        fun JsonObject.intOrNull(key: String): Int? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asInt
+        fun JsonObject.stringOrNull(key: String): String? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asString
+        fun JsonObject.boolOrNull(key: String): Boolean? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asBoolean
+
+        val pageIndex = stats?.intOrNull("pageIndex")
+        val pagesCount = stats?.intOrNull("pagesCount")
+        val pageLabel = stats?.stringOrNull("pageLabel")
+        val usePhysicalPageNumbers = stats?.boolOrNull("usePhysicalPageNumbers") ?: false
+
+        // Hide the indicator unless we have what we need to build it: a page
+        // (label, or 1-based index) and a percentage (index over total pages).
+        val pageProgress = if (pageIndex != null && pagesCount != null && pagesCount > 0) {
+            val page = if (!pageLabel.isNullOrBlank()) pageLabel else (pageIndex + 1).toString()
+            val prefix = context.getString(
+                if (usePhysicalPageNumbers) Strings.page else Strings.location
+            )
+            val percent = (pageIndex.toDouble() / pagesCount * 100).roundToInt()
+            "$prefix $page ($percent%)"
+        } else {
+            null
+        }
+
+        if (viewState.pageProgress != pageProgress) {
+            updateState { copy(pageProgress = pageProgress) }
+        }
+    }
+
     private fun setSelectedTextParams(params: JsonObject) {
         this.selectedTextParams = params
         val rects = params["rect"].asJsonArray
@@ -1358,7 +1431,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             val (sortedKeys, annotations, json) = processAnnotations(items = annotationItems)
-            val (type, page) = loadTypeAndPage(this.documentFile, rawPage = rawPage)
+            val (type, page) = loadTypeAndPage(viewState.type, rawPage = rawPage)
             val documentData = DocumentData(
                 type = type,
                 file = this.documentFile,
@@ -1382,6 +1455,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
 //            }
             viewModelScope.launch {
                 htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
+                isDocumentLoaded = true
+                sendContainerInsets()
                 restoreWebViewState()
             }
         } catch (e: Exception) {
@@ -1953,6 +2028,10 @@ data class HtmlEpubReaderViewState(
     val sidebarEditingEnabled: Boolean = false,
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
+    val type: HtmlEpubReaderDocumentType = HtmlEpubReaderDocumentType.SNAPSHOT,
+    val pageProgress: String? = null,
+    val containerInsetTop: Int = 0,
+    val containerInsetLeft: Int = 0,
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
@@ -1978,6 +2057,13 @@ data class HtmlEpubReaderViewState(
         return isCollapsed
     }
 }
+
+data class ContainerInsets(
+    val top: Int = 0,
+    val right: Int = 0,
+    val bottom: Int = 0,
+    val left: Int = 0,
+)
 
 sealed class HtmlEpubReaderViewEffect : ViewEffect {
     object NavigateBack : HtmlEpubReaderViewEffect()

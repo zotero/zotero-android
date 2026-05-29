@@ -9,6 +9,7 @@ sealed interface HtmlEpubReaderWebData {
     object deselectSelectedAnnotation : HtmlEpubReaderWebData
     data class setSelectedTextParams(val params: JsonObject) : HtmlEpubReaderWebData
     data class setViewState(val params: JsonObject) : HtmlEpubReaderWebData
+    data class setViewStats(val params: JsonObject) : HtmlEpubReaderWebData
     data class showUrl(val url: String) : HtmlEpubReaderWebData
 
     data class parseOutline(val params: JsonObject) : HtmlEpubReaderWebData

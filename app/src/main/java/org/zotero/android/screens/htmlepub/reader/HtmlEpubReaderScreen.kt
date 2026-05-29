@@ -4,14 +4,19 @@ import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -20,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.screens.htmlepub.annotation.sidebar.HtmlEpubAnnotationNavigationView
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderDocumentType
 import org.zotero.android.screens.htmlepub.annotationmore.sidebar.HtmlEpubAnnotationMoreNavigationView
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
@@ -28,6 +34,7 @@ import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderTopBar
 import org.zotero.android.screens.htmlepub.settings.sidebar.HtmlEpubSettingsView
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.themem3.AppThemeM3
+import kotlin.math.roundToInt
 
 @Composable
 internal fun HtmlEpubReaderScreen(
@@ -62,10 +69,48 @@ internal fun HtmlEpubReaderScreen(
         val decorView = window.decorView
         val systemBars = WindowInsetsCompat.Type.systemBars()
         val insetsController = WindowCompat.getInsetsController(window, decorView)
-        if (viewState.isTopBarVisible) {
-            insetsController.show(systemBars)
-        } else {
+        val isEpub = viewState.type == HtmlEpubReaderDocumentType.EPUB
+        val isTopBarVisible = viewState.isTopBarVisible
+        // EPUB is immersive: hide the system bars together with the top bar
+        // HTML stays non-immersive so the system navigation bar remains
+        if (isEpub && !isTopBarVisible) {
             insetsController.hide(systemBars)
+        } else {
+            insetsController.show(systemBars)
+        }
+
+        // EPUB: Reserve space for the full-height system bars and app bar inside the reader
+        // HTML: Reserve space for the system bars outside the reader
+        val density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val systemBarsInsets = WindowInsets.systemBarsIgnoringVisibility
+        val topAppBarHeight = TopAppBarDefaults.TopAppBarExpandedHeight
+        val statusBarTop = with(density) { systemBarsInsets.getTop(this).toDp() }
+        val insetTop = (statusBarTop + topAppBarHeight).value.roundToInt()
+        val statusOnlyTop = statusBarTop.value.roundToInt()
+        val insetBottom = with(density) { systemBarsInsets.getBottom(this).toDp().value.roundToInt() }
+        val insetLeft =
+            with(density) { systemBarsInsets.getLeft(this, layoutDirection).toDp().value.roundToInt() }
+        val insetRight =
+            with(density) { systemBarsInsets.getRight(this, layoutDirection).toDp().value.roundToInt() }
+        LaunchedEffect(insetTop, statusOnlyTop, insetRight, insetBottom, insetLeft, isEpub, isTopBarVisible) {
+            if (isEpub) {
+                viewModel.onReaderInsetsChanged(
+                    top = insetTop,
+                    right = insetRight,
+                    bottom = insetBottom,
+                    left = insetLeft,
+                    reserveInsideReader = true,
+                )
+            } else {
+                viewModel.onReaderInsetsChanged(
+                    top = if (isTopBarVisible) insetTop else statusOnlyTop,
+                    right = insetRight,
+                    bottom = insetBottom,
+                    left = insetLeft,
+                    reserveInsideReader = false,
+                )
+            }
         }
 
         val focusManager = LocalFocusManager.current

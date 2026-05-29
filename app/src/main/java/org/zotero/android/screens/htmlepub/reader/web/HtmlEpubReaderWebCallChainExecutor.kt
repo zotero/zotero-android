@@ -176,6 +176,14 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+                        "onChangeViewStats" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.setViewStats(params)
+                                )
+                            )
+                        }
                         "onOpenLink" -> {
                             val params = data["params"].asJsonObject
                             val url = params["url"].asString
@@ -245,6 +253,16 @@ class HtmlEpubReaderWebCallChainExecutor(
     suspend fun selectSearchResult(index: Int) {
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: '${index}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setContainerInsets(top: Int, right: Int, bottom: Int, left: Int) {
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript(
+                "javascript:setContainerInsets({ top: $top, right: $right, bottom: $bottom, left: $left });"
+            ) {
                 cont.resume(Unit)
             }
         }

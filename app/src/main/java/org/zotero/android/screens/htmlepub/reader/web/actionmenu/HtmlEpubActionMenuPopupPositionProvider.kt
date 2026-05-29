@@ -14,6 +14,8 @@ import com.pspdfkit.internal.utilities.dpToPx
 @Composable
 internal fun htmlEpubActionMenuPopupPositionProvider(
     selectedTextParamsRects: JsonArray,
+    topInset: Int,
+    leftInset: Int,
 ) = object : PopupPositionProvider {
     val localDensity = LocalDensity.current
     override fun calculatePosition(
@@ -29,8 +31,8 @@ internal fun htmlEpubActionMenuPopupPositionProvider(
         val textSelectionTopY = selectedTextParamsRects[1].asString.toDouble()
 
         val popupHalfWidth = popupContentSize.width / 6
-        val finalX = textSelectionMiddleX - popupHalfWidth
-        val finalY = textSelectionTopY + popupContentSize.height / 8
+        val finalX = textSelectionMiddleX - popupHalfWidth + leftInset
+        val finalY = textSelectionTopY + popupContentSize.height / 8 + topInset
 
         return IntOffset(
             x = finalX.dp.dpToPx(localDensity).toInt(),

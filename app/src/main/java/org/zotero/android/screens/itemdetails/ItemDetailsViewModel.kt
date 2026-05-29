@@ -1678,7 +1678,8 @@ class ItemDetailsViewModel @Inject constructor(
                         showHtmlEpub(
                             file = file,
                             parentKey = parentKey,
-                            attachment = attachment
+                            attachment = attachment,
+                            contentType = contentType,
                         )
                     }
                     "text/plain" -> {
@@ -2093,13 +2094,14 @@ class ItemDetailsViewModel @Inject constructor(
             }
         }
     }
-    private fun showHtmlEpub(file: File, parentKey: String?, attachment: Attachment) {
+    private fun showHtmlEpub(file: File, parentKey: String?, attachment: Attachment, contentType: String) {
         val uri = Uri.fromFile(file)
         val htmlEpubReaderArgs = HtmlEpubReaderArgs(
             key = attachment.key,
             parentKey = parentKey,
             library = viewState.library!!,
             uri = uri,
+            contentType = contentType,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
         triggerEffect(ItemDetailsViewEffect.NavigateToHtmlEpubReaderScreen(params))

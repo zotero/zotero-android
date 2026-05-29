@@ -8,4 +8,5 @@ data class HtmlEpubReaderArgs(
     val parentKey: String?,
     val library: Library,
     val uri: Uri,
+    val contentType: String,
 )

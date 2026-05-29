@@ -258,7 +258,8 @@ internal class AllItemsViewModel @Inject constructor(
                                 file = file,
                                 key = attachment.key,
                                 parentKey = parentKey,
-                                library = library
+                                library = library,
+                                contentType = contentType,
                             )
                         }
 
@@ -1276,13 +1277,14 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowCitationBibliographyExportEffect)
     }
 
-    private fun showHtmlEpub(file: File, key: String, parentKey: String?, library: Library) {
+    private fun showHtmlEpub(file: File, key: String, parentKey: String?, library: Library, contentType: String) {
         val uri = Uri.fromFile(file)
         val htmlEpubReaderArgs = HtmlEpubReaderArgs(
             key = key,
             parentKey = parentKey,
             library = library,
             uri = uri,
+            contentType = contentType,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
         triggerEffect(AllItemsViewEffect.NavigateToHtmlEpubReaderScreen(params))

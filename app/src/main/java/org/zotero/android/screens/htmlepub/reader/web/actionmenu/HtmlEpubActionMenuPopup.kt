@@ -9,6 +9,8 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 @Composable
 fun HtmlEpubActionMenuPopup(
     selectedTextParamsRects: JsonArray,
+    topInset: Int,
+    leftInset: Int,
     viewModel: HtmlEpubReaderViewModel,
 ) {
     val onDismiss: () -> Unit = {
@@ -21,7 +23,11 @@ fun HtmlEpubActionMenuPopup(
             dismissOnClickOutside = true
         ),
         onDismissRequest = onDismiss,
-        popupPositionProvider = htmlEpubActionMenuPopupPositionProvider(selectedTextParamsRects),
+        popupPositionProvider = htmlEpubActionMenuPopupPositionProvider(
+            selectedTextParamsRects = selectedTextParamsRects,
+            topInset = topInset,
+            leftInset = leftInset,
+        ),
     ) {
         HtmlEpubActionMenu(viewModel)
     }
