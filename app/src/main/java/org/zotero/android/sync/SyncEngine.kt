@@ -49,6 +49,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as this class must live throughout the app's entire lifecycle
 @Singleton
 class SyncUseCase @Inject constructor(
     private val syncRepository: SyncRepository,

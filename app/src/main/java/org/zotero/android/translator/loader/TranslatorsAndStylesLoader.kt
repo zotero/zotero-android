@@ -35,6 +35,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton used by controller
 @Singleton
 class TranslatorsAndStylesLoader @Inject constructor(
     dispatchers: Dispatchers,
@@ -46,6 +47,8 @@ class TranslatorsAndStylesLoader @Inject constructor(
     private val fileStore: FileStore,
     private val bundleDbWrapper: DbWrapperBundle,
     private val nonZoteroApi: NonZoteroApi,
+    private val syncRepoResponseDbRequestFactory: SyncRepoResponseDbRequest.Factory,
+    private val syncTranslatorsDbRequestFactory: SyncTranslatorsDbRequest.Factory,
 ) {
     enum class UpdateType(val i: Int) {
         manual(1),
@@ -334,11 +337,10 @@ class TranslatorsAndStylesLoader @Inject constructor(
         Timber.i("TranslatorsAndStylesLoader: load index")
         val metadata = loadIndex()
         Timber.i("TranslatorsAndStylesLoader: sync translators to database")
-        val request = SyncTranslatorsDbRequest(
+        val request = syncTranslatorsDbRequestFactory.create(
             updateMetadata = metadata,
             deleteIndices = deleteIndices,
             forceUpdate = forceUpdate,
-            fileStore = this.fileStore
         )
         var updated: List<Pair<String, String>> = emptyList()
         uiScope.launch {
@@ -640,11 +642,10 @@ class TranslatorsAndStylesLoader @Inject constructor(
         }
 
         Timber.i("TranslatorsAndStylesController: update db from repo")
-        val repoRequest = SyncRepoResponseDbRequest(
+        val repoRequest = syncRepoResponseDbRequestFactory.create(
             styles = updateStyles,
             translators = updateTranslatorMetadata,
             deleteTranslators = deleteTranslatorMetadata,
-            fileStore = this.fileStore
         )
         bundleDbWrapper.realmDbStorage.perform(request = repoRequest)
     }

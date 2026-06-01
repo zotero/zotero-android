@@ -1,5 +1,6 @@
 package org.zotero.android.screens.share
 
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.TagResponse
@@ -14,7 +15,6 @@ import org.zotero.android.database.requests.CreateItemWithAttachmentDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.UpdateCollectionLastUsedDbRequest
 import org.zotero.android.database.requests.key
-import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.screens.share.data.CreateItemsResult
 import org.zotero.android.screens.share.data.CreateResult
@@ -33,19 +33,18 @@ import timber.log.Timber
 import java.io.File
 import java.util.Date
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ShareItemSubmitter @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val schemaController: SchemaController,
-    private val fileStore: FileStore,
     private val backgroundUploadProcessor: BackgroundUploadProcessor,
     private val webDavController: WebDavController,
     private val createBackendItemDbRequestFactory: CreateBackendItemDbRequest.Factory,
     private val createItemWithAttachmentDbRequestFactory: CreateItemWithAttachmentDbRequest.Factory,
     private val authorizeUploadSyncActionFactory: AuthorizeUploadSyncAction.Factory,
-    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) {
 
     fun createItem(
@@ -148,14 +147,13 @@ class ShareItemSubmitter @Inject constructor(
                 )
             }
 
-            val request = CreateAttachmentDbRequest(
+            val request = createAttachmentDbRequestFactory.create(
                 attachment = attachment,
                 parentKey = null,
                 localizedType = localizedType,
                 includeAccessDate = attachment.hasUrl,
                 collections = collections,
                 tags = tags,
-                fileStore = fileStore
             )
             val attachment = coordinator.perform(request = request)
 

@@ -22,6 +22,7 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as it's used by Controller
 @Singleton
 class AttachmentDownloader @Inject constructor(
     private val zoteroApi: ZoteroApi,

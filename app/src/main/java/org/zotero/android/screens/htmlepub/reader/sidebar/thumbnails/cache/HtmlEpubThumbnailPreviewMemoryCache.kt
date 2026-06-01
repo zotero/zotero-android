@@ -2,8 +2,10 @@ package org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.cache
 
 import android.graphics.Bitmap
 import android.util.LruCache
+import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
+@ViewModelScoped
 class HtmlEpubThumbnailPreviewMemoryCache @Inject constructor(
 ){
     private val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()

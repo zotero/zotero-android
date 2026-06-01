@@ -13,7 +13,6 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
-import org.zotero.android.files.FileStore
 import org.zotero.android.sync.SchemaController
 
 class CreateItemWithAttachmentDbRequest @AssistedInject constructor(
@@ -21,8 +20,8 @@ class CreateItemWithAttachmentDbRequest @AssistedInject constructor(
     @Assisted("attachment") private val attachment: Attachment,
 
     private val schemaController: SchemaController,
-    private val fileStore: FileStore,
-    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) : DbResponseRequest<Pair<RItem, RItem>> {
 
     override val needsWrite: Boolean
@@ -54,14 +53,13 @@ class CreateItemWithAttachmentDbRequest @AssistedInject constructor(
 
         val localizedType =
             this.schemaController.localizedItemType(itemType = ItemTypes.attachment) ?: ""
-        val attachment = CreateAttachmentDbRequest(
+        val attachment = createAttachmentDbRequestFactory.create(
             attachment = this.attachment,
             parentKey = null,
             localizedType = localizedType,
             includeAccessDate = this.attachment.hasUrl,
             collections = emptySet(),
             tags = emptyList(),
-            fileStore = this.fileStore
         )
             .process(database)
 

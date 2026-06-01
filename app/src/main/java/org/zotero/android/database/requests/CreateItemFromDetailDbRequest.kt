@@ -21,7 +21,6 @@ import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
-import org.zotero.android.files.FileStore
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
@@ -40,9 +39,9 @@ class CreateItemFromDetailDbRequest @AssistedInject constructor(
     @Assisted("notes") private val notes: List<Note>,
     @Assisted("tags") private val tags: List<Tag>,
 
-    private val fileStore: FileStore,
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory
 ): DbResponseRequest<RItem> {
     sealed class Error : Exception() {
         object alreadyExists : Error()
@@ -138,8 +137,7 @@ class CreateItemFromDetailDbRequest @AssistedInject constructor(
                 rAttachment.changeType = UpdatableChangeType.user.name
                 rAttachment.changesSyncPaused = true
             } else {
-                val rAttachment = CreateAttachmentDbRequest(
-                    fileStore = this.fileStore,
+                val rAttachment = createAttachmentDbRequestFactory.create(
                     attachment = attachment,
                     parentKey = null,
                     localizedType = (this.schemaController.localizedItemType(itemType = ItemTypes.attachment)

@@ -11,6 +11,7 @@ import org.zotero.android.sync.SyncUseCase
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as its used to share state between multiple ViewModels
 @Singleton
 class ConflictResolutionUseCase @Inject constructor(
     private val syncUseCase: SyncUseCase,

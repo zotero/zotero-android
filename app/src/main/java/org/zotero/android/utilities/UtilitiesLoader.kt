@@ -8,7 +8,7 @@ import org.zotero.android.helpers.Unzipper
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-
+//Must be singleton, used by Controller
 @Singleton
 class UtilitiesLoader @Inject constructor(
     private val context: Context,

@@ -3,6 +3,7 @@ package org.zotero.android.screens.htmlepub.reader.sidebar.annotations
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -18,6 +19,7 @@ import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.cache.Html
 import timber.log.Timber
 import javax.inject.Inject
 
+@ViewModelScoped
 class HtmlEpubAnnotationBitmapManager @Inject constructor(
     private val dispatchers: Dispatchers,
     private val memoryCache: HtmlEpubAnnotationBitmapMemoryCache,

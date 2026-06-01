@@ -42,6 +42,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by Controller
 @Singleton
 class IdentifierLookupController @Inject constructor(
     private val context: Context,
@@ -61,6 +62,7 @@ class IdentifierLookupController @Inject constructor(
     private val translatorLoadedEventStream: TranslatorLoadedEventStream,
     private val attachmentDownloaderEventStream: RemoteAttachmentDownloaderEventStream,
     private val createTranslatedItemsDbRequestFactory: CreateTranslatedItemsDbRequest.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) {
 
     private lateinit var lookupMode: IdentifierLookupMode
@@ -134,14 +136,13 @@ class IdentifierLookupController @Inject constructor(
             val localizedType =
                 schemaController.localizedItemType(ItemTypes.attachment) ?: ItemTypes.attachment
             try {
-                val request = CreateAttachmentDbRequest(
+                val request = createAttachmentDbRequestFactory.create(
                     attachment = attachment,
                     parentKey = download.parentKey,
                     localizedType = localizedType,
                     includeAccessDate = attachment.hasUrl,
                     collections = emptySet(),
                     tags = emptyList(),
-                    fileStore = this.fileStore,
                 )
                 dbWrapperMain.realmDbStorage.perform(request = request)
             } catch (error: Exception) {

@@ -9,6 +9,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by Controller
 @Singleton
 class TranslationLoader @Inject constructor(
     private val context: Context,

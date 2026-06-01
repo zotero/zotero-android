@@ -6,6 +6,7 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by multiple ViewModels
 @Singleton
 class HtmlEpubReaderSearchResultsEventStream @Inject constructor(applicationScope: ApplicationScope) :
     StateEventStream<HtmlEpubReaderSearchResultsData>(applicationScope, HtmlEpubReaderSearchResultsData(null))

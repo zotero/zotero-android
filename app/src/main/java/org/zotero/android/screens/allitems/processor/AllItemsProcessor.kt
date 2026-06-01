@@ -2,6 +2,7 @@ package org.zotero.android.screens.allitems.processor
 
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.toMutableStateList
+import dagger.hilt.android.scopes.ViewModelScoped
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmResults
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +53,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 
+@ViewModelScoped
 class AllItemsProcessor @Inject constructor(
     private val dispatchers: Dispatchers,
     private val defaults: Defaults,

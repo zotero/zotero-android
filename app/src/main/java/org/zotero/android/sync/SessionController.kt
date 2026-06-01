@@ -8,6 +8,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as it's used by a number long living ViewModels
 @Singleton
 class SessionController @Inject constructor(
     private val defaults: Defaults,

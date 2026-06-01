@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be Singleton as its referenced by the Controller
 @Singleton
 class BackgroundUploadProcessor @Inject constructor(
     private val nonZoteroApi: NonZoteroApi,

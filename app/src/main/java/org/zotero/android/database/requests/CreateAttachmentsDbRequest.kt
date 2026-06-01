@@ -10,7 +10,6 @@ import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
-import org.zotero.android.files.FileStore
 import timber.log.Timber
 
 class CreateAttachmentsDbRequest @AssistedInject constructor(
@@ -19,7 +18,7 @@ class CreateAttachmentsDbRequest @AssistedInject constructor(
     @Assisted("localizedType") private val localizedType: String,
     @Assisted("collections") private val collections: Set<String>,
 
-    val fileStore: FileStore
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) : DbResponseRequest<List<Pair<String, String>>> {
     override val needsWrite: Boolean
         get() = true
@@ -44,14 +43,13 @@ class CreateAttachmentsDbRequest @AssistedInject constructor(
 
         for (attachment in this.attachments) {
             try {
-                val attachment = CreateAttachmentDbRequest(
+                val attachment = createAttachmentDbRequestFactory.create(
                     attachment = attachment,
                     parentKey = null,
                     localizedType = this.localizedType,
                     includeAccessDate = attachment.hasUrl,
                     collections = this.collections,
                     tags = emptyList(),
-                    fileStore = fileStore
                 ).process(database)
                 if (parent != null) {
                     attachment.parent = parent

@@ -4,6 +4,7 @@ import android.content.Context
 import android.webkit.WebMessage
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,6 +24,7 @@ import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
+@ViewModelScoped
 class TranslatorWebCallChainExecutor @Inject constructor(
     private val context: Context,
     dispatchers: Dispatchers,

@@ -9,6 +9,7 @@ import javax.inject.Singleton
 /**
  * Marshals and unmarshals objects of any complexity to and from Json string.
  */
+//Must be singleton as it's used by FileStore
 @Singleton
 class DataMarshaller @Inject constructor(val gson: Gson) {
 

@@ -7,6 +7,7 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by multiple ViewModels
 @Singleton
 class HtmlEpubReaderWebCallChainEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<Result<HtmlEpubReaderWebData>>(applicationScope)

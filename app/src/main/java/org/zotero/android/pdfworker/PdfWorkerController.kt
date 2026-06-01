@@ -2,6 +2,7 @@ package org.zotero.android.pdfworker
 
 import android.content.Context
 import com.google.gson.Gson
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -42,9 +43,8 @@ import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class PdfWorkerController @Inject constructor(
     private val context: Context,
     private val dispatchers: Dispatchers,

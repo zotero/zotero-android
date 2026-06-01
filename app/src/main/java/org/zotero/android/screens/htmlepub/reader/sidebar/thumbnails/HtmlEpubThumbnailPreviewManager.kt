@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
 import com.google.gson.JsonObject
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -25,6 +26,7 @@ import timber.log.Timber
 import java.util.Collections
 import javax.inject.Inject
 
+@ViewModelScoped
 class HtmlEpubThumbnailPreviewManager @Inject constructor(
     private val dispatchers: Dispatchers,
     private val memoryCache: HtmlEpubThumbnailPreviewMemoryCache,

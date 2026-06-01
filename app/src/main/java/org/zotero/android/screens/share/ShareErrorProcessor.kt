@@ -1,6 +1,7 @@
 package org.zotero.android.screens.share
 
 import android.content.Context
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.database.DbWrapperMain
@@ -15,9 +16,8 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ShareErrorProcessor @Inject constructor(
     private val context: Context,
     private val dbWrapperMain: DbWrapperMain,

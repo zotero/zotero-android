@@ -11,6 +11,7 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by Controller
 @Singleton
 class ExportCslLocaleReader @Inject constructor(
     private val fileStore: FileStore,
