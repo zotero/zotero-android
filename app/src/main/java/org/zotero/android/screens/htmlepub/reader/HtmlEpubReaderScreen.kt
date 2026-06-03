@@ -5,8 +5,12 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +31,8 @@ import org.zotero.android.screens.htmlepub.annotation.sidebar.HtmlEpubAnnotation
 import org.zotero.android.screens.htmlepub.annotationmore.sidebar.HtmlEpubAnnotationMoreNavigationView
 import org.zotero.android.screens.htmlepub.colorpicker.HtmlEpubReaderColorPickerView
 import org.zotero.android.screens.htmlepub.htmlEpubFilter.HtmlEpubFilterView
+import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
+import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchScreen
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
 import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderSearchTopBar
@@ -93,9 +99,11 @@ internal fun HtmlEpubReaderScreen(
                 is HtmlEpubReaderViewEffect.EnableForceScreenOn -> {
                     currentView.keepScreenOn = true
                 }
+
                 is HtmlEpubReaderViewEffect.ShowPdfFilters -> {
                     navigateToPdfFilter()
                 }
+
                 is HtmlEpubReaderViewEffect.NavigateToTagPickerScreen -> {
                     navigateToTagPicker()
                 }
@@ -109,6 +117,7 @@ internal fun HtmlEpubReaderScreen(
                 is HtmlEpubReaderViewEffect.ShowHtmlEpubColorPicker -> {
                     navigateToHtmlEpubColorPicker()
                 }
+
                 is HtmlEpubReaderViewEffect.ShowHtmlEpubSettings -> {
                     navigateToHtmlEpubSettings(consumedEffect.params)
                 }
@@ -144,14 +153,14 @@ internal fun HtmlEpubReaderScreen(
         CustomScaffoldM3(
             modifier = Modifier
                 .pointerInteropFilter {
-                when (it.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        viewModel.restartDisableForceScreenOnTimer()
+                    when (it.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            viewModel.restartDisableForceScreenOnTimer()
+                        }
                     }
-                }
-                false
-            },
-            shouldIncludeTopBarAndNavBarPaddings = false,
+                    false
+                },
+            shouldIncludeTopBarAndNavBarPaddings = viewState.isPdfOrHtml(),
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,
@@ -185,24 +194,60 @@ internal fun HtmlEpubReaderScreen(
 
             },
         ) {
-            if (layoutType.isTablet()) {
-                HtmlEpubReaderTabletMode(
-                    viewModel = viewModel,
-                    viewState = viewState,
-                    annotationsLazyListState = annotationsLazyListState,
-                    layoutType = layoutType,
-                    annotationMaxSideSize = annotationMaxSideSize
-                )
-            } else {
-                HtmlEpubReaderPhoneMode(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    htmlEpubReaderSearchViewModel = htmlEpubReaderSearchViewModel,
-                    htmlEpubReaderSearchViewState = htmlEpubReaderSearchViewState,
-                    annotationsLazyListState = annotationsLazyListState,
-                    layoutType = layoutType,
-                    annotationMaxSideSize = annotationMaxSideSize
-                )
+            when (viewState.fileType) {
+                ReaderFileType.PDF, ReaderFileType.HTML -> {
+                    if (layoutType.isTablet()) {
+                        HtmlEpubReaderSideBySideMode(
+                            viewModel = viewModel,
+                            viewState = viewState,
+                            annotationsLazyListState = annotationsLazyListState,
+                            annotationMaxSideSize = annotationMaxSideSize
+                        )
+                    } else {
+                        HtmlEpubReaderOverlayMode(
+                            viewState = viewState,
+                            viewModel = viewModel,
+                            annotationsLazyListState = annotationsLazyListState,
+                            layoutType = layoutType,
+                            annotationMaxSideSize = annotationMaxSideSize
+                        )
+                    }
+                }
+
+                ReaderFileType.EPUB -> {
+                    HtmlEpubReaderOverlayMode(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        annotationsLazyListState = annotationsLazyListState,
+                        layoutType = layoutType,
+                        annotationMaxSideSize = annotationMaxSideSize
+                    )
+                }
+
+            }
+        }
+        if (!layoutType.isTablet()) {
+            AnimatedContent(
+                modifier = Modifier.fillMaxSize(),
+                targetState = viewState.showPdfSearch,
+                transitionSpec = {
+                    htmlEpubReaderPdfSearchTransitionSpec()
+                },
+                label = ""
+            ) { showScreen ->
+                if (showScreen) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        HtmlEpubReaderSearchScreen(
+                            onBack = viewModel::hidePdfSearch,
+                            viewModel = htmlEpubReaderSearchViewModel,
+                            viewState = htmlEpubReaderSearchViewState,
+                        )
+                    }
+                }
             }
         }
         HtmlEpubAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)

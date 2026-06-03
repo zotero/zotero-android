@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebarDivider
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
@@ -26,14 +25,13 @@ import org.zotero.android.uicomponents.icon.IconWithPadding
 
 @Composable
 internal fun BoxScope.HtmlEpubReaderBottomPanel(
-    layoutType: CustomLayoutSize.LayoutType,
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(layoutType.calculateAllItemsBottomPanelHeight())
+            .height(48.dp)
             .align(Alignment.BottomStart)
             .background(color = MaterialTheme.colorScheme.surfaceContainer)
 

@@ -81,4 +81,6 @@
     <string name="errors_shareext_missing_file">Could not find file to upload</string>
     <string name="errors_shareext_background_uploader_failure">Background uploader not initialized</string>
 
+    <string name="location">Location</string>
+
 </resources>

@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderBottomPanel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
@@ -44,7 +43,6 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 internal fun HtmlEpubReaderAnnotationsSidebar(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
-    layoutType: CustomLayoutSize.LayoutType,
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
 ) {
@@ -162,11 +160,10 @@ internal fun HtmlEpubReaderAnnotationsSidebar(
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(layoutType.calculateAllItemsBottomPanelHeight()))
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
         HtmlEpubReaderBottomPanel(
-            layoutType = layoutType,
             viewModel = viewModel,
             viewState = viewState
         )

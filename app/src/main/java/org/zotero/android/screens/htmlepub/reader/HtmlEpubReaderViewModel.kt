@@ -24,7 +24,6 @@ import io.realm.RealmResults
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,6 +92,7 @@ import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Outline
 import org.zotero.android.screens.htmlepub.reader.data.Page
+import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultSelected
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsData
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchResultsEventStream
@@ -124,6 +124,7 @@ import java.util.Date
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timerTask
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class HtmlEpubReaderViewModel @Inject constructor(
@@ -149,8 +150,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
-
-    private val mainCoroutineScope = CoroutineScope(dispatchers.main)
 
     private lateinit var originalFile: File
     private lateinit var readerDirectory: File
@@ -413,6 +412,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 key = params.key,
                 parentKey = params.parentKey,
                 library = params.library,
+                fileType = decideFileType()
             )
         }
     }
@@ -423,6 +423,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.readerDirectory = fileStore.runningHtmlEpubReaderDirectory()
         this.documentFile = fileStore.runningHtmlEpubReaderUserFileSubDirectory(originalFile.extension)
         this.readerFile = File(readerDirectory, "view.html")
+
     }
 
     fun restartDisableForceScreenOnTimer() {
@@ -742,7 +743,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             Timber.e("HtmlEpubReaderViewModel: annotations missing or empty - ${params["annotations"] ?: emptyList<String>()}")
             return
         }
-        val annotations = if (isCurrentFilePdf()) {
+        val annotations = if (viewState.fileType == ReaderFileType.PDF) {
             parsePdfJson(pdfAnnotations = rawAnnotations, author = this.username, isAuthor = true)
         } else {
             parseHtmlEpubJson(annotations = rawAnnotations, author = this.username, isAuthor = true)
@@ -761,7 +762,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         if (annotation != null && viewState.activeTool != null) {
             toggle(viewState.activeTool!!)
         }
-        if (isCurrentFilePdf()) {
+        if (viewState.fileType == ReaderFileType.PDF) {
             createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
         } else {
             createHtmlEpubDatabaseAnnotations(annotations = annotations as List<HtmlEpubAnnotation>)
@@ -1095,13 +1096,16 @@ class HtmlEpubReaderViewModel @Inject constructor(
         return Triple(sortedKeys, annotations, jsons)
     }
 
-    fun isCurrentFilePdf(): Boolean {
+    private fun decideFileType(): ReaderFileType {
         return when (val extension = this.documentFile.extension.lowercase()) {
-            "epub", "html", "htm" -> {
-                false
+            "epub" -> {
+                ReaderFileType.EPUB
+            }
+            "html", "htm" -> {
+                ReaderFileType.HTML
             }
             "pdf" -> {
-                true
+                ReaderFileType.PDF
             }
             else -> {
                 throw RuntimeException("Unknown extension $extension")
@@ -1110,7 +1114,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private fun generateAnnotationJsonForReader(item: RItem): Pair<HtmlEpubAnnotation, JsonObject>? {
-        val isCurrentFilePdf = isCurrentFilePdf()
+        val isCurrentFilePdf = viewState.fileType == ReaderFileType.PDF
         return if (isCurrentFilePdf) {
             item.pdfAnnotation
         } else {
@@ -1408,7 +1412,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             .onEach { result ->
                 process(result)
             }
-            .launchIn(mainCoroutineScope)
+            .launchIn(viewModelScope)
     }
 
     private suspend fun process(result: Result<HtmlEpubReaderWebData>) {
@@ -1461,6 +1465,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
             is HtmlEpubReaderWebData.setViewState -> {
                 setViewState(successValue.params)
             }
+            is HtmlEpubReaderWebData.setViewStats -> {
+                setViewStats(successValue.params)
+            }
             is HtmlEpubReaderWebData.showUrl -> {
                 showUrl(successValue.url)
             }
@@ -1495,7 +1502,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             return
         }
 
-        if (isCurrentFilePdf()) {
+        if (viewState.fileType == ReaderFileType.PDF) {
             println()
             updateState {
                 copy(currentPdfPageIndex = page.toInt())
@@ -1513,7 +1520,38 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 return@launch
             }
         }
+    }
 
+    private fun setViewStats(params: JsonObject) {
+        val stats = params["stats"]?.takeIf { it.isJsonObject }?.asJsonObject
+        fun JsonObject.intOrNull(key: String): Int? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asInt
+        fun JsonObject.stringOrNull(key: String): String? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asString
+        fun JsonObject.boolOrNull(key: String): Boolean? =
+            this[key]?.takeIf { it.isJsonPrimitive }?.asBoolean
+
+        val pageIndex = stats?.intOrNull("pageIndex")
+        val pagesCount = stats?.intOrNull("pagesCount")
+        val pageLabel = stats?.stringOrNull("pageLabel")
+        val usePhysicalPageNumbers = stats?.boolOrNull("usePhysicalPageNumbers") ?: false
+
+        // Hide the indicator unless we have what we need to build it: a page
+        // (label, or 1-based index) and a percentage (index over total pages).
+        val pageProgress = if (pageIndex != null && pagesCount != null && pagesCount > 0) {
+            val page = if (!pageLabel.isNullOrBlank()) pageLabel else (pageIndex + 1).toString()
+            val prefix = context.getString(
+                if (usePhysicalPageNumbers) Strings.page else Strings.location
+            )
+            val percent = (pageIndex.toDouble() / pagesCount * 100).roundToInt()
+            "$prefix $page ($percent%)"
+        } else {
+            null
+        }
+
+        if (viewState.pageProgress != pageProgress) {
+            updateState { copy(pageProgress = pageProgress) }
+        }
     }
 
     private fun setSelectedTextParams(params: JsonObject) {
@@ -2341,6 +2379,9 @@ data class HtmlEpubReaderViewState(
     val numOfPages: Int = 0,
     val pageLabels: List<String> = emptyList(),
     val annotationsBitmapCache: PersistentMap<String, Bitmap> = persistentMapOf(),
+    val pageProgress: String? = null,
+
+    val fileType: ReaderFileType = ReaderFileType.EPUB,
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey
@@ -2349,6 +2390,10 @@ data class HtmlEpubReaderViewState(
     fun isOutlineSectionCollapsed(id: String): Boolean {
         val isCollapsed = !outlineExpandedNodes.contains(id)
         return isCollapsed
+    }
+
+    fun isPdfOrHtml(): Boolean {
+        return fileType == ReaderFileType.PDF || fileType == ReaderFileType.HTML
     }
 
 

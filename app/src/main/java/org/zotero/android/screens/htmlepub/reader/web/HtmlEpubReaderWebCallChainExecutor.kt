@@ -236,6 +236,15 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+                        "onChangeViewStats" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    HtmlEpubReaderWebData.setViewStats(params)
+                                )
+                            )
+                        }
+
                     }
                 }
 

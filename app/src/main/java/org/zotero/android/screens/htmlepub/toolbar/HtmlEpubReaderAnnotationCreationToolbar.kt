@@ -8,11 +8,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +45,7 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.AnnotationTool
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderTool
+import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeStringResource
@@ -131,6 +135,8 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
     }
     val snapAreaBackgroundColor =
         MaterialTheme.colorScheme.surface
+    val isPdfOrHtml = viewState.isPdfOrHtml()
+
     if (shouldShowSnapTargetAreas) {
         val stroke = Stroke(
             width = 5f,
@@ -138,12 +144,18 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
         )
 
         val strokeColor = MaterialTheme.colorScheme.primary
+        var boxModifier1 = Modifier
+            .width(48.dp)
+            .height(520.dp)
+        if (!isPdfOrHtml) {
+            boxModifier1 = boxModifier1
+                .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+                .padding(
+                    top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+                )
+        }
         Box(
-            modifier = Modifier
-                .width(48.dp)
-                .height(520.dp)
-                .statusBarsPadding()
-                .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
+            modifier = boxModifier1
                 .padding(start = 16.dp, top = 16.dp)
                 .background(
                     color = snapAreaBackgroundColor,
@@ -157,10 +169,7 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .width(48.dp)
-                .height(520.dp)
-                .statusBarsPadding()
-                .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
+                .then(boxModifier1)
                 .padding(end = 16.dp, top = 16.dp)
                 .background(
                     color = snapAreaBackgroundColor,
@@ -173,24 +182,31 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
         )
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    x = state
-                        .requireOffset()
-                        .roundToInt(),
-                    y = 0,
-                )
-            }
-            .anchoredDraggable(
-                state = state,
-                orientation = Orientation.Horizontal,
-                interactionSource = draggableInteractionSource
+    var columnModifier = Modifier
+        .offset {
+            IntOffset(
+                x = state
+                    .requireOffset()
+                    .roundToInt(),
+                y = 0,
             )
-            .height(520.dp)
-            .statusBarsPadding()
-            .padding(top = TopAppBarDefaults.TopAppBarExpandedHeight)
+        }
+        .anchoredDraggable(
+            state = state,
+            orientation = Orientation.Horizontal,
+            interactionSource = draggableInteractionSource
+        )
+        .height(520.dp)
+    if (!isPdfOrHtml) {
+        columnModifier = columnModifier
+            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
+            .padding(
+                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            )
+    }
+
+    LazyColumn(
+        modifier = columnModifier
             .padding(start = 16.dp, top = 16.dp)
             .background(
                 color = snapAreaBackgroundColor,
@@ -201,7 +217,7 @@ internal fun BoxScope.HtmlEpubReaderAnnotationCreationToolbar(
         item {
             Spacer(modifier = Modifier.height(4.dp))
             val toolsList =
-            if (viewModel.isCurrentFilePdf()) {
+            if (viewState.fileType == ReaderFileType.PDF) {
                 pdfReaderToolsList
             } else {
                 htmlEpubReaderToolsList

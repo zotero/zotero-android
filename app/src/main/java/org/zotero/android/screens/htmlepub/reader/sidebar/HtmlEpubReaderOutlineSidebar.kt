@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubSidebarSearchBar
@@ -48,7 +47,6 @@ private val levelPaddingConst = 8.dp
 internal fun HtmlEpubReaderOutlineSidebar(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
-    layoutType: CustomLayoutSize.LayoutType,
 ) {
     if (viewState.isOutlineEmpty) {
         Box(
@@ -82,7 +80,6 @@ internal fun HtmlEpubReaderOutlineSidebar(
             HtmlEpubReaderOutlineTable(
                 viewModel = viewModel,
                 viewState = viewState,
-                layoutType = layoutType
             )
         }
     }
@@ -92,7 +89,6 @@ internal fun HtmlEpubReaderOutlineSidebar(
 internal fun HtmlEpubReaderOutlineTable(
     viewModel: HtmlEpubReaderViewModel,
     viewState: HtmlEpubReaderViewState,
-    layoutType: CustomLayoutSize.LayoutType
 ) {
     val roundCornerShape = RoundedCornerShape(size = 10.dp)
     LazyColumn(
@@ -105,7 +101,6 @@ internal fun HtmlEpubReaderOutlineTable(
         state = rememberLazyListState(),
     ) {
         recursiveOutlineItem(
-            layoutType = layoutType,
             outlineItems = viewState.outlineSnapshot,
             isCollapsed = { viewState.isOutlineSectionCollapsed(it.id) },
             onItemTapped = { viewModel.onOutlineItemTapped(it) },
@@ -119,7 +114,6 @@ internal fun HtmlEpubReaderOutlineTable(
 }
 
 private fun LazyListScope.recursiveOutlineItem(
-    layoutType: CustomLayoutSize.LayoutType,
     levelPadding: Dp = 8.dp,
     outlineItems: List<HtmlEpubOutline>,
     isCollapsed: (item: HtmlEpubOutline) -> Boolean,
@@ -140,7 +134,6 @@ private fun LazyListScope.recursiveOutlineItem(
 
         if (!isCollapsed(item)) {
             recursiveOutlineItem(
-                layoutType = layoutType,
                 levelPadding = levelPadding + levelPaddingConst,
                 outlineItems = item.children,
                 isCollapsed = isCollapsed,

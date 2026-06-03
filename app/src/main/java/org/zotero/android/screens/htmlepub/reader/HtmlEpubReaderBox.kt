@@ -6,18 +6,23 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
 import org.zotero.android.screens.htmlepub.reader.web.actionmenu.HtmlEpubActionMenuPopup
 import org.zotero.android.screens.htmlepub.toolbar.HtmlEpubReaderAnnotationCreationToolbar
 
@@ -38,7 +43,7 @@ internal fun HtmlEpubReaderBox(
         true
     }
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
-    val anchoredDraggableState = rememberSaveable(
+    val anchoredDraggableState: AnchoredDraggableState<DragAnchors> = rememberSaveable(
         saver = AnchoredDraggableState.Saver(
             snapAnimationSpec = animationSpec,
             positionalThreshold = positionalThreshold,
@@ -61,7 +66,6 @@ internal fun HtmlEpubReaderBox(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
             .onSizeChanged { layoutSize ->
                 val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
                 anchoredDraggableState.updateAnchors(
@@ -91,6 +95,28 @@ internal fun HtmlEpubReaderBox(
                 onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
                 shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
             )
+        }
+
+        // EPUB: When bars are hidden, show page progress in the empty space
+        val pageProgress = viewState.pageProgress
+        if (viewState.fileType == ReaderFileType.EPUB
+            && !viewState.isTopBarVisible
+            && pageProgress != null
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = pageProgress,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
