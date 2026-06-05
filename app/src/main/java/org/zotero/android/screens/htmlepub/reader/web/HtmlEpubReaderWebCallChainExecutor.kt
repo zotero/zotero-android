@@ -19,6 +19,8 @@ import org.zotero.android.screens.htmlepub.reader.data.DocumentData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebError
 import org.zotero.android.screens.htmlepub.reader.data.Page
+import org.zotero.android.screens.htmlepub.settings.data.PageLayoutFlowMode
+import org.zotero.android.screens.htmlepub.settings.data.PageSpreadsMode
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
 import org.zotero.android.translator.helper.TranslatorHelper.encodeStringToBase64Binary
@@ -398,6 +400,43 @@ class HtmlEpubReaderWebCallChainExecutor(
 
         return suspendCancellableCoroutine { cont ->
             htmlEpubReaderWebViewHandler.evaluateJavascript("window._view.setColorScheme('$appearanceString');") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setFlowMode(flowMode: PageLayoutFlowMode) {
+        val flowModeString = when(flowMode) {
+            PageLayoutFlowMode.PAGINATED -> {
+                "paginated"
+            }
+            PageLayoutFlowMode.SCROLLED -> {
+                "scrolled"
+            }
+        }
+
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("window._view.setFlowMode('$flowModeString');") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setSpreadMode(spreadsMode: PageSpreadsMode) {
+        val spreadsModeString = when(spreadsMode) {
+            PageSpreadsMode.SINGLE -> {
+                "single"
+            }
+            PageSpreadsMode.DOUBLE -> {
+                "double"
+            }
+            PageSpreadsMode.EVEN -> {
+                "even"
+            }
+        }
+
+        return suspendCancellableCoroutine { cont ->
+            htmlEpubReaderWebViewHandler.evaluateJavascript("window._view.setSpreadMode('$spreadsModeString');") {
                 cont.resume(Unit)
             }
         }

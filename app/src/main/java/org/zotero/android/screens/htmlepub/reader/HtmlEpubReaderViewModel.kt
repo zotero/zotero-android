@@ -108,6 +108,7 @@ import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChain
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettings
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsArgs
 import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettingsChangeResult
+import org.zotero.android.screens.htmlepub.settings.data.PageAppearanceMode
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationConverterV2
@@ -2240,9 +2241,26 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun update(htmlEpubSettings: HtmlEpubSettings) {
         defaults.setHtmlEpubSettings(htmlEpubSettings)
-        pdfReaderThemeDecider.setPdfPageAppearanceMode(htmlEpubSettings.appearanceMode)
+
+        val oldPageAppearanceMode = when (htmlEpubSettings.appearanceMode) {
+            PageAppearanceMode.LIGHT -> {
+                org.zotero.android.pdf.data.PageAppearanceMode.LIGHT
+            }
+            PageAppearanceMode.DARK -> {
+                org.zotero.android.pdf.data.PageAppearanceMode.DARK
+            }
+            PageAppearanceMode.AUTOMATIC -> {
+                org.zotero.android.pdf.data.PageAppearanceMode.AUTOMATIC
+            }
+        }
+
+        pdfReaderThemeDecider.setPdfPageAppearanceMode(oldPageAppearanceMode)
         viewModelScope.launch {
             htmlEpubReaderWebCallChainExecutor?.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+            htmlEpubReaderWebCallChainExecutor?.setFlowMode(htmlEpubSettings.pageLayoutFlowMode)
+            htmlEpubReaderWebCallChainExecutor?.setSpreadMode(htmlEpubSettings.spreadsMode)
+
+
         }
     }
 

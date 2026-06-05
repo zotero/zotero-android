@@ -21,5 +21,17 @@ internal fun HtmlEpubSettingsTable(
             selectedOption = viewState.selectedAppearanceOption,
             optionSelected = viewModel::onOptionSelected
         )
+        htmlEpubSettingsSettingRow(
+            titleResId = Strings.pdf_settings_spreads_title,
+            options = viewState.spreadsOptions,
+            selectedOption = viewState.selectedSpreadsOption,
+            optionSelected = viewModel::onOptionSelected
+        )
+        htmlEpubSettingsSettingRow(
+            titleResId = Strings.pdf_settings_page_layout_title,
+            options = viewState.pageLayoutFlowOptions,
+            selectedOption = viewState.selectedPageLayoutFlowMode,
+            optionSelected = viewModel::onOptionSelected
+        )
     }
 }

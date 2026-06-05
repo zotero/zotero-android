@@ -53,7 +53,7 @@ open class Defaults @Inject constructor(
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
-    private val htmlEpubSettings = "htmlEpubSettings"
+    private val htmlEpubSettings = "htmlEpubSettings2"
 
     private val exportOutputMode = "exportOutputMode"
     private val exportOutputMethod = "exportOutputMethod"

@@ -83,4 +83,12 @@
 
     <string name="location">Location</string>
 
+    <string name="pdf_settings_spreads_title">Spreads</string>
+    <string name="pdf_settings_page_mode_none">None</string>
+    <string name="pdf_settings_page_mode_even">Even</string>
+
+    <string name="pdf_settings_page_layout_title">Page Layout</string>
+    <string name="pdf_settings_flow_mode_paginated">Paginated</string>
+    <string name="pdf_settings_flow_mode_scrolled">Scrolled</string>
+
 </resources>
