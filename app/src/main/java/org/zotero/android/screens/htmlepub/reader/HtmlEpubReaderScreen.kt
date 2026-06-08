@@ -35,6 +35,7 @@ import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchScreen
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewModel
 import org.zotero.android.screens.htmlepub.reader.search.HtmlEpubReaderSearchViewState
+import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.HtmlEpubThumbnailsViewModel
 import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderSearchTopBar
 import org.zotero.android.screens.htmlepub.reader.topbar.HtmlEpubReaderTopBar
 import org.zotero.android.screens.htmlepub.settings.sidebar.HtmlEpubSettingsView
@@ -57,6 +58,10 @@ internal fun HtmlEpubReaderScreen(
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+
+    val thumbnailsViewModel: HtmlEpubThumbnailsViewModel = hiltViewModel()
+    thumbnailsViewModel.initOnce()
+
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current
 
@@ -141,7 +146,13 @@ internal fun HtmlEpubReaderScreen(
                     onOpenWebpage(consumedEffect.url)
                 }
 
-                else -> {}
+                is HtmlEpubReaderViewEffect.OnPageChanged -> {
+                    thumbnailsViewModel.onPageChangedByReader(consumedEffect.currentPage)
+                }
+
+                else -> {
+                    //no-op
+                }
             }
         }
 

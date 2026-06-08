@@ -1,6 +1,7 @@
 package org.zotero.android.screens.htmlepub.reader
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -39,24 +40,26 @@ internal fun HtmlEpubReaderSideBySideMode(
     }
 
     Row(modifier = rowModifier) {
-        val modifier = Modifier
-            .width(330.dp)
-            .fillMaxHeight()
 
         AnimatedContent(
-            modifier = modifier,
             targetState = viewState.showSideBar,
             transitionSpec = {
                 htmlEpubReaderSidebarTransitionSpec()
             }, label = ""
         ) { showSideBar ->
             if (showSideBar) {
-                HtmlEpubReaderSidebar(
-                    viewModel = viewModel,
-                    viewState = viewState,
-                    annotationsLazyListState = annotationsLazyListState,
-                    annotationMaxSideSize = annotationMaxSideSize,
-                )
+                Column(
+                    modifier = Modifier
+                        .width(330.dp)
+                        .fillMaxHeight()
+                ) {
+                    HtmlEpubReaderSidebar(
+                        viewModel = viewModel,
+                        viewState = viewState,
+                        annotationsLazyListState = annotationsLazyListState,
+                        annotationMaxSideSize = annotationMaxSideSize,
+                    )
+                }
             }
         }
         if (viewState.showSideBar) {

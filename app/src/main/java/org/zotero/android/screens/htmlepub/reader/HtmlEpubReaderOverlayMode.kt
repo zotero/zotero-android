@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -32,13 +31,13 @@ internal fun HtmlEpubReaderOverlayMode(
     if (!isPdfOrHtml) {
         val density = LocalDensity.current
         val systemBarsInsets = WindowInsets.systemBarsIgnoringVisibility
-        val statusBarTop = with(density) { systemBarsInsets.getBottom(this).toDp() }
+        val statusBarTop = with(density) { systemBarsInsets.getTop(this).toDp() } + TopAppBarDefaults.TopAppBarExpandedHeight
+        val insetBottom = with(density) { systemBarsInsets.getBottom(this).toDp()}
 
         boxModifier = boxModifier
-            .windowInsetsPadding(TopAppBarDefaults.windowInsets)
-//            .windowInsetsPadding(BottomAppBarDefaults.windowInsets)
             .padding(
-                top = statusBarTop
+                top = statusBarTop,
+                bottom = insetBottom
             )
     }
     Box(
@@ -48,30 +47,31 @@ internal fun HtmlEpubReaderOverlayMode(
             viewState = viewState,
             viewModel = viewModel,
         )
-        val isTablet = layoutType.isTablet()
-
-        var modifier = Modifier
-            .fillMaxHeight()
-        if (isTablet) {
-            modifier = modifier.width(330.dp)
-        } else {
-            modifier = modifier.fillMaxWidth()
-        }
-
         AnimatedContent(
-            modifier = modifier,
             targetState = viewState.showSideBar,
             transitionSpec = {
                 htmlEpubReaderSidebarTransitionSpec()
             }, label = ""
         ) { showSideBar ->
             if (showSideBar) {
-                HtmlEpubReaderSidebar(
-                    viewState = viewState,
-                    viewModel = viewModel,
-                    annotationsLazyListState = annotationsLazyListState,
-                    annotationMaxSideSize = annotationMaxSideSize,
-                )
+                val isTablet = layoutType.isTablet()
+
+                var modifier = Modifier
+                    .fillMaxHeight()
+                if (isTablet) {
+                    modifier = modifier.width(330.dp)
+                } else {
+                    modifier = modifier.fillMaxWidth()
+                }
+                Box(modifier = modifier) {
+                    HtmlEpubReaderSidebar(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                        annotationsLazyListState = annotationsLazyListState,
+                        annotationMaxSideSize = annotationMaxSideSize,
+                    )
+                }
+
 
             }
         }

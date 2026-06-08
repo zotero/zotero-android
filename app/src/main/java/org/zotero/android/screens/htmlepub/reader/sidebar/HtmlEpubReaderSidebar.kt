@@ -14,9 +14,9 @@ import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewModel
 import org.zotero.android.screens.htmlepub.reader.HtmlEpubReaderViewState
 import org.zotero.android.screens.htmlepub.reader.data.ReaderFileType
 import org.zotero.android.screens.htmlepub.reader.sidebar.annotations.HtmlEpubReaderAnnotationsSidebar
-import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Annotations
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Outline
+import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubReaderSliderOptions.Thumbnails
 import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.HtmlEpubReaderThumbnailsSidebar
 import org.zotero.android.uicomponents.foundation.safeStringResource
 
@@ -26,7 +26,7 @@ private val htmlEpubSliderOptions = listOf(
 )
 
 private val pdfSliderOptions = listOf(
-    HtmlEpubReaderSliderOptions.Thumbnails,
+    Thumbnails,
     Annotations,
     Outline
 )
@@ -39,12 +39,13 @@ internal fun HtmlEpubReaderSidebar(
     annotationMaxSideSize: Int,
 ) {
     Column(Modifier) {
-        val selectorOptions =
-            if (viewState.fileType == ReaderFileType.PDF) {
-                pdfSliderOptions
-            } else {
-                htmlEpubSliderOptions
-            }.map {
+        val selectorOptions = if (viewState.fileType == ReaderFileType.PDF) {
+            pdfSliderOptions
+        } else {
+            htmlEpubSliderOptions
+        }
+        val selectorOptionsStrings = selectorOptions
+            .map {
                 safeStringResource(id = it.optionStringId)
             }
 
@@ -56,10 +57,10 @@ internal fun HtmlEpubReaderSidebar(
                         //Prevent tap to be propagated to composables behind this screen.
                     }
                 },
-            selectedTabIndex = selectedOption.ordinal
+            selectedTabIndex = selectorOptions.indexOf(selectedOption)
         ) {
-            selectorOptions.forEachIndexed { index, selectorOption ->
-                val isSelected = selectedOption.ordinal == index
+            selectorOptionsStrings.forEachIndexed { index, selectorOption ->
+                val isSelected = selectorOptions.indexOf(selectedOption) == index
                 Tab(
                     text = {
                         val textColor = if (isSelected) {
@@ -75,18 +76,15 @@ internal fun HtmlEpubReaderSidebar(
 
                     },
                     selected = isSelected,
-                    onClick = { viewModel.setSidebarSliderSelectedOption(index) }
+                    onClick = { viewModel.setSidebarSliderSelectedOption(selectorOptions[index]) }
                 )
             }
         }
 
         when (selectedOption) {
-            HtmlEpubReaderSliderOptions.Thumbnails -> {
+            Thumbnails -> {
                 HtmlEpubReaderThumbnailsSidebar(
                     annotationMaxSideSize = annotationMaxSideSize,
-                    currentPage = viewState.currentPdfPageIndex,
-                    numOfPages = viewState.numOfPages,
-                    pageLabels = viewState.pageLabels,
                 )
             }
 

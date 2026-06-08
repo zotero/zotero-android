@@ -1433,12 +1433,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
             HtmlEpubReaderWebData.loadDocument -> {
                 load()
             }
-            is HtmlEpubReaderWebData.onInitThumbnails -> {
-                onInitThumbnails(successValue.thumbnailsJsonArray)
-            }
-            is HtmlEpubReaderWebData.onSetPageLabels -> {
-                onSetPageLabels(successValue.pageLabelsJsonArray)
-            }
 
             is HtmlEpubReaderWebData.parseOutline -> {
                 parseOutline(successValue.params)
@@ -1504,10 +1498,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
 
         if (viewState.fileType == ReaderFileType.PDF) {
-            println()
-            updateState {
-                copy(currentPdfPageIndex = page.toInt())
-            }
+            triggerEffect(
+                HtmlEpubReaderViewEffect.OnPageChanged(page.toInt())
+            )
         }
 
         val request = StorePageForItemDbRequest(key = viewState.key, libraryId = viewState.library.identifier, page = page)
@@ -1561,18 +1554,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.selectedTextParamsText = (params["annotation"].asJsonObject)["text"].asString
         updateState {
             copy(selectedTextParamsRects = rects)
-        }
-    }
-
-    fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
-        updateState {
-            copy(numOfPages = thumbnailsJsonArray.size())
-        }
-    }
-
-    private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
-        updateState {
-            copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
     }
 
@@ -1742,8 +1723,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    fun setSidebarSliderSelectedOption(optionOrdinal: Int) {
-        val option = HtmlEpubReaderSliderOptions.entries[optionOrdinal]
+    fun setSidebarSliderSelectedOption(option: HtmlEpubReaderSliderOptions) {
         updateState {
             copy(sidebarSliderSelectedOption = option)
         }
@@ -2193,7 +2173,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun decideTopBarAndBottomBarVisibility() {
         val isTopBarCurrentlyVisible = viewState.isTopBarVisible
-        setTopBarVisibility(!isTopBarCurrentlyVisible)
+        val topBarNewVisibilityState = !isTopBarCurrentlyVisible
+        setTopBarVisibility(topBarNewVisibilityState)
+        if (decideFileType() == ReaderFileType.EPUB && !topBarNewVisibilityState) {
+            updateState { copy(showSideBar = false) }
+        }
     }
 
     fun navigateToHtmlEpubSettings() {
@@ -2259,7 +2243,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
             htmlEpubReaderWebCallChainExecutor?.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             htmlEpubReaderWebCallChainExecutor?.setFlowMode(htmlEpubSettings.pageLayoutFlowMode)
             htmlEpubReaderWebCallChainExecutor?.setSpreadMode(htmlEpubSettings.spreadsMode)
-
 
         }
     }
@@ -2394,8 +2377,6 @@ data class HtmlEpubReaderViewState(
     val toolColors: Map<AnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
     val currentPdfPageIndex: Int = 0,
-    val numOfPages: Int = 0,
-    val pageLabels: List<String> = emptyList(),
     val annotationsBitmapCache: PersistentMap<String, Bitmap> = persistentMapOf(),
     val pageProgress: String? = null,
 
@@ -2421,13 +2402,18 @@ sealed class HtmlEpubReaderViewEffect : ViewEffect {
     object NavigateBack : HtmlEpubReaderViewEffect()
     object DisableForceScreenOn : HtmlEpubReaderViewEffect()
     object EnableForceScreenOn : HtmlEpubReaderViewEffect()
-    object ScreenRefresh: HtmlEpubReaderViewEffect()
-    data class ScrollSideBar(val scrollToIndex: Int): HtmlEpubReaderViewEffect()
+    object ScreenRefresh : HtmlEpubReaderViewEffect()
+    data class ScrollSideBar(val scrollToIndex: Int) : HtmlEpubReaderViewEffect()
     object ShowPdfFilters : HtmlEpubReaderViewEffect()
-    object ShowHtmlEpubAnnotationMore: HtmlEpubReaderViewEffect()
-    object NavigateToTagPickerScreen: HtmlEpubReaderViewEffect()
-    object ShowHtmlEpubColorPicker: HtmlEpubReaderViewEffect()
+    object ShowHtmlEpubAnnotationMore : HtmlEpubReaderViewEffect()
+    object NavigateToTagPickerScreen : HtmlEpubReaderViewEffect()
+    object ShowHtmlEpubColorPicker : HtmlEpubReaderViewEffect()
     data class ShowHtmlEpubSettings(val params: String) : HtmlEpubReaderViewEffect()
-    data class ShowPdfAnnotationAndUpdateAnnotationsList(val scrollToIndex: Int, val showAnnotationPopup: Boolean): HtmlEpubReaderViewEffect()
+    data class ShowPdfAnnotationAndUpdateAnnotationsList(
+        val scrollToIndex: Int,
+        val showAnnotationPopup: Boolean
+    ) : HtmlEpubReaderViewEffect()
+
     data class OpenWebpage(val url: String) : HtmlEpubReaderViewEffect()
+    data class OnPageChanged(val currentPage: Int) : HtmlEpubReaderViewEffect()
 }

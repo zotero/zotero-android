@@ -2,6 +2,7 @@ package org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails
 
 import android.graphics.Bitmap
 import androidx.lifecycle.viewModelScope
+import com.google.gson.JsonArray
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -35,8 +36,7 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 
     private var pdfReaderThemeCancellable: Job? = null
 
-    fun initOnce(numberOfPages: Int) = initOnce {
-        initNumOfPages(numberOfPages)
+    fun initOnce() = initOnce {
         startObservingTheme()
         setupWebCallChainEventStream()
         setupThumbnailCacheUpdateStream()
@@ -78,6 +78,13 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
                 )
             }
 
+            is HtmlEpubReaderWebData.onInitThumbnails -> {
+                onInitThumbnails(successValue.thumbnailsJsonArray)
+            }
+            is HtmlEpubReaderWebData.onSetPageLabels -> {
+                onSetPageLabels(successValue.pageLabelsJsonArray)
+            }
+
             else -> {
                 //no-op
             }
@@ -95,6 +102,7 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    //When we ask the reader to change page it immediatelly triggers onPageChangedByReader in return, which we don't need.
     private var ignoreChangeByReaderUntil: Long = 0L
 
     fun selectThumbnail(page: Int) {
@@ -102,7 +110,7 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
         updateState {
             copy(selectedThumbnailPage = page)
         }
-        val location = mapOf("pageNumber" to page.toString())
+        val location = mapOf("pageNumber" to (page + 1).toString())
         EventBus.getDefault().post(HtmlEpubScrollReaderIfNeededEvent(location))
     }
 
@@ -118,8 +126,16 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             delay(200)
             triggerEffect(HtmlEpubThumbnailsViewEffect.ScrollThumbnailListToIndex(page))
         }
+    }
 
+    fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
+        initNumOfPages(thumbnailsJsonArray.size())
+    }
 
+    private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
+        updateState {
+            copy(pageLabels = pageLabelsJsonArray.map { it.asString })
+        }
     }
 
     override fun onCleared() {
@@ -152,6 +168,7 @@ internal data class HtmlEpubThumbnailsViewState(
     val numOfPages: Int = 0,
     val thumbnailCache: ImmutableList<Bitmap?> = persistentListOf(),
     val selectedThumbnailPage: Int? = null,
+    val pageLabels: List<String> = emptyList(),
 ) : ViewState {
     fun isThumbnailSelected(page: Int): Boolean {
         return this.selectedThumbnailPage == page

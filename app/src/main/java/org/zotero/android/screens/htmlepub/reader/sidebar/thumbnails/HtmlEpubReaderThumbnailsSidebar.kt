@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.zotero.android.androidx.content.pxToDp
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -41,18 +41,12 @@ import kotlin.math.abs
 
 @Composable
 internal fun HtmlEpubReaderThumbnailsSidebar(
-    viewModel: HtmlEpubThumbnailsViewModel = hiltViewModel(),
+    viewModel: HtmlEpubThumbnailsViewModel = viewModel(),
     annotationMaxSideSize: Int,
-    currentPage:Int,
-    numOfPages: Int,
-    pageLabels: List<String>,
 ) {
     val viewState by viewModel.viewStates.observeAsState(HtmlEpubThumbnailsViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val thumbnailsLazyListState = rememberLazyListState()
-
-    viewModel.initOnce(numberOfPages = numOfPages)
-    viewModel.onPageChangedByReader(currentPage)
 
     LaunchedEffect(thumbnailsLazyListState) {
         listenToScroll(thumbnailsLazyListState, viewModel)
@@ -144,7 +138,7 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = pageLabels.getOrNull(index) ?: "Loading...",
+                        text = viewState.pageLabels.getOrNull(index) ?: "Loading...",
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyLarge,
                     )
