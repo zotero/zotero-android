@@ -12,16 +12,20 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderWebData
 import org.zotero.android.screens.htmlepub.reader.sidebar.data.HtmlEpubRequestThumbnailRenderEventStream
 import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.cache.HtmlEpubThumbnailPreviewCacheSnapshotEventStream
 import org.zotero.android.screens.htmlepub.reader.sidebar.thumbnails.cache.HtmlEpubThumbnailPreviewMemoryCache
+import org.zotero.android.screens.htmlepub.reader.web.HtmlEpubReaderWebCallChainEventStream
 import timber.log.Timber
 import java.util.Collections
 import javax.inject.Inject
@@ -32,8 +36,9 @@ class HtmlEpubThumbnailPreviewManager @Inject constructor(
     private val memoryCache: HtmlEpubThumbnailPreviewMemoryCache,
     private val htmlEpubThumbnailPreviewCacheSnapshotEventStream: HtmlEpubThumbnailPreviewCacheSnapshotEventStream,
     private val htmlEpubRequestThumbnailRenderEventStream: HtmlEpubRequestThumbnailRenderEventStream,
+    private val webCallChainEventStream: HtmlEpubReaderWebCallChainEventStream
 
-    ) {
+) {
     private lateinit var viewModelScope: CoroutineScope
     private var coroutineScope: CoroutineScope? = null
 
@@ -43,13 +48,54 @@ class HtmlEpubThumbnailPreviewManager @Inject constructor(
 
     private var numOfPagesInDocument = 0
 
-    private val requestThumbnailDebounceFlow = MutableStateFlow<Int>(0)
+    private val requestThumbnailDebounceFlow = MutableStateFlow(0)
+    private val isReaderInitializedFlow = MutableStateFlow(false)
 
-    fun init(numOfPages: Int, viewModelScope: CoroutineScope) {
-        this.numOfPagesInDocument = numOfPages
+    fun init(viewModelScope: CoroutineScope) {
         this.viewModelScope = viewModelScope
+        setupWebCallChainEventStream()
         resetManagerState()
     }
+
+    fun setupWebCallChainEventStream() {
+        webCallChainEventStream.flow()
+            .onEach { result ->
+                process(result)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun process(result: Result<HtmlEpubReaderWebData>) {
+        if (result !is Result.Success) {
+            return
+        }
+
+        when (val successValue = result.value) {
+            is HtmlEpubReaderWebData.onRenderThumbnail -> {
+                store(
+                    successValue.thumbnailJsonObject
+                )
+            }
+
+            is HtmlEpubReaderWebData.onInitThumbnails -> {
+                initNumOfPages(successValue.thumbnailsJsonArray.size())
+            }
+
+            else -> {
+                //no-op
+            }
+        }
+    }
+
+    private fun initNumOfPages(numberOfPages: Int) {
+        isReaderInitializedFlow.tryEmit(true)
+        if (this.numOfPagesInDocument != 0) {
+            return
+        }
+        this.numOfPagesInDocument = numberOfPages
+        sendEmptyCacheState()
+    }
+
 
     private fun resetManagerState() {
         this.coroutineScope?.cancel()
@@ -64,13 +110,14 @@ class HtmlEpubThumbnailPreviewManager @Inject constructor(
 
     private fun setupRequestThumbnailDebounceFlow() {
         this.coroutineScope?.let { scope ->
-            println()
             requestThumbnailDebounceFlow
                 .debounce(150)
-                .map { centerVisibleItemIndex ->
-                    requestThumbnailAfterDebounce(centerVisibleItemIndex)
-                }
-                .launchIn(scope)
+                .combine(isReaderInitializedFlow
+                ) { centerVisibleItemIndex, isReaderInitialized ->
+                    if (isReaderInitialized) {
+                        requestThumbnailAfterDebounce(centerVisibleItemIndex)
+                    }
+                }.launchIn(scope)
         }
 
     }
@@ -182,8 +229,15 @@ class HtmlEpubThumbnailPreviewManager @Inject constructor(
     }
 
     fun cancelProcessing() {
+        isReaderInitializedFlow.tryEmit(false)
         resetManagerState()
         currentlyProcessingThumbnails.clear()
         memoryCache.clear()
+        sendEmptyCacheState()
+    }
+
+    private fun sendEmptyCacheState() {
+        val thumbnailCache = generateEmptySnapshot().toImmutableList()
+        htmlEpubThumbnailPreviewCacheSnapshotEventStream.emitAsync(thumbnailCache)
     }
 }

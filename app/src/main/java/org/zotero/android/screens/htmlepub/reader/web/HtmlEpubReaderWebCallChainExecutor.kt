@@ -1,17 +1,16 @@
 package org.zotero.android.screens.htmlepub.reader.web
 
-import android.content.Context
 import android.webkit.WebMessage
 import android.webkit.WebView
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.files.FileStore
 import org.zotero.android.screens.htmlepub.reader.CreateReaderLocation
 import org.zotero.android.screens.htmlepub.reader.CreateReaderViewOptions
 import org.zotero.android.screens.htmlepub.reader.CreateReaderViewState
@@ -26,32 +25,32 @@ import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJava
 import org.zotero.android.translator.helper.TranslatorHelper.encodeStringToBase64Binary
 import timber.log.Timber
 import java.io.File
+import javax.inject.Inject
 import kotlin.coroutines.resume
 
-class HtmlEpubReaderWebCallChainExecutor(
-    private val context: Context,
-    private val dispatchers: Dispatchers,
+@ViewModelScoped
+class HtmlEpubReaderWebCallChainExecutor @Inject constructor(
+    dispatchers: Dispatchers,
     private val gson: Gson,
-    private val fileStore: FileStore,
-    private val webView: WebView,
-    private val observable: HtmlEpubReaderWebCallChainEventStream
+    private val observable: HtmlEpubReaderWebCallChainEventStream,
+    private val htmlEpubReaderWebViewHandler: HtmlEpubReaderWebViewHandler
 ) {
 
-    private lateinit var htmlEpubReaderWebViewHandler: HtmlEpubReaderWebViewHandler
-
     private val limitedParallelismDispatcher =
-        kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
+        dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
-    fun start(file: File) {
+    fun start(webView: WebView, file: File) {
         try {
-            htmlEpubReaderWebViewHandler = HtmlEpubReaderWebViewHandler(
-                dispatchers = dispatchers,
-                context = context,
+            val filePath = "file://" + file.absolutePath
+
+            htmlEpubReaderWebViewHandler.load(
                 webView = webView,
-                fileStore = fileStore,
+                url = filePath,
+                onWebViewLoadPage = ::onIndexHtmlLoaded,
+                processWebViewResponses = ::receiveMessage,
             )
-            initialize(file)
+
             Timber.i("HtmlEpubReaderWebCallChainExecutor: initialization succeeded")
         } catch (e: Exception) {
             observable.emitAsync(
@@ -59,16 +58,6 @@ class HtmlEpubReaderWebCallChainExecutor(
             )
             Timber.i(e, "HtmlEpubReaderWebCallChainExecutor: initialization failed")
         }
-    }
-
-    private fun initialize(file: File) {
-        val filePath = "file://" + file.absolutePath
-
-        loadWebPage(
-            url = filePath,
-            onWebViewLoadPage = ::onIndexHtmlLoaded,
-            processWebViewResponses = ::receiveMessage,
-        )
     }
 
     private fun receiveMessage(message: WebMessage) {
@@ -153,7 +142,7 @@ class HtmlEpubReaderWebCallChainExecutor(
 
                         "onSelectAnnotations" -> {
                             val params = data["params"]
-                            if (params  == null || params.isJsonNull) {
+                            if (params == null || params.isJsonNull) {
                                 Timber.w("HtmlEpubReaderWebCallChainExecutor: event $event missing params")
                                 return@launch
                             }
@@ -169,7 +158,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 } else {
                                     it.asString
                                 }
-                          }
+                            }
                             val key = idsJsonArrayOfStrings.firstOrNull()
                             if (key != null) {
                                 observable.emitAsync(
@@ -185,6 +174,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             }
                         }
+
                         "onSetSelectionPopup" -> {
                             val dParams = data["params"]
                             if (dParams == null
@@ -200,6 +190,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onChangeViewState" -> {
                             val params = data["params"].asJsonObject
                             observable.emitAsync(
@@ -208,6 +199,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onOpenLink" -> {
                             val params = data["params"].asJsonObject
                             val url = params["url"].asString
@@ -217,6 +209,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onSetOutline" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -224,6 +217,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onFindResult" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -231,6 +225,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onBackdropTap" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -238,6 +233,7 @@ class HtmlEpubReaderWebCallChainExecutor(
                                 )
                             )
                         }
+
                         "onChangeViewStats" -> {
                             val params = data["params"].asJsonObject
                             observable.emitAsync(
@@ -261,7 +257,8 @@ class HtmlEpubReaderWebCallChainExecutor(
     private fun onIndexHtmlLoaded() {
         observable.emitAsync(
             Result.Success(
-                HtmlEpubReaderWebData.loadDocument)
+                HtmlEpubReaderWebData.loadDocument
+            )
         )
     }
 
@@ -368,15 +365,19 @@ class HtmlEpubReaderWebCallChainExecutor(
         if (key != null) {
             createReaderViewOptions.location = CreateReaderLocation(annotationID = key)
         } else if (page != null) {
-            when(page) {
+            when (page) {
                 is Page.html -> {
-                    createReaderViewOptions.viewState = CreateReaderViewState(scrollYPercent = page.scrollYPercent, scale = 1.0)
+                    createReaderViewOptions.viewState =
+                        CreateReaderViewState(scrollYPercent = page.scrollYPercent, scale = 1.0)
                 }
+
                 is Page.epub -> {
                     createReaderViewOptions.viewState = CreateReaderViewState(cfi = page.cfi)
                 }
+
                 is Page.pdf -> {
-                    createReaderViewOptions.viewState = CreateReaderViewState(pageIndex = page.pageIndex)
+                    createReaderViewOptions.viewState =
+                        CreateReaderViewState(pageIndex = page.pageIndex)
                 }
             }
         }
@@ -406,10 +407,11 @@ class HtmlEpubReaderWebCallChainExecutor(
     }
 
     suspend fun setFlowMode(flowMode: PageLayoutFlowMode) {
-        val flowModeString = when(flowMode) {
+        val flowModeString = when (flowMode) {
             PageLayoutFlowMode.PAGINATED -> {
                 "paginated"
             }
+
             PageLayoutFlowMode.SCROLLED -> {
                 "scrolled"
             }
@@ -423,13 +425,15 @@ class HtmlEpubReaderWebCallChainExecutor(
     }
 
     suspend fun setSpreadMode(spreadsMode: PageSpreadsMode) {
-        val spreadsModeString = when(spreadsMode) {
+        val spreadsModeString = when (spreadsMode) {
             PageSpreadsMode.SINGLE -> {
                 "single"
             }
+
             PageSpreadsMode.DOUBLE -> {
                 "double"
             }
+
             PageSpreadsMode.EVEN -> {
                 "even"
             }
@@ -442,16 +446,4 @@ class HtmlEpubReaderWebCallChainExecutor(
         }
     }
 
-
-    private fun loadWebPage(
-        url: String,
-        onWebViewLoadPage: () -> Unit,
-        processWebViewResponses: (message: WebMessage) -> Unit,
-    ) {
-        htmlEpubReaderWebViewHandler.load(
-            url = url,
-            onWebViewLoadPage = onWebViewLoadPage,
-            processWebViewResponses = processWebViewResponses,
-        )
-    }
 }

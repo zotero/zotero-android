@@ -14,7 +14,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,7 +42,6 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
@@ -136,9 +134,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val sessionDataEventStream: SessionDataEventStream,
     private val fileStore: FileStore,
-    private val gson: Gson,
     private val dbWrapperMain: DbWrapperMain,
-    private val dispatchers: Dispatchers,
     private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
     private val createHtmlEpubAnnotationsDbRequestFactory: CreateHtmlEpubAnnotationsDbRequest.Factory,
 
@@ -148,6 +144,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val htmlEpubRequestThumbnailRenderEventStream: HtmlEpubRequestThumbnailRenderEventStream,
     private val annotationBitmapManager: HtmlEpubAnnotationBitmapManager,
     private val annotationBitmapCacheSnapshotEventStream: HtmlEpubAnnotationBitmapCacheSnapshotEventStream,
+    private val htmlEpubReaderWebCallChainExecutor: HtmlEpubReaderWebCallChainExecutor,
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<HtmlEpubReaderViewState, HtmlEpubReaderViewEffect>(HtmlEpubReaderViewState())  {
@@ -174,8 +171,6 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private var item: RItem? = null
     private var annotationItems: RealmResults<RItem>? = null
 
-    private var htmlEpubReaderWebCallChainExecutor: HtmlEpubReaderWebCallChainExecutor? = null
-
     var outlines: MutableList<HtmlEpubOutline> = mutableListOf()
 
     private var annotationEditReaderKey: String? = null
@@ -199,7 +194,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: HtmlEpubReaderSearchResultSelected) {
         viewModelScope.launch {
-            htmlEpubReaderWebCallChainExecutor?.selectSearchResult(result.index)
+            htmlEpubReaderWebCallChainExecutor.selectSearchResult(result.index)
         }
     }
 
@@ -316,12 +311,12 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 val string = data?.term ?: ""
                 savedSearchTerm = string
                 if (string.isEmpty()) {
-                    htmlEpubReaderWebCallChainExecutor?.clearSearch()
+                    htmlEpubReaderWebCallChainExecutor.clearSearch()
                     htmlEpubReaderSearchResultsEventStream.emitAsync(HtmlEpubReaderSearchResultsData(null))
                     return@onEach
                 }
 
-                htmlEpubReaderWebCallChainExecutor?.search(string)
+                htmlEpubReaderWebCallChainExecutor.search(string)
             }
             .launchIn(viewModelScope)
     }
@@ -330,19 +325,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
         htmlEpubRequestThumbnailRenderEventStream.flow()
             .onEach { pageIndices ->
                 Timber.d("HtmlEpubThumbnailProcessing: requesting thumbnails on scroll: ${pageIndices}")
-//                htmlEpubReaderWebCallChainExecutor?.renderThumbnails(pageIndices)
+//                htmlEpubReaderWebCallChainExecutor.renderThumbnails(pageIndices)
                 for (i in pageIndices) {
-                    htmlEpubReaderWebCallChainExecutor?.renderThumbnails(i)
+                    htmlEpubReaderWebCallChainExecutor.renderThumbnails(i)
                 }
             }
 
             .launchIn(viewModelScope)
-    }
-
-    fun initEveryTime(webView: WebView) {
-        restartDisableForceScreenOnTimer()
-        setupWebView(webView)
-        initialiseReader()
     }
 
     fun initOnce(
@@ -352,11 +341,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.textFont = textFont
         val uri = screenArgs.uri
         initFileUris(uri)
+        copyReaderFiles()
         this.isTablet = isTablet
 
         EventBus.getDefault().register(this)
 
         initState()
+        setupWebCallChainEventStream()
         startObservingTheme()
         startObservingSearchTerm()
         startObservingRequestThumbnailRender()
@@ -387,6 +378,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.username = defaults.getUsername()
     }
 
+    fun initEveryTime(webView: WebView) {
+        restartDisableForceScreenOnTimer()
+        htmlEpubReaderWebCallChainExecutor.start(webView = webView, file = this.readerFile)
+    }
+
     private fun initAnnotationManager() {
         annotationBitmapManager.init(viewModelScope)
         val annotationsBitmapCache = annotationBitmapManager.generateEmptySnapshot().toPersistentMap()
@@ -397,13 +393,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
     }
 
-    private fun initialiseReader() {
+    private fun copyReaderFiles() {
         val readerUrl = fileStore.htmlEpubReaderDirectory()
         readerUrl.copyRecursively(target = readerDirectory, overwrite = true)
         originalFile.copyRecursively(target = documentFile, overwrite = true)
-
-        htmlEpubReaderWebCallChainExecutor?.start(this.readerFile)
-
     }
 
     private fun initState() {
@@ -849,7 +842,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
     private fun selectInDocument(key: String) {
         viewModelScope.launch {
-            htmlEpubReaderWebCallChainExecutor?.selectInDocument(key)
+            htmlEpubReaderWebCallChainExecutor.selectInDocument(key)
         }
     }
 
@@ -920,7 +913,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             updateState {
                 copy(activeTool = null)
             }
-            htmlEpubReaderWebCallChainExecutor?.clearTool()
+            htmlEpubReaderWebCallChainExecutor.clearTool()
             return
         }
         updateAnnotationToolDrawColorAndSize(annotationTool = annotationTool, colorHex = colorHex)
@@ -1312,11 +1305,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     page = page,
                     selectedAnnotationKey = viewState.selectedAnnotationKey
                 )
-                htmlEpubReaderWebCallChainExecutor?.loadDocument(documentData)
+                htmlEpubReaderWebCallChainExecutor.loadDocument(documentData)
                 restoreWebViewState()
             } else {
                 viewModelScope.launch {
-                    htmlEpubReaderWebCallChainExecutor?.updateView(
+                    htmlEpubReaderWebCallChainExecutor.updateView(
                         modifications = updatedPdfAnnotations,
                         insertions = insertedPdfAnnotations,
                         deletions = deletedPdfAnnotations
@@ -1400,15 +1393,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         this.readerDirectory.deleteRecursively()
     }
 
-    fun setupWebView(webView: WebView) {
-        this.htmlEpubReaderWebCallChainExecutor = HtmlEpubReaderWebCallChainExecutor(
-            context = context,
-            dispatchers = dispatchers,
-            gson = gson,
-            fileStore = fileStore,
-            webView = webView,
-            observable = webCallChainEventStream,
-        )
+    fun setupWebCallChainEventStream() {
         webCallChainEventStream.flow()
             .onEach { result ->
                 process(result)
@@ -1595,7 +1580,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         }
         if (!savedSearchTerm.isEmpty()) {
             delay(400)
-            htmlEpubReaderWebCallChainExecutor?.search(savedSearchTerm)
+            htmlEpubReaderWebCallChainExecutor.search(savedSearchTerm)
         }
     }
 
@@ -1835,13 +1820,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         annotationKey: String?,
     ) {
         if (annotationKey != null) {
-            if (viewState.selectedAnnotationKey != annotationKey) {
-                selectInDocument(annotationKey)
-            }
+            selectInDocument(annotationKey)
         } else {
             //TODO may need to check whether some annotation is actually selected in reader
             //Otherwise might lead to callback loop
-            htmlEpubReaderWebCallChainExecutor?.deselectText()
+            htmlEpubReaderWebCallChainExecutor.deselectText()
         }
     }
 
@@ -2050,11 +2033,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
         annotationTool: AnnotationTool,
         colorHex: String? = null
     ) {
-        htmlEpubReaderWebCallChainExecutor?.clearTool()
+        htmlEpubReaderWebCallChainExecutor.clearTool()
 
         when (annotationTool) {
             AnnotationTool.ink -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "ink",
                     colorHex = colorHex!!,
                     size = this.activeLineWidth
@@ -2062,7 +2045,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             AnnotationTool.text -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "text",
                     colorHex = colorHex!!,
                     size = this.activeFontSize
@@ -2070,35 +2053,35 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             AnnotationTool.highlight -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "highlight",
                     colorHex = colorHex!!,
                 )
             }
 
             AnnotationTool.note -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "note",
                     colorHex = colorHex!!,
                 )
             }
 
             AnnotationTool.image -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "image",
                     colorHex = colorHex!!,
                 )
             }
 
             AnnotationTool.underline -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "underline",
                     colorHex = colorHex!!,
                 )
             }
 
             AnnotationTool.eraser -> {
-                htmlEpubReaderWebCallChainExecutor?.setTool(
+                htmlEpubReaderWebCallChainExecutor.setTool(
                     toolName = "eraser",
                     size = this.activeEraserSize
                 )
@@ -2240,9 +2223,9 @@ class HtmlEpubReaderViewModel @Inject constructor(
 
         pdfReaderThemeDecider.setPdfPageAppearanceMode(oldPageAppearanceMode)
         viewModelScope.launch {
-            htmlEpubReaderWebCallChainExecutor?.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
-            htmlEpubReaderWebCallChainExecutor?.setFlowMode(htmlEpubSettings.pageLayoutFlowMode)
-            htmlEpubReaderWebCallChainExecutor?.setSpreadMode(htmlEpubSettings.spreadsMode)
+            htmlEpubReaderWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+            htmlEpubReaderWebCallChainExecutor.setFlowMode(htmlEpubSettings.pageLayoutFlowMode)
+            htmlEpubReaderWebCallChainExecutor.setSpreadMode(htmlEpubSettings.spreadsMode)
 
         }
     }
@@ -2256,7 +2239,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
             copy(selectedTextParamsRects = null)
         }
         viewModelScope.launch {
-            htmlEpubReaderWebCallChainExecutor?.deselectText()
+            htmlEpubReaderWebCallChainExecutor.deselectText()
         }
     }
 
@@ -2312,11 +2295,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
 //            return
 //        }
         if (!animated) {
-            htmlEpubReaderWebCallChainExecutor?.show(location = location)
+            htmlEpubReaderWebCallChainExecutor.show(location = location)
             completion()
             return
         }
-        htmlEpubReaderWebCallChainExecutor?.show(location = location)
+        htmlEpubReaderWebCallChainExecutor.show(location = location)
         completion()
     }
 

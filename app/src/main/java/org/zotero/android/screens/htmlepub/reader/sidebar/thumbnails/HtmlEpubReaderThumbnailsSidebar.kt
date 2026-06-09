@@ -81,7 +81,7 @@ internal fun HtmlEpubReaderThumbnailsSidebar(
             verticalArrangement = Arrangement.Absolute.spacedBy(16.dp),
         ) {
             items(
-                viewState.numOfPages
+                viewState.thumbnailCache.size
             ) { index ->
                 Column(
                     modifier = Modifier.fillMaxWidth(),

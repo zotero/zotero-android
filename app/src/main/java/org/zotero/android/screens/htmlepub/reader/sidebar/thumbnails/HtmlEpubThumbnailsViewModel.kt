@@ -6,7 +6,6 @@ import com.google.gson.JsonArray
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
@@ -40,21 +39,7 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
         startObservingTheme()
         setupWebCallChainEventStream()
         setupThumbnailCacheUpdateStream()
-    }
-
-    private fun initNumOfPages(numberOfPages: Int) {
-//        if (numberOfPages == 0 || numberOfPages == viewState.numOfPages) {
-//            return
-//        }
-        thumbnailPreviewManager.init(numOfPages = numberOfPages, viewModelScope = viewModelScope)
-        val thumbnailCache = thumbnailPreviewManager.generateEmptySnapshot().toImmutableList()
-        updateState {
-            copy(
-                numOfPages = numberOfPages,
-                thumbnailCache = thumbnailCache
-            )
-        }
-
+        thumbnailPreviewManager.init(viewModelScope)
     }
 
     fun setupWebCallChainEventStream() {
@@ -65,22 +50,12 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private suspend fun process(result: Result<HtmlEpubReaderWebData>) {
+    private fun process(result: Result<HtmlEpubReaderWebData>) {
         if (result !is Result.Success) {
             return
         }
 
-        val successValue = result.value
-        when (successValue) {
-            is HtmlEpubReaderWebData.onRenderThumbnail -> {
-                thumbnailPreviewManager.store(
-                    successValue.thumbnailJsonObject
-                )
-            }
-
-            is HtmlEpubReaderWebData.onInitThumbnails -> {
-                onInitThumbnails(successValue.thumbnailsJsonArray)
-            }
+        when (val successValue = result.value) {
             is HtmlEpubReaderWebData.onSetPageLabels -> {
                 onSetPageLabels(successValue.pageLabelsJsonArray)
             }
@@ -128,24 +103,15 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
         }
     }
 
-    fun onInitThumbnails(thumbnailsJsonArray: JsonArray) {
-        initNumOfPages(thumbnailsJsonArray.size())
-    }
-
     private fun onSetPageLabels(pageLabelsJsonArray: JsonArray) {
         updateState {
             copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
     }
 
-    override fun onCleared() {
-//        clearThumbnailCaches()
-    }
-
     private fun clearThumbnailCaches() {
         thumbnailPreviewManager.cancelProcessing()
         viewState.selectedThumbnailPage?.let {
-            thumbnailPreviewManager.requestThumbnail(it)
         }
     }
 
@@ -154,7 +120,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
             .drop(1)
             .onEach { data ->
                 clearThumbnailCaches()
-//                triggerEffect(HtmlEpubReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
     }
@@ -165,7 +130,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 }
 
 internal data class HtmlEpubThumbnailsViewState(
-    val numOfPages: Int = 0,
     val thumbnailCache: ImmutableList<Bitmap?> = persistentListOf(),
     val selectedThumbnailPage: Int? = null,
     val pageLabels: List<String> = emptyList(),

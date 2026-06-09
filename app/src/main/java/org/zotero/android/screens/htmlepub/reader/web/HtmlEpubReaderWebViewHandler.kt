@@ -12,33 +12,33 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.files.FileStore
 import timber.log.Timber
+import javax.inject.Inject
 
-
-class HtmlEpubReaderWebViewHandler(
+@ViewModelScoped
+class HtmlEpubReaderWebViewHandler @Inject constructor(
     dispatchers: Dispatchers,
     private val context: Context,
-    private val webView: WebView,
     private val fileStore: FileStore,
 ) {
     private val uiMainCoroutineScope = CoroutineScope(dispatchers.main)
 
+    private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
-
-    var cookies: String? = null
-    var userAgent: String? = null
-    var referrer: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     fun load(
+        webView: WebView,
         url: String,
         onWebViewLoadPage: () -> Unit,
         processWebViewResponses: ((message: WebMessage) -> Unit)? = null
     ) {
+        this.webView = webView
         uiMainCoroutineScope.launch {
             webView.settings.javaScriptEnabled = true
             webView.settings.allowFileAccess = true
@@ -89,7 +89,6 @@ class HtmlEpubReaderWebViewHandler(
                         }
                     })
 
-                    println()
                     //Passing to JS code the handle to our onMessage listener on kotlin side
                     webView.postWebMessage(
                         WebMessage("initPort", arrayOf(channel[1])),

@@ -17,7 +17,6 @@ import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.htmlepub.reader.search.data.HtmlEpubReaderSearchItem
@@ -29,7 +28,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class HtmlEpubReaderSearchViewModel @Inject constructor(
-    private val dispatchers: Dispatchers,
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
     private val pdfReaderThemeDecider: PdfReaderThemeDecider,
     private val htmlEpubReaderSearchResultsEventStream: HtmlEpubReaderSearchResultsEventStream,
