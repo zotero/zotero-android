@@ -34,7 +34,7 @@ class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
     annotations = annotations,
     userId = userId,
     schemaController = schemaController,
-    ) {
+) {
 
     override fun addFields(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
         super.addFields(annotation, item, database)
@@ -83,7 +83,7 @@ class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
         val allTags = database.where<RTag>()
 
         for (tag in annotation.tags) {
-            val rTag = allTags.name(tag.name).findFirst() ?:  continue
+            val rTag = allTags.name(tag.name).findFirst() ?: continue
 
             val rTypedTag = database.createObject<RTypedTag>()
             rTypedTag.type = Kind.manual.name

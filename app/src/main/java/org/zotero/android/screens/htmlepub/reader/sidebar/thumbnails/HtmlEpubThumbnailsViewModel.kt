@@ -111,8 +111,6 @@ internal class HtmlEpubThumbnailsViewModel @Inject constructor(
 
     private fun clearThumbnailCaches() {
         thumbnailPreviewManager.cancelProcessing()
-        viewState.selectedThumbnailPage?.let {
-        }
     }
 
     private fun startObservingTheme() {

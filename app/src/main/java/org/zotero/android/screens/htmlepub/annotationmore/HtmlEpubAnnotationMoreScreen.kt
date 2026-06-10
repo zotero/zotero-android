@@ -118,6 +118,19 @@ internal fun HtmlEpubAnnotationMorePart(
                         viewModel = viewModel,
                     )
                 }
+                AnnotationType.image -> {
+                    HtmlEpubAnnotationMoreImageRow(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
+                }
+
+                AnnotationType.text -> {
+                    HtmlEpubAnnotationMoreFreeTextRow(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
+                }
 
                 null -> {
                     //no-op

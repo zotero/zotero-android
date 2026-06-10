@@ -6,6 +6,7 @@ data class HtmlEpubAnnotationMoreSaveResult(
     val key: String,
     val color: String,
     val lineWidth: Float,
+    val fontSize: Float,
     val pageLabel: String,
     val updateSubsequentLabels: Boolean,
     val text: String,

@@ -46,7 +46,7 @@ data class HtmlEpubAnnotation(
         get() = 0f
 
     override val fontSize: Float
-        get() = 12f
+        get() = position["fontSize"].asFloat
 
     override fun author(displayName: String, username: String): String {
         return author

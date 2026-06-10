@@ -58,7 +58,8 @@ internal class HtmlEpubAnnotationMoreViewModel @Inject constructor(
                 type = annotation.type,
                 color = annotation.color,
                 colors = colors,
-                fontSize = annotation.fontSize ?: 12f,
+                lineWidth = annotation.lineWidth,
+                fontSize = annotation.fontSize,
                 highlightText = annotation.text ?: "",
                 pageLabel = annotation.pageLabel,
                 underlineText = annotation.text ?: "",
@@ -98,6 +99,12 @@ internal class HtmlEpubAnnotationMoreViewModel @Inject constructor(
         }
     }
 
+    fun onSizeChanged(newSize: Float) {
+        updateState {
+            copy(lineWidth = newSize)
+        }
+    }
+
     fun onDeleteAnnotation() {
         EventBus.getDefault().post(
             HtmlEpubAnnotationMoreDeleteResult(
@@ -125,6 +132,7 @@ internal class HtmlEpubAnnotationMoreViewModel @Inject constructor(
                 type = viewState.type!!,
                 color = viewState.color,
                 lineWidth = viewState.lineWidth,
+                fontSize = viewState.fontSize,
                 pageLabel = viewState.pageLabel,
                 updateSubsequentLabels = viewState.updateSubsequentLabels,
                 text = text

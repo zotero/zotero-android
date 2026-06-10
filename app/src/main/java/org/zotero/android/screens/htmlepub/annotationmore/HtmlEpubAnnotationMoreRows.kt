@@ -1,6 +1,5 @@
 package org.zotero.android.screens.htmlepub.annotationmore
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.toColorInt
@@ -19,7 +18,7 @@ internal fun HtmlEpubAnnotationMoreHighlightRow(
         onValueChange = viewModel::onHighlightTextValueChange,
     )
     NewSettingsDivider()
-    HtmlEpubAnnotationMoreColorPicker(viewState, viewModel)
+    HtmlEpubAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
 }
 
 
@@ -28,7 +27,7 @@ internal fun HtmlEpubAnnotationMoreNoteRow(
     viewState: HtmlEpubAnnotationMoreViewState,
     viewModel: HtmlEpubAnnotationMoreViewModel,
 ) {
-    HtmlEpubAnnotationMoreColorPicker(viewState, viewModel)
+    HtmlEpubAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
 }
 
 
@@ -45,5 +44,26 @@ internal fun HtmlEpubAnnotationMoreUnderlineRow(
         onValueChange = viewModel::onUnderlineTextValueChange,
     )
     NewSettingsDivider()
-    HtmlEpubAnnotationMoreColorPicker(viewState, viewModel)
+    HtmlEpubAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
+}
+
+@Composable
+internal fun HtmlEpubAnnotationMoreImageRow(
+    viewState: HtmlEpubAnnotationMoreViewState,
+    viewModel: HtmlEpubAnnotationMoreViewModel,
+) {
+    HtmlEpubAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
+}
+
+@Composable
+internal fun HtmlEpubAnnotationMoreFreeTextRow(
+    viewState: HtmlEpubAnnotationMoreViewState,
+    viewModel: HtmlEpubAnnotationMoreViewModel,
+) {
+    HtmlEpubAnnotationMoreFontSizeSelector(
+        viewState = viewState,
+        viewModel = viewModel,
+    )
+    NewSettingsDivider()
+    HtmlEpubAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
 }

@@ -52,6 +52,7 @@ import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CreateHtmlEpubAnnotationsDbRequest
+import org.zotero.android.database.requests.CreatePDFAnnotationsDbRequestV2
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
@@ -137,6 +138,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
     private val createHtmlEpubAnnotationsDbRequestFactory: CreateHtmlEpubAnnotationsDbRequest.Factory,
+    private val createPDFAnnotationsDbRequestFactory: CreatePDFAnnotationsDbRequestV2.Factory,
 
     private val htmlEpubReaderSearchResultsEventStream: HtmlEpubReaderSearchResultsEventStream,
     private val htmlEpubReaderSearchTermEventStream: HtmlEpubReaderSearchTermEventStream,
@@ -201,7 +203,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: HtmlEpubAnnotationScreenClosed) {
         viewModelScope.launch {
-            _select(null, false)
+//            _select(null, false)
         }
     }
 
@@ -261,6 +263,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
         set(
             type = result.type,
             color = result.color,
+            fontSize = result.fontSize,
             lineWidth = result.lineWidth,
             pageLabel = result.pageLabel,
             text = result.text,
@@ -778,15 +781,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
     }
 
     private fun createPdfDatabaseAnnotations(annotations: List<PDFDocumentAnnotation>) {
-//        val request = CreatePDFAnnotationsDbRequest(
-//            attachmentKey = viewState.key,
-//            libraryId = viewState.library.identifier,
-//            annotations = annotations,
-//            userId = viewState.userId,
-//            schemaController = this.schemaController,
-//            boundingBoxConverter = this.annotationBoundingBoxConverter
-//        )
-//        dbWrapperMain.realmDbStorage.perform(request)
+        val request = createPDFAnnotationsDbRequestFactory.create(
+            attachmentKey = viewState.key,
+            libraryId = viewState.library.identifier,
+            annotations = annotations,
+            userId = this.userId,
+        )
+        dbWrapperMain.realmDbStorage.perform(request)
 
     }
 
@@ -1186,12 +1187,13 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     when (annotation.type) {
                         AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline, AnnotationType.ink -> {
                             comment = annotation.comment //TODO comment attribute conversion
+                            comments[key] = comment
                         }
+
                         AnnotationType.text -> {
-                            comment = null
+                            //no-op, text annotation has no comment
                         }
                     }
-                    comments[key] = comment!!
                 }
             }
         }
@@ -1230,12 +1232,8 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             val item = objects[index]!!
-            if (item.key == ignoreDbCallbackOnReaderInsertionItemKey) {
-                ignoreDbCallbackOnReaderInsertionItemKey = null
-                continue
-            }
 
-            val htmlEpubAnnotation =  generateAnnotationJsonForReader(item)
+            val htmlEpubAnnotation = generateAnnotationJsonForReader(item)
             if (htmlEpubAnnotation == null) {
                 Timber.w("HtmlEpubReaderViewModel: tried adding invalid annotation")
                 shouldCancelUpdate = true
@@ -1261,6 +1259,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
                     }
 
                 }
+
                 UpdatableChangeType.sync.name, UpdatableChangeType.syncResponse.name -> {
                     insertedPdfAnnotations.add(json)
                     Timber.i("HtmlEpubReaderViewModel: insert Html/Epub annotation")
@@ -1308,13 +1307,23 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 htmlEpubReaderWebCallChainExecutor.loadDocument(documentData)
                 restoreWebViewState()
             } else {
-                viewModelScope.launch {
+                var shouldIgnoreUpdate = false
+                if (insertedPdfAnnotations.size() == 1) {
+                    val insertedKey = (insertedPdfAnnotations[0].asJsonObject)["id"].asString
+                    if (insertedKey == ignoreDbCallbackOnReaderInsertionItemKey) {
+                        ignoreDbCallbackOnReaderInsertionItemKey = null
+                        shouldIgnoreUpdate = true
+                    }
+                }
+                //TODO remove later if it doesnt lead to new issues
+//                if (!shouldIgnoreUpdate) {
                     htmlEpubReaderWebCallChainExecutor.updateView(
                         modifications = updatedPdfAnnotations,
                         insertions = insertedPdfAnnotations,
                         deletions = deletedPdfAnnotations
                     )
-                }
+//                }
+
             }
 
             this@HtmlEpubReaderViewModel.texts = texts
@@ -1323,9 +1332,10 @@ class HtmlEpubReaderViewModel @Inject constructor(
             }
 
             val key = selectKey
-            if (key != null) {
-                _select(key = key, didSelectInDocument = true)
-            } else if (selectionDeleted) {
+//            if (key != null) {
+//                _select(key = key, didSelectInDocument = true)
+//            } else
+            if (selectionDeleted) {
                 _select(key = null, didSelectInDocument = true)
             }
 
@@ -1870,6 +1880,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
     private fun set(
         type: AnnotationType,
         color: String,
+        fontSize: Float,
         lineWidth: Float,
         pageLabel: String,
         text: String,
@@ -1889,7 +1900,11 @@ class HtmlEpubReaderViewModel @Inject constructor(
             KeyBaseKeyPair(
                 key = FieldKeys.Item.Annotation.Position.lineWidth,
                 baseKey = FieldKeys.Item.Annotation.position
-            ) to "${lineWidth.rounded(3)}"
+            ) to "${lineWidth.rounded(3)}",
+            KeyBaseKeyPair(
+                key = FieldKeys.Item.Annotation.Position.fontSize,
+                baseKey = FieldKeys.Item.Annotation.position
+            ) to "${fontSize.rounded(3)}",
 
         )
         val request = editItemFieldsDbRequestFactory.create(
@@ -2087,6 +2102,7 @@ class HtmlEpubReaderViewModel @Inject constructor(
                 )
             }
         }
+        _select(key = null, didSelectInDocument = true)
         updateState {
             copy(activeTool = annotationTool)
         }
