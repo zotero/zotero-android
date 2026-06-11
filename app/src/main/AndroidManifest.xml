@@ -20,6 +20,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="false"
         android:supportsRtl="false"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:requestLegacyExternalStorage"
