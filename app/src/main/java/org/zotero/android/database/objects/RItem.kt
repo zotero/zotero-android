@@ -21,7 +21,7 @@ import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.helpers.formatter.sqlFormat
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
+import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
@@ -672,7 +672,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return parameters
         }
 
-    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, JsonObject>?
+    val newReaderAnnotation: Pair<NewReaderAnnotation, JsonObject>?
         get()
     {
         var type: AnnotationType? = null
@@ -763,7 +763,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             json.addProperty(key, value)
         }
 
-        val annotation = HtmlEpubAnnotation(
+        val annotation = NewReaderAnnotation(
             key = this.key,
             type = type,
             pageLabel = pageLabel ?: "",
@@ -783,7 +783,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     }
 
     //TODO consider whether it's possible to merge this with htmlEpubAnnotation
-    val pdfAnnotation: Pair<HtmlEpubAnnotation, JsonObject>?
+    val pdfAnnotation: Pair<NewReaderAnnotation, JsonObject>?
         get()
         {
             var type: AnnotationType? = null
@@ -864,7 +864,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 json.addProperty(key, value)
             }
 
-            val annotation = HtmlEpubAnnotation(
+            val annotation = NewReaderAnnotation(
                 key = this.key,
                 type = type,
                 pageLabel = pageLabel ?: "",

@@ -9,11 +9,12 @@ import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
-import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettings
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
+
 //Must be singleton, used everywhere.
 @Singleton
 open class Defaults @Inject constructor(
@@ -53,7 +54,7 @@ open class Defaults @Inject constructor(
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
-    private val htmlEpubSettings = "htmlEpubSettings2"
+    private val readerSettings = "readerSettings"
 
     private val exportOutputMode = "exportOutputMode"
     private val exportOutputMethod = "exportOutputMethod"
@@ -67,7 +68,7 @@ open class Defaults @Inject constructor(
     private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
-    private val lastHtmlEpubReaderCommitHash = "lastHtmlEpubReaderCommitHash"
+    private val lastReaderCommitHash = "lastReaderCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -537,27 +538,27 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(this@Defaults.exportOutputMode, json) }
     }
 
-    fun getLastHtmlEpubReaderCommitHash(): String {
-        return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
+    fun getLastReaderCommitHash(): String {
+        return sharedPreferences.getString(lastReaderCommitHash, "") ?: ""
     }
 
-    fun setLastHtmlEpubReaderCommitHash(newValue: String) {
-        sharedPreferences.edit { putString(lastHtmlEpubReaderCommitHash, newValue) }
+    fun setLastReaderCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastReaderCommitHash, newValue) }
     }
 
-    fun getHtmlEpubSettings(): HtmlEpubSettings {
+    fun getReaderSettings(): ReaderSettings {
         val json: String = sharedPreferences.getString(
-            this.htmlEpubSettings,
+            this.readerSettings,
             null
-        ) ?: return HtmlEpubSettings.default()
+        ) ?: return ReaderSettings.default()
         return dataMarshaller.unmarshal(json)
     }
 
-    fun setHtmlEpubSettings(
-        pdfSettings: HtmlEpubSettings,
+    fun setReaderSettings(
+        readerSettings: ReaderSettings,
     ) {
-        val json = dataMarshaller.marshal(pdfSettings)
-        sharedPreferences.edit { putString(this@Defaults.htmlEpubSettings, json) }
+        val json = dataMarshaller.marshal(readerSettings)
+        sharedPreferences.edit { putString(this@Defaults.readerSettings, json) }
     }
 
     fun reset() {

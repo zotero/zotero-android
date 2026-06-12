@@ -16,7 +16,7 @@ import org.zotero.android.translator.data.TranslatorAction
 import org.zotero.android.translator.data.TranslatorActionEventStream
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
+import org.zotero.android.loaders.translator.TranslatorsAndStylesLoader
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber

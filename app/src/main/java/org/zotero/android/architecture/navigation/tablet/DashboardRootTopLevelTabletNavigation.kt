@@ -23,8 +23,8 @@ import org.zotero.android.architecture.navigation.zoterWebViewScreen
 import org.zotero.android.pdf.pdfReaderScreenAndNavigationForTablet
 import org.zotero.android.pdf.toPdfScreen
 import org.zotero.android.screens.dashboard.DashboardViewEffect
-import org.zotero.android.screens.htmlepub.htmlEpubReaderNavScreensForTablet
-import org.zotero.android.screens.htmlepub.toHtmlEpubScreen
+import org.zotero.android.screens.reader.readerNavScreensForTablet
+import org.zotero.android.screens.reader.toReaderScreen
 import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.tagpicker.TagPickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
@@ -67,9 +67,9 @@ internal fun DashboardRootTopLevelTabletNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
-                navigation.toHtmlEpubScreen(
-                    htmlEpubParams = htmlEpubReaderArgs
+            onShowReader = { readerArgs ->
+                navigation.toReaderScreen(
+                    readerParams = readerArgs
                 )
             },
             toAddOrEditNote = navigation::toAddOrEditNote,
@@ -94,9 +94,8 @@ internal fun DashboardRootTopLevelTabletNavigation(
         retrieveMetadataDialog(onBack = {
             navController.popBackStack()
         })
-        htmlEpubReaderNavScreensForTablet(
+        readerNavScreensForTablet(
             navigation = navigation,
-            navController = navController,
             onOpenWebpage = onOpenWebpage,
             navigateToTagPicker = navigation::toTagPickerScreen,
         )
@@ -108,7 +107,7 @@ private fun NavGraphBuilder.dashboardScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String, String) -> Unit,
-    onShowHtmlOrEpub: (String) -> Unit,
+    onShowReader: (String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
@@ -126,7 +125,7 @@ private fun NavGraphBuilder.dashboardScreen(
             onPickFile = onPickFile,
             onOpenFile = onOpenFile,
             onShowPdf = onShowPdf,
-            onShowHtmlOrEpub = onShowHtmlOrEpub,
+            onShowHtmlOrEpub = onShowReader,
             onExitApp = onExitApp,
             onExportHtml = onExportHtml,
             toAddOrEditNote = toAddOrEditNote,

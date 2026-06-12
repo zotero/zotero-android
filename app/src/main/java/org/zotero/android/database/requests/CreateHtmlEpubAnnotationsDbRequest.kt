@@ -16,19 +16,19 @@ import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.RTypedTag.Kind
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
+import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
 class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
     @Assisted("attachmentKey") private val attachmentKey: String,
     @Assisted("libraryId") private val libraryId: LibraryIdentifier,
-    @Assisted("annotations") private val annotations: List<HtmlEpubAnnotation>,
+    @Assisted("annotations") private val annotations: List<NewReaderAnnotation>,
     @Assisted("userId") private val userId: Long,
 
     private val schemaController: SchemaController,
     private val gson: Gson,
-) : CreateReaderAnnotationsDbRequest<HtmlEpubAnnotation>(
+) : CreateReaderAnnotationsDbRequest<NewReaderAnnotation>(
     attachmentKey = attachmentKey,
     libraryId = libraryId,
     annotations = annotations,
@@ -36,7 +36,7 @@ class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
     schemaController = schemaController,
 ) {
 
-    override fun addFields(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
+    override fun addFields(annotation: NewReaderAnnotation, item: RItem, database: Realm) {
         super.addFields(annotation, item, database)
 
         for (field in FieldKeys.Item.Annotation.extraHtmlEpubFields(annotation.type)) {
@@ -79,7 +79,7 @@ class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
         return "${jsonElement.asString}"
     }
 
-    override fun addTags(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
+    override fun addTags(annotation: NewReaderAnnotation, item: RItem, database: Realm) {
         val allTags = database.where<RTag>()
 
         for (tag in annotation.tags) {
@@ -97,7 +97,7 @@ class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
         fun create(
             @Assisted("attachmentKey") attachmentKey: String,
             @Assisted("libraryId") libraryId: LibraryIdentifier,
-            @Assisted("annotations") annotations: List<HtmlEpubAnnotation>,
+            @Assisted("annotations") annotations: List<NewReaderAnnotation>,
             @Assisted("userId") userId: Long,
         ): CreateHtmlEpubAnnotationsDbRequest
     }

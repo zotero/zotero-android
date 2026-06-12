@@ -37,7 +37,7 @@ import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
-import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
+import org.zotero.android.loaders.translator.TranslatorsAndStylesLoader
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
