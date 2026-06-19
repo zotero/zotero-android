@@ -1,6 +1,7 @@
 package org.zotero.android.architecture.navigation.toolbar
 
 import android.content.Context
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.database.DbWrapperMain
@@ -14,9 +15,8 @@ import org.zotero.android.uicomponents.foundation.getSafeQuantityString
 import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.webdav.data.WebDavError
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class SyncToolbarTextGenerator @Inject constructor(
     private val context: Context,
     private val dbWrapperMain: DbWrapperMain,

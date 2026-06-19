@@ -77,6 +77,8 @@ internal class CollectionsViewModel @Inject constructor(
     private val attachmentDownloader: AttachmentDownloader,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val collectionTreeController: CollectionTreeController,
+    private val readAllAttachmentsFromCollectionDbRequestFactory: ReadAllAttachmentsFromCollectionDbRequest.Factory,
+    private val readItemsDbRequestFactory: ReadItemsDbRequest.Factory,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()), CollectionTreeControllerInterface {
 
@@ -240,12 +242,11 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun maybeInitRequestAndStartObservingAllItemsCount() {
         allItems = dbWrapperMain.realmDbStorage.perform(
-            request = ReadItemsDbRequest(
+            request = readItemsDbRequestFactory.create(
                 collectionId = CollectionIdentifier.custom(
                     CustomType.all
                 ),
                 libraryId = libraryId,
-                defaults = defaults,
                 isAsync = true,
             )
         )
@@ -256,12 +257,11 @@ internal class CollectionsViewModel @Inject constructor(
     }
     private fun maybeInitRequestAndStartObservingUnfiledItemsCount() {
         unfiledItems = dbWrapperMain.realmDbStorage.perform(
-            request = ReadItemsDbRequest(
+            request = readItemsDbRequestFactory.create(
                 collectionId = CollectionIdentifier.custom(
                     CustomType.unfiled
                 ),
                 libraryId = libraryId,
-                defaults = defaults,
                 isAsync = true,
             )
         )
@@ -273,12 +273,11 @@ internal class CollectionsViewModel @Inject constructor(
 
     private fun maybeInitRequestAndStartObservingTrashItemsCount() {
         trashItems = dbWrapperMain.realmDbStorage.perform(
-            request = ReadItemsDbRequest(
+            request = readItemsDbRequestFactory.create(
                 collectionId = CollectionIdentifier.custom(
                     CustomType.trash
                 ),
                 libraryId = libraryId,
-                defaults = defaults,
                 isAsync = true,
             )
         )
@@ -484,10 +483,9 @@ internal class CollectionsViewModel @Inject constructor(
     private fun downloadAttachments(collectionId: CollectionIdentifier) {
         try {
             val items = dbWrapperMain.realmDbStorage.perform(
-                request = ReadAllAttachmentsFromCollectionDbRequest(
+                request = readAllAttachmentsFromCollectionDbRequestFactory.create(
                     collectionId = collectionId,
                     libraryId = this.library.identifier,
-                    defaults = this.defaults
                 ),
             )
             val attachments = items.mapNotNull { item ->
@@ -543,10 +541,9 @@ internal class CollectionsViewModel @Inject constructor(
     private fun removeDownloads(collectionId: CollectionIdentifier) {
         try {
             val items = dbWrapperMain.realmDbStorage.perform(
-                request = ReadItemsDbRequest(
+                request = readItemsDbRequestFactory.create(
                     collectionId = collectionId,
                     libraryId = this.libraryId,
-                    defaults = this.defaults,
                     isAsync = false
                 )
             )

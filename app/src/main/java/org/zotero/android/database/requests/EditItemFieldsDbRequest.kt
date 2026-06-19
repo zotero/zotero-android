@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.androidx.text.strippedHtmlTags
@@ -15,10 +18,11 @@ import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
 
-class EditItemFieldsDbRequest(
-    private val key: String,
-    private val libraryId: LibraryIdentifier,
-    private val fieldValues: Map<KeyBaseKeyPair, String>,
+class EditItemFieldsDbRequest @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("fieldValues") private val fieldValues: Map<KeyBaseKeyPair, String>,
+
     private val dateParser: DateParser,
 ) : DbRequest {
     override val needsWrite: Boolean
@@ -78,5 +82,14 @@ class EditItemFieldsDbRequest(
             item.changeType = UpdatableChangeType.user.name
             item.dateModified = Date()
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("fieldValues") fieldValues: Map<KeyBaseKeyPair, String>
+        ): EditItemFieldsDbRequest
     }
 }

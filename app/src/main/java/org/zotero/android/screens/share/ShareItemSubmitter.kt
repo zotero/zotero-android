@@ -1,5 +1,6 @@
 package org.zotero.android.screens.share
 
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.api.pojo.sync.TagResponse
@@ -14,13 +15,11 @@ import org.zotero.android.database.requests.CreateItemWithAttachmentDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.UpdateCollectionLastUsedDbRequest
 import org.zotero.android.database.requests.key
-import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import org.zotero.android.screens.share.data.CreateItemsResult
 import org.zotero.android.screens.share.data.CreateResult
 import org.zotero.android.screens.share.data.UploadData
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareSubmissionData
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncObject
@@ -34,23 +33,23 @@ import timber.log.Timber
 import java.io.File
 import java.util.Date
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ShareItemSubmitter @Inject constructor(
     private val dbWrapperMain: DbWrapperMain,
     private val schemaController: SchemaController,
-    private val dateParser: DateParser,
-    private val fileStore: FileStore,
     private val backgroundUploadProcessor: BackgroundUploadProcessor,
     private val webDavController: WebDavController,
+    private val createBackendItemDbRequestFactory: CreateBackendItemDbRequest.Factory,
+    private val createItemWithAttachmentDbRequestFactory: CreateItemWithAttachmentDbRequest.Factory,
+    private val authorizeUploadSyncActionFactory: AuthorizeUploadSyncAction.Factory,
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) {
 
     fun createItem(
         item: ItemResponse,
         libraryId: LibraryIdentifier,
-        schemaController: SchemaController,
-        dateParser: DateParser
     ): Pair<Map<String, Any>, Map<String, List<String>>> {
         var changeUuids: MutableMap<String, List<String>> = mutableMapOf()
         var parameters: MutableMap<String, Any> = mutableMapOf()
@@ -64,12 +63,7 @@ class ShareItemSubmitter @Inject constructor(
                     )
                 )
             }
-
-            val request = CreateBackendItemDbRequest(
-                item = item,
-                schemaController = schemaController,
-                dateParser = dateParser
-            )
+            val request = createBackendItemDbRequestFactory.create(item)
             val item = coordinator.perform(request = request)
             parameters = item.updateParameters?.toMutableMap() ?: mutableMapOf()
             changeUuids = mutableMapOf(item.key to item.changes.map { it.identifier })
@@ -96,12 +90,9 @@ class ShareItemSubmitter @Inject constructor(
                     )
                 )
             }
-            val request = CreateItemWithAttachmentDbRequest(
+            val request = createItemWithAttachmentDbRequestFactory.create(
                 item = item,
                 attachment = attachment,
-                schemaController = this.schemaController,
-                dateParser = this.dateParser,
-                fileStore = this.fileStore
             )
             val (item, attachment) = coordinator.perform(request = request)
             val itemUpdateParameters = item.updateParameters
@@ -156,14 +147,13 @@ class ShareItemSubmitter @Inject constructor(
                 )
             }
 
-            val request = CreateAttachmentDbRequest(
+            val request = createAttachmentDbRequestFactory.create(
                 attachment = attachment,
                 parentKey = null,
                 localizedType = localizedType,
                 includeAccessDate = attachment.hasUrl,
                 collections = collections,
                 tags = tags,
-                fileStore = fileStore
             )
             val attachment = coordinator.perform(request = request)
 
@@ -212,7 +202,7 @@ class ShareItemSubmitter @Inject constructor(
             file.delete()
             return CustomResult.GeneralError.CodeError(e)
         }
-        val result = SubmitUpdateSyncAction(
+        val result = submitUpdateSyncActionFactory.create(
             parameters = listOf(parameters),
             changeUuids = changeUuids,
             sinceVersion = null,
@@ -249,7 +239,7 @@ class ShareItemSubmitter @Inject constructor(
             return CustomResult.GeneralError.CodeError(e)
         }
 
-        val result = SubmitUpdateSyncAction(
+        val result = submitUpdateSyncActionFactory.create(
             parameters = parameters,
             changeUuids = changeUuids,
             sinceVersion = null,
@@ -335,7 +325,7 @@ class ShareItemSubmitter @Inject constructor(
                 return
             }
             val submissionData = (submissionDataResult as CustomResult.GeneralSuccess).value!!
-            val uploadSyncResult = AuthorizeUploadSyncAction(
+            val uploadSyncResult = authorizeUploadSyncActionFactory.create(
                 key = data.attachment.key,
                 filename = data.filename,
                 filesize = submissionData.filesize,

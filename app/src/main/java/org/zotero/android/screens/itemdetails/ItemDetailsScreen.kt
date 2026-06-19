@@ -80,7 +80,7 @@ internal fun ItemDetailsScreen(
                     onShowPdf(consumedEffect.params, consumedEffect.encodedFilePath)
                 }
 
-                is ItemDetailsViewEffect.NavigateToHtmlEpubReaderScreen -> {
+                is ItemDetailsViewEffect.NavigateToReaderScreen -> {
                     onShowHtmlOrEpub(consumedEffect.params)
                 }
 

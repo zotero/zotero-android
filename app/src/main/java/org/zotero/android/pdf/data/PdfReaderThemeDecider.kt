@@ -5,6 +5,7 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be Singleton as it's used by multiple ViewModels
 @Singleton
 class PdfReaderThemeDecider @Inject constructor(
     private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream
@@ -41,6 +42,7 @@ class PdfReaderThemeDecider @Inject constructor(
     }
 }
 
+//Must be Singleton as it's used by multiple ViewModels
 @Singleton
 class PdfReaderCurrentThemeEventStream @Inject constructor(applicationScope: ApplicationScope) :
     StateEventStream<PdfReaderCurrentThemeData>(applicationScope, PdfReaderCurrentThemeData(false))

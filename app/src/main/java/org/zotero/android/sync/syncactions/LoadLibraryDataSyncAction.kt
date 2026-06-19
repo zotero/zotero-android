@@ -1,17 +1,21 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.ReadLibrariesDataDbRequest
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LibraryData
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 
+class LoadLibraryDataSyncAction @AssistedInject constructor(
+    @Assisted("type") private val type: Libraries,
+    @Assisted("fetchUpdates") private val fetchUpdates: Boolean,
+    @Assisted("loadVersions") private val loadVersions: Boolean,
+    @Assisted("webDavEnabled") private val webDavEnabled: Boolean,
 
-class LoadLibraryDataSyncAction(
-    val type: Libraries,
-    val fetchUpdates: Boolean,
-    val loadVersions: Boolean,
-    val webDavEnabled: Boolean,
-) : SyncAction() {
+    private val dbWrapperMain: DbWrapperMain,
+) {
 
     fun result(): List<LibraryData> {
         val request =
@@ -38,6 +42,16 @@ class LoadLibraryDataSyncAction(
             }
 
         return dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("type") type: Libraries,
+            @Assisted("fetchUpdates") fetchUpdates: Boolean,
+            @Assisted("loadVersions") loadVersions: Boolean,
+            @Assisted("webDavEnabled") webDavEnabled: Boolean
+        ): LoadLibraryDataSyncAction
     }
 
 }

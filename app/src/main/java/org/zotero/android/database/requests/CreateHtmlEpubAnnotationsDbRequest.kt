@@ -4,6 +4,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -13,25 +16,27 @@ import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.RTypedTag.Kind
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
+import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 
-class CreateHtmlEpubAnnotationsDbRequest(
-    private val attachmentKey: String,
-    private val libraryId: LibraryIdentifier,
-    private val annotations: List<HtmlEpubAnnotation>,
-    private val userId: Long,
+class CreateHtmlEpubAnnotationsDbRequest @AssistedInject constructor(
+    @Assisted("attachmentKey") private val attachmentKey: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("annotations") private val annotations: List<NewReaderAnnotation>,
+    @Assisted("userId") private val userId: Long,
+
     private val schemaController: SchemaController,
     private val gson: Gson,
-) : CreateReaderAnnotationsDbRequest<HtmlEpubAnnotation>(
+) : CreateReaderAnnotationsDbRequest<NewReaderAnnotation>(
     attachmentKey = attachmentKey,
     libraryId = libraryId,
     annotations = annotations,
     userId = userId,
     schemaController = schemaController,
-    ) {
-    override fun addFields(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
+) {
+
+    override fun addFields(annotation: NewReaderAnnotation, item: RItem, database: Realm) {
         super.addFields(annotation, item, database)
 
         for (field in FieldKeys.Item.Annotation.extraHtmlEpubFields(annotation.type)) {
@@ -74,11 +79,11 @@ class CreateHtmlEpubAnnotationsDbRequest(
         return "${jsonElement.asString}"
     }
 
-    override fun addTags(annotation: HtmlEpubAnnotation, item: RItem, database: Realm) {
+    override fun addTags(annotation: NewReaderAnnotation, item: RItem, database: Realm) {
         val allTags = database.where<RTag>()
 
         for (tag in annotation.tags) {
-            val rTag = allTags.name(tag.name).findFirst() ?:  continue
+            val rTag = allTags.name(tag.name).findFirst() ?: continue
 
             val rTypedTag = database.createObject<RTypedTag>()
             rTypedTag.type = Kind.manual.name
@@ -86,4 +91,15 @@ class CreateHtmlEpubAnnotationsDbRequest(
             rTypedTag.tag = rTag
         }
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("attachmentKey") attachmentKey: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("annotations") annotations: List<NewReaderAnnotation>,
+            @Assisted("userId") userId: Long,
+        ): CreateHtmlEpubAnnotationsDbRequest
+    }
+
 }

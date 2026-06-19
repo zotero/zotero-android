@@ -21,6 +21,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as it's used by the Controller
 @Singleton
 class UserControllers @Inject constructor(
     dispatcher: CoroutineDispatcher,

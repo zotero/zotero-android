@@ -1,0 +1,189 @@
+package org.zotero.android.screens.reader.annotationmore
+
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.ScreenArguments
+import org.zotero.android.architecture.ViewEffect
+import org.zotero.android.architecture.ViewState
+import org.zotero.android.database.objects.AnnotationType
+import org.zotero.android.database.objects.AnnotationsConfig
+import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
+import org.zotero.android.pdf.data.PdfReaderThemeDecider
+import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreArgs
+import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreDeleteResult
+import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreSaveResult
+import org.zotero.android.screens.reader.annotationmore.editpage.data.ReaderAnnotationEditPageArgs
+import org.zotero.android.screens.reader.annotationmore.editpage.data.ReaderAnnotationEditPageResult
+import javax.inject.Inject
+
+@HiltViewModel
+internal class ReaderAnnotationMoreViewModel @Inject constructor(
+    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
+    private val pdfReaderThemeDecider: PdfReaderThemeDecider,
+) : BaseViewModel2<ReaderAnnotationMoreViewState, ReaderAnnotationMoreViewEffect>(
+    ReaderAnnotationMoreViewState()
+) {
+
+    private lateinit var args: ReaderAnnotationMoreArgs
+    private var pdfReaderThemeCancellable: Job? = null
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReaderAnnotationEditPageResult) {
+        updateState {
+            copy(pageLabel = result.pageLabel)
+        }
+    }
+
+    fun init(args: ReaderAnnotationMoreArgs) = initOnce {
+        this.args = args
+        EventBus.getDefault().register(this)
+        updateState {
+            copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+        }
+        startObservingTheme()
+
+        val annotation = args.selectedAnnotation!!
+
+        val colors = AnnotationsConfig.colors(annotation.type)
+        updateState {
+            copy(
+                key = annotation.key,
+                type = annotation.type,
+                color = annotation.color,
+                colors = colors,
+                lineWidth = annotation.lineWidth,
+                fontSize = annotation.fontSize,
+                highlightText = annotation.text ?: "",
+                pageLabel = annotation.pageLabel,
+                underlineText = annotation.text ?: "",
+            )
+        }
+    }
+
+    fun setOsTheme(isDark: Boolean) {
+        pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
+    }
+
+    private fun startObservingTheme() {
+        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
+            .onEach { data ->
+                updateState {
+                    copy(isDark = data!!.isDark)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onPageClicked() {
+        ScreenArguments.readerAnnotationEditPageArgs = ReaderAnnotationEditPageArgs(
+            pageLabel = viewState.pageLabel,
+        )
+        triggerEffect(ReaderAnnotationMoreViewEffect.NavigateToPageEditScreen)
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
+    }
+
+    fun onColorSelected(color: String) {
+        updateState {
+            copy(color = color)
+        }
+    }
+
+    fun onSizeChanged(newSize: Float) {
+        updateState {
+            copy(lineWidth = newSize)
+        }
+    }
+
+    fun onDeleteAnnotation() {
+        EventBus.getDefault().post(
+            ReaderAnnotationMoreDeleteResult(
+                key = viewState.key!!,
+            )
+        )
+        triggerEffect(ReaderAnnotationMoreViewEffect.Back)
+    }
+
+    fun onSave() {
+        val text = when(viewState.type) {
+            AnnotationType.highlight -> {
+                viewState.highlightText
+            }
+            AnnotationType.underline -> {
+                viewState.underlineText
+            }
+            else -> {
+                ""
+            }
+        }
+        EventBus.getDefault().post(
+            ReaderAnnotationMoreSaveResult(
+                key = viewState.key!!,
+                type = viewState.type!!,
+                color = viewState.color,
+                lineWidth = viewState.lineWidth,
+                fontSize = viewState.fontSize,
+                pageLabel = viewState.pageLabel,
+                updateSubsequentLabels = viewState.updateSubsequentLabels,
+                text = text
+            )
+        )
+        triggerEffect(ReaderAnnotationMoreViewEffect.Back)
+
+    }
+
+    fun onFontSizeDecrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize - 0.5f)
+        }
+
+    }
+
+    fun onFontSizeIncrease() {
+        updateState {
+            copy(fontSize = viewState.fontSize + 0.5f)
+        }
+    }
+
+    fun onUnderlineTextValueChange(newText: String) {
+        updateState {
+            copy(underlineText = newText)
+        }
+    }
+
+    fun onHighlightTextValueChange(newText: String) {
+        updateState {
+            copy(highlightText = newText)
+        }
+    }
+
+}
+
+internal data class ReaderAnnotationMoreViewState(
+    val isDark: Boolean = false,
+    val key: String? = null,
+    val type: AnnotationType? = null,
+    val color: String = "",
+    val colors: List<String> = emptyList(),
+    val lineWidth: Float = 1.0f,
+    val fontSize: Float = 12f,
+    val pageLabel: String = "",
+    val updateSubsequentLabels: Boolean = false,
+    val highlightText: String = "",
+    val underlineText: String = "",
+) : ViewState
+
+internal sealed class ReaderAnnotationMoreViewEffect : ViewEffect {
+    object NavigateToPageEditScreen : ReaderAnnotationMoreViewEffect()
+    object Back : ReaderAnnotationMoreViewEffect()
+}

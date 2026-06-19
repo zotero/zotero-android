@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -21,14 +24,15 @@ import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.sync.LinkMode
 import timber.log.Timber
 
-class CreateAttachmentDbRequest(
-    val attachment: Attachment,
-    val parentKey: String?,
-    val localizedType: String,
-    val includeAccessDate: Boolean,
-    val collections: Set<String>,
-    val tags: List<TagResponse>,
-    val fileStore: FileStore
+class CreateAttachmentDbRequest @AssistedInject constructor(
+    @Assisted("attachment") private val attachment: Attachment,
+    @Assisted("parentKey") private val parentKey: String?,
+    @Assisted("localizedType") private val localizedType: String,
+    @Assisted("includeAccessDate") private val includeAccessDate: Boolean,
+    @Assisted("collections") private val collections: Set<String>,
+    @Assisted("tags") private val tags: List<TagResponse>,
+
+    private val fileStore: FileStore
 ) : DbResponseRequest<RItem> {
 
     sealed class Error : Exception() {
@@ -41,7 +45,9 @@ class CreateAttachmentDbRequest(
         get() = true
 
     override fun process(database: Realm): RItem {
-        if(database.where<RItem>().key(this.attachment.key, this.attachment.libraryId).findFirst() != null) {
+        if (database.where<RItem>().key(this.attachment.key, this.attachment.libraryId)
+                .findFirst() != null
+        ) {
             Timber.e("CreateAttachmentDbRequest: Trying to create attachment that already exists!")
             throw Error.alreadyExists
         }
@@ -71,6 +77,7 @@ class CreateAttachmentDbRequest(
             when (fieldKey) {
                 FieldKeys.Item.title ->
                     value = this.attachment.title
+
                 FieldKeys.Item.Attachment.linkMode -> {
                     value = when (this.attachment.type) {
                         is Attachment.Kind.file -> {
@@ -81,15 +88,18 @@ class CreateAttachmentDbRequest(
                                 Attachment.FileLinkType.linkedFile -> LinkMode.linkedFile.str
                             }
                         }
+
                         is Attachment.Kind.url -> LinkMode.linkedUrl.str
                     }
                 }
+
                 FieldKeys.Item.Attachment.contentType -> {
                     when (this.attachment.type) {
                         is Attachment.Kind.file -> value = this.attachment.type.contentType
                         is Attachment.Kind.url -> continue
                     }
                 }
+
                 FieldKeys.Item.Attachment.md5 -> {
                     when (this.attachment.type) {
                         is Attachment.Kind.file -> {
@@ -100,8 +110,10 @@ class CreateAttachmentDbRequest(
                             )
                             val md5Value = fileStore.md5(file)
                             if (md5Value == "null") {
-                                Timber.e("CreateAttachmentDbRequest: incorrect md5 value " +
-                                        "for attachment ${this.attachment.key}")
+                                Timber.e(
+                                    "CreateAttachmentDbRequest: incorrect md5 value " +
+                                            "for attachment ${this.attachment.key}"
+                                )
                                 throw Error.incorrectMd5Value
                             }
                             value = md5Value
@@ -119,6 +131,7 @@ class CreateAttachmentDbRequest(
                             val modificationTime = System.currentTimeMillis()
                             value = modificationTime.toString()
                         }
+
                         is Attachment.Kind.url -> {
                             continue
                         }
@@ -129,6 +142,7 @@ class CreateAttachmentDbRequest(
                     when (this.attachment.type) {
                         is Attachment.Kind.file -> value =
                             this.attachment.type.filename
+
                         is Attachment.Kind.url -> continue
                     }
                 }
@@ -154,13 +168,18 @@ class CreateAttachmentDbRequest(
                             )
                             value = file.absolutePath
                         }
+
                         else -> continue
                     }
                 }
+
                 FieldKeys.Item.accessDate -> {
-                    if(!this.includeAccessDate) { continue }
+                    if (!this.includeAccessDate) {
+                        continue
+                    }
                     value = iso8601DateFormatV2.format(this.attachment.dateAdded)
                 }
+
                 else -> continue
             }
             val field = database.createEmbeddedObject(RItemField::class.java, item, "fields")
@@ -210,4 +229,15 @@ class CreateAttachmentDbRequest(
         return item
     }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("attachment") attachment: Attachment,
+            @Assisted("parentKey") parentKey: String?,
+            @Assisted("localizedType") localizedType: String,
+            @Assisted("includeAccessDate") includeAccessDate: Boolean,
+            @Assisted("collections") collections: Set<String>,
+            @Assisted("tags") tags: List<TagResponse>
+        ): CreateAttachmentDbRequest
+    }
 }

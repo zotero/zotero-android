@@ -3,6 +3,7 @@ package org.zotero.android.screens.share
 import com.google.common.io.ByteProcessor
 import com.google.common.io.ByteStreams
 import com.google.common.io.Closeables
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.NonZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
@@ -11,9 +12,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ShareFileDownloader @Inject constructor(
     private val nonZoteroApi: NonZoteroApi
 ) {

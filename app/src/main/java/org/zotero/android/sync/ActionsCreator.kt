@@ -3,6 +3,7 @@ package org.zotero.android.sync
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by SyncEngine
 @Singleton
 class ActionsCreator @Inject constructor() {
 

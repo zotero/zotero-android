@@ -1,6 +1,7 @@
 package org.zotero.android.pdf.cache
 
 import android.graphics.BitmapFactory
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -9,9 +10,8 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Collections
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class AnnotationPreviewFileCache @Inject constructor(
     private val dispatchers: Dispatchers,
     private val fileStore: FileStore,

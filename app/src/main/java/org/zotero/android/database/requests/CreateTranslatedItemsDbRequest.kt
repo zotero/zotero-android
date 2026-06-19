@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import org.zotero.android.api.pojo.sync.ItemResponse
 import org.zotero.android.database.DbResponseRequest
@@ -10,8 +13,9 @@ import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.SchemaController
 
-class CreateTranslatedItemsDbRequest(
-    private val responses: List<ItemResponse>,
+class CreateTranslatedItemsDbRequest @AssistedInject constructor(
+    @Assisted("responses") private val responses: List<ItemResponse>,
+
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
 ) : DbResponseRequest<List<RItem>> {
@@ -58,5 +62,10 @@ class CreateTranslatedItemsDbRequest(
             listOfCreatedItems.add(item)
         }
         return listOfCreatedItems
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(@Assisted("responses") responses: List<ItemResponse>): CreateTranslatedItemsDbRequest
     }
 }

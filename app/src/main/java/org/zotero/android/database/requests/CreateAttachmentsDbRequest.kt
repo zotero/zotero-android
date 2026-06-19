@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
@@ -7,15 +10,15 @@ import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
-import org.zotero.android.files.FileStore
 import timber.log.Timber
 
-class CreateAttachmentsDbRequest(
-    val attachments: List<Attachment>,
-    val parentKey: String?,
-    val localizedType: String,
-    val collections: Set<String>,
-    val fileStore: FileStore
+class CreateAttachmentsDbRequest @AssistedInject constructor(
+    @Assisted("attachments") private val attachments: List<Attachment>,
+    @Assisted("parentKey") private val parentKey: String?,
+    @Assisted("localizedType") private val localizedType: String,
+    @Assisted("collections") private val collections: Set<String>,
+
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) : DbResponseRequest<List<Pair<String, String>>> {
     override val needsWrite: Boolean
         get() = true
@@ -40,14 +43,13 @@ class CreateAttachmentsDbRequest(
 
         for (attachment in this.attachments) {
             try {
-                val attachment = CreateAttachmentDbRequest(
+                val attachment = createAttachmentDbRequestFactory.create(
                     attachment = attachment,
                     parentKey = null,
                     localizedType = this.localizedType,
                     includeAccessDate = attachment.hasUrl,
                     collections = this.collections,
                     tags = emptyList(),
-                    fileStore = fileStore
                 ).process(database)
                 if (parent != null) {
                     attachment.parent = parent
@@ -62,5 +64,15 @@ class CreateAttachmentsDbRequest(
         }
 
         return failed
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("attachments") attachments: List<Attachment>,
+            @Assisted("parentKey") parentKey: String?,
+            @Assisted("localizedType") localizedType: String,
+            @Assisted("collections") collections: Set<String>
+        ): CreateAttachmentsDbRequest
     }
 }

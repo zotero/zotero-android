@@ -28,9 +28,9 @@ class ObjectUserChangeEventStream @Inject constructor(applicationScope: Applicat
 
 class ObjectUserChangeObserver(
     private val dbWrapperMain: DbWrapperMain,
-    val observable: ObjectUserChangeEventStream,
-    val applicationScope: ApplicationScope,
-    val dispatchers: Dispatchers
+    private val observable: ObjectUserChangeEventStream,
+    private val applicationScope: ApplicationScope,
+    private val dispatchers: Dispatchers
 ) {
 
     private lateinit var pagesToken: RealmResults<RPageIndex>

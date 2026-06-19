@@ -1,15 +1,20 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 
-class RestoreDeletionsSyncAction(
-    val libraryId: LibraryIdentifier,
-    val collections: List<String>,
-    val items: List<String>,
-) : SyncAction() {
+class RestoreDeletionsSyncAction @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("collections") private val collections: List<String>,
+    @Assisted("items") private val items: List<String>,
+
+    private val dbWrapperMain: DbWrapperMain,
+) {
 
     fun result(): CustomResult<Unit> {
         try {
@@ -23,6 +28,15 @@ class RestoreDeletionsSyncAction(
         } catch (error: Throwable) {
             return CustomResult.GeneralError.CodeError(error)
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("collections") collections: List<String>,
+            @Assisted("items") items: List<String>
+        ): RestoreDeletionsSyncAction
     }
 
 }

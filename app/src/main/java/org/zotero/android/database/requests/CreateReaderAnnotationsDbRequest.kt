@@ -14,7 +14,7 @@ import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RUser
 import org.zotero.android.database.objects.UpdatableChangeType
-import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import timber.log.Timber

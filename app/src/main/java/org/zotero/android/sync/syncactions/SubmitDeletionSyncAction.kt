@@ -1,9 +1,14 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
@@ -13,17 +18,19 @@ import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 
-class SubmitDeletionSyncAction(
-    val keys: List<String>,
-    val objectS: SyncObject,
-    val version: Int,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val webDavEnabled: Boolean,
-) : SyncAction() {
+class SubmitDeletionSyncAction @AssistedInject constructor(
+    @Assisted("keys") private val keys: List<String>,
+    @Assisted("objectS") private val objectS: SyncObject,
+    @Assisted("version") private val version: Int,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("webDavEnabled") private val webDavEnabled: Boolean,
+
+    private val zoteroApi: ZoteroApi,
+    private val dbWrapperMain: DbWrapperMain,
+) {
     suspend fun result(): CustomResult<Pair<Int, Boolean>> {
         val url =
             BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/" + this.objectS.apiPath
@@ -120,6 +127,18 @@ class SubmitDeletionSyncAction(
             throw error
         }
 
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("keys") keys: List<String>,
+            @Assisted("objectS") objectS: SyncObject,
+            @Assisted("version") version: Int,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("webDavEnabled") webDavEnabled: Boolean
+        ): SubmitDeletionSyncAction
     }
 
 }

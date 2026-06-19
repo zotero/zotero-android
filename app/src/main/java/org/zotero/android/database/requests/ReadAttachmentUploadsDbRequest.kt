@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmResults
 import io.realm.kotlin.where
@@ -16,9 +19,10 @@ import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import java.io.File
 
-class ReadAttachmentUploadsDbRequest(
-    val libraryId: LibraryIdentifier,
-    val fileStorage: FileStore,
+class ReadAttachmentUploadsDbRequest @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+
+    private val fileStorage: FileStore,
     private val defaults: Defaults,
 ) : DbResponseRequest<List<AttachmentUpload>> {
     override val needsWrite: Boolean
@@ -116,6 +120,14 @@ class ReadAttachmentUploadsDbRequest(
         }
         return uploads
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier
+        ): ReadAttachmentUploadsDbRequest
+    }
+
 }
 
 class ReadAllAttachmentUploadsDbRequest(val libraryId: LibraryIdentifier) :

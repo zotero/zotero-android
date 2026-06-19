@@ -47,7 +47,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-
+//Must be singleton, used across the app
 @Singleton
 class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,

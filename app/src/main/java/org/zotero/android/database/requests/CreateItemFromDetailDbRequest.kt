@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -18,7 +21,6 @@ import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.database.objects.UpdatableChangeType
-import org.zotero.android.files.FileStore
 import org.zotero.android.screens.itemdetails.data.ItemDetailData
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
@@ -28,17 +30,18 @@ import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.util.UUID
 
-class CreateItemFromDetailDbRequest(
-    private val key: String,
-    private val libraryId: LibraryIdentifier,
-    private val collectionKey: String?,
-    private val data: ItemDetailData,
-    private val attachments: List<Attachment>,
-    private val notes: List<Note>,
-    private val tags: List<Tag>,
-    private val fileStore: FileStore,
+class CreateItemFromDetailDbRequest @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("collectionKey") private val collectionKey: String?,
+    @Assisted("data") private val data: ItemDetailData,
+    @Assisted("attachments") private val attachments: List<Attachment>,
+    @Assisted("notes") private val notes: List<Note>,
+    @Assisted("tags") private val tags: List<Tag>,
+
     private val schemaController: SchemaController,
     private val dateParser: DateParser,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory
 ): DbResponseRequest<RItem> {
     sealed class Error : Exception() {
         object alreadyExists : Error()
@@ -134,8 +137,7 @@ class CreateItemFromDetailDbRequest(
                 rAttachment.changeType = UpdatableChangeType.user.name
                 rAttachment.changesSyncPaused = true
             } else {
-                val rAttachment = CreateAttachmentDbRequest(
-                    fileStore = this.fileStore,
+                val rAttachment = createAttachmentDbRequestFactory.create(
                     attachment = attachment,
                     parentKey = null,
                     localizedType = (this.schemaController.localizedItemType(itemType = ItemTypes.attachment)
@@ -167,6 +169,18 @@ class CreateItemFromDetailDbRequest(
         item.changeType = UpdatableChangeType.user.name
         AllItemsDbRowCreator.createOrUpdate(item, database)
         return item
+    }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("collectionKey") collectionKey: String?,
+            @Assisted("data") data: ItemDetailData,
+            @Assisted("attachments") attachments: List<Attachment>,
+            @Assisted("notes") notes: List<Note>,
+            @Assisted("tags") tags: List<Tag>
+        ): CreateItemFromDetailDbRequest
     }
 }

@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.ItemResponse
@@ -10,25 +13,23 @@ import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
-import org.zotero.android.files.FileStore
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.SchemaController
 
-class CreateItemWithAttachmentDbRequest(
-    private val item: ItemResponse,
-    private val attachment: Attachment,
+class CreateItemWithAttachmentDbRequest @AssistedInject constructor(
+    @Assisted("item") private val item: ItemResponse,
+    @Assisted("attachment") private val attachment: Attachment,
+
     private val schemaController: SchemaController,
-    private val dateParser: DateParser,
-    private val fileStore: FileStore,
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
 ) : DbResponseRequest<Pair<RItem, RItem>> {
+
     override val needsWrite: Boolean
         get() = true
 
     override fun process(database: Realm): Pair<RItem, RItem> {
-        StoreItemsDbResponseRequest(
+        storeItemsDbResponseRequestFactory.create(
             responses = listOf(this.item),
-            schemaController = this.schemaController,
-            dateParser = this.dateParser,
             preferResponseData = true,
             denyIncorrectCreator = false
         )
@@ -52,14 +53,13 @@ class CreateItemWithAttachmentDbRequest(
 
         val localizedType =
             this.schemaController.localizedItemType(itemType = ItemTypes.attachment) ?: ""
-        val attachment = CreateAttachmentDbRequest(
+        val attachment = createAttachmentDbRequestFactory.create(
             attachment = this.attachment,
             parentKey = null,
             localizedType = localizedType,
             includeAccessDate = this.attachment.hasUrl,
             collections = emptySet(),
             tags = emptyList(),
-            fileStore = this.fileStore
         )
             .process(database)
 
@@ -68,5 +68,14 @@ class CreateItemWithAttachmentDbRequest(
 
         return item to attachment
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("item") item: ItemResponse,
+            @Assisted("attachment") attachment: Attachment
+        ): CreateItemWithAttachmentDbRequest
+    }
+
 
 }

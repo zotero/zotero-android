@@ -1,27 +1,34 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.MarkOtherObjectsAsChangedByUser
 import org.zotero.android.database.requests.SyncVersionsDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import java.io.IOException
 
-class SyncVersionsSyncAction(
-    val objectS: SyncObject,
-    val sinceVersion: Int?,
-    val currentVersion: Int?,
-    val syncType: SyncKind,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val syncDelayIntervals: List<Double>,
-    val checkRemote: Boolean,
-) : SyncAction() {
+class SyncVersionsSyncAction @AssistedInject constructor(
+    @Assisted("objectS") private val objectS: SyncObject,
+    @Assisted("sinceVersion") private val sinceVersion: Int?,
+    @Assisted("currentVersion") private val currentVersion: Int?,
+    @Assisted("syncType") private val syncType: SyncKind,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("syncDelayIntervals") private val syncDelayIntervals: List<Double>,
+    @Assisted("checkRemote") private val checkRemote: Boolean,
+
+    private val zoteroApi: ZoteroApi,
+    private val dbWrapperMain: DbWrapperMain,
+) {
 
     suspend fun result(): Pair<Int, List<String>> {
         when (this@SyncVersionsSyncAction.objectS) {
@@ -154,7 +161,7 @@ class SyncVersionsSyncAction(
                     )
                 }
 
-                SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal,SyncKind.keysOnly, SyncKind.prioritizeDownloads -> {
+                SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.keysOnly, SyncKind.prioritizeDownloads -> {
                     //no-op
                 }
             }
@@ -170,5 +177,19 @@ class SyncVersionsSyncAction(
             coordinator.invalidate()
         })
         return Pair(newVersion, identifiers)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("objectS") objectS: SyncObject,
+            @Assisted("sinceVersion") sinceVersion: Int?,
+            @Assisted("currentVersion") currentVersion: Int?,
+            @Assisted("syncType") syncType: SyncKind,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("syncDelayIntervals") syncDelayIntervals: List<Double>,
+            @Assisted("checkRemote") checkRemote: Boolean,
+        ): SyncVersionsSyncAction
     }
 }

@@ -12,6 +12,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as it is used extensively throughout the app
 @Singleton
 class DateParser @Inject constructor() {
 

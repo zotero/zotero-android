@@ -44,8 +44,8 @@ import org.zotero.android.screens.creatoredit.creatorEditNavScreens
 import org.zotero.android.screens.creatoredit.toCreatorEdit
 import org.zotero.android.screens.dashboard.DashboardViewEffect
 import org.zotero.android.screens.filter.FilterScreenPhone
-import org.zotero.android.screens.htmlepub.htmlEpubReaderNavScreensForPhone
-import org.zotero.android.screens.htmlepub.toHtmlEpubScreen
+import org.zotero.android.screens.reader.readerNavScreensForPhone
+import org.zotero.android.screens.reader.toReaderScreen
 import org.zotero.android.screens.retrievemetadata.RetrieveMetadataScreen
 import org.zotero.android.screens.scanbarcode.ui.ScanBarcodeScreen
 import org.zotero.android.screens.settings.settingsNavScreens
@@ -151,9 +151,9 @@ internal fun DashboardRootPhoneNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
-                navigation.toHtmlEpubScreen(
-                    htmlEpubParams = htmlEpubReaderArgs
+            onShowHtmlOrEpub = { readerArgs ->
+                navigation.toReaderScreen(
+                    readerParams = readerArgs
                 )
             },
             isTablet = false
@@ -178,9 +178,9 @@ internal fun DashboardRootPhoneNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowHtmlOrEpub = { htmlEpubReaderArgs ->
-                navigation.toHtmlEpubScreen(
-                    htmlEpubParams = htmlEpubReaderArgs
+            onShowHtmlOrEpub = { readerArgs ->
+                navigation.toReaderScreen(
+                    readerParams = readerArgs
                 )
             },
         )
@@ -272,7 +272,7 @@ internal fun DashboardRootPhoneNavigation(
         ) {
             SingleCitationScreen(onBack = navigation::onBack)
         }
-        htmlEpubReaderNavScreensForPhone(
+        readerNavScreensForPhone(
             navigation = navigation,
             navigateToTagPicker = navigation::toTagPicker,
             onOpenWebpage = onOpenWebpage,

@@ -1,8 +1,18 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
+import org.zotero.android.api.mappers.CollectionResponseMapper
+import org.zotero.android.api.mappers.ItemResponseMapper
+import org.zotero.android.api.mappers.SearchResponseMapper
+import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
@@ -12,6 +22,7 @@ import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
@@ -24,22 +35,35 @@ import org.zotero.android.database.requests.MarkSettingsAsSyncedDbRequest
 import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileWriter
 
-class SubmitUpdateSyncAction(
-    val parameters: List<Map<String, Any>>,
-    val changeUuids: Map<String, List<String>>,
-    val sinceVersion: Int?,
-    val objectS: SyncObject,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val updateLibraryVersion: Boolean,
-) : SyncAction() {
+class SubmitUpdateSyncAction @AssistedInject constructor(
+    @Assisted("parameters") private val parameters: List<Map<String, Any>>,
+    @Assisted("changeUuids") private val changeUuids: Map<String, List<String>>,
+    @Assisted("sinceVersion") private val sinceVersion: Int?,
+    @Assisted("objectS") private val objectS: SyncObject,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("updateLibraryVersion") private val updateLibraryVersion: Boolean,
+
+    private val zoteroApi: ZoteroApi,
+    private val dispatcher: CoroutineDispatcher,
+    private val gson: Gson,
+    private val dbWrapperMain: DbWrapperMain,
+    private val updatesResponseMapper: UpdatesResponseMapper,
+    private val markItemAsSyncedAndUpdateDbRequestFactory: MarkItemAsSyncedAndUpdateDbRequest.Factory,
+    private val collectionResponseMapper: CollectionResponseMapper,
+    private val itemResponseMapper: ItemResponseMapper,
+    private val searchResponseMapper: SearchResponseMapper,
+    private val schemaController: SchemaController,
+    private val fileStore: FileStore,
+) {
     private val splitMessage = "Annotation position is too long"
 
     suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
@@ -313,12 +337,10 @@ class SubmitUpdateSyncAction(
             for (response in changedItems) {
                 val changeUuids = this.changeUuids[response.key] ?: emptyList()
                 requests.add(
-                    MarkItemAsSyncedAndUpdateDbRequest(
+                    markItemAsSyncedAndUpdateDbRequestFactory.create(
                         libraryId = this.libraryId,
                         response = response,
                         changeUuids = changeUuids,
-                        schemaController = this.schemaController,
-                        dateParser = this.dateParser
                     )
                 )
             }
@@ -475,6 +497,19 @@ class SubmitUpdateSyncAction(
                 Timber.e(e, "SubmitUpdateSyncAction: can't encode/write item - $objectS")
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("parameters") parameters: List<Map<String, Any>>,
+            @Assisted("changeUuids") changeUuids: Map<String, List<String>>,
+            @Assisted("sinceVersion") sinceVersion: Int?,
+            @Assisted("objectS") objectS: SyncObject,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("updateLibraryVersion") updateLibraryVersion: Boolean,
+        ): SubmitUpdateSyncAction
     }
 
 }

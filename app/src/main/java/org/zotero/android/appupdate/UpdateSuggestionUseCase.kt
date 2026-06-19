@@ -1,6 +1,7 @@
 package org.zotero.android.appupdate
 
 import android.content.Context
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
@@ -9,9 +10,8 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class UpdateSuggestionUseCase @Inject constructor(
     private val context: Context,
     private val nonZoteroApi: NonZoteroApi,

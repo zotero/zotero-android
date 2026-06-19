@@ -10,6 +10,7 @@ import org.zotero.android.translator.data.RawAttachment
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//MUST be singleton as it shares the state between multiple ViewModels
 @Singleton
 class ShareRawAttachmentLoader @Inject constructor() {
 

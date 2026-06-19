@@ -1,6 +1,9 @@
 package org.zotero.android.database.requests
 
 import com.google.gson.JsonObject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.kotlin.createObject
@@ -40,12 +43,13 @@ import timber.log.Timber
 import java.util.Date
 import java.util.UUID
 
-class StoreItemsDbResponseRequest(
-    val responses: List<ItemResponse>,
+class StoreItemsDbResponseRequest @AssistedInject constructor(
+    @Assisted("responses") private val responses: List<ItemResponse>,
+    @Assisted("preferResponseData") private val preferResponseData: Boolean,
+    @Assisted("denyIncorrectCreator") private val denyIncorrectCreator: Boolean,
+
     val schemaController: SchemaController,
     val dateParser: DateParser,
-    val preferResponseData: Boolean,
-    val denyIncorrectCreator: Boolean,
 ) : DbResponseRequest<StoreItemsResponse> {
     override val needsWrite: Boolean
         get() = true
@@ -78,6 +82,16 @@ class StoreItemsDbResponseRequest(
 
         return StoreItemsResponse(changedFilenames = filenameChanges, conflicts = errors)
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("responses") responses: List<ItemResponse>,
+            @Assisted("preferResponseData") preferResponseData: Boolean,
+            @Assisted("denyIncorrectCreator") denyIncorrectCreator: Boolean,
+        ): StoreItemsDbResponseRequest
+    }
+
 }
 
 class StoreItemDbRequest(

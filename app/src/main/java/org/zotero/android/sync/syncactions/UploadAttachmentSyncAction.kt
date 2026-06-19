@@ -1,39 +1,56 @@
 package org.zotero.android.sync.syncactions
 
 import android.webkit.MimeTypeMap
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.NonZoteroApi
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.CheckItemIsChangedDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncActionError
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
+import org.zotero.android.webdav.WebDavController
+import org.zotero.android.webdav.WebDavSessionStorage
 import org.zotero.android.webdav.data.WebDavUploadResult
 import timber.log.Timber
 import java.io.File
 
-class UploadAttachmentSyncAction(
-    private val key: String,
-    private val file: File,
-    private val filename: String,
-    private val md5: String,
-    private val mtime: Long,
-    private val libraryId: LibraryIdentifier,
-    private val userId: Long,
-    private val oldMd5: String?,
-    var failedBeforeZoteroApiRequest: Boolean = true,
-): SyncAction() {
+class UploadAttachmentSyncAction @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("file") private val file: File,
+    @Assisted("filename") private val filename: String,
+    @Assisted("md5") private val md5: String,
+    @Assisted("mtime") private val mtime: Long,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("oldMd5") private val oldMd5: String?,
+    @Assisted("failedBeforeZoteroApiRequest") var failedBeforeZoteroApiRequest: Boolean = true,
+
+    private val authorizeUploadSyncActionFactory: AuthorizeUploadSyncAction.Factory,
+    private val sessionStorage: WebDavSessionStorage,
+    private val nonZoteroApi: NonZoteroApi,
+    private val zoteroApi: ZoteroApi,
+    private val dbWrapperMain: DbWrapperMain,
+    private val fileStore: FileStore,
+    private val webDavController: WebDavController,
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory
+) {
 
     suspend fun result(): CustomResult<Unit> {
         return try {
@@ -71,7 +88,7 @@ class UploadAttachmentSyncAction(
         checkDatabase()
         val filesize = validateFile()
         this.failedBeforeZoteroApiRequest = false
-        val authorizeUploadSyncActionNetworkResult = AuthorizeUploadSyncAction(
+        val authorizeUploadSyncActionNetworkResult = authorizeUploadSyncActionFactory.create(
             key = this.key,
             filename = this.filename,
             filesize = filesize,
@@ -307,7 +324,7 @@ class UploadAttachmentSyncAction(
             throw e
         }
         this.failedBeforeZoteroApiRequest = false
-        val submitUpdateSyncActionResult = SubmitUpdateSyncAction(
+        val submitUpdateSyncActionResult = submitUpdateSyncActionFactory.create(
             parameters = listOf(loadParameters),
             changeUuids = emptyMap(),
             sinceVersion = null,
@@ -332,6 +349,21 @@ class UploadAttachmentSyncAction(
                 throw Exception("Network Error. ${submitUpdateSyncActionResult.httpCode}, ${submitUpdateSyncActionResult.stringResponse}")
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("file") file: File,
+            @Assisted("filename") filename: String,
+            @Assisted("md5") md5: String,
+            @Assisted("mtime") mtime: Long,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("oldMd5") oldMd5: String?,
+            @Assisted("failedBeforeZoteroApiRequest") failedBeforeZoteroApiRequest: Boolean = true,
+        ): UploadAttachmentSyncAction
     }
 
 }
