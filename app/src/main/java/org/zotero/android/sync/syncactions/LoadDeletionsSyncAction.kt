@@ -2,9 +2,8 @@ package org.zotero.android.sync.syncactions
 
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.sync.LibraryIdentifier
-
 import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.syncactions.architecture.SyncAction
 
@@ -27,7 +26,7 @@ class LoadDeletionsSyncAction(
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = this.userId) + "/deleted"
 
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.deletionRequest(
                 url = url,
                 since = sinceVersion,

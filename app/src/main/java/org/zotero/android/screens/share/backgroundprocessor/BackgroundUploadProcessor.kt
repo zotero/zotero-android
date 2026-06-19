@@ -16,6 +16,7 @@ import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.architecture.logging.DeviceInfoProvider
 import org.zotero.android.backgrounduploader.BackgroundUpload
 import org.zotero.android.database.DbWrapperMain
@@ -157,11 +158,10 @@ class BackgroundUploadProcessor @Inject constructor(
         libraryId: LibraryIdentifier,
         userId: Long
     ): CustomResult<Unit> {
-
-        val registerUploadNetworkResult = safeApiCall {
-            val headers = mapOf("If-None-Match" to "*")
-            val url =
-                BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/" + key + "/file"
+        val headers = mapOf("If-None-Match" to "*")
+        val url =
+            BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/items/" + key + "/file"
+        val registerUploadNetworkResult = safeApiCallForZoteroSync {
             zoteroApi.registerUpload(
                 url = url,
                 headers = headers,
@@ -250,10 +250,9 @@ class BackgroundUploadProcessor @Inject constructor(
         val url =
             BuildConfig.BASE_API_URL + "/" + libraryId.apiPath(userId = userId) + "/" + objectType.apiPath
 
-        val networkResult = safeApiCall {
-            val jsonBody = gson.toJson(listOf(loadParameters))
-
-            val headers = mutableMapOf<String, String>()
+        val jsonBody = gson.toJson(listOf(loadParameters))
+        val headers = mutableMapOf<String, String>()
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.updates(url = url, jsonBody = jsonBody, headers = headers)
         }
 

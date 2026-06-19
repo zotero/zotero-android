@@ -15,7 +15,7 @@ import org.zotero.android.api.mappers.CollectionResponseMapper
 import org.zotero.android.api.mappers.ItemResponseMapper
 import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.requests.StoreCollectionsDbRequest
@@ -65,20 +65,21 @@ class SyncBatchProcessor(
                     val url =
                         BuildConfig.BASE_API_URL + "/" + batch.libraryId.apiPath(userId = this@SyncBatchProcessor.userId) + "/" + batch.objectS.apiPath
 
-                    val networkResult = safeApiCall {
-                        val parameters = mutableMapOf<String, String>()
-                        when (batch.objectS) {
-                            SyncObject.collection ->
-                                parameters["collectionKey"] = keysString
+                    val parameters = mutableMapOf<String, String>()
+                    when (batch.objectS) {
+                        SyncObject.collection ->
+                            parameters["collectionKey"] = keysString
 
-                            SyncObject.item, SyncObject.trash ->
-                                parameters["itemKey"] = keysString
+                        SyncObject.item, SyncObject.trash ->
+                            parameters["itemKey"] = keysString
 
-                            SyncObject.search ->
-                                parameters["searchKey"] = keysString
+                        SyncObject.search ->
+                            parameters["searchKey"] = keysString
 
-                            SyncObject.settings -> {}
-                        }
+                        SyncObject.settings -> {}
+                    }
+
+                    val networkResult = safeApiCallForZoteroSync {
                         zoteroApi.objects(url = url, queryMap = parameters)
                     }
                     if (!isActive) {

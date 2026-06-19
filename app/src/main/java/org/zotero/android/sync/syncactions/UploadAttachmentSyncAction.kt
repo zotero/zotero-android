@@ -8,6 +8,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import org.zotero.android.BuildConfig
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.requests.CheckItemIsChangedDbRequest
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
@@ -121,17 +122,16 @@ class UploadAttachmentSyncAction(
             }
         }
 
-        val registerUploadNetworkResult = safeApiCall {
-
-            val headers = mutableMapOf<String, String>()
-            val md5 = oldMd5
-            if (md5 != null) {
-                headers.put("If-Match", md5)
-            } else {
-                headers.put("If-None-Match", "*")
-            }
-            val url =
-                BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/items/" + this.key + "/file"
+        val headers = mutableMapOf<String, String>()
+        val md5 = oldMd5
+        if (md5 != null) {
+            headers.put("If-Match", md5)
+        } else {
+            headers.put("If-None-Match", "*")
+        }
+        val url =
+            BuildConfig.BASE_API_URL + "/" + this.libraryId.apiPath(userId = this.userId) + "/items/" + this.key + "/file"
+        val registerUploadNetworkResult = safeApiCallForZoteroSync {
             zoteroApi.registerUpload(
                 url = url,
                 headers = headers,

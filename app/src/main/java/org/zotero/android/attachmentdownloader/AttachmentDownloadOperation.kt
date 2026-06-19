@@ -6,10 +6,10 @@ import kotlinx.coroutines.isActive
 import okhttp3.ResponseBody
 import org.zotero.android.BuildConfig
 import org.zotero.android.androidx.file.copyWithExt
-import org.zotero.android.api.ZoteroNoRedirectApi
 import org.zotero.android.api.ZoteroApi
+import org.zotero.android.api.ZoteroNoRedirectApi
 import org.zotero.android.api.network.CustomResult
-import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.network.safeApiCallForZoteroSync
 import org.zotero.android.helpers.Unzipper
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.webdav.WebDavController
@@ -178,7 +178,7 @@ class AttachmentDownloadOperation(
             isCompressed = headersResponse.headers()["Zotero-File-Compressed"] == "Yes"
         }
 
-        val networkResult = safeApiCall {
+        val networkResult = safeApiCallForZoteroSync {
             zoteroApi.downloadFile(url)
         }
         if (networkResult is CustomResult.GeneralError) {
