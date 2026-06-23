@@ -1,6 +1,5 @@
 package org.zotero.android.screens.share
 
-import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
@@ -80,6 +79,7 @@ import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
 import retrofit2.Response
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
 import java.util.Date
 import javax.inject.Inject
 
@@ -585,7 +585,7 @@ internal class ShareViewModel @Inject constructor(
                 process(url = attachment.url)
             }
             is RawAttachment.fileUrl -> {
-                process(uri = attachment.uri)
+                process(attachment.fileName, attachment.fileExtension, attachment.uriInputStream)
             }
 
             is RawAttachment.remoteFileUrl -> {
@@ -690,9 +690,7 @@ internal class ShareViewModel @Inject constructor(
 
     }
 
-    private suspend fun process(uri: Uri) {
-        val fileName = getUriDetailsUseCase.getFullName(uri)
-        val fileExtension =  getUriDetailsUseCase.getExtension(uri)
+    private suspend fun process(fileName: String?, fileExtension: String?, uriInputStream: InputStream) {
         if (fileName == null || fileExtension == null) {
             viewModelScope.launch {
                 updateState {
@@ -703,7 +701,7 @@ internal class ShareViewModel @Inject constructor(
         }
         val tmpFile = fileStore.temporaryFile(fileExtension)
         try {
-            getUriDetailsUseCase.copyFile(uri, tmpFile)
+            getUriDetailsUseCase.copyFile(uriInputStream = uriInputStream, toFile = tmpFile)
             viewModelScope.launch {
                 updateState {
                     copy(
