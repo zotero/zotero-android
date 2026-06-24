@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.OrderedCollectionChangeSet
+import io.realm.RealmResults
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -39,8 +41,10 @@ import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadCollectionAndLibraryDbRequest
+import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadRecentCollections
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
@@ -60,14 +64,10 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
-import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
-import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.SyncObservableEventStream
-import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.translator.data.AttachmentState
@@ -92,8 +92,6 @@ internal class ShareViewModel @Inject constructor(
     private val shareRawAttachmentLoader: ShareRawAttachmentLoader,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val fileStore: FileStore,
-    private val syncScheduler: SyncScheduler,
-    private val syncObservableEventStream: SyncObservableEventStream,
     private val translatorActionEventStream: TranslatorActionEventStream,
     private val dbWrapperMain: DbWrapperMain,
     private val itemResponseMapper: ItemResponseMapper,
@@ -123,6 +121,8 @@ internal class ShareViewModel @Inject constructor(
     private lateinit var attachmentKey: String
     private var wasAttachmentUploaded: Boolean = false
 
+    private var collections: RealmResults<RCollection>? = null
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ShareScreen) {
@@ -143,14 +143,10 @@ internal class ShareViewModel @Inject constructor(
         selectedLibraryId = fileStore.getSelectedLibrary()
         attachmentKey = KeyGenerator.newKey()
         setupObservers()
+        initRequestAndStartObservingCollectionResults()
         ioCoroutineScope.launch {
             try {
                 Timber.i("ShareViewModel: start async collections sync")
-                syncScheduler.startSyncController(
-                    type = SyncKind.collectionsOnly,
-                    libraries = Libraries.all,
-                    retryAttempt = 0
-                )
                 var rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
 
                 val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
@@ -196,6 +192,35 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
+    private fun initRequestAndStartObservingCollectionResults() {
+        collections = dbWrapperMain.realmDbStorage.perform(
+            ReadCollectionsDbRequest(
+                libraryId = this.defaultLibraryId,
+                isAsync = true
+            )
+        )
+        collections?.addChangeListener { objects, changeSet ->
+            when (changeSet.state) {
+                OrderedCollectionChangeSet.State.INITIAL -> {
+                    finishSync(successful = true)
+                }
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
+                    finishSync(successful = true)
+                }
+
+                OrderedCollectionChangeSet.State.ERROR -> {
+                    Timber.e(
+                        changeSet.error,
+                        "ShareViewModel: could not load results"
+                    )
+                    finishSync(successful = false)
+                }
+            }
+        }
+    }
+
+
     private fun calculateRawAttachmentType(
         rawAttachmentType: RawAttachment,
         headNetworkResult: Response<*>?
@@ -239,12 +264,6 @@ internal class ShareViewModel @Inject constructor(
 
 
     private fun setupObservers() {
-        syncObservableEventStream.flow()
-            .onEach { data ->
-                finishSync(successful = (data == null))
-            }
-            .launchIn(viewModelScope)
-
         translatorActionEventStream.flow()
             .onEach { event ->
                 if (event is Result.Failure) {
@@ -803,6 +822,7 @@ internal class ShareViewModel @Inject constructor(
 
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
+        collections?.removeAllChangeListeners()
         ioCoroutineScope.cancel()
         pdfWorkerController.cancelAllLookups()
         super.onCleared()
@@ -838,6 +858,7 @@ internal class ShareViewModel @Inject constructor(
     }
 
     fun submitAsync() {
+        collections?.removeAllChangeListeners()
         viewModelScope.launch {
             submit()
         }
