@@ -375,17 +375,17 @@ class ReaderWebCallChainExecutor @Inject constructor(
             }
         }
 
-        val spreadsModeString = when (defaults.getReaderSettings().spreadsMode) {
+        val spreadsModeInt = when (defaults.getReaderSettings().spreadsMode) {
             PageSpreadsMode.NONE -> {
-                "0"
+                0
             }
 
             PageSpreadsMode.ODD -> {
-                "1"
+                1
             }
 
             PageSpreadsMode.EVEN -> {
-                "2"
+                2
             }
         }
 
@@ -404,13 +404,13 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.epub -> {
                     createReaderViewOptions.viewState.cfi = page.cfi
                     createReaderViewOptions.viewState.flowMode = flowModeString
-                    createReaderViewOptions.spreadMode = spreadsModeString
+                    createReaderViewOptions.viewState.spreadMode = spreadsModeInt
 
                 }
 
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
-                    createReaderViewOptions.spreadMode = spreadsModeString
+                    createReaderViewOptions.viewState.spreadMode = spreadsModeInt
                 }
             }
         }

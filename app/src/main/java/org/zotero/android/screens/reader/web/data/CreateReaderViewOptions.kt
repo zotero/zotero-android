@@ -10,7 +10,6 @@ data class CreateReaderViewOptions(
     var viewState: CreateReaderViewState = CreateReaderViewState(),
 
     var colorScheme: String = "light",
-    var spreadMode: String? = null,
 )
 
 data class CreateReaderLocation(
@@ -28,4 +27,6 @@ data class CreateReaderViewState(
     var pageIndex: Int? = null,
 
     var flowMode: String? = null,
+    var spreadMode: Int? = null,
+
 )
