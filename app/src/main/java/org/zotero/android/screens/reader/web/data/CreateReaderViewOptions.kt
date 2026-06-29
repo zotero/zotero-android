@@ -7,7 +7,10 @@ data class CreateReaderViewOptions(
     val url: String,
     val annotations: JsonArray,
     var location: CreateReaderLocation? = null,
-    var viewState: CreateReaderViewState? = null,
+    var viewState: CreateReaderViewState = CreateReaderViewState(),
+
+    var colorScheme: String = "light",
+    var spreadMode: String? = null,
 )
 
 data class CreateReaderLocation(
@@ -16,11 +19,13 @@ data class CreateReaderLocation(
 
 data class CreateReaderViewState(
     //html
-    val scrollYPercent: Double? = null,
-    val scale: Double? = null,
+    var scrollYPercent: Double? = null,
+    var scale: Double? = null,
     //epub
-    val cfi: String? = null,
+    var cfi: String? = null,
 
     //pdf
-    val pageIndex: Int? = null,
+    var pageIndex: Int? = null,
+
+    var flowMode: String? = null,
 )

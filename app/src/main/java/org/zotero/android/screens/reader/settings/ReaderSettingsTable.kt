@@ -22,13 +22,15 @@ internal fun ReaderSettingsTable(
             selectedOption = viewState.selectedAppearanceOption,
             optionSelected = viewModel::onOptionSelected
         )
-        readerSettingsSettingRow(
-            titleResId = Strings.pdf_settings_spreads_title,
-            options = viewState.spreadsOptions,
-            selectedOption = viewState.selectedSpreadsOption,
-            optionSelected = viewModel::onOptionSelected
-        )
-        if (viewState.fileType != ReaderFileType.PDF) {
+        if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
+            readerSettingsSettingRow(
+                titleResId = Strings.pdf_settings_spreads_title,
+                options = viewState.spreadsOptions,
+                selectedOption = viewState.selectedSpreadsOption,
+                optionSelected = viewModel::onOptionSelected
+            )
+        }
+        if (viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(
                 titleResId = Strings.pdf_settings_page_layout_title,
                 options = viewState.pageLayoutFlowOptions,

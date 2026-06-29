@@ -9,6 +9,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.screens.reader.data.ReaderDocumentData
@@ -19,7 +20,6 @@ import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
 import org.zotero.android.screens.reader.web.data.CreateReaderLocation
 import org.zotero.android.screens.reader.web.data.CreateReaderViewOptions
-import org.zotero.android.screens.reader.web.data.CreateReaderViewState
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJavascript
 import org.zotero.android.translator.helper.TranslatorHelper.encodeStringToBase64Binary
@@ -33,7 +33,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
     dispatchers: Dispatchers,
     private val gson: Gson,
     private val observable: ReaderWebCallChainEventStream,
-    private val readerWebViewHandler: ReaderWebViewHandler
+    private val readerWebViewHandler: ReaderWebViewHandler,
+    private val defaults: Defaults,
 ) {
 
     private val limitedParallelismDispatcher =
@@ -234,6 +235,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onViewContentInitialized" -> {
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onViewContentInitialized
+                                )
+                            )
+                        }
+
                         "onChangeViewStats" -> {
                             val params = data["params"].asJsonObject
                             observable.emitAsync(
@@ -347,7 +356,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun loadDocument(data: ReaderDocumentData) {
+    suspend fun loadDocument(data: ReaderDocumentData, isDark: Boolean) {
         Timber.i("ReaderWebCallChainExecutor: try creating view for ${data.type}; page = ${data.page}")
         Timber.i("${data.file.absolutePath}")
         val createReaderViewOptions = CreateReaderViewOptions(
@@ -356,6 +365,30 @@ class ReaderWebCallChainExecutor @Inject constructor(
             annotations = data.annotationsJson
         )
 
+        val flowModeString = when (defaults.getReaderSettings().pageLayoutFlowMode) {
+            PageLayoutFlowMode.PAGINATED -> {
+                "paginated"
+            }
+
+            PageLayoutFlowMode.SCROLLED -> {
+                "scrolled"
+            }
+        }
+
+        val spreadsModeString = when (defaults.getReaderSettings().spreadsMode) {
+            PageSpreadsMode.NONE -> {
+                "0"
+            }
+
+            PageSpreadsMode.ODD -> {
+                "1"
+            }
+
+            PageSpreadsMode.EVEN -> {
+                "2"
+            }
+        }
+
         val key = data.selectedAnnotationKey
         val page = data.page
         if (key != null) {
@@ -363,20 +396,31 @@ class ReaderWebCallChainExecutor @Inject constructor(
         } else if (page != null) {
             when (page) {
                 is ReaderPage.html -> {
-                    createReaderViewOptions.viewState =
-                        CreateReaderViewState(scrollYPercent = page.scrollYPercent, scale = 1.0)
+                    createReaderViewOptions.viewState.scrollYPercent = page.scrollYPercent
+                    createReaderViewOptions.viewState.scale = 1.0
+
                 }
 
                 is ReaderPage.epub -> {
-                    createReaderViewOptions.viewState = CreateReaderViewState(cfi = page.cfi)
+                    createReaderViewOptions.viewState.cfi = page.cfi
+                    createReaderViewOptions.viewState.flowMode = flowModeString
+                    createReaderViewOptions.spreadMode = spreadsModeString
+
                 }
 
                 is ReaderPage.pdf -> {
-                    createReaderViewOptions.viewState =
-                        CreateReaderViewState(pageIndex = page.pageIndex)
+                    createReaderViewOptions.viewState.pageIndex = page.pageIndex
+                    createReaderViewOptions.spreadMode = spreadsModeString
                 }
             }
         }
+
+        val appearanceString = if (isDark) {
+            "dark"
+        } else {
+            "light"
+        }
+        createReaderViewOptions.colorScheme = appearanceString
 
         val toJson = encodeAsJSONForJavascript(this.gson, createReaderViewOptions)
         val javascript = "javascript:createView('${toJson}');"
