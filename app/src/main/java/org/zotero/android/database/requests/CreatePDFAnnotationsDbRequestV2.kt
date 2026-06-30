@@ -47,9 +47,10 @@ class CreatePDFAnnotationsDbRequestV2 @AssistedInject constructor(
 
             val rRect = database.createEmbeddedObject(RRect::class.java, item, "rects")
             rRect.minX = rect.left.toDouble()
-            rRect.minY = rect.bottom.toDouble()
             rRect.maxX = rect.right.toDouble()
-            rRect.maxY = rect.top.toDouble()
+
+            rRect.minY = rect.top.toDouble()
+            rRect.maxY = rect.bottom.toDouble()
         }
         changes.add(RItemChanges.rects)
     }
