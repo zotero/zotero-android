@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
 import org.zotero.android.screens.reader.web.actionmenu.ReaderActionMenuPopup
-import org.zotero.android.uicomponents.theme.CustomTheme
 
 
 @Composable
@@ -119,7 +118,7 @@ internal fun ReaderBox(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(32.dp)
-                    .background(CustomTheme.colors.surface)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
                 // EPUB: When bars are hidden, show page progress in the empty space
                 val pageProgress = viewState.pageProgress
