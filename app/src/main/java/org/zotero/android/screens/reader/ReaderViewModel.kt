@@ -8,10 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.RectF
-import android.net.Uri
 import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
-import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
@@ -197,10 +195,15 @@ class ReaderViewModel @Inject constructor(
     var sidebarEditingEnabled: Boolean = false
 
 
-
     val screenArgs: ReaderArgs by lazy {
         val argsEncoded = stateHandle.get<String>(ARG_READER_SCREEN).require()
         navigationParamsMarshaller.decodeObjectFromBase64(argsEncoded)
+    }
+
+    private val screenFileArgs: File by lazy {
+        val filePathString = stateHandle.get<String>(ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG).require()
+        val file = File(filePathString)
+        file
     }
 
     private var readerSearchTermCancellable: Job? = null
@@ -358,8 +361,7 @@ class ReaderViewModel @Inject constructor(
         textFont: TextStyle,
     ) = initOnce {
         this.textFont = textFont
-        val uri = screenArgs.uri
-        initFileUris(uri)
+        initFileUris()
         copyReaderFiles()
         this.isTablet = isTablet
 
@@ -437,8 +439,8 @@ class ReaderViewModel @Inject constructor(
     }
 
 
-    private fun initFileUris(uri: Uri) {
-        this.originalFile = uri.toFile()
+    private fun initFileUris() {
+        this.originalFile = screenFileArgs
         this.readerDirectory = fileStore.runningReaderDirectory()
         this.documentFile = fileStore.runningReaderUserFileSubDirectory(originalFile.extension)
         this.readerFile = File(readerDirectory, "view.html")

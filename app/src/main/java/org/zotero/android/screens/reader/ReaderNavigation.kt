@@ -22,7 +22,9 @@ import org.zotero.android.screens.reader.filter.ReaderFilterNavigation
 import org.zotero.android.screens.reader.filter.toReaderFilterScreen
 import org.zotero.android.screens.reader.settings.ReaderSettingsScreen
 
-internal const val ARG_READER_SCREEN = "readerReaderArgs"
+internal const val ARG_READER_SCREEN = "readerArgs"
+internal const val ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG = "readerFilePathArgs"
+
 internal const val ARG_READER_SETTINGS_SCREEN = "readerSettingsArgs"
 
 internal fun NavGraphBuilder.readerNavScreensForTablet(
@@ -130,9 +132,10 @@ private fun NavGraphBuilder.readerScreen(
     onOpenWebpage: (url: String) -> Unit,
 ) {
     composable(
-        route = "${ReaderDestinations.READER_SCREEN}/{$ARG_READER_SCREEN}",
+        route = "${ReaderDestinations.READER_SCREEN}/{$ARG_READER_SCREEN}?uri={$ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG}",
         arguments = listOf(
             navArgument(ARG_READER_SCREEN) { type = NavType.StringType },
+            navArgument(ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG) { type = NavType.StringType },
         ),
     ) {
         ReaderScreen(
@@ -159,8 +162,9 @@ private object ReaderDestinations {
 
 fun ZoteroNavigation.toReaderScreen(
     readerParams: String,
+    readerEncodedFilePathParam: String,
 ) {
-    navController.navigate("${ReaderDestinations.READER_SCREEN}/$readerParams")
+    navController.navigate("${ReaderDestinations.READER_SCREEN}/$readerParams?uri=$readerEncodedFilePathParam")
 }
 
 private fun ZoteroNavigation.toReaderAnnotationNavigation() {

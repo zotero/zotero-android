@@ -2070,15 +2070,17 @@ class ItemDetailsViewModel @Inject constructor(
         }
     }
     private fun showReader(file: File, parentKey: String?, attachment: Attachment) {
-        val uri = Uri.fromFile(file)
         val readerArgs = ReaderArgs(
             key = attachment.key,
             parentKey = parentKey,
             library = viewState.library!!,
-            uri = uri,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(readerArgs)
-        triggerEffect(ItemDetailsViewEffect.NavigateToReaderScreen(params))
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(ItemDetailsViewEffect.NavigateToReaderScreen(
+            params = params,
+            readerEncodedFilePathParam = encodedFilePath
+        ))
     }
 }
 
@@ -2117,7 +2119,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : ItemDetailsViewEffect()
-    data class NavigateToReaderScreen(val params: String) : ItemDetailsViewEffect()
+    data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val url: String) : ItemDetailsViewEffect()
     data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()

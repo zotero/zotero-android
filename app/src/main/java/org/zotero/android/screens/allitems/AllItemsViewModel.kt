@@ -1310,15 +1310,17 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     private fun showReader(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = Uri.fromFile(file)
         val readerArgs = ReaderArgs(
             key = key,
             parentKey = parentKey,
             library = library,
-            uri = uri,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(readerArgs)
-        triggerEffect(AllItemsViewEffect.NavigateToReaderScreen(params))
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(AllItemsViewEffect.NavigateToReaderScreen(
+            params = params,
+            readerEncodedFilePathParam = encodedFilePath
+        ))
     }
 
 
@@ -1412,7 +1414,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
     data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : AllItemsViewEffect()
-    data class NavigateToReaderScreen(val params: String) : AllItemsViewEffect()
+    data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()

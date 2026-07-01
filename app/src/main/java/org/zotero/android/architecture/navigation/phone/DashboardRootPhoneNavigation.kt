@@ -151,9 +151,10 @@ internal fun DashboardRootPhoneNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowHtmlOrEpub = { readerArgs ->
+            onShowHtmlOrEpub = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
-                    readerParams = readerArgs
+                    readerParams = readerArgs,
+                    readerEncodedFilePathParam = readerEncodedFilePathParam,
                 )
             },
             isTablet = false
@@ -178,9 +179,10 @@ internal fun DashboardRootPhoneNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowHtmlOrEpub = { readerArgs ->
+            onShowHtmlOrEpub = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
-                    readerParams = readerArgs
+                    readerParams = readerArgs,
+                    readerEncodedFilePathParam = readerEncodedFilePathParam,
                 )
             },
         )

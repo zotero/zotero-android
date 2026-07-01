@@ -27,7 +27,7 @@ internal fun DashboardRootTabletNavigationScreen(
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     onShowPdf: (String, String) -> Unit,
-    onShowHtmlOrEpub: (String) -> Unit,
+    onShowHtmlOrEpub: (String, String) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,
     onExitApp:() -> Unit,

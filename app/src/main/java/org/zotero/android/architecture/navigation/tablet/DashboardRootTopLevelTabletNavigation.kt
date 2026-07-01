@@ -67,9 +67,10 @@ internal fun DashboardRootTopLevelTabletNavigation(
                     pdfScreenEncodedFilePathParam = pdfScreenEncodedFilePathParam,
                 )
             },
-            onShowReader = { readerArgs ->
+            onShowReader = { readerArgs, readerEncodedFilePathParam ->
                 navigation.toReaderScreen(
-                    readerParams = readerArgs
+                    readerParams = readerArgs,
+                    readerEncodedFilePathParam = readerEncodedFilePathParam,
                 )
             },
             toAddOrEditNote = navigation::toAddOrEditNote,
@@ -108,7 +109,7 @@ private fun NavGraphBuilder.dashboardScreen(
     onPickFile: (callPoint: EventBusConstants.FileWasSelected.CallPoint) -> Unit,
     onOpenFile: (file: File, mimeType: String) -> Unit,
     onShowPdf: (String, String) -> Unit,
-    onShowReader: (String) -> Unit,
+    onShowReader: (String, String) -> Unit,
     onExportHtml: (file: File) -> Unit,
     toAddOrEditNote: (String) -> Unit,
     toZoteroWebViewScreen: (String) -> Unit,

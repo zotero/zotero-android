@@ -46,7 +46,7 @@ internal fun AllItemsScreen(
     navigateToSingleCitation: () -> Unit,
     navigateToCitationBibliographyExport:() -> Unit,
     onShowPdf: (String, String) -> Unit,
-    onShowHtmlOrEpub: (String) -> Unit,
+    onShowHtmlOrEpub: (String, String) -> Unit,
 ) {
     AppThemeM3 {
         val layoutType = CustomLayoutSize.calculateLayoutType()
@@ -116,7 +116,7 @@ internal fun AllItemsScreen(
                     onShowPdf(consumedEffect.params, consumedEffect.encodedFilePath)
                 }
                 is AllItemsViewEffect.NavigateToReaderScreen -> {
-                    onShowHtmlOrEpub(consumedEffect.params)
+                    onShowHtmlOrEpub(consumedEffect.params, consumedEffect.readerEncodedFilePathParam)
                 }
 
                 is AllItemsViewEffect.ShowVideoPlayer -> {
