@@ -5,6 +5,7 @@ import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.sync.LibraryIdentifier
@@ -45,17 +46,19 @@ class PerformDeletionsDbRequest(
             }
             when (this.conflictMode) {
                 ConflictResolutionMode.resolveConflicts -> {
-                    if (objectS.selfOrChildChanged) {
+                    if (hasLocalChangesRequiringConflict(objectS)) {
                         conflicts.add(Pair(objectS.key, objectS.displayTitle))
                         continue
                     }
                 }
+
                 ConflictResolutionMode.restoreConflicts -> {
-                    if (objectS.selfOrChildChanged) {
+                    if (hasLocalChangesRequiringConflict(objectS)) {
                         objectS.markAsChanged(database)
                         continue
                     }
                 }
+
                 ConflictResolutionMode.deleteConflicts -> {
                     // no-op
                 }
@@ -114,6 +117,33 @@ class PerformDeletionsDbRequest(
             tag.tags?.deleteAllFromRealm()
         }
         tags.deleteAllFromRealm()
+    }
+
+    fun hasLocalChangesRequiringConflict(item: RItem): Boolean {
+        if (hasNonLastReadChanges(item)) {
+            return true
+        }
+
+        for (child in item.children!!) {
+            if (child.isInvalidated) {
+                continue
+            }
+            if (hasLocalChangesRequiringConflict(child)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    fun hasNonLastReadChanges(item: RItem): Boolean {
+        if (!item.isChanged) {
+            return false
+        }
+
+        val changes = item.changedFields.toMutableList()
+        changes.remove(RItemChanges.lastRead)
+        return !changes.isEmpty()
     }
 
 }

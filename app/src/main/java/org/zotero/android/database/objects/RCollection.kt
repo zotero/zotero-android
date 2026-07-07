@@ -113,9 +113,6 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
             return parameters
         }
 
-    override val selfOrChildChanged: Boolean
-        get() = isChanged
-
     override fun markAsChanged(database: Realm) {
         val changes = mutableListOf(RCollectionChanges.nameS)
         changeType = UpdatableChangeType.user.name

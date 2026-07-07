@@ -41,6 +41,7 @@ enum class RItemChanges {
     relations,
     rects,
     paths,
+    lastRead,
 }
 
 open class RItem : Updatable, Deletable, Syncable, RealmObject() {
@@ -133,6 +134,10 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     var htmlFreeContent: String? = null
     var allItemsDbRow: AllItemsDbRow? = null
 
+    @Index
+    var lastRead: Date? = null
+    var effectiveLastRead: Date? = null
+
     val doi: String?
         get() {
             val fieldS = fields.firstOrNull { it.key == FieldKeys.Item.doi }
@@ -154,6 +159,24 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return changes.flatMap { it.rawChanges.map { RItemChanges.valueOf(it) } }
         }
 
+    fun updateEffectiveLastRead() {
+        when(rawType) {
+            ItemTypes.annotation -> {
+                return
+            }
+            ItemTypes.attachment -> {
+                effectiveLastRead = lastRead
+            }
+             else -> {
+                 val childrenMaxLastRead = children
+                     ?.mapNotNull { it.lastRead }
+                     ?.maxOrNull()
+                 effectiveLastRead = listOfNotNull(lastRead, childrenMaxLastRead)
+                     .maxOrNull()
+             }
+        }
+        parent?.updateEffectiveLastRead()
+    }
 
     fun set(title: String) {
         baseTitle = title
@@ -383,22 +406,6 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         }
         return jsonData
     }
-
-
-    override val selfOrChildChanged: Boolean
-        get() {
-            if (this.isChanged) {
-                return true
-            }
-
-            for (child in this.children!!) {
-                if (child.selfOrChildChanged) {
-                    return true
-                }
-            }
-
-            return false
-        }
 
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = this.allChanges))

@@ -73,9 +73,6 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
             return this.conditions.sortedBy { it.sortId }.map { it.updateParameters }
         }
 
-    override val selfOrChildChanged: Boolean
-        get() = isChanged
-
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = RSearchChanges.entries))
         changeType = UpdatableChangeType.user.name

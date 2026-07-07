@@ -5,6 +5,7 @@ import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.sync.LibraryIdentifier
@@ -165,6 +166,31 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
         }
 
         return level
+    }
+}
+
+class ClearLastReadOnlyItemChangesDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val keys: Set<String>,
+): DbResponseRequest<Set<String>> {
+
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm): Set<String> {
+        val clearedKeys = mutableSetOf<String>()
+        val items = database.where<RItem>().keys(keys, libraryId).findAll()
+
+        for (item in items) {
+            if (!item.isChanged || !item.changedFields.contains(RItemChanges.lastRead)) {
+                continue
+            }
+
+            item.deleteAllChanges(database)
+            clearedKeys.add(item.key)
+        }
+
+        return clearedKeys
     }
 }
 

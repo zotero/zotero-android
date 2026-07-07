@@ -67,9 +67,6 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
             return mapOf("lastPageIndex_${libraryPart}_${this.key}" to mapOf("value" to value))
         }
 
-    override val selfOrChildChanged: Boolean
-        get() = isChanged
-
     override fun markAsChanged(database: Realm) {
         //no-op
     }
