@@ -4,8 +4,8 @@ import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Index
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.ktx.rounded
-import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
 
 enum class RPageIndexChanges {
@@ -27,6 +27,7 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType
+    var deleted: Boolean = false
 
     val changedFields: List<RPageIndexChanges>
         get() {
@@ -44,15 +45,6 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
         get() {
             val libraryId = this.libraryId ?: return null
 
-            val libraryPart: String =
-                when (libraryId) {
-                    is LibraryIdentifier.custom ->
-                        "u"
-
-                    is LibraryIdentifier.group ->
-                        "g${libraryId.groupId}"
-                }
-
             val value: Any
             val intValue = index.toIntOrNull()
             val doubleValue = index.toDoubleOrNull()
@@ -64,10 +56,19 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
                 value = index
             }
 
-            return mapOf("lastPageIndex_${libraryPart}_${this.key}" to mapOf("value" to value))
+            return mapOf(
+                SettingKeyParser.uid(
+                    key,
+                    libraryId = libraryId,
+                    prefix = "lastPageIndex"
+                ) to mapOf("value" to value)
+            )
         }
 
     override fun markAsChanged(database: Realm) {
-        //no-op
+        this.changes.add(RObjectChange.create(changes = listOf(RPageIndexChanges.index)))
+        this.changeType = UpdatableChangeType.user.name
+        this.deleted = false
+        this.version = 0
     }
 }

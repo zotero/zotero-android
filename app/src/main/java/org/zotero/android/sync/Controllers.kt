@@ -16,20 +16,20 @@ import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.logging.crash.CrashReporter
 import org.zotero.android.architecture.logging.debug.DebugLogging
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
-import org.zotero.android.loaders.citation.CitationProcLoader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
-import org.zotero.android.loaders.reader.ReaderLoader
+import org.zotero.android.loaders.citation.CitationProcLoader
 import org.zotero.android.loaders.csl.CslLocalesLoader
 import org.zotero.android.loaders.csl.ExportCslLocaleReader
 import org.zotero.android.loaders.pdfworker.PdfWorkerLoader
-import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
-import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
+import org.zotero.android.loaders.reader.ReaderLoader
 import org.zotero.android.loaders.translator.TranslationLoader
 import org.zotero.android.loaders.translator.TranslatorsAndStylesLoader
 import org.zotero.android.loaders.utilities.UtilitiesLoader
+import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
+import org.zotero.android.screens.share.backgroundprocessor.BackgroundUploadProcessor
 import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
@@ -66,6 +66,7 @@ class Controllers @Inject constructor(
     private val defaults: Defaults,
     private val exportCslLocaleReader: ExportCslLocaleReader,
     private val readerLoader: ReaderLoader,
+    private val lastReadWatcher: LastReadWatcher,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -215,12 +216,14 @@ class Controllers @Inject constructor(
     }
 
     fun didEnterBackground() {
+        lastReadWatcher.didEnterBackground()
 //        if(this.sessionDataEventStream.currentValue() != null) {
 //            this.userControllers.disableSync(apiKey = null)
 //        }
     }
 
     fun willTerminate() {
+        lastReadWatcher.willTerminate()
 //        if(this.sessionDataEventStream.currentValue() != null) {
 //            this.userControllers.disableSync(apiKey = null)
 //        }

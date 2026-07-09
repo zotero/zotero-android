@@ -1,32 +1,26 @@
 package org.zotero.android.api.mappers
 
 import com.google.gson.JsonObject
-import org.zotero.android.api.pojo.sync.PageIndexResponse
+import jakarta.inject.Inject
+import org.zotero.android.api.pojo.sync.LastReadResponse
 import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.Parsing
-import javax.inject.Inject
 
-class PageIndexResponseMapper @Inject constructor(){
-
-    fun fromJson(key: String, dictionary: JsonObject): PageIndexResponse? {
-        if (!key.startsWith("lastPageIndex")) {
+class LastReadResponseMapper @Inject constructor() {
+    fun fromJson(key: String, data: JsonObject): LastReadResponse? {
+        if (!key.startsWith("lastRead_")) {
             return null
         }
-        try {
-            val (key, libraryId) = SettingKeyParser.parse(key = key)
-
-            val version = dictionary["version"].asInt
-
-            return PageIndexResponse(
-                key = key,
-                value = parseValue(dictionary),
-                version = version,
-                libraryId = libraryId
-            )
-        } catch (e: Exception) {
-            return null
-        }
+        val (key, libraryId) = SettingKeyParser.parse(key = key)
+        val value = data["value"].asLong
+        val version = data["version"].asInt
+        return LastReadResponse(
+            key = key,
+            libraryId = libraryId,
+            value = value,
+            version = version
+        )
     }
 
     private fun parseValue(dictionary: JsonObject): String {

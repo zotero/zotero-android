@@ -7,12 +7,12 @@ class BackgroundTimer(
     private val timeIntervalMs: Long,
     private val eventHandler: (() -> Unit)?
 ) {
-    private enum class State {
+    enum class State {
         suspended,
         resumed
     }
 
-    private var state: State = State.suspended
+    var state: State = State.suspended
 
     private lateinit var timer: Timer
 

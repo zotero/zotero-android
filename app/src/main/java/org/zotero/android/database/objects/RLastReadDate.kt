@@ -5,6 +5,7 @@ import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Index
 import io.realm.kotlin.where
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.database.requests.key
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date

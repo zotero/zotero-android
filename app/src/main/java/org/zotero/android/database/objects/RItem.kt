@@ -25,6 +25,7 @@ import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.Tag
 import timber.log.Timber
@@ -253,6 +254,18 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (changes.contains(RItemChanges.creators)) {
                 parameters["creators"] = this.creators.sort("orderId").map { it.updateParameters }.toTypedArray()
             }
+
+            val libIdLocal = libraryId
+
+            if (changes.contains(RItemChanges.lastRead) && libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary) {
+                val lastRead = lastRead?.time?.let { it / 1000 }
+                if (lastRead != null){
+                    parameters["lastRead"] = lastRead
+                } else {
+                    parameters["lastRead"] = ""
+                }
+            }
+
             if (changes.contains(RItemChanges.fields)) {
                 for (field in this.fields.filter { it.changed }) {
                     if (field.baseKey == FieldKeys.Item.Annotation.position) {
@@ -450,7 +463,6 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 return changes
             }
 
-
             val changes = mutableListOf(RItemChanges.type, RItemChanges.fields, RItemChanges.tags)
             if (!this.creators.isEmpty()) {
                 changes.add(RItemChanges.creators)
@@ -466,6 +478,10 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             }
             if (!this.relations.isEmpty()) {
                 changes.add(RItemChanges.relations)
+            }
+            val libIdLocal = libraryId
+            if (libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary && lastRead != null) {
+                changes.add(RItemChanges.lastRead)
             }
             return changes
         }

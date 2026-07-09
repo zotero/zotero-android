@@ -18,7 +18,7 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.api.pojo.sync.PageIndexResponse
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.api.pojo.sync.SearchResponse
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
@@ -112,7 +112,7 @@ class SubmitUpdateSyncAction @AssistedInject constructor(
             val key = params.keys.firstOrNull()
             if (key != null) {
                 try {
-                    val setting = PageIndexResponse.parse(key = key)
+                    val setting = SettingKeyParser.parse(key = key)
                     settings.add(setting)
 
                 } catch (e: Exception) {
