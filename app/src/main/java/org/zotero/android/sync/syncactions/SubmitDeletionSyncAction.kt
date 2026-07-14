@@ -39,16 +39,21 @@ class SubmitDeletionSyncAction @AssistedInject constructor(
 
             val parameters = mutableMapOf<String, String>()
             when (this.objectS) {
-                SyncObject.collection ->
+                SyncObject.collection -> {
                     parameters["collectionKey"] = joinedKeys
+                }
 
-                SyncObject.item, SyncObject.trash ->
+                SyncObject.item, SyncObject.trash -> {
                     parameters["itemKey"] = joinedKeys
+                }
 
-                SyncObject.search ->
+                SyncObject.search -> {
                     parameters["searchKey"] = joinedKeys
+                }
 
-                SyncObject.settings -> {}
+                SyncObject.settings -> {
+                    parameters["settingKey"] = joinedKeys
+                }
             }
             zoteroApi.submitDeletionsRequest(
                 url = url,

@@ -23,6 +23,7 @@ import org.zotero.android.database.objects.LinkType
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCreator
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RLink
@@ -166,6 +167,19 @@ class StoreItemDbRequest(
             item.lastSyncDate = Date()
             item.changeType = UpdatableChangeType.sync.name
             item.libraryId = libraryId
+
+            when (libraryId) {
+                is LibraryIdentifier.custom -> {
+                    if (libraryId.type == RCustomLibraryType.myLibrary) {
+                        item.lastRead = response.lastRead
+                        item.updateEffectiveLastRead()
+                    }
+                }
+                is LibraryIdentifier.group -> {
+                    //no-op
+                }
+            }
+
 
             val filenameChange: StoreItemsResponse.FilenameChange? = syncFields(
                 data = response,
@@ -488,6 +502,7 @@ class StoreItemDbRequest(
                 parent = database.createObject<RItem>()
                 parent.key = key
                 parent.syncState = ObjectSyncState.dirty.name
+                parent.lastSyncDate = Date(0)
                 parent.libraryId = libraryId
             }
             item.parent = parent
@@ -531,6 +546,7 @@ class StoreItemDbRequest(
                 val collection = database.createObject<RCollection>()
                 collection.key = key
                 collection.syncState = ObjectSyncState.dirty.name
+                collection.lastSyncDate = Date(0)
                 collection.libraryId = libraryId
                 collection.items.add(item)
             }

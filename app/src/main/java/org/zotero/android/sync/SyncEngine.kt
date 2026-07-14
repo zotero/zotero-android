@@ -1142,11 +1142,16 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun performDeletions(libraryId: LibraryIdentifier, collections: List<String>,
-                                         items: List<String>, searches: List<String>, tags: List<String>,
-                                         conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode) {
+    private suspend fun performDeletions(
+        libraryId: LibraryIdentifier,
+        collections: List<String>,
+        items: List<String>,
+        searches: List<String>,
+        tags: List<String>,
+        conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
+    ) {
         try {
-            val conflicts = performDeletionsSyncActionFactory.create(
+            val result = performDeletionsSyncActionFactory.create(
                 libraryId = libraryId,
                 collections = collections,
                 items = items,
@@ -1154,7 +1159,7 @@ class SyncUseCase @Inject constructor(
                 tags = tags,
                 conflictMode = conflictMode
             ).result()
-            finishDeletionsSync(result = CustomResult.GeneralSuccess(conflicts), items = items, libraryId = libraryId)
+            finishDeletionsSync(result = CustomResult.GeneralSuccess(result), items = items, libraryId = libraryId)
         } catch (e: Throwable) {
             finishDeletionsSync(
                 result = CustomResult.GeneralError.CodeError(e),
@@ -1165,7 +1170,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun finishDeletionsSync(
-        result: CustomResult<List<Pair<String, String>>>,
+        result: CustomResult<PerformDeletionsSyncAction.Result>,
         libraryId: LibraryIdentifier,
         items: List<String>? = null,
         version: Int? = null
@@ -1191,7 +1196,11 @@ class SyncUseCase @Inject constructor(
             return
         }
         result as CustomResult.GeneralSuccess
-        val conflicts = result.value!!
+        if (!result.unexpectedMyLibraryLastReadDeletions.isEmpty()) {
+            nonFatalErrors.add(NonFatal.unexpectedMyLibraryLastReadDeletions(keys = result.unexpectedMyLibraryLastReadDeletions))
+        }
+
+        val conflicts = result.value!!.conflicts
         if (!conflicts.isEmpty()) {
             resolve(conflict = Conflict.removedItemsHaveLocalChanges(keys = conflicts, libraryId = libraryId))
         } else {
@@ -1526,7 +1535,7 @@ class SyncUseCase @Inject constructor(
                 is NonFatal.unknown, is NonFatal.schema, is NonFatal.parsing, is NonFatal.apiError,
                 is NonFatal.unchanged, is NonFatal.quotaLimit, is NonFatal.attachmentMissing,
                 is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed,
-                is NonFatal.webDavUpload, is NonFatal.webDavDownload, is NonFatal.webDavVerification ->
+                is NonFatal.webDavUpload, is NonFatal.webDavDownload, is NonFatal.webDavVerification, is NonFatal.unexpectedMyLibraryLastReadDeletions ->
                 reportErrors.add(error)
             }
         }

@@ -18,7 +18,7 @@ open class RLastReadDate : Syncable, Updatable, Deletable, RealmObject() {
     @Index
     override var key: String = ""
     lateinit var date: Date
-    var changed: Boolean = true
+    var changed: Boolean = false
     override var groupKey: Int? = null
     override lateinit var changes: RealmList<RObjectChange>
     @Index

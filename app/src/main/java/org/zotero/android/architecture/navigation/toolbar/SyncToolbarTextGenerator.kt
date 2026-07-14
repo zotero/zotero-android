@@ -5,9 +5,11 @@ import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncError
+import org.zotero.android.sync.SyncError.ErrorData
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
@@ -209,7 +211,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                     return context.getSafeString(
                         Strings.errors_sync_toolbar_attachment_missing,
                         "${nonFatalError.title} (${nonFatalError.key})"
-                    ) to SyncError.ErrorData(
+                    ) to ErrorData(
                         itemKeys = listOf(nonFatalError.key),
                         libraryId = nonFatalError.libraryId
                     )
@@ -253,7 +255,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                     val string = nonFatalError.messageS
                     val keys = nonFatalError.keys
                     val libraryId = nonFatalError.libraryId
-                    return (string to SyncError.ErrorData(
+                    return (string to ErrorData(
                         itemKeys = keys.toList(),
                         libraryId = libraryId
                     ))
@@ -264,7 +266,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                 }
 
                 is SyncError.NonFatal.preconditionFailed -> {
-                    return context.getSafeString(Strings.errors_sync_toolbar_conflict_retry_limit) to SyncError.ErrorData(
+                    return context.getSafeString(Strings.errors_sync_toolbar_conflict_retry_limit) to ErrorData(
                         itemKeys = null,
                         libraryId = nonFatalError.libraryId
                     )
@@ -316,6 +318,13 @@ class SyncToolbarTextGenerator @Inject constructor(
                         Strings.errors_sync_toolbar_webdav_item_prop,
                         error.message
                     ) to null
+                }
+
+                is SyncError.NonFatal.unexpectedMyLibraryLastReadDeletions -> {
+                    return context.getSafeString(Strings.errors_sync_toolbar_unexpected_my_library_last_read_deletions) to ErrorData(
+                        itemKeys = nonFatalError.keys,
+                        libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
+                    )
                 }
             }
         }

@@ -99,7 +99,8 @@ class ItemResponseMapper @Inject constructor(
             rects = rects,
             paths = paths,
             rawType = rawType,
-            key = key
+            key = key,
+            lastRead = null,
         )
     }
 
@@ -211,6 +212,8 @@ class ItemResponseMapper @Inject constructor(
             }
         }
 
+        val lastRead = data["lastRead"]?.asLong?.let { Date(it * 1000) }
+
         return ItemResponse(
             rawType = rawType,
             collectionKeys = collectionKeys,
@@ -231,7 +234,8 @@ class ItemResponseMapper @Inject constructor(
             version = version,
             paths = null,
             rects = null,
-            fields = fields
+            fields = fields,
+            lastRead = lastRead
         )
     }
 
@@ -292,7 +296,8 @@ class ItemResponseMapper @Inject constructor(
             rawType = rawType,
             fields = fields,
             rects = rects,
-            paths = paths
+            paths = paths,
+            lastRead = null,
         )
     }
 

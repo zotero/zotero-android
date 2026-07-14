@@ -23,6 +23,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.formatter.iso8601DateFormatV2
 import org.zotero.android.sync.LinkMode
 import timber.log.Timber
+import java.util.Date
 
 class CreateAttachmentDbRequest @AssistedInject constructor(
     @Assisted("attachment") private val attachment: Attachment,
@@ -202,6 +203,7 @@ class CreateAttachmentDbRequest @AssistedInject constructor(
                 collection = database.createObject<RCollection>()
                 collection.key = key
                 collection.syncState = ObjectSyncState.dirty.name
+                collection.lastSyncDate = Date(0)
                 collection.libraryId = this.attachment.libraryId
             }
 

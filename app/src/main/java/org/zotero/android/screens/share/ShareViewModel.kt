@@ -1017,7 +1017,8 @@ internal class ShareViewModel @Inject constructor(
                 lastModifiedBy = null,
                 rects = null,
                 paths = null,
-                inPublications = false
+                inPublications = false,
+                lastRead = null,
             )
 
             submit(item = webItem, libraryId = libraryId, userId = userId)

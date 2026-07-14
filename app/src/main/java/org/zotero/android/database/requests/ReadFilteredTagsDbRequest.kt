@@ -2,6 +2,7 @@ package org.zotero.android.database.requests
 
 import io.realm.Realm
 import io.realm.kotlin.where
+import org.joda.time.DateTime
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RTypedTag
 import org.zotero.android.screens.allitems.data.ItemsFilter
@@ -35,6 +36,10 @@ class ReadFilteredTagsDbRequest(
                     }
                     CollectionIdentifier.CustomType.unfiled -> {
                         predicates = predicates.and().rawPredicate("any item.collections.@count == 0")
+                    }
+                    CollectionIdentifier.CustomType.recentlyRead -> {
+                        val lastDate = DateTime().minusDays(14).toDate()
+                        predicates = predicates.and().rawPredicate("item.lastRead >= $0 or any item.children.lastRead >= $1", lastDate, lastDate)
                     }
                     CollectionIdentifier.CustomType.trash -> {
                         predicates = predicates.and().rawPredicate("item.trash = true")

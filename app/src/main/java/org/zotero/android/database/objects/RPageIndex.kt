@@ -12,7 +12,7 @@ enum class RPageIndexChanges {
     index
 }
 
-open class RPageIndex : RealmObject(), Updatable, Syncable {
+open class RPageIndex : RealmObject(), Updatable, Syncable, Deletable {
     @Index
     override var key: String = ""
     var index: String = ""
@@ -27,7 +27,7 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
     override var syncRetries: Int = 0
     override lateinit var changes: RealmList<RObjectChange>
     override lateinit var changeType: String //UpdatableChangeType
-    var deleted: Boolean = false
+    override var deleted: Boolean = false
 
     val changedFields: List<RPageIndexChanges>
         get() {
@@ -71,4 +71,13 @@ open class RPageIndex : RealmObject(), Updatable, Syncable {
         this.deleted = false
         this.version = 0
     }
+
+    override fun willRemove(database: Realm) {
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
+    }
+
+    override val isInvalidated: Boolean
+        get() = !isValid
 }
