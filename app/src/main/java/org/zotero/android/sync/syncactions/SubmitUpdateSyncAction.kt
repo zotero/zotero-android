@@ -18,8 +18,8 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.api.pojo.sync.SearchResponse
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
@@ -107,14 +107,13 @@ class SubmitUpdateSyncAction @AssistedInject constructor(
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val newVersion = networkResult.lastModifiedVersion
-        val settings = mutableListOf<Pair<String, LibraryIdentifier>>()
+        val settings = mutableListOf<MarkSettingsAsSyncedDbRequest.Setting>()
         for (params in this.parameters) {
-            val key = params.keys.firstOrNull()
-            if (key != null) {
+            val uid = params.keys.firstOrNull()
+            if (uid != null) {
                 try {
-                    val setting = SettingKeyParser.parse(key = key)
-                    settings.add(setting)
-
+                    val (key, libraryId) = SettingKeyParser.parse(key = uid)
+                    settings.add(MarkSettingsAsSyncedDbRequest.Setting(uid = uid, key = key, libraryId = libraryId))
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -424,7 +423,6 @@ class SubmitUpdateSyncAction @AssistedInject constructor(
                 Timber.e(e, "SubmitUpdateSyncAction: could not split annotations")
             }
         }
-
 
         val remainingFailedResponses =
             clearLastReadOnlyItemChangesIfNeeded(failedResponses, libraryId)

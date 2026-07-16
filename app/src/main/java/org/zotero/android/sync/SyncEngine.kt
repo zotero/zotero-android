@@ -12,7 +12,7 @@ import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandl
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
-import org.zotero.android.database.requests.PerformDeletionsDbRequest
+import org.zotero.android.database.requests.PerformItemDeletionsDbRequest
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.sync.SyncError.NonFatal
@@ -31,6 +31,7 @@ import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.MarkGroupForResyncSyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
+import org.zotero.android.sync.syncactions.PerformDeletionsSyncActionResult
 import org.zotero.android.sync.syncactions.RestoreDeletionsSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryFilesSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
@@ -240,8 +241,15 @@ class SyncUseCase @Inject constructor(
                 processStoreVersion(libraryId = action.libraryId, type = UpdateVersionType.deletions, version = action.version)
             }
             is Action.performDeletions -> {
-                performDeletions(libraryId = action.libraryId, collections = action.collections,
-                    items = action.items, searches = action.searches, tags = action.tags, conflictMode = action.conflictMode)
+                performDeletions(
+                    libraryId = action.libraryId,
+                    collections = action.collections,
+                    items = action.items,
+                    searches = action.searches,
+                    tags = action.tags,
+                    settings  = action.settings,
+                    conflictMode = action.conflictMode
+                )
             }
             is Action.markChangesAsResolved -> {
                 markChangesAsResolved(action.libraryId)
@@ -1148,7 +1156,8 @@ class SyncUseCase @Inject constructor(
         items: List<String>,
         searches: List<String>,
         tags: List<String>,
-        conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
+        settings: List<String>,
+        conflictMode: PerformItemDeletionsDbRequest.ConflictResolutionMode
     ) {
         try {
             val result = performDeletionsSyncActionFactory.create(
@@ -1157,6 +1166,7 @@ class SyncUseCase @Inject constructor(
                 items = items,
                 searches = searches,
                 tags = tags,
+                settings  = settings,
                 conflictMode = conflictMode
             ).result()
             finishDeletionsSync(result = CustomResult.GeneralSuccess(result), items = items, libraryId = libraryId)
@@ -1170,7 +1180,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun finishDeletionsSync(
-        result: CustomResult<PerformDeletionsSyncAction.Result>,
+        result: CustomResult<PerformDeletionsSyncActionResult>,
         libraryId: LibraryIdentifier,
         items: List<String>? = null,
         version: Int? = null
@@ -1196,8 +1206,8 @@ class SyncUseCase @Inject constructor(
             return
         }
         result as CustomResult.GeneralSuccess
-        if (!result.unexpectedMyLibraryLastReadDeletions.isEmpty()) {
-            nonFatalErrors.add(NonFatal.unexpectedMyLibraryLastReadDeletions(keys = result.unexpectedMyLibraryLastReadDeletions))
+        if (!result.value!!.unexpectedMyLibraryLastReadDeletions.isEmpty()) {
+            nonFatalErrors.add(NonFatal.unexpectedMyLibraryLastReadDeletions(keys = result.value!!.unexpectedMyLibraryLastReadDeletions))
         }
 
         val conflicts = result.value!!.conflicts
@@ -1595,7 +1605,7 @@ class SyncUseCase @Inject constructor(
 
             is ConflictResolution.remoteDeletionOfActiveObject -> {
                 val actions = mutableListOf<Action>()
-                if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty()) {
+                if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty() || !resolution.settings.isEmpty() ) {
                     actions.add(
                         Action.performDeletions(
                             libraryId = resolution.libraryId,
@@ -1603,7 +1613,8 @@ class SyncUseCase @Inject constructor(
                             items = resolution.toDeleteItems,
                             searches = resolution.searches,
                             tags = resolution.tags,
-                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.resolveConflicts
+                            settings = resolution.settings,
+                            conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.resolveConflicts
                         )
                     )
                 }
@@ -1628,7 +1639,8 @@ class SyncUseCase @Inject constructor(
                             items = resolution.toDelete,
                             searches = emptyList(),
                             tags = emptyList(),
-                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.deleteConflicts
+                            settings = emptyList(),
+                            conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.deleteConflicts
                         )
                     )
                 }
@@ -1664,6 +1676,7 @@ class SyncUseCase @Inject constructor(
             items = value.items,
             searches = value.searches,
             tags = value.tags,
+            settings = value.settings,
             version = value.version,
             libraryId = libraryId
         )
@@ -1674,6 +1687,7 @@ class SyncUseCase @Inject constructor(
         items: List<String>,
         searches: List<String>,
         tags: List<String>,
+        settings: List<String>,
         version: Int,
         libraryId: LibraryIdentifier
     ) {
@@ -1687,7 +1701,8 @@ class SyncUseCase @Inject constructor(
                     items = items,
                     searches = searches,
                     tags = tags,
-                    conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
+                    settings = settings,
+                    conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
                 )
 
             SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.keysOnly, SyncKind.prioritizeDownloads ->
@@ -1697,6 +1712,7 @@ class SyncUseCase @Inject constructor(
                         collections = collections,
                         items = items,
                         searches = searches,
+                        settings = settings,
                         tags = tags
                     )
                 )

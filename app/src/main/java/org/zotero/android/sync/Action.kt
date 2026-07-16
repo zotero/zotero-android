@@ -1,6 +1,7 @@
 package org.zotero.android.sync
 
-import org.zotero.android.database.requests.PerformDeletionsDbRequest
+import org.zotero.android.database.requests.PerformItemDeletionsDbRequest
+
 
 sealed class Action {
     object loadKeyPermissions : Action()
@@ -90,7 +91,8 @@ sealed class Action {
         val items: List<String>,
         val searches: List<String>,
         val tags: List<String>,
-        val conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode
+        val settings: List<String>,
+        val conflictMode: PerformItemDeletionsDbRequest.ConflictResolutionMode
     ) : Action()
 
     data class restoreDeletions(
@@ -104,7 +106,7 @@ sealed class Action {
             val action = this
             return when (action) {
                 is loadKeyPermissions, is createLibraryActions, is syncGroupVersions ->
-                    return null
+                    null
                 is resolveDeletedGroup -> return LibraryIdentifier.group(action.groupId)
                 is syncGroupToDb -> return LibraryIdentifier.group(action.groupId)
                 is createUploadActions -> action.libraryId
@@ -127,7 +129,7 @@ sealed class Action {
                 is revertLibraryToOriginal -> action.libraryId
                 is fixUpload -> action.libraryId
                 is removeActions -> action.libraryId
-                is resolveGroupFileWritePermission -> return LibraryIdentifier.group(action.groupId)
+                is resolveGroupFileWritePermission -> LibraryIdentifier.group(action.groupId)
                 is revertLibraryFilesToOriginal -> action.libraryId
             }
         }

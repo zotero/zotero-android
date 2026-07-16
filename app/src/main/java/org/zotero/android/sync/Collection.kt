@@ -26,12 +26,27 @@ data class Collection(
                 itemCount = 0,
             )
         }
-        fun initWithCustomType(type: CollectionIdentifier.CustomType, itemCount: Int = 0): Collection {
-            val name = when(type) {
-                CollectionIdentifier.CustomType.all -> "All Items"
-                CollectionIdentifier.CustomType.trash -> "Trash"
-                CollectionIdentifier.CustomType.publications -> "My Publications"
-                CollectionIdentifier.CustomType.unfiled -> "Unfiled Items"
+
+        fun initWithCustomType(
+            type: CollectionIdentifier.CustomType,
+            itemCount: Int = 0
+        ): Collection {
+            val name = when (type) {
+                CollectionIdentifier.CustomType.all -> {
+                    "All Items"
+                }
+                CollectionIdentifier.CustomType.trash -> {
+                    "Trash"
+                }
+                CollectionIdentifier.CustomType.publications -> {
+                    "My Publications"
+                }
+                CollectionIdentifier.CustomType.recentlyRead -> {
+                    "Recently Read"
+                }
+                CollectionIdentifier.CustomType.unfiled -> {
+                    "Unfiled Items"
+                }
             }
             return Collection(
                 identifier = CollectionIdentifier.custom(type),
@@ -44,25 +59,40 @@ data class Collection(
     val iconName: Int
         get() {
             return when (this.identifier) {
-                is CollectionIdentifier.collection -> Drawables.cell_collection
+                is CollectionIdentifier.collection -> {
+                    Drawables.cell_collection
+                }
                 is CollectionIdentifier.custom -> {
-                    return when (this.identifier.type) {
-                        CollectionIdentifier.CustomType.all,
-                        CollectionIdentifier.CustomType.publications -> Drawables.cell_document
-                        CollectionIdentifier.CustomType.trash -> Drawables.cell_trash
-                        CollectionIdentifier.CustomType.unfiled -> Drawables.cell_unfiled
+                    when (this.identifier.type) {
+                        CollectionIdentifier.CustomType.all, CollectionIdentifier.CustomType.publications -> {
+                            Drawables.cell_document
+                        }
+                        CollectionIdentifier.CustomType.recentlyRead -> {
+                            Drawables.recent
+                        }
+                        CollectionIdentifier.CustomType.trash -> {
+                            Drawables.cell_trash
+                        }
+                        CollectionIdentifier.CustomType.unfiled -> {
+                            Drawables.cell_unfiled
+                        }
                     }
                 }
-                is CollectionIdentifier.search -> Drawables.cell_document
+
+                is CollectionIdentifier.search -> {
+                    Drawables.cell_document
+                }
             }
         }
-    val isCollection: Boolean get() {
-        return when (this.identifier) {
-            is CollectionIdentifier.collection ->
-                true
-            is CollectionIdentifier.custom, is CollectionIdentifier.search ->
-                false
+    val isCollection: Boolean
+        get() {
+            return when (this.identifier) {
+                is CollectionIdentifier.collection ->
+                    true
+
+                is CollectionIdentifier.custom, is CollectionIdentifier.search ->
+                    false
+            }
         }
-    }
 }
 

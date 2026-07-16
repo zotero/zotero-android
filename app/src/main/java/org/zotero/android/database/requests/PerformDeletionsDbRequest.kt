@@ -14,12 +14,9 @@ import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.sync.LibraryIdentifier
 
-class PerformDeletionsDbRequest(
+class PerformItemDeletionsDbRequest(
     val libraryId: LibraryIdentifier,
-    val collections: List<String>,
-    val items: List<String>,
-    val searches: List<String>,
-    val tags: List<String>,
+    val keys: List<String>,
     val conflictMode: ConflictResolutionMode,
 ) : DbResponseRequest<List<Pair<String, String>>> {
     enum class ConflictResolutionMode {
@@ -34,14 +31,7 @@ class PerformDeletionsDbRequest(
     override fun process(
         database: Realm,
     ): List<Pair<String, String>> {
-        deleteCollections(this.collections, database = database)
-        deleteSearches(this.searches, database = database)
-        val conflicts = this.deleteItems(this.items, database = database)
-        this.deleteTags(this.tags, database = database)
-        return conflicts
-    }
 
-    private fun deleteItems(keys: List<String>, database: Realm): List<Pair<String, String>> {
         val objects = database.where<RItem>().keys(keys, this.libraryId).findAll()
         val conflicts: MutableList<Pair<String, String>> = mutableListOf()
         for (objectS in objects) {
@@ -73,56 +63,6 @@ class PerformDeletionsDbRequest(
         return conflicts
     }
 
-    private fun deleteCollections(keys: List<String>, database: Realm) {
-        val objects = database
-            .where<RCollection>()
-            .keys(keys, this.libraryId)
-            .findAll()
-
-        for (objectS in objects) {
-            if (objectS.isInvalidated) {
-                continue
-            }
-
-            if (objectS.isChanged) {
-                objectS.markAsChanged(database)
-            } else {
-                objectS.willRemove(database)
-                objectS.deleteFromRealm()
-            }
-        }
-    }
-
-    private fun deleteSearches(keys: List<String>, database: Realm) {
-        val objects = database
-            .where<RSearch>()
-            .keys(keys, this.libraryId)
-            .findAll()
-
-        for (objectS in objects) {
-            if (objectS.isInvalidated) {
-                continue
-            }
-            if (objectS.isChanged) {
-                objectS.markAsChanged(database)
-            } else {
-                objectS.willRemove(database)
-                objectS.deleteFromRealm()
-            }
-        }
-    }
-
-    private fun deleteTags(names: List<String>, database: Realm) {
-        val tags = database
-            .where<RTag>()
-            .nameIn(names, this.libraryId)
-            .findAll()
-        for (tag in tags) {
-            tag.tags?.deleteAllFromRealm()
-        }
-        tags.deleteAllFromRealm()
-    }
-
     fun hasLocalChangesRequiringConflict(item: RItem): Boolean {
         if (hasNonLastReadChanges(item)) {
             return true
@@ -152,17 +92,24 @@ class PerformDeletionsDbRequest(
 
 }
 
-class PerformPageIndexDeletionsDbRequest(
+class PerformCollectionDeletionsDbRequest(
     private val libraryId: LibraryIdentifier,
-    private val keys: List<String>,
-): DbRequest {
+    private val keys: List<String>
+) : DbRequest {
     override val needsWrite: Boolean
         get() = true
 
     override fun process(database: Realm) {
-        val objects = database.where<RPageIndex>().keys(keys, libraryId).findAll()
+        val objects = database
+            .where<RCollection>()
+            .keys(keys, this.libraryId)
+            .findAll()
+
         for (objectS in objects) {
-            if (objectS.isInvalidated) { continue }
+            if (objectS.isInvalidated) {
+                continue
+            }
+
             if (objectS.isChanged) {
                 objectS.markAsChanged(database)
             } else {
@@ -174,10 +121,82 @@ class PerformPageIndexDeletionsDbRequest(
 
 }
 
-class PerformLastReadDeletionsDbRequest(
+class PerformPageIndexDeletionsDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val keys: List<String>,
+) : DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val objects = database.where<RPageIndex>().keys(keys, libraryId).findAll()
+        for (objectS in objects) {
+            if (objectS.isInvalidated) {
+                continue
+            }
+            if (objectS.isChanged) {
+                objectS.markAsChanged(database)
+            } else {
+                objectS.willRemove(database)
+                objectS.deleteFromRealm()
+            }
+        }
+    }
+
+}
+
+class PerformSearchDeletionsDbRequest(
     private val libraryId: LibraryIdentifier,
     private val keys: List<String>,
 ): DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val objects = database
+            .where<RSearch>()
+            .keys(keys, this.libraryId)
+            .findAll()
+
+        for (objectS in objects) {
+            if (objectS.isInvalidated) {
+                continue
+            }
+            if (objectS.isChanged) {
+                objectS.markAsChanged(database)
+            } else {
+                objectS.willRemove(database)
+                objectS.deleteFromRealm()
+            }
+        }
+    }
+
+}
+
+class PerformTagDeletionsDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val names: List<String>
+): DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val tags = database
+            .where<RTag>()
+            .nameIn(names, this.libraryId)
+            .findAll()
+        for (tag in tags) {
+            tag.tags?.deleteAllFromRealm()
+        }
+        tags.deleteAllFromRealm()
+    }
+
+}
+
+class PerformLastReadDeletionsDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val keys: List<String>,
+) : DbRequest {
     sealed class Error : Exception() {
         object myLibraryNotSupported : Error()
     }
@@ -187,12 +206,13 @@ class PerformLastReadDeletionsDbRequest(
 
     override fun process(database: Realm) {
         val libIdLocal = libraryId
-        when(libIdLocal) {
+        when (libIdLocal) {
             is LibraryIdentifier.custom -> {
                 if (libIdLocal.type == RCustomLibraryType.myLibrary) {
                     throw Error.myLibraryNotSupported
                 }
             }
+
             is LibraryIdentifier.group -> {
                 val objects = database.where<RLastReadDate>().keys(keys, libraryId).findAll()
                 for (objectS in objects) {
