@@ -488,6 +488,9 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
 
     override fun willRemove(database: Realm) {
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
         if (this.children!!.isValid) {
             for (child in this.children) {
                 if (!child.isValid) {

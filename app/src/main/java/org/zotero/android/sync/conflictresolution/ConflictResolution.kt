@@ -15,7 +15,8 @@ sealed class ConflictResolution {
         val toDeleteItems: List<String>,
         val toRestoreItems: List<String>,
         val searches: List<String>,
-        val tags: List<String>
+        val tags: List<String>,
+        val settings: List<String>,
     ) : ConflictResolution()
 
     data class remoteDeletionOfChangedItem(

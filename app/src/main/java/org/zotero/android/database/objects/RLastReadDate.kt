@@ -61,7 +61,7 @@ open class RLastReadDate : Syncable, Updatable, Deletable, RealmObject() {
                     key = key,
                     libraryId = LibraryIdentifier.group(groupKey!!),
                     prefix = "lastRead"
-                ) to mapOf("value" to 0L)
+                ) to mapOf("value" to date.time / 1000)
             )
         }
 

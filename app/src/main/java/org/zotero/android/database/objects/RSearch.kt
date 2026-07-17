@@ -39,7 +39,9 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         }
 
     override fun willRemove(database: Realm) {
-        //no-op
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
     }
 
     override val isInvalidated: Boolean
