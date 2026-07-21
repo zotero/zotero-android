@@ -6,6 +6,7 @@ import org.zotero.android.database.migration.main.solutions.MigrateAllItemsDbRow
 import org.zotero.android.database.migration.main.solutions.MigrateExtractAnnotationTypeFromItems
 import org.zotero.android.database.migration.main.solutions.MigrateMarkAllNonLocalGroupsAsOutdatedToTriggerResync
 import org.zotero.android.database.migration.main.solutions.MigrateNonArabicFormattingSortIndex
+import org.zotero.android.database.migration.main.solutions.MigrateRecentlyRead
 
 internal class MainDbMigration(private val fileName: String) : RealmMigration {
 
@@ -21,6 +22,9 @@ internal class MainDbMigration(private val fileName: String) : RealmMigration {
         }
         if (oldVersion < 6) {
             MigrateNonArabicFormattingSortIndex(dynamicRealm).migrate()
+        }
+        if (oldVersion < 7) {
+            MigrateRecentlyRead(dynamicRealm).migrate()
         }
     }
 

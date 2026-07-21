@@ -108,6 +108,7 @@ sealed class SyncError {
         data class webDavUpload(val error: WebDavError.Upload): NonFatal()
         data class webDavDownload(val error: WebDavError.Download): NonFatal()
         data class webDavVerification(val error: WebDavError.Verification): NonFatal()
+        data class unexpectedMyLibraryLastReadDeletions(val keys: List<String>): NonFatal()
 
         val isVersionMismatch: Boolean
             get() {

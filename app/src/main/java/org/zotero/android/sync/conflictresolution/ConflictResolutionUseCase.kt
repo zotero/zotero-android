@@ -52,6 +52,7 @@ class ConflictResolutionUseCase @Inject constructor(
 
     private lateinit var searches: List<String>
     private lateinit var tags: List<String>
+    private lateinit var settings: List<String>
 
     private fun resolveObjectsRemovedRemotely(conflict: Conflict.objectsRemovedRemotely) {
         libraryId = conflict.libraryId
@@ -61,6 +62,7 @@ class ConflictResolutionUseCase @Inject constructor(
         toRestoreItems = mutableListOf()
         searches = conflict.searches
         tags = conflict.tags
+        settings = conflict.settings
 
         val keyForShowingCollection = showsCollection(libraryId = libraryId)
         val keyForShowingItem = showsItem(libraryId = libraryId)
@@ -98,6 +100,7 @@ class ConflictResolutionUseCase @Inject constructor(
             toRestoreItems = toRestoreItems,
             searches = searches,
             tags = tags,
+            settings = settings
         )
         syncUseCase.enqueueResolution(resolution)
     }

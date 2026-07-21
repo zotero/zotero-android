@@ -33,6 +33,7 @@ class StorePageForItemDbRequest(
         }
 
         pageIndex.index = this.page
+        pageIndex.deleted = false
         pageIndex.changes.add(RObjectChange.create(listOf(RPageIndexChanges.index)))
         pageIndex.changeType = UpdatableChangeType.user.name
     }

@@ -1,3 +1,4 @@
+
 package org.zotero.android.sync.syncactions
 
 import dagger.assisted.Assisted
@@ -7,10 +8,12 @@ import org.zotero.android.BuildConfig
 import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.requests.CreateWebDavDeletionsDbRequest
 import org.zotero.android.database.requests.DeleteObjectsDbRequest
@@ -39,16 +42,21 @@ class SubmitDeletionSyncAction @AssistedInject constructor(
 
             val parameters = mutableMapOf<String, String>()
             when (this.objectS) {
-                SyncObject.collection ->
+                SyncObject.collection -> {
                     parameters["collectionKey"] = joinedKeys
+                }
 
-                SyncObject.item, SyncObject.trash ->
+                SyncObject.item, SyncObject.trash -> {
                     parameters["itemKey"] = joinedKeys
+                }
 
-                SyncObject.search ->
+                SyncObject.search -> {
                     parameters["searchKey"] = joinedKeys
+                }
 
-                SyncObject.settings -> {}
+                SyncObject.settings -> {
+                    parameters["settingKey"] = joinedKeys
+                }
             }
             zoteroApi.submitDeletionsRequest(
                 url = url,
@@ -115,7 +123,23 @@ class SubmitDeletionSyncAction @AssistedInject constructor(
                     }
 
                     SyncObject.settings -> {
-                        //no-op
+                        val groupedSettings = mutableMapOf<LibraryIdentifier, MutableList<String>>()
+                        for (uid in keys) {
+                            if (!uid.startsWith("lastRead_")) {
+                                continue
+                            }
+                            val (key, libraryId) =  SettingKeyParser.parse(key = uid)
+                            groupedSettings.getOrPut(libraryId,  {mutableListOf<String>()}).add(key)
+                        }
+                        for ((libraryId, keys) in groupedSettings) {
+                            requests.add(
+                                element = DeleteObjectsDbRequest(
+                                    keys = keys,
+                                    libraryId = libraryId,
+                                    clazz = RLastReadDate::class
+                                ), index = 0
+                            )
+                        }
                     }
                 }
                 coordinator.perform(requests)

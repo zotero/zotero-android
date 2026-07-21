@@ -38,7 +38,7 @@ data class ItemResponse(
     val lastModifiedBy: UserResponse?,
     val rects: List<List<Double>>?,
     val paths: List<List<Double>>?,
-
+    val lastRead: Date?,
     ) {
 
     var notes: MutableList<String> = mutableListOf()
@@ -308,6 +308,7 @@ data class ItemResponse(
             rects = this.rects,
             paths = this.paths,
             inPublications = false,
+            lastRead = this.lastRead,
         )
     }
 
@@ -334,6 +335,7 @@ data class ItemResponse(
                 rects = this.rects,
                 paths = this.paths,
                 inPublications = false,
+                lastRead = this.lastRead,
             )
     }
 }

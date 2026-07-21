@@ -9,6 +9,7 @@ import org.zotero.android.database.objects.RCustomLibrary
 import org.zotero.android.database.objects.RGroup
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemField
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RLink
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.RPageIndex
@@ -46,6 +47,7 @@ import org.zotero.android.database.objects.RWebDavDeletion
         RVersions::class,
         RObjectChange::class,
         AllItemsDbRow::class,
+        RLastReadDate::class,
     ]
 )
 data class MainConfigurationDbModule(val placeholder: String) { // empty data class for equals/hashcode

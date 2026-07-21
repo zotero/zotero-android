@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.RealmQuery
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.commons.text.translate.UnicodeUnescaper
+import org.joda.time.DateTime
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.UpdatableChangeType
@@ -284,6 +285,18 @@ fun <T> RealmQuery<T>.items(
                 CollectionIdentifier.CustomType.trash -> {
                     //no-op
                 }
+
+                CollectionIdentifier.CustomType.recentlyRead -> {
+                    val lastDate = DateTime().minusDays(14).toDate()
+                    predicates =
+                        predicates
+                            .and()
+                            .beginGroup()
+                            .greaterThanOrEqualTo("lastRead", lastDate)
+                            .or()
+                            .greaterThanOrEqualTo("children.lastRead", lastDate)
+                            .endGroup()
+                }
             }
         }
         is CollectionIdentifier.search -> {
@@ -333,9 +346,18 @@ fun <T> RealmQuery<T>.itemUserChanges(
         .changesNotPaused()
 }
 
-fun <T> RealmQuery<T>.pageIndexUserChanges(
-): RealmQuery<T> {
-    return changedByUser().and().changed()
+fun <T> RealmQuery<T>.settingsChanges(): RealmQuery<T> {
+    return changedByUser()
+        .and()
+            .beginGroup()
+            .changed()
+            .or()
+            .deleted(true)
+            .endGroup()
+}
+
+fun <T> RealmQuery<T>.changesWithoutDeletions(): RealmQuery<T> {
+    return changed().and().deleted(false)
 }
 
 fun <T> RealmQuery<T>.userChanges(

@@ -1,14 +1,19 @@
 package org.zotero.android.database.requests
 
 import io.realm.Realm
+import io.realm.RealmResults
 import io.realm.kotlin.where
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
+import org.zotero.android.database.objects.Updatable
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
+import kotlin.collections.set
 
 data class ReadUpdatedParametersResponse(
     val parameters: List<Map<String, Any>>,
@@ -31,20 +36,29 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
             is LibraryIdentifier.custom -> {
                 val parameters = mutableListOf<Map<String, Any>>()
                 val uuids = mutableMapOf<String, List<String>>()
-                val changed = database
+                val changedIndices = database
                     .where<RPageIndex>()
-                    .changed()
+                    .changesWithoutDeletions()
                     .findAll()
 
-                for (objectS in changed) {
-                    val _parameters = objectS.updateParameters ?: continue
-                    val newKey = _parameters.keys.firstOrNull() ?: continue
-                    parameters.add(_parameters)
-                    uuids[newKey] = objectS.changes.map { it.identifier }
-                }
-
-                return ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)
+                update(parameters =  parameters, uuids = uuids,  changedIndices)
+                val changedDates = database.where<RLastReadDate>().changesWithoutDeletions().findAll()
+                update(parameters = parameters, uuids = uuids, changedDates)
+                ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)
             }
+        }
+    }
+
+    fun <O : Updatable> update(
+        parameters: MutableList<Map<String, Any>>,
+        uuids: MutableMap<String, List<String>>,
+        objects: RealmResults<O>
+    ) {
+        for (objectS in objects) {
+            val _parameters = objectS.updateParameters ?: continue
+            val newKey = _parameters.keys.firstOrNull() ?: continue
+            parameters.add(_parameters)
+            uuids[newKey] = objectS.changes.map { it.identifier }
         }
     }
 }
@@ -165,6 +179,31 @@ class ReadUpdatedItemUpdateParametersDbRequest(val libraryId: LibraryIdentifier)
         }
 
         return level
+    }
+}
+
+class ClearLastReadOnlyItemChangesDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val keys: Set<String>,
+): DbResponseRequest<Set<String>> {
+
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm): Set<String> {
+        val clearedKeys = mutableSetOf<String>()
+        val items = database.where<RItem>().keys(keys, libraryId).findAll()
+
+        for (item in items) {
+            if (!item.isChanged || !item.changedFields.contains(RItemChanges.lastRead)) {
+                continue
+            }
+
+            item.deleteAllChanges(database)
+            clearedKeys.add(item.key)
+        }
+
+        return clearedKeys
     }
 }
 

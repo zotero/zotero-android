@@ -16,6 +16,7 @@ data class LoadDeletionsSyncActionResult(
     val items: List<String>,
     val searches: List<String>,
     val tags: List<String>,
+    val settings: List<String>,
     val version: Int
 )
 
@@ -55,7 +56,8 @@ class LoadDeletionsSyncAction @AssistedInject constructor(
                 items = value.items,
                 searches = value.searches,
                 tags = value.tags,
-                version = newVersion
+                settings = value.settings,
+                version = newVersion,
             )
         )
     }

@@ -27,6 +27,12 @@ internal fun CollectionsTable(
             layoutType = layoutType,
             viewModel = viewModel
         )
+        fixedCollectionRow(
+            customType = CollectionIdentifier.CustomType.recentlyRead,
+            viewState = viewState,
+            layoutType = layoutType,
+            viewModel = viewModel
+        )
         recursiveCollectionItem(
             layoutType = layoutType,
             collectionItems = viewState.collectionItemsToDisplay,

@@ -2,9 +2,9 @@ package org.zotero.android.api.pojo.sync
 
 import org.zotero.android.sync.LibraryIdentifier
 
-data class PageIndexResponse(
+data class LastReadResponse(
     val key: String,
-    val value: String,
-    val version: Int,
+    val value: Long,
     val libraryId: LibraryIdentifier,
+    val version: Int,
 )

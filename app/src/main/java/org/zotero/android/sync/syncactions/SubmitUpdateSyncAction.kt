@@ -18,14 +18,15 @@ import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
+import org.zotero.android.database.requests.ClearLastReadOnlyItemChangesDbRequest
 import org.zotero.android.database.requests.MarkCollectionAsSyncedAndUpdateDbRequest
 import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.database.requests.MarkItemAsSyncedAndUpdateDbRequest
@@ -39,6 +40,7 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
+import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncObject
 import timber.log.Timber
 import java.io.FileWriter
@@ -105,14 +107,13 @@ class SubmitUpdateSyncAction @AssistedInject constructor(
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val newVersion = networkResult.lastModifiedVersion
-        val settings = mutableListOf<Pair<String, LibraryIdentifier>>()
+        val settings = mutableListOf<MarkSettingsAsSyncedDbRequest.Setting>()
         for (params in this.parameters) {
-            val key = params.keys.firstOrNull()
-            if (key != null) {
+            val uid = params.keys.firstOrNull()
+            if (uid != null) {
                 try {
-                    val setting = PageIndexResponse.parse(key = key)
-                    settings.add(setting)
-
+                    val (key, libraryId) = SettingKeyParser.parse(key = uid)
+                    settings.add(MarkSettingsAsSyncedDbRequest.Setting(uid = uid, key = key, libraryId = libraryId))
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -423,10 +424,66 @@ class SubmitUpdateSyncAction @AssistedInject constructor(
             }
         }
 
-        Timber.e("SubmitUpdateSyncAction: failures - $failedResponses")
+        val remainingFailedResponses =
+            clearLastReadOnlyItemChangesIfNeeded(failedResponses, libraryId)
+        if (remainingFailedResponses.isEmpty()) {
+            return SyncError.NonFatal.preconditionFailed(libraryId)
+        }
 
-        val errorMessages = failedResponses.joinToString(separator = "\n") { it.message }
-        return SyncActionError.submitUpdateFailures(errorMessages)
+        val remainingFailedResponsesText =
+            remainingFailedResponses.joinToString(separator = "\n") { it.message }
+        Timber.e("SubmitUpdateSyncAction: failures - $remainingFailedResponses")
+
+        return SyncActionError.submitUpdateFailures(remainingFailedResponsesText)
+    }
+
+    fun clearLastReadOnlyItemChangesIfNeeded(
+        failedResponses: List<FailedUpdateResponse>,
+        libraryId: LibraryIdentifier
+    ): List<FailedUpdateResponse> {
+        when (this.objectS) {
+            SyncObject.item, SyncObject.trash -> {
+                //no-op
+            }
+
+            SyncObject.collection, SyncObject.search, SyncObject.settings -> {
+                return failedResponses
+            }
+        }
+        val missingKeys = failedResponses.mapNotNull { response ->
+            if (response.code != 404) {
+                return@mapNotNull null
+            }
+            response.key
+        }.toSet()
+
+        if (missingKeys.isEmpty()) {
+            return failedResponses
+        }
+
+        try {
+            val clearedKeys = dbWrapperMain.realmDbStorage.perform(
+                request = ClearLastReadOnlyItemChangesDbRequest(
+                    libraryId = libraryId,
+                    keys = missingKeys
+                )
+            )
+            if (clearedKeys.isEmpty()) {
+                return failedResponses
+            }
+
+            Timber.w("SubmitUpdateSyncAction: cleared lastRead-only changes for remotely missing items - $clearedKeys")
+            return failedResponses.filter({ response ->
+                val key = response.key ?: return@filter true
+                !clearedKeys.contains(key)
+            })
+        } catch (error: Exception) {
+            Timber.e(
+                error,
+                "SubmitUpdateSyncAction: could not clear lastRead-only changes for remotely missing items"
+            )
+            return failedResponses
+        }
     }
 
     private fun process(response: UpdatesResponse): SubmitUpdateProcessResponse {

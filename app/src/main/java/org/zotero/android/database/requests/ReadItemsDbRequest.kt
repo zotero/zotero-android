@@ -6,6 +6,7 @@ import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.RealmResults
+import io.realm.Sort
 import io.realm.kotlin.where
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
@@ -14,6 +15,7 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import org.zotero.android.sync.LibraryIdentifier
 
 class ReadItemsDbRequest @AssistedInject constructor(
@@ -69,12 +71,18 @@ class ReadItemsDbRequest @AssistedInject constructor(
         }
 
         // Sort if needed
-        if (this.sortType != null) {
-            resultsQuery = resultsQuery.sort(
-                this.sortType.descriptors.first,
-                this.sortType.descriptors.second
-            )
+        val colIdLocal = collectionId
+        if (colIdLocal is CollectionIdentifier.custom && colIdLocal.type == CustomType.recentlyRead) {
+            resultsQuery = resultsQuery.sort("effectiveLastRead", Sort.DESCENDING, "sortTitle", Sort.ASCENDING)
+        } else {
+            if (this.sortType != null) {
+                resultsQuery = resultsQuery.sort(
+                    this.sortType.descriptors.first,
+                    this.sortType.descriptors.second
+                )
+            }
         }
+
         return if (isAsync) {
             resultsQuery.findAllAsync()
         } else {

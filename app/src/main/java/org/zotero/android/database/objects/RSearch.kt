@@ -39,7 +39,9 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         }
 
     override fun willRemove(database: Realm) {
-        //no-op
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
     }
 
     override val isInvalidated: Boolean
@@ -72,9 +74,6 @@ open class RSearch : Deletable, Syncable, Updatable, RealmObject() {
         get() {
             return this.conditions.sortedBy { it.sortId }.map { it.updateParameters }
         }
-
-    override val selfOrChildChanged: Boolean
-        get() = isChanged
 
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = RSearchChanges.entries))

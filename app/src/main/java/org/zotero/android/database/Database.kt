@@ -9,7 +9,7 @@ import java.io.File
 
 class Database {
     companion object {
-        private const val schemaVersion = 6L //From now on must only increase by 1 whenever db schema changes
+        private const val schemaVersion = 7L //From now on must only increase by 1 whenever db schema changes
 
         fun mainConfiguration(dbFile: File): RealmConfiguration {
             val builder = RealmConfiguration.Builder()

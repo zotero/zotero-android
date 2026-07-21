@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 sealed class CollectionIdentifier: java.io.Serializable {
     @Serializable
     enum class CustomType: java.io.Serializable {
-        all, trash, publications, unfiled
+        all, trash, publications, unfiled, recentlyRead
     }
 
     @Serializable
@@ -21,10 +21,21 @@ sealed class CollectionIdentifier: java.io.Serializable {
             return when (this) {
                 is custom -> {
                     when (this.type) {
-                        CustomType.all -> "all"
-                        CustomType.publications -> "publications"
-                        CustomType.trash -> "trash"
-                        CustomType.unfiled -> "unfiled"
+                        CustomType.all -> {
+                            "all"
+                        }
+                        CustomType.publications -> {
+                            "publications"
+                        }
+                        CustomType.trash -> {
+                            "trash"
+                        }
+                        CustomType.unfiled -> {
+                            "unfiled"
+                        }
+                        CustomType.recentlyRead -> {
+                            "recentlyRead"
+                        }
                     }
                 }
                 is collection ->
@@ -39,8 +50,12 @@ sealed class CollectionIdentifier: java.io.Serializable {
             return when (this) {
                 is custom -> {
                     when (this.type) {
-                        CustomType.trash -> true
-                        CustomType.all, CustomType.publications, CustomType.unfiled -> false
+                        CustomType.trash -> {
+                            true
+                        }
+                        CustomType.all, CustomType.publications, CustomType.unfiled, CustomType.recentlyRead -> {
+                            false
+                        }
                     }
                 }
                 else -> false

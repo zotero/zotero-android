@@ -109,6 +109,7 @@ import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AnnotationConverterV2
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.LastReadWatcher
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SessionDataEventStream
@@ -144,6 +145,7 @@ class ReaderViewModel @Inject constructor(
     private val annotationBitmapManager: ReaderAnnotationBitmapManager,
     private val annotationBitmapCacheSnapshotEventStream: ReaderAnnotationBitmapCacheSnapshotEventStream,
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
+    private val lastReadWatcher: LastReadWatcher,
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ReaderViewState, ReaderViewEffect>(ReaderViewState())  {
@@ -1458,6 +1460,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun deinitialiseReader() {
+        lastReadWatcher.submit(key = this.key, libraryId = this.library.identifier, date = Date())
         this.readerDirectory.deleteRecursively()
     }
 
@@ -1565,6 +1568,12 @@ class ReaderViewModel @Inject constructor(
             return
         }
 
+        lastReadWatcher.submitAfterDelay(
+            key = this.key,
+            libraryId = this.library.identifier,
+            date = Date()
+        )
+
         if (viewState.fileType == ReaderFileType.PDF) {
             triggerEffect(
                 ReaderViewEffect.OnPageChanged(page.toInt())
@@ -1651,6 +1660,8 @@ class ReaderViewModel @Inject constructor(
             this.annotationItems?.removeAllChangeListeners()
             this.annotationItems = annotationItems
             startObservingAnnotationResults()
+
+            lastReadWatcher.submit(key = this.key, libraryId = this.library.identifier, date = Date())
         } catch (e: Exception) {
             Timber.e(e, "ReaderViewModel: could not load document")
         }

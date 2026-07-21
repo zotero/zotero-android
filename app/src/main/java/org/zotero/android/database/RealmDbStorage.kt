@@ -67,6 +67,23 @@ class RealmDbStorage(val config: RealmConfiguration) {
         coordinator.perform(requests)
         coordinator.invalidate()
     }
+
+    fun performCoordinator(
+        coordinatorAction: (RealmDbCoordinator) -> Unit,
+        invalidateRealm: Boolean,
+        refreshRealm: Boolean
+    ) {
+        val coordinator = RealmDbCoordinator().init(config)
+
+        if (refreshRealm) {
+            coordinator.refresh()
+        }
+        coordinatorAction(coordinator)
+
+        if (invalidateRealm) {
+            coordinator.invalidate()
+        }
+    }
 }
 
 class RealmDbCoordinator {

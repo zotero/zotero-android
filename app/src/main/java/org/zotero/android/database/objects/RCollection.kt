@@ -40,18 +40,19 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
     override lateinit var changeType: String // UpdatableChangeType
     override var deleted: Boolean = false
     override fun willRemove(database: Realm) {
-        val libraryId = this.libraryId
-        if (libraryId != null) {
-            val children = database.where<RCollection>().parentKey(this.key, library = libraryId)
-            if (children.isValid) {
-                for (child in children.findAll()) {
-                    if (child.isInvalidated) {
-                        continue
-                    }
-                    child.willRemove(database)
+        val libraryId = this.libraryId ?: return
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
+        val children = database.where<RCollection>().parentKey(this.key, libraryId).findAll()
+        if (children.isValid) {
+            for (child in children) {
+                if (child.isInvalidated) {
+                    continue
                 }
-                children.findAll().deleteAllFromRealm()
+                child.willRemove(database)
             }
+            children.deleteAllFromRealm()
         }
     }
 
@@ -112,9 +113,6 @@ open class RCollection : Syncable, Updatable, Deletable, RealmObject() {
 
             return parameters
         }
-
-    override val selfOrChildChanged: Boolean
-        get() = isChanged
 
     override fun markAsChanged(database: Realm) {
         val changes = mutableListOf(RCollectionChanges.nameS)

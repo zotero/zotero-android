@@ -25,6 +25,7 @@ import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.Tag
 import timber.log.Timber
@@ -41,6 +42,7 @@ enum class RItemChanges {
     relations,
     rects,
     paths,
+    lastRead,
 }
 
 open class RItem : Updatable, Deletable, Syncable, RealmObject() {
@@ -133,6 +135,10 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     var htmlFreeContent: String? = null
     var allItemsDbRow: AllItemsDbRow? = null
 
+    @Index
+    var lastRead: Date? = null
+    var effectiveLastRead: Date? = null
+
     val doi: String?
         get() {
             val fieldS = fields.firstOrNull { it.key == FieldKeys.Item.doi }
@@ -154,6 +160,24 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return changes.flatMap { it.rawChanges.map { RItemChanges.valueOf(it) } }
         }
 
+    fun updateEffectiveLastRead() {
+        when(rawType) {
+            ItemTypes.annotation -> {
+                return
+            }
+            ItemTypes.attachment -> {
+                effectiveLastRead = lastRead
+            }
+             else -> {
+                 val childrenMaxLastRead = children
+                     ?.mapNotNull { it.lastRead }
+                     ?.maxOrNull()
+                 effectiveLastRead = listOfNotNull(lastRead, childrenMaxLastRead)
+                     .maxOrNull()
+             }
+        }
+        parent?.updateEffectiveLastRead()
+    }
 
     fun set(title: String) {
         baseTitle = title
@@ -230,6 +254,18 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (changes.contains(RItemChanges.creators)) {
                 parameters["creators"] = this.creators.sort("orderId").map { it.updateParameters }.toTypedArray()
             }
+
+            val libIdLocal = libraryId
+
+            if (changes.contains(RItemChanges.lastRead) && libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary) {
+                val lastRead = lastRead?.time?.let { it / 1000 }
+                if (lastRead != null){
+                    parameters["lastRead"] = lastRead
+                } else {
+                    parameters["lastRead"] = ""
+                }
+            }
+
             if (changes.contains(RItemChanges.fields)) {
                 for (field in this.fields.filter { it.changed }) {
                     if (field.baseKey == FieldKeys.Item.Annotation.position) {
@@ -384,22 +420,6 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         return jsonData
     }
 
-
-    override val selfOrChildChanged: Boolean
-        get() {
-            if (this.isChanged) {
-                return true
-            }
-
-            for (child in this.children!!) {
-                if (child.selfOrChildChanged) {
-                    return true
-                }
-            }
-
-            return false
-        }
-
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = this.allChanges))
         this.changeType = UpdatableChangeType.user.name
@@ -443,7 +463,6 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 return changes
             }
 
-
             val changes = mutableListOf(RItemChanges.type, RItemChanges.fields, RItemChanges.tags)
             if (!this.creators.isEmpty()) {
                 changes.add(RItemChanges.creators)
@@ -460,11 +479,18 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (!this.relations.isEmpty()) {
                 changes.add(RItemChanges.relations)
             }
+            val libIdLocal = libraryId
+            if (libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary && lastRead != null) {
+                changes.add(RItemChanges.lastRead)
+            }
             return changes
         }
 
 
     override fun willRemove(database: Realm) {
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
         if (this.children!!.isValid) {
             for (child in this.children) {
                 if (!child.isValid) {
