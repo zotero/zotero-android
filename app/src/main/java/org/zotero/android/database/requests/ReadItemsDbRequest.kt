@@ -10,7 +10,6 @@ import io.realm.Sort
 import io.realm.kotlin.where
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
-import org.zotero.android.database.objects.ItemTypes.Companion.case
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.allitems.data.ItemsFilter

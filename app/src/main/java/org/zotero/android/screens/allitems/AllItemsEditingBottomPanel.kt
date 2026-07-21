@@ -251,6 +251,15 @@ private fun editingSingleItemSelectedActions(
                 onClick = { viewModel.onAddToCollection() })
         )
 
+        if (viewModel.shouldIncludeRemoveFromRecentlyReadButton()) {
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.remove_from_collection,
+                    overflowTextResId = Strings.accessibility_items_remove_from_recentlyRead,
+                    onClick = { viewModel.removeFromRecentlyRead() })
+            )
+        }
+
         if (viewModel.shouldIncludeRemoveFromCollectionButton()) {
             overflowItems.add(
                 AllItemsBottomPanelItem(

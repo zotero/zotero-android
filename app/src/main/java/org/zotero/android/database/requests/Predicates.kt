@@ -288,7 +288,14 @@ fun <T> RealmQuery<T>.items(
 
                 CollectionIdentifier.CustomType.recentlyRead -> {
                     val lastDate = DateTime().minusDays(14).toDate()
-                    predicates = predicates.and().rawPredicate("lastRead >= $0 or any children.lastRead >= $1", lastDate, lastDate)
+                    predicates =
+                        predicates
+                            .and()
+                            .beginGroup()
+                            .greaterThanOrEqualTo("lastRead", lastDate)
+                            .or()
+                            .greaterThanOrEqualTo("children.lastRead", lastDate)
+                            .endGroup()
                 }
             }
         }

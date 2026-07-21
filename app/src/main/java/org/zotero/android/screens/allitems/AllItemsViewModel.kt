@@ -95,6 +95,7 @@ import org.zotero.android.screens.retrievemetadata.data.RetrieveMetadataArgs
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
@@ -1244,6 +1245,11 @@ internal class AllItemsViewModel @Inject constructor(
             ?.key(identifier.key)?.findFirst() != null)
     }
 
+    fun shouldIncludeRemoveFromRecentlyReadButton(): Boolean {
+        val identifier = this.collection.identifier
+        return (identifier as? CollectionIdentifier.custom)?.type == CustomType.recentlyRead
+    }
+
     fun shouldIncludeDuplicateButton(): Boolean {
         val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
         if(item == null) {
@@ -1337,6 +1343,10 @@ internal class AllItemsViewModel @Inject constructor(
         updateState {
             copy(shouldShowAppUpdateBanner = false)
         }
+    }
+
+    fun removeFromRecentlyRead() {
+        deleteItemsFromRecentlyRead(getSelectedKeys(), this.library.identifier)
     }
 
     private fun deleteItemsFromRecentlyRead(keys: Set<String>, libraryId: LibraryIdentifier) =

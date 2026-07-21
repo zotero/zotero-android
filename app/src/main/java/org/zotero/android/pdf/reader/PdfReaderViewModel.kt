@@ -176,6 +176,7 @@ import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.AnnotationSplitter
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.LastReadWatcher
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SessionDataEventStream
@@ -184,6 +185,7 @@ import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.util.Date
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
@@ -214,7 +216,9 @@ class PdfReaderViewModel @Inject constructor(
     private val stateHandle: SavedStateHandle,
     private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
     private val createPDFAnnotationsDbRequestFactory: CreatePDFAnnotationsDbRequest.Factory,
-) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
+    private val lastReadWatcher: LastReadWatcher,
+) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()),
+    PdfReaderVMInterface {
 
     private var liveAnnotations: RealmResults<RItem>? = null
     private var databaseAnnotations: RealmResults<RItem>? = null
@@ -282,7 +286,7 @@ class PdfReaderViewModel @Inject constructor(
         updateState {
             copy(selectedThumbnail = row)
         }
-
+        lastReadWatcher.submitAfterDelay(key = viewState.key, libraryId = viewState.library.identifier, date = Date())
         onStorePageFlow.tryEmit(event.pageIndex)
     }
 
@@ -998,6 +1002,7 @@ class PdfReaderViewModel @Inject constructor(
         }
         observeDocument()
         updateAnnotationsList(forceNotShowAnnotationPopup = true)
+        lastReadWatcher.submit(key = key, libraryId = library.identifier, date = Date())
     }
 
     private fun setupAnnotationChangedDebouncerFlow() {
@@ -2135,6 +2140,7 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         progressHandler.unMuteProgressToolbarForScreen()
+        lastReadWatcher.submit(key = viewState.key, libraryId = viewState.library.identifier, date = Date())
         if (this::pdfFragment.isInitialized) {
             onAnnotationUpdatedListener?.let {
                 pdfFragment.removeOnAnnotationUpdatedListener(it)

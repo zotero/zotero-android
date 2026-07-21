@@ -74,15 +74,15 @@ class MarkSettingsAsSyncedDbRequest(
     override fun process(database: Realm) {
         for (setting in this.settings) {
             val objectS: Updatable
-            val lastRead = database.where<RLastReadDate>().findAll()
-                .uniqueObject(key = setting.key, libraryId = setting.libraryId)
-            val pageIndex = database.where<RPageIndex>().findAll()
-                .uniqueObject(key = setting.key, libraryId = setting.libraryId)
 
-            if (setting.uid.startsWith("lastRead_") && lastRead != null) {
-                objectS = lastRead
-            } else if (setting.uid.startsWith("lastPageIndex_") && pageIndex != null) {
-                objectS = pageIndex
+            if (setting.uid.startsWith("lastRead_")) {
+                val lastRead = database.where<RLastReadDate>().findAll()
+                    .uniqueObject(key = setting.key, libraryId = setting.libraryId)
+                objectS = lastRead!!
+            } else if (setting.uid.startsWith("lastPageIndex_")) {
+                val pageIndex = database.where<RPageIndex>().findAll()
+                    .uniqueObject(key = setting.key, libraryId = setting.libraryId)
+                objectS = pageIndex!!
             } else {
                 Timber.e("MarkSettingsAsSyncedDbRequest: could not find setting for ${setting.uid}")
                 continue

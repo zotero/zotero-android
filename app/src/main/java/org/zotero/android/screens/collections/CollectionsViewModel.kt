@@ -85,6 +85,8 @@ internal class CollectionsViewModel @Inject constructor(
     private var allItems: RealmResults<RItem>? = null
     private var unfiledItems: RealmResults<RItem>? = null
     private var trashItems: RealmResults<RItem>? = null
+    private var recentlyRead: RealmResults<RItem>? = null
+
     private var collections: RealmResults<RCollection>? = null
 
     private var isTablet: Boolean = false
@@ -165,6 +167,9 @@ internal class CollectionsViewModel @Inject constructor(
                     CustomType.all to Collection.initWithCustomType(
                         type = CustomType.all,
                         itemCount = 0
+                    ), CustomType.recentlyRead to Collection.initWithCustomType(
+                        type = CustomType.recentlyRead,
+                        itemCount = 0
                     ), CustomType.unfiled to Collection.initWithCustomType(
                         type = CustomType.unfiled,
                         itemCount = 0
@@ -204,6 +209,7 @@ internal class CollectionsViewModel @Inject constructor(
             maybeInitRequestAndStartObservingAllItemsCount()
             maybeInitRequestAndStartObservingUnfiledItemsCount()
             maybeInitRequestAndStartObservingTrashItemsCount()
+            maybeInitRequestAndStartObservingRecentlyReadCount()
         }
     }
 
@@ -285,6 +291,23 @@ internal class CollectionsViewModel @Inject constructor(
         observeItemCount(
             results = trashItems,
             customType = CustomType.trash
+        )
+    }
+
+    private fun maybeInitRequestAndStartObservingRecentlyReadCount() {
+        recentlyRead = dbWrapperMain.realmDbStorage.perform(
+            request = readItemsDbRequestFactory.create(
+                collectionId = CollectionIdentifier.custom(
+                    CustomType.recentlyRead
+                ),
+                libraryId = libraryId,
+                isAsync = true,
+            )
+        )
+
+        observeItemCount(
+            results = recentlyRead,
+            customType = CustomType.recentlyRead
         )
     }
 
@@ -422,7 +445,7 @@ internal class CollectionsViewModel @Inject constructor(
                         }
                     }
 
-                    CustomType.publications, CustomType.all, CustomType.unfiled -> {
+                    CustomType.publications, CustomType.all, CustomType.unfiled, CustomType.recentlyRead -> {
                         actions.add(0, LongPressOptionItem.CollectionDownloadAttachments(collection.identifier))
                     }
                 }
