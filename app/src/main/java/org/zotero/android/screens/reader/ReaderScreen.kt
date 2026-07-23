@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.R
@@ -89,6 +90,8 @@ internal fun ReaderScreen(
         val decorView = window.decorView
         val systemBars = WindowInsetsCompat.Type.systemBars()
         val insetsController = WindowCompat.getInsetsController(window, decorView)
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         if (viewState.isTopBarVisible) {
             insetsController.show(systemBars)
         } else {
