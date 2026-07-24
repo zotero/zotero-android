@@ -41,7 +41,7 @@ class LoadLibraryDataSyncAction @AssistedInject constructor(
                 }
             }
 
-        return dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
+        return dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true, refreshRealm = true)
     }
 
     @AssistedFactory
