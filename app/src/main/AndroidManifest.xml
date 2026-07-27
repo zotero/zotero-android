@@ -25,6 +25,9 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:requestLegacyExternalStorage"
         tools:targetApi="n">
+
+        <property android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY" android:value="true" />
+
         <meta-data
             android:name="pspdfkit_automatic_initialize"
             android:value="false" />
