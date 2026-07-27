@@ -42,6 +42,7 @@ import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.architecture.require
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationType
@@ -146,6 +147,7 @@ class ReaderViewModel @Inject constructor(
     private val annotationBitmapCacheSnapshotEventStream: ReaderAnnotationBitmapCacheSnapshotEventStream,
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
+    private val progressHandler: SyncProgressHandler,
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ReaderViewState, ReaderViewEffect>(ReaderViewState())  {
@@ -404,6 +406,7 @@ class ReaderViewModel @Inject constructor(
         updateState {
             copy(isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
         }
+        progressHandler.muteProgressToolbarForScreen()
 
     }
 
@@ -1451,6 +1454,7 @@ class ReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
+        progressHandler.unMuteProgressToolbarForScreen()
 
         item?.removeAllChangeListeners()
         annotationItems?.removeAllChangeListeners()
