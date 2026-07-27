@@ -38,20 +38,16 @@ object Libs {
         const val kluentAndroid = "org.amshove.kluent:kluent-android:1.73"
     }
 
-    object Dagger {
-        private const val version = "2.57"
-        const val hiltAndroid = "com.google.dagger:hilt-android:$version"
-        const val hiltCompiler = "com.google.dagger:hilt-compiler:$version"
-        const val hiltGradlePlugin = "com.google.dagger:hilt-android-gradle-plugin:$version"
-        const val hiltAndroidAndroidCompilerProcessor =
-            "com.google.dagger:hilt-android-compiler:$version"
+    object DevTools {
+        const val kspVersion = "2.2.0-2.0.2"
     }
 
     object Hilt {
-        private const val version = "1.2.0"
+        const val version = "2.57"
+        const val hiltAndroid = "com.google.dagger:hilt-android:$version"
+        const val hiltAndroidCompiler = "com.google.dagger:hilt-android-compiler:$version"
 
-        const val compiler = "androidx.hilt:hilt-compiler:$version"
-        const val navigationCompose = "androidx.hilt:hilt-navigation-compose:$version"
+        const val navigationCompose = "androidx.hilt:hilt-navigation-compose:1.2.0"
     }
 
     object Coil {

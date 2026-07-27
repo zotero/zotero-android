@@ -6,8 +6,8 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     kotlin("plugin.serialization")
+    id("com.google.devtools.ksp")
     id("com.github.triplet.play") version "3.12.1"
-    id("dagger.hilt.android.plugin")
     id("realm-android")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
