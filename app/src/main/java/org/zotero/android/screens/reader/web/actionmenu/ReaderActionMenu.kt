@@ -45,7 +45,7 @@ internal fun ReaderActionMenu(
 
     val menuState = remember { AppBarMenuState() }
 
-    if (menuState.isExpanded) {
+    if (menuState.isShowing) {
         ColumnActionMenu(
             menuState = menuState,
             overflowItems = overflowItems

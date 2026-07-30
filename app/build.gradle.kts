@@ -7,7 +7,7 @@ plugins {
     kotlin("kapt")
     kotlin("plugin.serialization")
     id("com.google.devtools.ksp")
-    id("com.github.triplet.play") version "3.12.1"
+    id("com.github.triplet.play") version "4.0.0"
     id("realm-android")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
@@ -23,7 +23,7 @@ plugins {
     //----Dependency plugins end----
 
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("plugin.compose")
 }
 
 android {
@@ -176,7 +176,7 @@ dependencies {
     implementation(Libs.jodaTime)
     implementation(Libs.eventBus)
     implementation(Libs.keyboardVisibility)
-    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation(Libs.codeScanner)
 
 }
 

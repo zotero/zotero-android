@@ -75,7 +75,7 @@ internal fun AllItemsEditingBottomPanel(
                 Box {
                     IconButton(
                         onClick = {
-                            if (menuState.isExpanded) {
+                            if (menuState.isShowing) {
                                 menuState.dismiss()
                             } else {
                                 menuState.show()
@@ -86,7 +86,7 @@ internal fun AllItemsEditingBottomPanel(
                     }
 
                     DropdownMenu(
-                        expanded = menuState.isExpanded,
+                        expanded = menuState.isShowing,
                         onDismissRequest = { menuState.dismiss() },
                     ) {
                         overflowItems

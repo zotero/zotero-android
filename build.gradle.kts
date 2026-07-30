@@ -7,9 +7,9 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.12.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0")
-        classpath(Libs.Kotlin.serialization)
+        classpath("com.android.tools.build:gradle:9.3.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10")
+//        classpath(Libs.Kotlin.serialization)
         classpath(Libs.Firebase.Crashlytics.crashlyticsGradle)
         classpath(Libs.googleServices)
         classpath(Libs.realmGradlePlugin)
@@ -20,7 +20,7 @@ buildscript {
 }
 
 plugins {
-    id("com.google.devtools.ksp") version Libs.DevTools.kspVersion apply false
+    id("com.google.devtools.ksp") version Libs.Kotlin.kspVersion apply false
     id("com.google.dagger.hilt.android") version Libs.Hilt.version apply false
 }
 
