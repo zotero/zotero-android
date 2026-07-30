@@ -93,8 +93,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Download Android dependencies
-        run: ./gradlew androidDependencies --no-configuration-cache
-
       - name: Deploy to Google Play Internal Test Track
         run: ./gradlew --no-configuration-cache -PpreDexLibs=false publishInternalReleaseBundle --stacktrace
