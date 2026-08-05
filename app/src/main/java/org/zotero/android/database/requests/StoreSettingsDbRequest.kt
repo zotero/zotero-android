@@ -15,6 +15,7 @@ import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RTag
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.ktx.uniqueObject
+import org.zotero.android.ktx.uniqueObjectV2
 import org.zotero.android.sync.LibraryIdentifier
 import java.util.Date
 
@@ -46,7 +47,9 @@ class StoreSettingsDbRequest(
     private fun syncPages(pages: List<PageIndexResponse>, database: Realm) {
         for (index in pages) {
             val rIndex: RPageIndex
-            val existing = database.where<RPageIndex>().findAll().uniqueObject(key = index.key, libraryId=  index.libraryId)
+            val existing = database
+                .where<RPageIndex>()
+                .uniqueObjectV2(key = index.key, libraryId = index.libraryId)
             if (existing != null) {
                 rIndex = existing
             } else {
