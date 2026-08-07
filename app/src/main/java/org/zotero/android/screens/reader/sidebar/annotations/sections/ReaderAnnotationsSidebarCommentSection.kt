@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.textinput.CustomTextField
 
@@ -18,7 +18,7 @@ import org.zotero.android.uicomponents.textinput.CustomTextField
 internal fun ReaderAnnotationsSidebarCommentSection(
     viewState: ReaderViewState,
     viewModel: ReaderViewModel,
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     shouldAddTopPadding: Boolean,
 ) {
     if (viewState.isAnnotationSelected(annotation.key)) {

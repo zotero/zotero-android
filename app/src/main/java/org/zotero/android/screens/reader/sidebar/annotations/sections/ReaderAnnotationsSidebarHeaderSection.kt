@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
@@ -32,7 +32,7 @@ import org.zotero.android.uicomponents.foundation.safeClickable
 internal fun ReaderAnnotationsSidebarHeaderSection(
     viewModel: ReaderViewModel,
     viewState: ReaderViewState,
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     annotationColor: Color,
 ) {
     val title = stringResource(Strings.page) + " " + annotation.pageLabel

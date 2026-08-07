@@ -23,7 +23,7 @@ import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationColorRe
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationCommentResult
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationDeleteResult
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationScreenClosed
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.Tag
@@ -159,7 +159,7 @@ internal class ReaderAnnotationViewModel @Inject constructor(
 
 internal data class ReaderAnnotationViewState(
     val isDark: Boolean = false,
-    val annotation: NewReaderAnnotation? = null,
+    val annotation: ReaderAnnotation? = null,
     val tags: ImmutableList<Tag> = persistentListOf(),
     val commentFocusText: String = "",
     val color: String = "",

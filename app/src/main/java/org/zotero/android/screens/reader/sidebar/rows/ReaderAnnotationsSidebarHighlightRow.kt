@@ -5,12 +5,13 @@ import androidx.compose.ui.graphics.Color
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
 import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarHighlightedTextSection
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarTagsAndCommentsSection
 
 @Composable
 internal fun ReaderAnnotationsSidebarHighlightRow(
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     viewState: ReaderViewState,
     viewModel: ReaderViewModel,
     annotationColor: Color,

@@ -404,14 +404,14 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 val rectArrayJson = JsonArray()
                 this.rects.forEach { rRect ->
                     val subArray = JsonArray()
-                        listOf(
-                            rRect.minX,
-                            rRect.minY,
-                            rRect.maxX,
-                            rRect.maxY
-                        ).forEach {
-                            subArray.add(it)
-                        }
+                    listOf(
+                        rRect.minX,
+                        rRect.minY,
+                        rRect.maxX,
+                        rRect.maxY
+                    ).forEach {
+                        subArray.add(it)
+                    }
                     rectArrayJson.add(subArray)
                 }
                 jsonData.add(FieldKeys.Item.Annotation.Position.rects, rectArrayJson)

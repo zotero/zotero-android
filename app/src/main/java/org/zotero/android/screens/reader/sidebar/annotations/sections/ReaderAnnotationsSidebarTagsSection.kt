@@ -14,14 +14,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.sidebar.ReaderSidebarDivider
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 
 @Composable
 internal fun ReaderAnnotationsSidebarTagsSection(
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     viewState: ReaderViewState,
     viewModel: ReaderViewModel,
 ) {

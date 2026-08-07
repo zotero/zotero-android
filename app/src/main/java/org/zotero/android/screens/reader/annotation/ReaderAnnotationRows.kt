@@ -24,7 +24,7 @@ import org.zotero.android.R
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.annotation.sections.ReaderAnnotationCommentSection
 import org.zotero.android.screens.reader.annotation.sections.ReaderAnnotationTagsSection
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Drawables
@@ -33,7 +33,7 @@ import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ReaderAnnotationHeaderRow(
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     annotationColor: Color,
     onBack: () -> Unit,
 ) {

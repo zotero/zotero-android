@@ -13,12 +13,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 
 @Composable
 internal fun ReaderAnnotationsSidebarHighlightedTextSection(
     annotationColor: Color,
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
 ) {
     Box(
         modifier = Modifier

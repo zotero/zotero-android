@@ -79,6 +79,7 @@ import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMor
 import org.zotero.android.screens.reader.colorpicker.data.ReaderColorPickerArgs
 import org.zotero.android.screens.reader.colorpicker.data.ReaderColorPickerResult
 import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
 import org.zotero.android.screens.reader.data.ReaderAnnotationsFilter
 import org.zotero.android.screens.reader.data.ReaderArgs
@@ -159,7 +160,7 @@ class ReaderViewModel @Inject constructor(
     private var userId: Long = 0L
     private var username: String = ""
     private var selectedTextParams: JsonObject? = null
-    private var annotations = mutableMapOf<String, NewReaderAnnotation?>()
+    private var annotations = mutableMapOf<String, ReaderAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
     private var comments = mutableMapOf<String, String>()
@@ -686,15 +687,24 @@ class ReaderViewModel @Inject constructor(
 
 
     private suspend fun saveAnnotationFromSelection(type: AnnotationType) {
-        //TODO support will be added later
-        if (viewState.fileType == ReaderFileType.PDF) {
-            return
+        val textParams =
+            this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
+        val params = params(textParams, type) ?: return
+
+        val annotations = if (viewState.fileType == ReaderFileType.PDF) {
+            parsePdfJson(
+                pdfAnnotations = JsonArray().apply { add(params) },
+                author = this.username,
+                isAuthor = true
+            )
+        } else {
+            parseHtmlEpubJson(
+                annotations = JsonArray().apply { add(params) },
+                author = this.username,
+                isAuthor = true
+            )
         }
 
-      val textParams =
-            this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
-        val params = params( textParams, type) ?: return
-        val annotations = parseHtmlEpubJson(JsonArray().apply { add(params) }, author =  this.username, isAuthor = true)
         this.selectedTextParams = null
         for (annotation in annotations) {
             this.annotations[annotation.key] = annotation
@@ -705,7 +715,11 @@ class ReaderViewModel @Inject constructor(
             insertions = JsonArray().apply { add(params) },
             deletions = JsonArray()
         )
-        createHtmlEpubDatabaseAnnotations(annotations = annotations)
+        if (viewState.fileType == ReaderFileType.PDF) {
+            createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
+        } else {
+            createHtmlEpubDatabaseAnnotations(annotations = annotations as List<NewReaderAnnotation>)
+        }
     }
 
 
@@ -1021,22 +1035,25 @@ class ReaderViewModel @Inject constructor(
         }
         return snapshot.filter{ key ->
                 val annotation = this.annotations[key] ?:return@filter false
-            filter(annotation = annotation, term = term) && filter(annotation = annotation,  filter)
+            filter(annotation = annotation, term = term) && filter(annotation = annotation,  filter = filter)
         }
     }
 
-    private fun filter(annotation: NewReaderAnnotation, term: String?): Boolean {
+    private fun filter(annotation: ReaderAnnotation, term: String?): Boolean {
         if (term == null) {
             return true
         }
+        val username = defaults.getUsername()
+        val displayName = defaults.getDisplayName()
+
         return annotation.key.lowercase() == term.lowercase() ||
-                annotation.author.contains(term, ignoreCase = true) ||
+                annotation.author(displayName = displayName, username = username).contains(term, ignoreCase = true) ||
                 annotation.comment.contains(term, ignoreCase = true) ||
                 (annotation.text ?: "").contains(term, ignoreCase = true) ||
                 annotation.tags.any { it.name.contains(term, ignoreCase = true) }
     }
 
-    private fun filter(annotation: NewReaderAnnotation, filter: ReaderAnnotationsFilter?): Boolean {
+    private fun filter(annotation: ReaderAnnotation, filter: ReaderAnnotationsFilter?): Boolean {
         if (filter == null) {
             return true
         }
@@ -1711,7 +1728,7 @@ class ReaderViewModel @Inject constructor(
         toggle(tool)
     }
 
-    fun annotation(key: String): NewReaderAnnotation? {
+    fun annotation(key: String): ReaderAnnotation? {
         return this.annotations[key]
     }
 
@@ -1760,7 +1777,7 @@ class ReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun onTagsClicked(annotation: NewReaderAnnotation) {
+    fun onTagsClicked(annotation: ReaderAnnotation) {
         viewModelScope.launch {
             selectAnnotationFromDocument(key = annotation.key)
 
@@ -1799,7 +1816,7 @@ class ReaderViewModel @Inject constructor(
         val colors = mutableSetOf<String>()
         val tags = mutableSetOf<Tag>()
 
-        val processAnnotation: (NewReaderAnnotation) -> Unit = { annotation ->
+        val processAnnotation: (ReaderAnnotation) -> Unit = { annotation ->
             colors.add(annotation.color)
             for (tag in annotation.tags) {
                 tags.add(tag)
@@ -2346,12 +2363,14 @@ class ReaderViewModel @Inject constructor(
         triggerEffect(ReaderViewEffect.OpenWebpage(url))
     }
 
-    fun dismissActionMenu() {
+    fun dismissActionMenu(deselectInReader: Boolean = false) {
         updateState {
             copy(selectedTextParamsRects = null)
         }
-        viewModelScope.launch {
-            readerWebCallChainExecutor.deselectText()
+        if (deselectInReader) {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.deselectText()
+            }
         }
     }
 
@@ -2394,12 +2413,12 @@ class ReaderViewModel @Inject constructor(
 
     fun onHighlight() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.highlight)
-        dismissActionMenu()
+        dismissActionMenu(deselectInReader = true)
     }
 
     fun onUnderline() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.underline)
-        dismissActionMenu()
+        dismissActionMenu(deselectInReader = true)
     }
 
     private suspend fun scrollReaderIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {

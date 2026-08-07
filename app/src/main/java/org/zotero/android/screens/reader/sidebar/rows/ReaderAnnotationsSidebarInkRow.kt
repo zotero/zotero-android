@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarImageSection
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarTagsSection
 
@@ -12,7 +12,7 @@ import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnno
 internal fun ReaderAnnotationsSidebarInkRow(
     viewState: ReaderViewState,
     viewModel: ReaderViewModel,
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     annotationMaxSideSize: Int,
     cachedBitmap: Bitmap?,
 ) {

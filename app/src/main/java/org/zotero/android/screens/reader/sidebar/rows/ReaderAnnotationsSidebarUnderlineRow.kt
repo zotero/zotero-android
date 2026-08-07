@@ -4,13 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarTagsAndCommentsSection
 import org.zotero.android.screens.reader.sidebar.annotations.sections.ReaderAnnotationsSidebarUnderlineTextSection
 
 @Composable
 internal fun ReaderAnnotationsSidebarUnderlineRow(
-    annotation: NewReaderAnnotation,
+    annotation: ReaderAnnotation,
     viewState: ReaderViewState,
     viewModel: ReaderViewModel,
     annotationColor: Color,

@@ -28,7 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationArgs
-import org.zotero.android.screens.reader.data.NewReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
@@ -85,7 +85,7 @@ internal fun ReaderAnnotationScreen(
 
 @Composable
 internal fun ReaderAnnotationPart(
-    stateAnnotation: NewReaderAnnotation?,
+    stateAnnotation: ReaderAnnotation?,
     onDone: () -> Unit,
     onDeleteAnnotation: () -> Unit,
     onColorSelected: (String) -> Unit,
