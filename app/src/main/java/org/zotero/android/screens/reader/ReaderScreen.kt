@@ -65,6 +65,7 @@ internal fun ReaderScreen(
     onOpenWebpage: (url: String) -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
+    viewModel.initFileType()
     viewModel.setOsTheme(isDark = isSystemInDarkTheme())
     val viewState by viewModel.viewStates.observeAsState(ReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()

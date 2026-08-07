@@ -480,7 +480,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
 
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("window._view.setSpreadMode($spreadsModeString);") {
+            val javascript = "window._view.setSpreadMode(${spreadsModeString.toInt()});"
+            readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }
         }

@@ -436,11 +436,6 @@ class ReaderViewModel @Inject constructor(
         this.key = params.key
         this.parentKey = params.parentKey
         this.library = params.library
-        updateState {
-            copy(
-                fileType = decideFileType()
-            )
-        }
     }
 
 
@@ -1157,7 +1152,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun decideFileType(): ReaderFileType {
-        return when (val extension = this.documentFile.extension.lowercase()) {
+        return when (val extension = screenFileArgs.extension.lowercase()) {
             "epub" -> {
                 ReaderFileType.EPUB
             }
@@ -1370,7 +1365,6 @@ class ReaderViewModel @Inject constructor(
                     data = documentData,
                     isDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark
                 )
-                restoreWebViewState()
             } else {
                 var shouldIgnoreUpdate = false
                 if (insertedPdfAnnotations.size() == 1) {
@@ -1669,10 +1663,6 @@ class ReaderViewModel @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "ReaderViewModel: could not load document")
         }
-    }
-
-    suspend fun restoreWebViewState() {
-        updateAppearanceAccordingToSettings(false)
     }
 
 
@@ -2439,6 +2429,13 @@ class ReaderViewModel @Inject constructor(
 //        }
     }
 
+    fun initFileType() {
+        updateState {
+            copy(
+                fileType = decideFileType()
+            )
+        }
+    }
 }
 
 data class ReaderViewState(
