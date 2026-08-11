@@ -161,10 +161,10 @@ private fun BoxScope.Set(progress: Int?, showsStop: Boolean) {
 private fun contentType(state: State, style: Style): ContentType? {
     return when (state) {
         is State.progress -> {
-            return ContentType.progress(state.progress)
+            ContentType.progress(state.progress)
         }
         is State.ready -> {
-            return when (val type = state.attachmentKind) {
+            when (val type = state.attachmentKind) {
                 is Attachment.Kind.file -> {
                     when (type.location) {
                         Attachment.FileLocation.local -> {
