@@ -72,7 +72,9 @@ import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationArgs
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationColorResult
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationCommentResult
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationDeleteResult
+import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationFontSizeResult
 import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationScreenClosed
+import org.zotero.android.screens.reader.annotation.data.ReaderAnnotationSizeResult
 import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreArgs
 import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreDeleteResult
 import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMoreSaveResult
@@ -622,7 +624,6 @@ class ReaderViewModel @Inject constructor(
                 data = pdfAnnotation.asJsonObject,
                 author = author,
                 isAuthor = isAuthor,
-                lineWidthFromUser = 2.0f//TODO fix
             )
             annotation
         }
@@ -1554,6 +1555,7 @@ class ReaderViewModel @Inject constructor(
                 updateState {
                     copy(isReaderLoading = false)
                 }
+                readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
 
             else -> {
@@ -2455,6 +2457,62 @@ class ReaderViewModel @Inject constructor(
             )
         }
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReaderAnnotationSizeResult) {
+        setLineWidth(key = result.key, width = result.size)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReaderAnnotationFontSizeResult) {
+        setFontSize(key = result.key, fontSize = result.size)
+    }
+
+    private fun setFontSize(key:String, fontSize: Float) {
+        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.Position.fontSize, baseKey = null) to "$fontSize")
+        val request = editItemFieldsDbRequestFactory.create(
+            key = key,
+            libraryId = this.library.identifier,
+            fieldValues = values,
+        )
+
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapperMain,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "ReaderViewModel: can't set font size $key")
+                updateState {
+                    copy(error = Error.cantUpdateAnnotation)
+                }
+                return@launch
+            }
+        }
+    }
+
+    private fun setLineWidth(key:String, width: Float) {
+        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.Position.lineWidth, baseKey = null) to width.rounded(3).toString())
+        val request = editItemFieldsDbRequestFactory.create(
+            key = key,
+            libraryId = this.library.identifier,
+            fieldValues = values,
+        )
+
+        viewModelScope.launch {
+            perform(
+                dbWrapper = dbWrapperMain,
+                request = request
+            ).ifFailure {
+                Timber.e(it, "ReaderViewModel: can't set line width $key")
+                updateState {
+                    copy(error = Error.cantUpdateAnnotation)
+                }
+                return@launch
+            }
+        }
+
+    }
+
 }
 
 data class ReaderViewState(

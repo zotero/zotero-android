@@ -43,7 +43,9 @@ data class NewReaderAnnotation(
     }
 
     override val lineWidth: Float
-        get() = 0f
+        get() {
+            return position["width"]?.asFloat ?: 1.0f
+        }
 
     override val fontSize: Float
         get() = position["fontSize"]?.asFloat ?: 12.0f

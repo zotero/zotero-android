@@ -67,3 +67,16 @@ internal fun ReaderAnnotationMoreFreeTextRow(
     NewSettingsDivider()
     ReaderAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
 }
+
+@Composable
+internal fun ReaderAnnotationMoreInkRow(
+    viewState: ReaderAnnotationMoreViewState,
+    viewModel: ReaderAnnotationMoreViewModel,
+) {
+    ReaderAnnotationMoreColorPicker(viewState = viewState, viewModel = viewModel)
+    NewSettingsDivider()
+    ReaderAnnotationMoreSizeSelector(
+        viewState = viewState,
+        viewModel = viewModel,
+    )
+}

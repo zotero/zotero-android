@@ -23,7 +23,6 @@ class AnnotationConverterV2 {
             data: JsonObject,
             author: String,
             isAuthor: Boolean,
-            lineWidthFromUser: Float? = null,
         ): PDFDocumentAnnotation? {
             val type = (data["type"]?.asString)?.let { AnnotationType.valueOf(it) } ?: return null
             if (!AnnotationsConfig.supportedV2.contains(type)) {
@@ -55,7 +54,7 @@ class AnnotationConverterV2 {
                 AnnotationType.ink -> {
                     rects = emptyList()
                     paths = pathsForInk(position["paths"].asJsonArray)
-                    lineWidth = lineWidthFromUser!!
+                    lineWidth = position["width"].asFloat
                 }
 
                 AnnotationType.image -> {

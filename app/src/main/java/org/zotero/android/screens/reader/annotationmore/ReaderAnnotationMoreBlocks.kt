@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -291,3 +293,38 @@ internal fun ReaderAnnotationFilterCircle(hex: String, isSelected: Boolean, onCl
     })
 }
 
+@Composable
+internal fun ReaderAnnotationMoreSizeSelector(
+    viewState: ReaderAnnotationMoreViewState,
+    viewModel: ReaderAnnotationMoreViewModel,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.padding(end = 10.dp),
+            text = safeStringResource(id = Strings.pdf_annotation_popover_line_width),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Slider(
+            modifier = Modifier.weight(1f),
+            value = viewState.lineWidth,
+            onValueChange = { viewModel.onSizeChanged(it) },
+            colors = SliderDefaults.colors(
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                thumbColor = MaterialTheme.colorScheme.primary,
+            ),
+            valueRange = 0.5f..25f
+        )
+        Text(
+            modifier = Modifier.padding(start = 10.dp),
+            text = String.format(Locale.getDefault(), "%.1f", viewState.lineWidth),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}

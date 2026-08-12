@@ -132,11 +132,13 @@ internal fun ReaderAnnotationMorePart(
                     )
                 }
 
-                null -> {
-                    //no-op
+                AnnotationType.ink -> {
+                    ReaderAnnotationMoreInkRow(
+                        viewState = viewState,
+                        viewModel = viewModel,
+                    )
                 }
-
-                else -> {
+                null -> {
                     //no-op
                 }
             }

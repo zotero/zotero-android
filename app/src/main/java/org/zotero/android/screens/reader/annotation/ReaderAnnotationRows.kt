@@ -69,7 +69,9 @@ internal fun ReaderAnnotationHeaderRow(
         }
 
         Row(
-            modifier = Modifier.align(Alignment.CenterEnd).padding(top = 4.dp),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(top = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -105,17 +107,17 @@ internal fun ReaderAnnotationHighlightRow(
         commentFocusText = commentFocusText,
         onCommentTextChange = onCommentTextChange,
     )
-        NewSettingsDivider()
-        ReaderAnnotationColorPicker(
-            colors = colors,
-            onColorSelected = onColorSelected,
-            selectedColor = selectedColor,
-        )
-        NewSettingsDivider()
-        ReaderAnnotationTagsSection(
-            tags = tags,
-            onTagsClicked = onTagsClicked,
-        )
+    NewSettingsDivider()
+    ReaderAnnotationColorPicker(
+        colors = colors,
+        onColorSelected = onColorSelected,
+        selectedColor = selectedColor,
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
 }
 
 @Composable
@@ -133,17 +135,17 @@ internal fun ReaderAnnotationNoteRow(
         onCommentTextChange = onCommentTextChange,
     )
 
-        NewSettingsDivider()
-        ReaderAnnotationColorPicker(
-            colors = colors,
-            onColorSelected = onColorSelected,
-            selectedColor = selectedColor
-        )
-        NewSettingsDivider()
-        ReaderAnnotationTagsSection(
-            tags = tags,
-            onTagsClicked = onTagsClicked,
-        )
+    NewSettingsDivider()
+    ReaderAnnotationColorPicker(
+        colors = colors,
+        onColorSelected = onColorSelected,
+        selectedColor = selectedColor
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
 }
 
 
@@ -162,16 +164,97 @@ internal fun ReaderAnnotationUnderlineRow(
         onCommentTextChange = onCommentTextChange,
     )
 
-        NewSettingsDivider()
-        ReaderAnnotationColorPicker(
-            colors = colors,
-            onColorSelected = onColorSelected,
-            selectedColor = selectedColor
-        )
-        NewSettingsDivider()
-        ReaderAnnotationTagsSection(
-            tags = tags,
-            onTagsClicked = onTagsClicked,
-        )
+    NewSettingsDivider()
+    ReaderAnnotationColorPicker(
+        colors = colors,
+        onColorSelected = onColorSelected,
+        selectedColor = selectedColor
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
+}
+
+@Composable
+internal fun ReaderAnnotationImageRow(
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    colors: List<String>,
+    onColorSelected: (color: String) -> Unit,
+    selectedColor: String,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit
+) {
+    ReaderAnnotationCommentSection(
+        commentFocusText = commentFocusText,
+        onCommentTextChange = onCommentTextChange,
+    )
+    NewSettingsDivider()
+    ReaderAnnotationColorPicker(
+        colors = colors,
+        onColorSelected = onColorSelected,
+        selectedColor = selectedColor
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
+}
+
+@Composable
+internal fun ReaderAnnotationInkRow(
+    commentFocusText: String,
+    onCommentTextChange: (String) -> Unit,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit,
+    size: Float,
+    onSizeChanged: (Float) -> Unit,
+) {
+    ReaderAnnotationCommentSection(
+        commentFocusText = commentFocusText,
+        onCommentTextChange = onCommentTextChange,
+    )
+    NewSettingsDivider()
+    ReaderAnnotationSizeSelector(
+        size = size,
+        onSizeChanged = onSizeChanged,
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
+}
+
+@Composable
+internal fun ReaderAnnotationTextRow(
+    fontSize: Float,
+    onFontSizeDecrease: () -> Unit,
+    onFontSizeIncrease: () -> Unit,
+    onColorSelected: (String) -> Unit,
+    colors: List<String>,
+    selectedColor: String,
+    tags: List<Tag>,
+    onTagsClicked: () -> Unit,
+) {
+    ReaderAnnotationFontSizeSelector(
+        fontSize = fontSize,
+        onFontSizeDecrease = onFontSizeDecrease,
+        onFontSizeIncrease = onFontSizeIncrease,
+    )
+    NewSettingsDivider()
+    ReaderAnnotationColorPicker(
+        colors = colors,
+        onColorSelected = onColorSelected,
+        selectedColor = selectedColor
+    )
+    NewSettingsDivider()
+    ReaderAnnotationTagsSection(
+        tags = tags,
+        onTagsClicked = onTagsClicked,
+    )
 }
 

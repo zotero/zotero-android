@@ -79,6 +79,11 @@ internal fun ReaderAnnotationScreen(
             commentFocusText = viewState.commentFocusText,
             onCommentTextChange = viewModel::onCommentTextChange,
             onDeleteAnnotation = viewModel::onDeleteAnnotation,
+            size = viewState.size,
+            onSizeChanged = viewModel::onSizeChanged,
+            fontSize = viewState.fontSize,
+            onFontSizeDecrease = viewModel::onFontSizeDecrease,
+            onFontSizeIncrease = viewModel::onFontSizeIncrease
         )
     }
 }
@@ -95,6 +100,11 @@ internal fun ReaderAnnotationPart(
     onTagsClicked: () -> Unit,
     commentFocusText: String,
     onCommentTextChange: (String) -> Unit,
+    size: Float,
+    onSizeChanged: (Float) -> Unit,
+    fontSize: Float,
+    onFontSizeDecrease: () -> Unit,
+    onFontSizeIncrease: () -> Unit,
 ) {
     val annotation = stateAnnotation ?: return
 
@@ -146,7 +156,41 @@ internal fun ReaderAnnotationPart(
                     onTagsClicked = onTagsClicked
                 )
 
-                else -> {}
+                AnnotationType.image -> {
+                    ReaderAnnotationImageRow(
+                        onColorSelected = onColorSelected,
+                        onCommentTextChange = onCommentTextChange,
+                        selectedColor = selectedColor,
+                        colors = colors,
+                        commentFocusText = commentFocusText,
+                        tags = tags,
+                        onTagsClicked = onTagsClicked
+                    )
+                }
+
+                AnnotationType.ink -> {
+                    ReaderAnnotationInkRow(
+                        onCommentTextChange = onCommentTextChange,
+                        commentFocusText = commentFocusText,
+                        tags = tags,
+                        onTagsClicked = onTagsClicked,
+                        size = size,
+                        onSizeChanged = onSizeChanged
+                    )
+                }
+
+                AnnotationType.text -> {
+                    ReaderAnnotationTextRow(
+                        fontSize = fontSize,
+                        onFontSizeDecrease = onFontSizeDecrease,
+                        onFontSizeIncrease = onFontSizeIncrease,
+                        tags = tags,
+                        onTagsClicked = onTagsClicked,
+                        onColorSelected = onColorSelected,
+                        selectedColor = selectedColor,
+                        colors = colors,
+                    )
+                }
             }
         }
         item {
