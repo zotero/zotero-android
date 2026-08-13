@@ -2,7 +2,6 @@ package org.zotero.android.screens.reader
 
 import android.content.res.Resources
 import android.util.TypedValue
-import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -23,7 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
@@ -175,15 +175,16 @@ internal fun ReaderScreen(
         )
 
         CustomScaffoldM3(
-            modifier = Modifier
-                .pointerInteropFilter {
-                    when (it.action) {
-                        MotionEvent.ACTION_DOWN -> {
+            modifier = Modifier.pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.changes.firstOrNull()?.changedToUpIgnoreConsumed() == true) {
                             viewModel.restartDisableForceScreenOnTimer()
                         }
                     }
-                    false
-                },
+                }
+            },
             shouldIncludeTopBarAndNavBarPaddings = viewState.isPdfOrHtml(),
             topBar = {
                 AnimatedContent(
