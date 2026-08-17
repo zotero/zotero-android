@@ -22,8 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
@@ -175,16 +173,6 @@ internal fun ReaderScreen(
         )
 
         CustomScaffoldM3(
-            modifier = Modifier.pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        if (event.changes.firstOrNull()?.changedToUpIgnoreConsumed() == true) {
-                            viewModel.restartDisableForceScreenOnTimer()
-                        }
-                    }
-                }
-            },
             shouldIncludeTopBarAndNavBarPaddings = viewState.isPdfOrHtml(),
             topBar = {
                 AnimatedContent(

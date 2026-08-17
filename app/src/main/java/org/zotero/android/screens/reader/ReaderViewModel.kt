@@ -450,7 +450,7 @@ class ReaderViewModel @Inject constructor(
 
     }
 
-    fun restartDisableForceScreenOnTimer() {
+    private fun restartDisableForceScreenOnTimer() {
         viewModelScope.launch {
             triggerEffect(ReaderViewEffect.EnableForceScreenOn)
         }
@@ -1611,6 +1611,8 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setViewStats(params: JsonObject) {
+        restartDisableForceScreenOnTimer()
+
         val stats = params["stats"]?.takeIf { it.isJsonObject }?.asJsonObject
         fun JsonObject.intOrNull(key: String): Int? =
             this[key]?.takeIf { it.isJsonPrimitive }?.asInt

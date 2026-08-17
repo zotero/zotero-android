@@ -537,6 +537,7 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
+                restartDisableForceScreenOnTimer()
                 decideTopBarAndBottomBarVisibility(clickedAnnotation)
                 return false
             }
@@ -3539,7 +3540,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun restartDisableForceScreenOnTimer() {
+    private fun restartDisableForceScreenOnTimer() {
         viewModelScope.launch {
             triggerEffect(PdfReaderViewEffect.EnableForceScreenOn)
         }
