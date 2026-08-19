@@ -3,6 +3,8 @@ package org.zotero.android.api
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
+import org.zotero.android.api.pojo.speech.CreditsResponse
+import org.zotero.android.api.pojo.speech.VoicesResponse
 import org.zotero.android.api.pojo.sync.DeletionsResponse
 import org.zotero.android.api.pojo.sync.GroupResponse
 import retrofit2.http.Body
@@ -99,5 +101,26 @@ interface ZoteroApi {
         @Query("since") since: Int? = null,
         @HeaderMap headers: Map<String, String>,
     ): retrofit2.Response<JsonObject>
+
+    @GET("tts/voices")
+    suspend fun voicesRequest(
+        @Query("version") version: Int = 1,
+    ): retrofit2.Response<VoicesResponse>
+
+    @GET("tts/credits")
+    suspend fun creditsRequest(): retrofit2.Response<CreditsResponse>
+
+    @GET("tts/speak")
+    @Streaming
+    suspend fun readAloudAudioRequest(
+        @Query("text") text: String,
+        @Query("voice") voiceId: String,
+    ): retrofit2.Response<ResponseBody>
+
+    @GET("tts/sample")
+    @Streaming
+    suspend fun readAloudSampleRequest(
+        @Query("voice") voiceId: String,
+    ): retrofit2.Response<ResponseBody>
 
 }
