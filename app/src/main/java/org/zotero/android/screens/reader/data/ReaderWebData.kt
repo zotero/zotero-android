@@ -19,6 +19,7 @@ sealed interface ReaderWebData {
 
     data class onInitThumbnails(val thumbnailsJsonArray: JsonArray) : ReaderWebData
     data class onRenderThumbnail(val thumbnailJsonObject: JsonObject) : ReaderWebData
+    data class onRenderAnnotationImage(val annotationImageJsonObject: JsonObject) : ReaderWebData
     data class onSetPageLabels(val pageLabelsJsonArray: JsonArray) : ReaderWebData
 
     object onViewContentInitialized: ReaderWebData

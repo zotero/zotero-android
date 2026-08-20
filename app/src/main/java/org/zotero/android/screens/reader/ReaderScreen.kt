@@ -43,6 +43,7 @@ import org.zotero.android.screens.reader.search.ReaderSearchScreen
 import org.zotero.android.screens.reader.search.ReaderSearchViewModel
 import org.zotero.android.screens.reader.search.ReaderSearchViewState
 import org.zotero.android.screens.reader.settings.ReaderSettingsView
+import org.zotero.android.screens.reader.sidebar.annotations.ReaderAnnotationsViewModel
 import org.zotero.android.screens.reader.sidebar.thumbnails.ReaderThumbnailsViewModel
 import org.zotero.android.screens.reader.topbar.ReaderSearchTopBar
 import org.zotero.android.screens.reader.topbar.ReaderTopBar
@@ -70,6 +71,9 @@ internal fun ReaderScreen(
 
     val thumbnailsViewModel: ReaderThumbnailsViewModel = hiltViewModel()
     thumbnailsViewModel.initOnce()
+
+    val annotationsViewModel: ReaderAnnotationsViewModel = hiltViewModel()
+    annotationsViewModel.initOnce()
 
     val activity = LocalActivity.current ?: return
     val currentView = LocalView.current

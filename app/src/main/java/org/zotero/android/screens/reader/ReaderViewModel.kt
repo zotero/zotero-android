@@ -6,7 +6,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.RectF
 import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
@@ -18,9 +17,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
 import io.realm.RealmResults
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,8 +97,7 @@ import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResult
-import org.zotero.android.screens.reader.sidebar.annotations.ReaderAnnotationBitmapManager
-import org.zotero.android.screens.reader.sidebar.annotations.cache.ReaderAnnotationBitmapCacheSnapshotEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderRequestAnnotationImageRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
@@ -146,8 +141,7 @@ class ReaderViewModel @Inject constructor(
     private val readerSearchTermEventStream: ReaderSearchTermEventStream,
     private val webCallChainEventStream: ReaderWebCallChainEventStream,
     private val readerRequestThumbnailRenderEventStream: ReaderRequestThumbnailRenderEventStream,
-    private val annotationBitmapManager: ReaderAnnotationBitmapManager,
-    private val annotationBitmapCacheSnapshotEventStream: ReaderAnnotationBitmapCacheSnapshotEventStream,
+    private val readerRequestAnnotationImageRenderEventStream: ReaderRequestAnnotationImageRenderEventStream,
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
     private val progressHandler: SyncProgressHandler,
@@ -308,26 +302,9 @@ class ReaderViewModel @Inject constructor(
                 updateState {
                     copy(isDark = isDark)
                 }
-                clearAnnotationsBitmapCache()
                 triggerEffect(ReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
-    }
-
-    private fun setupAnnotationsBitmapCacheUpdateStream() {
-        annotationBitmapCacheSnapshotEventStream.flow()
-            .onEach { cacheSnapshot ->
-                Timber.d("ReaderThumbnailProcessing: thumbnailCache updated")
-                updateState {
-                    copy(annotationsBitmapCache = cacheSnapshot)
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-
-    private fun clearAnnotationsBitmapCache() {
-        annotationBitmapManager.cancelProcessing()
     }
 
     private fun startObservingSearchTerm() {
@@ -363,6 +340,18 @@ class ReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun startObservingRequestAnnotationImageRender() {
+        readerRequestAnnotationImageRenderEventStream.flow()
+            .onEach { keys ->
+                Timber.d("ReaderAnnotationImageProcessing: requesting annotation images: ${keys}")
+                for (key in keys) {
+                    readerWebCallChainExecutor.renderAnnotationImages(key)
+                }
+            }
+
+            .launchIn(viewModelScope)
+    }
+
     fun initOnce(
         isTablet: Boolean,
         textFont: TextStyle,
@@ -379,13 +368,11 @@ class ReaderViewModel @Inject constructor(
         startObservingTheme()
         startObservingSearchTerm()
         startObservingRequestThumbnailRender()
+        startObservingRequestAnnotationImageRender()
 
         setupCommentChangeFlow()
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
-
-        setupAnnotationsBitmapCacheUpdateStream()
-        initAnnotationManager()
 
         this.activeLineWidth = defaults.getActiveLineWidth()
         this.activeEraserSize = defaults.getActiveEraserSize()
@@ -416,16 +403,6 @@ class ReaderViewModel @Inject constructor(
     fun initEveryTime(webView: WebView) {
         restartDisableForceScreenOnTimer()
         readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
-    }
-
-    private fun initAnnotationManager() {
-        annotationBitmapManager.init(viewModelScope)
-        val annotationsBitmapCache = annotationBitmapManager.generateEmptySnapshot().toPersistentMap()
-        updateState {
-            copy(
-                annotationsBitmapCache = annotationsBitmapCache
-            )
-        }
     }
 
     private fun copyReaderFiles() {
@@ -841,20 +818,6 @@ class ReaderViewModel @Inject constructor(
             createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
         } else {
             createHtmlEpubDatabaseAnnotations(annotations = annotations as List<NewReaderAnnotation>)
-        }
-
-
-        rawAnnotations.forEach {
-            val data = it.asJsonObject
-            val key = data["id"]?.asString
-            val imageBase64 = data["image"]?.asString
-            if (key != null && imageBase64 != null) {
-                annotationBitmapManager.store(
-                    key = key,
-                    encodedImageBase64String = imageBase64
-                )
-            }
-
         }
     }
 
@@ -2549,7 +2512,6 @@ data class ReaderViewState(
     val readerFilterArgs: ReaderFilterArgs? = null,
     val toolColors: Map<ReaderAnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
-    val annotationsBitmapCache: PersistentMap<String, Bitmap> = persistentMapOf(),
     val pageProgress: String? = null,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,

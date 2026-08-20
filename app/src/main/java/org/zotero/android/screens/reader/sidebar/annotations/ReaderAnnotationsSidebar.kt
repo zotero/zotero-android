@@ -16,12 +16,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.viewmodel.compose.viewModel as hiltComposeViewModel
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.screens.reader.ReaderBottomPanel
 import org.zotero.android.screens.reader.ReaderSidebarSearchBar
@@ -43,7 +47,9 @@ internal fun ReaderAnnotationsSidebar(
     viewState: ReaderViewState,
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
+    annotationsViewModel: ReaderAnnotationsViewModel = hiltComposeViewModel(),
 ) {
+    val annotationsViewState by annotationsViewModel.viewStates.observeAsState(ReaderAnnotationsViewState())
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -98,7 +104,15 @@ internal fun ReaderAnnotationsSidebar(
                     )
                     ReaderSidebarDivider()
 
-                    val cachedBitmap = viewState.annotationsBitmapCache[key]
+                    val cachedBitmap = annotationsViewState.annotationsBitmapCache[key]
+                    val hasBitmapPreview = annotation.type == AnnotationType.image ||
+                            annotation.type == AnnotationType.ink ||
+                            annotation.type == AnnotationType.text
+                    if (hasBitmapPreview && cachedBitmap == null) {
+                        LaunchedEffect(key) {
+                            annotationsViewModel.requestAnnotationImage(key)
+                        }
+                    }
                     when (annotation.type) {
                         AnnotationType.note -> {
                             ReaderAnnotationsSidebarNoteRow(

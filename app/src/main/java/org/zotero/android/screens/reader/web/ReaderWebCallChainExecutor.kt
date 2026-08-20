@@ -103,6 +103,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onRenderAnnotationImage" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onRenderAnnotationImage(params)
+                                )
+                            )
+                        }
+
                         "onSetPageLabels" -> {
                             val params = data["params"].asJsonObject
                             val pageLabelsJsonArray = params["pageLabels"].asJsonArray
@@ -305,6 +314,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun renderThumbnails(index: Int) {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("renderThumbnails([$index])") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun renderAnnotationImages(id: String) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("renderAnnotationImages(['$id'])") {
                 cont.resume(Unit)
             }
         }
