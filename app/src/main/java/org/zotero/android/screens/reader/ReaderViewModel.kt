@@ -40,6 +40,7 @@ import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.architecture.require
+import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -48,6 +49,10 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CreateHtmlEpubAnnotationsDbRequest
 import org.zotero.android.database.requests.CreatePDFAnnotationsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationFontSizeDbRequest
+import org.zotero.android.database.requests.EditAnnotationPathsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationRectsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationRotationDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
@@ -814,10 +819,28 @@ class ReaderViewModel @Inject constructor(
         if (annotation != null && viewState.activeTool != null) {
             toggle(viewState.activeTool!!)
         }
-        if (viewState.fileType == ReaderFileType.PDF) {
-            createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
-        } else {
-            createHtmlEpubDatabaseAnnotations(annotations = annotations as List<NewReaderAnnotation>)
+
+        val newAnnotations = annotations.filter { this.annotations[it.key] == null }
+        val editedAnnotations = annotations.filter { this.annotations[it.key] != null }
+
+        if (newAnnotations.isNotEmpty()) {
+            for (newAnnotation in newAnnotations) {
+                this.annotations[newAnnotation.key] = newAnnotation
+            }
+            if (viewState.fileType == ReaderFileType.PDF) {
+                createPdfDatabaseAnnotations(annotations = newAnnotations as List<PDFDocumentAnnotation>)
+            } else {
+                createHtmlEpubDatabaseAnnotations(annotations = newAnnotations as List<NewReaderAnnotation>)
+            }
+        }
+        for (editedAnnotation in editedAnnotations) {
+            this.annotations[editedAnnotation.key] = editedAnnotation
+            if (viewState.fileType == ReaderFileType.PDF) {
+                editedAnnotation as PDFDocumentAnnotation
+                updatePdfDatabaseAnnotation(editedAnnotation)
+            } else {
+                updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+            }
         }
     }
 
@@ -885,6 +908,97 @@ class ReaderViewModel @Inject constructor(
         viewModelScope.launch {
             readerWebCallChainExecutor.selectInDocument(key)
         }
+    }
+
+    private fun updatePdfDatabaseAnnotation(annotation: PDFDocumentAnnotation) {
+        val key = annotation.key
+        val libraryId = this.library.identifier
+        val requests = mutableListOf<DbRequest>()
+
+        val fieldValues = mutableMapOf(
+            KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.color,
+            KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to annotation.comment,
+        )
+
+        when (annotation.type) {
+            AnnotationType.ink -> {
+                requests.add(
+                    EditAnnotationPathsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        paths = annotation.paths
+                    )
+                )
+                val lineWidth = annotation.lineWidth
+                if (lineWidth != null) {
+                    fieldValues[
+                        KeyBaseKeyPair(
+                            key = FieldKeys.Item.Annotation.Position.lineWidth,
+                            baseKey = FieldKeys.Item.Annotation.position
+                        )
+                    ] = lineWidth.rounded(3).toString()
+                }
+            }
+
+            AnnotationType.text -> {
+                requests.add(
+                    EditAnnotationRectsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        rects = annotation.rects
+                    )
+                )
+                requests.add(
+                    EditAnnotationRotationDbRequest(
+                        key = key,
+                        libraryId = libraryId,
+                        rotation = annotation.rotation ?: 0
+                    )
+                )
+                requests.add(
+                    EditAnnotationFontSizeDbRequest(
+                        key = key,
+                        libraryId = libraryId,
+                        size = (annotation.fontSize ?: 0f).toInt()
+                    )
+                )
+            }
+
+            AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline -> {
+                requests.add(
+                    EditAnnotationRectsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        rects = annotation.rects
+                    )
+                )
+            }
+        }
+
+        requests.add(
+            0,
+            editItemFieldsDbRequestFactory.create(
+                key = key,
+                libraryId = libraryId,
+                fieldValues = fieldValues,
+            )
+        )
+
+        ignoreDbCallbackOnReaderModificationItemKeys.add(key)
+        dbWrapperMain.realmDbStorage.perform(requests)
+    }
+
+    private fun updateHtmlEpubDatabaseAnnotation(annotation: NewReaderAnnotation) {
+        val request = editItemFieldsDbRequestFactory.create(
+            key = annotation.key,
+            libraryId = this.library.identifier,
+            fieldValues = mapOf(
+                KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.color,
+                KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to annotation.comment,
+            ),
+        )
+        ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
+        dbWrapperMain.realmDbStorage.perform(request)
     }
 
     private fun setTags(tags: List<Tag>, key: String) {
@@ -1161,6 +1275,8 @@ class ReaderViewModel @Inject constructor(
     //We need to skip it's execution otherwise it will trigger unnecessary reader update, whichc already has the correct state.
     private var ignoreDbCallbackOnReaderInsertionItemKey : String? = null
 
+    private val ignoreDbCallbackOnReaderModificationItemKeys = mutableSetOf<String>()
+
     fun update(
         changeSet: OrderedCollectionChangeSet,
         objects: RealmResults<RItem>,
@@ -1202,7 +1318,11 @@ class ReaderViewModel @Inject constructor(
 
             Timber.w("ReaderViewModel: update annotation $key")
             annotations[key] = annotation
-            updatedPdfAnnotations.add(json)
+            val isOwnEditEcho = ignoreDbCallbackOnReaderModificationItemKeys.remove(key)
+            val isSyncResponseVersionBump = item.changeType == UpdatableChangeType.syncResponse.name
+            if (!isOwnEditEcho && !isSyncResponseVersionBump) {
+                updatedPdfAnnotations.add(json)
+            }
 
             if (canUpdate(key = key, item = item)) {
                 Timber.i("ReaderViewModel: update sidebar key $key")
@@ -1356,11 +1476,13 @@ class ReaderViewModel @Inject constructor(
                 }
                 //TODO remove later if it doesnt lead to new issues
 //                if (!shouldIgnoreUpdate) {
+                if (!updatedPdfAnnotations.isEmpty || !insertedPdfAnnotations.isEmpty || !deletedPdfAnnotations.isEmpty) {
                     readerWebCallChainExecutor.updateView(
                         modifications = updatedPdfAnnotations,
                         insertions = insertedPdfAnnotations,
                         deletions = deletedPdfAnnotations
                     )
+                }
 //                }
 
             }
