@@ -1324,6 +1324,12 @@ class ReaderViewModel @Inject constructor(
                 updatedPdfAnnotations.add(json)
             }
 
+            if (!isSyncResponseVersionBump &&
+                (annotation.type == AnnotationType.image || annotation.type == AnnotationType.ink || annotation.type == AnnotationType.text)
+            ) {
+                readerRequestAnnotationImageRenderEventStream.emitAsync(listOf(key))
+            }
+
             if (canUpdate(key = key, item = item)) {
                 Timber.i("ReaderViewModel: update sidebar key $key")
                 updatedKeys.add(key)
@@ -1435,7 +1441,10 @@ class ReaderViewModel @Inject constructor(
 
         updateState {
             if (this@ReaderViewModel.snapshotKeys == null) {
-                copy(sortedKeys = keys)
+                copy(
+                    sortedKeys = keys,
+                    annotationsUpdatedCounter = annotationsUpdatedCounter + 1,
+                )
             } else {
                 this@ReaderViewModel.snapshotKeys = keys
                 copy(
@@ -1443,7 +1452,8 @@ class ReaderViewModel @Inject constructor(
                         snapshot = keys,
                         term = viewState.annotationSearchTerm,
                         filter = viewState.annotationFilter
-                    )
+                    ),
+                    annotationsUpdatedCounter = annotationsUpdatedCounter + 1,
                 )
             }
         }
@@ -2636,6 +2646,7 @@ data class ReaderViewState(
     val pageProgress: String? = null,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
+    val annotationsUpdatedCounter: Int = 0,
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey

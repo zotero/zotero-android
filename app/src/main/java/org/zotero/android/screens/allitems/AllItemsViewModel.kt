@@ -276,7 +276,7 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                     when (contentType) {
                         "application/pdf" -> {
-                            showPdf(
+                            showReader(
                                 file = file,
                                 key = attachment.key,
                                 parentKey = parentKey,
