@@ -171,9 +171,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             }
                             val key = idsJsonArrayOfStrings.firstOrNull()
                             if (key != null) {
+                                val inlineTextEditing = paramsObject["inlineTextEditing"]
+                                    ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
-                                        ReaderWebData.selectAnnotationFromDocument(key)
+                                        ReaderWebData.selectAnnotationFromDocument(key, inlineTextEditing)
                                     )
                                 )
                             } else {

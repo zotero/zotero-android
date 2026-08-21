@@ -48,6 +48,7 @@ class ReaderWebViewHandler @Inject constructor(
             webView.settings.javaScriptCanOpenWindowsAutomatically = true
             webView.setFocusable(true);
             webView.setFocusableInTouchMode(true);
+            webView.requestFocus()
 
             webView.webChromeClient = object : WebChromeClient() {
                 override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
@@ -79,6 +80,7 @@ class ReaderWebViewHandler @Inject constructor(
                 }
 
                 override fun onPageFinished(view: WebView, url: String) {
+                    webView.requestFocus()
                     val channel = webView.createWebMessageChannel()
                     val port = channel[0]
                     this@ReaderWebViewHandler.webViewPort = port

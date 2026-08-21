@@ -832,12 +832,11 @@ class ReaderViewModel @Inject constructor(
 
     }
 
-    private suspend fun selectAnnotationFromDocument(key: String) {
-        _select(key = key, didSelectInDocument = true)
+    private suspend fun selectAnnotationFromDocument(key: String, inlineTextEditing: Boolean = false) {
+        _select(key = key, didSelectInDocument = true, inlineTextEditing = inlineTextEditing)
     }
 
-
-    private suspend fun _select(key: String?, didSelectInDocument: Boolean) {
+    private suspend fun _select(key: String?, didSelectInDocument: Boolean, inlineTextEditing: Boolean = false) {
         if (key == viewState.selectedAnnotationKey) {
             return
         }
@@ -879,7 +878,7 @@ class ReaderViewModel @Inject constructor(
             }
         }
         selectAndFocusAnnotationInDocument()
-        openAnnotationDialog()
+        openAnnotationDialog(suppressPopup = inlineTextEditing)
     }
 
     private fun selectInDocument(key: String) {
@@ -1487,7 +1486,7 @@ class ReaderViewModel @Inject constructor(
                 saveAnnotations(successValue.params)
             }
             is ReaderWebData.selectAnnotationFromDocument -> {
-                selectAnnotationFromDocument(successValue.key)
+                selectAnnotationFromDocument(successValue.key, successValue.inlineTextEditing)
             }
             is ReaderWebData.setSelectedTextParams -> {
                 setSelectedTextParams(successValue.params)
@@ -2166,8 +2165,8 @@ class ReaderViewModel @Inject constructor(
 
 
 
-    private fun openAnnotationDialog() {
-        val showAnnotationPopup = !viewState.showSideBar && viewState.selectedAnnotationKey != null
+    private fun openAnnotationDialog(suppressPopup: Boolean = false) {
+        val showAnnotationPopup = !suppressPopup && !viewState.showSideBar && viewState.selectedAnnotationKey != null
         if (showAnnotationPopup) {
             annotationEditReaderKey = viewState.selectedAnnotationKey
             val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
