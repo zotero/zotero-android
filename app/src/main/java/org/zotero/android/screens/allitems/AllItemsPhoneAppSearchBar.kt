@@ -65,6 +65,13 @@ internal fun AllItemsPhoneAppSearchBar(
                         }
                     },
                     actions = {
+                        IconButton(onClick = viewModel::onDownloadAll) {
+                            Icon(
+                                painter = painterResource(Drawables.download_24px),
+                                contentDescription = stringResource(Strings.collections_download_attachments),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                         TooltipBox(
                             positionProvider = rememberTooltipPositionProvider(
                                 TooltipAnchorPosition.Below,
