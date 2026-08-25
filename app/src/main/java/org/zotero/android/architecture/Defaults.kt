@@ -11,6 +11,7 @@ import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
+import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -78,6 +79,12 @@ open class Defaults @Inject constructor(
     private val webDavPassword = "webDavPassword"
 
     private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
+
+    private val defaultLocalVoiceForLanguage = "defaultLocalVoiceForLanguage"
+    private val defaultStandardRemoteVoiceForLanguage = "defaultStandardRemoteVoiceForLanguage"
+    private val defaultPremiumRemoteVoiceForLanguage = "defaultPremiumRemoteVoiceForLanguage"
+    private val remoteVoiceTier = "remoteVoiceTier"
+    private val didShowReadAloudOnboarding = "didShowReadAloudOnboarding"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -559,6 +566,66 @@ open class Defaults @Inject constructor(
     ) {
         val json = dataMarshaller.marshal(readerSettings)
         sharedPreferences.edit { putString(this@Defaults.readerSettings, json) }
+    }
+
+    fun getDefaultLocalVoiceForLanguage(): Map<String, String> {
+        val json =
+            sharedPreferences.getString(defaultLocalVoiceForLanguage, null) ?: return emptyMap()
+        return dataMarshaller.unmarshalMap<String, String>(json) ?: emptyMap()
+    }
+
+    fun setDefaultLocalVoiceForLanguage(value: Map<String, String>) {
+        val json = dataMarshaller.marshal(value)
+        sharedPreferences.edit { putString(this@Defaults.defaultLocalVoiceForLanguage, json) }
+    }
+
+    fun getDefaultStandardRemoteVoiceForLanguage(): Map<String, RemoteVoice> {
+        val json = sharedPreferences.getString(defaultStandardRemoteVoiceForLanguage, null)
+            ?: return emptyMap()
+        return dataMarshaller.unmarshalMap<String, RemoteVoice>(json) ?: emptyMap()
+    }
+
+    fun setDefaultStandardRemoteVoiceForLanguage(value: Map<String, RemoteVoice>) {
+        val json = dataMarshaller.marshal(value)
+        sharedPreferences.edit {
+            putString(
+                this@Defaults.defaultStandardRemoteVoiceForLanguage,
+                json
+            )
+        }
+    }
+
+    fun getDefaultPremiumRemoteVoiceForLanguage(): Map<String, RemoteVoice> {
+        val json = sharedPreferences.getString(defaultPremiumRemoteVoiceForLanguage, null)
+            ?: return emptyMap()
+        return dataMarshaller.unmarshalMap<String, RemoteVoice>(json) ?: emptyMap()
+    }
+
+    fun setDefaultPremiumRemoteVoiceForLanguage(value: Map<String, RemoteVoice>) {
+        val json = dataMarshaller.marshal(value)
+        sharedPreferences.edit {
+            putString(
+                this@Defaults.defaultPremiumRemoteVoiceForLanguage,
+                json
+            )
+        }
+    }
+
+    fun getRemoteVoiceTier(): RemoteVoice.Tier? {
+        val value = sharedPreferences.getString(remoteVoiceTier, null) ?: return null
+        return RemoteVoice.Tier.from(value)
+    }
+
+    fun setRemoteVoiceTier(tier: RemoteVoice.Tier?) {
+        sharedPreferences.edit { putString(this@Defaults.remoteVoiceTier, tier?.value) }
+    }
+
+    fun didShowReadAloudOnboarding(): Boolean {
+        return sharedPreferences.getBoolean(didShowReadAloudOnboarding, false)
+    }
+
+    fun setDidShowReadAloudOnboarding(newValue: Boolean) {
+        sharedPreferences.edit { putBoolean(didShowReadAloudOnboarding, newValue) }
     }
 
     fun reset() {

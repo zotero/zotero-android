@@ -177,6 +177,7 @@ dependencies {
     implementation(Libs.eventBus)
     implementation(Libs.keyboardVisibility)
     implementation(Libs.codeScanner)
+    implementation(Libs.MlKit.languageId)
 
 }
 

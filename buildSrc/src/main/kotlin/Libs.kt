@@ -15,6 +15,10 @@ object Libs {
 
     const val codeScanner = "com.google.android.gms:play-services-code-scanner:16.1.0"
 
+    object MlKit {
+        const val languageId = "com.google.mlkit:language-id:17.0.6"
+    }
+
     object Compose {
         private const val version = "1.11.4"
         const val foundation = "androidx.compose.foundation:foundation:$version"
