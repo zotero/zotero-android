@@ -7,6 +7,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.RectF
+import android.net.Uri
 import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.SavedStateHandle
@@ -2386,6 +2387,11 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    fun navigateToPlainReader() {
+        val encodedFilePath = Uri.encode(this.originalFile.absolutePath)
+        triggerEffect(ReaderViewEffect.ShowReaderPlainReader(encodedFilePath))
+    }
+
     fun hideSettingsView() {
         updateState {
             copy(
@@ -2675,6 +2681,7 @@ sealed class ReaderViewEffect : ViewEffect {
     object NavigateToTagPickerScreen : ReaderViewEffect()
     object ShowReaderColorPicker : ReaderViewEffect()
     data class ShowReaderSettings(val params: String) : ReaderViewEffect()
+    data class ShowReaderPlainReader(val encodedFilePath: String) : ReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(
         val scrollToIndex: Int,
         val showAnnotationPopup: Boolean

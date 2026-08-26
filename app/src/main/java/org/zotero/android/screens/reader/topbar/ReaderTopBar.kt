@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
+import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.search.ReaderSearchViewModel
 import org.zotero.android.screens.reader.search.ReaderSearchViewState
 import org.zotero.android.screens.reader.search.popup.ReaderSearchPopup
@@ -34,6 +35,7 @@ internal fun ReaderTopBar(
     onBack: () -> Unit,
     onShowHideSideBar: () -> Unit,
     toPdfSettings: () -> Unit,
+    toPdfPlainReader: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
     toggleToolbarButton: () -> Unit,
     isToolbarButtonSelected: Boolean,
@@ -87,6 +89,33 @@ internal fun ReaderTopBar(
                     },
                     isSelected = showSideBar
                 )
+            }
+
+            if (viewState.fileType == ReaderFileType.PDF) {
+                TooltipBox(
+                    positionProvider = rememberTooltipPositionProvider(
+                        TooltipAnchorPosition.Below,
+                        4.dp
+                    ),
+                    tooltip = {
+                        PlainTooltip() {
+                            Text(
+                                safeStringResource(
+                                    Strings.pdf_reader_plain_reader
+                                )
+                            )
+                        }
+                    },
+                    state = rememberTooltipState()
+                ) {
+                    IconButton(onClick = toPdfPlainReader) {
+                        Icon(
+                            painter = painterResource(Drawables.reader),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
