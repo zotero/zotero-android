@@ -17,13 +17,13 @@ internal fun ReaderSettingsScreen(
     onBack: () -> Unit,
     viewModel: ReaderSettingsViewModel = hiltViewModel(),
 ) {
-    val sendParamsAndBack: () -> Unit = {
-        viewModel.sendSettingsParams()
+    val applyParamsAndBack: () -> Unit = {
+        viewModel.applyChangesImmediately()
         onBack()
     }
 
     BackHandler(onBack = {
-        sendParamsAndBack()
+        applyParamsAndBack()
     })
     LaunchedEffect(Unit) {
         viewModel.init(args = args)
@@ -37,7 +37,8 @@ internal fun ReaderSettingsScreen(
         CustomScaffoldM3(
             topBar = {
                 ReaderSettingsTopBar(
-                    onDone = sendParamsAndBack,
+                    onDone = applyParamsAndBack,
+                    onSave = applyParamsAndBack,
                 )
             },
         ) {

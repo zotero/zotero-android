@@ -4,8 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
@@ -42,6 +44,9 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
     private lateinit var readerSettings: ReaderSettings
     private var pdfReaderThemeCancellable: Job? = null
+
+    private var debounceApplyJob: Job? = null
+    private val DEBOUNCE_APPLY_DELAY_MS = 500L
 
     private fun startObservingTheme() {
         this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
@@ -150,7 +155,21 @@ internal class ReaderSettingsViewModel @Inject constructor(
             }
         }
         updatePdfSettings(option)
+        scheduleDebouncedApply()
+    }
 
+    private fun scheduleDebouncedApply() {
+        debounceApplyJob?.cancel()
+        debounceApplyJob = viewModelScope.launch {
+            delay(DEBOUNCE_APPLY_DELAY_MS)
+            sendSettingsParams()
+        }
+    }
+
+    fun applyChangesImmediately() {
+        debounceApplyJob?.cancel()
+        debounceApplyJob = null
+        sendSettingsParams()
     }
 
     private fun updatePdfSettings(option: ReaderSettingsOptions) {
@@ -197,7 +216,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
         pdfReaderThemeDecider.setCurrentOsTheme(isOsThemeDark = isDark)
     }
 
-    fun sendSettingsParams() {
+    private fun sendSettingsParams() {
         EventBus.getDefault().post(ReaderSettingsChangeResult(readerSettings))
     }
 
