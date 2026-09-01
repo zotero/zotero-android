@@ -10,6 +10,7 @@ import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
@@ -551,7 +552,11 @@ open class Defaults @Inject constructor(
             this.readerSettings,
             null
         ) ?: return ReaderSettings.default()
-        return dataMarshaller.unmarshal(json)
+        val settings = dataMarshaller.unmarshal<ReaderSettings>(json)
+        if (settings.scrollMode == null) {
+            settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        return settings
     }
 
     fun setReaderSettings(

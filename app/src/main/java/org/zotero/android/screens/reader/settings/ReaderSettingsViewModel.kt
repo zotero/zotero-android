@@ -20,7 +20,7 @@ import org.zotero.android.screens.reader.ARG_READER_SETTINGS_SCREEN
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
-import org.zotero.android.screens.reader.settings.data.PageScrollDirection
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
@@ -69,7 +69,7 @@ internal class ReaderSettingsViewModel @Inject constructor(
             updateState {
                 copy(
                     selectedAppearanceOption = convert(readerSettings.appearanceMode),
-                    selectedScrollDirectionOption = convert(readerSettings.direction),
+                    selectedScrollModeOption = convert(readerSettings.scrollMode),
                     selectedSpreadsOption = convert(readerSettings.spreadsMode),
                     selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
                     fileType = loadedArgs.fileType,
@@ -92,13 +92,16 @@ internal class ReaderSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun convert(direction: PageScrollDirection): ReaderSettingsOptions {
-        return when (direction) {
-            PageScrollDirection.HORIZONTAL -> {
-                ReaderSettingsOptions.ScrollDirectionHorizontal
+    private fun convert(scrollMode: PageScrollMode): ReaderSettingsOptions {
+        return when (scrollMode) {
+            PageScrollMode.VERTICAL -> {
+                ReaderSettingsOptions.ScrollModeVertical
             }
-            PageScrollDirection.VERTICAL -> {
-                ReaderSettingsOptions.ScrollDirectionVertical
+            PageScrollMode.HORIZONTAL -> {
+                ReaderSettingsOptions.ScrollModeHorizontal
+            }
+            PageScrollMode.WRAPPED -> {
+                ReaderSettingsOptions.ScrollModeWrapped
             }
         }
     }
@@ -137,9 +140,9 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     copy(selectedAppearanceOption = option)
                 }
             }
-            ReaderSettingsOptions.ScrollDirectionHorizontal, ReaderSettingsOptions.ScrollDirectionVertical -> {
+            ReaderSettingsOptions.ScrollModeVertical, ReaderSettingsOptions.ScrollModeHorizontal, ReaderSettingsOptions.ScrollModeWrapped -> {
                 updateState {
-                    copy(selectedScrollDirectionOption = option)
+                    copy(selectedScrollModeOption = option)
                 }
             }
             ReaderSettingsOptions.PageSpreadsNone, ReaderSettingsOptions.PageSpreadsDouble, ReaderSettingsOptions.PageSpreadsEven -> {
@@ -186,11 +189,14 @@ internal class ReaderSettingsViewModel @Inject constructor(
                 readerSettings.appearanceMode = PageAppearanceMode.AUTOMATIC
             }
 
-            ReaderSettingsOptions.ScrollDirectionHorizontal -> {
-                readerSettings.direction = PageScrollDirection.HORIZONTAL
+            ReaderSettingsOptions.ScrollModeVertical -> {
+                readerSettings.scrollMode = PageScrollMode.VERTICAL
             }
-            ReaderSettingsOptions.ScrollDirectionVertical -> {
-                readerSettings.direction = PageScrollDirection.VERTICAL
+            ReaderSettingsOptions.ScrollModeHorizontal -> {
+                readerSettings.scrollMode = PageScrollMode.HORIZONTAL
+            }
+            ReaderSettingsOptions.ScrollModeWrapped -> {
+                readerSettings.scrollMode = PageScrollMode.WRAPPED
             }
 
             ReaderSettingsOptions.PageSpreadsNone -> {
@@ -224,14 +230,16 @@ internal class ReaderSettingsViewModel @Inject constructor(
 
 internal data class ReaderSettingsViewState(
     val selectedAppearanceOption: ReaderSettingsOptions = ReaderSettingsOptions.AppearanceAutomatic,
-    val selectedScrollDirectionOption: ReaderSettingsOptions = ReaderSettingsOptions.ScrollDirectionHorizontal,
+    val selectedScrollModeOption: ReaderSettingsOptions = ReaderSettingsOptions.ScrollModeVertical,
     val selectedSpreadsOption: ReaderSettingsOptions = ReaderSettingsOptions.PageSpreadsNone,
     val selectedPageLayoutFlowMode: ReaderSettingsOptions = ReaderSettingsOptions.PageLayoutFlowModePaginated,
     val isDark: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB
 ) : ViewState {
-    val scrollDirectionOptions = listOf(
-        ReaderSettingsOptions.ScrollDirectionHorizontal, ReaderSettingsOptions.ScrollDirectionVertical
+    val scrollModeOptions = listOf(
+        ReaderSettingsOptions.ScrollModeVertical,
+        ReaderSettingsOptions.ScrollModeHorizontal,
+        ReaderSettingsOptions.ScrollModeWrapped,
     )
     val appearanceOptions = listOf(
         ReaderSettingsOptions.AppearanceLight,

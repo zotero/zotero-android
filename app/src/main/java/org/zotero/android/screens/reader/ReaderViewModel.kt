@@ -2475,6 +2475,9 @@ class ReaderViewModel @Inject constructor(
                 if (viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setFlowMode(readerSettings.pageLayoutFlowMode)
                 }
+                if (viewState.fileType == ReaderFileType.PDF) {
+                    readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                }
             }
 
         }
