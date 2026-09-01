@@ -91,4 +91,9 @@
     <string name="pdf_settings_flow_mode_paginated">Paginated</string>
     <string name="pdf_settings_flow_mode_scrolled">Scrolled</string>
 
+    <string name="pdf_settings_scroll_mode_title">Scrolling</string>
+    <string name="pdf_settings_scroll_mode_vertical">Vertical</string>
+    <string name="pdf_settings_scroll_mode_horizontal">Horizontal</string>
+    <string name="pdf_settings_scroll_mode_wrapped">Wrapped</string>
+
 </resources>

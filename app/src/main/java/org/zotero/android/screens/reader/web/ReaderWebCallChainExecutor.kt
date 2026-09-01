@@ -17,6 +17,7 @@ import org.zotero.android.screens.reader.data.ReaderPage
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.data.ReaderWebError
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
 import org.zotero.android.screens.reader.web.data.CreateReaderLocation
 import org.zotero.android.screens.reader.web.data.CreateReaderViewOptions
@@ -435,6 +436,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
+                    createReaderViewOptions.viewState.scrollMode = defaults.getReaderSettings().scrollMode.jsValue
                 }
             }
         }
@@ -505,6 +507,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
         return suspendCancellableCoroutine { cont ->
             val javascript = "window._view.setSpreadMode(${spreadsModeString.toInt()});"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setScrollMode(scrollMode: PageScrollMode) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript = "window._view.setScrollMode(${scrollMode.jsValue});"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

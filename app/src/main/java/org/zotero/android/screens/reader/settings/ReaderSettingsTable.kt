@@ -22,6 +22,14 @@ internal fun ReaderSettingsTable(
             selectedOption = viewState.selectedAppearanceOption,
             optionSelected = viewModel::onOptionSelected
         )
+        if (viewState.fileType == ReaderFileType.PDF) {
+            readerSettingsSettingRow(
+                titleResId = Strings.pdf_settings_scroll_mode_title,
+                options = viewState.scrollModeOptions,
+                selectedOption = viewState.selectedScrollModeOption,
+                optionSelected = viewModel::onOptionSelected
+            )
+        }
         if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(
                 titleResId = Strings.pdf_settings_spreads_title,
