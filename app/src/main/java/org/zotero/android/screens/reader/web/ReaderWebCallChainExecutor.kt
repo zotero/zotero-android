@@ -193,6 +193,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                 || dParams.isJsonNull
                                 || (dParams.isJsonObject && dParams.asJsonObject.isEmpty)
                             ) {
+                                observable.emitAsync(
+                                    Result.Success(
+                                        ReaderWebData.clearSelectedTextParams
+                                    )
+                                )
                                 return@launch
                             }
                             val params = dParams.asJsonObject

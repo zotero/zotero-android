@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
-import org.zotero.android.screens.reader.web.actionmenu.ReaderActionMenuPopup
 
 
 @Composable
@@ -91,15 +90,6 @@ internal fun ReaderBox(
                     )
                 }
         ) {
-            val selectedTextParamsRects = viewState.selectedTextParamsRects
-            if (selectedTextParamsRects != null) {
-                ReaderActionMenuPopup(
-                    selectedTextParamsRects = selectedTextParamsRects,
-                    viewModel = viewModel,
-                    viewState = viewState,
-                )
-            }
-
             ReaderWebView(viewModel = viewModel)
             if (viewState.showCreationToolbar) {
                 ReaderAnnotationCreationToolbar(

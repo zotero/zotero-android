@@ -1,14 +1,10 @@
 package org.zotero.android.screens.reader
 
-import android.app.Activity
-import android.app.SearchManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.graphics.RectF
 import android.net.Uri
-import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -108,6 +104,8 @@ import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRend
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
 import org.zotero.android.screens.reader.sidebar.data.ReaderWrapperOutline
+import org.zotero.android.screens.reader.web.ReaderCustomWebView
+import org.zotero.android.screens.reader.web.ReaderSelectionActionModeDelegate
 import org.zotero.android.screens.reader.web.ReaderWebCallChainEventStream
 import org.zotero.android.screens.reader.web.ReaderWebCallChainExecutor
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -162,6 +160,7 @@ class ReaderViewModel @Inject constructor(
     private var userId: Long = 0L
     private var username: String = ""
     private var selectedTextParams: JsonObject? = null
+    private var readerWebView: ReaderCustomWebView? = null
     private var annotations = mutableMapOf<String, ReaderAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
@@ -182,8 +181,6 @@ class ReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: String? = null
 
     private var savedSearchTerm = ""
-
-    private var selectedTextParamsText: String = ""
 
     var activeLineWidth: Float = 0.0f
     var activeEraserSize: Float = 0.0f
@@ -406,8 +403,21 @@ class ReaderViewModel @Inject constructor(
 
     }
 
-    fun initEveryTime(webView: WebView) {
+    fun initEveryTime(webView: ReaderCustomWebView) {
         restartDisableForceScreenOnTimer()
+        this.readerWebView = webView
+        webView.selectionActionModeDelegate = object : ReaderSelectionActionModeDelegate {
+            override fun hasValidSelection(): Boolean = viewState.selectedText != null
+            override fun onHighlight() {
+                this@ReaderViewModel.onHighlight()
+            }
+
+            override fun onUnderline() {
+                this@ReaderViewModel.onUnderline()
+            }
+
+            override fun onCopy(): Boolean = copySelectedTextToClipboard()
+        }
         readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
     }
 
@@ -689,7 +699,7 @@ class ReaderViewModel @Inject constructor(
             )
         }
 
-        this.selectedTextParams = null
+        clearSelectedTextParams()
         for (annotation in annotations) {
             this.annotations[annotation.key] = annotation
         }
@@ -1624,6 +1634,9 @@ class ReaderViewModel @Inject constructor(
             is ReaderWebData.setSelectedTextParams -> {
                 setSelectedTextParams(successValue.params)
             }
+            ReaderWebData.clearSelectedTextParams -> {
+                clearSelectedTextParams()
+            }
             is ReaderWebData.setViewState -> {
                 setViewState(successValue.params)
             }
@@ -1740,12 +1753,34 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setSelectedTextParams(params: JsonObject) {
-        this.selectedTextParams = params
-        val rects = params["rect"].asJsonArray
-        this.selectedTextParamsText = (params["annotation"].asJsonObject)["text"].asString
+        val text = params["annotation"]
+            ?.takeIf { it.isJsonObject }
+            ?.asJsonObject
+            ?.get("text")
+            ?.takeIf { it.isJsonPrimitive }
+            ?.asString
+            ?.takeIf { it.isNotBlank() }
+
+        this.selectedTextParams = params.takeIf { text != null }
         updateState {
-            copy(selectedTextParamsRects = rects)
+            copy(selectedText = text)
         }
+        readerWebView?.invalidateSelectionActionMode()
+    }
+
+    private fun clearSelectedTextParams() {
+        this.selectedTextParams = null
+        updateState {
+            copy(selectedText = null)
+        }
+        readerWebView?.invalidateSelectionActionMode()
+    }
+
+    private fun copySelectedTextToClipboard(): Boolean {
+        val text = viewState.selectedText ?: return false
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Copied Text", text))
+        return true
     }
 
     fun load() {
@@ -2467,62 +2502,14 @@ class ReaderViewModel @Inject constructor(
         triggerEffect(ReaderViewEffect.OpenWebpage(url))
     }
 
-    fun dismissActionMenu(deselectInReader: Boolean = false) {
-        updateState {
-            copy(selectedTextParamsRects = null)
-        }
-        if (deselectInReader) {
-            viewModelScope.launch {
-                readerWebCallChainExecutor.deselectText()
-            }
-        }
-    }
-
-    fun onCopy() {
-        dismissActionMenu()
-
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Copied Text", selectedTextParamsText)
-        clipboard.setPrimaryClip(clip)
-    }
-
-    fun onShare(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, selectedTextParamsText)
-        }
-        localActivity?.startActivity(Intent.createChooser(intent, "Share text"))
-    }
-    fun onTranslate(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_PROCESS_TEXT)
-        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, selectedTextParamsText)
-        intent.putExtra(
-            Intent.EXTRA_PROCESS_TEXT_READONLY,
-            false
-        )
-        intent.setType("text/plain")
-        localActivity?.startActivity(intent)
-    }
-    fun onWebSearch(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_WEB_SEARCH)
-        intent.putExtra(SearchManager.QUERY, selectedTextParamsText)
-        localActivity?.startActivity(intent)
-    }
-
-    fun onHighlight() = viewModelScope.launch {
+    private fun onHighlight() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.highlight)
-        dismissActionMenu(deselectInReader = true)
+        readerWebCallChainExecutor.deselectText()
     }
 
-    fun onUnderline() = viewModelScope.launch {
+    private fun onUnderline() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.underline)
-        dismissActionMenu(deselectInReader = true)
+        readerWebCallChainExecutor.deselectText()
     }
 
     private suspend fun scrollReaderIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {
@@ -2618,7 +2605,7 @@ class ReaderViewModel @Inject constructor(
 }
 
 data class ReaderViewState(
-    val selectedTextParamsRects: JsonArray? = null,
+    val selectedText: String? = null,
     val isDark: Boolean = false,
     val error: ReaderViewModel.Error? = null,
     val activeTool: ReaderAnnotationTool? = null,

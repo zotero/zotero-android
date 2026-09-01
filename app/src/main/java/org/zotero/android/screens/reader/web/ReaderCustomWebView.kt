@@ -8,6 +8,14 @@ import android.webkit.WebView
 
 class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebView(context, attrs) {
 
+    var selectionActionModeDelegate: ReaderSelectionActionModeDelegate? = null
+
+    private var activeSelectionActionMode: ActionMode? = null
+
+    fun invalidateSelectionActionMode() {
+        activeSelectionActionMode?.invalidate()
+    }
+
     override fun startActionModeForChild(
         originalView: View,
         callback: ActionMode.Callback
@@ -24,14 +32,24 @@ class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebVi
     }
 
     public override fun startActionMode(callback: ActionMode.Callback): ActionMode {
-        return startActionModeForChild(this,
-            ReaderWevViewSelectActionModeCallback()
-        )
+        val actionMode = startActionModeForChild(this, wrapSelectionCallback(callback))
+        activeSelectionActionMode = actionMode
+        return actionMode
     }
 
     public override fun startActionMode(callback: ActionMode.Callback, type: Int): ActionMode {
-        return startActionModeForChild(this,
-            ReaderWevViewSelectActionModeCallback(), type)
+        val actionMode = startActionModeForChild(this, wrapSelectionCallback(callback), type)
+        activeSelectionActionMode = actionMode
+        return actionMode
+    }
+
+    private fun wrapSelectionCallback(callback: ActionMode.Callback): ActionMode.Callback {
+        return ReaderWevViewSelectActionModeCallback(
+            context = context,
+            original = callback,
+            delegate = { selectionActionModeDelegate },
+            onDestroyed = { activeSelectionActionMode = null }
+        )
     }
 
     override fun showContextMenu(): Boolean {
