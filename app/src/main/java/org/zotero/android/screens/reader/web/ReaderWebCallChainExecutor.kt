@@ -284,9 +284,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
         //no-op
     }
 
-    suspend fun selectInDocument(key: String) {
+    suspend fun selectInDocument(key: String, centerInDocument: Boolean = true) {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("select({ key: '$key' });") {
+            readerWebViewHandler.evaluateJavascript("select({ key: '$key', centerInDocument: $centerInDocument });") {
                 cont.resume(Unit)
             }
         }
