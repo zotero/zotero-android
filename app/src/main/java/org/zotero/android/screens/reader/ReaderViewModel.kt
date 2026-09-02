@@ -906,18 +906,19 @@ class ReaderViewModel @Inject constructor(
                     )
                 }
             }
+            selectAndFocusAnnotationInDocument(centerInDocument = true)
         } else {
             updateState {
                 copy(focusSidebarKey = key)
             }
+            selectAndFocusAnnotationInDocument(centerInDocument = false)
         }
-        selectAndFocusAnnotationInDocument()
         openAnnotationDialog(suppressPopup = inlineTextEditing)
     }
 
-    private fun selectInDocument(key: String) {
+    private fun selectInDocument(key: String, centerInDocument: Boolean = true) {
         viewModelScope.launch {
-            readerWebCallChainExecutor.selectInDocument(key)
+            readerWebCallChainExecutor.selectInDocument(key, centerInDocument)
         }
     }
 
@@ -2031,7 +2032,7 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    private suspend fun selectAndFocusAnnotationInDocument() {
+    private suspend fun selectAndFocusAnnotationInDocument(centerInDocument: Boolean = true) {
         val selectedKey = viewState.selectedAnnotationKey
         val annotation = selectedKey?.let { annotation(it) }
         if (annotation != null) {
@@ -2041,18 +2042,19 @@ class ReaderViewModel @Inject constructor(
             } else if (annotation.type != AnnotationType.ink
                 || viewState.activeTool != ReaderAnnotationTool.ink
             ) {
-                select(selectedKey)
+                select(selectedKey, centerInDocument = centerInDocument)
             }
         } else {
-            select(null)
+            select(null, centerInDocument = centerInDocument)
         }
     }
 
     private suspend fun select(
         annotationKey: String?,
+        centerInDocument: Boolean = true,
     ) {
         if (annotationKey != null) {
-            selectInDocument(annotationKey)
+            selectInDocument(annotationKey, centerInDocument)
         } else {
             //TODO may need to check whether some annotation is actually selected in reader
             //Otherwise might lead to callback loop
