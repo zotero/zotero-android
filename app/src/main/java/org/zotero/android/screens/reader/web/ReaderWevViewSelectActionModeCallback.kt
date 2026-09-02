@@ -7,6 +7,8 @@ import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.core.view.get
+import androidx.core.view.size
 import org.zotero.android.uicomponents.Strings
 
 private const val MENU_ITEM_ID_HIGHLIGHT = Menu.FIRST + 1000
@@ -44,12 +46,32 @@ class ReaderWevViewSelectActionModeCallback(
             originalMenuPrepared = true
         }
 
-        menu.removeItem(MENU_ITEM_ID_HIGHLIGHT)
-        menu.removeItem(MENU_ITEM_ID_UNDERLINE)
+        val menuItems: MutableList<MenuItem> = ArrayList()
+        for (i in 0..<menu.size) {
+            menuItems.add(menu[i])
+        }
 
-        if (delegate()?.hasValidSelection() == true) {
-            menu.add(Menu.NONE, MENU_ITEM_ID_HIGHLIGHT, Menu.NONE, context.getString(Strings.pdf_highlight))
-            menu.add(Menu.NONE, MENU_ITEM_ID_UNDERLINE, Menu.NONE, context.getString(Strings.pdf_underline))
+        menu.clear()
+
+        var orderIndex = 0
+
+        menu.add(
+            Menu.NONE,
+            MENU_ITEM_ID_HIGHLIGHT,
+            Menu.NONE,
+            context.getString(Strings.pdf_highlight)
+        )
+        menu.add(
+            Menu.NONE,
+            MENU_ITEM_ID_UNDERLINE,
+            Menu.NONE,
+            context.getString(Strings.pdf_underline)
+        )
+
+        for (item in menuItems) {
+            if (item.itemId != MENU_ITEM_ID_HIGHLIGHT && item.itemId != MENU_ITEM_ID_UNDERLINE) {
+                menu.add(item.groupId, item.itemId, orderIndex++, item.title).intent = item.intent
+            }
         }
 
         return true
