@@ -2397,8 +2397,11 @@ class ReaderViewModel @Inject constructor(
     private var previousSidebarVisibilityState = false
 
     private fun decideTopBarAndBottomBarVisibility() = viewModelScope.launch {
-        val isTopBarCurrentlyVisible = viewState.isTopBarVisible
-        val topBarNewVisibilityState = !isTopBarCurrentlyVisible
+        val isFullyVisible = viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll
+        val topBarNewVisibilityState = !isFullyVisible
+        if (topBarNewVisibilityState) {
+            updateState { copy(isScrubberSuppressedByScroll = false) }
+        }
         setTopBarVisibility(topBarNewVisibilityState)
         delay(300)//First hide topbar and then with a delay sidebar, creates much nicer visual effect
         if (!topBarNewVisibilityState) {
@@ -2406,6 +2409,18 @@ class ReaderViewModel @Inject constructor(
             updateState { copy(showSideBar = false) }
         } else {
             updateState { copy(showSideBar = this@ReaderViewModel.previousSidebarVisibilityState) }
+        }
+    }
+
+    fun onDocumentUserGestureDetected() {
+        if (viewState.fileType != ReaderFileType.PDF) {
+            return
+        }
+        if (viewState.activeTool != null) {
+            return
+        }
+        if (viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll) {
+            updateState { copy(isScrubberSuppressedByScroll = true) }
         }
     }
 
@@ -2624,6 +2639,7 @@ data class ReaderViewState(
     val annotationPopoverRect: RectF? = null,
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
+    val isScrubberSuppressedByScroll: Boolean = false,
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
@@ -2657,6 +2673,10 @@ data class ReaderViewState(
 
     fun isPdfOrHtml(): Boolean {
         return fileType == ReaderFileType.PDF || fileType == ReaderFileType.HTML
+    }
+
+    fun isScrubberVisible(): Boolean {
+        return fileType == ReaderFileType.PDF && isTopBarVisible && !isScrubberSuppressedByScroll
     }
 
 

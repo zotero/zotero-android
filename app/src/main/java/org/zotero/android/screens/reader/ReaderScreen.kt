@@ -43,6 +43,7 @@ import org.zotero.android.screens.reader.search.ReaderSearchScreen
 import org.zotero.android.screens.reader.search.ReaderSearchViewModel
 import org.zotero.android.screens.reader.search.ReaderSearchViewState
 import org.zotero.android.screens.reader.settings.ReaderSettingsView
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.sidebar.annotations.ReaderAnnotationsViewModel
 import org.zotero.android.screens.reader.sidebar.thumbnails.ReaderThumbnailsViewModel
 import org.zotero.android.screens.reader.topbar.ReaderSearchTopBar
@@ -72,6 +73,9 @@ internal fun ReaderScreen(
 
     val thumbnailsViewModel: ReaderThumbnailsViewModel = hiltViewModel()
     thumbnailsViewModel.initOnce()
+
+    val scrubberViewModel: ReaderScrubberViewModel = hiltViewModel()
+    scrubberViewModel.initOnce()
 
     val annotationsViewModel: ReaderAnnotationsViewModel = hiltViewModel()
     annotationsViewModel.initOnce()
@@ -168,6 +172,7 @@ internal fun ReaderScreen(
 
                 is ReaderViewEffect.OnPageChanged -> {
                     thumbnailsViewModel.onPageChangedByReader(consumedEffect.currentPage)
+                    scrubberViewModel.onPageChangedByReader(consumedEffect.currentPage)
                 }
 
                 else -> {
@@ -223,6 +228,7 @@ internal fun ReaderScreen(
                         ReaderSideBySideMode(
                             viewModel = viewModel,
                             viewState = viewState,
+                            scrubberViewModel = scrubberViewModel,
                             annotationsLazyListState = annotationsLazyListState,
                             annotationMaxSideSize = annotationMaxSideSize
                         )
@@ -230,6 +236,7 @@ internal fun ReaderScreen(
                         ReaderOverlayMode(
                             viewState = viewState,
                             viewModel = viewModel,
+                            scrubberViewModel = scrubberViewModel,
                             annotationsLazyListState = annotationsLazyListState,
                             layoutType = layoutType,
                             annotationMaxSideSize = annotationMaxSideSize
@@ -241,6 +248,7 @@ internal fun ReaderScreen(
                     ReaderOverlayMode(
                         viewState = viewState,
                         viewModel = viewModel,
+                        scrubberViewModel = scrubberViewModel,
                         annotationsLazyListState = annotationsLazyListState,
                         layoutType = layoutType,
                         annotationMaxSideSize = annotationMaxSideSize

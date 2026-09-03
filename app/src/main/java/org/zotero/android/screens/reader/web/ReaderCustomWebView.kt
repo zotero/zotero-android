@@ -3,14 +3,50 @@ package org.zotero.android.screens.reader.web
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ActionMode
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.webkit.WebView
+import kotlin.math.abs
 
 class ReaderCustomWebView(context: Context, attrs: AttributeSet? = null) : WebView(context, attrs) {
 
     var selectionActionModeDelegate: ReaderSelectionActionModeDelegate? = null
 
     private var activeSelectionActionMode: ActionMode? = null
+
+    var onUserGestureDetected: (() -> Unit)? = null
+    private var gestureDownX = 0f
+    private var gestureDownY = 0f
+    private var gestureAlreadyReportedThisTouch = false
+    private val touchSlop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                gestureDownX = ev.x
+                gestureDownY = ev.y
+                gestureAlreadyReportedThisTouch = false
+            }
+
+            MotionEvent.ACTION_POINTER_DOWN -> {
+                if (!gestureAlreadyReportedThisTouch) {
+                    gestureAlreadyReportedThisTouch = true
+                    onUserGestureDetected?.invoke()
+                }
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (!gestureAlreadyReportedThisTouch &&
+                    (abs(ev.x - gestureDownX) > touchSlop || abs(ev.y - gestureDownY) > touchSlop)
+                ) {
+                    gestureAlreadyReportedThisTouch = true
+                    onUserGestureDetected?.invoke()
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
+    }
 
     fun invalidateSelectionActionMode() {
         activeSelectionActionMode?.invalidate()

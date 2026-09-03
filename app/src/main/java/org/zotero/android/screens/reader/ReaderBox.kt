@@ -1,5 +1,6 @@
 package org.zotero.android.screens.reader
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
@@ -24,6 +25,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
 
 
@@ -31,6 +34,7 @@ import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
 internal fun ReaderBox(
     viewModel: ReaderViewModel,
     viewState: ReaderViewState,
+    scrubberViewModel: ReaderScrubberViewModel,
     isOverlayMode: Boolean,
 ) {
     val density = LocalDensity.current
@@ -101,6 +105,13 @@ internal fun ReaderBox(
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
+            if (viewState.fileType == ReaderFileType.PDF) {
+                ReaderScrubberOverlay(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    visible = viewState.isScrubberVisible(),
+                    scrubberViewModel = scrubberViewModel,
+                )
+            }
         }
 
         if (viewState.fileType == ReaderFileType.EPUB) {
@@ -124,6 +135,20 @@ internal fun ReaderBox(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ReaderScrubberOverlay(
+    modifier: Modifier,
+    visible: Boolean,
+    scrubberViewModel: ReaderScrubberViewModel,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+    ) {
+        ReaderPageScrubber(viewModel = scrubberViewModel)
     }
 }
 
