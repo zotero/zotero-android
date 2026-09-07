@@ -6,11 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
@@ -30,6 +28,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
 ) : BaseViewModel2<ReaderScrubberViewState, ReaderScrubberViewEffect>(ReaderScrubberViewState()) {
 
     private var pdfReaderThemeCancellable: Job? = null
+    private var lastRequestedLandmarks: List<Int> = emptyList()
 
     fun initOnce() = initOnce {
         startObservingTheme()
@@ -50,42 +49,49 @@ internal class ReaderScrubberViewModel @Inject constructor(
 
     private var ignoreChangeByReaderUntil: Long = 0L
 
-    fun selectThumbnail(page: Int) {
-        ignoreChangeByReaderUntil = System.currentTimeMillis() + 1000
-        updateState {
-            copy(selectedPage = page)
+    fun onLandmarksComputed(indices: List<Int>) {
+        if (indices == lastRequestedLandmarks) {
+            return
         }
-        val location = mapOf("pageNumber" to (page + 1).toString())
-        EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(location))
-        scheduleRecenterOnIndex(page)
+        lastRequestedLandmarks = indices
+        thumbnailPreviewManager.requestExactThumbnails(indices)
+    }
+
+    fun onScrubStart() {
+        updateState { copy(isScrubbing = true) }
+    }
+
+    fun onScrubTo(page: Int) {
+        ignoreChangeByReaderUntil = System.currentTimeMillis() + 1000
+        if (viewState.selectedPage != page) {
+            updateState { copy(selectedPage = page) }
+            val location = mapOf("pageNumber" to (page + 1).toString())
+            EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(location))
+        }
+        thumbnailPreviewManager.requestThumbnail(page)
+    }
+
+    fun onScrubEnd() {
+        updateState { copy(isScrubbing = false) }
+    }
+
+    fun onTapAt(page: Int) {
+        onScrubTo(page)
     }
 
     fun onPageChangedByReader(page: Int) {
-        viewModelScope.launch {
-            val currentTimeMillis = System.currentTimeMillis()
-            if (viewState.selectedPage == page || currentTimeMillis < ignoreChangeByReaderUntil) {
-                return@launch
-            }
-            updateState {
-                copy(selectedPage = page)
-            }
-            scheduleRecenterOnIndex(page)
+        val currentTimeMillis = System.currentTimeMillis()
+        if (viewState.selectedPage == page || currentTimeMillis < ignoreChangeByReaderUntil) {
+            return
         }
-    }
-
-    private fun scheduleRecenterOnIndex(page: Int) {
-        viewModelScope.launch {
-            delay(RECENTER_DELAY_MS)
-            triggerEffect(ReaderScrubberViewEffect.ScrollScrubberListToIndex(page))
+        updateState {
+            copy(selectedPage = page)
         }
-    }
-
-    companion object {
-        private const val RECENTER_DELAY_MS = 300L
     }
 
     private fun clearThumbnailCaches() {
         thumbnailPreviewManager.cancelProcessing()
+        lastRequestedLandmarks = emptyList()
     }
 
     private fun startObservingTheme() {
@@ -96,21 +102,12 @@ internal class ReaderScrubberViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
     }
-
-    fun requestThumbnail(centerIndex: Int) {
-        thumbnailPreviewManager.requestThumbnail(centerIndex)
-    }
 }
 
 internal data class ReaderScrubberViewState(
     val thumbnailCache: ImmutableList<Bitmap?> = persistentListOf(),
     val selectedPage: Int? = null,
-) : ViewState {
-    fun isThumbnailSelected(page: Int): Boolean {
-        return this.selectedPage == page
-    }
-}
+    val isScrubbing: Boolean = false,
+) : ViewState
 
-internal sealed class ReaderScrubberViewEffect : ViewEffect {
-    data class ScrollScrubberListToIndex(val scrollToIndex: Int) : ReaderScrubberViewEffect()
-}
+internal sealed class ReaderScrubberViewEffect : ViewEffect
