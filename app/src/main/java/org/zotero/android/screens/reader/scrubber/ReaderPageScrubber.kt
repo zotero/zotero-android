@@ -1,6 +1,9 @@
 package org.zotero.android.screens.reader.scrubber
 
 import android.graphics.Bitmap
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +58,41 @@ private val ScrubberSelectedBorderWidth = 2.5.dp
 private const val ScrubberWidthFraction = 0.8f
 
 private const val AssumedPageAspectRatio = 0.72f
+
+@Composable
+internal fun ReaderPageIndicatorLabel(
+    viewModel: ReaderScrubberViewModel = viewModel(),
+) {
+    val viewState by viewModel.viewStates.observeAsState(ReaderScrubberViewState())
+    val selectedPage = viewState.selectedPage
+    val pageCount = viewState.thumbnailCache.size
+
+    AnimatedVisibility(
+        visible = viewState.showPageLabel && selectedPage != null && pageCount > 0,
+        enter = fadeIn(),
+        exit = fadeOut(),
+    ) {
+        if (selectedPage != null && pageCount > 0) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                val baseStyle = MaterialTheme.typography.bodySmall
+                Text(
+                    text = "${selectedPage + 1} of $pageCount",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = baseStyle.copy(
+                        fontSize = baseStyle.fontSize * 2,
+                        lineHeight = baseStyle.lineHeight * 2,
+                    ),
+                )
+            }
+        }
+    }
+}
 
 @Composable
 internal fun ReaderPageScrubber(

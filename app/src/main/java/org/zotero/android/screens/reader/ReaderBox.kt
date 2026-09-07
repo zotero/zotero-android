@@ -6,11 +6,13 @@ import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
 import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
 import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
@@ -106,11 +109,20 @@ internal fun ReaderBox(
                 )
             }
             if (viewState.fileType == ReaderFileType.PDF) {
-                ReaderScrubberOverlay(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    visible = viewState.isScrubberVisible(),
-                    scrubberViewModel = scrubberViewModel,
-                )
+                val isScrubberVisible = viewState.isScrubberVisible()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isScrubberVisible) 0.dp else 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel)
+                    ReaderScrubberOverlay(
+                        visible = isScrubberVisible,
+                        scrubberViewModel = scrubberViewModel,
+                    )
+                }
             }
         }
 
@@ -140,14 +152,10 @@ internal fun ReaderBox(
 
 @Composable
 private fun ReaderScrubberOverlay(
-    modifier: Modifier,
     visible: Boolean,
     scrubberViewModel: ReaderScrubberViewModel,
 ) {
-    AnimatedVisibility(
-        visible = visible,
-        modifier = modifier,
-    ) {
+    AnimatedVisibility(visible = visible) {
         ReaderPageScrubber(viewModel = scrubberViewModel)
     }
 }
