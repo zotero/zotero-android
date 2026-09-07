@@ -18,12 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.R
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.pdf.data.PDFAnnotation
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.theme.CustomTheme
@@ -34,7 +34,7 @@ internal fun PdfAnnotationHeaderRow(
     annotationColor: Color,
     onBack: () -> Unit,
 ) {
-    val title = stringResource(R.string.page) + " " + annotation.pageLabel
+    val title = safeStringResource(R.string.page) + " " + annotation.pageLabel
     val icon = when (annotation.type) {
         AnnotationType.note -> Drawables.annotate_note
         AnnotationType.highlight -> Drawables.annotate_highlight
@@ -76,7 +76,7 @@ internal fun PdfAnnotationHeaderRow(
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(
-                    text = stringResource(Strings.done),
+                    text = safeStringResource(Strings.done),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelLarge
                 )

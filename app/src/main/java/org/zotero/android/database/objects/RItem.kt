@@ -21,10 +21,11 @@ import org.zotero.android.database.requests.nameIn
 import org.zotero.android.helpers.formatter.ItemTitleFormatter
 import org.zotero.android.helpers.formatter.iso8601WithFractionalSeconds
 import org.zotero.android.helpers.formatter.sqlFormat
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubAnnotation
+import org.zotero.android.screens.reader.data.NewReaderAnnotation
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.CreatorSummaryFormatter
 import org.zotero.android.sync.DateParser
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.Tag
 import timber.log.Timber
@@ -41,6 +42,7 @@ enum class RItemChanges {
     relations,
     rects,
     paths,
+    lastRead,
 }
 
 open class RItem : Updatable, Deletable, Syncable, RealmObject() {
@@ -133,6 +135,10 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     var htmlFreeContent: String? = null
     var allItemsDbRow: AllItemsDbRow? = null
 
+    @Index
+    var lastRead: Date? = null
+    var effectiveLastRead: Date? = null
+
     val doi: String?
         get() {
             val fieldS = fields.firstOrNull { it.key == FieldKeys.Item.doi }
@@ -154,6 +160,24 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return changes.flatMap { it.rawChanges.map { RItemChanges.valueOf(it) } }
         }
 
+    fun updateEffectiveLastRead() {
+        when(rawType) {
+            ItemTypes.annotation -> {
+                return
+            }
+            ItemTypes.attachment -> {
+                effectiveLastRead = lastRead
+            }
+             else -> {
+                 val childrenMaxLastRead = children
+                     ?.mapNotNull { it.lastRead }
+                     ?.maxOrNull()
+                 effectiveLastRead = listOfNotNull(lastRead, childrenMaxLastRead)
+                     .maxOrNull()
+             }
+        }
+        parent?.updateEffectiveLastRead()
+    }
 
     fun set(title: String) {
         baseTitle = title
@@ -230,6 +254,18 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (changes.contains(RItemChanges.creators)) {
                 parameters["creators"] = this.creators.sort("orderId").map { it.updateParameters }.toTypedArray()
             }
+
+            val libIdLocal = libraryId
+
+            if (changes.contains(RItemChanges.lastRead) && libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary) {
+                val lastRead = lastRead?.time?.let { it / 1000 }
+                if (lastRead != null){
+                    parameters["lastRead"] = lastRead
+                } else {
+                    parameters["lastRead"] = ""
+                }
+            }
+
             if (changes.contains(RItemChanges.fields)) {
                 for (field in this.fields.filter { it.changed }) {
                     if (field.baseKey == FieldKeys.Item.Annotation.position) {
@@ -321,20 +357,68 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         return ZoteroApplication.instance.gsonWithRoundedDecimals.toJson(jsonData)
     }
 
-    override val selfOrChildChanged: Boolean
-        get() {
-            if (this.isChanged) {
-                return true
-            }
+    //TODO replace original createAnnotationPosition method with this
+    fun createAnnotationPositionAsJsonObject(
+        type: AnnotationType,
+        positionFields: RealmResults<RItemField>,
+    ): JsonObject {
+        val jsonData = JsonObject()
 
-            for (child in this.children!!) {
-                if (child.selfOrChildChanged) {
-                    return true
+        for (field in positionFields) {
+            val value = field.value.toIntOrNull()
+            if (value != null) {
+                jsonData.addProperty(field.key, value)
+            } else {
+                val doubleVal = field.value.toDoubleOrNull()
+                if (doubleVal != null) {
+                    jsonData.addProperty(field.key, doubleVal)
+                } else {
+                    try {
+                        val json = ZoteroApplication.instance.gson.fromJson(field.value, JsonObject::class.java)
+                        jsonData.add(field.key, json)
+                    } catch (e: Exception) {
+                        Timber.w(e)//This is not a bug, but just for debug purposes
+                        jsonData.addProperty(field.key, field.value)
+                    }
                 }
             }
-
-            return false
         }
+
+        when (type) {
+            AnnotationType.ink -> {
+                val apiPathsJson = JsonArray()
+                for (path in this.paths.sortedBy { it.sortIndex }) {
+                    val subArray = JsonArray()
+                    path.coordinates
+                        .sortedBy { it.sortIndex }
+                        .map { it.value }.forEach {
+                            subArray.add(it)
+                        }
+                    apiPathsJson.add(subArray)
+                }
+
+                jsonData.add(FieldKeys.Item.Annotation.Position.paths, apiPathsJson)
+            }
+
+            AnnotationType.highlight, AnnotationType.image, AnnotationType.note, AnnotationType.underline, AnnotationType.text -> {
+                val rectArrayJson = JsonArray()
+                this.rects.forEach { rRect ->
+                    val subArray = JsonArray()
+                    listOf(
+                        rRect.minX,
+                        rRect.minY,
+                        rRect.maxX,
+                        rRect.maxY
+                    ).forEach {
+                        subArray.add(it)
+                    }
+                    rectArrayJson.add(subArray)
+                }
+                jsonData.add(FieldKeys.Item.Annotation.Position.rects, rectArrayJson)
+            }
+        }
+        return jsonData
+    }
 
     override fun markAsChanged(database: Realm) {
         this.changes.add(RObjectChange.create(changes = this.allChanges))
@@ -379,7 +463,6 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
                 return changes
             }
 
-
             val changes = mutableListOf(RItemChanges.type, RItemChanges.fields, RItemChanges.tags)
             if (!this.creators.isEmpty()) {
                 changes.add(RItemChanges.creators)
@@ -396,11 +479,18 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             if (!this.relations.isEmpty()) {
                 changes.add(RItemChanges.relations)
             }
+            val libIdLocal = libraryId
+            if (libIdLocal is LibraryIdentifier.custom && libIdLocal.type == RCustomLibraryType.myLibrary && lastRead != null) {
+                changes.add(RItemChanges.lastRead)
+            }
             return changes
         }
 
 
     override fun willRemove(database: Realm) {
+        if (changes.isValid) {
+            changes.deleteAllFromRealm()
+        }
         if (this.children!!.isValid) {
             for (child in this.children) {
                 if (!child.isValid) {
@@ -608,7 +698,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             return parameters
         }
 
-    val htmlEpubAnnotation: Pair<HtmlEpubAnnotation, JsonObject>?
+    val newReaderAnnotation: Pair<NewReaderAnnotation, JsonObject>?
         get()
     {
         var type: AnnotationType? = null
@@ -699,7 +789,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
             json.addProperty(key, value)
         }
 
-        val annotation = HtmlEpubAnnotation(
+        val annotation = NewReaderAnnotation(
             key = this.key,
             type = type,
             pageLabel = pageLabel ?: "",
@@ -717,6 +807,107 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
 
         return annotation to json
     }
+
+    //TODO consider whether it's possible to merge this with htmlEpubAnnotation
+    val pdfAnnotation: Pair<NewReaderAnnotation, JsonObject>?
+        get()
+        {
+            var type: AnnotationType? = null
+            var text: String? = null
+            var sortIndex: String? = null
+            var pageLabel: String? = null
+            var comment: String? = null
+            var color: String? = null
+            val unknown = mutableMapOf<String, String>()
+            for (field in this.fields) {
+                when {
+                    field.key == FieldKeys.Item.Annotation.type && field.baseKey == null -> {
+                        try {
+                            type = AnnotationType.valueOf(field.value)
+                        } catch (_: Exception) {
+                            throw Exception("RItem: invalid annotation type when creating annotation, type=${field.value}")
+                        }
+                    }
+                    field.key == FieldKeys.Item.Annotation.text && field.baseKey == null -> {
+                        text = field.value
+                    }
+                    field.key == FieldKeys.Item.Annotation.sortIndex && field.baseKey == null -> {
+                        sortIndex = field.value
+                    }
+                    field.key == FieldKeys.Item.Annotation.pageLabel && field.baseKey == null -> {
+                        pageLabel = field.value
+                    }
+                    field.key == FieldKeys.Item.Annotation.comment && field.baseKey == null -> {
+                        comment = field.value
+                    }
+                    field.key == FieldKeys.Item.Annotation.color && field.baseKey == null -> {
+                        color = field.value
+                    }
+                    else -> {
+                        unknown[field.key] = field.value
+                    }
+                }
+            }
+            if (type == null || sortIndex == null) {
+                Timber.e("RItem: can't create html/epub annotation, type=${type};sortIndex=${sortIndex};")
+                return null
+            }
+
+            val tags = this.tags!!.map { typedTag ->
+                val color = if ((typedTag.tag?.color ?: "").isEmpty()) null else typedTag.tag?.color
+                Tag(name = typedTag.tag?.name ?: "", color = color ?: "")
+            }
+
+            val positionJson = createAnnotationPositionAsJsonObject(
+                type = type,
+                positionFields = this.fields.where().baseKey(FieldKeys.Item.Annotation.position).findAll(),
+            )
+
+            val json: JsonObject = JsonObject().apply {
+                addProperty("id",this@RItem.key)
+                addProperty("dateCreated", iso8601WithFractionalSeconds.format(dateAdded))
+                addProperty("dateModified", iso8601WithFractionalSeconds.format(dateModified))
+                addProperty("authorName", (createdBy?.username ?: ""))
+                addProperty("type", type.name)
+                addProperty("text", (text ?: ""))
+                addProperty("sortIndex", sortIndex)
+                addProperty("pageLabel", (pageLabel ?: ""))
+                addProperty("comment", (comment ?: ""))
+                addProperty("color", (color ?: ""))
+                add("position", positionJson)
+
+                val arr = JsonArray()
+                tags.forEach {
+                    arr.add(JsonObject().apply {
+                        addProperty("name", it.name)
+                        addProperty("color", it.color)
+                    })
+                }
+                add("tags", arr)
+            }
+
+            for ((key, value) in unknown.iterator()) {
+                json.addProperty(key, value)
+            }
+
+            val annotation = NewReaderAnnotation(
+                key = this.key,
+                type = type,
+                pageLabel = pageLabel ?: "",
+                position = positionJson,
+                author = createdBy?.username ?: "",
+                isAuthor = true,
+                color = color ?: "",
+                comment = comment ?: "",
+                text = text,
+                sortIndex = sortIndex,
+                dateAdded = dateAdded,
+                dateModified = dateModified,
+                tags = tags
+            )
+
+            return annotation to json
+        }
 
 
 }

@@ -14,6 +14,7 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, as its being used by Controllers Class
 @Singleton
 class CrashReporter @Inject constructor(
     dispatcher: CoroutineDispatcher,

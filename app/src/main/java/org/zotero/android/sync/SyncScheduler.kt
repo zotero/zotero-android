@@ -18,6 +18,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.concurrent.timerTask
 
+//Must be singleton as this class must live throughout the app's entire lifecycle
 @Singleton
 class SyncScheduler @Inject constructor(
     val syncController: SyncUseCase,

@@ -25,6 +25,7 @@ import androidx.core.text.getSpans
 import androidx.core.text.toSpannable
 import org.zotero.android.androidx.content.spToPx
 import org.zotero.android.uicomponents.Fonts
+import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.uicomponents.theme.CustomPalette
 import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.theme.CustomTypography
@@ -34,7 +35,7 @@ object StyledTextHelper {
     
     fun createStyledSpan(@StringRes stringRes: Int, context: Context, vararg args: Any): Spannable {
         val spannedString = context.getText(stringRes) as? SpannedString
-            ?: return SpannableString(context.getString(stringRes))
+            ?: return SpannableString(context.getSafeString(stringRes))
 
         // get all the annotation spans from the text
         val annotations: Array<out Annotation> = spannedString.getSpans(0, spannedString.length)

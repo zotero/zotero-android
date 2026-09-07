@@ -1,27 +1,34 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncActionError
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 import org.zotero.android.sync.syncactions.data.AuthorizeUploadResponse
 import timber.log.Timber
 
-class AuthorizeUploadSyncAction(
-    val key: String,
-    val filename: String,
-    val filesize: Long,
-    val md5: String,
-    val mtime: Long,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val oldMd5: String?,
-) : SyncAction() {
+class AuthorizeUploadSyncAction @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("filename") private val filename: String,
+    @Assisted("filesize") private val filesize: Long,
+    @Assisted("md5") private val md5: String,
+    @Assisted("mtime") private val mtime: Long,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("oldMd5") private val oldMd5: String?,
+
+    private val zoteroApi: ZoteroApi,
+    private val gson: Gson,
+) {
     suspend fun result(): CustomResult<AuthorizeUploadResponse> =
         withContext(Dispatchers.IO) {
             this@AuthorizeUploadSyncAction.run {
@@ -74,4 +81,20 @@ class AuthorizeUploadSyncAction(
             }
 
         }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("filename") filename: String,
+            @Assisted("filesize") filesize: Long,
+            @Assisted("md5") md5: String,
+            @Assisted("mtime") mtime: Long,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("oldMd5") oldMd5: String?
+        ): AuthorizeUploadSyncAction
+    }
+
+
 }

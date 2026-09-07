@@ -75,7 +75,7 @@ internal fun AllItemsEditingBottomPanel(
                 Box {
                     IconButton(
                         onClick = {
-                            if (menuState.isExpanded) {
+                            if (menuState.isShowing) {
                                 menuState.dismiss()
                             } else {
                                 menuState.show()
@@ -86,7 +86,7 @@ internal fun AllItemsEditingBottomPanel(
                     }
 
                     DropdownMenu(
-                        expanded = menuState.isExpanded,
+                        expanded = menuState.isShowing,
                         onDismissRequest = { menuState.dismiss() },
                     ) {
                         overflowItems
@@ -250,6 +250,15 @@ private fun editingSingleItemSelectedActions(
                 overflowTextResId = Strings.items_action_add_to_collection,
                 onClick = { viewModel.onAddToCollection() })
         )
+
+        if (viewModel.shouldIncludeRemoveFromRecentlyReadButton()) {
+            panelItems.add(
+                AllItemsBottomPanelItem(
+                    iconRes = Drawables.remove_from_collection,
+                    overflowTextResId = Strings.accessibility_items_remove_from_recentlyRead,
+                    onClick = { viewModel.removeFromRecentlyRead() })
+            )
+        }
 
         if (viewModel.shouldIncludeRemoveFromCollectionButton()) {
             overflowItems.add(

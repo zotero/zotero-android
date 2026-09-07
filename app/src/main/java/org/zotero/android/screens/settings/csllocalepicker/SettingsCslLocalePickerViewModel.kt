@@ -12,7 +12,7 @@ import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
-import org.zotero.android.locales.ExportCslLocaleReader
+import org.zotero.android.loaders.csl.ExportCslLocaleReader
 import org.zotero.android.screens.settings.csllocalepicker.data.ExportLocale
 import org.zotero.android.screens.settings.csllocalepicker.data.SettingsQuickCopyUpdateCslLocaleEventStream
 import javax.inject.Inject

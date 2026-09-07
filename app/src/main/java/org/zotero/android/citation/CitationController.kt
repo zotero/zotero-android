@@ -1,10 +1,10 @@
 package org.zotero.android.citation
 
-import android.content.Context
 import android.webkit.WebMessage
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -31,8 +31,8 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@ViewModelScoped
 class CitationController @Inject constructor(
-    private val context: Context,
     dispatchers: Dispatchers,
     private val gson: Gson,
     private val citationWebViewHandler: CitationWebViewHandler,

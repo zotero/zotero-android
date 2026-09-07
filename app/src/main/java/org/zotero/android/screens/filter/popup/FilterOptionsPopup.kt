@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -27,7 +26,8 @@ import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.quantityStringResource
+import org.zotero.android.uicomponents.foundation.safeQuantityStringResource
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun FilterOptionsPopup(
@@ -54,13 +54,13 @@ internal fun FilterOptionsPopup(
             val areDeselectAllRowsEnabled = viewState.selectedTags.isNotEmpty()
             FilterOptionsPopupOptionRow(
                 isEnabled = false,
-                text = quantityStringResource(
+                text = safeQuantityStringResource(
                     id = Plurals.tag_picker_tags_selected,
                     viewState.selectedTags.size
                 ),
             )
             FilterOptionsPopupOptionRow(
-                text = stringResource(id = Strings.items_deselect_all),
+                text = safeStringResource(id = Strings.items_deselect_all),
                 isEnabled = areDeselectAllRowsEnabled,
                 onOptionClick = viewModel::deselectAll
             )
@@ -68,19 +68,19 @@ internal fun FilterOptionsPopup(
 
             if (viewState.showAutomatic) {
                 FilterOptionsPopupOptionRow(
-                    text = stringResource(id = Strings.tag_picker_show_auto),
+                    text = safeStringResource(id = Strings.tag_picker_show_auto),
                     resIcon = Drawables.check_24px,
                     onOptionClick = { viewModel.setShowAutomatic(false) }
                 )
             } else {
                 FilterOptionsPopupOptionRow(
-                    text = stringResource(id = Strings.tag_picker_show_auto),
+                    text = safeStringResource(id = Strings.tag_picker_show_auto),
                     onOptionClick = { viewModel.setShowAutomatic(true) }
                 )
             }
             NewSettingsDivider()
             FilterOptionsPopupOptionRow(
-                text = stringResource(id = Strings.tag_picker_delete_automatic),
+                text = safeStringResource(id = Strings.tag_picker_delete_automatic),
                 textAndIconColor = MaterialTheme.colorScheme.error,
                 onOptionClick = viewModel::loadAutomaticCount
             )

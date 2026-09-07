@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HTTP
 import retrofit2.http.HeaderMap
+import retrofit2.http.Headers
 import retrofit2.http.PUT
 import retrofit2.http.Streaming
 import retrofit2.http.Url
@@ -19,6 +20,7 @@ interface WebDavApi {
     suspend fun downloadFile(@Url url: String): retrofit2.Response<ResponseBody>
 
     @HTTP(method = "OPTIONS")
+    @Headers("Accept-Encoding: identity")
     suspend fun options(@Url url: String): retrofit2.Response<ResponseBody>
 
     @HTTP(method = "MKCOL")

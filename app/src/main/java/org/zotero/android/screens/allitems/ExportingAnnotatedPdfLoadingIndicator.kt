@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.theme.CustomTheme
 
 @Composable
@@ -34,7 +34,7 @@ fun ExportingAnnotatedPdfLoadingIndicator() {
         )
         Text(
             modifier = Modifier.padding(top = 40.dp),
-            text = stringResource(Strings.items_generating_annotated_pdf),
+            text = safeStringResource(Strings.items_generating_annotated_pdf),
             color = Color.White,
             style = CustomTheme.typography.newH4,
         )

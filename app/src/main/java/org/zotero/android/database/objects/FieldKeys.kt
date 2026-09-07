@@ -61,7 +61,8 @@ class FieldKeys {
                 "dateAdded",
                 "dateModified",
                 "parentItem",
-                "inPublications"
+                "inPublications",
+                "lastRead"
             )
         }
 

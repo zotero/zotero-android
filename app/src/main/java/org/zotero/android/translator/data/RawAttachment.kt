@@ -1,6 +1,6 @@
 package org.zotero.android.translator.data
 
-import android.net.Uri
+import java.io.InputStream
 
 sealed interface RawAttachment {
     data class web(
@@ -14,7 +14,7 @@ sealed interface RawAttachment {
     ) : RawAttachment
 
     data class remoteUrl(val url: String) : RawAttachment
-    data class fileUrl(val uri: Uri) : RawAttachment
+    data class fileUrl(val fileName: String?, val fileExtension: String?, val uriInputStream: InputStream) : RawAttachment
     data class remoteFileUrl(
         val url: String,
         val contentType: String?,

@@ -33,6 +33,7 @@ import org.zotero.android.screens.scanbarcode.ScanBarcodeViewModel.State
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.util.LinkedList
 import javax.inject.Inject
@@ -129,9 +130,9 @@ internal class ScanBarcodeViewModel @Inject constructor(
                             val identifiers = update.kind.identifiers
                             if (identifiers.isEmpty()) {
                                 if (update.lookupData.isEmpty()) {
-                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup_no_identifiers_and_no_lookup_data))
+                                    progressHandler.showScanBarcodeMessage(context.getSafeString(Strings.errors_lookup_no_identifiers_and_no_lookup_data))
                                 } else {
-                                    progressHandler.showScanBarcodeMessage(context.getString(Strings.errors_lookup_no_identifiers_with_lookup_data))
+                                    progressHandler.showScanBarcodeMessage(context.getSafeString(Strings.errors_lookup_no_identifiers_with_lookup_data))
                                 }
                             }
                             updateLookupState(State.lookup(update.lookupData))
@@ -399,15 +400,15 @@ internal class ScanBarcodeViewModel @Inject constructor(
     ): String {
         val errorText = when (failedState.error) {
             is Error.noIdentifiersDetectedAndNoLookupData -> {
-                context.getString(Strings.errors_lookup_no_identifiers_and_no_lookup_data)
+                context.getSafeString(Strings.errors_lookup_no_identifiers_and_no_lookup_data)
             }
 
             is Error.noIdentifiersDetectedWithLookupData -> {
-                context.getString(Strings.errors_lookup_no_identifiers_with_lookup_data)
+                context.getSafeString(Strings.errors_lookup_no_identifiers_with_lookup_data)
             }
 
             else -> {
-                context.getString(Strings.errors_unknown)
+                context.getSafeString(Strings.errors_unknown)
             }
         }
         return errorText

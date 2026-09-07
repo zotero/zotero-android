@@ -32,6 +32,7 @@ import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeQuantityString
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -138,7 +139,7 @@ internal class CollectionPickerViewModel @Inject constructor(
         val title = if (selectedCount == 0) {
             context.resources.getString(Strings.items_collections_select_prompt)
         } else {
-            context.resources.getQuantityString(
+            context.getSafeQuantityString(
                 Plurals.items_collections_selected,
                 selectedCount,
                 selectedCount

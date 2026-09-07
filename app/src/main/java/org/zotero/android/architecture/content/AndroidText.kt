@@ -3,6 +3,8 @@ package org.zotero.android.architecture.content
 import android.content.Context
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
+import org.zotero.android.uicomponents.foundation.getSafeQuantityString
+import org.zotero.android.uicomponents.foundation.getSafeString
 
 interface AndroidText {
     fun toString(context: Context): String
@@ -21,9 +23,9 @@ class StringId(
     @Suppress("SpreadOperator") // We need spread operator here.
     override fun toString(context: Context): String {
         return if (args.isEmpty()) {
-            return context.getString(id)
+            return context.getSafeString(id)
         } else {
-            context.getString(id, *args)
+            context.getSafeString(id, *args)
         }
     }
 
@@ -60,12 +62,12 @@ class PluralId(
     @Suppress("SpreadOperator") // We need spread operator here.
     override fun toString(context: Context): String {
         return if (args.isEmpty()) {
-            return context.resources.getQuantityString(
+            context.getSafeQuantityString(
                 id,
                 quantity
             )
         } else {
-            context.resources.getQuantityString(
+            context.getSafeQuantityString(
                 id,
                 quantity,
                 *args

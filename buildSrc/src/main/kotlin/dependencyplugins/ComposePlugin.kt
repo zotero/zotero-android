@@ -1,19 +1,19 @@
 package dependencyplugins
 
 import Libs
-import com.android.build.gradle.TestedExtension
+import com.android.build.api.dsl.CommonExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.getByType
 
 class ComposePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val extension = project.extensions.getByType<TestedExtension>()
+        val extension = project.extensions.getByType<CommonExtension>()
         extension.configure(project)
     }
 }
 
-private fun TestedExtension.configure(project: Project) {
+private fun CommonExtension.configure(project: Project) {
     buildFeatures.apply {
         compose = true
     }

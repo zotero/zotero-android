@@ -16,12 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareAddTagRow(
@@ -48,7 +48,7 @@ internal fun ShareAddTagRow(
         Text(
             modifier = Modifier
                 .weight(1f),
-            text = stringResource(id = Strings.item_detail_add_tag),
+            text = safeStringResource(id = Strings.item_detail_add_tag),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
             maxLines = 1,

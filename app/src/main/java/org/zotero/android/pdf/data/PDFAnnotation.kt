@@ -5,7 +5,7 @@ import android.graphics.RectF
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.ktx.rounded
 import org.zotero.android.pdf.reader.AnnotationKey
-import org.zotero.android.screens.htmlepub.reader.data.ReaderAnnotation
+import org.zotero.android.screens.reader.data.ReaderAnnotation
 import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 
 interface PDFAnnotation: ReaderAnnotation {

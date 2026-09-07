@@ -3,13 +3,21 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
+import org.zotero.android.api.pojo.sync.LastReadResponse
 import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SettingsResponse
 import org.zotero.android.api.pojo.sync.TagColorResponse
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.objects.ObjectSyncState
+import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RTag
+import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.ktx.uniqueObject
+import org.zotero.android.ktx.uniqueObjectV2
 import org.zotero.android.sync.LibraryIdentifier
+import java.util.Date
 
 class StoreSettingsDbRequest(
     private val response: SettingsResponse,
@@ -23,25 +31,25 @@ class StoreSettingsDbRequest(
         if (response != null) {
             syncTagColors(tags = response.value, database)
         }
-        syncPages(this.response.pageIndices.indices, database)
-    }
-
-    private fun syncPages(pages: List<PageIndexResponse>, database: Realm) {
-        when (this.libraryId) {
+        when(this.libraryId) {
             is LibraryIdentifier.group -> {
                 return
             }
-
             is LibraryIdentifier.custom -> {
                 //no-op
             }
         }
 
-        val indices = database.where<RPageIndex>().library(this.libraryId)
+        syncPages(pages = this.response.pageIndices.indices, database)
+        syncLastReadValues(values=  this.response.lastReadValues.values, database)
+    }
 
+    private fun syncPages(pages: List<PageIndexResponse>, database: Realm) {
         for (index in pages) {
             val rIndex: RPageIndex
-            val existing = indices.key(index.key).findFirst()
+            val existing = database
+                .where<RPageIndex>()
+                .uniqueObjectV2(key = index.key, libraryId = index.libraryId)
             if (existing != null) {
                 rIndex = existing
             } else {
@@ -101,5 +109,41 @@ class StoreSettingsDbRequest(
             }
         }
 
+    }
+
+    private fun syncLastReadValues(values: List<LastReadResponse>, database: Realm) {
+        for (value in values) {
+            val rDate: RLastReadDate
+            val existing = database.where<RLastReadDate>().findAll()
+                .uniqueObject(key = value.key, libraryId = value.libraryId)
+            if (existing != null) {
+                rDate = existing
+            } else {
+                rDate = database.createObject<RLastReadDate>()
+                rDate.key = value.key
+                rDate.libraryId = value.libraryId
+            }
+            rDate.date = Date(value.value * 1000)
+            rDate.version = value.version
+
+            rDate.deleteAllChanges(database)
+
+            val item = database.where<RItem>().findAll()
+                .uniqueObject(key = value.key, libraryId = value.libraryId)
+
+            if (item != null) {
+                item.lastRead = rDate.date
+                item.updateEffectiveLastRead()
+            } else {
+                val item = database.createObject<RItem>()
+                item.key = value.key
+                item.libraryId = value.libraryId
+                item.lastRead = rDate.date
+                item.updateEffectiveLastRead()
+                item.syncState = ObjectSyncState.dirty.name
+                item.lastSyncDate = Date(0)
+                item.changeType = UpdatableChangeType.sync.name
+            }
+        }
     }
 }

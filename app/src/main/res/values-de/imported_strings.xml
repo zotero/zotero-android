@@ -90,7 +90,7 @@
     <string name="sync_toolbar_groups_with_data">Gruppen saynchronisieren (%1$d / %2$d)</string>
     <string name="sync_toolbar_library">%s synchronisieren</string>
     <string name="sync_toolbar_object">%1$s in %2$s synchronisieren</string>
-    <string name="sync_toolbar_object_with_data">%1$s in %2$s synchronisieren (%3$d / %4$d)</string>
+    <string name="sync_toolbar_object_with_data">%1$s in %4$s synchronisieren (%2$d / %3$d)</string>
     <string name="sync_toolbar_finished">Synchronisieren abgeschlossen</string>
     <string name="sync_toolbar_deletion">Löschen wird angewendet in %s</string>
     <string name="sync_toolbar_aborted">Synchronisieren fehlgeschlagen (%s)</string>

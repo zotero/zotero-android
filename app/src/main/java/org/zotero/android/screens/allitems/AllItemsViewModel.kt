@@ -23,13 +23,16 @@ import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.joda.time.DateTime
 import org.zotero.android.androidx.content.copyHtmlToClipboard
 import org.zotero.android.androidx.content.copyPlainTextToClipboard
 import org.zotero.android.androidx.content.longToast
+import org.zotero.android.appupdate.UpdateSuggestionUseCase
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.LCE2
+import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -52,6 +55,8 @@ import org.zotero.android.database.requests.EmptyTrashDbRequest
 import org.zotero.android.database.requests.MarkItemsAsTrashedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.database.requests.ReadItemsWithKeysDbRequest
+import org.zotero.android.database.requests.StoreLastReadDatesDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
@@ -81,15 +86,16 @@ import org.zotero.android.screens.filter.data.FilterArgs
 import org.zotero.android.screens.filter.data.FilterReloadEvent
 import org.zotero.android.screens.filter.data.FilterResult
 import org.zotero.android.screens.filter.data.UpdateFiltersEvent
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.itemdetails.data.DetailType
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.reader.data.ReaderArgs
 import org.zotero.android.screens.retrievemetadata.data.RetrieveMetadataArgs
 import org.zotero.android.screens.sortpicker.data.SortPickerArgs
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import org.zotero.android.sync.KeyGenerator
 import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
@@ -122,6 +128,8 @@ internal class AllItemsViewModel @Inject constructor(
     private val allItemsProcessor: AllItemsProcessor,
     private val dispatchers: Dispatchers,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val updateSuggestionUseCase: UpdateSuggestionUseCase,
+    private val createAttachmentsDbRequestFactory: CreateAttachmentsDbRequest.Factory,
     private val defaults: Defaults,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
@@ -222,9 +230,33 @@ internal class AllItemsViewModel @Inject constructor(
                 allItemsProcessorInterface = this@AllItemsViewModel,
                 searchTerm = searchTerm
             )
+
+            maybeShowAppUpdateDialog()
+
         }
 
 
+    }
+
+    private fun maybeShowAppUpdateDialog() {
+        val doNotShowAppUpdateBannerBeforeTime = defaults.getDoNotShowAppUpdateBannerBeforeTime()
+
+        if (updateSuggestionUseCase.wasDownloadedFromGooglePlayStore()
+            || System.currentTimeMillis() < doNotShowAppUpdateBannerBeforeTime) {
+            return
+        }
+        viewModelScope.launch {
+            val newestAppVersionFromManifest =
+                updateSuggestionUseCase.getNewestAppVersionFromManifest()
+            if (updateSuggestionUseCase.shouldShowUpdateAppDialog(newestAppVersionFromManifest)) {
+                updateState {
+                    copy(
+                        appUpdateBannerPayload = newestAppVersionFromManifest!!,
+                        shouldShowAppUpdateBanner = true
+                    )
+                }
+            }
+        }
     }
 
     override fun show(attachment: Attachment, parentKey: String?, library: Library) {
@@ -244,7 +276,7 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                     when (contentType) {
                         "application/pdf" -> {
-                            showPdf(
+                            showReader(
                                 file = file,
                                 key = attachment.key,
                                 parentKey = parentKey,
@@ -252,27 +284,21 @@ internal class AllItemsViewModel @Inject constructor(
                             )
                         }
 
-                        "text/html", "text/plain" -> {
+                        "text/html", "application/epub+zip" -> {
+                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
+                            showReader(
+                                file = file,
+                                key = attachment.key,
+                                parentKey = parentKey,
+                                library = library
+                            )
+                        }
+
+                        "text/plain" -> {
                             val url = file.toUri().toString()
                             val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                             triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
                         }
-
-//                        "text/html", "application/epub+zip" -> {
-//                            Timber.i("AllItemsViewModel: show HTML / EPUB ${attachment.key}")
-//                            showHtmlEpub(
-//                                file = file,
-//                                key = attachment.key,
-//                                parentKey = parentKey,
-//                                library = library
-//                            )
-//                        }
-//
-//                        "text/plain" -> {
-//                            val url = file.toUri().toString()
-//                            val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
-//                            triggerEffect(AllItemsViewEffect.ShowZoteroWebView(encodedUrl))
-//                        }
                         else -> {
                             if (contentType.contains("image")) {
                                 showImageFile(file)
@@ -473,7 +499,12 @@ internal class AllItemsViewModel @Inject constructor(
             }
         }
         val type = schemaController.localizedItemType(ItemTypes.attachment) ?: ""
-        val request = CreateAttachmentsDbRequest(attachments = attachments, parentKey = null, localizedType = type, collections = collections, fileStore = fileStore)
+        val request = createAttachmentsDbRequestFactory.create(
+            attachments = attachments,
+            parentKey = null,
+            localizedType = type,
+            collections = collections
+        )
 
         val result = perform(dbWrapperMain, invalidateRealm = true, request = request).ifFailure {
             Timber.e(it,"ItemsActionHandler: can't add attachment")
@@ -755,7 +786,7 @@ internal class AllItemsViewModel @Inject constructor(
         var collectionKey: String? = null
         when(this.collection.identifier) {
             is CollectionIdentifier.collection ->
-            collectionKey = this.collection.identifier.keyGet
+                collectionKey = this.collection.identifier.keyGet
             else -> {
                 //no-op
             }
@@ -959,7 +990,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAddToCollection() {
-       showCollectionPicker(getSelectedKeys())
+        showCollectionPicker(getSelectedKeys())
     }
 
     fun showRemoveFromCollectionQuestion(itemsKeys: Set<String>) {
@@ -1214,6 +1245,11 @@ internal class AllItemsViewModel @Inject constructor(
             ?.key(identifier.key)?.findFirst() != null)
     }
 
+    fun shouldIncludeRemoveFromRecentlyReadButton(): Boolean {
+        val identifier = this.collection.identifier
+        return (identifier as? CollectionIdentifier.custom)?.type == CustomType.recentlyRead
+    }
+
     fun shouldIncludeDuplicateButton(): Boolean {
         val item = allItemsProcessor.getResultByKey(getSelectedKeys().first())
         if(item == null) {
@@ -1282,18 +1318,90 @@ internal class AllItemsViewModel @Inject constructor(
         triggerEffect(AllItemsViewEffect.ShowCitationBibliographyExportEffect)
     }
 
-    private fun showHtmlEpub(file: File, key: String, parentKey: String?, library: Library) {
-        val uri = Uri.fromFile(file)
-        val htmlEpubReaderArgs = HtmlEpubReaderArgs(
+    private fun showReader(file: File, key: String, parentKey: String?, library: Library) {
+        val readerArgs = ReaderArgs(
             key = key,
             parentKey = parentKey,
             library = library,
-            uri = uri,
         )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
-        triggerEffect(AllItemsViewEffect.NavigateToHtmlEpubReaderScreen(params))
+        val params = navigationParamsMarshaller.encodeObjectToBase64(readerArgs)
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(AllItemsViewEffect.NavigateToReaderScreen(
+            params = params,
+            readerEncodedFilePathParam = encodedFilePath
+        ))
     }
 
+
+    fun onAppUpdateDownloadButtonTapped() {
+        updateState {
+            copy(shouldShowAppUpdateBanner = false)
+        }
+        triggerEffect(AllItemsViewEffect.OpenWebpage("https://www.zotero.org/download/android/"))
+    }
+
+    fun onAppUpdateLaterButtonTapped() {
+        defaults.setDoNotShowAppUpdateBannerBeforeTime(DateTime().plusDays(1).millis)
+        updateState {
+            copy(shouldShowAppUpdateBanner = false)
+        }
+    }
+
+    fun removeFromRecentlyRead() {
+        deleteItemsFromRecentlyRead(getSelectedKeys(), this.library.identifier)
+    }
+
+    private fun deleteItemsFromRecentlyRead(keys: Set<String>, libraryId: LibraryIdentifier) =
+        viewModelScope.launch {
+            performCoordinator(
+                dbWrapper = dbWrapperMain,
+                coordinatorAction = { coordinator ->
+                    val items = coordinator.perform(
+                        request = ReadItemsWithKeysDbRequest(
+                            keys = keys,
+                            libraryId = libraryId
+                        )
+                    )
+                    val toRemove = mutableListOf<StoreLastReadDatesDbRequest.Data>()
+                    for (item in items) {
+                        if (item.lastRead != null) {
+                            toRemove.add(
+                                StoreLastReadDatesDbRequest.Data(
+                                    key = item.key,
+                                    libraryId = libraryId,
+                                    date = null
+                                )
+                            )
+                        }
+                        for (child in item.children!!) {
+                            if (child.lastRead != null) {
+                                toRemove.add(
+                                    StoreLastReadDatesDbRequest.Data(
+                                        key = child.key,
+                                        libraryId = libraryId,
+                                        date = null
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    coordinator.perform(request = StoreLastReadDatesDbRequest(array = toRemove))
+                }, completion = { result ->
+                    if (result is Result.Failure) {
+                        Timber.e(
+                            result.exception,
+                            "AllItemsViewModel: can't remove items from recently read"
+                        )
+                        viewModelScope.launch {
+                            updateState {
+                                copy(
+                                    error = ItemsError.deletionFromRecentlyRead,
+                                )
+                            }
+                        }
+                    }
+                })
+        }
 
 }
 
@@ -1314,6 +1422,8 @@ internal data class AllItemsViewState(
     val showDownloadedFilesPopup: Boolean = false,
     val isGeneratingBibliography: Boolean = false,
     val isGeneratingCitation: Boolean = false,
+    val appUpdateBannerPayload: String = "",
+    val shouldShowAppUpdateBanner: Boolean = false,
 ) : ViewState {
     val tagsFilter: Set<String>?
         get() {
@@ -1369,7 +1479,7 @@ internal sealed class AllItemsViewEffect : ViewEffect {
     object ShowVideoPlayer : AllItemsViewEffect()
     object ShowImageViewer : AllItemsViewEffect()
     data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : AllItemsViewEffect()
-    data class NavigateToHtmlEpubReaderScreen(val params: String) : AllItemsViewEffect()
+    data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : AllItemsViewEffect()
     object ScreenRefresh : AllItemsViewEffect()
     object ShowScanBarcode : AllItemsViewEffect()
     data class ShowRetrieveMetadataDialogEffect(val params: String) : AllItemsViewEffect()

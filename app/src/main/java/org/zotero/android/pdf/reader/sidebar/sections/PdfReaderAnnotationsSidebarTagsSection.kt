@@ -10,7 +10,6 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.data.PDFAnnotation
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -18,6 +17,7 @@ import org.zotero.android.pdf.reader.PdfReaderViewState
 import org.zotero.android.pdf.reader.sidebar.PdfReaderSidebarDivider
 import org.zotero.android.pdf.reader.sidebar.sectionHorizontalPadding
 import org.zotero.android.pdf.reader.sidebar.sectionVerticalPadding
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.debounceClickable
 
@@ -56,7 +56,7 @@ internal fun PdfReaderAnnotationsSidebarTagsSection(
                 Text(
                     modifier = Modifier
                         .sectionHorizontalPadding(),
-                    text = stringResource(id = Strings.pdf_annotations_sidebar_add_tags),
+                    text = safeStringResource(id = Strings.pdf_annotations_sidebar_add_tags),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelLarge,
                 )

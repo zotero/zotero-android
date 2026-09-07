@@ -2,6 +2,7 @@ package org.zotero.android.pdfworker
 
 import android.content.Context
 import com.google.gson.Gson
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -35,16 +36,15 @@ import org.zotero.android.screens.addbyidentifier.IdentifierLookupController
 import org.zotero.android.screens.addbyidentifier.IdentifierLookupController.LookupData
 import org.zotero.android.screens.addbyidentifier.data.IdentifierLookupMode
 import org.zotero.android.sync.AttachmentCreator
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class PdfWorkerController @Inject constructor(
     private val context: Context,
     private val dispatchers: Dispatchers,
@@ -53,11 +53,12 @@ class PdfWorkerController @Inject constructor(
     private val itemResponseMapper: ItemResponseMapper,
     private val tagResponseMapper: TagResponseMapper,
     private val creatorResponseMapper: CreatorResponseMapper,
-    private val dateParser: DateParser,
     private val schemaController: SchemaController,
     private val dbWrapperMain: DbWrapperMain,
     private val defaults: Defaults,
-    private val identifierLookupController: IdentifierLookupController
+    private val identifierLookupController: IdentifierLookupController,
+    private val linkAttachmentToParentItemDbRequestFactory: LinkAttachmentToParentItemDbRequest.Factory,
+    private val createTranslatedItemsDbRequestFactory: CreateTranslatedItemsDbRequest.Factory,
 ) {
 
     private val mainCoroutineScope = CoroutineScope(dispatchers.main)
@@ -185,10 +186,7 @@ class PdfWorkerController @Inject constructor(
         libraryIdentifier: LibraryIdentifier,
     ) {
         dbWrapperMain.realmDbStorage.perform(
-            LinkAttachmentToParentItemDbRequest(
-                schemaController = this.schemaController,
-                fileStore = this.fileStore,
-                dateParser = this.dateParser,
+            linkAttachmentToParentItemDbRequestFactory.create(
                 libraryId = libraryIdentifier,
                 itemKey = itemKey,
                 parentItemKey = createdItem.key
@@ -204,7 +202,7 @@ class PdfWorkerController @Inject constructor(
             val errorMessage = when (customException) {
                 PdfWorkerRecognizeError.failedToInitializePdfWorker -> {
                     Timber.e("PdfWorkerController: Pdf Worker's JS failed to initialize")
-                    context.getString(Strings.retrieve_metadata_error_failed_to_initialize)
+                    context.getSafeString(Strings.retrieve_metadata_error_failed_to_initialize)
                 }
                 is PdfWorkerRecognizeError.recognizeFailed -> {
                     Timber.e("PdfWorkerController: recognizeFailed: ${customException.errorMessage}")
@@ -288,12 +286,10 @@ class PdfWorkerController @Inject constructor(
         itemKey: String,
     ) {
         val createdItem = dbWrapperMain.realmDbStorage.perform(
-            CreateTranslatedItemsDbRequest(
+            createTranslatedItemsDbRequestFactory.create(
                 responses = listOf(
                     item
                 ),
-                schemaController = schemaController,
-                dateParser = dateParser
             )
         )[0]
         updateItemAndPostProgress(

@@ -4,7 +4,7 @@ import org.zotero.android.architecture.Defaults
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
-
+//Must be singleton, used by SyncEngine
 @Singleton
 class WebDavSessionStorage @Inject constructor(
     private val defaults: Defaults

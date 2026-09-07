@@ -1,20 +1,24 @@
 package org.zotero.android.architecture.navigation.toolbar
 
 import android.content.Context
+import dagger.hilt.android.scopes.ViewModelScoped
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgress
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncError
+import org.zotero.android.sync.SyncError.ErrorData
 import org.zotero.android.sync.SyncObject
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeQuantityString
+import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.webdav.data.WebDavError
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class SyncToolbarTextGenerator @Inject constructor(
     private val context: Context,
     private val dbWrapperMain: DbWrapperMain,
@@ -23,23 +27,23 @@ class SyncToolbarTextGenerator @Inject constructor(
     fun syncToolbarText(progress: SyncProgress): String {
         when (progress) {
             SyncProgress.starting -> {
-                return context.getString(Strings.sync_toolbar_starting)
+                return context.getSafeString(Strings.sync_toolbar_starting)
             }
 
             is SyncProgress.groups -> {
                 val progress = progress.progress
                 if (progress != null) {
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.sync_toolbar_groups_with_data,
                         progress.completed,
                         progress.total
                     )
                 }
-                return context.getString(Strings.sync_toolbar_groups)
+                return context.getSafeString(Strings.sync_toolbar_groups)
             }
 
             is SyncProgress.library -> {
-                return context.getString(Strings.sync_toolbar_library, progress.name)
+                return context.getSafeString(Strings.sync_toolbar_library, progress.name)
             }
 
             is SyncProgress.objectS -> {
@@ -47,7 +51,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                 val libraryName = progress.libraryName
                 val progress = progress.progress
                 if (progress != null) {
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.sync_toolbar_object_with_data,
                         name(objectS),
                         progress.completed,
@@ -55,12 +59,12 @@ class SyncToolbarTextGenerator @Inject constructor(
                         libraryName
                     )
                 }
-                return context.getString(Strings.sync_toolbar_object, name(objectS), libraryName)
+                return context.getSafeString(Strings.sync_toolbar_object, name(objectS), libraryName)
             }
 
             is SyncProgress.changes -> {
                 val progress = progress.progress
-                return context.getString(
+                return context.getSafeString(
                     Strings.sync_toolbar_writes,
                     progress.completed,
                     progress.total
@@ -69,7 +73,7 @@ class SyncToolbarTextGenerator @Inject constructor(
 
             is SyncProgress.uploads -> {
                 val progress = progress.progress
-                return context.getString(
+                return context.getSafeString(
                     Strings.sync_toolbar_uploads,
                     progress.completed,
                     progress.total
@@ -79,28 +83,28 @@ class SyncToolbarTextGenerator @Inject constructor(
             is SyncProgress.finished -> {
                 val errors = progress.errors
                 if (errors.isEmpty()) {
-                    return context.getString(Strings.sync_toolbar_finished)
+                    return context.getSafeString(Strings.sync_toolbar_finished)
                 }
                 val issues =
-                    context.resources.getQuantityString(
+                    context.getSafeQuantityString(
                         Plurals.errors_sync_toolbar_errors,
                         errors.size,
                         errors.size
                     )
-                return context.getString(Strings.errors_sync_toolbar_finished_with_errors, issues)
+                return context.getSafeString(Strings.errors_sync_toolbar_finished_with_errors, issues)
             }
 
             is SyncProgress.deletions -> {
-                return context.getString(Strings.sync_toolbar_deletion, progress.name)
+                return context.getSafeString(Strings.sync_toolbar_deletion, progress.name)
             }
 
             is SyncProgress.aborted -> {
                 val error = progress.error
                 if (error is SyncError.Fatal.forbidden) {
-                    return context.getString(Strings.errors_sync_toolbar_forbidden)
+                    return context.getSafeString(Strings.errors_sync_toolbar_forbidden)
                 }
                 val formatArgs = syncToolbarAlertMessage(error).first
-                return context.getString(
+                return context.getSafeString(
                     Strings.sync_toolbar_aborted,
                     formatArgs
                 )
@@ -127,46 +131,46 @@ class SyncToolbarTextGenerator @Inject constructor(
                 }
 
                 is SyncError.Fatal.apiError -> {
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.errors_api,
                         fatalError.response
                     ) to fatalError.data
                 }
 
                 is SyncError.Fatal.dbError -> {
-                    return context.getString(Strings.errors_db) to null
+                    return context.getSafeString(Strings.errors_db) to null
                 }
 
                 is SyncError.Fatal.allLibrariesFetchFailed -> {
-                    return context.getString(Strings.errors_sync_toolbar_libraries_missing) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_libraries_missing) to null
                 }
 
                 is SyncError.Fatal.uploadObjectConflict -> {
-                    return context.getString(Strings.errors_sync_toolbar_conflict_retry_limit) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_conflict_retry_limit) to null
                 }
 
                 is SyncError.Fatal.groupSyncFailed -> {
-                    return context.getString(Strings.errors_sync_toolbar_groups_failed) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_groups_failed) to null
                 }
 
                 is SyncError.Fatal.missingGroupPermissions, is SyncError.Fatal.permissionLoadingFailed -> {
-                    return context.getString(Strings.errors_sync_toolbar_group_permissions) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_group_permissions) to null
                 }
 
                 is SyncError.Fatal.noInternetConnection -> {
-                    return context.getString(Strings.errors_sync_toolbar_internet_connection) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_internet_connection) to null
                 }
 
                 is SyncError.Fatal.serviceUnavailable -> {
-                    return context.getString(Strings.errors_sync_toolbar_unavailable) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_unavailable) to null
                 }
 
                 is SyncError.Fatal.forbidden -> {
-                    return context.getString(Strings.errors_sync_toolbar_forbidden_message) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_forbidden_message) to null
                 }
 
                 is SyncError.Fatal.cantSubmitAttachmentItem -> {
-                    return context.getString(Strings.errors_db) to fatalError.data
+                    return context.getSafeString(Strings.errors_db) to fatalError.data
                 }
 
             }
@@ -177,37 +181,37 @@ class SyncToolbarTextGenerator @Inject constructor(
         if (nonFatalError != null) {
             when (nonFatalError) {
                 is SyncError.NonFatal.schema -> {
-                    return context.getString(Strings.errors_schema) to null
+                    return context.getSafeString(Strings.errors_schema) to null
                 }
 
                 is SyncError.NonFatal.parsing -> {
-                    return context.getString(Strings.errors_parsing) to null
+                    return context.getSafeString(Strings.errors_parsing) to null
                 }
 
                 is SyncError.NonFatal.apiError -> {
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.errors_api,
                         nonFatalError.response
                     ) to nonFatalError.data
                 }
 
                 is SyncError.NonFatal.versionMismatch -> {
-                    return context.getString(Strings.errors_versionMismatch) to null
+                    return context.getSafeString(Strings.errors_versionMismatch) to null
                 }
 
                 is SyncError.NonFatal.unknown -> {
                     return if (nonFatalError.messageS.isEmpty()) {
-                        context.getString(Strings.errors_unknown) to nonFatalError.data
+                        context.getSafeString(Strings.errors_unknown) to nonFatalError.data
                     } else {
                         nonFatalError.messageS to nonFatalError.data
                     }
                 }
 
                 is SyncError.NonFatal.attachmentMissing -> {
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.errors_sync_toolbar_attachment_missing,
                         "${nonFatalError.title} (${nonFatalError.key})"
-                    ) to SyncError.ErrorData(
+                    ) to ErrorData(
                         itemKeys = listOf(nonFatalError.key),
                         libraryId = nonFatalError.libraryId
                     )
@@ -216,7 +220,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                 is SyncError.NonFatal.quotaLimit -> {
                     when (nonFatalError.libraryId) {
                         is LibraryIdentifier.custom -> {
-                            return context.getString(
+                            return context.getSafeString(
                                 Strings.errors_sync_toolbar_personal_quota_reached
                             ) to null
                         }
@@ -224,7 +228,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                         is LibraryIdentifier.group -> {
                             val groupId = nonFatalError.libraryId.groupId
                             val groupName = getGroupNameById(groupId)
-                            return context.getString(
+                            return context.getSafeString(
                                 Strings.errors_sync_toolbar_group_quota_reached, groupName
                             ) to null
                         }
@@ -232,15 +236,15 @@ class SyncToolbarTextGenerator @Inject constructor(
                 }
 
                 is SyncError.NonFatal.insufficientSpace -> {
-                    return context.getString(Strings.errors_sync_toolbar_insufficient_space) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_insufficient_space) to null
                 }
 
                 is SyncError.NonFatal.webDavDeletionFailed -> {
-                    return context.getString(Strings.errors_sync_toolbar_webdav_error) to null
+                    return context.getSafeString(Strings.errors_sync_toolbar_webdav_error) to null
                 }
 
                 is SyncError.NonFatal.webDavDeletion -> {
-                    return context.resources.getQuantityString(
+                    return context.getSafeQuantityString(
                         Plurals.errors_sync_toolbar_webdav_error2,
                         nonFatalError.count,
                         nonFatalError.count
@@ -251,7 +255,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                     val string = nonFatalError.messageS
                     val keys = nonFatalError.keys
                     val libraryId = nonFatalError.libraryId
-                    return (string to SyncError.ErrorData(
+                    return (string to ErrorData(
                         itemKeys = keys.toList(),
                         libraryId = libraryId
                     ))
@@ -262,7 +266,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                 }
 
                 is SyncError.NonFatal.preconditionFailed -> {
-                    return context.getString(Strings.errors_sync_toolbar_conflict_retry_limit) to SyncError.ErrorData(
+                    return context.getSafeString(Strings.errors_sync_toolbar_conflict_retry_limit) to ErrorData(
                         itemKeys = null,
                         libraryId = nonFatalError.libraryId
                     )
@@ -281,7 +285,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                             val statusCode =
                                 apiError as? CustomResult.GeneralError.UnacceptableStatusCode
                             if (statusCode != null) {
-                                return context.getString(
+                                return context.getSafeString(
                                     Strings.errors_sync_toolbar_webdav_request_failed,
                                     statusCode.resultHttpCode ?: -1,
                                     httpMethod ?: "Unknown"
@@ -296,7 +300,7 @@ class SyncToolbarTextGenerator @Inject constructor(
                     val error = nonFatalError.error
                     when (error) {
                         is WebDavError.Download.itemPropInvalid -> {
-                            return context.getString(
+                            return context.getSafeString(
                                 Strings.errors_sync_toolbar_webdav_item_prop,
                                 error.str
                             ) to null
@@ -310,10 +314,17 @@ class SyncToolbarTextGenerator @Inject constructor(
 
                 is SyncError.NonFatal.webDavVerification -> {
                     val error = nonFatalError.error
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.errors_sync_toolbar_webdav_item_prop,
                         error.message
                     ) to null
+                }
+
+                is SyncError.NonFatal.unexpectedMyLibraryLastReadDeletions -> {
+                    return context.getSafeString(Strings.errors_sync_toolbar_unexpected_my_library_last_read_deletions) to ErrorData(
+                        itemKeys = nonFatalError.keys,
+                        libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
+                    )
                 }
             }
         }
@@ -323,15 +334,15 @@ class SyncToolbarTextGenerator @Inject constructor(
     private fun name(objectS: SyncObject): String {
         return when (objectS) {
             SyncObject.collection -> {
-                context.getString(Strings.sync_toolbar_object_collections)
+                context.getSafeString(Strings.sync_toolbar_object_collections)
             }
 
             SyncObject.item, SyncObject.trash -> {
-                context.getString(Strings.sync_toolbar_object_items)
+                context.getSafeString(Strings.sync_toolbar_object_items)
             }
 
             SyncObject.search -> {
-                context.getString(Strings.sync_toolbar_object_searches)
+                context.getSafeString(Strings.sync_toolbar_object_searches)
             }
 
             SyncObject.settings -> ""

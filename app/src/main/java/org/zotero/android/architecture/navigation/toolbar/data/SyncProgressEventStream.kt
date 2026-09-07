@@ -5,6 +5,7 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, as its being used by SyncEngine
 @Singleton
 class SyncProgressEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<SyncProgress>(applicationScope)

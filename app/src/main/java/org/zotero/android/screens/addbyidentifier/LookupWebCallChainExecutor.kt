@@ -19,7 +19,7 @@ import org.zotero.android.screens.addbyidentifier.data.LookupError
 import org.zotero.android.screens.addbyidentifier.data.LookupSettings
 import org.zotero.android.translator.data.WebPortResponse
 import org.zotero.android.translator.helper.TranslatorHelper
-import org.zotero.android.translator.loader.TranslatorsAndStylesLoader
+import org.zotero.android.loaders.translator.TranslatorsAndStylesLoader
 import timber.log.Timber
 import java.io.File
 import kotlin.coroutines.resume

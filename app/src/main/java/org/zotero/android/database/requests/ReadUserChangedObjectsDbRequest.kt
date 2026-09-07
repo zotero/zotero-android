@@ -5,6 +5,7 @@ import io.realm.RealmModel
 import io.realm.RealmResults
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import kotlin.reflect.KClass
 
@@ -20,8 +21,8 @@ class ReadUserChangedObjectsDbRequest<T: RealmModel>(
                 database.where(clazz.java).itemUserChanges()
             }
 
-            RPageIndex::class -> {
-                database.where(clazz.java).pageIndexUserChanges()
+            RPageIndex::class, RLastReadDate::class -> {
+                database.where(clazz.java).settingsChanges()
             }
 
             else -> {

@@ -6,6 +6,7 @@ import org.zotero.android.styles.data.Style
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by multiple ViewModels
 @Singleton
 class SettingsQuickCopyUpdateStyleEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<Style>(applicationScope)

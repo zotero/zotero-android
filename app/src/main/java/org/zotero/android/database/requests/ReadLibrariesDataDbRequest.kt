@@ -2,6 +2,7 @@ package org.zotero.android.database.requests
 
 import io.realm.Realm
 import io.realm.kotlin.where
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibrary
@@ -146,6 +147,7 @@ class ReadLibrariesDataDbRequest(
             when (identifier) {
                 is LibraryIdentifier.custom ->
                     custom.add(identifier.type)
+
                 is LibraryIdentifier.group ->
                     group.add(identifier.groupId)
             }
@@ -167,31 +169,32 @@ class ReadLibrariesDataDbRequest(
             ).process(
                 database = database,
             )
-            .map { it.key }
-            .chunked(DeleteBatch.maxCount)
-            .map {
-                DeleteBatch(
-                    libraryId = libraryId,
-                    objectS = SyncObject.collection,
-                    version = version,
-                    keys = it
-                )
-            }
+                .map { it.key }
+                .chunked(DeleteBatch.maxCount)
+                .map {
+                    DeleteBatch(
+                        libraryId = libraryId,
+                        objectS = SyncObject.collection,
+                        version = version,
+                        keys = it
+                    )
+                }
 
-        val searchDeletions = ReadDeletedObjectsDbRequest(libraryId = libraryId, clazz = RSearch::class)
-            .process(
-                database = database,
-            )
-            .map { it.key }
-            .chunked(DeleteBatch.maxCount)
-            .map {
-                DeleteBatch(
-                    libraryId = libraryId,
-                    objectS = SyncObject.search,
-                    version = version,
-                    keys = it
+        val searchDeletions =
+            ReadDeletedObjectsDbRequest(libraryId = libraryId, clazz = RSearch::class)
+                .process(
+                    database = database,
                 )
-            }
+                .map { it.key }
+                .chunked(DeleteBatch.maxCount)
+                .map {
+                    DeleteBatch(
+                        libraryId = libraryId,
+                        objectS = SyncObject.search,
+                        version = version,
+                        keys = it
+                    )
+                }
 
         val itemDeletions = ReadDeletedObjectsDbRequest(
             libraryId = libraryId, clazz = RItem::class
@@ -209,7 +212,32 @@ class ReadLibrariesDataDbRequest(
                     keys = it
                 )
             }
-        return collectionDeletions + searchDeletions + itemDeletions
+
+        var lastReadDeletions = emptyList<DeleteBatch>()
+        if (libraryId is LibraryIdentifier.custom && libraryId.type == RCustomLibraryType.myLibrary) {
+            lastReadDeletions = ReadDeletedLastReadDbRequest()
+                .process(database)
+                .mapNotNull { item ->
+                    item.groupKey?.let {
+                        SettingKeyParser.uid(
+                            item.key,
+                            libraryId = LibraryIdentifier.group(it),
+                            prefix = "lastRead"
+                        )
+                    }
+                }
+                .chunked(DeleteBatch.maxCount)
+                .map {
+                    DeleteBatch(
+                        libraryId = libraryId,
+                        objectS = SyncObject.settings,
+                        version = version,
+                        keys = it
+                    )
+                }
+        }
+
+        return collectionDeletions + searchDeletions + itemDeletions + lastReadDeletions
     }
 
     private fun updates(
@@ -285,7 +313,11 @@ class ReadLibrariesDataDbRequest(
         return batches
     }
 
-    private fun settingsWriteBatches(response: ReadUpdatedParametersResponse, libraryId: LibraryIdentifier, version: Int): List<WriteBatch> {
+    private fun settingsWriteBatches(
+        response: ReadUpdatedParametersResponse,
+        libraryId: LibraryIdentifier,
+        version: Int
+    ): List<WriteBatch> {
         val chunks = response.parameters.chunked(WriteBatch.maxCount)
         val batches = mutableListOf<WriteBatch>()
         for (chunk in chunks) {

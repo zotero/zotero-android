@@ -13,10 +13,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun SingleCitationTopBar(
@@ -30,7 +30,7 @@ internal fun SingleCitationTopBar(
         ),
         title = {
             Text(
-                text = stringResource(Strings.citation_title),
+                text = safeStringResource(Strings.citation_title),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )
@@ -51,7 +51,7 @@ internal fun SingleCitationTopBar(
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(
-                    text = stringResource(Strings.copy_1),
+                    text = safeStringResource(Strings.copy_1),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelLarge
                 )

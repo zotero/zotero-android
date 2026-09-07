@@ -166,7 +166,7 @@ internal fun PdfReaderAnnotationsSidebar(
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(layoutType.calculateAllItemsBottomPanelHeight()))
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
         PdfReaderBottomPanel(

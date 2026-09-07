@@ -79,6 +79,7 @@ class StoreCollectionsDbRequest(
                 parent = database.createObject<RCollection>()
                 parent.key = key
                 parent.syncState = ObjectSyncState.dirty.name
+                parent.lastSyncDate = Date(0)
                 parent.libraryId = libraryId
 
             }

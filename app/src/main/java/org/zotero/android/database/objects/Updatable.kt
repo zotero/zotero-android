@@ -8,7 +8,6 @@ interface Updatable {
 
     var changeType: String //UpdatableChangeType
     val updateParameters: Map<String, Any>?
-    val selfOrChildChanged: Boolean
 
     fun markAsChanged(database: Realm)
 

@@ -6,8 +6,8 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     kotlin("plugin.serialization")
-    id("com.github.triplet.play") version "3.12.1"
-    id("dagger.hilt.android.plugin")
+    id("com.google.devtools.ksp")
+    id("com.github.triplet.play") version "4.0.0"
     id("realm-android")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
@@ -23,7 +23,7 @@ plugins {
     //----Dependency plugins end----
 
     id("com.google.dagger.hilt.android")
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("plugin.compose")
 }
 
 android {
@@ -42,6 +42,11 @@ android {
         buildConfigField("boolean", "EVENT_AND_CRASH_LOGGING_ENABLED", "false")
         buildConfigField("String", "PSPDFKIT_KEY", "\"\"")
         manifestPlaceholders["enableCrashReporting"] = false
+
+        //Making build version components to be accessible from within the app.
+        buildConfigField("int", "BUILD_VERSION_MAJOR", "${BuildConfig.version.major}")
+        buildConfigField("int", "BUILD_VERSION_MINOR", "${BuildConfig.version.minor}")
+        buildConfigField("int", "BUILD_VERSION_PATCH", "${BuildConfig.version.patch}")
 
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -171,7 +176,7 @@ dependencies {
     implementation(Libs.jodaTime)
     implementation(Libs.eventBus)
     implementation(Libs.keyboardVisibility)
-    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    implementation(Libs.codeScanner)
 
 }
 

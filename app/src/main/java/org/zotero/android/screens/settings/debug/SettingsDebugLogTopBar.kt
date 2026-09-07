@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Plurals
-import org.zotero.android.uicomponents.foundation.quantityStringResource
+import org.zotero.android.uicomponents.foundation.safeQuantityStringResource
 
 @Composable
 internal fun SettingsDebugLogTopBar(
@@ -24,7 +24,7 @@ internal fun SettingsDebugLogTopBar(
         ),
         title = {
             Text(
-                text = quantityStringResource(id = Plurals.settings_lines, numberOfLines),
+                text = safeQuantityStringResource(id = Plurals.settings_lines, numberOfLines),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

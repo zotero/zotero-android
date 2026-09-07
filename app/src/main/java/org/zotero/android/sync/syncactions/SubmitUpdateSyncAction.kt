@@ -1,20 +1,32 @@
 package org.zotero.android.sync.syncactions
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
+import org.zotero.android.api.mappers.CollectionResponseMapper
+import org.zotero.android.api.mappers.ItemResponseMapper
+import org.zotero.android.api.mappers.SearchResponseMapper
+import org.zotero.android.api.mappers.UpdatesResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.api.pojo.sync.CollectionResponse
 import org.zotero.android.api.pojo.sync.FailedUpdateResponse
 import org.zotero.android.api.pojo.sync.ItemResponse
-import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SearchResponse
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.api.pojo.sync.UpdatesResponse
 import org.zotero.android.database.DbRequest
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
+import org.zotero.android.database.requests.ClearLastReadOnlyItemChangesDbRequest
 import org.zotero.android.database.requests.MarkCollectionAsSyncedAndUpdateDbRequest
 import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.database.requests.MarkItemAsSyncedAndUpdateDbRequest
@@ -24,22 +36,36 @@ import org.zotero.android.database.requests.MarkSettingsAsSyncedDbRequest
 import org.zotero.android.database.requests.SplitAnnotationsDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
 import org.zotero.android.database.requests.UpdateVersionsDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SyncActionError
+import org.zotero.android.sync.SyncError
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 import java.io.FileWriter
 
-class SubmitUpdateSyncAction(
-    val parameters: List<Map<String, Any>>,
-    val changeUuids: Map<String, List<String>>,
-    val sinceVersion: Int?,
-    val objectS: SyncObject,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    val updateLibraryVersion: Boolean,
-) : SyncAction() {
+class SubmitUpdateSyncAction @AssistedInject constructor(
+    @Assisted("parameters") private val parameters: List<Map<String, Any>>,
+    @Assisted("changeUuids") private val changeUuids: Map<String, List<String>>,
+    @Assisted("sinceVersion") private val sinceVersion: Int?,
+    @Assisted("objectS") private val objectS: SyncObject,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("updateLibraryVersion") private val updateLibraryVersion: Boolean,
+
+    private val zoteroApi: ZoteroApi,
+    private val dispatcher: CoroutineDispatcher,
+    private val gson: Gson,
+    private val dbWrapperMain: DbWrapperMain,
+    private val updatesResponseMapper: UpdatesResponseMapper,
+    private val markItemAsSyncedAndUpdateDbRequestFactory: MarkItemAsSyncedAndUpdateDbRequest.Factory,
+    private val collectionResponseMapper: CollectionResponseMapper,
+    private val itemResponseMapper: ItemResponseMapper,
+    private val searchResponseMapper: SearchResponseMapper,
+    private val schemaController: SchemaController,
+    private val fileStore: FileStore,
+) {
     private val splitMessage = "Annotation position is too long"
 
     suspend fun result(): CustomResult<Pair<Int, CustomResult.GeneralError.CodeError?>> {
@@ -81,14 +107,13 @@ class SubmitUpdateSyncAction(
         }
         networkResult as CustomResult.GeneralSuccess.NetworkSuccess
         val newVersion = networkResult.lastModifiedVersion
-        val settings = mutableListOf<Pair<String, LibraryIdentifier>>()
+        val settings = mutableListOf<MarkSettingsAsSyncedDbRequest.Setting>()
         for (params in this.parameters) {
-            val key = params.keys.firstOrNull()
-            if (key != null) {
+            val uid = params.keys.firstOrNull()
+            if (uid != null) {
                 try {
-                    val setting = PageIndexResponse.parse(key = key)
-                    settings.add(setting)
-
+                    val (key, libraryId) = SettingKeyParser.parse(key = uid)
+                    settings.add(MarkSettingsAsSyncedDbRequest.Setting(uid = uid, key = key, libraryId = libraryId))
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -313,12 +338,10 @@ class SubmitUpdateSyncAction(
             for (response in changedItems) {
                 val changeUuids = this.changeUuids[response.key] ?: emptyList()
                 requests.add(
-                    MarkItemAsSyncedAndUpdateDbRequest(
+                    markItemAsSyncedAndUpdateDbRequestFactory.create(
                         libraryId = this.libraryId,
                         response = response,
                         changeUuids = changeUuids,
-                        schemaController = this.schemaController,
-                        dateParser = this.dateParser
                     )
                 )
             }
@@ -401,10 +424,66 @@ class SubmitUpdateSyncAction(
             }
         }
 
-        Timber.e("SubmitUpdateSyncAction: failures - $failedResponses")
+        val remainingFailedResponses =
+            clearLastReadOnlyItemChangesIfNeeded(failedResponses, libraryId)
+        if (remainingFailedResponses.isEmpty()) {
+            return SyncError.NonFatal.preconditionFailed(libraryId)
+        }
 
-        val errorMessages = failedResponses.joinToString(separator = "\n") { it.message }
-        return SyncActionError.submitUpdateFailures(errorMessages)
+        val remainingFailedResponsesText =
+            remainingFailedResponses.joinToString(separator = "\n") { it.message }
+        Timber.e("SubmitUpdateSyncAction: failures - $remainingFailedResponses")
+
+        return SyncActionError.submitUpdateFailures(remainingFailedResponsesText)
+    }
+
+    fun clearLastReadOnlyItemChangesIfNeeded(
+        failedResponses: List<FailedUpdateResponse>,
+        libraryId: LibraryIdentifier
+    ): List<FailedUpdateResponse> {
+        when (this.objectS) {
+            SyncObject.item, SyncObject.trash -> {
+                //no-op
+            }
+
+            SyncObject.collection, SyncObject.search, SyncObject.settings -> {
+                return failedResponses
+            }
+        }
+        val missingKeys = failedResponses.mapNotNull { response ->
+            if (response.code != 404) {
+                return@mapNotNull null
+            }
+            response.key
+        }.toSet()
+
+        if (missingKeys.isEmpty()) {
+            return failedResponses
+        }
+
+        try {
+            val clearedKeys = dbWrapperMain.realmDbStorage.perform(
+                request = ClearLastReadOnlyItemChangesDbRequest(
+                    libraryId = libraryId,
+                    keys = missingKeys
+                )
+            )
+            if (clearedKeys.isEmpty()) {
+                return failedResponses
+            }
+
+            Timber.w("SubmitUpdateSyncAction: cleared lastRead-only changes for remotely missing items - $clearedKeys")
+            return failedResponses.filter({ response ->
+                val key = response.key ?: return@filter true
+                !clearedKeys.contains(key)
+            })
+        } catch (error: Exception) {
+            Timber.e(
+                error,
+                "SubmitUpdateSyncAction: could not clear lastRead-only changes for remotely missing items"
+            )
+            return failedResponses
+        }
     }
 
     private fun process(response: UpdatesResponse): SubmitUpdateProcessResponse {
@@ -475,6 +554,19 @@ class SubmitUpdateSyncAction(
                 Timber.e(e, "SubmitUpdateSyncAction: can't encode/write item - $objectS")
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("parameters") parameters: List<Map<String, Any>>,
+            @Assisted("changeUuids") changeUuids: Map<String, List<String>>,
+            @Assisted("sinceVersion") sinceVersion: Int?,
+            @Assisted("objectS") objectS: SyncObject,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long,
+            @Assisted("updateLibraryVersion") updateLibraryVersion: Boolean,
+        ): SubmitUpdateSyncAction
     }
 
 }

@@ -10,7 +10,7 @@ import org.zotero.android.files.FileStore
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
-
+//Must be singleton, used everywhere.
 @Singleton
 class SchemaController @Inject constructor(
     private val fileStore: FileStore,

@@ -10,6 +10,7 @@ import org.zotero.android.database.objects.RGroup
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.Syncable
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
 import java.lang.Integer.min
@@ -19,6 +20,7 @@ private typealias ResultSyncVersionsString = List<String>
 
 class SyncVersionsDbRequest(
     private val versions: Map<String, Int>,
+    private val libraryId: LibraryIdentifier,
     private val syncObject: SyncObject,
     val syncType: SyncKind,
     val delayIntervals: List<Double>
@@ -35,17 +37,20 @@ class SyncVersionsDbRequest(
                 return check(
                     objects = database
                         .where<RCollection>()
+                        .library(this.libraryId)
                         .findAll()
                 )
             SyncObject.search ->
                 return check(
                     objects = database
                         .where<RSearch>()
+                        .library(this.libraryId)
                         .findAll()
                 )
             SyncObject.item -> {
                 val objects = database
                     .where<RItem>()
+                    .library(this.libraryId)
                     .isTrash(false)
                     .findAll()
                 return check(
@@ -55,6 +60,7 @@ class SyncVersionsDbRequest(
             SyncObject.trash -> {
                 val objects = database
                     .where<RItem>()
+                    .library(this.libraryId)
                     .isTrash(true)
                     .findAll()
                 return check(

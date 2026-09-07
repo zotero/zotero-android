@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.RealmDbCoordinator
 import timber.log.Timber
 
 abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
@@ -141,5 +142,26 @@ abstract class BaseViewModel2<STATE : ViewState, EFFECT : ViewEffect>(
         }catch (e: Exception) {
             Result.Failure(e)
         }
+    }
+
+    suspend fun performCoordinator(
+        dbWrapper: DbWrapperMain,
+        refreshRealm: Boolean = false,
+        invalidateRealm: Boolean = false,
+        coordinatorAction: (RealmDbCoordinator) -> Unit,
+        completion:(Result<Unit>) -> Unit,
+    ) = withContext(Dispatchers.IO) {
+        try {
+            dbWrapper.realmDbStorage.performCoordinator(
+                coordinatorAction = coordinatorAction,
+                invalidateRealm,
+                refreshRealm
+            )
+
+            completion(Result.Success(Unit))
+        }catch (e: Exception) {
+            completion(Result.Failure(e))
+        }
+
     }
 }

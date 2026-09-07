@@ -4,6 +4,7 @@ import org.zotero.android.ZoteroApplication
 import org.zotero.android.database.objects.CreatorTypes
 import org.zotero.android.database.objects.RCreator
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 
 class CreatorSummaryFormatter {
 
@@ -33,7 +34,7 @@ class CreatorSummaryFormatter {
                     return creators.firstOrNull()?.summaryName
                 2 -> {
                     val sorted = creators.sortedBy { it.orderId }
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.items_creator_summary_and,
                         sorted.first().summaryName,
                         sorted.last().summaryName
@@ -41,7 +42,7 @@ class CreatorSummaryFormatter {
                 }
                 else -> {
                     val sorted = creators.sortedBy { it.orderId }
-                    return context.getString(
+                    return context.getSafeString(
                         Strings.items_creator_summary_etal,
                         sorted.first().summaryName
                     )

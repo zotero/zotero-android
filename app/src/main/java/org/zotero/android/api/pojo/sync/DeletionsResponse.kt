@@ -5,4 +5,5 @@ data class DeletionsResponse(
     val searches: List<String>,
     val items: List<String>,
     val tags: List<String>,
+    val settings: List<String>,
 )

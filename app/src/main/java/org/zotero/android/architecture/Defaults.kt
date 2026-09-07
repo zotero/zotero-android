@@ -9,12 +9,14 @@ import org.zotero.android.pdf.data.PDFSettings
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
-import org.zotero.android.screens.htmlepub.settings.data.HtmlEpubSettings
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
+import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used everywhere.
 @Singleton
 open class Defaults @Inject constructor(
     private val context: Context,
@@ -53,7 +55,7 @@ open class Defaults @Inject constructor(
     private val exportStyleId = "exportStyleId"
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
-    private val htmlEpubSettings = "htmlEpubSettings"
+    private val readerSettings = "readerSettings1"
 
     private val exportOutputMode = "exportOutputMode"
     private val exportOutputMethod = "exportOutputMethod"
@@ -67,7 +69,7 @@ open class Defaults @Inject constructor(
     private val lastCitationProcCommitHash = "lastCitationProcCommitHash"
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
-    private val lastHtmlEpubReaderCommitHash = "lastHtmlEpubReaderCommitHash"
+    private val lastReaderCommitHash = "lastReaderCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -77,6 +79,8 @@ open class Defaults @Inject constructor(
     private val webDavPassword = "webDavPassword"
     private val buttonPageTurning = "buttonPageTurning"
     private val keepZoom = "keepZoom"
+
+    private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -431,6 +435,14 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
     }
 
+    fun getDoNotShowAppUpdateBannerBeforeTime(): Long {
+        return sharedPreferences.getLong(doNotShowAppUpdateBannerBeforeTime, 0L)
+    }
+
+    fun setDoNotShowAppUpdateBannerBeforeTime(newValue: Long) {
+        sharedPreferences.edit { putLong(doNotShowAppUpdateBannerBeforeTime, newValue) }
+    }
+
     fun getLastCitationProcCommitHash(): String {
         return sharedPreferences.getString(lastCitationProcCommitHash, "") ?: ""
     }
@@ -548,24 +560,32 @@ open class Defaults @Inject constructor(
     fun getLastHtmlEpubReaderCommitHash(): String {
         return sharedPreferences.getString(lastHtmlEpubReaderCommitHash, "") ?: ""
     }
-
-    fun setLastHtmlEpubReaderCommitHash(newValue: String) {
-        sharedPreferences.edit { putString(lastHtmlEpubReaderCommitHash, newValue) }
+    
+    fun getLastReaderCommitHash(): String {
+        return sharedPreferences.getString(lastReaderCommitHash, "") ?: ""
     }
 
-    fun getHtmlEpubSettings(): HtmlEpubSettings {
+    fun setLastReaderCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastReaderCommitHash, newValue) }
+    }
+
+    fun getReaderSettings(): ReaderSettings {
         val json: String = sharedPreferences.getString(
-            this.htmlEpubSettings,
+            this.readerSettings,
             null
-        ) ?: return HtmlEpubSettings.default()
-        return dataMarshaller.unmarshal(json)
+        ) ?: return ReaderSettings.default()
+        val settings = dataMarshaller.unmarshal<ReaderSettings>(json)
+        if (settings.scrollMode == null) {
+            settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        return settings
     }
 
-    fun setHtmlEpubSettings(
-        pdfSettings: HtmlEpubSettings,
+    fun setReaderSettings(
+        readerSettings: ReaderSettings,
     ) {
-        val json = dataMarshaller.marshal(pdfSettings)
-        sharedPreferences.edit { putString(this@Defaults.htmlEpubSettings, json) }
+        val json = dataMarshaller.marshal(readerSettings)
+        sharedPreferences.edit { putString(this@Defaults.readerSettings, json) }
     }
 
     fun reset() {
@@ -592,6 +612,8 @@ open class Defaults @Inject constructor(
         setWebDavUsername(null)
         setWebDavPassword(null)
         setWebDavVerified(false)
+
+        setDoNotShowAppUpdateBannerBeforeTime(0L)
 
         setQuickCopyCslLocaleId("en-US")
         setQuickCopyAsHtml(false)

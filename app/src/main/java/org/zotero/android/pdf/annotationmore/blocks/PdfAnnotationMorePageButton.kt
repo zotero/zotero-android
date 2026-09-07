@@ -12,11 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 
@@ -37,7 +37,7 @@ internal fun PdfAnnotationMorePageButton(
     ) {
         Text(
             modifier = Modifier.padding(start = 16.dp),
-            text = stringResource(Strings.page_number),
+            text = safeStringResource(Strings.page_number),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
         )

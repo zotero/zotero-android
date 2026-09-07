@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.citation.singlecitation.SingleCitationViewModel
 import org.zotero.android.screens.citation.singlecitation.SingleCitationViewState
 import org.zotero.android.screens.citation.singlecitation.locatorsList
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun SingleCitationDropDownMenuBox(
@@ -116,6 +116,6 @@ private fun localized(locator: String): String {
             "string",
             context.packageName
         )
-    val stringResource = stringResource(resourceId)
+    val stringResource = safeStringResource(resourceId)
     return stringResource
 }

@@ -1,15 +1,10 @@
 package org.zotero.android.sync
 
-import com.google.gson.Gson
 import io.realm.exceptions.RealmError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import org.zotero.android.api.ZoteroApi
-import org.zotero.android.api.mappers.CollectionResponseMapper
-import org.zotero.android.api.mappers.ItemResponseMapper
-import org.zotero.android.api.mappers.SearchResponseMapper
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -17,10 +12,9 @@ import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandl
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.MarkObjectsAsChangedByUser
-import org.zotero.android.database.requests.PerformDeletionsDbRequest
+import org.zotero.android.database.requests.PerformItemDeletionsDbRequest
 import org.zotero.android.database.requests.ReadGroupDbRequest
 import org.zotero.android.database.requests.UpdateVersionType
-import org.zotero.android.files.FileStore
 import org.zotero.android.sync.SyncError.NonFatal
 import org.zotero.android.sync.conflictresolution.Conflict
 import org.zotero.android.sync.conflictresolution.ConflictEventStream
@@ -37,6 +31,7 @@ import org.zotero.android.sync.syncactions.MarkForResyncSyncAction
 import org.zotero.android.sync.syncactions.MarkGroupAsLocalOnlySyncAction
 import org.zotero.android.sync.syncactions.MarkGroupForResyncSyncAction
 import org.zotero.android.sync.syncactions.PerformDeletionsSyncAction
+import org.zotero.android.sync.syncactions.PerformDeletionsSyncActionResult
 import org.zotero.android.sync.syncactions.RestoreDeletionsSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryFilesSyncAction
 import org.zotero.android.sync.syncactions.RevertLibraryUpdatesSyncAction
@@ -55,25 +50,41 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as this class must live throughout the app's entire lifecycle
 @Singleton
 class SyncUseCase @Inject constructor(
     private val syncRepository: SyncRepository,
     private val defaults: Defaults,
     private val dbWrapperMain: DbWrapperMain,
-    private val zoteroApi: ZoteroApi,
-    private val fileStore: FileStore,
-    private val itemResponseMapper: ItemResponseMapper,
-    private val collectionResponseMapper: CollectionResponseMapper,
-    private val searchResponseMapper: SearchResponseMapper,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
     private val observable: SyncObservableEventStream,
     private val actionsCreator: ActionsCreator,
-    private val gson: Gson,
     private val conflictEventStream: ConflictEventStream,
     private val progressHandler: SyncProgressHandler,
     private val sessionStorage: WebDavSessionStorage,
     private val dispatchers: Dispatchers,
+    private val loadUploadDataSyncActionFactory: LoadUploadDataSyncAction.Factory,
+    private val syncBatchProcessorFactory: SyncBatchProcessor.Factory,
+    private val revertLibraryFilesSyncActionFactory: RevertLibraryFilesSyncAction.Factory,
+    private val revertLibraryUpdatesSyncActionFactory: RevertLibraryUpdatesSyncAction.Factory,
+    private val uploadAttachmentSyncActionFactory: UploadAttachmentSyncAction.Factory,
+    private val deleteWebDavFilesSyncActionFactory: DeleteWebDavFilesSyncAction.Factory,
+    private val fetchAndStoreGroupSyncActionFactory: FetchAndStoreGroupSyncAction.Factory,
+    private val loadDeletionsSyncActionFactory: LoadDeletionsSyncAction.Factory,
+    private val loadLibraryDataSyncActionFactory: LoadLibraryDataSyncAction.Factory,
+    private val loadPermissionsSyncActionFactory: LoadPermissionsSyncAction.Factory,
+    private val markChangesAsResolvedSyncActionFactory: MarkChangesAsResolvedSyncAction.Factory,
+    private val markForResyncSyncActionFactory: MarkForResyncSyncAction.Factory,
+    private val markGroupAsLocalOnlySyncActionFactory: MarkGroupAsLocalOnlySyncAction.Factory,
+    private val markGroupForResyncSyncActionFactory: MarkGroupForResyncSyncAction.Factory,
+    private val performDeletionsSyncActionFactory: PerformDeletionsSyncAction.Factory,
+    private val restoreDeletionsSyncActionFactory: RestoreDeletionsSyncAction.Factory,
+    private val storeVersionSyncActionFactory: StoreVersionSyncAction.Factory,
+    private val submitDeletionSyncActionFactory: SubmitDeletionSyncAction.Factory,
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory,
+    private val deleteGroupSyncActionFactory: DeleteGroupSyncAction.Factory,
+    private val syncSettingsSyncActionFactory: SyncSettingsSyncAction.Factory,
+    private val syncVersionsSyncActionFactory: SyncVersionsSyncAction.Factory,
+    private val uploadFixSyncActionFactory: UploadFixSyncAction.Factory,
 ) {
     private var userId: Long = 0L
     private var libraryType: Libraries = Libraries.all
@@ -230,8 +241,15 @@ class SyncUseCase @Inject constructor(
                 processStoreVersion(libraryId = action.libraryId, type = UpdateVersionType.deletions, version = action.version)
             }
             is Action.performDeletions -> {
-                performDeletions(libraryId = action.libraryId, collections = action.collections,
-                    items = action.items, searches = action.searches, tags = action.tags, conflictMode = action.conflictMode)
+                performDeletions(
+                    libraryId = action.libraryId,
+                    collections = action.collections,
+                    items = action.items,
+                    searches = action.searches,
+                    tags = action.tags,
+                    settings  = action.settings,
+                    conflictMode = action.conflictMode
+                )
             }
             is Action.markChangesAsResolved -> {
                 markChangesAsResolved(action.libraryId)
@@ -271,7 +289,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processKeyCheckAction() {
-        val result = LoadPermissionsSyncAction().result()
+        val result = loadPermissionsSyncActionFactory.create().result()
         if (result is CustomResult.GeneralSuccess) {
             val response = result.value!!
             val permissions = AccessPermissions(
@@ -309,7 +327,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processSettingsSync(libraryId: LibraryIdentifier, version: Int) {
-        val result = SyncSettingsSyncAction(
+        val result = syncSettingsSyncActionFactory.create(
             currentVersion = this.lastReturnedVersion,
             sinceVersion = version,
             libraryId = libraryId,
@@ -371,7 +389,7 @@ class SyncUseCase @Inject constructor(
         collections: List<String>,
         items: List<String>
     ) {
-        val result = RestoreDeletionsSyncAction(
+        val result = restoreDeletionsSyncActionFactory.create(
             libraryId = libraryId,
             collections = collections,
             items = items
@@ -390,7 +408,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun revertGroupData(libraryId: LibraryIdentifier) {
-        val result = RevertLibraryUpdatesSyncAction(
+        val result = revertLibraryUpdatesSyncActionFactory.create(
             libraryId = libraryId,
         ).result()
         if (result is CustomResult.GeneralError.CodeError) {
@@ -402,7 +420,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processSubmitUpdate(batch: WriteBatch) {
-        val actionResult = SubmitUpdateSyncAction(
+        val actionResult = submitUpdateSyncActionFactory.create(
             parameters = batch.parameters,
             changeUuids = batch.changeUuids,
             sinceVersion = batch.version,
@@ -429,7 +447,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processUploadAttachment(upload: AttachmentUpload) {
-        val action = UploadAttachmentSyncAction(
+        val action = uploadAttachmentSyncActionFactory.create(
             key = upload.key,
             file = upload.file,
             filename = upload.filename,
@@ -463,19 +481,9 @@ class SyncUseCase @Inject constructor(
         val objectS = batch.objectS
 
         this.batchProcessor =
-            SyncBatchProcessor(
-                dispatchers = this.dispatchers,
+            syncBatchProcessorFactory.create(
                 batches = batches,
                 userId = defaults.getUserId(),
-                zoteroApi = zoteroApi,
-                dbWrapperMain = this.dbWrapperMain,
-                fileStore = this.fileStore,
-                itemResponseMapper = itemResponseMapper,
-                collectionResponseMapper = collectionResponseMapper,
-                searchResponseMapper = searchResponseMapper,
-                schemaController = schemaController,
-                dateParser = this.dateParser,
-                gson = this.gson,
                 progress = { processed ->
                     coroutineScope.launch {
                         syncSchedulerSemaphore.withPermit {
@@ -571,7 +579,7 @@ class SyncUseCase @Inject constructor(
         objectS: SyncObject
     ) {
         try {
-            MarkForResyncSyncAction(
+            markForResyncSyncActionFactory.create(
                 keys = keys,
                 objectS = objectS,
                 libraryId = libraryId
@@ -599,7 +607,7 @@ class SyncUseCase @Inject constructor(
         val lastVersion = this.lastReturnedVersion
 
         try {
-            val (newVersion, toUpdate) = SyncVersionsSyncAction(
+            val (newVersion, toUpdate) = syncVersionsSyncActionFactory.create(
                 objectS = objectS,
                 sinceVersion = version,
                 currentVersion = lastVersion,
@@ -671,7 +679,7 @@ class SyncUseCase @Inject constructor(
         options: CreateLibraryActionsOptions
     ) {
         try {
-            val result = LoadLibraryDataSyncAction(
+            val result = loadLibraryDataSyncActionFactory.create(
                 type = libraries,
                 fetchUpdates = (options != CreateLibraryActionsOptions.onlyDownloads),
                 loadVersions = (this.type != SyncKind.full),
@@ -1113,7 +1121,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun processStoreVersion(libraryId: LibraryIdentifier, type: UpdateVersionType, version: Int) {
         try {
-            StoreVersionSyncAction(
+            storeVersionSyncActionFactory.create(
                 version = version,
                 type = type,
                 libraryId = libraryId
@@ -1142,19 +1150,26 @@ class SyncUseCase @Inject constructor(
         }
     }
 
-    private suspend fun performDeletions(libraryId: LibraryIdentifier, collections: List<String>,
-                                         items: List<String>, searches: List<String>, tags: List<String>,
-                                         conflictMode: PerformDeletionsDbRequest.ConflictResolutionMode) {
+    private suspend fun performDeletions(
+        libraryId: LibraryIdentifier,
+        collections: List<String>,
+        items: List<String>,
+        searches: List<String>,
+        tags: List<String>,
+        settings: List<String>,
+        conflictMode: PerformItemDeletionsDbRequest.ConflictResolutionMode
+    ) {
         try {
-            val conflicts = PerformDeletionsSyncAction(
+            val result = performDeletionsSyncActionFactory.create(
                 libraryId = libraryId,
                 collections = collections,
                 items = items,
                 searches = searches,
                 tags = tags,
+                settings  = settings,
                 conflictMode = conflictMode
             ).result()
-            finishDeletionsSync(result = CustomResult.GeneralSuccess(conflicts), items = items, libraryId = libraryId)
+            finishDeletionsSync(result = CustomResult.GeneralSuccess(result), items = items, libraryId = libraryId)
         } catch (e: Throwable) {
             finishDeletionsSync(
                 result = CustomResult.GeneralError.CodeError(e),
@@ -1165,7 +1180,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun finishDeletionsSync(
-        result: CustomResult<List<Pair<String, String>>>,
+        result: CustomResult<PerformDeletionsSyncActionResult>,
         libraryId: LibraryIdentifier,
         items: List<String>? = null,
         version: Int? = null
@@ -1191,7 +1206,11 @@ class SyncUseCase @Inject constructor(
             return
         }
         result as CustomResult.GeneralSuccess
-        val conflicts = result.value!!
+        if (!result.value!!.unexpectedMyLibraryLastReadDeletions.isEmpty()) {
+            nonFatalErrors.add(NonFatal.unexpectedMyLibraryLastReadDeletions(keys = result.value!!.unexpectedMyLibraryLastReadDeletions))
+        }
+
+        val conflicts = result.value!!.conflicts
         if (!conflicts.isEmpty()) {
             resolve(conflict = Conflict.removedItemsHaveLocalChanges(keys = conflicts, libraryId = libraryId))
         } else {
@@ -1205,7 +1224,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun markChangesAsResolved(libraryId: LibraryIdentifier) {
         try {
-            MarkChangesAsResolvedSyncAction(libraryId = libraryId).result()
+            markChangesAsResolvedSyncActionFactory.create(libraryId = libraryId).result()
             finishCompletableAction(errorData = null)
         } catch (e: Exception) {
             Timber.e(e)
@@ -1215,7 +1234,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun markGroupAsLocalOnly(groupId: Int) {
         try {
-            MarkGroupAsLocalOnlySyncAction(groupId = groupId).result()
+            markGroupAsLocalOnlySyncActionFactory.create(groupId = groupId).result()
             finishCompletableAction(errorData = null)
         } catch (e: Exception) {
             Timber.e(e)
@@ -1225,7 +1244,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun deleteGroup(groupId: Int) {
         try {
-            DeleteGroupSyncAction(groupId =  groupId).result()
+            deleteGroupSyncActionFactory.create(groupId = groupId).result()
             finishCompletableAction(errorData = null)
         } catch (e: Exception) {
             Timber.e(e)
@@ -1240,7 +1259,7 @@ class SyncUseCase @Inject constructor(
         canWriteFiles: Boolean
     ) {
         try {
-            val uploads = LoadUploadDataSyncAction(libraryId = libraryId
+            val uploads = loadUploadDataSyncActionFactory.create(libraryId = libraryId
             ).result()
             process(
                 uploads = uploads,
@@ -1526,7 +1545,7 @@ class SyncUseCase @Inject constructor(
                 is NonFatal.unknown, is NonFatal.schema, is NonFatal.parsing, is NonFatal.apiError,
                 is NonFatal.unchanged, is NonFatal.quotaLimit, is NonFatal.attachmentMissing,
                 is NonFatal.insufficientSpace, is NonFatal.webDavDeletion, is NonFatal.webDavDeletionFailed,
-                is NonFatal.webDavUpload, is NonFatal.webDavDownload, is NonFatal.webDavVerification ->
+                is NonFatal.webDavUpload, is NonFatal.webDavDownload, is NonFatal.webDavVerification, is NonFatal.unexpectedMyLibraryLastReadDeletions ->
                 reportErrors.add(error)
             }
         }
@@ -1586,7 +1605,7 @@ class SyncUseCase @Inject constructor(
 
             is ConflictResolution.remoteDeletionOfActiveObject -> {
                 val actions = mutableListOf<Action>()
-                if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty()) {
+                if (!resolution.toDeleteCollections.isEmpty() || !resolution.toDeleteItems.isEmpty() || !resolution.searches.isEmpty() || !resolution.tags.isEmpty() || !resolution.settings.isEmpty() ) {
                     actions.add(
                         Action.performDeletions(
                             libraryId = resolution.libraryId,
@@ -1594,7 +1613,8 @@ class SyncUseCase @Inject constructor(
                             items = resolution.toDeleteItems,
                             searches = resolution.searches,
                             tags = resolution.tags,
-                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.resolveConflicts
+                            settings = resolution.settings,
+                            conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.resolveConflicts
                         )
                     )
                 }
@@ -1619,7 +1639,8 @@ class SyncUseCase @Inject constructor(
                             items = resolution.toDelete,
                             searches = emptyList(),
                             tags = emptyList(),
-                            conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.deleteConflicts
+                            settings = emptyList(),
+                            conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.deleteConflicts
                         )
                     )
                 }
@@ -1638,7 +1659,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun loadRemoteDeletions(libraryId: LibraryIdentifier, sinceVersion: Int) {
-        val result = LoadDeletionsSyncAction(
+        val result = loadDeletionsSyncActionFactory.create(
             currentVersion = this.lastReturnedVersion,
             sinceVersion = sinceVersion,
             libraryId = libraryId,
@@ -1655,6 +1676,7 @@ class SyncUseCase @Inject constructor(
             items = value.items,
             searches = value.searches,
             tags = value.tags,
+            settings = value.settings,
             version = value.version,
             libraryId = libraryId
         )
@@ -1665,6 +1687,7 @@ class SyncUseCase @Inject constructor(
         items: List<String>,
         searches: List<String>,
         tags: List<String>,
+        settings: List<String>,
         version: Int,
         libraryId: LibraryIdentifier
     ) {
@@ -1678,7 +1701,8 @@ class SyncUseCase @Inject constructor(
                     items = items,
                     searches = searches,
                     tags = tags,
-                    conflictMode = PerformDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
+                    settings = settings,
+                    conflictMode = PerformItemDeletionsDbRequest.ConflictResolutionMode.restoreConflicts
                 )
 
             SyncKind.collectionsOnly, SyncKind.ignoreIndividualDelays, SyncKind.normal, SyncKind.keysOnly, SyncKind.prioritizeDownloads ->
@@ -1688,6 +1712,7 @@ class SyncUseCase @Inject constructor(
                         collections = collections,
                         items = items,
                         searches = searches,
+                        settings = settings,
                         tags = tags
                     )
                 )
@@ -1712,7 +1737,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun markGroupForResync(identifier: Int) {
         try {
-            MarkGroupForResyncSyncAction(
+            markGroupForResyncSyncActionFactory.create(
                 identifier = identifier,
             ).result()
             finishCompletableAction(errorData = null)
@@ -1728,7 +1753,7 @@ class SyncUseCase @Inject constructor(
         }
     }
     private suspend fun processGroupSync(groupId: Int) {
-        val action = FetchAndStoreGroupSyncAction(identifier = groupId, userId = this.userId)
+        val action = fetchAndStoreGroupSyncActionFactory.create(identifier = groupId, userId = this.userId)
         val result = action.result()
         if (result !is CustomResult.GeneralSuccess) {
            val error = result as CustomResult.GeneralError.CodeError
@@ -1768,10 +1793,9 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processUploadFix(key: String, libraryId: LibraryIdentifier) {
-        val action = UploadFixSyncAction(
+        val action = uploadFixSyncActionFactory.create(
             key = key,
             libraryId = libraryId,
-            userId = this.userId,
             coroutineScope = this.coroutineScope,
             syncSchedulerSemaphore = this.syncSchedulerSemaphore
         )
@@ -1794,7 +1818,7 @@ class SyncUseCase @Inject constructor(
 
     private suspend fun revertGroupFiles(libraryId: LibraryIdentifier) {
         try {
-            RevertLibraryFilesSyncAction(
+            revertLibraryFilesSyncActionFactory.create(
                 libraryId = libraryId,
             )
                 .result()
@@ -1805,7 +1829,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun processSubmitDeletion(batch: DeleteBatch) {
-        val actionResult = SubmitDeletionSyncAction(
+        val actionResult = submitDeletionSyncActionFactory.create(
             keys = batch.keys,
             objectS = batch.objectS,
             version = batch.version,
@@ -1974,7 +1998,7 @@ class SyncUseCase @Inject constructor(
     }
 
     private suspend fun performWebDavDeletions(libraryId: LibraryIdentifier) {
-        val result = DeleteWebDavFilesSyncAction(libraryId = libraryId).result()
+        val result = deleteWebDavFilesSyncActionFactory.create(libraryId = libraryId).result()
         when (result) {
             is CustomResult.GeneralSuccess -> {
                 val failures = result.value!!

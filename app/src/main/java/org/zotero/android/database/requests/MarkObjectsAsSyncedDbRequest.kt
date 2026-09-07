@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmModel
 import io.realm.kotlin.where
@@ -12,15 +15,18 @@ import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCollectionChanges
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
 import org.zotero.android.database.objects.RSearchChanges
 import org.zotero.android.database.objects.Syncable
 import org.zotero.android.database.objects.Updatable
 import org.zotero.android.database.objects.UpdatableChangeType
+import org.zotero.android.ktx.uniqueObject
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
+import timber.log.Timber
 
 class MarkObjectsAsSyncedDbRequest(
     val libraryId: LibraryIdentifier,
@@ -51,38 +57,43 @@ class MarkObjectsAsSyncedDbRequest(
 }
 
 class MarkSettingsAsSyncedDbRequest(
-    val settings: List<Pair<String, LibraryIdentifier>>,
+    val settings: List<Setting>,
     val changeUuids: Map<String, List<String>>,
     val version: Int
 ): DbRequest {
+    data class Setting(
+        val uid: String,
+        val key: String,
+        val libraryId: LibraryIdentifier,
+    )
+
 
     override val needsWrite: Boolean
         get() = true
 
-    private fun uuidKey(key: String, libraryId: LibraryIdentifier): String {
-        val libraryPart: String = when(libraryId) {
-            is LibraryIdentifier.custom -> {
-                "u"
-            }
-
-            is LibraryIdentifier.group -> {
-                "g${libraryId.groupId}"
-            }
-        }
-
-        return "lastPageIndex_${libraryPart}_$key"
-    }
-
     override fun process(database: Realm) {
-        for(setting in this.settings) {
-            val objectS = database.where<RPageIndex>().key(setting.first, setting.second).findFirst() ?: continue
-            if (objectS.version != this.version) {
-                objectS.version = this.version
+        for (setting in this.settings) {
+            val objectS: Updatable
+
+            if (setting.uid.startsWith("lastRead_")) {
+                val lastRead = database.where<RLastReadDate>().findAll()
+                    .uniqueObject(key = setting.key, libraryId = setting.libraryId)
+                objectS = lastRead!!
+            } else if (setting.uid.startsWith("lastPageIndex_")) {
+                val pageIndex = database.where<RPageIndex>().findAll()
+                    .uniqueObject(key = setting.key, libraryId = setting.libraryId)
+                objectS = pageIndex!!
+            } else {
+                Timber.e("MarkSettingsAsSyncedDbRequest: could not find setting for ${setting.uid}")
+                continue
+            }
+
+            if (objectS.version != version) {
+                objectS.version = version
             }
 
             objectS.changeType = UpdatableChangeType.syncResponse.name
-
-            val uuids = this.changeUuids[this.uuidKey(key = setting.first, libraryId = setting.second)]
+            val uuids = changeUuids[setting.uid]
 
             if (uuids != null) {
                 objectS.deleteChanges(uuids = uuids, database = database)
@@ -134,12 +145,13 @@ class MarkCollectionAsSyncedAndUpdateDbRequest(
     }
 }
 
-class MarkItemAsSyncedAndUpdateDbRequest (
-    val libraryId: LibraryIdentifier,
-    val response: ItemResponse,
-    val changeUuids: List<String>,
-    val schemaController: SchemaController,
-    val dateParser: DateParser,
+class MarkItemAsSyncedAndUpdateDbRequest @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("response") private val response: ItemResponse,
+    @Assisted("changeUuids") private val changeUuids: List<String>,
+
+    private val schemaController: SchemaController,
+    private val dateParser: DateParser,
 ): DbRequest {
 
     override val needsWrite: Boolean
@@ -240,6 +252,16 @@ class MarkItemAsSyncedAndUpdateDbRequest (
 
         item.updateDerivedTitles()
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("response") response: ItemResponse,
+            @Assisted("changeUuids") changeUuids: List<String>
+        ): MarkItemAsSyncedAndUpdateDbRequest
+    }
+
 }
 
 class MarkSearchAsSyncedAndUpdateDbRequest(

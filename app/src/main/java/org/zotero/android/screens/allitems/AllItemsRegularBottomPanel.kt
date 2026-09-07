@@ -18,11 +18,11 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.downloadedfiles.DownloadedFilesPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun AllItemsRegularBottomPanel(
@@ -40,7 +40,7 @@ internal fun AllItemsRegularBottomPanel(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.all_items_bottom_panel_filters
                             )
                         )
@@ -81,7 +81,7 @@ internal fun AllItemsRegularBottomPanel(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.all_items_bottom_panel_add_new_item
                             )
                         )
@@ -112,7 +112,7 @@ internal fun AllItemsRegularBottomPanel(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.all_items_bottom_panel_sort_by
                             )
                         )

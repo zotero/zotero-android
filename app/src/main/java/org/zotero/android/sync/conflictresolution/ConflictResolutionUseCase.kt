@@ -11,6 +11,7 @@ import org.zotero.android.sync.SyncUseCase
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as its used to share state between multiple ViewModels
 @Singleton
 class ConflictResolutionUseCase @Inject constructor(
     private val syncUseCase: SyncUseCase,
@@ -51,6 +52,7 @@ class ConflictResolutionUseCase @Inject constructor(
 
     private lateinit var searches: List<String>
     private lateinit var tags: List<String>
+    private lateinit var settings: List<String>
 
     private fun resolveObjectsRemovedRemotely(conflict: Conflict.objectsRemovedRemotely) {
         libraryId = conflict.libraryId
@@ -60,6 +62,7 @@ class ConflictResolutionUseCase @Inject constructor(
         toRestoreItems = mutableListOf()
         searches = conflict.searches
         tags = conflict.tags
+        settings = conflict.settings
 
         val keyForShowingCollection = showsCollection(libraryId = libraryId)
         val keyForShowingItem = showsItem(libraryId = libraryId)
@@ -97,6 +100,7 @@ class ConflictResolutionUseCase @Inject constructor(
             toRestoreItems = toRestoreItems,
             searches = searches,
             tags = tags,
+            settings = settings
         )
         syncUseCase.enqueueResolution(resolution)
     }

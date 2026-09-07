@@ -1,8 +1,12 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.RealmResults
+import io.realm.Sort
 import io.realm.kotlin.where
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
@@ -11,16 +15,18 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import org.zotero.android.sync.LibraryIdentifier
 
-class ReadItemsDbRequest(
-    val libraryId: LibraryIdentifier,
-    val collectionId: CollectionIdentifier,
-    val filters: List<ItemsFilter> = emptyList(),
-    val sortType: ItemsSortType? = null,
-    val searchTextComponents: List<String> = emptyList(),
+class ReadItemsDbRequest @AssistedInject constructor(
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("collectionId") private val collectionId: CollectionIdentifier,
+    @Assisted("filters") private val filters: List<ItemsFilter> = emptyList(),
+    @Assisted("sortType") private val sortType: ItemsSortType? = null,
+    @Assisted("searchTextComponents") private val searchTextComponents: List<String> = emptyList(),
+    @Assisted("isAsync") private val isAsync: Boolean,
+
     val defaults: Defaults,
-    val isAsync: Boolean,
 ) : DbResponseRequest<RealmResults<RItem>> {
 
     override val needsWrite: Boolean
@@ -65,12 +71,18 @@ class ReadItemsDbRequest(
         }
 
         // Sort if needed
-        if (this.sortType != null) {
-            resultsQuery = resultsQuery.sort(
-                this.sortType.descriptors.first,
-                this.sortType.descriptors.second
-            )
+        val colIdLocal = collectionId
+        if (colIdLocal is CollectionIdentifier.custom && colIdLocal.type == CustomType.recentlyRead) {
+            resultsQuery = resultsQuery.sort("effectiveLastRead", Sort.DESCENDING, "sortTitle", Sort.ASCENDING)
+        } else {
+            if (this.sortType != null) {
+                resultsQuery = resultsQuery.sort(
+                    this.sortType.descriptors.first,
+                    this.sortType.descriptors.second
+                )
+            }
         }
+
         return if (isAsync) {
             resultsQuery.findAllAsync()
         } else {
@@ -92,6 +104,19 @@ class ReadItemsDbRequest(
         }
         return keys
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("collectionId") collectionId: CollectionIdentifier,
+            @Assisted("filters") filters: List<ItemsFilter> = emptyList(),
+            @Assisted("sortType") sortType: ItemsSortType? = null,
+            @Assisted("searchTextComponents") searchTextComponents: List<String> = emptyList(),
+            @Assisted("isAsync") isAsync: Boolean,
+        ): ReadItemsDbRequest
+    }
+
 }
 
 class ReadItemsWithKeysDbRequest(

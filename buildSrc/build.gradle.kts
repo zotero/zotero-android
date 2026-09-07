@@ -9,8 +9,8 @@ plugins {
 
 dependencies {
     // This constant is duplicated in root/build.gradle.kts. Make sure to also update there
-    implementation("com.android.tools.build:gradle:8.12.0")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0")
+    implementation("com.android.tools.build:gradle:9.3.1")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.10")
 }
 
 gradlePlugin {

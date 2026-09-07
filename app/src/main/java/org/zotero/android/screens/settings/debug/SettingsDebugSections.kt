@@ -6,7 +6,7 @@ import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.settings.elements.NewSettingsItem
 import org.zotero.android.uicomponents.Plurals
 import org.zotero.android.uicomponents.Strings
-import org.zotero.android.uicomponents.foundation.quantityStringResource
+import org.zotero.android.uicomponents.foundation.safeQuantityStringResource
 
 @Composable
 internal fun SettingsDebugCancelLoggingSection(viewModel: SettingsDebugViewModel) {
@@ -30,7 +30,7 @@ internal fun SettingsDebugStopLoggingSection(viewModel: SettingsDebugViewModel) 
 @Composable
 internal fun SettingsDebugLinesLoggedSection(viewState: SettingsDebugViewState) {
     NewSettingsItem(
-        title = quantityStringResource(
+        title = safeQuantityStringResource(
             id = Plurals.settings_lines_logged,
             viewState.numberOfLines
         ),

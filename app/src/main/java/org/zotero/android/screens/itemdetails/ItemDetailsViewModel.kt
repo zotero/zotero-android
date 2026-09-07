@@ -81,7 +81,6 @@ import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
 import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
-import org.zotero.android.screens.htmlepub.reader.data.HtmlEpubReaderArgs
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.NavigateToPdfScreen
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OnBack
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.OpenFile
@@ -102,6 +101,7 @@ import org.zotero.android.screens.itemdetails.data.ItemDetailField
 import org.zotero.android.screens.itemdetails.data.ItemDetailsArgs
 import org.zotero.android.screens.mediaviewer.image.ImageViewerArgs
 import org.zotero.android.screens.mediaviewer.video.VideoPlayerArgs
+import org.zotero.android.screens.reader.data.ReaderArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
 import org.zotero.android.sync.AttachmentFileCleanupController
@@ -115,12 +115,12 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.Note
 import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
-import org.zotero.android.sync.UrlDetector
 import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreItem
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionItem
 import org.zotero.android.uicomponents.bottomsheet.LongPressOptionsHolder
+import org.zotero.android.uicomponents.foundation.getSafeString
 import org.zotero.android.uicomponents.reorder.move
 import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
 import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
@@ -140,7 +140,6 @@ class ItemDetailsViewModel @Inject constructor(
     private val defaults: Defaults,
     private val dbWrapperMain: DbWrapperMain,
     private val fileStore: FileStore,
-    private val urlDetector: UrlDetector,
     private val schemaController: SchemaController,
     private val selectMedia: SelectMediaUseCase,
     private val fileDownloader: AttachmentDownloader,
@@ -151,6 +150,12 @@ class ItemDetailsViewModel @Inject constructor(
     private val dateParser: DateParser,
     private val context: Context,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
+    private val itemDetailDataCreator: ItemDetailDataCreator,
+    private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+    private val createAttachmentsDbRequestFactory: CreateAttachmentsDbRequest.Factory,
+    private val createItemFromDetailDbRequestFactory: CreateItemFromDetailDbRequest.Factory,
+    private val editTypeItemDetailDbRequestFactory: EditTypeItemDetailDbRequest.Factory,
+
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ItemDetailsViewState, ItemDetailsViewEffect>(ItemDetailsViewState()) {
 
@@ -329,9 +334,8 @@ class ItemDetailsViewModel @Inject constructor(
         } else {
             val updatedStateData = viewState.data.deepCopy()
             val updatedData = viewState.data.deepCopy(
-                fieldIds = ItemDetailDataCreator.allFieldKeys(
+                fieldIds = itemDetailDataCreator.allFieldKeys(
                     viewState.data.type,
-                    schemaController = this.schemaController
                 )
             )
             updateState {
@@ -360,17 +364,12 @@ class ItemDetailsViewModel @Inject constructor(
                     val itemType = type.type
                     val child = type.child
                     collectionKey = type.collectionKey
-                    data = ItemDetailDataCreator.createData(
+                    data = itemDetailDataCreator.createData(
                         ItemDetailDataCreator.Kind.new(
                             itemType = itemType,
                             child = child
                         ),
-                        schemaController = this.schemaController,
-                        fileStorage = this.fileStore,
-                        urlDetector = this.urlDetector,
-                        dateParser = this.dateParser,
                         doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
-                        defaults = this.defaults
                     )
                 }
                 is DetailType.preview -> {
@@ -387,17 +386,12 @@ class ItemDetailsViewModel @Inject constructor(
                             key = itemKey
                         )
                     )
-                    data = ItemDetailDataCreator.createData(
+                    data = itemDetailDataCreator.createData(
                         ItemDetailDataCreator.Kind.existing(
                             item = item,
                             ignoreChildren = true
                         ),
-                        schemaController = this.schemaController,
-                        fileStorage = this.fileStore,
-                        urlDetector = this.urlDetector,
-                        dateParser = this.dateParser,
                         doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
-                        defaults = this.defaults
                     )
                 }
             }
@@ -408,7 +402,7 @@ class ItemDetailsViewModel @Inject constructor(
             }
             return
         }
-        val request = CreateItemFromDetailDbRequest(
+        val request = createItemFromDetailDbRequestFactory.create(
             key = key,
             libraryId = libraryId,
             collectionKey = collectionKey,
@@ -416,9 +410,6 @@ class ItemDetailsViewModel @Inject constructor(
             attachments = data.attachments,
             notes = data.notes,
             tags = data.tags,
-            dateParser = this.dateParser,
-            schemaController = this.schemaController,
-            fileStore = fileStore
         )
         viewModelScope.launch {
             val result = perform(dbWrapperMain, request = request, invalidateRealm = true)
@@ -457,19 +448,14 @@ class ItemDetailsViewModel @Inject constructor(
             }
 
 
-            val (data, attachments, notes, tags) = ItemDetailDataCreator.createData(
+            val (data, attachments, notes, tags) = itemDetailDataCreator.createData(
                 ItemDetailDataCreator.Kind.existing(item = item, ignoreChildren = false),
-                schemaController = this@ItemDetailsViewModel.schemaController,
-                dateParser = this@ItemDetailsViewModel.dateParser,
-                fileStorage = this@ItemDetailsViewModel.fileStore,
-                urlDetector = this@ItemDetailsViewModel.urlDetector,
                 doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) },
-                defaults = this@ItemDetailsViewModel.defaults
             )
 
             if (!isEditing) {
                 data.fieldIds =
-                    ItemDetailDataCreator.filteredFieldKeys(data.fieldIds, fields = data.fields)
+                    itemDetailDataCreator.filteredFieldKeys(data.fieldIds, fields = data.fields)
             }
 
             saveReloaded(
@@ -502,7 +488,7 @@ class ItemDetailsViewModel @Inject constructor(
         }
         if (viewState.snapshot != null || isEditing) {
             val updatedSnapshot = data.deepCopy(
-                fieldIds = ItemDetailDataCreator.filteredFieldKeys(
+                fieldIds = itemDetailDataCreator.filteredFieldKeys(
                     data.fieldIds,
                     fields = data.fields
                 )
@@ -721,10 +707,9 @@ class ItemDetailsViewModel @Inject constructor(
         ignoreScreenRefreshOnNextDbUpdate = true
 
         field.value = value
-        field.isTappable = ItemDetailDataCreator.isTappable(
+        field.isTappable = itemDetailDataCreator.isTappable(
             key = field.key,
             value = field.value,
-            urlDetector = this.urlDetector,
             doiDetector = { doiValue -> FieldKeys.Item.isDoi(doiValue) }
         )
 
@@ -746,7 +731,7 @@ class ItemDetailsViewModel @Inject constructor(
             copy(data = updatedData)
         }
 
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = viewState.key,
             libraryId = viewState.library!!.identifier,
             fieldValues = mapOf(
@@ -755,7 +740,6 @@ class ItemDetailsViewModel @Inject constructor(
                     baseKey = field.baseField
                 ) to field.value
             ),
-            dateParser = this.dateParser
         )
 
         viewModelScope.launch {
@@ -784,11 +768,10 @@ class ItemDetailsViewModel @Inject constructor(
             key = key,
             baseKey = (if (key != FieldKeys.Item.title) FieldKeys.Item.title else null)
         )
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = viewState.key,
             libraryId = viewState.library!!.identifier,
             fieldValues = mapOf(keyPair to newTitle),
-            dateParser = this.dateParser
         )
         viewModelScope.launch {
             val result = perform(dbWrapper = dbWrapperMain, request = request)
@@ -805,7 +788,7 @@ class ItemDetailsViewModel @Inject constructor(
             copy(data = updatedData)
         }
 
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = viewState.key,
             libraryId = viewState.library!!.identifier,
             fieldValues = mapOf(
@@ -814,7 +797,6 @@ class ItemDetailsViewModel @Inject constructor(
                     baseKey = null
                 ) to newAbstract
             ),
-            dateParser = this.dateParser
         )
 
         viewModelScope.launch {
@@ -912,11 +894,10 @@ class ItemDetailsViewModel @Inject constructor(
             )
             if (!updatedFields.isEmpty()) {
                 requests.add(
-                    element = EditItemFieldsDbRequest(
+                    element = editItemFieldsDbRequestFactory.create(
                         key = viewState.key,
                         libraryId = viewState.library!!.identifier,
                         fieldValues = updatedFields,
-                        dateParser = this@ItemDetailsViewModel.dateParser
                     ), index = 0
                 )
             }
@@ -930,7 +911,7 @@ class ItemDetailsViewModel @Inject constructor(
 
             val updatedData = viewState.data.deepCopy(
                 fields = updatedFieldsMap,
-                fieldIds = ItemDetailDataCreator.filteredFieldKeys(
+                fieldIds = itemDetailDataCreator.filteredFieldKeys(
                     viewState.data.fieldIds,
                     viewState.data.fields,
                 ),
@@ -1259,7 +1240,7 @@ class ItemDetailsViewModel @Inject constructor(
                 schemaController
             ),
             showSaveButton = false,
-            title = context.getString(Strings.item_type),
+            title = context.getSafeString(Strings.item_type),
             callPoint = SinglePickerResult.CallPoint.ItemDetails
         )
         triggerEffect(ShowItemTypePickerEffect)
@@ -1344,10 +1325,8 @@ class ItemDetailsViewModel @Inject constructor(
             throw ItemDetailError.typeNotSupported(type)
         }
 
-        val (fieldIds, fields, hasAbstract) = ItemDetailDataCreator.fieldData(
+        val (fieldIds, fields, hasAbstract) = itemDetailDataCreator.fieldData(
             type,
-            schemaController = this.schemaController,
-            urlDetector = this.urlDetector,
             doiDetector = { FieldKeys.Item.isDoi(it) },
             getExistingData = { key, baseField ->
                 val originalDataField = originalData.fields[key]
@@ -1365,7 +1344,6 @@ class ItemDetailsViewModel @Inject constructor(
                 }
                 return@fieldData null to null
             },
-            dateParser = this.dateParser
         )
 
         val data = originalData
@@ -1673,24 +1651,19 @@ class ItemDetailsViewModel @Inject constructor(
                     "application/pdf" -> {
                         showPdf(file = file, parentKey = parentKey, attachment = attachment)
                     }
-                    "text/html", "text/plain" -> {
+                    "text/html", "application/epub+zip" -> {
+                        Timber.i("ItemDetailsViewModel: show HTML / EPUB ${attachment.key}")
+                        showReader(
+                            file = file,
+                            parentKey = parentKey,
+                            attachment = attachment
+                        )
+                    }
+                    "text/plain" -> {
                         val url = file.toUri().toString()
                         val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                         triggerEffect(ItemDetailsViewEffect.ShowZoteroWebView(encodedUrl))
                     }
-//                    "text/html", "application/epub+zip" -> {
-//                        Timber.i("ItemDetailsViewModel: show HTML / EPUB ${attachment.key}")
-//                        showHtmlEpub(
-//                            file = file,
-//                            parentKey = parentKey,
-//                            attachment = attachment
-//                        )
-//                    }
-//                    "text/plain" -> {
-//                        val url = file.toUri().toString()
-//                        val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
-//                        triggerEffect(ItemDetailsViewEffect.ShowZoteroWebView(encodedUrl))
-//                    }
                     else -> {
                         if (contentType.contains("image")) {
                             showImageFile(file)
@@ -1889,12 +1862,11 @@ class ItemDetailsViewModel @Inject constructor(
 
             val type = this.schemaController.localizedItemType(itemType = ItemTypes.attachment)
                 ?: ItemTypes.attachment
-            val request = CreateAttachmentsDbRequest(
+            val request = createAttachmentsDbRequestFactory.create(
                 attachments = attachments,
                 parentKey = viewState.key,
                 localizedType = type,
                 collections = emptySet(),
-                fileStore = fileStore
             )
 
             viewModelScope.launch {
@@ -2081,14 +2053,13 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     private fun changeTypeInDb() {
-        val request = EditTypeItemDetailDbRequest(
+        val request = editTypeItemDetailDbRequestFactory.create(
             key = viewState.key,
             libraryId = viewState.library!!.identifier,
             type = viewState.data.type,
             fields = viewState.data.databaseFields(schemaController = schemaController),
             creatorIds = viewState.data.creatorIds,
             creators = viewState.data.creators,
-            dateParser = this.dateParser
         )
 
         viewModelScope.launch {
@@ -2098,16 +2069,18 @@ class ItemDetailsViewModel @Inject constructor(
             }
         }
     }
-    private fun showHtmlEpub(file: File, parentKey: String?, attachment: Attachment) {
-        val uri = Uri.fromFile(file)
-        val htmlEpubReaderArgs = HtmlEpubReaderArgs(
+    private fun showReader(file: File, parentKey: String?, attachment: Attachment) {
+        val readerArgs = ReaderArgs(
             key = attachment.key,
             parentKey = parentKey,
             library = viewState.library!!,
-            uri = uri,
         )
-        val params = navigationParamsMarshaller.encodeObjectToBase64(htmlEpubReaderArgs)
-        triggerEffect(ItemDetailsViewEffect.NavigateToHtmlEpubReaderScreen(params))
+        val params = navigationParamsMarshaller.encodeObjectToBase64(readerArgs)
+        val encodedFilePath = Uri.encode(file.absolutePath)
+        triggerEffect(ItemDetailsViewEffect.NavigateToReaderScreen(
+            params = params,
+            readerEncodedFilePathParam = encodedFilePath
+        ))
     }
 }
 
@@ -2146,7 +2119,7 @@ sealed class ItemDetailsViewEffect : ViewEffect {
     object ShowImageViewer : ItemDetailsViewEffect()
     data class OpenFile(val file: File, val mimeType: String) : ItemDetailsViewEffect()
     data class NavigateToPdfScreen(val params: String, val encodedFilePath: String) : ItemDetailsViewEffect()
-    data class NavigateToHtmlEpubReaderScreen(val params: String) : ItemDetailsViewEffect()
+    data class NavigateToReaderScreen(val params: String, val readerEncodedFilePathParam: String) : ItemDetailsViewEffect()
     data class OpenWebpage(val url: String) : ItemDetailsViewEffect()
     data class ShowZoteroWebView(val url: String) : ItemDetailsViewEffect()
     object AddAttachment : ItemDetailsViewEffect()

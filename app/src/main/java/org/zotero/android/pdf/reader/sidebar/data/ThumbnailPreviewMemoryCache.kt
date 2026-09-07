@@ -2,10 +2,10 @@ package org.zotero.android.pdf.reader.sidebar.data
 
 import android.graphics.Bitmap
 import android.util.LruCache
+import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ThumbnailPreviewMemoryCache @Inject constructor(
     private val eventStream: ThumbnailPreviewCacheUpdatedEventStream
 ){

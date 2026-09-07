@@ -8,9 +8,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun PdfSettingsTopBar(
@@ -23,7 +23,7 @@ internal fun PdfSettingsTopBar(
         ),
         title = {
             Text(
-                text = stringResource(Strings.pdf_settings_appearance_title),
+                text = safeStringResource(Strings.pdf_settings_appearance_title),
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge
             )

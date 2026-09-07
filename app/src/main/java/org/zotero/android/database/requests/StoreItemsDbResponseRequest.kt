@@ -1,6 +1,9 @@
 package org.zotero.android.database.requests
 
 import com.google.gson.JsonObject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.RealmQuery
 import io.realm.kotlin.createObject
@@ -20,6 +23,7 @@ import org.zotero.android.database.objects.LinkType
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCreator
+import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemField
 import org.zotero.android.database.objects.RLink
@@ -40,12 +44,13 @@ import timber.log.Timber
 import java.util.Date
 import java.util.UUID
 
-class StoreItemsDbResponseRequest(
-    val responses: List<ItemResponse>,
+class StoreItemsDbResponseRequest @AssistedInject constructor(
+    @Assisted("responses") private val responses: List<ItemResponse>,
+    @Assisted("preferResponseData") private val preferResponseData: Boolean,
+    @Assisted("denyIncorrectCreator") private val denyIncorrectCreator: Boolean,
+
     val schemaController: SchemaController,
     val dateParser: DateParser,
-    val preferResponseData: Boolean,
-    val denyIncorrectCreator: Boolean,
 ) : DbResponseRequest<StoreItemsResponse> {
     override val needsWrite: Boolean
         get() = true
@@ -78,6 +83,16 @@ class StoreItemsDbResponseRequest(
 
         return StoreItemsResponse(changedFilenames = filenameChanges, conflicts = errors)
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("responses") responses: List<ItemResponse>,
+            @Assisted("preferResponseData") preferResponseData: Boolean,
+            @Assisted("denyIncorrectCreator") denyIncorrectCreator: Boolean,
+        ): StoreItemsDbResponseRequest
+    }
+
 }
 
 class StoreItemDbRequest(
@@ -152,6 +167,19 @@ class StoreItemDbRequest(
             item.lastSyncDate = Date()
             item.changeType = UpdatableChangeType.sync.name
             item.libraryId = libraryId
+
+            when (libraryId) {
+                is LibraryIdentifier.custom -> {
+                    if (libraryId.type == RCustomLibraryType.myLibrary) {
+                        item.lastRead = response.lastRead
+                        item.updateEffectiveLastRead()
+                    }
+                }
+                is LibraryIdentifier.group -> {
+                    //no-op
+                }
+            }
+
 
             val filenameChange: StoreItemsResponse.FilenameChange? = syncFields(
                 data = response,
@@ -474,6 +502,7 @@ class StoreItemDbRequest(
                 parent = database.createObject<RItem>()
                 parent.key = key
                 parent.syncState = ObjectSyncState.dirty.name
+                parent.lastSyncDate = Date(0)
                 parent.libraryId = libraryId
             }
             item.parent = parent
@@ -517,6 +546,7 @@ class StoreItemDbRequest(
                 val collection = database.createObject<RCollection>()
                 collection.key = key
                 collection.syncState = ObjectSyncState.dirty.name
+                collection.lastSyncDate = Date(0)
                 collection.libraryId = libraryId
                 collection.items.add(item)
             }

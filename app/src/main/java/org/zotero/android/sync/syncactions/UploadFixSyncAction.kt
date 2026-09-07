@@ -1,5 +1,8 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -7,25 +10,33 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.zotero.android.api.network.CustomResult
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
+import org.zotero.android.attachmentdownloader.AttachmentDownloaderEventStream
+import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.ItemTypes
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.requests.MarkAttachmentUploadedDbRequest
 import org.zotero.android.database.requests.MarkForResyncDbAction
 import org.zotero.android.database.requests.ReadItemDbRequest
+import org.zotero.android.files.FileStore
 import org.zotero.android.sync.AttachmentCreator
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 import timber.log.Timber
 
-class UploadFixSyncAction(
-    val key: String,
-    val libraryId: LibraryIdentifier,
-    val userId: Long,
-    private val coroutineScope: CoroutineScope,
-    private val syncSchedulerSemaphore: Semaphore,
-) : SyncAction() {
+class UploadFixSyncAction @AssistedInject constructor(
+    @Assisted("key") private val key: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("coroutineScope") private val coroutineScope: CoroutineScope,
+    @Assisted("syncSchedulerSemaphore") private val syncSchedulerSemaphore: Semaphore,
+
+    private val dbWrapperMain: DbWrapperMain,
+    private val fileStore: FileStore,
+    private val defaults: Defaults,
+    private val attachmentDownloaderEventStream: AttachmentDownloaderEventStream,
+    private val attachmentDownloader: AttachmentDownloader,
+) {
 
     sealed class Error : Exception() {
         object attachmentMissingRemotely : Error()
@@ -191,4 +202,13 @@ class UploadFixSyncAction(
         }
     }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("key") key: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("coroutineScope") coroutineScope: CoroutineScope,
+            @Assisted("syncSchedulerSemaphore") syncSchedulerSemaphore: Semaphore
+        ): UploadFixSyncAction
+    }
 }

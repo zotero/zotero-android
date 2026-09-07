@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun TagPickerTopBar(
@@ -34,7 +35,7 @@ internal fun TagPickerTopBar(
         ),
         title = {
             Text(
-                text = stringResource(
+                text = safeStringResource(
                     id = Strings.tag_picker_title,
                     viewState.selectedTags.size
                 ),

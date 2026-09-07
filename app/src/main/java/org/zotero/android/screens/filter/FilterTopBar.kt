@@ -13,10 +13,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import org.zotero.android.screens.filter.popup.FilterOptionsPopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun FilterTopBar(
@@ -33,7 +33,7 @@ internal fun FilterTopBar(
         ),
         title = {
             Text(
-                text = stringResource(
+                text = safeStringResource(
                     id = Strings.items_filters_title
                 ),
                 color = MaterialTheme.colorScheme.onSurface,
@@ -56,7 +56,7 @@ internal fun FilterTopBar(
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(
-                    text = stringResource(Strings.done),
+                    text = safeStringResource(Strings.done),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelLarge
                 )

@@ -31,7 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
@@ -41,6 +40,7 @@ import org.zotero.android.pdf.data.PdfReaderTool
 import org.zotero.android.pdf.reader.DragAnchors
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
 import org.zotero.android.pdf.reader.PdfReaderViewState
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import kotlin.math.roundToInt
@@ -181,7 +181,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                         tooltip = {
                             PlainTooltip() {
                                 Text(
-                                    text = stringResource(tool.title)
+                                    text = safeStringResource(tool.title)
                                 )
                             }
                         },
@@ -219,7 +219,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.accessibility_pdf_undo
                             )
                         )
@@ -241,7 +241,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.accessibility_pdf_redo
                             )
                         )
@@ -264,7 +264,7 @@ internal fun BoxScope.PdfReaderAnnotationCreationToolbar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.cancel
                             )
                         )

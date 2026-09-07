@@ -8,6 +8,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton as it's used by a number long living ViewModels
 @Singleton
 class SessionController @Inject constructor(
     private val defaults: Defaults,
@@ -60,6 +61,7 @@ class SessionController @Inject constructor(
     }
 }
 
+//Must be a singleton as it's getting filled with data on app start and then data is retrieved on other screens
 @Singleton
 class SessionDataEventStream @Inject constructor(applicationScope: ApplicationScope) :
     StateEventStream<SessionData?>(applicationScope, null)

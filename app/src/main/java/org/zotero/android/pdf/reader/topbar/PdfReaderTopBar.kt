@@ -17,7 +17,6 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -28,6 +27,7 @@ import org.zotero.android.pdf.reader.pdfsearch.popup.PdfReaderSearchPopup
 import org.zotero.android.pdf.reader.share.PdfReaderSharePopup
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.icon.IconWithPaddingM3
 
 @Composable
@@ -74,7 +74,7 @@ internal fun PdfReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.pdf_reader_sidebar
                             )
                         )
@@ -100,7 +100,7 @@ internal fun PdfReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.pdf_reader_plain_reader
                             )
                         )
@@ -127,7 +127,7 @@ internal fun PdfReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.pdf_reader_toolbar
                             )
                         )
@@ -153,7 +153,7 @@ internal fun PdfReaderTopBar(
                         tooltip = {
                             PlainTooltip() {
                                 Text(
-                                    stringResource(
+                                    safeStringResource(
                                         Strings.searchbar_placeholder
                                     )
                                 )
@@ -186,7 +186,7 @@ internal fun PdfReaderTopBar(
                     tooltip = {
                         PlainTooltip() {
                             Text(
-                                stringResource(
+                                safeStringResource(
                                     Strings.searchbar_placeholder
                                 )
                             )
@@ -219,7 +219,7 @@ internal fun PdfReaderTopBar(
                     tooltip = {
                         PlainTooltip() {
                             Text(
-                                stringResource(
+                                safeStringResource(
                                     Strings.share
                                 )
                             )
@@ -245,7 +245,7 @@ internal fun PdfReaderTopBar(
                 tooltip = {
                     PlainTooltip() {
                         Text(
-                            stringResource(
+                            safeStringResource(
                                 Strings.settings_title
                             )
                         )

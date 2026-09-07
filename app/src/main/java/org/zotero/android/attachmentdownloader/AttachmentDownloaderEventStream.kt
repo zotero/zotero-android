@@ -5,6 +5,7 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used by downloaded
 @Singleton
 class AttachmentDownloaderEventStream @Inject constructor(applicationScope: ApplicationScope) :
     EventStream<AttachmentDownloader.Update>(applicationScope)

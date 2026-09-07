@@ -21,11 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.textinput.AppSearchBarM3
 
 @Composable
@@ -73,7 +73,7 @@ internal fun AllItemsPhoneAppSearchBar(
                             tooltip = {
                                 PlainTooltip() {
                                     Text(
-                                        stringResource(
+                                        safeStringResource(
                                             Strings.searchbar_placeholder
                                         )
                                     )
@@ -133,7 +133,7 @@ private fun AppSearchBarM3Wrapper(
     }
 
     AppSearchBarM3(
-        hint = stringResource(id = Strings.items_search_title),
+        hint = safeStringResource(id = Strings.items_search_title),
         onSearchImeClicked = onSearchAction,
         onInnerValueChanged = searchBarOnInnerValueChanged,
         textFieldState = searchBarTextFieldState,

@@ -2,6 +2,9 @@ package org.zotero.android.database.requests
 
 import android.graphics.PointF
 import android.graphics.RectF
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
@@ -18,13 +21,14 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import timber.log.Timber
 
-class CreatePDFAnnotationsDbRequest(
-    private val attachmentKey: String,
-    private val libraryId: LibraryIdentifier,
-    private val annotations: List<PDFDocumentAnnotation>,
-    private val userId: Long,
+class CreatePDFAnnotationsDbRequest @AssistedInject constructor(
+    @Assisted("attachmentKey") private val attachmentKey: String,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("annotations") private val annotations: List<PDFDocumentAnnotation>,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("boundingBoxConverter") private val boundingBoxConverter: AnnotationBoundingBoxConverter,
+
     private val schemaController: SchemaController,
-    private val boundingBoxConverter: AnnotationBoundingBoxConverter,
 ) : CreateReaderAnnotationsDbRequest<PDFDocumentAnnotation>(attachmentKey = attachmentKey, libraryId = libraryId, annotations = annotations, userId = userId, schemaController = schemaController) {
 
     private fun addRects(
@@ -157,4 +161,14 @@ class CreatePDFAnnotationsDbRequest(
         )
     }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("attachmentKey") attachmentKey: String,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("annotations") annotations: List<PDFDocumentAnnotation>,
+            @Assisted("userId") userId: Long,
+            @Assisted("boundingBoxConverter") boundingBoxConverter: AnnotationBoundingBoxConverter
+        ): CreatePDFAnnotationsDbRequest
+    }
 }

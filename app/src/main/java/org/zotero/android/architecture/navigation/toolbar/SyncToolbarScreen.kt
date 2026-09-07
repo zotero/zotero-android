@@ -21,12 +21,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.architecture.navigation.toolbar.data.CurrentSyncProgressState
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.topbar.NewHeadingTextButton
@@ -94,7 +94,7 @@ internal fun BoxScope.SyncToolbarScreen(
                     is CurrentSyncProgressState.SyncFinishedWithError, is CurrentSyncProgressState.Aborted -> {
                         NewHeadingTextButton(
                             onClick = viewModel::showErrorDialog,
-                            text = stringResource(Strings.sync_snackbar_view_action),
+                            text = safeStringResource(Strings.sync_snackbar_view_action),
                         )
                     }
 

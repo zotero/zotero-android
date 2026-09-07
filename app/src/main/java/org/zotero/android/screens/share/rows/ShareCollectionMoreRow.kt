@@ -12,10 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeClickable
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun ShareCollectionMoreRow(
@@ -34,7 +34,7 @@ internal fun ShareCollectionMoreRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(id = Strings.shareext_collection_other),
+            text = safeStringResource(id = Strings.shareext_collection_other),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
         )

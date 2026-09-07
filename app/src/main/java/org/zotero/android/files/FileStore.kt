@@ -31,6 +31,7 @@ import javax.inject.Singleton
 /**
  * Used to store objects and object trees in files.
  */
+//Must be singleton, used everywhere.
 @Singleton
 class FileStore @Inject constructor (
     private val context: Context,
@@ -593,20 +594,20 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
-    fun htmlEpubReaderDirectory(): File {
-        val folderPath = File(getRootDirectory(), "htmlEpubReader")
+    fun readerDirectory(): File {
+        val folderPath = File(getRootDirectory(), "reader")
         folderPath.mkdirs()
         return folderPath
     }
 
-    fun runningHtmlEpubReaderDirectory(): File {
-        val folderPath = File(getRootDirectory(), "runningHtmlEpubReader")
+    fun runningReaderDirectory(): File {
+        val folderPath = File(getRootDirectory(), "runningReader")
         folderPath.mkdirs()
         return folderPath
     }
 
-    fun runningHtmlEpubReaderUserFileSubDirectory(ext: String): File {
-        val folderPath = File(runningHtmlEpubReaderDirectory(), "userFile.${ext}")
+    fun runningReaderUserFileSubDirectory(ext: String): File {
+        val folderPath = File(runningReaderDirectory(), "userFile.${ext}")
         folderPath.mkdirs()
         return folderPath
     }

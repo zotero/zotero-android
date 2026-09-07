@@ -1,24 +1,25 @@
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.NamedDomainObjectContainer
 
-fun com.android.build.gradle.TestedExtension.setDefaultProductFlavors() {
-    flavorDimensions(ProductFlavors.Environment.dimension)
+fun ApplicationExtension.setDefaultProductFlavors() {
+    flavorDimensions += ProductFlavors.Environment.dimension
 
     productFlavors {
         create(ProductFlavors.Environment.DEV.envName()) {
             dimension = ProductFlavors.Environment.dimension
-            create(ProductFlavors.Environment.INTERNAL.envName()) {
-                dimension = ProductFlavors.Environment.dimension
-            }
+        }
+        create(ProductFlavors.Environment.INTERNAL.envName()) {
+            dimension = ProductFlavors.Environment.dimension
         }
     }
 }
 
-fun <T: Any> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
+fun <T : Any> NamedDomainObjectContainer<T>.dev(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.DEV.envName()).block()
 }
 
-fun <T: Any> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
+fun <T : Any> NamedDomainObjectContainer<T>.internal(block: T.() -> Unit) {
     getByName(ProductFlavors.Environment.INTERNAL.envName()).block()
 }
 

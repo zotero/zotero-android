@@ -10,14 +10,17 @@ class ReadDocumentDataDbRequest(
     private val attachmentKey: String,
     private val libraryId: LibraryIdentifier,
     private val defaultPageValue: String,
-): DbResponseRequest<String> {
+) : DbResponseRequest<String> {
     override val needsWrite: Boolean
         get() = false
 
     override fun process(database: Realm): String {
         val pageIndex =
             database.where<RPageIndex>().key(this.attachmentKey, this.libraryId).findFirst()
-                ?: return this.defaultPageValue
+        if (pageIndex == null || pageIndex.deleted) {
+            return this.defaultPageValue
+        }
+
         return pageIndex.index
     }
 }

@@ -9,10 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewModel
 import org.zotero.android.pdf.annotationmore.PdfAnnotationMoreViewState
+import org.zotero.android.uicomponents.foundation.safeStringResource
 import org.zotero.android.uicomponents.Strings
 import java.util.Locale
 
@@ -29,7 +29,7 @@ internal fun PdfAnnotationMoreSizeSelector(
     ) {
         Text(
             modifier = Modifier.padding(end = 10.dp),
-            text = stringResource(id = Strings.pdf_annotation_popover_line_width),
+            text = safeStringResource(id = Strings.pdf_annotation_popover_line_width),
             color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge,
         )

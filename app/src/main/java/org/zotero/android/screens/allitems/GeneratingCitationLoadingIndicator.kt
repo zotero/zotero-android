@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 fun GeneratingCitationLoadingIndicator() {
@@ -33,7 +33,7 @@ fun GeneratingCitationLoadingIndicator() {
         )
         Text(
             modifier = Modifier.padding(top = 40.dp),
-            text = stringResource(Strings.items_generating_cit),
+            text = safeStringResource(Strings.items_generating_cit),
             color = Color.White,
             style = MaterialTheme.typography.titleSmallEmphasized,
         )

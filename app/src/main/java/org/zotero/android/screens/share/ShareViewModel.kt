@@ -1,12 +1,13 @@
 package org.zotero.android.screens.share
 
-import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.realm.OrderedCollectionChangeSet
+import io.realm.RealmResults
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -40,8 +41,10 @@ import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.requests.ReadCollectionAndLibraryDbRequest
+import org.zotero.android.database.requests.ReadCollectionsDbRequest
 import org.zotero.android.database.requests.ReadRecentCollections
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.GetUriDetailsUseCase
@@ -61,14 +64,10 @@ import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
 import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
-import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
-import org.zotero.android.sync.SyncKind
 import org.zotero.android.sync.SyncObject
-import org.zotero.android.sync.SyncObservableEventStream
-import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
 import org.zotero.android.sync.syncactions.SubmitUpdateSyncAction
 import org.zotero.android.translator.data.AttachmentState
@@ -80,6 +79,7 @@ import org.zotero.android.translator.web.TranslatorWebExtractionExecutor
 import retrofit2.Response
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
 import java.util.Date
 import javax.inject.Inject
 
@@ -92,8 +92,6 @@ internal class ShareViewModel @Inject constructor(
     private val shareRawAttachmentLoader: ShareRawAttachmentLoader,
     private val getUriDetailsUseCase: GetUriDetailsUseCase,
     private val fileStore: FileStore,
-    private val syncScheduler: SyncScheduler,
-    private val syncObservableEventStream: SyncObservableEventStream,
     private val translatorActionEventStream: TranslatorActionEventStream,
     private val dbWrapperMain: DbWrapperMain,
     private val itemResponseMapper: ItemResponseMapper,
@@ -108,6 +106,7 @@ internal class ShareViewModel @Inject constructor(
     private val pdfWorkerController: PdfWorkerController,
     private val nonZoteroApi: NonZoteroApi,
     private val nonZoteroNoRedirectApi: NonZoteroNoRedirectApi,
+    private val submitUpdateSyncActionFactory: SubmitUpdateSyncAction.Factory,
 ) : BaseViewModel2<ShareViewState, ShareViewEffect>(ShareViewState()) {
 
     private val defaultLibraryId: LibraryIdentifier = LibraryIdentifier.custom(RCustomLibraryType.myLibrary)
@@ -121,6 +120,8 @@ internal class ShareViewModel @Inject constructor(
     private lateinit var selectedLibraryId: LibraryIdentifier
     private lateinit var attachmentKey: String
     private var wasAttachmentUploaded: Boolean = false
+
+    private var collections: RealmResults<RCollection>? = null
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
@@ -142,14 +143,10 @@ internal class ShareViewModel @Inject constructor(
         selectedLibraryId = fileStore.getSelectedLibrary()
         attachmentKey = KeyGenerator.newKey()
         setupObservers()
+        initRequestAndStartObservingCollectionResults()
         ioCoroutineScope.launch {
             try {
                 Timber.i("ShareViewModel: start async collections sync")
-                syncScheduler.startSyncController(
-                    type = SyncKind.collectionsOnly,
-                    libraries = Libraries.all,
-                    retryAttempt = 0
-                )
                 var rawAttachmentType = shareRawAttachmentLoader.getLoadedAttachmentResult()
 
                 val maybeHeadNetworkResult = if (rawAttachmentType is RawAttachment.remoteUrl) {
@@ -195,6 +192,35 @@ internal class ShareViewModel @Inject constructor(
         }
     }
 
+    private fun initRequestAndStartObservingCollectionResults() {
+        collections = dbWrapperMain.realmDbStorage.perform(
+            ReadCollectionsDbRequest(
+                libraryId = this.defaultLibraryId,
+                isAsync = true
+            )
+        )
+        collections?.addChangeListener { objects, changeSet ->
+            when (changeSet.state) {
+                OrderedCollectionChangeSet.State.INITIAL -> {
+                    finishSync(successful = true)
+                }
+
+                OrderedCollectionChangeSet.State.UPDATE -> {
+                    finishSync(successful = true)
+                }
+
+                OrderedCollectionChangeSet.State.ERROR -> {
+                    Timber.e(
+                        changeSet.error,
+                        "ShareViewModel: could not load results"
+                    )
+                    finishSync(successful = false)
+                }
+            }
+        }
+    }
+
+
     private fun calculateRawAttachmentType(
         rawAttachmentType: RawAttachment,
         headNetworkResult: Response<*>?
@@ -238,12 +264,6 @@ internal class ShareViewModel @Inject constructor(
 
 
     private fun setupObservers() {
-        syncObservableEventStream.flow()
-            .onEach { data ->
-                finishSync(successful = (data == null))
-            }
-            .launchIn(viewModelScope)
-
         translatorActionEventStream.flow()
             .onEach { event ->
                 if (event is Result.Failure) {
@@ -584,7 +604,7 @@ internal class ShareViewModel @Inject constructor(
                 process(url = attachment.url)
             }
             is RawAttachment.fileUrl -> {
-                process(uri = attachment.uri)
+                process(attachment.fileName, attachment.fileExtension, attachment.uriInputStream)
             }
 
             is RawAttachment.remoteFileUrl -> {
@@ -689,9 +709,7 @@ internal class ShareViewModel @Inject constructor(
 
     }
 
-    private suspend fun process(uri: Uri) {
-        val fileName = getUriDetailsUseCase.getFullName(uri)
-        val fileExtension =  getUriDetailsUseCase.getExtension(uri)
+    private suspend fun process(fileName: String?, fileExtension: String?, uriInputStream: InputStream) {
         if (fileName == null || fileExtension == null) {
             viewModelScope.launch {
                 updateState {
@@ -702,7 +720,7 @@ internal class ShareViewModel @Inject constructor(
         }
         val tmpFile = fileStore.temporaryFile(fileExtension)
         try {
-            getUriDetailsUseCase.copyFile(uri, tmpFile)
+            getUriDetailsUseCase.copyFile(uriInputStream = uriInputStream, toFile = tmpFile)
             viewModelScope.launch {
                 updateState {
                     copy(
@@ -804,6 +822,7 @@ internal class ShareViewModel @Inject constructor(
 
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
+        collections?.removeAllChangeListeners()
         ioCoroutineScope.cancel()
         pdfWorkerController.cancelAllLookups()
         super.onCleared()
@@ -839,6 +858,7 @@ internal class ShareViewModel @Inject constructor(
     }
 
     fun submitAsync() {
+        collections?.removeAllChangeListeners()
         viewModelScope.launch {
             submit()
         }
@@ -997,7 +1017,8 @@ internal class ShareViewModel @Inject constructor(
                 lastModifiedBy = null,
                 rects = null,
                 paths = null,
-                inPublications = false
+                inPublications = false,
+                lastRead = null,
             )
 
             submit(item = webItem, libraryId = libraryId, userId = userId)
@@ -1016,10 +1037,8 @@ internal class ShareViewModel @Inject constructor(
             val (parameters, changeUuids) = shareItemSubmitter.createItem(
                 item,
                 libraryId = libraryId,
-                schemaController = schemaController,
-                dateParser = dateParser
             )
-            val result = SubmitUpdateSyncAction(
+            val result = submitUpdateSyncActionFactory.create(
                 parameters = listOf(parameters),
                 changeUuids = changeUuids,
                 sinceVersion = null,

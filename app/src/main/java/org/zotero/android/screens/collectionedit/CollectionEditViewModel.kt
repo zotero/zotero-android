@@ -30,6 +30,7 @@ import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.conflictresolution.AskUserToDeleteOrRestoreCollection
 import org.zotero.android.sync.conflictresolution.ConflictResolutionUseCase
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.foundation.getSafeString
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -146,7 +147,7 @@ internal class CollectionEditViewModel @Inject constructor(
         val excludedKeys = if (viewState.key == null) emptySet() else setOf(viewState.key!!)
 
         ScreenArguments.collectionPickerArgs = CollectionPickerArgs(
-            mode = CollectionPickerMode.single(title = context.getString(Strings.collections_picker_title)),
+            mode = CollectionPickerMode.single(title = context.getSafeString(Strings.collections_picker_title)),
             libraryId = viewState.library.identifier,
             excludedKeys = excludedKeys,
             selected = setOf(selected)

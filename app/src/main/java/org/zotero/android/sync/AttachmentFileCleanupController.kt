@@ -27,6 +27,7 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Should be Singleton, used by multiple ViewModels but does not share any state
 @Singleton
 class AttachmentFileCleanupController @Inject constructor(
     private val fileStorage: FileStore,

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.pspdfkit.configuration.rendering.PageRenderConfiguration
 import com.pspdfkit.document.PdfDocument
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -13,9 +14,8 @@ import org.zotero.android.sync.LibraryIdentifier
 import java.io.FileOutputStream
 import java.util.Collections
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
+@ViewModelScoped
 class ThumbnailPreviewManager @Inject constructor(
     private val dispatchers: Dispatchers,
     private val fileStore: FileStore,

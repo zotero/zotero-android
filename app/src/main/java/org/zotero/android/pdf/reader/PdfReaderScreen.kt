@@ -1,6 +1,5 @@
 package org.zotero.android.pdf.reader
 
-import android.view.MotionEvent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -9,12 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import org.zotero.android.architecture.ui.CustomLayoutSize
@@ -67,6 +65,8 @@ internal fun PdfReaderScreen(
         val decorView = window.decorView
         val systemBars = WindowInsetsCompat.Type.systemBars()
         val insetsController = WindowCompat.getInsetsController(window, decorView)
+        insetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         if (viewState.isTopBarVisible) {
             insetsController.show(systemBars)
         } else {
@@ -172,12 +172,6 @@ internal fun PdfReaderScreen(
         )
 
         CustomScaffoldM3(
-            modifier = Modifier.pointerInteropFilter {
-                when (it.action) {
-                    MotionEvent.ACTION_DOWN -> viewModel.restartDisableForceScreenOnTimer()
-                }
-                false
-            },
             topBar = {
                 AnimatedContent(
                     targetState = viewState.isTopBarVisible,

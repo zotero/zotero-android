@@ -2,6 +2,7 @@ package org.zotero.android.api.mappers
 
 import com.google.gson.JsonObject
 import org.zotero.android.api.pojo.sync.PageIndexResponse
+import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.ktx.rounded
 import org.zotero.android.sync.Parsing
 import javax.inject.Inject
@@ -9,11 +10,11 @@ import javax.inject.Inject
 class PageIndexResponseMapper @Inject constructor(){
 
     fun fromJson(key: String, dictionary: JsonObject): PageIndexResponse? {
-        if (!key.contains("lastPageIndex")) {
+        if (!key.startsWith("lastPageIndex")) {
             return null
         }
         try {
-            val (key, libraryId) = PageIndexResponse.parse(key = key)
+            val (key, libraryId) = SettingKeyParser.parse(key = key)
 
             val version = dictionary["version"].asInt
 

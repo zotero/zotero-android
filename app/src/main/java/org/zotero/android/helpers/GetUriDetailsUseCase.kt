@@ -13,6 +13,7 @@ import okhttp3.internal.closeQuietly
 import org.zotero.android.translator.data.AttachmentState
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
 import javax.inject.Inject
 
 class GetUriDetailsUseCase @Inject constructor(
@@ -51,11 +52,10 @@ class GetUriDetailsUseCase @Inject constructor(
         application.contentResolver.getType(contentUri)
     }
 
-    suspend fun copyFile(fromUri: Uri, toFile: File) = withContext(dispatcher) {
+    suspend fun copyFile(uriInputStream: InputStream, toFile: File) = withContext(dispatcher) {
         Timber.i("GetUriDetailsUseCase: copy file to attachment folder")
 
         try {
-            val uriInputStream = application.contentResolver.openInputStream(fromUri)!!
             FileHelper.copyInputStreamToFile(uriInputStream, toFile)
             uriInputStream.closeQuietly()
         } catch (error: Exception) {

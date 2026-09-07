@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.where
 import org.zotero.android.api.pojo.sync.KeyBaseKeyPair
@@ -11,20 +14,21 @@ import org.zotero.android.database.objects.RItemChanges
 import org.zotero.android.database.objects.RObjectChange
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.files.FileStore
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.sync.SchemaController
 import timber.log.Timber
 import java.util.Date
 
-class LinkAttachmentToParentItemDbRequest(
+class LinkAttachmentToParentItemDbRequest @AssistedInject constructor(
     private val schemaController: SchemaController,
     private val fileStore: FileStore,
-    private val dateParser: DateParser,
-    private val libraryId: LibraryIdentifier,
-    private val itemKey: String,
-    private val parentItemKey: String
+    private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("itemKey") private val itemKey: String,
+    @Assisted("parentItemKey") private val parentItemKey: String
 ): DbRequest {
+
     override val needsWrite: Boolean
         get() = true
 
@@ -75,11 +79,10 @@ class LinkAttachmentToParentItemDbRequest(
             baseKey = null
         )
 
-        EditItemFieldsDbRequest(
+        editItemFieldsDbRequestFactory.create(
             key = itemKey,
             libraryId = libraryId,
             fieldValues = mapOf(titleFieldKeyPair to "PDF", attachmentFileNamePair to newFileName),
-            dateParser = dateParser
         ).process(database)
 
         item.changes.add(
@@ -137,4 +140,12 @@ class LinkAttachmentToParentItemDbRequest(
         }"
     }
 
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("itemKey") itemKey: String,
+            @Assisted("parentItemKey") parentItemKey: String
+        ): LinkAttachmentToParentItemDbRequest
+    }
 }

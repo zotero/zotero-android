@@ -1,27 +1,33 @@
 package org.zotero.android.sync.syncactions
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import org.zotero.android.BuildConfig
+import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.sync.LibraryIdentifier
 
 import org.zotero.android.sync.SyncError
-import org.zotero.android.sync.syncactions.architecture.SyncAction
 
 data class LoadDeletionsSyncActionResult(
     val collections: List<String>,
     val items: List<String>,
     val searches: List<String>,
     val tags: List<String>,
+    val settings: List<String>,
     val version: Int
 )
 
-class LoadDeletionsSyncAction(
-    private val currentVersion: Int?,
-    private val sinceVersion: Int,
-    private val libraryId: LibraryIdentifier,
-    private val userId: Long,
-): SyncAction() {
+class LoadDeletionsSyncAction @AssistedInject constructor(
+    @Assisted("currentVersion") private val currentVersion: Int?,
+    @Assisted("sinceVersion") private val sinceVersion: Int,
+    @Assisted("libraryId") private val libraryId: LibraryIdentifier,
+    @Assisted("userId") private val userId: Long,
+
+    private val zoteroApi: ZoteroApi,
+) {
 
     suspend fun result(): CustomResult<LoadDeletionsSyncActionResult> {
         val url =
@@ -50,8 +56,20 @@ class LoadDeletionsSyncAction(
                 items = value.items,
                 searches = value.searches,
                 tags = value.tags,
-                version = newVersion
+                settings = value.settings,
+                version = newVersion,
             )
         )
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("currentVersion") currentVersion: Int?,
+            @Assisted("sinceVersion") sinceVersion: Int,
+            @Assisted("libraryId") libraryId: LibraryIdentifier,
+            @Assisted("userId") userId: Long
+        ): LoadDeletionsSyncAction
+    }
+
 }

@@ -6,6 +6,7 @@ import org.zotero.android.files.FileStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, used everywhere.
 @Singleton
 class DbWrapperMain @Inject constructor(
     private val fileStore: FileStore

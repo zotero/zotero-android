@@ -3,6 +3,7 @@ package org.zotero.android.screens.collections.data
 import kotlinx.collections.immutable.toImmutableList
 import org.zotero.android.sync.Collection
 import org.zotero.android.sync.CollectionIdentifier
+import org.zotero.android.sync.CollectionIdentifier.CustomType
 import java.util.concurrent.ConcurrentHashMap
 
 data class CollectionTree(
@@ -100,8 +101,17 @@ data class CollectionTree(
         }
 
         if (startIndex == -1) {
-            // No object of given type found, insert after .all
-            array.addAll(index = 1, newArray)
+            var id = 0
+            when {
+                array.size >= 2 && (array[1].identifier as? CollectionIdentifier.custom)?.type == CustomType.recentlyRead -> {
+                    id = 2
+                }
+
+                array.size >= 1 -> {
+                    id = 1
+                }
+            }
+            array.addAll(index = id, newArray)
             return
         }
 

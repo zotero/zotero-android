@@ -3,6 +3,9 @@ package org.zotero.android.sync
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
@@ -18,6 +21,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.requests.DeleteMissingPlaceholderItemsDbRequest
 import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
 import org.zotero.android.database.requests.StoreSearchesDbRequest
@@ -30,20 +34,21 @@ import java.util.concurrent.atomic.AtomicInteger
 
 typealias SyncBatchResponse = Triple<List<String>, List<Throwable>, List<StoreItemsResponse.Error>>
 
-class SyncBatchProcessor(
-    val batches: List<DownloadBatch>,
-    val userId: Long,
-    val zoteroApi: ZoteroApi,
-    val dbWrapperMain: DbWrapperMain,
-    val fileStore: FileStore,
-    val itemResponseMapper: ItemResponseMapper,
-    val collectionResponseMapper: CollectionResponseMapper,
-    val searchResponseMapper: SearchResponseMapper,
-    val schemaController: SchemaController,
-    val dateParser: DateParser,
-    val gson: Gson,
-    val progress: (Int) -> Unit,
-    val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+class SyncBatchProcessor @AssistedInject constructor(
+    @Assisted("batches") private val batches: List<DownloadBatch>,
+    @Assisted("userId") private val userId: Long,
+    @Assisted("progress") private val progress: (Int) -> Unit,
+    @Assisted("completion") private val completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+
+    private val zoteroApi: ZoteroApi,
+    private val dbWrapperMain: DbWrapperMain,
+    private val fileStore: FileStore,
+    private val itemResponseMapper: ItemResponseMapper,
+    private val collectionResponseMapper: CollectionResponseMapper,
+    private val searchResponseMapper: SearchResponseMapper,
+    private val schemaController: SchemaController,
+    private val gson: Gson,
+    private val storeItemsDbResponseRequestFactory: StoreItemsDbResponseRequest.Factory,
     val dispatchers: Dispatchers,
 ) {
 
@@ -226,16 +231,30 @@ class SyncBatchProcessor(
 
                 storeIndividualObjects(objects, type = SyncObject.item, libraryId = libraryId)
 
-                val request = StoreItemsDbResponseRequest(
+                val request = storeItemsDbResponseRequestFactory.create(
                     responses = items,
-                    schemaController = this.schemaController,
-                    dateParser = this.dateParser,
                     preferResponseData = true,
                     denyIncorrectCreator = true,
                 )
                 val response = dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
+
+                // Keys the server didn't return at all, as opposed to keys whose data failed to
+                // parse or store. Placeholders for them can't ever be resolved by this request,
+                // so they're deleted instead of being marked for resync.
+                val responseKeys = dataArray.mapNotNull {
+                    try {
+                        it.asJsonObject["key"]?.asString
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                val missingKeys =
+                    failedKeys(expectedKeys = expectedKeys, parsedKeys = responseKeys)
+                val deletedKeys =
+                    deleteMissingPlaceholders(keys = missingKeys, libraryId = libraryId)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
+                        .filter { !deletedKeys.contains(it) }
 
                 renameExistingFiles(changes = response.changedFilenames, libraryId = libraryId)
                 SyncBatchResponse(failedKeys, errors, response.conflicts)
@@ -249,6 +268,15 @@ class SyncBatchProcessor(
 
     private fun failedKeys(expectedKeys: List<String>, parsedKeys: List<String>): List<String> {
         return expectedKeys.filter { !parsedKeys.contains(it) }
+    }
+
+    private fun deleteMissingPlaceholders(keys: List<String>, libraryId: LibraryIdentifier): List<String> {
+        if (keys.isEmpty()) {
+            return emptyList()
+        }
+        return dbWrapperMain.realmDbStorage.perform(
+            request = DeleteMissingPlaceholderItemsDbRequest(libraryId = libraryId, keys = keys)
+        )
     }
 
     private fun renameExistingFiles(changes: List<StoreItemsResponse.FilenameChange>, libraryId: LibraryIdentifier) {
@@ -291,6 +319,16 @@ class SyncBatchProcessor(
 
     fun cancelAllOperations() {
         resultsProcessorCoroutineScope.cancel()
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("batches") batches: List<DownloadBatch>,
+            @Assisted("userId") userId: Long,
+            @Assisted("progress") progress: (Int) -> Unit,
+            @Assisted("completion") completion: suspend (CustomResult<SyncBatchResponse>) -> Unit,
+        ): SyncBatchProcessor
     }
 
 }

@@ -177,17 +177,17 @@ import org.zotero.android.sync.AnnotationBoundingBoxCalculator
 import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.AnnotationSplitter
-import org.zotero.android.sync.DateParser
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.LastReadWatcher
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
-import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.SessionDataEventStream
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.util.Date
 import java.util.EnumSet
 import java.util.Timer
 import javax.inject.Inject
@@ -211,14 +211,16 @@ class PdfReaderViewModel @Inject constructor(
     private val annotationPreviewCacheUpdatedEventStream: AnnotationPreviewCacheUpdatedEventStream,
     private val thumbnailPreviewCacheUpdatedEventStream: ThumbnailPreviewCacheUpdatedEventStream,
     override val annotationPreviewMemoryCache: AnnotationPreviewMemoryCache,
-    private val schemaController: SchemaController,
-    private val dateParser: DateParser,
     private val navigationParamsMarshaller: NavigationParamsMarshaller,
     private val dispatcher: CoroutineDispatcher,
     private val progressHandler: SyncProgressHandler,
     private val fileStore: FileStore,
     private val stateHandle: SavedStateHandle,
-) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()), PdfReaderVMInterface {
+    private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+    private val createPDFAnnotationsDbRequestFactory: CreatePDFAnnotationsDbRequest.Factory,
+    private val lastReadWatcher: LastReadWatcher,
+) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()),
+    PdfReaderVMInterface {
 
     private var liveAnnotations: RealmResults<RItem>? = null
     private var databaseAnnotations: RealmResults<RItem>? = null
@@ -290,7 +292,7 @@ class PdfReaderViewModel @Inject constructor(
         updateState {
             copy(selectedThumbnail = row)
         }
-
+        lastReadWatcher.submitAfterDelay(key = viewState.key, libraryId = viewState.library.identifier, date = Date())
         onStorePageFlow.tryEmit(event.pageIndex)
     }
 
@@ -569,6 +571,7 @@ class PdfReaderViewModel @Inject constructor(
                 pagePosition: PointF?,
                 clickedAnnotation: Annotation?
             ): Boolean {
+                restartDisableForceScreenOnTimer()
                 decideTopBarAndBottomBarVisibility(clickedAnnotation)
                 return false
             }
@@ -1034,6 +1037,7 @@ class PdfReaderViewModel @Inject constructor(
         }
         observeDocument()
         updateAnnotationsList(forceNotShowAnnotationPopup = true)
+        lastReadWatcher.submit(key = key, libraryId = library.identifier, date = Date())
     }
 
     private fun setupAnnotationChangedDebouncerFlow() {
@@ -1179,11 +1183,10 @@ class PdfReaderViewModel @Inject constructor(
                         baseKey = FieldKeys.Item.Annotation.position
                     ) to "${inkAnnotation.lineWidth.rounded(3)}"
                 )
-                val request = EditItemFieldsDbRequest(
+                val request = editItemFieldsDbRequestFactory.create(
                     key = key,
                     libraryId = viewState.library.identifier,
                     fieldValues = values,
-                    dateParser = this.dateParser,
                 )
                 requests.add(request)
             }
@@ -1245,11 +1248,10 @@ class PdfReaderViewModel @Inject constructor(
                     baseKey = null
                 ) to annotation.baseColor
             )
-            val request = EditItemFieldsDbRequest(
+            val request = editItemFieldsDbRequestFactory.create(
                 key = key,
                 libraryId = viewState.library.identifier,
                 fieldValues = values,
-                dateParser = this.dateParser,
             )
             requests.add(request)
         }
@@ -1261,11 +1263,10 @@ class PdfReaderViewModel @Inject constructor(
                     baseKey = null
                 ) to (annotation.contents ?: "")
             )
-            val request = EditItemFieldsDbRequest(
+            val request = editItemFieldsDbRequestFactory.create(
                 key = key,
                 libraryId = viewState.library.identifier,
                 fieldValues = values,
-                dateParser = this.dateParser,
             )
             requests.add(request)
         }
@@ -2174,6 +2175,7 @@ class PdfReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         progressHandler.unMuteProgressToolbarForScreen()
+        lastReadWatcher.submit(key = viewState.key, libraryId = viewState.library.identifier, date = Date())
         if (this::pdfFragment.isInitialized) {
             onAnnotationUpdatedListener?.let {
                 pdfFragment.removeOnAnnotationUpdatedListener(it)
@@ -2929,12 +2931,11 @@ class PdfReaderViewModel @Inject constructor(
                 isDark = viewState.isDark,
             )
         }
-        val request = CreatePDFAnnotationsDbRequest(
+        val request = createPDFAnnotationsDbRequestFactory.create(
             attachmentKey = viewState.key,
             libraryId = viewState.library.identifier,
             annotations = documentAnnotations,
             userId = viewState.userId,
-            schemaController = this.schemaController,
             boundingBoxConverter = this.annotationBoundingBoxConverter
         )
         dbWrapperMain.realmDbStorage.perform(request)
@@ -3312,11 +3313,10 @@ class PdfReaderViewModel @Inject constructor(
             ) to pageLabel,
             KeyBaseKeyPair(key = FieldKeys.Item.Annotation.text, baseKey = null) to text
         )
-        val request = EditItemFieldsDbRequest(
+        val request = editItemFieldsDbRequestFactory.create(
             key = key,
             libraryId = viewState.library.identifier,
             fieldValues = values,
-            dateParser = this.dateParser
         )
 
         dbWrapperMain.realmDbStorage.perform(request)
@@ -3574,7 +3574,7 @@ class PdfReaderViewModel @Inject constructor(
         }
     }
 
-    fun restartDisableForceScreenOnTimer() {
+    private fun restartDisableForceScreenOnTimer() {
         viewModelScope.launch {
             triggerEffect(PdfReaderViewEffect.EnableForceScreenOn)
         }

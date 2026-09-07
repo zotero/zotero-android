@@ -1,7 +1,9 @@
 package org.zotero.android.screens.root
 
 import android.content.Intent
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
@@ -13,14 +15,12 @@ import javax.inject.Inject
 class RootViewModel @Inject constructor(
     private val sessionController: SessionController,
     private val shareRawAttachmentLoader: ShareRawAttachmentLoader
-    ) : BaseViewModel2<
-        RootViewState,
-        RootViewEffect>(initialState = RootViewState()) {
+    ) : BaseViewModel2<RootViewState, RootViewEffect>(initialState = RootViewState()) {
 
-    fun init(intent: Intent) {
+    fun init(intent: Intent) = viewModelScope.launch {
         if (!sessionController.isLoggedIn) {
             triggerEffect(RootViewEffect.NavigateToSignIn)
-        } else if (shareRawAttachmentLoader.doesIntentContainShareData(intent)) {
+        } else if (shareRawAttachmentLoader.maybeLoadFromIntent(intent)) {
             triggerEffect(RootViewEffect.NavigateToShare)
         } else {
             triggerEffect(RootViewEffect.NavigateToDashboard)

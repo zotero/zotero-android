@@ -1,0 +1,167 @@
+package org.zotero.android.screens.reader
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
+import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
+import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
+
+
+@Composable
+internal fun ReaderBox(
+    viewModel: ReaderViewModel,
+    viewState: ReaderViewState,
+    scrubberViewModel: ReaderScrubberViewModel,
+    isOverlayMode: Boolean,
+) {
+    val density = LocalDensity.current
+    val positionalThreshold = { distance: Float -> distance * 0.5f }
+    val velocityThreshold = { with(density) { 1000.dp.toPx() } }
+    val animationSpec = tween<Float>()
+
+    var shouldShowSnapTargetAreas: Boolean by remember { mutableStateOf(false) }
+    val confirmValueChange = { newValue: DragAnchors ->
+        shouldShowSnapTargetAreas = false
+        true
+    }
+    val decayAnimationSpec = rememberSplineBasedDecay<Float>()
+    val anchoredDraggableState: AnchoredDraggableState<DragAnchors> = rememberSaveable(
+        saver = AnchoredDraggableState.Saver(
+            snapAnimationSpec = animationSpec,
+            positionalThreshold = positionalThreshold,
+            velocityThreshold = velocityThreshold,
+            confirmValueChange = confirmValueChange,
+            decayAnimationSpec = decayAnimationSpec
+        )
+    ) {
+        AnchoredDraggableState(
+            initialValue = DragAnchors.Start,
+            positionalThreshold = positionalThreshold,
+            velocityThreshold = velocityThreshold,
+            snapAnimationSpec = animationSpec,
+            decayAnimationSpec = decayAnimationSpec,
+            confirmValueChange = confirmValueChange,
+        )
+    }
+    val extraRightPadding = if (isOverlayMode && viewState.showSideBar) {
+        330.dp
+    } else {
+        0.dp
+    }
+
+    val rightTargetAreaXOffset = with(density) { 96.dp.toPx() + extraRightPadding.toPx() }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .onSizeChanged { layoutSize ->
+                    val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
+                    anchoredDraggableState.updateAnchors(
+                        DraggableAnchors {
+                            DragAnchors.entries
+                                .forEach { anchor ->
+                                    anchor at dragEndPoint * anchor.fraction
+                                }
+                        }
+                    )
+                }
+        ) {
+            ReaderWebView(viewModel = viewModel)
+            if (viewState.showCreationToolbar) {
+                ReaderAnnotationCreationToolbar(
+                    viewState = viewState,
+                    viewModel = viewModel,
+                    isOverlayMode = isOverlayMode,
+                    state = anchoredDraggableState,
+                    onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
+                    shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
+                )
+            }
+            if (viewState.fileType == ReaderFileType.PDF) {
+                val isScrubberVisible = viewState.isScrubberVisible()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isScrubberVisible) 0.dp else 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel)
+                    ReaderScrubberOverlay(
+                        visible = isScrubberVisible,
+                        scrubberViewModel = scrubberViewModel,
+                    )
+                }
+            }
+        }
+
+        if (viewState.fileType == ReaderFileType.EPUB) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                // EPUB: When bars are hidden, show page progress in the empty space
+                val pageProgress = viewState.pageProgress
+                if (!viewState.isTopBarVisible
+                    && pageProgress != null
+                ) {
+                    Text(
+                        modifier = Modifier.align(Alignment.Center),
+                        text = pageProgress,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReaderScrubberOverlay(
+    visible: Boolean,
+    scrubberViewModel: ReaderScrubberViewModel,
+) {
+    AnimatedVisibility(visible = visible) {
+        ReaderPageScrubber(viewModel = scrubberViewModel)
+    }
+}
+
+enum class DragAnchors(val fraction: Float) {
+    Start(0f),
+    End(1f),
+}
+

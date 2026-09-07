@@ -11,18 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.UriHandler
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import org.zotero.android.screens.login.data.RequestKind
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.button.CustomFilledButton
 import org.zotero.android.uicomponents.button.CustomOutlineButton
 import org.zotero.android.uicomponents.button.CustomTextButton
+import org.zotero.android.uicomponents.foundation.safeStringResource
 
 @Composable
 internal fun OnboardingButtonSection(
     pagerState: PagerState,
-    onSignInOrSignUpClick: (RequestKind) -> Unit,
+    onSignInClick: () -> Unit,
+    onSignUpClick: () -> Unit,
     uriHandler: UriHandler,
 ) {
     Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -38,10 +38,8 @@ internal fun OnboardingButtonSection(
                 .fillMaxWidth()
                 .widthIn(max = 400.dp)
                 .height(56.dp),
-            text = stringResource(id = Strings.onboarding_sign_in),
-            onClick = {
-                onSignInOrSignUpClick(RequestKind.login)
-            }
+            text = safeStringResource(id = Strings.onboarding_sign_in),
+            onClick = onSignInClick
         )
         Spacer(modifier = Modifier.height(16.dp))
         CustomOutlineButton(
@@ -49,15 +47,15 @@ internal fun OnboardingButtonSection(
                 .fillMaxWidth()
                 .widthIn(max = 400.dp)
                 .height(56.dp),
-            text = stringResource(id = Strings.onboarding_create_account), onClick = {
-                onSignInOrSignUpClick(RequestKind.createAccount)
-            })
+            text = safeStringResource(id = Strings.onboarding_create_account),
+            onClick = onSignUpClick
+        )
         Spacer(modifier = Modifier.height(8.dp))
         CustomTextButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .widthIn(max = 400.dp),
-            text = stringResource(id = Strings.about_zotero),
+            text = safeStringResource(id = Strings.about_zotero),
             onClick = {
                 uriHandler.openUri("https://www.zotero.org/?app=1")
             },

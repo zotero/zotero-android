@@ -47,7 +47,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-
+//Must be singleton, used across the app
 @Singleton
 class WebDavController @Inject constructor(
     private val sessionStorage: WebDavSessionStorage,
@@ -202,7 +202,7 @@ class WebDavController @Inject constructor(
 
         val httpCode = networkResult.resultHttpCode
         if (!listOf(200, 204, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode!!, null)
+            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode!!, "checkIsDav failed. Unacceptable status code: $httpCode for url: $url ")
         }
 
         if (networkResult !is CustomResult.GeneralSuccess) {
@@ -231,7 +231,8 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 201, 204).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "createZoteroDirectory failed. Unacceptable status code: $httpCode for url: $url " )
         }
     }
 
@@ -268,9 +269,10 @@ class WebDavController @Inject constructor(
 
         val httpCode = networkResult.resultHttpCode
         return if (listOf(207, 404).contains(httpCode)) {
-            return networkResult
+            networkResult
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "propFind failed. Unacceptable status code: $httpCode for url: $url ")
         }
     }
 
@@ -282,7 +284,8 @@ class WebDavController @Inject constructor(
 
         val httpCode = networkResult.resultHttpCode
         if (!((200..<300).toList() + 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            return CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "checkWhetherReturns404ForMissingFile failed. Unacceptable status code: $httpCode for url: $url ")
         }
 
         return if (httpCode == 404) {
@@ -320,7 +323,8 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 204, 404).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "webDavDeleteRequest failed. Unacceptable status code: $httpCode for url: $url ")
         }
     }
 
@@ -331,7 +335,8 @@ class WebDavController @Inject constructor(
         val httpCode = networkResult.resultHttpCode
 
         if (!listOf(200, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            return CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "webDavDownloadRequest failed. Unacceptable status code: $httpCode for url: $url ")
         }
 
         if (httpCode == 404) {
@@ -353,7 +358,8 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 201, 204).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "webDavTestWriteRequest failed. Unacceptable status code: $httpCode for url: $url ")
         }
     }
 
@@ -444,7 +450,8 @@ class WebDavController @Inject constructor(
         val httpCode = networkResult.resultHttpCode
 
         if (!listOf(200, 404).contains(httpCode)) {
-            return CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            return CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "metadata failed. Unacceptable status code: $httpCode for url: $url ")
         }
 
         if (httpCode == 404) {
@@ -486,7 +493,8 @@ class WebDavController @Inject constructor(
         return if (listOf(200, 204, 404).contains(httpCode)) {
             CustomResult.GeneralSuccess(Unit)
         } else {
-            CustomResult.GeneralError.UnacceptableStatusCode(httpCode ?: -1, null)
+            val finalCode = httpCode ?: -1
+            CustomResult.GeneralError.UnacceptableStatusCode(finalCode, "removeExistingMetadata failed. Unacceptable status code: $httpCode for url: $url ")
         }
     }
 

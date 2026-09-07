@@ -8,6 +8,7 @@ import java.lang.Integer.min
 import javax.inject.Inject
 import javax.inject.Singleton
 
+//Must be singleton, as its being used by SyncEngine
 @Singleton
 class SyncProgressHandler @Inject constructor(
     private val syncProgressEventStream: SyncProgressEventStream,

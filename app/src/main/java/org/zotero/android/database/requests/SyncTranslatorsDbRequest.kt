@@ -1,5 +1,8 @@
 package org.zotero.android.database.requests
 
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
@@ -9,10 +12,11 @@ import org.zotero.android.files.FileStore
 import org.zotero.android.screens.share.data.TranslatorMetadata
 import timber.log.Timber
 
-class SyncTranslatorsDbRequest(
-    private val updateMetadata: List<TranslatorMetadata>,
-    private val deleteIndices: List<String>,
-    private val forceUpdate: Boolean,
+class SyncTranslatorsDbRequest @AssistedInject constructor(
+    @Assisted("updateMetadata") private val updateMetadata: List<TranslatorMetadata>,
+    @Assisted("deleteIndices") private val deleteIndices: List<String>,
+    @Assisted("forceUpdate") private val forceUpdate: Boolean,
+
     private val fileStore: FileStore,
 ) : DbResponseRequest<List<Pair<String, String>>> {
     override val needsWrite: Boolean
@@ -54,4 +58,14 @@ class SyncTranslatorsDbRequest(
         }
         return update
     }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("updateMetadata") updateMetadata: List<TranslatorMetadata>,
+            @Assisted("deleteIndices") deleteIndices: List<String>,
+            @Assisted("forceUpdate") forceUpdate: Boolean
+        ): SyncTranslatorsDbRequest
+    }
+
 }
