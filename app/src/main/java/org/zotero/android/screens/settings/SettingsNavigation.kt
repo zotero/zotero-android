@@ -17,6 +17,7 @@ import org.zotero.android.screens.settings.csllocalepicker.SettingsCslLocalePick
 import org.zotero.android.screens.settings.debug.SettingsDebugLogScreen
 import org.zotero.android.screens.settings.debug.SettingsDebugScreen
 import org.zotero.android.screens.settings.quickcopy.SettingsQuickCopyScreen
+import org.zotero.android.screens.settings.pageturning.SettingsPageTurningScreen
 import org.zotero.android.screens.settings.stylepicker.SettingsStylePickerScreen
 import org.zotero.android.uicomponents.navigation.ZoteroNavHost
 import org.zotero.android.uicomponents.singlepicker.SinglePickerScreen
@@ -48,6 +49,7 @@ internal fun NavGraphBuilder.settingsNavScreens(
         toAccountScreen = navigation::toAccountScreen,
         toDebugScreen = navigation::toDebugScreen,
         toCiteScreen = navigation::toCiteScreen,
+        toPageTurningScreen = navigation::toPageTurningScreen,
         toQuickCopyScreen = navigation::toQuickCopyScreen,
     )
     accountScreen(
@@ -61,6 +63,9 @@ internal fun NavGraphBuilder.settingsNavScreens(
     )
     citeScreen(
         navigateToCiteSearch = navigation::toCiteSearchScreen,
+        onBack = navigation::onBack,
+    )
+    pageTurningScreen(
         onBack = navigation::onBack,
     )
     citeSearchScreen(
@@ -84,6 +89,7 @@ fun NavGraphBuilder.settingsScreen(
     toAccountScreen: () -> Unit,
     toDebugScreen: () -> Unit,
     toCiteScreen: () -> Unit,
+    toPageTurningScreen: () -> Unit,
     toQuickCopyScreen: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -96,6 +102,7 @@ fun NavGraphBuilder.settingsScreen(
             onOpenWebpage = onOpenWebpage,
             toDebugScreen = toDebugScreen,
             toCiteScreen = toCiteScreen,
+            toPageTurningScreen = toPageTurningScreen,
             toQuickCopyScreen = toQuickCopyScreen,
         )
     }
@@ -138,6 +145,18 @@ private fun NavGraphBuilder.citeScreen(
         SettingsCiteScreen(
             onBack = onBack,
             navigateToCiteSearch = navigateToCiteSearch
+        )
+    }
+}
+
+private fun NavGraphBuilder.pageTurningScreen(
+    onBack: () -> Unit,
+) {
+    composable(
+        route = SettingsDestinations.PAGE_TURNING,
+    ) {
+        SettingsPageTurningScreen(
+            onBack = onBack,
         )
     }
 }
@@ -227,6 +246,7 @@ private object SettingsDestinations {
     const val SINGLE_PICKER_SCREEN = "singlePickerScreen"
     const val CSL_LOCALE_PICKER = "cslLocalPicker"
     const val CITE = "cite"
+    const val PAGE_TURNING = "pageTurning"
     const val CITE_SEARCH = "citeSearch"
     const val QUICK_COPY = "quickCopy"
     const val STYLE_PICKER = "stylePicker"
@@ -246,6 +266,10 @@ fun ZoteroNavigation.toDebugScreen() {
 
 fun ZoteroNavigation.toCiteScreen() {
     navController.navigate(SettingsDestinations.CITE)
+}
+
+fun ZoteroNavigation.toPageTurningScreen() {
+    navController.navigate(SettingsDestinations.PAGE_TURNING)
 }
 
 fun ZoteroNavigation.toCiteSearchScreen(args: String) {
