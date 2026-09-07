@@ -179,22 +179,33 @@ internal class SettingsAccountViewModel @Inject constructor(
     }
 
     fun setUrl(url: String) {
-        if (viewState.url == url) {
-            return
+        var newUrl = url.trim()
+
+        val scheme = WebDavScheme.entries.firstOrNull {
+            newUrl.startsWith("${it.name}://", ignoreCase = true)
         }
-        var decodedUrl = url
-        if (url.contains("%")) {
-            decodedUrl = HtmlCompat.fromHtml(
-                url,
+        if (scheme != null) {
+            newUrl = newUrl.removeRange(0, scheme.name.length + "://".length)
+            setScheme(scheme)
+        }
+
+        if (newUrl.contains("%")) {
+            newUrl = HtmlCompat.fromHtml(
+                newUrl,
                 HtmlCompat.FROM_HTML_MODE_LEGACY
             ).toString()
         }
-        sessionStorage.url = decodedUrl
+
+        if (viewState.url == newUrl) {
+            return
+        }
+
+        sessionStorage.url = newUrl
         webDavController.resetVerification()
 
         updateState {
             copy(
-                url = url,
+                url = newUrl,
                 webDavVerificationResult = null,
                 markingForReupload = true
             )
