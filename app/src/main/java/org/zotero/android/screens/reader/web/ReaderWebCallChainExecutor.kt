@@ -176,7 +176,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                     ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
-                                        ReaderWebData.selectAnnotationFromDocument(key, inlineTextEditing)
+                                        ReaderWebData.selectAnnotationFromDocument(
+                                            key,
+                                            inlineTextEditing
+                                        )
                                     )
                                 )
                             } else {
@@ -292,11 +295,43 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun show(location: Map<String, Any>) {
+    suspend fun show(location: Map<String, Any>, skipHistory: Boolean = false) {
         val encodedPayload = encodeAsJSONForJavascript(gson = gson, data = location)
 
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}' });") {
+            readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}', skipHistory: $skipHistory });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateBack() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateBack();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateForward() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateForward();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun suspendHistoryTracking() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:suspendHistoryTracking();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun resumeHistoryTrackingAndPush() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:resumeHistoryTrackingAndPush();") {
                 cont.resume(Unit)
             }
         }
@@ -436,7 +471,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
-                    createReaderViewOptions.viewState.scrollMode = defaults.getReaderSettings().scrollMode.jsValue
+                    createReaderViewOptions.viewState.scrollMode =
+                        defaults.getReaderSettings().scrollMode.jsValue
                 }
             }
         }

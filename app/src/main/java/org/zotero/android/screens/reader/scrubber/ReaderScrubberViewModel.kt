@@ -16,6 +16,7 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.thumbnails.ReaderThumbnailPreviewManager
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewCacheSnapshotEventStream
@@ -66,6 +67,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
 
     fun onScrubStart() {
         updateState { copy(isScrubbing = true) }
+        EventBus.getDefault().post(ReaderHistoryTrackingEvent(suspend = true))
     }
 
     fun onScrubTo(page: Int) {
@@ -73,7 +75,12 @@ internal class ReaderScrubberViewModel @Inject constructor(
         if (viewState.selectedPage != page) {
             updateState { copy(selectedPage = page) }
             val location = mapOf("pageNumber" to (page + 1).toString())
-            EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(location))
+            EventBus.getDefault().post(
+                ReaderScrollReaderIfNeededEvent(
+                    location,
+                    skipHistory = viewState.isScrubbing
+                )
+            )
         }
         thumbnailPreviewManager.requestThumbnail(page)
         showPageLabelTemporarily()
@@ -81,6 +88,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
 
     fun onScrubEnd() {
         updateState { copy(isScrubbing = false) }
+        EventBus.getDefault().post(ReaderHistoryTrackingEvent(suspend = false))
     }
 
     fun onTapAt(page: Int) {
