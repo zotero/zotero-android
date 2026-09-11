@@ -551,6 +551,18 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun documentWorkerDirectory(): File {
+        val folderPath = File(getRootDirectory(), "document-worker")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun sdtCacheDirectory(): File {
+        val folderPath = File(getRootDirectory(), "sdt-cache")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun citationDirectory(): File {
         val folderPath = File(getRootDirectory(), "citation")
         folderPath.mkdirs()

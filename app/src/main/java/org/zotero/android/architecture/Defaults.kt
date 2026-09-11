@@ -70,6 +70,7 @@ open class Defaults @Inject constructor(
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
     private val lastReaderCommitHash = "lastReaderCommitHash"
+    private val lastDocumentWorkerCommitHash = "lastDocumentWorkerCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -431,6 +432,14 @@ open class Defaults @Inject constructor(
 
     fun setLastPdfWorkerCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
+    }
+
+    fun getLastDocumentWorkerCommitHash(): String {
+        return sharedPreferences.getString(lastDocumentWorkerCommitHash, "") ?: ""
+    }
+
+    fun setLastDocumentWorkerCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastDocumentWorkerCommitHash, newValue) }
     }
 
     fun getDoNotShowAppUpdateBannerBeforeTime(): Long {

@@ -16,3 +16,6 @@
 [submodule "reader"]
 	path = reader
 	url = https://github.com/zotero/reader.git
+[submodule "document-worker"]
+	path = document-worker
+	url = https://github.com/zotero/document-worker.git
