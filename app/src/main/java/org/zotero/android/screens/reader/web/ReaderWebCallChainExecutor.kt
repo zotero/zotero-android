@@ -176,7 +176,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                     ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
-                                        ReaderWebData.selectAnnotationFromDocument(key, inlineTextEditing)
+                                        ReaderWebData.selectAnnotationFromDocument(
+                                            key,
+                                            inlineTextEditing
+                                        )
                                     )
                                 )
                             } else {
@@ -297,6 +300,38 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateBack() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateBack();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateForward() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateForward();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun beginNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:beginNavigation();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun endNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:endNavigation();") {
                 cont.resume(Unit)
             }
         }
@@ -436,7 +471,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
-                    createReaderViewOptions.viewState.scrollMode = defaults.getReaderSettings().scrollMode.jsValue
+                    createReaderViewOptions.viewState.scrollMode =
+                        defaults.getReaderSettings().scrollMode.jsValue
                 }
             }
         }

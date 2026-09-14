@@ -101,6 +101,7 @@ import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResult
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestAnnotationImageRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
 import org.zotero.android.screens.reader.sidebar.data.ReaderWrapperOutline
@@ -267,6 +268,17 @@ class ReaderViewModel @Inject constructor(
     fun onEvent(result: ReaderScrollReaderIfNeededEvent) {
         viewModelScope.launch {
             scrollReaderIfNeeded(result.location, false) {}
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReaderHistoryTrackingEvent) {
+        viewModelScope.launch {
+            if (result.suspend) {
+                readerWebCallChainExecutor.beginNavigation()
+            } else {
+                readerWebCallChainExecutor.endNavigation()
+            }
         }
     }
 
@@ -1734,6 +1746,12 @@ class ReaderViewModel @Inject constructor(
         val pagesCount = stats?.intOrNull("pagesCount")
         val pageLabel = stats?.stringOrNull("pageLabel")
         val usePhysicalPageNumbers = stats?.boolOrNull("usePhysicalPageNumbers") ?: false
+        val canNavigateBack = stats?.boolOrNull("canNavigateBack") ?: false
+        val canNavigateForward = stats?.boolOrNull("canNavigateForward") ?: false
+
+        if (viewState.canNavigateBack != canNavigateBack || viewState.canNavigateForward != canNavigateForward) {
+            updateState { copy(canNavigateBack = canNavigateBack, canNavigateForward = canNavigateForward) }
+        }
 
         // Hide the indicator unless we have what we need to build it: a page
         // (label, or 1-based index) and a percentage (index over total pages).
@@ -2532,17 +2550,34 @@ class ReaderViewModel @Inject constructor(
         readerWebCallChainExecutor.deselectText()
     }
 
-    private suspend fun scrollReaderIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {
+    fun navigatePageHistoryBack() {
+        if (!viewState.canNavigateBack) {
+            return
+        }
+        viewModelScope.launch {
+            readerWebCallChainExecutor.navigateBack()
+        }
+    }
+
+    fun navigatePageHistoryForward() {
+        if (!viewState.canNavigateForward) {
+            return
+        }
+        viewModelScope.launch {
+            readerWebCallChainExecutor.navigateForward()
+        }
+    }
+
+    private suspend fun scrollReaderIfNeeded(
+        location: Map<String, Any>,
+        animated: Boolean,
+        completion: () -> Unit,
+    ) {
 //        val locationsPage = location["pageNumber"] ?: location["pageIndex"]
 //        if (isCurrentFilePdf() && viewState.currentPdfPageIndex.toString() == locationsPage as String) {
 //            completion()
 //            return
 //        }
-        if (!animated) {
-            readerWebCallChainExecutor.show(location = location)
-            completion()
-            return
-        }
         readerWebCallChainExecutor.show(location = location)
         completion()
     }
@@ -2658,6 +2693,8 @@ data class ReaderViewState(
     val toolColors: Map<ReaderAnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
     val pageProgress: String? = null,
+    val canNavigateBack: Boolean = false,
+    val canNavigateForward: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
     val annotationsUpdatedCounter: Int = 0,
