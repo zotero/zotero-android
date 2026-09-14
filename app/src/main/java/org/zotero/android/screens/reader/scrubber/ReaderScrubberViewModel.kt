@@ -75,12 +75,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
         if (viewState.selectedPage != page) {
             updateState { copy(selectedPage = page) }
             val location = mapOf("pageNumber" to (page + 1).toString())
-            EventBus.getDefault().post(
-                ReaderScrollReaderIfNeededEvent(
-                    location,
-                    skipHistory = viewState.isScrubbing
-                )
-            )
+            EventBus.getDefault().post(ReaderScrollReaderIfNeededEvent(location))
         }
         thumbnailPreviewManager.requestThumbnail(page)
         showPageLabelTemporarily()

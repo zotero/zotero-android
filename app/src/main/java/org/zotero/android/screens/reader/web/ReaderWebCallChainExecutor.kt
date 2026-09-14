@@ -295,11 +295,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun show(location: Map<String, Any>, skipHistory: Boolean = false) {
+    suspend fun show(location: Map<String, Any>) {
         val encodedPayload = encodeAsJSONForJavascript(gson = gson, data = location)
 
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}', skipHistory: $skipHistory });") {
+            readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}' });") {
                 cont.resume(Unit)
             }
         }
@@ -321,17 +321,17 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun suspendHistoryTracking() {
+    suspend fun beginNavigation() {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:suspendHistoryTracking();") {
+            readerWebViewHandler.evaluateJavascript("javascript:beginNavigation();") {
                 cont.resume(Unit)
             }
         }
     }
 
-    suspend fun resumeHistoryTrackingAndPush() {
+    suspend fun endNavigation() {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:resumeHistoryTrackingAndPush();") {
+            readerWebViewHandler.evaluateJavascript("javascript:endNavigation();") {
                 cont.resume(Unit)
             }
         }

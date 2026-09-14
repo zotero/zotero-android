@@ -267,7 +267,7 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderScrollReaderIfNeededEvent) {
         viewModelScope.launch {
-            scrollReaderIfNeeded(result.location, false, skipHistory = result.skipHistory) {}
+            scrollReaderIfNeeded(result.location, false) {}
         }
     }
 
@@ -275,9 +275,9 @@ class ReaderViewModel @Inject constructor(
     fun onEvent(result: ReaderHistoryTrackingEvent) {
         viewModelScope.launch {
             if (result.suspend) {
-                readerWebCallChainExecutor.suspendHistoryTracking()
+                readerWebCallChainExecutor.beginNavigation()
             } else {
-                readerWebCallChainExecutor.resumeHistoryTrackingAndPush()
+                readerWebCallChainExecutor.endNavigation()
             }
         }
     }
@@ -2571,7 +2571,6 @@ class ReaderViewModel @Inject constructor(
     private suspend fun scrollReaderIfNeeded(
         location: Map<String, Any>,
         animated: Boolean,
-        skipHistory: Boolean = false,
         completion: () -> Unit,
     ) {
 //        val locationsPage = location["pageNumber"] ?: location["pageIndex"]
@@ -2579,7 +2578,7 @@ class ReaderViewModel @Inject constructor(
 //            completion()
 //            return
 //        }
-        readerWebCallChainExecutor.show(location = location, skipHistory = skipHistory)
+        readerWebCallChainExecutor.show(location = location)
         completion()
     }
 
