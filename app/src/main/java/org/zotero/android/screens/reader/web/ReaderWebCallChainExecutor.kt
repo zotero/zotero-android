@@ -176,7 +176,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                     ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
-                                        ReaderWebData.selectAnnotationFromDocument(key, inlineTextEditing)
+                                        ReaderWebData.selectAnnotationFromDocument(
+                                            key,
+                                            inlineTextEditing
+                                        )
                                     )
                                 )
                             } else {
@@ -265,6 +268,26 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(
                                 Result.Success(
                                     ReaderWebData.setViewStats(params)
+                                )
+                            )
+                        }
+
+                        "onReadingModeLoading" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.setReadingModeLoading(params["loading"].asBoolean)
+                                )
+                            )
+                        }
+
+                        "onReadingModeEnabledChange" -> {
+                            val params = data["params"].asJsonObject
+                            val enabled = params["enabled"].asBoolean
+                            val error = params["error"]?.takeIf { !it.isJsonNull }?.asString
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.setReadingModeEnabled(enabled, error)
                                 )
                             )
                         }
@@ -436,7 +459,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
-                    createReaderViewOptions.viewState.scrollMode = defaults.getReaderSettings().scrollMode.jsValue
+                    createReaderViewOptions.viewState.scrollMode =
+                        defaults.getReaderSettings().scrollMode.jsValue
                 }
             }
         }
@@ -516,6 +540,40 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun setScrollMode(scrollMode: PageScrollMode) {
         return suspendCancellableCoroutine { cont ->
             val javascript = "window._view.setScrollMode(${scrollMode.jsValue});"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setSDTPack(bytesBase64: String, packVersion: Int, schemaMajorVersion: Int) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript =
+                "javascript:setSDTPack({ bytes: '$bytesBase64', packVersion: $packVersion, schemaMajorVersion: $schemaMajorVersion });"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setAppearance(
+        lineHeight: Double,
+        wordSpacing: Double,
+        letterSpacing: Double,
+        pageWidth: Int
+    ) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript =
+                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth });"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setReadingModeEnabled(enabled: Boolean) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript = "javascript:setReadingModeEnabled({ enabled: $enabled });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

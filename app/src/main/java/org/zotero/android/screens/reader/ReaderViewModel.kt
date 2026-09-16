@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.RectF
-import android.net.Uri
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -58,6 +57,7 @@ import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
@@ -149,6 +149,7 @@ class ReaderViewModel @Inject constructor(
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
     private val progressHandler: SyncProgressHandler,
+    private val documentWorkerController: DocumentWorkerController,
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ReaderViewState, ReaderViewEffect>(ReaderViewState())  {
@@ -771,10 +772,11 @@ class ReaderViewModel @Inject constructor(
         object cantUpdateAnnotation: Error()
         object incompatibleDocument: Error()
         object unknown: Error()
+        object readingModeUnavailable: Error()
 
         val title: Int get(){
             when (this) {
-                cantAddAnnotations, cantDeleteAnnotation, cantUpdateAnnotation, incompatibleDocument, unknown -> {
+                cantAddAnnotations, cantDeleteAnnotation, cantUpdateAnnotation, incompatibleDocument, unknown, readingModeUnavailable -> {
                     return Strings.error
                 }
             }
@@ -798,7 +800,7 @@ class ReaderViewModel @Inject constructor(
                     return Strings.errors_pdf_incompatible_document
                 }
 
-                unknown -> {
+                unknown, readingModeUnavailable -> {
                     return Strings.errors_unknown
                 }
             }
@@ -1667,6 +1669,24 @@ class ReaderViewModel @Inject constructor(
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
 
+            is ReaderWebData.setReadingModeLoading -> {
+                updateState {
+                    copy(readingModeLoading = successValue.loading)
+                }
+            }
+
+            is ReaderWebData.setReadingModeEnabled -> {
+                updateState {
+                    copy(readingModeEnabled = successValue.enabled)
+                }
+                if (successValue.error != null) {
+                    Timber.e("ReaderViewModel: reading mode error: ${successValue.error}")
+                    updateState {
+                        copy(error = Error.readingModeUnavailable)
+                    }
+                }
+            }
+
             else -> {
                 //no-op
             }
@@ -2427,7 +2447,8 @@ class ReaderViewModel @Inject constructor(
     fun navigateToReaderSettings() {
         val args = ReaderSettingsArgs(
             readerSettings = defaults.getReaderSettings(),
-            fileType = viewState.fileType
+            fileType = viewState.fileType,
+            readingModeEnabled = viewState.readingModeEnabled,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(args)
         if (isTablet) {
@@ -2439,9 +2460,56 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    fun navigateToPlainReader() {
-        val encodedFilePath = Uri.encode(this.originalFile.absolutePath)
-        triggerEffect(ReaderViewEffect.ShowReaderPlainReader(encodedFilePath))
+    private var didSetSDTPack = false
+
+    fun toggleReadingMode() {
+        val enable = !viewState.readingModeEnabled
+        if (!enable) {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.setReadingModeEnabled(false)
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                if (!didSetSDTPack) {
+                    updateState {
+                        copy(readingModeLoading = true)
+                    }
+                    val pack = documentWorkerController.getOrGenerateSDTPack(
+                        file = this@ReaderViewModel.originalFile,
+                        onProgress = { progress ->
+                            Timber.i("ReaderViewModel: SDT generation progress: $progress")
+                        },
+                    )
+                    readerWebCallChainExecutor.setSDTPack(
+                        bytesBase64 = android.util.Base64.encodeToString(
+                            pack.bytes,
+                            android.util.Base64.NO_WRAP
+                        ),
+                        packVersion = pack.packVersion,
+                        schemaMajorVersion = pack.schemaMajorVersion,
+                    )
+                    didSetSDTPack = true
+                    updateState {
+                        copy(readingModeLoading = false)
+                    }
+                }
+                val readerSettings = defaults.getReaderSettings()
+                readerWebCallChainExecutor.setAppearance(
+                    lineHeight = readerSettings.lineHeight.toDouble(),
+                    wordSpacing = readerSettings.wordSpacing.toDouble(),
+                    letterSpacing = readerSettings.letterSpacing.toDouble(),
+                    pageWidth = readerSettings.pageWidth,
+                )
+                readerWebCallChainExecutor.setReadingModeEnabled(true)
+            } catch (e: Exception) {
+                Timber.e(e, "ReaderViewModel: failed to enable reading mode")
+                updateState {
+                    copy(readingModeLoading = false, error = Error.readingModeUnavailable)
+                }
+            }
+        }
     }
 
     fun hideSettingsView() {
@@ -2661,6 +2729,8 @@ data class ReaderViewState(
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
     val annotationsUpdatedCounter: Int = 0,
+    val readingModeEnabled: Boolean = false,
+    val readingModeLoading: Boolean = false,
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey
@@ -2693,7 +2763,6 @@ sealed class ReaderViewEffect : ViewEffect {
     object NavigateToTagPickerScreen : ReaderViewEffect()
     object ShowReaderColorPicker : ReaderViewEffect()
     data class ShowReaderSettings(val params: String) : ReaderViewEffect()
-    data class ShowReaderPlainReader(val encodedFilePath: String) : ReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(
         val scrollToIndex: Int,
         val showAnnotationPopup: Boolean

@@ -24,4 +24,7 @@ sealed interface ReaderWebData {
     data class onSetPageLabels(val pageLabelsJsonArray: JsonArray) : ReaderWebData
 
     object onViewContentInitialized: ReaderWebData
+
+    data class setReadingModeLoading(val loading: Boolean) : ReaderWebData
+    data class setReadingModeEnabled(val enabled: Boolean, val error: String?) : ReaderWebData
 }
