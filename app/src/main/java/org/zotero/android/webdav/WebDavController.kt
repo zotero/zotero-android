@@ -41,6 +41,7 @@ import retrofit2.Retrofit
 import timber.log.Timber
 import java.io.File
 import java.net.URL
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -774,8 +775,8 @@ class WebDavController @Inject constructor(
         val password = sessionStorage.password
 
         val credentials = Credentials(username, password)
-        val basicAuthenticator = BasicAuthenticator(credentials)
-        val digestAuthenticator = DigestAuthenticator(credentials)
+        val basicAuthenticator = BasicAuthenticator(credentials, StandardCharsets.UTF_8)
+        val digestAuthenticator = DigestAuthenticator(credentials, StandardCharsets.UTF_8)
         val authenticator = DispatchingAuthenticator.Builder()
             .with("digest", digestAuthenticator)
             .with("basic", basicAuthenticator)
