@@ -17,5 +17,5 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     PageSpreadsEven(Strings.pdf_settings_page_mode_even),
 
     PageLayoutFlowModePaginated(Strings.pdf_settings_flow_mode_paginated),
-    PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled)
+    PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled),
 }

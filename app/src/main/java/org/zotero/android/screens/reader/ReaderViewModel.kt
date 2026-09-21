@@ -2746,7 +2746,7 @@ data class ReaderViewState(
     }
 
     fun isScrubberVisible(): Boolean {
-        return fileType == ReaderFileType.PDF && isTopBarVisible && !isScrubberSuppressedByScroll
+        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible && !isScrubberSuppressedByScroll
     }
 
 

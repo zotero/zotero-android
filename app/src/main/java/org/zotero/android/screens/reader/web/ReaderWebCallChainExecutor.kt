@@ -327,7 +327,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
     suspend fun selectSearchResult(index: Int) {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: '${index}' });") {
+            readerWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: ${index} });") {
                 cont.resume(Unit)
             }
         }

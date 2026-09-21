@@ -96,4 +96,9 @@
     <string name="pdf_settings_scroll_mode_horizontal">Horizontal</string>
     <string name="pdf_settings_scroll_mode_wrapped">Wrapped</string>
 
+    <string name="pdf_settings_line_height_title">Line height</string>
+    <string name="pdf_settings_word_spacing_title">Word spacing</string>
+    <string name="pdf_settings_letter_spacing_title">Letter spacing</string>
+    <string name="pdf_settings_page_width_title">Page width</string>
+
 </resources>
