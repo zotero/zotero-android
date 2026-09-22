@@ -1663,6 +1663,10 @@ class ReaderViewModel @Inject constructor(
                 decideTopBarAndBottomBarVisibility()
             }
 
+            ReaderWebData.onEdgePageTurnTap -> {
+                onDocumentUserGestureDetected()
+            }
+
             ReaderWebData.onViewContentInitialized -> {
                 val tool = viewState.activeTool
                 val color = tool?.let { viewState.toolColors[it] }
