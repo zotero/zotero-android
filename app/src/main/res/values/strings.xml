@@ -96,4 +96,6 @@
     <string name="pdf_settings_scroll_mode_horizontal">Horizontal</string>
     <string name="pdf_settings_scroll_mode_wrapped">Wrapped</string>
 
+    <string name="login_open_in_browser">Open in Browser</string>
+
 </resources>

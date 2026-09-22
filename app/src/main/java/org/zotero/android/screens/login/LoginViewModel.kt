@@ -109,6 +109,7 @@ internal class LoginViewModel @Inject constructor(
             this.sessionStatus = SessionStatus.checking
             this.sessionToken = createLoginSessionResponse.sessionToken
             this.loginUrl = finalUrl
+            updateState { copy(loginUrl = finalUrl) }
             this.webView?.loadUrl(this.loginUrl!!)
             startStreaming(sessionToken!!)
             startSessionPolling(sessionToken!!)
@@ -319,6 +320,7 @@ internal class LoginViewModel @Inject constructor(
 
 internal data class LoginViewState(
     val snackbarMessage: SnackbarMessage? = null,
+    val loginUrl: String? = null,
 ) : ViewState
 
 internal sealed class LoginViewEffect : ViewEffect {
