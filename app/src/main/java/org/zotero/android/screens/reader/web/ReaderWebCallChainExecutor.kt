@@ -255,6 +255,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onEdgePageTurnTap" -> {
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onEdgePageTurnTap
+                                )
+                            )
+                        }
+
                         "onViewContentInitialized" -> {
                             observable.emitAsync(
                                 Result.Success(
