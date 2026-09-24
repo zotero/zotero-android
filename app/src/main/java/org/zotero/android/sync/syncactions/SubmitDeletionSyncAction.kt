@@ -61,7 +61,7 @@ class SubmitDeletionSyncAction @AssistedInject constructor(
             zoteroApi.submitDeletionsRequest(
                 url = url,
                 queryMap = parameters,
-                headers = mapOf("If-Modified-Since-Version" to this.version.toString())
+                headers = mapOf("If-Unmodified-Since-Version" to this.version.toString())
             )
         }
         if (networkResult !is CustomResult.GeneralSuccess.NetworkSuccess) {
