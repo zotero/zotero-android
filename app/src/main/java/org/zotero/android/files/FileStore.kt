@@ -611,4 +611,16 @@ class FileStore @Inject constructor (
         folderPath.mkdirs()
         return folderPath
     }
+
+    fun documentWorkerDirectory(): File {
+        val folderPath = File(getRootDirectory(), "document_worker")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun documentWorkerHostDirectory(): File {
+        val folderPath = File(getRootDirectory(), "document_worker_host")
+        folderPath.mkdirs()
+        return folderPath
+    }
 }

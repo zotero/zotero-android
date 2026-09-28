@@ -70,6 +70,7 @@ open class Defaults @Inject constructor(
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
     private val lastReaderCommitHash = "lastReaderCommitHash"
+    private val lastDocumentWorkerHash = "lastDocumentWorkerHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -551,6 +552,14 @@ open class Defaults @Inject constructor(
 
     fun setLastReaderCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastReaderCommitHash, newValue) }
+    }
+
+    fun getLastDocumentWorkerHash(): String {
+        return sharedPreferences.getString(lastDocumentWorkerHash, "") ?: ""
+    }
+
+    fun setLastDocumentWorkerHash(newValue: String) {
+        sharedPreferences.edit { putString(lastDocumentWorkerHash, newValue) }
     }
 
     fun getReaderSettings(): ReaderSettings {
