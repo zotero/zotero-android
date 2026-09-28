@@ -1489,8 +1489,17 @@ class ReaderViewModel @Inject constructor(
                 val (sortedKeys, annotations, json) = generateReaderInitJsonFromInitialAnnotations(
                     items = objects
                 )
+                val readerSettings = defaults.getReaderSettings()
+                // Fitted zooms are recomputed for the current screen and margin
                 val savedPdfViewState = if (page is ReaderPage.pdf) {
                     defaults.getPdfViewState(libraryId = this@ReaderViewModel.library.identifier, key = this@ReaderViewModel.key)
+                        ?.takeUnless { it.isContentFit && readerSettings.fitToContent }
+                } else {
+                    null
+                }
+                // A zoom the user chose for this document takes precedence over fitting
+                val contentFitMargin = if (page is ReaderPage.pdf && savedPdfViewState == null && readerSettings.fitToContent) {
+                    readerSettings.contentMargin.fraction
                 } else {
                     null
                 }
@@ -1501,6 +1510,7 @@ class ReaderViewModel @Inject constructor(
                     page = page,
                     selectedAnnotationKey = viewState.selectedAnnotationKey,
                     savedPdfViewState = savedPdfViewState,
+                    contentFitMargin = contentFitMargin,
                 )
                 readerWebCallChainExecutor.loadDocument(
                     data = documentData,
@@ -1747,7 +1757,7 @@ class ReaderViewModel @Inject constructor(
         fun JsonObject.doubleOrNull(key: String): Double? =
             this[key]?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asDouble
         // A named scale such as "page-width" means the user hasn't zoomed,
-        // so let the document open with the default zoom instead
+        // so let the document open with the default or fitted zoom instead
         val scale = state.doubleOrNull("scale")
         val pdfViewState = scale?.let {
             ReaderPdfViewState(
@@ -1755,6 +1765,7 @@ class ReaderViewModel @Inject constructor(
                 scale = it,
                 top = state.doubleOrNull("top"),
                 left = state.doubleOrNull("left"),
+                isContentFit = state["contentFitted"]?.takeIf { it.isJsonPrimitive }?.asBoolean == true,
             )
         }
         defaults.setPdfViewState(libraryId = this.library.identifier, key = this.key, state = pdfViewState)
@@ -2523,12 +2534,16 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun update(readerSettings: ReaderSettings) {
+        val previousSettings = defaults.getReaderSettings()
         defaults.setReaderSettings(readerSettings)
         updatePdfPageAppearanceMode(readerSettings)
-        updateAppearanceAccordingToSettings(true)
+        val shouldFitToContent = readerSettings.fitToContent && (!previousSettings.fitToContent
+                || previousSettings.contentMargin != readerSettings.contentMargin
+                || previousSettings.scrollMode != readerSettings.scrollMode)
+        updateAppearanceAccordingToSettings(isSettingsUpdate = true, shouldFitToContent = shouldFitToContent)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean) {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, shouldFitToContent: Boolean = false) {
         viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
@@ -2541,6 +2556,9 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                    if (shouldFitToContent) {
+                        readerWebCallChainExecutor.fitToContent(readerSettings.contentMargin.fraction)
+                    }
                 }
             }
 

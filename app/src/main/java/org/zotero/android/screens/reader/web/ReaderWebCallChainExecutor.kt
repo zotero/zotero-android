@@ -19,6 +19,7 @@ import org.zotero.android.screens.reader.data.ReaderWebError
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
+import org.zotero.android.screens.reader.web.data.CreateReaderContentFit
 import org.zotero.android.screens.reader.web.data.CreateReaderLocation
 import org.zotero.android.screens.reader.web.data.CreateReaderViewOptions
 import org.zotero.android.translator.data.WebPortResponse
@@ -493,6 +494,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 }
             }
         }
+        data.contentFitMargin?.let {
+            createReaderViewOptions.contentFit = CreateReaderContentFit(margin = it)
+        }
 
         val appearanceString = if (isDark) {
             "dark"
@@ -561,6 +565,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
         return suspendCancellableCoroutine { cont ->
             val javascript = "window._view.setSpreadMode(${spreadsModeString.toInt()});"
             readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun fitToContent(margin: Double) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:window.fitToContent({ margin: $margin });") {
                 cont.resume(Unit)
             }
         }

@@ -10,4 +10,6 @@ data class ReaderDocumentData(
     val page: ReaderPage?,
     val selectedAnnotationKey: String?,
     val savedPdfViewState: ReaderPdfViewState? = null,
+    // Fit the PDF content to the screen on open, keeping this margin
+    val contentFitMargin: Double? = null,
 )
