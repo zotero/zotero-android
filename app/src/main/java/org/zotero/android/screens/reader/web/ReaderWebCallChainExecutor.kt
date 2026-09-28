@@ -481,6 +481,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
                     createReaderViewOptions.viewState.scrollMode =
                         defaults.getReaderSettings().scrollMode.jsValue
+                    val savedViewState = data.savedPdfViewState
+                    if (savedViewState != null) {
+                        createReaderViewOptions.viewState.scale = savedViewState.scale
+                        createReaderViewOptions.viewState.left = savedViewState.left
+                        // The page may have changed on another device, then only the zoom applies
+                        if (savedViewState.pageIndex == page.pageIndex) {
+                            createReaderViewOptions.viewState.top = savedViewState.top
+                        }
+                    }
                 }
             }
         }

@@ -10,8 +10,10 @@ import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.data.ReaderPdfViewState
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
+import org.zotero.android.sync.LibraryIdentifier
 import org.zotero.android.webdav.data.WebDavScheme
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -79,6 +81,7 @@ open class Defaults @Inject constructor(
     private val webDavPassword = "webDavPassword"
 
     private val doNotShowAppUpdateBannerBeforeTime = "doNotShowAppUpdateBannerBeforeTime"
+    private val pdfViewStatePrefix = "pdfViewState_"
 
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences(
@@ -559,6 +562,33 @@ open class Defaults @Inject constructor(
         return settings
     }
 
+    // Local-only zoom and scroll position of a PDF, restored when it's reopened
+    fun getPdfViewState(libraryId: LibraryIdentifier, key: String): ReaderPdfViewState? {
+        val json = sharedPreferences.getString(pdfViewStateKey(libraryId, key), null) ?: return null
+        return dataMarshaller.unmarshal<ReaderPdfViewState>(json)
+    }
+
+    fun setPdfViewState(libraryId: LibraryIdentifier, key: String, state: ReaderPdfViewState?) {
+        sharedPreferences.edit {
+            if (state == null) {
+                remove(pdfViewStateKey(libraryId, key))
+            } else {
+                putString(pdfViewStateKey(libraryId, key), dataMarshaller.marshal(state))
+            }
+        }
+    }
+
+    private fun pdfViewStateKey(libraryId: LibraryIdentifier, key: String): String {
+        return "$pdfViewStatePrefix${libraryId.folderName}_$key"
+    }
+
+    private fun clearPdfViewStates() {
+        val keys = sharedPreferences.all.keys.filter { it.startsWith(pdfViewStatePrefix) }
+        sharedPreferences.edit {
+            keys.forEach { remove(it) }
+        }
+    }
+
     fun setReaderSettings(
         readerSettings: ReaderSettings,
     ) {
@@ -598,6 +628,7 @@ open class Defaults @Inject constructor(
         setQuickCopyStyleId("http://www.zotero.org/styles/chicago-notes-bibliography")
         setExportOutputMethod(CitBibExportOutputMethod.copy)
         setExportOutputMode(CitBibExportOutputMode.bibliography)
+        clearPdfViewStates()
     }
 
 }
