@@ -62,7 +62,7 @@ internal fun NavGraphBuilder.readerNavScreensForTablet(
 
     dialogFixedDimens(
         modifier = Modifier
-            .height(500.dp)
+            .height(540.dp)
             .width(420.dp),
         route = "${ReaderDestinations.READER_SETTINGS}/{$ARG_READER_SETTINGS_SCREEN}",
         arguments = listOf(

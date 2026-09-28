@@ -8,8 +8,13 @@ data class CreateReaderViewOptions(
     val annotations: JsonArray,
     var location: CreateReaderLocation? = null,
     var viewState: CreateReaderViewState = CreateReaderViewState(),
+    var contentFit: CreateReaderContentFit? = null,
 
     var colorScheme: String = "light",
+)
+
+data class CreateReaderContentFit(
+    val margin: Double,
 )
 
 data class CreateReaderLocation(
@@ -25,6 +30,8 @@ data class CreateReaderViewState(
 
     //pdf
     var pageIndex: Int? = null,
+    var top: Double? = null,
+    var left: Double? = null,
 
     var flowMode: String? = null,
     var spreadMode: Int? = null,

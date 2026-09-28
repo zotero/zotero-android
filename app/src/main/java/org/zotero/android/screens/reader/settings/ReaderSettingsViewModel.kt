@@ -19,6 +19,7 @@ import org.zotero.android.pdf.data.PdfReaderThemeDecider
 import org.zotero.android.screens.reader.ARG_READER_SETTINGS_SCREEN
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
+import org.zotero.android.screens.reader.settings.data.PageContentMargin
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
@@ -72,6 +73,8 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     selectedScrollModeOption = convert(readerSettings.scrollMode),
                     selectedSpreadsOption = convert(readerSettings.spreadsMode),
                     selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
+                    selectedFitToContentOption = convertFitToContent(readerSettings.fitToContent),
+                    selectedContentMarginOption = convert(readerSettings.contentMargin),
                     fileType = loadedArgs.fileType,
                 )
             }
@@ -131,6 +134,31 @@ internal class ReaderSettingsViewModel @Inject constructor(
         }
     }
 
+    private fun convertFitToContent(fitToContent: Boolean): ReaderSettingsOptions {
+        return if (fitToContent) {
+            ReaderSettingsOptions.FitToContentOn
+        } else {
+            ReaderSettingsOptions.FitToContentOff
+        }
+    }
+
+    private fun convert(contentMargin: PageContentMargin): ReaderSettingsOptions {
+        return when (contentMargin) {
+            PageContentMargin.NONE -> {
+                ReaderSettingsOptions.ContentMarginNone
+            }
+            PageContentMargin.SMALL -> {
+                ReaderSettingsOptions.ContentMarginSmall
+            }
+            PageContentMargin.MEDIUM -> {
+                ReaderSettingsOptions.ContentMarginMedium
+            }
+            PageContentMargin.LARGE -> {
+                ReaderSettingsOptions.ContentMarginLarge
+            }
+        }
+    }
+
     fun onOptionSelected(optionOrdinal: Int) {
         val option = ReaderSettingsOptions.entries[optionOrdinal]
 
@@ -154,6 +182,19 @@ internal class ReaderSettingsViewModel @Inject constructor(
             ReaderSettingsOptions.PageLayoutFlowModePaginated, ReaderSettingsOptions.PageLayoutFlowModeScrolled -> {
                 updateState {
                     copy(selectedPageLayoutFlowMode = option)
+                }
+            }
+
+            ReaderSettingsOptions.FitToContentOff, ReaderSettingsOptions.FitToContentOn -> {
+                updateState {
+                    copy(selectedFitToContentOption = option)
+                }
+            }
+
+            ReaderSettingsOptions.ContentMarginNone, ReaderSettingsOptions.ContentMarginSmall,
+            ReaderSettingsOptions.ContentMarginMedium, ReaderSettingsOptions.ContentMarginLarge -> {
+                updateState {
+                    copy(selectedContentMarginOption = option)
                 }
             }
         }
@@ -215,6 +256,26 @@ internal class ReaderSettingsViewModel @Inject constructor(
             ReaderSettingsOptions.PageLayoutFlowModeScrolled -> {
                 readerSettings.pageLayoutFlowMode = PageLayoutFlowMode.SCROLLED
             }
+
+            ReaderSettingsOptions.FitToContentOff -> {
+                readerSettings.fitToContent = false
+            }
+            ReaderSettingsOptions.FitToContentOn -> {
+                readerSettings.fitToContent = true
+            }
+
+            ReaderSettingsOptions.ContentMarginNone -> {
+                readerSettings.contentMargin = PageContentMargin.NONE
+            }
+            ReaderSettingsOptions.ContentMarginSmall -> {
+                readerSettings.contentMargin = PageContentMargin.SMALL
+            }
+            ReaderSettingsOptions.ContentMarginMedium -> {
+                readerSettings.contentMargin = PageContentMargin.MEDIUM
+            }
+            ReaderSettingsOptions.ContentMarginLarge -> {
+                readerSettings.contentMargin = PageContentMargin.LARGE
+            }
         }
     }
 
@@ -233,6 +294,8 @@ internal data class ReaderSettingsViewState(
     val selectedScrollModeOption: ReaderSettingsOptions = ReaderSettingsOptions.ScrollModeVertical,
     val selectedSpreadsOption: ReaderSettingsOptions = ReaderSettingsOptions.PageSpreadsNone,
     val selectedPageLayoutFlowMode: ReaderSettingsOptions = ReaderSettingsOptions.PageLayoutFlowModePaginated,
+    val selectedFitToContentOption: ReaderSettingsOptions = ReaderSettingsOptions.FitToContentOff,
+    val selectedContentMarginOption: ReaderSettingsOptions = ReaderSettingsOptions.ContentMarginSmall,
     val isDark: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB
 ) : ViewState {
@@ -255,6 +318,16 @@ internal data class ReaderSettingsViewState(
     val pageLayoutFlowOptions = listOf(
         ReaderSettingsOptions.PageLayoutFlowModePaginated,
         ReaderSettingsOptions.PageLayoutFlowModeScrolled,
+    )
+    val fitToContentOptions = listOf(
+        ReaderSettingsOptions.FitToContentOff,
+        ReaderSettingsOptions.FitToContentOn,
+    )
+    val contentMarginOptions = listOf(
+        ReaderSettingsOptions.ContentMarginNone,
+        ReaderSettingsOptions.ContentMarginSmall,
+        ReaderSettingsOptions.ContentMarginMedium,
+        ReaderSettingsOptions.ContentMarginLarge,
     )
 
 }

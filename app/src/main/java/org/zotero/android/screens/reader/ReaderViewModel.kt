@@ -87,6 +87,7 @@ import org.zotero.android.screens.reader.data.ReaderDocumentData
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.data.ReaderOutline
 import org.zotero.android.screens.reader.data.ReaderPage
+import org.zotero.android.screens.reader.data.ReaderPdfViewState
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.data.ReaderWebError
 import org.zotero.android.screens.reader.filter.data.ReaderFilterArgs
@@ -1488,12 +1489,28 @@ class ReaderViewModel @Inject constructor(
                 val (sortedKeys, annotations, json) = generateReaderInitJsonFromInitialAnnotations(
                     items = objects
                 )
+                val readerSettings = defaults.getReaderSettings()
+                // Fitted zooms are recomputed for the current screen and margin
+                val savedPdfViewState = if (page is ReaderPage.pdf) {
+                    defaults.getPdfViewState(libraryId = this@ReaderViewModel.library.identifier, key = this@ReaderViewModel.key)
+                        ?.takeUnless { it.isContentFit && readerSettings.fitToContent }
+                } else {
+                    null
+                }
+                // A zoom the user chose for this document takes precedence over fitting
+                val contentFitMargin = if (page is ReaderPage.pdf && savedPdfViewState == null && readerSettings.fitToContent) {
+                    readerSettings.contentMargin.fraction
+                } else {
+                    null
+                }
                 val documentData = ReaderDocumentData(
                     type = type,
                     file = this@ReaderViewModel.documentFile,
                     annotationsJson = json,
                     page = page,
-                    selectedAnnotationKey = viewState.selectedAnnotationKey
+                    selectedAnnotationKey = viewState.selectedAnnotationKey,
+                    savedPdfViewState = savedPdfViewState,
+                    contentFitMargin = contentFitMargin,
                 )
                 readerWebCallChainExecutor.loadDocument(
                     data = documentData,
@@ -1720,6 +1737,7 @@ class ReaderViewModel @Inject constructor(
             triggerEffect(
                 ReaderViewEffect.OnPageChanged(page.toInt())
             )
+            storePdfViewState(pageIndex = page.toInt(), state = state)
         }
 
         val request = StorePageForItemDbRequest(key = this.key, libraryId = this.library.identifier, page = page)
@@ -1733,6 +1751,24 @@ class ReaderViewModel @Inject constructor(
                 return@launch
             }
         }
+    }
+
+    private fun storePdfViewState(pageIndex: Int, state: JsonObject) {
+        fun JsonObject.doubleOrNull(key: String): Double? =
+            this[key]?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asDouble
+        // A named scale such as "page-width" means the user hasn't zoomed,
+        // so let the document open with the default or fitted zoom instead
+        val scale = state.doubleOrNull("scale")
+        val pdfViewState = scale?.let {
+            ReaderPdfViewState(
+                pageIndex = pageIndex,
+                scale = it,
+                top = state.doubleOrNull("top"),
+                left = state.doubleOrNull("left"),
+                isContentFit = state["contentFitted"]?.takeIf { it.isJsonPrimitive }?.asBoolean == true,
+            )
+        }
+        defaults.setPdfViewState(libraryId = this.library.identifier, key = this.key, state = pdfViewState)
     }
 
     private fun setViewStats(params: JsonObject) {
@@ -2498,12 +2534,16 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun update(readerSettings: ReaderSettings) {
+        val previousSettings = defaults.getReaderSettings()
         defaults.setReaderSettings(readerSettings)
         updatePdfPageAppearanceMode(readerSettings)
-        updateAppearanceAccordingToSettings(true)
+        val shouldFitToContent = readerSettings.fitToContent && (!previousSettings.fitToContent
+                || previousSettings.contentMargin != readerSettings.contentMargin
+                || previousSettings.scrollMode != readerSettings.scrollMode)
+        updateAppearanceAccordingToSettings(isSettingsUpdate = true, shouldFitToContent = shouldFitToContent)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean) {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, shouldFitToContent: Boolean = false) {
         viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
@@ -2516,6 +2556,9 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                    if (shouldFitToContent) {
+                        readerWebCallChainExecutor.fitToContent(readerSettings.contentMargin.fraction)
+                    }
                 }
             }
 

@@ -96,6 +96,16 @@
     <string name="pdf_settings_scroll_mode_horizontal">Horizontal</string>
     <string name="pdf_settings_scroll_mode_wrapped">Wrapped</string>
 
+    <string name="pdf_settings_fit_to_content_title">Fit to Content</string>
+    <string name="pdf_settings_fit_to_content_off">Off</string>
+    <string name="pdf_settings_fit_to_content_on">On</string>
+
+    <string name="pdf_settings_content_margin_title">Content Margin</string>
+    <string name="pdf_settings_content_margin_none">None</string>
+    <string name="pdf_settings_content_margin_small">Small</string>
+    <string name="pdf_settings_content_margin_medium">Medium</string>
+    <string name="pdf_settings_content_margin_large">Large</string>
+
     <string name="login_open_in_browser">Open in Browser</string>
 
 </resources>
