@@ -8,4 +8,6 @@ data class ReaderPdfViewState(
     // Point at the top-left of the viewport, in PDF page coordinates
     val top: Double?,
     val left: Double?,
+    // The zoom was fitted to the content rather than chosen by the user
+    val isContentFit: Boolean = false,
 )

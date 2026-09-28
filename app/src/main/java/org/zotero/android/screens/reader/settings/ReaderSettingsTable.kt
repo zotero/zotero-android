@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.settings.data.ReaderSettingsOptions
 import org.zotero.android.uicomponents.Strings
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -31,6 +32,23 @@ internal fun ReaderSettingsTable(
                 selectedOption = viewState.selectedScrollModeOption,
                 optionSelected = viewModel::onOptionSelected
             )
+        }
+        // Fitting applies to the PDF pages, not to Reading Mode's reflowed text
+        if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
+            readerSettingsSettingRow(
+                titleResId = Strings.pdf_settings_fit_to_content_title,
+                options = viewState.fitToContentOptions,
+                selectedOption = viewState.selectedFitToContentOption,
+                optionSelected = viewModel::onOptionSelected
+            )
+            if (viewState.selectedFitToContentOption == ReaderSettingsOptions.FitToContentOn) {
+                readerSettingsSettingRow(
+                    titleResId = Strings.pdf_settings_content_margin_title,
+                    options = viewState.contentMarginOptions,
+                    selectedOption = viewState.selectedContentMarginOption,
+                    optionSelected = viewModel::onOptionSelected
+                )
+            }
         }
         if ((viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) || viewState.fileType == ReaderFileType.EPUB) {
             readerSettingsSettingRow(

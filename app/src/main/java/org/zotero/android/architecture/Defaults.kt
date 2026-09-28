@@ -11,6 +11,7 @@ import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
 import org.zotero.android.screens.reader.data.ReaderPdfViewState
+import org.zotero.android.screens.reader.settings.data.PageContentMargin
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.sync.LibraryIdentifier
@@ -571,6 +572,9 @@ open class Defaults @Inject constructor(
         }
         if (settings.scrollMode == null) {
             settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        if (settings.contentMargin == null) {
+            settings.contentMargin = PageContentMargin.SMALL
         }
         if (settings.lineHeight <= 0f) {
             settings.lineHeight = 1.2f
