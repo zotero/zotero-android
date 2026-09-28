@@ -10,7 +10,6 @@ import io.realm.Sort
 import io.realm.kotlin.where
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.database.DbResponseRequest
-import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.screens.allitems.data.ItemsFilter
 import org.zotero.android.screens.allitems.data.ItemsSortType
@@ -37,7 +36,7 @@ class ReadItemsDbRequest @AssistedInject constructor(
     ): RealmResults<RItem> {
         var resultsQuery: RealmQuery<RItem>
         if (defaults.showSubcollectionItems() && collectionId is CollectionIdentifier.collection) {
-            val keys = selfAndSubcollectionKeys(collectionId.key, database)
+            val keys = database.selfAndSubcollectionKeys(collectionId.key, this.libraryId)
 
             resultsQuery = database
                 .where<RItem>()
@@ -88,21 +87,6 @@ class ReadItemsDbRequest @AssistedInject constructor(
         } else {
             resultsQuery.findAll()
         }
-    }
-
-    private fun selfAndSubcollectionKeys(
-        key: String,
-        database: Realm
-    ): Set<String> {
-        var keys: Set<String> = hashSetOf(key)
-        val children = database
-            .where<RCollection>()
-            .parentKey(key, this.libraryId)
-            .findAll()
-        for (child in children) {
-            keys = keys.union(selfAndSubcollectionKeys(child.key, database))
-        }
-        return keys
     }
 
     @AssistedFactory

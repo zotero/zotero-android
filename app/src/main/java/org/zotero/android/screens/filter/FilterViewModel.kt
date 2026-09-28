@@ -272,7 +272,8 @@ internal class FilterViewModel @Inject constructor(
                         collectionId = collectionId,
                         libraryId = libraryId,
                         showAutomatic = viewState.showAutomatic,
-                        filters = filters
+                        filters = filters,
+                        showSubcollectionItems = defaults.showSubcollectionItems(),
                     )
                 )
                 val colored =
