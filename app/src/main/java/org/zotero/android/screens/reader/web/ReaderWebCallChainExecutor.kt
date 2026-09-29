@@ -255,6 +255,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onEdgePageTurnTap" -> {
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onEdgePageTurnTap
+                                )
+                            )
+                        }
+
                         "onViewContentInitialized" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -320,6 +328,38 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:navigate({ location: '${encodedPayload}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateBack() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateBack();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateForward() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateForward();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun beginNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:beginNavigation();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun endNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:endNavigation();") {
                 cont.resume(Unit)
             }
         }

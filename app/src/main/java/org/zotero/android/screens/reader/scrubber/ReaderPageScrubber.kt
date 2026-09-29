@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,8 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
@@ -40,15 +43,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.zotero.android.R
+import org.zotero.android.uicomponents.foundation.safeClickable
 import org.zotero.android.uicomponents.theme.CustomTheme
 import kotlin.math.roundToInt
 
@@ -80,17 +87,45 @@ internal fun ReaderPageIndicatorLabel(
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                val baseStyle = MaterialTheme.typography.bodySmall
                 Text(
                     text = "${selectedPage + 1} of $pageCount",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = baseStyle.copy(
-                        fontSize = baseStyle.fontSize * 2,
-                        lineHeight = baseStyle.lineHeight * 2,
-                    ),
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
+    }
+}
+
+private val PageHistoryArrowSize = 32.dp
+private val PageHistoryArrowIconSize = 18.dp
+
+@Composable
+internal fun ReaderPageHistoryArrowButton(
+    isForward: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(PageHistoryArrowSize)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .safeClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.arrow_back_24dp),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .size(PageHistoryArrowIconSize)
+                .graphicsLayer(rotationZ = if (isForward) 180f else 0f),
+        )
     }
 }
 

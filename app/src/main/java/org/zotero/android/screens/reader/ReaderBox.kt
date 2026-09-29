@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +29,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.scrubber.ReaderPageHistoryArrowButton
 import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
 import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
 import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
@@ -118,9 +121,26 @@ internal fun ReaderBox(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     ReaderPageIndicatorLabel(viewModel = scrubberViewModel)
-                    ReaderScrubberOverlay(
-                        visible = isScrubberVisible,
-                        scrubberViewModel = scrubberViewModel,
+                    AnimatedVisibility(visible = isScrubberVisible) {
+                        ReaderPageScrubber(viewModel = scrubberViewModel)
+                    }
+                }
+                if (isScrubberVisible) {
+                    ReaderPageHistoryBackArrow(
+                        visible = viewState.canNavigateBack,
+                        onClick = { viewModel.navigatePageHistoryBack() },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                            .padding(start = 16.dp, bottom = ScrubberBottomClearance),
+                    )
+                    ReaderPageHistoryForwardArrow(
+                        visible = viewState.canNavigateForward,
+                        onClick = { viewModel.navigatePageHistoryForward() },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                            .padding(end = 16.dp, bottom = ScrubberBottomClearance),
                     )
                 }
             }
@@ -150,13 +170,27 @@ internal fun ReaderBox(
     }
 }
 
+private val ScrubberBottomClearance = 80.dp
+
 @Composable
-private fun ReaderScrubberOverlay(
+private fun ReaderPageHistoryBackArrow(
     visible: Boolean,
-    scrubberViewModel: ReaderScrubberViewModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    AnimatedVisibility(visible = visible) {
-        ReaderPageScrubber(viewModel = scrubberViewModel)
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ReaderPageHistoryArrowButton(isForward = false, onClick = onClick)
+    }
+}
+
+@Composable
+private fun ReaderPageHistoryForwardArrow(
+    visible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ReaderPageHistoryArrowButton(isForward = true, onClick = onClick)
     }
 }
 

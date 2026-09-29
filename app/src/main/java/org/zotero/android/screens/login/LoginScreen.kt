@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.login.LoginViewEffect.NavigateBack
 import org.zotero.android.screens.login.LoginViewEffect.NavigateToDashboard
@@ -17,6 +18,7 @@ internal fun LoginScreen(
 ) {
     val viewState by viewModel.viewStates.observeAsState(LoginViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
+    val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(key1 = viewEffect) {
         when (viewEffect?.consume()) {
@@ -28,7 +30,11 @@ internal fun LoginScreen(
     CustomScaffoldM3(
         topBar = {
             LoginTopBar(
+                loginUrl = viewState.loginUrl,
                 onCancelClicked = onBack,
+                onOpenInBrowserClicked = {
+                    viewState.loginUrl?.let { uriHandler.openUri(it) }
+                },
             )
         },
         snackbarMessage = viewState.snackbarMessage,
