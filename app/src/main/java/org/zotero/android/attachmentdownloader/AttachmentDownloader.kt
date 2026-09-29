@@ -3,6 +3,9 @@ package org.zotero.android.attachmentdownloader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.ZoteroNoRedirectApi
 import org.zotero.android.api.network.CustomResult
@@ -19,6 +22,8 @@ import org.zotero.android.webdav.WebDavController
 import org.zotero.android.webdav.WebDavSessionStorage
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -87,10 +92,21 @@ class AttachmentDownloader @Inject constructor(
         }
     }
 
+    // Progress of downloads of more than one attachment, updated as each attachment finishes
+    sealed interface BatchState {
+        // Attachments to download are being determined
+        object Preparing : BatchState
+        data class Downloading(val downloaded: Int, val total: Int) : BatchState
+    }
+
     private var userId: Long = 0L
     private var coroutineScope = CoroutineScope(dispatcher)
-    private var operations = mutableMapOf<Download, AttachmentDownloadOperation>()
-    private var errors = mutableMapOf<Download, Throwable>()
+    // Modified both when downloads are enqueued and when they finish on download threads
+    private var operations = ConcurrentHashMap<Download, AttachmentDownloadOperation>()
+    private var errors = ConcurrentHashMap<Download, Throwable>()
+    private val preparingBatchCount = AtomicInteger(0)
+    private val batchStateFlow = MutableStateFlow<BatchState?>(null)
+    val batchState: StateFlow<BatchState?> = batchStateFlow.asStateFlow()
     private var batchProgress: AttachmentBatchProgress = AttachmentBatchProgress()
     private var totalBatchCount: Int = 0
 
@@ -417,6 +433,7 @@ class AttachmentDownloader @Inject constructor(
         this.errors.remove(download)
         this.operations[download] = operation
         this.totalBatchCount += 1
+        publishBatchState()
 
         return download to operation
     }
@@ -443,6 +460,7 @@ class AttachmentDownloader @Inject constructor(
     ) {
         this.operations.remove(download)
         resetBatchDataIfNeeded()
+        publishBatchState()
 
         when (result) {
             is CustomResult.GeneralError.CodeError -> {
@@ -539,6 +557,27 @@ class AttachmentDownloader @Inject constructor(
         val progress = this.operations[download]?.progressInHundreds
         val error = this.errors[download]
         return progress to error
+    }
+
+    // Call before determining the attachments of a batch download, which can take a while,
+    // and again once it's done, whether or not batchDownload() was called
+    fun setPreparingBatch(isPreparing: Boolean) {
+        if (isPreparing) {
+            preparingBatchCount.incrementAndGet()
+        } else {
+            preparingBatchCount.updateAndGet { maxOf(it - 1, 0) }
+        }
+        publishBatchState()
+    }
+
+    private fun publishBatchState() {
+        val total = this.totalBatchCount
+        val remaining = this.operations.size
+        batchStateFlow.value = when {
+            remaining > 0 && total > 1 -> BatchState.Downloading(downloaded = total - remaining, total = total)
+            preparingBatchCount.get() > 0 -> BatchState.Preparing
+            else -> null
+        }
     }
 
     private fun resetBatchDataIfNeeded() {

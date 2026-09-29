@@ -63,6 +63,7 @@
     <string name="all_items_bottom_panel_add_new_item">Add Item</string>
     <string name="all_items_bottom_panel_filters">Filters</string>
     <string name="all_items_bottom_panel_sort_by">Sort By</string>
+    <string name="all_items_preparing_downloads">Preparing downloads…</string>
     <string name="collections_add_collection">Add Collection</string>
     <string name="all_items_details">Details</string>
     <string name="pdf_reader_sidebar">Sidebar</string>

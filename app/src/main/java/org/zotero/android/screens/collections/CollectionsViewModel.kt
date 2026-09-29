@@ -507,6 +507,7 @@ internal class CollectionsViewModel @Inject constructor(
     }
 
     private suspend fun downloadAttachments(collectionId: CollectionIdentifier) {
+        this.attachmentDownloader.setPreparingBatch(true)
         try {
             val attachments = readAttachmentsToDownload(collectionId)
             this.attachmentDownloader.batchDownload(
@@ -514,8 +515,9 @@ internal class CollectionsViewModel @Inject constructor(
             )
         } catch (error: Exception) {
             Timber.e(error, "CollectionsViewModel: download attachments")
+        } finally {
+            this.attachmentDownloader.setPreparingBatch(false)
         }
-
     }
 
     // Determining the location of each attachment hashes every file that is already downloaded,
