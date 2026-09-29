@@ -23,6 +23,12 @@
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
+    <string name="pdf_ask_ai_action">Ask ChatGPT</string>
+    <string name="pdf_ask_ai_title">Ask ChatGPT about this passage</string>
+    <string name="pdf_ask_ai_extra_prompt_label">Additional instructions (optional)</string>
+    <string name="pdf_ask_ai_send">Open ChatGPT</string>
+    <string name="pdf_ask_ai_cancel">Cancel</string>
+    <string name="pdf_ask_ai_browser_missing">No browser is available to open ChatGPT.</string>
 
     <string name="retrieve_metadata_status_no_results">Status: recognition yielded no results</string>
 

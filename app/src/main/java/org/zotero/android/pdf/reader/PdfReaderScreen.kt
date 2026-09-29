@@ -1,20 +1,34 @@
 package org.zotero.android.pdf.reader
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
@@ -162,6 +176,23 @@ internal fun PdfReaderScreen(
                     onExportPdf(consumedEffect.file)
                 }
 
+                is PdfReaderViewEffect.OpenChatGpt -> {
+                    val uri = Uri.parse("https://chatgpt.com/")
+                        .buildUpon()
+                        .appendQueryParameter("q", consumedEffect.prompt)
+                        .build()
+                    val chromeIntent = Intent(Intent.ACTION_VIEW, uri).setPackage("com.android.chrome")
+                    try {
+                        if (chromeIntent.resolveActivity(activity.packageManager) != null) {
+                            activity.startActivity(chromeIntent)
+                        } else {
+                            activity.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                        }
+                    } catch (error: ActivityNotFoundException) {
+                        android.widget.Toast.makeText(activity, R.string.pdf_ask_ai_browser_missing, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+
                 else -> {}
             }
         }
@@ -231,6 +262,39 @@ internal fun PdfReaderScreen(
         PdfAnnotationMoreNavigationView(viewState = viewState, viewModel = viewModel)
         PdfSettingsView(viewState = viewState, viewModel = viewModel)
         PdfCopyCitationView(viewState = viewState, viewModel = viewModel)
+        val askAiSelectedText = viewState.askAiSelectedText
+        if (viewState.showAskAiDialog && askAiSelectedText != null) {
+            var additionalPrompt by remember(askAiSelectedText) { mutableStateOf("") }
+            AlertDialog(
+                onDismissRequest = viewModel::dismissAskAiDialog,
+                title = { Text(text = androidx.compose.ui.res.stringResource(R.string.pdf_ask_ai_title)) },
+                text = {
+                    Column {
+                        Text(
+                            text = askAiSelectedText,
+                            maxLines = 5
+                        )
+                        OutlinedTextField(
+                            value = additionalPrompt,
+                            onValueChange = { additionalPrompt = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(androidx.compose.ui.res.stringResource(R.string.pdf_ask_ai_extra_prompt_label)) },
+                            minLines = 3
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.submitAskAiPrompt(additionalPrompt) }) {
+                        Text(androidx.compose.ui.res.stringResource(R.string.pdf_ask_ai_send))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = viewModel::dismissAskAiDialog) {
+                        Text(androidx.compose.ui.res.stringResource(R.string.pdf_ask_ai_cancel))
+                    }
+                }
+            )
+        }
     }
 
 }

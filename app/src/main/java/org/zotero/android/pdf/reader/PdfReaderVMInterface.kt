@@ -59,4 +59,7 @@ interface PdfReaderVMInterface {
     fun onCopyCitation()
     fun onCopyBibliography()
     fun hideCopyCitation()
+    fun onAskAiSelection(selectedText: String)
+    fun dismissAskAiDialog()
+    fun submitAskAiPrompt(additionalPrompt: String)
 }
