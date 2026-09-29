@@ -120,7 +120,7 @@ internal fun ReaderBox(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel)
+                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel, visible = isScrubberVisible)
                     AnimatedVisibility(visible = isScrubberVisible) {
                         ReaderPageScrubber(viewModel = scrubberViewModel)
                     }
