@@ -15,6 +15,7 @@ import org.zotero.android.architecture.coroutines.ApplicationScope
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.logging.crash.CrashReporter
 import org.zotero.android.architecture.logging.debug.DebugLogging
+import org.zotero.android.attachmentdownloader.AttachmentDownloadNotificationController
 import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.database.DbWrapperBundle
 import org.zotero.android.database.DbWrapperMain
@@ -67,6 +68,7 @@ class Controllers @Inject constructor(
     private val exportCslLocaleReader: ExportCslLocaleReader,
     private val readerLoader: ReaderLoader,
     private val lastReadWatcher: LastReadWatcher,
+    private val attachmentDownloadNotificationController: AttachmentDownloadNotificationController,
     ) {
     private var sessionCancellable: Job? = null
     private var apiKey: String? = null
@@ -81,6 +83,7 @@ class Controllers @Inject constructor(
         createBundleDataDbStorage()
         crashReporter.processPendingReports()
         initializeSessionIfPossible()
+        attachmentDownloadNotificationController.init()
         startApp()
         this.didInitialize = true
     }
