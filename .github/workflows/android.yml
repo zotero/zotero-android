@@ -90,6 +90,12 @@ jobs:
       - name: Execute bundle_reader.sh
         run: scripts/bundle_reader.sh
 
+      - name: Grant execute permission for bundle_document-worker.sh
+        run: chmod +x scripts/bundle_document-worker.sh
+
+      - name: Execute bundle_document-worker.sh
+        run: scripts/bundle_document-worker.sh
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 

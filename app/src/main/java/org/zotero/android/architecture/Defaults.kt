@@ -70,6 +70,7 @@ open class Defaults @Inject constructor(
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
     private val lastReaderCommitHash = "lastReaderCommitHash"
+    private val lastDocumentWorkerCommitHash = "lastDocumentWorkerCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -433,6 +434,14 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
     }
 
+    fun getLastDocumentWorkerCommitHash(): String {
+        return sharedPreferences.getString(lastDocumentWorkerCommitHash, "") ?: ""
+    }
+
+    fun setLastDocumentWorkerCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastDocumentWorkerCommitHash, newValue) }
+    }
+
     fun getDoNotShowAppUpdateBannerBeforeTime(): Long {
         return sharedPreferences.getLong(doNotShowAppUpdateBannerBeforeTime, 0L)
     }
@@ -552,9 +561,16 @@ open class Defaults @Inject constructor(
             this.readerSettings,
             null
         ) ?: return ReaderSettings.default()
-        val settings = dataMarshaller.unmarshal<ReaderSettings>(json)
+        val settings = try {
+            dataMarshaller.unmarshal<ReaderSettings>(json)
+        } catch (e: Exception) {
+            return ReaderSettings.default()
+        }
         if (settings.scrollMode == null) {
             settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        if (settings.lineHeight <= 0f) {
+            settings.lineHeight = 1.2f
         }
         return settings
     }

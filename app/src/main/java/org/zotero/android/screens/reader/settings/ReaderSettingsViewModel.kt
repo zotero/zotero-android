@@ -27,6 +27,7 @@ import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResult
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsOptions
 import java.nio.charset.StandardCharsets
+import kotlin.math.roundToInt
 import javax.inject.Inject
 
 @HiltViewModel
@@ -72,7 +73,12 @@ internal class ReaderSettingsViewModel @Inject constructor(
                     selectedScrollModeOption = convert(readerSettings.scrollMode),
                     selectedSpreadsOption = convert(readerSettings.spreadsMode),
                     selectedPageLayoutFlowMode = convert(readerSettings.pageLayoutFlowMode),
+                    lineHeight = readerSettings.lineHeight,
+                    wordSpacing = readerSettings.wordSpacing,
+                    letterSpacing = readerSettings.letterSpacing,
+                    pageWidth = readerSettings.pageWidth.toFloat(),
                     fileType = loadedArgs.fileType,
+                    readingModeEnabled = loadedArgs.readingModeEnabled,
                 )
             }
         }
@@ -161,6 +167,39 @@ internal class ReaderSettingsViewModel @Inject constructor(
         scheduleDebouncedApply()
     }
 
+    fun onLineHeightChanged(value: Float) {
+        readerSettings.lineHeight = value
+        updateState {
+            copy(lineHeight = value)
+        }
+        scheduleDebouncedApply()
+    }
+
+    fun onWordSpacingChanged(value: Float) {
+        readerSettings.wordSpacing = value
+        updateState {
+            copy(wordSpacing = value)
+        }
+        scheduleDebouncedApply()
+    }
+
+    fun onLetterSpacingChanged(value: Float) {
+        readerSettings.letterSpacing = value
+        updateState {
+            copy(letterSpacing = value)
+        }
+        scheduleDebouncedApply()
+    }
+
+    fun onPageWidthChanged(value: Float) {
+        val rounded = value.roundToInt()
+        readerSettings.pageWidth = rounded
+        updateState {
+            copy(pageWidth = rounded.toFloat())
+        }
+        scheduleDebouncedApply()
+    }
+
     private fun scheduleDebouncedApply() {
         debounceApplyJob?.cancel()
         debounceApplyJob = viewModelScope.launch {
@@ -233,8 +272,13 @@ internal data class ReaderSettingsViewState(
     val selectedScrollModeOption: ReaderSettingsOptions = ReaderSettingsOptions.ScrollModeVertical,
     val selectedSpreadsOption: ReaderSettingsOptions = ReaderSettingsOptions.PageSpreadsNone,
     val selectedPageLayoutFlowMode: ReaderSettingsOptions = ReaderSettingsOptions.PageLayoutFlowModePaginated,
+    val lineHeight: Float = 1.2f,
+    val wordSpacing: Float = 0f,
+    val letterSpacing: Float = 0f,
+    val pageWidth: Float = 0f,
     val isDark: Boolean = false,
-    val fileType: ReaderFileType = ReaderFileType.EPUB
+    val fileType: ReaderFileType = ReaderFileType.EPUB,
+    val readingModeEnabled: Boolean = false,
 ) : ViewState {
     val scrollModeOptions = listOf(
         ReaderSettingsOptions.ScrollModeVertical,
@@ -256,7 +300,6 @@ internal data class ReaderSettingsViewState(
         ReaderSettingsOptions.PageLayoutFlowModePaginated,
         ReaderSettingsOptions.PageLayoutFlowModeScrolled,
     )
-
 }
 
 internal sealed class ReaderSettingsViewEffect : ViewEffect

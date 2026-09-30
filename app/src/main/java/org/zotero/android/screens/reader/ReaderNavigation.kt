@@ -13,8 +13,6 @@ import androidx.navigation.navArgument
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.navigation.ZoteroNavigation
 import org.zotero.android.architecture.navigation.dialogFixedDimens
-import org.zotero.android.pdf.ARG_PDF_PLAIN_READER_SCREEN
-import org.zotero.android.pdf.reader.plainreader.PdfPlainReaderScreen
 import org.zotero.android.screens.reader.annotation.ReaderAnnotationNavigation
 import org.zotero.android.screens.reader.annotation.toReaderAnnotationScreen
 import org.zotero.android.screens.reader.annotationmore.ReaderAnnotationMoreNavigation
@@ -43,11 +41,9 @@ internal fun NavGraphBuilder.readerNavScreensForTablet(
         navigateToReaderAnnotationMore = navigation::toReaderAnnotationMoreNavigation,
         navigateToReaderColorPicker = navigation::toReaderColorPicker,
         navigateToReaderSettings = navigation::toReaderSettings,
-        navigateToReaderPlainReader = navigation::toReaderPlainReader,
         onOpenWebpage = onOpenWebpage,
 
     )
-    readerPlainReader(navigation)
     dialogFixedDimens(
         modifier = Modifier
             .height(400.dp)
@@ -121,21 +117,8 @@ internal fun NavGraphBuilder.readerNavScreensForPhone(
         navigateToReaderAnnotationMore = navigation::toReaderAnnotationMoreScreen,
         navigateToReaderColorPicker = navigation::toReaderColorPicker,
         navigateToReaderSettings = navigation::toReaderSettings,
-        navigateToReaderPlainReader = navigation::toReaderPlainReader,
         onOpenWebpage = onOpenWebpage,
     )
-    readerPlainReader(navigation)
-}
-
-private fun NavGraphBuilder.readerPlainReader(navigation: ZoteroNavigation) {
-    composable(
-        route = "${ReaderDestinations.READER_PLAIN_READER}/{$ARG_PDF_PLAIN_READER_SCREEN}",
-        arguments = listOf(
-            navArgument(ARG_PDF_PLAIN_READER_SCREEN) { type = NavType.StringType },
-        ),
-    ) {
-        PdfPlainReaderScreen(onBack = navigation::onBack)
-    }
 }
 
 private fun NavGraphBuilder.readerScreen(
@@ -146,7 +129,6 @@ private fun NavGraphBuilder.readerScreen(
     navigateToReaderAnnotationMore: () -> Unit,
     navigateToReaderColorPicker: () -> Unit,
     navigateToReaderSettings: (args: String) -> Unit,
-    navigateToReaderPlainReader: (args: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
 ) {
     composable(
@@ -164,7 +146,6 @@ private fun NavGraphBuilder.readerScreen(
             navigateToReaderAnnotationMore = navigateToReaderAnnotationMore,
             navigateToReaderColorPicker = navigateToReaderColorPicker,
             navigateToReaderSettings = navigateToReaderSettings,
-            navigateToReaderPlainReader = navigateToReaderPlainReader,
             onOpenWebpage = onOpenWebpage
         )
     }
@@ -177,7 +158,6 @@ private object ReaderDestinations {
     const val READER_COLOR_PICKER = "readerColorPicker"
     const val READER_ANNOTATION_NAVIGATION = "readerAnnotationNavigation"
     const val READER_SETTINGS = "readerSettings"
-    const val READER_PLAIN_READER = "readerPlainReader"
 }
 
 fun ZoteroNavigation.toReaderScreen(
@@ -205,8 +185,4 @@ private fun ZoteroNavigation.toReaderFilterNavigation() {
 
 private fun ZoteroNavigation.toReaderSettings(args: String) {
     navController.navigate("${ReaderDestinations.READER_SETTINGS}/$args")
-}
-
-private fun ZoteroNavigation.toReaderPlainReader(encodedFilePath: String) {
-    navController.navigate("${ReaderDestinations.READER_PLAIN_READER}/$encodedFilePath")
 }

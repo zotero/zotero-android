@@ -98,4 +98,9 @@
 
     <string name="login_open_in_browser">Open in Browser</string>
 
+    <string name="pdf_settings_line_height_title">Line height</string>
+    <string name="pdf_settings_word_spacing_title">Word spacing</string>
+    <string name="pdf_settings_letter_spacing_title">Letter spacing</string>
+    <string name="pdf_settings_page_width_title">Page width</string>
+
 </resources>

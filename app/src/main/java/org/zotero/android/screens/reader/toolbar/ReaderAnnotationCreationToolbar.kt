@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.launchIn
@@ -50,6 +51,9 @@ import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeStringResource
 import kotlin.math.roundToInt
+
+private val TOOLBAR_CHROME_HEIGHT = 188.dp
+private val TOOLBAR_TOOL_HEIGHT = 40.dp
 
 private val htmlEpubReaderToolsList = listOf(
     ReaderTool(
@@ -117,6 +121,10 @@ private val pdfReaderToolsList = listOf(
     )
 )
 
+private fun toolbarHeight(toolCount: Int): Dp {
+    return TOOLBAR_CHROME_HEIGHT + TOOLBAR_TOOL_HEIGHT * toolCount
+}
+
 @Composable
 internal fun BoxScope.ReaderAnnotationCreationToolbar(
     viewState: ReaderViewState,
@@ -147,6 +155,14 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         MaterialTheme.colorScheme.surface
     val isPdfOrHtml = viewState.isPdfOrHtml()
 
+    val toolsList =
+        if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
+            pdfReaderToolsList
+        } else {
+            htmlEpubReaderToolsList
+        }
+    val toolbarHeight = toolbarHeight(toolsList.size)
+
     if (shouldShowSnapTargetAreas) {
         val stroke = Stroke(
             width = 5f,
@@ -157,7 +173,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         Box(
             modifier = Modifier
                 .width(48.dp)
-                .height(520.dp)
+                .height(toolbarHeight)
                 .statusBarsPadding()
                 .padding(start = 16.dp)
                 .background(
@@ -173,7 +189,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .width(48.dp)
-                .height(520.dp)
+                .height(toolbarHeight)
                 .statusBarsPadding()
                 .padding(end = 16.dp)
                 .background(
@@ -201,7 +217,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             orientation = Orientation.Horizontal,
             interactionSource = draggableInteractionSource
         )
-        .height(520.dp)
+        .height(toolbarHeight)
 
     LazyColumn(
         modifier = columnModifier
@@ -214,12 +230,6 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
     ) {
         item {
             Spacer(modifier = Modifier.height(4.dp))
-            val toolsList =
-            if (viewState.fileType == ReaderFileType.PDF) {
-                pdfReaderToolsList
-            } else {
-                htmlEpubReaderToolsList
-            }
 
             toolsList.forEach { tool ->
                 if (!tool.isHidden) {

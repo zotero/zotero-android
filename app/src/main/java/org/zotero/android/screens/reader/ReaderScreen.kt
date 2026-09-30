@@ -62,7 +62,6 @@ internal fun ReaderScreen(
     navigateToReaderAnnotationMore: () -> Unit,
     navigateToReaderColorPicker: () -> Unit,
     navigateToReaderSettings: (args: String) -> Unit,
-    navigateToReaderPlainReader: (args: String) -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
@@ -147,10 +146,6 @@ internal fun ReaderScreen(
                     navigateToReaderSettings(consumedEffect.params)
                 }
 
-                is ReaderViewEffect.ShowReaderPlainReader -> {
-                    navigateToReaderPlainReader(consumedEffect.encodedFilePath)
-                }
-
                 is ReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList -> {
                     if (consumedEffect.showAnnotationPopup) {
                         if (layoutType.isTablet()) {
@@ -205,7 +200,7 @@ internal fun ReaderScreen(
                                 onBack = onBack,
                                 onShowHideSideBar = viewModel::toggleSideBar,
                                 toPdfSettings = viewModel::navigateToReaderSettings,
-                                toPdfPlainReader = viewModel::navigateToPlainReader,
+                                toggleReadingMode = viewModel::toggleReadingMode,
                                 showPdfSearch = viewState.showPdfSearch,
                                 toggleToolbarButton = viewModel::toggleToolbarButton,
                                 isToolbarButtonSelected = viewState.showCreationToolbar,
