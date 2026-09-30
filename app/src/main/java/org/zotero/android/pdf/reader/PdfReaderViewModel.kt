@@ -56,6 +56,7 @@ import com.pspdfkit.ui.special_mode.controller.AnnotationCreationController
 import com.pspdfkit.ui.special_mode.controller.AnnotationSelectionController
 import com.pspdfkit.ui.special_mode.controller.AnnotationTool
 import com.pspdfkit.ui.special_mode.manager.AnnotationManager
+import com.pspdfkit.ui.toolbar.popup.PdfTextSelectionPopupToolbar
 import com.pspdfkit.ui.toolbar.popup.PopupToolbarMenuItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
@@ -112,6 +113,7 @@ import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
+import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
@@ -584,6 +586,25 @@ class PdfReaderViewModel @Inject constructor(
 
     private fun setOnPreparePopupToolbarListener() {
         this.pdfFragment.setOnPreparePopupToolbarListener { toolbar ->
+            if (toolbar is PdfTextSelectionPopupToolbar) {
+                val items = toolbar.menuItems.toMutableList()
+                items.add(
+                    PopupToolbarMenuItem(
+                        org.zotero.android.R.id.zotero_ask_ai,
+                        org.zotero.android.R.string.pdf_ask_ai_action
+                    )
+                )
+                toolbar.menuItems = items
+                toolbar.setOnPopupToolbarItemClickedListener { item ->
+                    if (item.id == org.zotero.android.R.id.zotero_ask_ai) {
+                        val selectedText = this.pdfFragment.textSelection?.text.orEmpty()
+                        onAskAiSelection(selectedText)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
             val sourceItems = toolbar.menuItems.toMutableList()
             val menuItems = sourceItems.listIterator()
 
@@ -3652,6 +3673,73 @@ class PdfReaderViewModel @Inject constructor(
             )
         }
     }
+
+    override fun onAskAiSelection(selectedText: String) {
+        val quote = selectedText.trim().takeIf { it.isNotEmpty() } ?: return
+        viewModelScope.launch {
+            val articleContext = try {
+                withContext(dispatcher) {
+                    val itemKey = viewState.parentKey ?: viewState.key
+                    val item = dbWrapperMain.realmDbStorage.perform(
+                        request = ReadItemDbRequest(
+                            libraryId = viewState.library.identifier,
+                            key = itemKey
+                        )
+                    )
+                    buildString {
+                        appendLine("Title: ${item.fieldValue(FieldKeys.Item.title) ?: item.displayTitle}")
+                        item.creatorSummary?.takeIf { it.isNotBlank() }?.let { appendLine("Creators: $it") }
+                        item.fieldValue(FieldKeys.Item.publicationTitle)
+                            ?.takeIf { it.isNotBlank() }?.let { appendLine("Publication: $it") }
+                        item.fieldValue(FieldKeys.Item.date)
+                            ?.takeIf { it.isNotBlank() }?.let { appendLine("Date: $it") }
+                        item.doi?.let { appendLine("DOI: $it") }
+                        item.urlString?.let { appendLine("URL: $it") }
+                        item.fieldValue(FieldKeys.Item.abstractN)
+                            ?.takeIf { it.isNotBlank() }
+                            ?.take(2500)
+                            ?.let { appendLine("Abstract: $it") }
+                        append("Selected PDF page: ${viewState.visiblePage + 1}")
+                    }
+                }
+            } catch (error: Exception) {
+                Timber.w(error, "PdfReaderViewModel: couldn't load article context for AI prompt")
+                "Article metadata is unavailable. Selected PDF page: ${viewState.visiblePage + 1}"
+            }
+            updateState {
+                copy(
+                    askAiSelectedText = quote,
+                    askAiArticleContext = articleContext,
+                    showAskAiDialog = true
+                )
+            }
+        }
+    }
+
+    override fun dismissAskAiDialog() {
+        updateState { copy(showAskAiDialog = false) }
+    }
+
+    override fun submitAskAiPrompt(additionalPrompt: String) {
+        val selectedText = viewState.askAiSelectedText ?: return
+        val prompt = buildString {
+            appendLine("Explain the selected passage and define its important terms in plain language.")
+            appendLine("Use the article context to explain what the passage means here. Do not invent claims; note when the provided context is insufficient.")
+            if (additionalPrompt.isNotBlank()) {
+                appendLine()
+                appendLine("My additional request:")
+                appendLine(additionalPrompt.trim())
+            }
+            appendLine()
+            appendLine("Article context:")
+            appendLine(viewState.askAiArticleContext.orEmpty())
+            appendLine()
+            appendLine("Selected passage:")
+            appendLine(selectedText)
+        }
+        dismissAskAiDialog()
+        triggerEffect(PdfReaderViewEffect.OpenChatGpt(prompt))
+    }
 }
 
 data class PdfReaderViewState(
@@ -3697,6 +3785,9 @@ data class PdfReaderViewState(
     var pdfAnnotationMoreArgs: PdfAnnotationMoreArgs? = null,
     var pdfSettingsArgs: PdfSettingsArgs? = null,
     var showSharePopup: Boolean = false,
+    val askAiSelectedText: String? = null,
+    val askAiArticleContext: String? = null,
+    val showAskAiDialog: Boolean = false,
     val showSingleCitationScreen: Boolean = false,
     val isGeneratingBibliography: Boolean = false,
     val isExportingAnnotatedPdf: Boolean = false,
@@ -3732,6 +3823,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateToTagPickerScreen: PdfReaderViewEffect()
     data class ScrollThumbnailListToIndex(val scrollToIndex: Int): PdfReaderViewEffect()
     data class ExportPdf(val file: File) : PdfReaderViewEffect()
+    data class OpenChatGpt(val prompt: String) : PdfReaderViewEffect()
     object ShowSingleCitationScreen: PdfReaderViewEffect()
 
 }
