@@ -97,11 +97,13 @@ import org.zotero.android.citation.CitationController
 import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.objects.Attachment
 import org.zotero.android.database.objects.AnnotationsConfig
 import org.zotero.android.database.objects.FieldKeys
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.objects.zoteroType
+import org.zotero.android.database.requests.CreateAttachmentDbRequest
 import org.zotero.android.database.requests.CreatePDFAnnotationsDbRequest
 import org.zotero.android.database.requests.EditAnnotationFontSizeDbRequest
 import org.zotero.android.database.requests.EditAnnotationPathsDbRequest
@@ -109,9 +111,11 @@ import org.zotero.android.database.requests.EditAnnotationRectsDbRequest
 import org.zotero.android.database.requests.EditAnnotationRotationDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
+import org.zotero.android.database.requests.MarkAttachmentContentChangedDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
 import org.zotero.android.database.requests.ReadAnnotationsDbRequest
 import org.zotero.android.database.requests.ReadDocumentDataDbRequest
+import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
 import org.zotero.android.files.FileStore
@@ -176,10 +180,14 @@ import org.zotero.android.sync.AnnotationColorGenerator
 import org.zotero.android.sync.AnnotationConverter
 import org.zotero.android.sync.AnnotationSplitter
 import org.zotero.android.sync.KeyGenerator
+import org.zotero.android.sync.Libraries
 import org.zotero.android.sync.LastReadWatcher
 import org.zotero.android.sync.Library
 import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.LinkMode
 import org.zotero.android.sync.SessionDataEventStream
+import org.zotero.android.sync.SyncKind
+import org.zotero.android.sync.SyncScheduler
 import org.zotero.android.sync.Tag
 import org.zotero.android.uicomponents.Strings
 import timber.log.Timber
@@ -215,8 +223,10 @@ class PdfReaderViewModel @Inject constructor(
     private val fileStore: FileStore,
     private val stateHandle: SavedStateHandle,
     private val editItemFieldsDbRequestFactory: EditItemFieldsDbRequest.Factory,
+    private val createAttachmentDbRequestFactory: CreateAttachmentDbRequest.Factory,
     private val createPDFAnnotationsDbRequestFactory: CreatePDFAnnotationsDbRequest.Factory,
     private val lastReadWatcher: LastReadWatcher,
+    private val syncScheduler: SyncScheduler,
 ) : BaseViewModel2<PdfReaderViewState, PdfReaderViewEffect>(PdfReaderViewState()),
     PdfReaderVMInterface {
 
@@ -257,6 +267,14 @@ class PdfReaderViewModel @Inject constructor(
     private lateinit var searchResultHighlighter: SearchResultHighlighter
 
     private var disableForceScreenOnTimer: Timer? = null
+    private var pendingExternalPdfEdit: PendingExternalPdfEdit? = null
+    private var isPreparingExternalPdfEdit = false
+
+    private data class PendingExternalPdfEdit(
+        val key: String,
+        val libraryId: LibraryIdentifier,
+        val file: File,
+    )
 
     private var annotationEditReaderKey: AnnotationKey? = null
     private var isLongPressOnTextAnnotation = false
@@ -3564,15 +3582,155 @@ class PdfReaderViewModel @Inject constructor(
             copy(isExportingAnnotatedPdf = true)
         }
         viewModelScope.launch {
-            withContext<Unit>(dispatcher) {
-                this@PdfReaderViewModel.document.saveIfModified()
-            }
+            saveAnnotatedPdf()
             triggerEffect(PdfReaderViewEffect.ExportPdf(this@PdfReaderViewModel.dirtyFile))
             updateState {
                 copy(isExportingAnnotatedPdf = false)
             }
         }
 
+    }
+
+    private suspend fun saveAnnotatedPdf() {
+        withContext(dispatcher) {
+            document.saveIfModified()
+        }
+    }
+
+    override fun onOpenAnnotatedCopyInOtherApp() {
+        dismissSharePopup()
+        if (isPreparingExternalPdfEdit || pendingExternalPdfEdit != null) return
+        isPreparingExternalPdfEdit = true
+        viewModelScope.launch {
+            try {
+                val target = prepareAnnotatedPdfForExternalEditing()
+                pendingExternalPdfEdit = target
+                triggerEffect(PdfReaderViewEffect.OpenExternalPdfEditor(target.file))
+            } catch (error: Exception) {
+                Timber.e(error, "PdfReaderViewModel: couldn't prepare annotated PDF for external editing")
+                context.longToast(
+                    error.message ?: context.getString(org.zotero.android.R.string.pdf_annotated_copy_prepare_failed)
+                )
+            } finally {
+                isPreparingExternalPdfEdit = false
+            }
+        }
+    }
+
+    private suspend fun prepareAnnotatedPdfForExternalEditing(): PendingExternalPdfEdit = withContext(dispatcher) {
+        saveAnnotatedPdf()
+        val libraryId = viewState.library.identifier
+        val sourceItem = dbWrapperMain.realmDbStorage.perform(
+            request = ReadItemDbRequest(libraryId = libraryId, key = viewState.key)
+        )
+        val sourceFilename = sourceItem.fields
+            .firstOrNull { it.key == FieldKeys.Item.Attachment.filename }
+            ?.value?.takeIf { it.isNotBlank() } ?: originalFile.name
+        if (!sourceFilename.endsWith(".pdf", ignoreCase = true)) {
+            throw IllegalStateException(context.getString(org.zotero.android.R.string.pdf_annotated_copy_prepare_failed))
+        }
+        val sourceLinkMode = sourceItem.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.value
+        if (sourceLinkMode != LinkMode.importedFile.str && sourceLinkMode != LinkMode.importedUrl.str) {
+            throw IllegalStateException(context.getString(org.zotero.android.R.string.pdf_annotated_copy_not_managed))
+        }
+        val sourceBaseName = sourceFilename.substringBeforeLast('.')
+        val targetFilename = if (sourceBaseName.endsWith("__annotated", ignoreCase = true)) {
+            sourceFilename
+        } else {
+            "${sourceBaseName}__annotated.${sourceFilename.substringAfterLast('.')}"
+        }
+        val parentKey = viewState.parentKey ?: sourceItem.parent?.key
+        val parent = parentKey?.let { key ->
+            dbWrapperMain.realmDbStorage.perform(ReadItemDbRequest(libraryId = libraryId, key = key))
+        }
+        val existingCopy = parent?.children?.firstOrNull { child ->
+            val filename = child.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.filename }?.value
+            val linkMode = child.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.linkMode }?.value
+            child.key != sourceItem.key && filename?.equals(targetFilename, ignoreCase = true) == true &&
+                    (linkMode == LinkMode.importedFile.str || linkMode == LinkMode.importedUrl.str)
+        }
+        if (existingCopy != null) {
+            val existingFilename = existingCopy.fields
+                .firstOrNull { it.key == FieldKeys.Item.Attachment.filename }?.value ?: targetFilename
+            val targetFile = fileStore.attachmentFile(libraryId, existingCopy.key, existingFilename)
+            if (!targetFile.isFile) {
+                throw IllegalStateException(context.getString(org.zotero.android.R.string.pdf_annotated_copy_not_downloaded))
+            }
+            return@withContext PendingExternalPdfEdit(existingCopy.key, libraryId, targetFile)
+        }
+        val targetKey = KeyGenerator.newKey()
+        val targetFile = fileStore.attachmentFile(libraryId, targetKey, targetFilename)
+        dirtyFile.copyTo(targetFile, overwrite = true)
+        val attachment = Attachment(
+            type = Attachment.Kind.file(
+                filename = targetFilename,
+                contentType = "application/pdf",
+                location = Attachment.FileLocation.local,
+                linkType = Attachment.FileLinkType.importedFile,
+            ),
+            title = targetFilename,
+            key = targetKey,
+            libraryId = libraryId,
+            dateAdded = Date(),
+        )
+        try {
+            dbWrapperMain.realmDbStorage.perform(
+                createAttachmentDbRequestFactory.create(
+                    attachment = attachment,
+                    parentKey = parentKey,
+                    localizedType = sourceItem.localizedType,
+                    includeAccessDate = false,
+                    collections = emptySet(),
+                    tags = emptyList(),
+                )
+            )
+        } catch (error: Exception) {
+            targetFile.delete()
+            throw error
+        }
+        syncScheduler.request(SyncKind.normal, Libraries.specific(listOf(libraryId)))
+        PendingExternalPdfEdit(targetKey, libraryId, targetFile)
+    }
+
+    override fun onExternalPdfEditorReturned() {
+        val target = pendingExternalPdfEdit ?: return
+        pendingExternalPdfEdit = null
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(500)
+            try {
+                val validPdf = withContext(dispatcher) {
+                    target.file.isFile && target.file.length() > 0L && fileStore.isPdf(target.file)
+                }
+                if (!validPdf) {
+                    context.longToast(context.getString(org.zotero.android.R.string.pdf_annotated_copy_invalid_after_edit))
+                    return@launch
+                }
+                val newMd5 = withContext(dispatcher) { fileStore.md5(target.file) }
+                if (newMd5 == "null") return@launch
+                val previousMd5 = withContext(dispatcher) {
+                    val item = dbWrapperMain.realmDbStorage.perform(ReadItemDbRequest(target.libraryId, target.key))
+                    item.fields.firstOrNull { it.key == FieldKeys.Item.Attachment.md5 }?.value
+                }
+                if (previousMd5 == newMd5) return@launch
+                dbWrapperMain.realmDbStorage.perform(
+                    MarkAttachmentContentChangedDbRequest(
+                        key = target.key,
+                        libraryId = target.libraryId,
+                        md5 = newMd5,
+                        mtime = target.file.lastModified(),
+                    )
+                )
+                syncScheduler.request(SyncKind.normal, Libraries.specific(listOf(target.libraryId)))
+                context.longToast(context.getString(org.zotero.android.R.string.pdf_annotated_copy_changed))
+            } catch (error: Exception) {
+                Timber.e(error, "PdfReaderViewModel: couldn't queue edited PDF for upload")
+                context.longToast(context.getString(org.zotero.android.R.string.pdf_annotated_copy_prepare_failed))
+            }
+        }
+    }
+
+    override fun onExternalPdfEditorLaunchFailed() {
+        pendingExternalPdfEdit = null
     }
 
     override fun dismissSharePopup() {
@@ -3732,6 +3890,7 @@ sealed class PdfReaderViewEffect : ViewEffect {
     object NavigateToTagPickerScreen: PdfReaderViewEffect()
     data class ScrollThumbnailListToIndex(val scrollToIndex: Int): PdfReaderViewEffect()
     data class ExportPdf(val file: File) : PdfReaderViewEffect()
+    data class OpenExternalPdfEditor(val file: File) : PdfReaderViewEffect()
     object ShowSingleCitationScreen: PdfReaderViewEffect()
 
 }

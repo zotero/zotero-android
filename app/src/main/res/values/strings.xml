@@ -23,6 +23,13 @@
     <string name="pdf_reader_slider_thumbnails">Thumbnails</string>
     <string name="pdf_reader_slider_annotations">Annotations</string>
     <string name="pdf_reader_slider_outline">Outline</string>
+    <string name="pdf_open_annotated_copy_in">Open annotated copy in…</string>
+    <string name="pdf_open_annotated_copy_title">Open PDF in</string>
+    <string name="pdf_annotated_copy_prepare_failed">Could not prepare the annotated PDF copy.</string>
+    <string name="pdf_annotated_copy_not_downloaded">The existing annotated copy must be downloaded to this device before editing.</string>
+    <string name="pdf_annotated_copy_changed">Annotated PDF changes will sync with Zotero.</string>
+    <string name="pdf_annotated_copy_invalid_after_edit">The edited file is not a readable PDF. Changes were not synced.</string>
+    <string name="pdf_annotated_copy_not_managed">This PDF is not a Zotero-managed attachment, so its edits cannot be synced.</string>
 
     <string name="retrieve_metadata_status_no_results">Status: recognition yielded no results</string>
 

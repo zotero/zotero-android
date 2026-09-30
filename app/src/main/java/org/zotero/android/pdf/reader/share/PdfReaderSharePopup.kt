@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
+import org.zotero.android.R
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import org.zotero.android.pdf.reader.PdfReaderVMInterface
@@ -59,6 +60,11 @@ internal fun PdfReaderSharePopup(
             PdfReaderSharePopupOptionRow(
                 text = safeStringResource(id = Strings.pdf_export_export_annotated),
                 onOptionClick = viewModel::onExportAnnotatedPdf,
+                resIcon = Drawables.share_24
+            )
+            PdfReaderSharePopupOptionRow(
+                text = safeStringResource(id = R.string.pdf_open_annotated_copy_in),
+                onOptionClick = viewModel::onOpenAnnotatedCopyInOtherApp,
                 resIcon = Drawables.share_24
             )
         }

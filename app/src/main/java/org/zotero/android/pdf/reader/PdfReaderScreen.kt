@@ -1,6 +1,12 @@
 package org.zotero.android.pdf.reader
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.Intent
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -10,11 +16,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.Modifier
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import org.zotero.android.BuildConfig
+import org.zotero.android.R
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.architecture.ui.ObserveLifecycleEvent
 import org.zotero.android.pdf.annotation.sidebar.PdfAnnotationNavigationView
@@ -49,6 +60,11 @@ internal fun PdfReaderScreen(
     val viewState by viewModel.viewStates.observeAsState(PdfReaderViewState())
     val viewEffect by viewModel.viewEffects.observeAsState()
     val activity = LocalActivity.current ?: return
+    val externalPdfEditLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) {
+        viewModel.onExternalPdfEditorReturned()
+    }
     val currentView = LocalView.current
     ObserveLifecycleEvent { event ->
         when (event) {
@@ -160,6 +176,49 @@ internal fun PdfReaderScreen(
 
                 is PdfReaderViewEffect.ExportPdf -> {
                     onExportPdf(consumedEffect.file)
+                }
+
+                is PdfReaderViewEffect.OpenExternalPdfEditor -> {
+                    val uri = FileProvider.getUriForFile(
+                        activity,
+                        "${BuildConfig.APPLICATION_ID}.provider",
+                        consumedEffect.file,
+                    )
+                    val grantFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    val editIntent = Intent(Intent.ACTION_EDIT).apply {
+                        setDataAndType(uri, "application/pdf")
+                        putExtra(MediaStore.EXTRA_OUTPUT, uri)
+                        clipData = ClipData.newUri(activity.contentResolver, consumedEffect.file.name, uri)
+                        addFlags(grantFlags)
+                    }
+                    if (editIntent.resolveActivity(activity.packageManager) == null) {
+                        editIntent.action = Intent.ACTION_VIEW
+                    }
+                    val chooser = Intent.createChooser(
+                        editIntent,
+                        activity.getString(R.string.pdf_open_annotated_copy_title),
+                    ).apply {
+                        addFlags(grantFlags)
+                        clipData = editIntent.clipData
+                    }
+                    try {
+                        externalPdfEditLauncher.launch(chooser)
+                    } catch (error: ActivityNotFoundException) {
+                        viewModel.onExternalPdfEditorLaunchFailed()
+                        android.widget.Toast.makeText(
+                            activity,
+                            R.string.pdf_annotated_copy_prepare_failed,
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                    } catch (error: Exception) {
+                        viewModel.onExternalPdfEditorLaunchFailed()
+                        android.widget.Toast.makeText(
+                            activity,
+                            error.message ?: activity.getString(R.string.pdf_annotated_copy_prepare_failed),
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                    }
                 }
 
                 else -> {}

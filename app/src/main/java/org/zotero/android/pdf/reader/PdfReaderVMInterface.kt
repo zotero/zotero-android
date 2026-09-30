@@ -59,4 +59,7 @@ interface PdfReaderVMInterface {
     fun onCopyCitation()
     fun onCopyBibliography()
     fun hideCopyCitation()
+    fun onOpenAnnotatedCopyInOtherApp()
+    fun onExternalPdfEditorReturned()
+    fun onExternalPdfEditorLaunchFailed()
 }
