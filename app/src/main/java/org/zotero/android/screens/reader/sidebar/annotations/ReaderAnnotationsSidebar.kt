@@ -67,7 +67,7 @@ internal fun ReaderAnnotationsSidebar(
                 )
             }
             itemsIndexed(
-                items = viewState.sortedKeys,
+                items = viewModel.displayedSortedKeys(),
             ) { _, key ->
                 val annotation = viewModel.annotation(key) ?: return@itemsIndexed
                 val isSelected = viewState.isAnnotationSelected(annotation.key)

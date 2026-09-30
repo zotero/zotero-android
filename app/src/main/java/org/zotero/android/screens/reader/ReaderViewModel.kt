@@ -99,9 +99,9 @@ import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResult
+import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestAnnotationImageRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
-import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
 import org.zotero.android.screens.reader.sidebar.data.ReaderWrapperOutline
@@ -1685,20 +1685,13 @@ class ReaderViewModel @Inject constructor(
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
             }
 
-            is ReaderWebData.setReadingModeLoading -> {
-                updateState {
-                    copy(readingModeLoading = successValue.loading)
-                }
-            }
-
             is ReaderWebData.setReadingModeEnabled -> {
                 updateState {
                     copy(readingModeEnabled = successValue.enabled)
                 }
-                if (successValue.error != null) {
-                    Timber.e("ReaderViewModel: reading mode error: ${successValue.error}")
+                if (successValue.enabled && !viewState.isTopBarVisible) {
                     updateState {
-                        copy(error = Error.readingModeUnavailable)
+                        copy(isTopBarVisible = true, isScrubberSuppressedByScroll = false)
                     }
                 }
             }
@@ -1890,10 +1883,12 @@ class ReaderViewModel @Inject constructor(
         }
         val selectedAnnotationKey = viewState.selectedAnnotationKey
         if (newShowSideBarState && selectedAnnotationKey != null) {
-            val index = viewState.sortedKeys.indexOf(selectedAnnotationKey)
-            triggerEffect(
-                ReaderViewEffect.ScrollSideBar(index)
-            )
+            val index = displayedSortedKeys().indexOf(selectedAnnotationKey)
+            if (index != -1) {
+                triggerEffect(
+                    ReaderViewEffect.ScrollSideBar(index)
+                )
+            }
         }
     }
 
@@ -1907,6 +1902,18 @@ class ReaderViewModel @Inject constructor(
 
     fun annotation(key: String): ReaderAnnotation? {
         return this.annotations[key]
+    }
+
+    fun displayedSortedKeys(): List<String> {
+        if (!viewState.readingModeEnabled) {
+            return viewState.sortedKeys
+        }
+        return viewState.sortedKeys.filter { key ->
+            when (annotation(key)?.type) {
+                AnnotationType.highlight, AnnotationType.underline, AnnotationType.note -> true
+                else -> false
+            }
+        }
     }
 
     fun onCommentFocusFieldChange(annotationKey: String) {
@@ -2394,7 +2401,7 @@ class ReaderViewModel @Inject constructor(
             }
         }
 
-        val index = viewState.sortedKeys.indexOf(viewState.selectedAnnotationKey)
+        val index = displayedSortedKeys().indexOf(viewState.selectedAnnotationKey)
         triggerEffect(
             ReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(
                 index,
@@ -2584,6 +2591,14 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                }
+                if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
+                    readerWebCallChainExecutor.setAppearance(
+                        lineHeight = readerSettings.lineHeight.toDouble(),
+                        wordSpacing = readerSettings.wordSpacing.toDouble(),
+                        letterSpacing = readerSettings.letterSpacing.toDouble(),
+                        pageWidth = readerSettings.pageWidth,
+                    )
                 }
             }
 

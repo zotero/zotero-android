@@ -280,22 +280,12 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
-                        "onReadingModeLoading" -> {
-                            val params = data["params"].asJsonObject
-                            observable.emitAsync(
-                                Result.Success(
-                                    ReaderWebData.setReadingModeLoading(params["loading"].asBoolean)
-                                )
-                            )
-                        }
-
-                        "onReadingModeEnabledChange" -> {
+                        "onReadingModeEnabled" -> {
                             val params = data["params"].asJsonObject
                             val enabled = params["enabled"].asBoolean
-                            val error = params["error"]?.takeIf { !it.isJsonNull }?.asString
                             observable.emitAsync(
                                 Result.Success(
-                                    ReaderWebData.setReadingModeEnabled(enabled, error)
+                                    ReaderWebData.setReadingModeEnabled(enabled)
                                 )
                             )
                         }

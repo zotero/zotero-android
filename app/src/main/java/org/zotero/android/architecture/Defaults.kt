@@ -561,9 +561,16 @@ open class Defaults @Inject constructor(
             this.readerSettings,
             null
         ) ?: return ReaderSettings.default()
-        val settings = dataMarshaller.unmarshal<ReaderSettings>(json)
+        val settings = try {
+            dataMarshaller.unmarshal<ReaderSettings>(json)
+        } catch (e: Exception) {
+            return ReaderSettings.default()
+        }
         if (settings.scrollMode == null) {
             settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        if (settings.lineHeight <= 0f) {
+            settings.lineHeight = 1.2f
         }
         return settings
     }
