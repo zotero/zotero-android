@@ -68,6 +68,7 @@ private const val AssumedPageAspectRatio = 0.72f
 
 @Composable
 internal fun ReaderPageIndicatorLabel(
+    visible: Boolean,
     viewModel: ReaderScrubberViewModel = viewModel(),
 ) {
     val viewState by viewModel.viewStates.observeAsState(ReaderScrubberViewState())
@@ -75,7 +76,7 @@ internal fun ReaderPageIndicatorLabel(
     val pageCount = viewState.thumbnailCache.size
 
     AnimatedVisibility(
-        visible = viewState.showPageLabel && selectedPage != null && pageCount > 0,
+        visible = visible && selectedPage != null && pageCount > 0,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
