@@ -340,11 +340,13 @@ class AllItemsProcessor @Inject constructor(
         val attachment = accessory.attachmentGet ?: return
         when (update.kind) {
             AttachmentDownloader.Update.Kind.ready -> {
+                // The item may already show the file as local, if it was reloaded after the file was
+                // marked as downloaded. It still has to stop showing the download as in progress
                 val updatedAttachment =
                     attachment.changed(location = Attachment.FileLocation.local)
-                        ?: return
-
-                itemAccessories[updateKey] = ItemAccessory.attachment(updatedAttachment)
+                if (updatedAttachment != null) {
+                    itemAccessories[updateKey] = ItemAccessory.attachment(updatedAttachment)
+                }
 
                 this@AllItemsProcessor.updateItemKey = updateKey
                 if (this@AllItemsProcessor.downloadBatchData != batchData) {

@@ -6,6 +6,7 @@ import java.io.File
 import java.io.InputStream
 import java.security.DigestInputStream
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.encoding.Base64
 
 object FileHelper {
@@ -75,7 +76,8 @@ object FileHelper {
         return Base64.decode(bytes)
     }
 
-    private val cachedMD5AndModificationDateByURL = mutableMapOf<String, Triple<String, Long, Long>>()
+    // Accessed from any thread that determines attachment locations
+    private val cachedMD5AndModificationDateByURL = ConcurrentHashMap<String, Triple<String, Long, Long>>()
 
     fun cachedMD5(file: File): String? {
         var newModificationDate: Long = Long.MIN_VALUE
