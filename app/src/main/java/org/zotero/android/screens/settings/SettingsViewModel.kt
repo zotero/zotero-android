@@ -1,16 +1,31 @@
 package org.zotero.android.screens.settings
 
 import dagger.hilt.android.lifecycle.HiltViewModel
+import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
+import org.zotero.android.architecture.Defaults
+import org.zotero.android.architecture.EventBusConstants
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
 import javax.inject.Inject
 
 @HiltViewModel
 internal class SettingsViewModel @Inject constructor(
+    private val defaults: Defaults,
 ) : BaseViewModel2<SettingsViewState, SettingsViewEffect>(SettingsViewState()) {
 
     fun init() = initOnce {
+        updateState {
+            copy(showSubcollectionItems = defaults.showSubcollectionItems())
+        }
+    }
+
+    fun setShowSubcollectionItems(showSubcollectionItems: Boolean) {
+        defaults.setShowSubcollectionItems(showSubcollectionItems)
+        updateState {
+            copy(showSubcollectionItems = showSubcollectionItems)
+        }
+        EventBus.getDefault().post(EventBusConstants.ShowSubcollectionItemsChanged)
     }
 
     fun onDone() {
@@ -29,7 +44,7 @@ internal class SettingsViewModel @Inject constructor(
 }
 
 internal data class SettingsViewState(
-    val placeholder: String = "",
+    val showSubcollectionItems: Boolean = false,
 ) : ViewState
 
 internal sealed class SettingsViewEffect : ViewEffect {
