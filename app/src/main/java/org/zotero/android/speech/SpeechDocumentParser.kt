@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
+import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.speech.data.SDTRect
 import org.zotero.android.speech.data.TextRange
 
@@ -442,5 +443,118 @@ object SpeechDocumentParser {
         val maxX = maxOf(a.x + a.width, b.x + b.width)
         val maxY = maxOf(a.y + a.height, b.y + b.height)
         return SDTRect(x = minX, y = minY, width = maxX - minX, height = maxY - minY)
+    }
+
+    fun paragraphRange(index: Int, segments: List<Segment>): TextRange? {
+        val (_, segment) = segmentContaining(index, segments) ?: return null
+        val end = segment.pageOffset + segment.text.length
+        val start = maxOf(index, segment.pageOffset)
+        return TextRange(start, end - start)
+    }
+
+    fun sentenceRange(index: Int, segments: List<Segment>): TextRange? {
+        val (_, segment) = segmentContaining(index, segments) ?: return null
+        val intra = maxOf(0, index - segment.pageOffset)
+        val sentence = TextTokenizer.findSentence(segment.text, intra) ?: return null
+        return TextRange(segment.pageOffset + sentence.range.location, sentence.range.length)
+    }
+
+    fun nextSentenceStart(index: Int, segments: List<Segment>): Int? {
+        val (segmentIndex, segment) = segmentContaining(index, segments) ?: return null
+        val segmentEnd = segment.pageOffset + segment.text.length
+        if (index < segmentEnd) {
+            val intra = maxOf(0, index - segment.pageOffset)
+            val relativeNext = TextTokenizer.nextSentenceStart(segment.text, intra)
+            if (relativeNext != null) {
+                val candidate = segment.pageOffset + relativeNext
+                if (candidate < segmentEnd) {
+                    return candidate
+                }
+            }
+        }
+        val nextIndex = segmentIndex + 1
+        if (nextIndex >= segments.size) return null
+        return firstSentenceStart(segments[nextIndex])
+    }
+
+    fun previousSentenceStart(index: Int, segments: List<Segment>): Int? {
+        val (segmentIndex, segment) = segmentContaining(index, segments) ?: return null
+        if (index > segment.pageOffset) {
+            val intra = index - segment.pageOffset
+            val relativeStart = TextTokenizer.previousSentenceStart(segment.text, intra)
+            if (relativeStart != null) {
+                return segment.pageOffset + relativeStart
+            }
+        }
+        if (segmentIndex <= 0) return null
+        return lastSentenceStart(segments[segmentIndex - 1])
+    }
+
+    fun lastSentenceStart(segments: List<Segment>): Int? {
+        val last = segments.lastOrNull() ?: return null
+        return lastSentenceStart(last)
+    }
+
+    private fun firstSentenceStart(segment: Segment): Int {
+        return segment.pageOffset + (TextTokenizer.findSentence(segment.text, 0)?.range?.location ?: 0)
+    }
+
+    private fun lastSentenceStart(segment: Segment): Int {
+        return segment.pageOffset + (TextTokenizer.previousSentenceStart(segment.text, segment.text.length) ?: 0)
+    }
+
+    private fun segmentContaining(index: Int, segments: List<Segment>): Pair<Int, Segment>? {
+        for ((offset, segment) in segments.withIndex()) {
+            if (index < segment.pageOffset + segment.text.length) {
+                return offset to segment
+            }
+        }
+        return null
+    }
+
+    fun unitRange(index: Int, granularity: RemoteVoice.Granularity, segments: List<Segment>): TextRange? {
+        val (_, segment) = segmentContaining(index, segments) ?: return null
+        if (granularity == RemoteVoice.Granularity.paragraph) {
+            return TextRange(segment.pageOffset, segment.text.length)
+        }
+        val intra = maxOf(0, index - segment.pageOffset)
+        val sentence = TextTokenizer.findSentenceContaining(segment.text, intra) ?: return null
+        return TextRange(segment.pageOffset + sentence.range.location, sentence.range.length)
+    }
+
+    fun firstUnitRange(granularity: RemoteVoice.Granularity, segments: List<Segment>): TextRange? {
+        val first = segments.firstOrNull() ?: return null
+        if (granularity == RemoteVoice.Granularity.paragraph) {
+            return TextRange(first.pageOffset, first.text.length)
+        }
+        return sentenceRange(first.pageOffset, segments)
+    }
+
+    fun lastUnitRange(granularity: RemoteVoice.Granularity, segments: List<Segment>): TextRange? {
+        val last = segments.lastOrNull() ?: return null
+        if (granularity == RemoteVoice.Granularity.paragraph) {
+            return TextRange(last.pageOffset, last.text.length)
+        }
+        val start = lastSentenceStart(segments) ?: return null
+        return sentenceRange(start, segments)
+    }
+
+    fun nextUnitRange(afterEndOf: TextRange, granularity: RemoteVoice.Granularity, segments: List<Segment>): TextRange? {
+        val end = afterEndOf.end
+        if (granularity == RemoteVoice.Granularity.paragraph) {
+            val next = segments.firstOrNull { it.pageOffset >= end } ?: return null
+            return TextRange(next.pageOffset, next.text.length)
+        }
+        val start = nextSentenceStart(end, segments) ?: return null
+        return sentenceRange(start, segments)
+    }
+
+    fun previousUnitRange(location: Int, granularity: RemoteVoice.Granularity, segments: List<Segment>): TextRange? {
+        if (granularity == RemoteVoice.Granularity.paragraph) {
+            val previous = segments.lastOrNull { it.pageOffset < location } ?: return null
+            return TextRange(previous.pageOffset, previous.text.length)
+        }
+        val start = previousSentenceStart(location, segments) ?: return null
+        return sentenceRange(start, segments)
     }
 }

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document Worker Host</title>
+</head>
+<body>
+<script src="../document_worker/worker.js"></script>
+<script>
+(function () {
+  var port = null;
+
+  window.addEventListener("message", function (event) {
+    if (event.data === "initPort") {
+      port = event.ports[0];
+    }
+  });
+
+  function sendToPort(handlerName, message) {
+    port.postMessage(JSON.stringify({ handlerName: handlerName, message: message }));
+  }
+
+  function installMapIteratorFlatMap() {
+    var prototype = Object.getPrototypeOf(new Map().values());
+    if (typeof prototype.flatMap === "function") {
+      return false;
+    }
+    Object.defineProperty(prototype, "flatMap", {
+      configurable: true,
+      writable: true,
+      value: function (mapper) {
+        var source = this;
+        return (function* () {
+          var index = 0;
+          for (var value of source) {
+            var mapped = mapper(value, index++);
+            for (var mappedValue of mapped) {
+              yield mappedValue;
+            }
+          }
+        })();
+      }
+    });
+    return true;
+  }
+  installMapIteratorFlatMap();
+
+  function base64ToBytes(base64) {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  function bytesToBase64(bytes) {
+    var binary = "";
+    var chunkSize = 0x8000;
+    for (var offset = 0; offset < bytes.length; offset += chunkSize) {
+      var chunk = bytes.subarray(offset, offset + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return btoa(binary);
+  }
+
+  function fetchLocalFile(url) {
+    return new Promise(function (resolve, reject) {
+      var request = new XMLHttpRequest();
+      request.open("GET", url, true);
+      request.responseType = "arraybuffer";
+      request.onload = function () {
+        if ((request.status === 200 || request.status === 0) && request.response) {
+          resolve(new Uint8Array(request.response));
+        } else {
+          reject(new Error("request failed for " + url + ": " + request.status));
+        }
+      };
+      request.onerror = function () {
+        reject(new Error("request failed for " + url));
+      };
+      request.send(null);
+    });
+  }
+
+  function documentWorkerDataProvider(path) {
+    return fetchLocalFile("../document_worker/" + path);
+  }
+
+  async function extractPack(bytes, options) {
+    var result = await window.worker.getStructuredDocumentText(bytes, {
+      contentType: options.contentType,
+      password: options.password,
+      sourceHash: options.sourceHash,
+      dataProvider: documentWorkerDataProvider
+    });
+    return bytesToBase64(new Uint8Array(result.buf));
+  }
+
+  window.extractStructuredDocumentTextPack = async function (base64Buf, optionsJSON) {
+    return extractPack(base64ToBytes(base64Buf), optionsJSON ? JSON.parse(optionsJSON) : {});
+  };
+
+  window.getStructuredDocumentText = async function (workId, fileUrl, contentType, password, sourceHash) {
+    try {
+      var bytes = await fetchLocalFile(fileUrl);
+      var buf = await extractPack(bytes, { contentType: contentType, password: password, sourceHash: sourceHash });
+      sendToPort("structuredDocumentTextHandler", { workId: workId, structuredDocumentText: { buf: buf } });
+    } catch (error) {
+      sendToPort("errorHandler", { workId: workId, error: String(error) });
+    }
+  };
+})();
+</script>
+</body>
+</html>
