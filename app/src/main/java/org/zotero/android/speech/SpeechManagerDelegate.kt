@@ -7,6 +7,7 @@ import java.io.File
 interface SpeechManagerDelegate<Index : Any> {
     val documentTitle: String?
     val documentFile: File?
+    val documentContentType: String?
     val documentPassword: String?
     fun getCurrentPageIndex(): Index
     fun getNextPageIndex(currentPageIndex: Index): Index?

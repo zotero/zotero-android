@@ -28,6 +28,23 @@ object LanguageDetector {
     val deviceLocale: String
         get() = Locale.getDefault().toLanguageTag()
 
+    val deviceBaseLanguage: String
+        get() = baseLanguage(of = deviceLocale)
+
+    fun baseLanguage(of: String): String {
+        return of.substringBefore('-')
+    }
+
+    fun localizedLanguageName(baseLanguage: String): String? {
+        val name = Locale.forLanguageTag(baseLanguage).displayLanguage
+        return if (name.isEmpty() || name == baseLanguage) null else name
+    }
+
+    fun localizedIdentifierName(languageTag: String): String? {
+        val name = Locale.forLanguageTag(languageTag).displayName
+        return if (name.isEmpty() || name == languageTag) null else name
+    }
+
     suspend fun detectLanguage(text: String): String {
         val identifier = LanguageIdentification.getClient()
         try {
