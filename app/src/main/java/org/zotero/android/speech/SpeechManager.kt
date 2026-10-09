@@ -7,6 +7,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.coroutines.Dispatchers
@@ -19,9 +20,11 @@ import java.lang.ref.WeakReference
 
 class SpeechManager<Index : Any>(
     delegate: SpeechManagerDelegate<Index>,
+    voiceLanguage: String?,
+    voiceProcessorFactory: VoiceProcessorFactory,
     private val documentWorkerExecutor: DocumentWorkerWebCallChainExecutor,
     private val dispatchers: Dispatchers,
-) {
+) : VoiceProcessorDelegate {
     data class SpeechParagraph<Index>(
         val text: String,
         val page: Index,
@@ -33,8 +36,8 @@ class SpeechManager<Index : Any>(
     private val delegateReference = WeakReference(delegate)
     private val delegate: SpeechManagerDelegate<Index>? get() = delegateReference.get()
 
-    private val mutableState = MutableStateFlow<SpeechState>(SpeechState.Stopped)
-    val state: StateFlow<SpeechState> = mutableState
+    override val state = MutableStateFlow<SpeechState>(SpeechState.Stopped)
+    override val remainingTime = MutableStateFlow<Double?>(null)
 
     private val mutableExtractionProgress = MutableStateFlow<Double?>(null)
     val extractionProgress: StateFlow<Double?> = mutableExtractionProgress
@@ -52,6 +55,12 @@ class SpeechManager<Index : Any>(
         val offset: Int,
     )
 
+    sealed class StartTarget<out Index> {
+        data object CurrentPage : StartTarget<Nothing>()
+        class PageTextOffset(val offsetForPageText: (String) -> Int) : StartTarget<Nothing>()
+        data class Resume<Index>(val position: ResumePosition<Index>) : StartTarget<Index>()
+    }
+
     private enum class NavigationDirection { forward, backward }
 
     private val navigationMultiTapIntervalMillis = 300L
@@ -63,7 +72,7 @@ class SpeechManager<Index : Any>(
     private var documentLoaded = false
     private var documentLanguage: String? = null
 
-    private lateinit var processor: VoiceProcessor
+    private var processor: VoiceProcessor
     private var position: Position? = null
         set(value) {
             field = value
@@ -77,13 +86,39 @@ class SpeechManager<Index : Any>(
     private var pendingNavigation: Pair<NavigationDirection, Job>? = null
     var onSpeakingPositionChanged: ((ResumePosition<Index>) -> Unit)? = null
 
-    private val speechRange: TextRange?
+    val isActive: Boolean get() = !state.value.isStopped
+    val language: String? get() = processor.preferredLanguage
+    val speechRateModifier: Float get() = processor.speechRateModifier
+    val detectedLanguage: String get() = processor.detectedLanguage ?: "en"
+
+    override val speechRange: TextRange?
         get() {
             val position = position ?: return null
             if (position.paragraphIndex >= paragraphs.size) return null
             val paragraph = paragraphs[position.paragraphIndex]
             return TextRange(paragraph.pageOffset + position.range.location, position.range.length)
         }
+
+    init {
+        processor = voiceProcessorFactory.makeLocalProcessor(
+            language = voiceLanguage,
+            detectedLanguage = null,
+            speechRateModifier = 1f,
+            delegate = this,
+            scope = scope,
+        )
+        scope.launch {
+            state.collect { state ->
+                if (state.isStopped) {
+                    position = null
+                    currentSpeakingPage = null
+                    processor.detectedLanguage = null
+                    pendingNavigation?.second?.cancel()
+                    pendingNavigation = null
+                }
+            }
+        }
+    }
 
     private val highlightGranularity: RemoteVoice.Granularity
         get() = when (val voice = processor.speechVoice) {
@@ -172,8 +207,141 @@ class SpeechManager<Index : Any>(
         }
     }
 
+    fun start(target: StartTarget<Index>) {
+        state.value = SpeechState.Initializing
+        processor.verifyPlaybackAllowed { outOfCreditsReason ->
+            if (state.value != SpeechState.Initializing) return@verifyPlaybackAllowed
+            if (outOfCreditsReason != null) {
+                Timber.i("SpeechManager: can't start playback, out of credits")
+                state.value = SpeechState.OutOfCredits(outOfCreditsReason)
+                return@verifyPlaybackAllowed
+            }
+            if (delegate == null) {
+                Timber.e("SpeechManager: can't get delegate")
+                state.value = SpeechState.Stopped
+                return@verifyPlaybackAllowed
+            }
+            scope.launch {
+                val success = loadDocumentIfNeeded()
+                if (state.value != SpeechState.Initializing) return@launch
+                if (!success) {
+                    state.value = SpeechState.Stopped
+                    return@launch
+                }
+                applySessionLanguageIfNeeded()
+                startPlayback(target)
+            }
+        }
+    }
+
+    private fun startPlayback(target: StartTarget<Index>) {
+        val delegate = delegate
+        if (delegate == null) {
+            state.value = SpeechState.Stopped
+            return
+        }
+
+        if (target is StartTarget.Resume && target.position.paragraphIndex < paragraphs.size) {
+            val resumePosition = target.position
+            val paragraph = paragraphs[resumePosition.paragraphIndex]
+            val offset = resumePosition.offset.coerceIn(0, paragraph.text.length)
+            startSpeaking(resumePosition.paragraphIndex, offset, reportPageChange = false)
+            return
+        }
+
+        val currentIndex = delegate.getCurrentPageIndex()
+        val page = firstReadablePage(currentIndex)
+        if (page == null) {
+            Timber.w("SpeechManager: no readable content to play")
+            state.value = SpeechState.Stopped
+            return
+        }
+        val startOffset = if (target is StartTarget.PageTextOffset && page == currentIndex) {
+            target.offsetForPageText(pageText(page))
+        } else {
+            0
+        }
+        val resolved = resolveParagraph(startOffset, page)
+        if (resolved == null) {
+            state.value = SpeechState.Stopped
+            return
+        }
+        startSpeaking(resolved.first, resolved.second, reportPageChange = false)
+    }
+
+    private fun applySessionLanguageIfNeeded() {
+        if (processor.preferredLanguage != null || processor.detectedLanguage != null) return
+        val language = documentLanguage ?: "en"
+        processor.detectedLanguage = language
+        Timber.i("SpeechManager: using session language $language (from document metadata: ${documentLanguage != null})")
+    }
+
+    fun pause() {
+        processor.pause()
+    }
+
+    fun resume() {
+        if (processor.canResume) {
+            processor.resume()
+        } else {
+            start(StartTarget.CurrentPage)
+        }
+    }
+
     fun stop() {
         processor.stop()
+    }
+
+    fun set(rateModifier: Float) {
+        processor.speechRateModifier = rateModifier
+    }
+
+    fun release() {
+        pendingNavigation?.second?.cancel()
+        pendingNavigation = null
+        processor.stop()
+        (processor as? LocalVoiceProcessor)?.release()
+        scope.cancel()
+    }
+
+    override fun goToNextPageIfAvailable(): Boolean {
+        val position = position ?: return false
+        val nextIndex = position.paragraphIndex + 1
+        if (nextIndex >= paragraphs.size) return false
+        startSpeaking(nextIndex, 0, reportPageChange = true)
+        return true
+    }
+
+    override fun speechRangeWillChange(range: TextRange) {
+        val page = currentSpeakingPage ?: return
+        val (index, _) = resolveParagraph(range.location, page) ?: return
+        val paragraph = paragraphs[index]
+        val intraLocation = (range.location - paragraph.pageOffset).coerceIn(0, paragraph.text.length)
+        val intraLength = minOf(range.length, paragraph.text.length - intraLocation)
+        val intraRange = TextRange(intraLocation, intraLength)
+        val granularity = highlightGranularity
+
+        val current = position
+        if (current != null && current.paragraphIndex == index && current.highlightGranularity == granularity &&
+            current.highlightRange.contains(intraLocation)
+        ) {
+            position = Position(index, intraRange, current.highlightRange, granularity)
+            return
+        }
+
+        val unit = findHighlightUnit(intraLocation, paragraph.text, granularity)
+        val newHighlightRange = unit?.range ?: intraRange
+        position = Position(index, intraRange, newHighlightRange, granularity)
+
+        if (unit != null) {
+            delegate?.readAloudHighlightChanged(
+                text = unit.text,
+                rects = highlightRects(paragraph, newHighlightRange),
+                pageIndex = paragraph.page,
+                sourceLocation = paragraph.pageOffset + newHighlightRange.location,
+                sourceTextLength = pageTextLength[paragraph.page] ?: paragraph.text.length,
+            )
+        }
     }
 
     fun navigateForward() {

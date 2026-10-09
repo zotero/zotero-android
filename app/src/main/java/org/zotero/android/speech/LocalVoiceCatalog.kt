@@ -28,7 +28,7 @@ class LocalVoiceCatalog @Inject constructor(
         if (isLoaded && !forceReload) {
             return voices
         }
-        val engine = initializeEngine() ?: return voices
+        val engine = createEngine() ?: return voices
         try {
             voices = engine.voices.orEmpty().filter { it.isInstalledOnDevice }
             isLoaded = true
@@ -40,7 +40,7 @@ class LocalVoiceCatalog @Inject constructor(
         return voices
     }
 
-    private suspend fun initializeEngine(): TextToSpeech? {
+    suspend fun createEngine(): TextToSpeech? {
         return suspendCancellableCoroutine { continuation ->
             val holder = arrayOfNulls<TextToSpeech>(1)
             val engine = TextToSpeech(context) { status ->
