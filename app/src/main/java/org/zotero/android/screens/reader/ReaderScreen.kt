@@ -39,6 +39,7 @@ import org.zotero.android.screens.reader.annotationmore.ReaderAnnotationMoreNavi
 import org.zotero.android.screens.reader.colorpicker.ReaderColorPickerView
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.filter.ReaderFilterView
+import org.zotero.android.screens.reader.readaloud.ReadAloudControlsBar
 import org.zotero.android.screens.reader.search.ReaderSearchScreen
 import org.zotero.android.screens.reader.search.ReaderSearchViewModel
 import org.zotero.android.screens.reader.search.ReaderSearchViewState
@@ -193,7 +194,9 @@ internal fun ReaderScreen(
                                 toPdfSettings = viewModel::navigateToReaderSettings,
                                 showPdfSearch = viewState.showPdfSearch,
                                 toggleToolbarButton = viewModel::toggleToolbarButton,
+                                onToggleReadAloud = viewModel::toggleReadAloud,
                                 isToolbarButtonSelected = viewState.showCreationToolbar,
+                                isReadAloudActive = viewState.isReadAloudActive,
                                 showSideBar = viewState.showSideBar,
                                 onShowHidePdfSearch = viewModel::togglePdfSearch,
                                 viewModel = viewModel,
@@ -206,17 +209,45 @@ internal fun ReaderScreen(
                 }
 
             },
-        ) {
-            when (viewState.fileType) {
-                ReaderFileType.PDF, ReaderFileType.HTML -> {
-                    if (layoutType.isTablet()) {
-                        ReaderSideBySideMode(
-                            viewModel = viewModel,
-                            viewState = viewState,
-                            annotationsLazyListState = annotationsLazyListState,
-                            annotationMaxSideSize = annotationMaxSideSize
-                        )
-                    } else {
+            bottomBar = {
+                viewState.readAloudControls?.let { controls ->
+                    ReadAloudControlsBar(
+                        controls = controls,
+                        onBackward = viewModel::onReadAloudSkipBackward,
+                        onPlay = viewModel::onReadAloudPlay,
+                        onPause = viewModel::onReadAloudPause,
+                        onForward = viewModel::onReadAloudSkipForward,
+                    )
+                }
+            },
+        ) { contentPadding ->
+            val bottomPadding = if (viewState.readAloudControls != null) {
+                contentPadding.calculateBottomPadding()
+            } else {
+                0.dp
+            }
+            Box(modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding)) {
+                when (viewState.fileType) {
+                    ReaderFileType.PDF, ReaderFileType.HTML -> {
+                        if (layoutType.isTablet()) {
+                            ReaderSideBySideMode(
+                                viewModel = viewModel,
+                                viewState = viewState,
+                                annotationsLazyListState = annotationsLazyListState,
+                                annotationMaxSideSize = annotationMaxSideSize
+                            )
+                        } else {
+                            ReaderOverlayMode(
+                                viewState = viewState,
+                                viewModel = viewModel,
+                                annotationsLazyListState = annotationsLazyListState,
+                                layoutType = layoutType,
+                                annotationMaxSideSize = annotationMaxSideSize
+                            )
+                        }
+                    }
+
+                    ReaderFileType.EPUB -> {
                         ReaderOverlayMode(
                             viewState = viewState,
                             viewModel = viewModel,
@@ -225,18 +256,8 @@ internal fun ReaderScreen(
                             annotationMaxSideSize = annotationMaxSideSize
                         )
                     }
-                }
 
-                ReaderFileType.EPUB -> {
-                    ReaderOverlayMode(
-                        viewState = viewState,
-                        viewModel = viewModel,
-                        annotationsLazyListState = annotationsLazyListState,
-                        layoutType = layoutType,
-                        annotationMaxSideSize = annotationMaxSideSize
-                    )
                 }
-
             }
         }
         if (!layoutType.isTablet()) {

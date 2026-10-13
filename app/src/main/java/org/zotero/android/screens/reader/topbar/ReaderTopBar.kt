@@ -36,7 +36,9 @@ internal fun ReaderTopBar(
     toPdfSettings: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
     toggleToolbarButton: () -> Unit,
+    onToggleReadAloud: () -> Unit,
     isToolbarButtonSelected: Boolean,
+    isReadAloudActive: Boolean,
     showSideBar: Boolean,
     showPdfSearch: Boolean,
     viewState: ReaderViewState,
@@ -111,6 +113,30 @@ internal fun ReaderTopBar(
                     selectedDrawableRes = Drawables.draw_filled,
                     onToggle = toggleToolbarButton,
                     isSelected = isToolbarButtonSelected
+                )
+            }
+
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Below,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip() {
+                        Text(
+                            safeStringResource(
+                                Strings.accessibility_speech_title
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                IconWithPaddingM3(
+                    unselectedDrawableRes = Drawables.headphones,
+                    selectedDrawableRes = Drawables.headphones_filled,
+                    onToggle = onToggleReadAloud,
+                    isSelected = isReadAloudActive
                 )
             }
 

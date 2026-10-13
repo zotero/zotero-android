@@ -87,6 +87,9 @@ import org.zotero.android.screens.reader.data.ReaderAnnotationsFilter
 import org.zotero.android.screens.reader.data.ReaderArgs
 import org.zotero.android.screens.reader.data.ReaderDocumentData
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.readaloud.ReadAloudControlsState
+import org.zotero.android.screens.reader.readaloud.ReaderReadAloudHandler
+import org.zotero.android.screens.reader.readaloud.ReaderSpeechDelegate
 import org.zotero.android.screens.reader.data.ReaderOutline
 import org.zotero.android.screens.reader.data.ReaderPage
 import org.zotero.android.screens.reader.data.ReaderWebData
@@ -151,6 +154,7 @@ class ReaderViewModel @Inject constructor(
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
     private val progressHandler: SyncProgressHandler,
+    private val readAloudHandler: ReaderReadAloudHandler,
 
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<ReaderViewState, ReaderViewEffect>(ReaderViewState())  {
@@ -184,6 +188,9 @@ class ReaderViewModel @Inject constructor(
     private var savedSearchTerm = ""
 
     private var selectedTextParamsText: String = ""
+
+    private var currentPageIndex = 0
+    private var pagesCount: Int? = null
 
     var activeLineWidth: Float = 0.0f
     var activeEraserSize: Float = 0.0f
@@ -376,6 +383,7 @@ class ReaderViewModel @Inject constructor(
 
         initState()
         setupWebCallChainEventStream()
+        observeReadAloudState()
         startObservingTheme()
         startObservingSearchTerm()
         startObservingRequestThumbnailRender()
@@ -1466,6 +1474,7 @@ class ReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         EventBus.getDefault().unregister(this)
+        readAloudHandler.release()
         progressHandler.unMuteProgressToolbarForScreen()
 
         item?.removeAllChangeListeners()
@@ -1623,6 +1632,8 @@ class ReaderViewModel @Inject constructor(
 
         val pageIndex = stats?.intOrNull("pageIndex")
         val pagesCount = stats?.intOrNull("pagesCount")
+        pageIndex?.let { currentPageIndex = it }
+        this.pagesCount = pagesCount
         val pageLabel = stats?.stringOrNull("pageLabel")
         val usePhysicalPageNumbers = stats?.boolOrNull("usePhysicalPageNumbers") ?: false
 
@@ -1722,6 +1733,37 @@ class ReaderViewModel @Inject constructor(
                 ReaderViewEffect.ScrollSideBar(index)
             )
         }
+    }
+
+    fun toggleReadAloud() {
+        readAloudHandler.toggle(
+            ReaderSpeechDelegate(
+                documentTitle = item?.parent?.displayTitle ?: item?.displayTitle,
+                documentFile = documentFile,
+                fileType = viewState.fileType,
+                currentPage = { currentPageIndex },
+                pagesCount = { pagesCount },
+            )
+        )
+    }
+
+    private fun observeReadAloudState() {
+        readAloudHandler.isActive
+            .onEach { isActive -> updateState { copy(isReadAloudActive = isActive) } }
+            .launchIn(viewModelScope)
+        readAloudHandler.controls
+            .onEach { controls -> updateState { copy(readAloudControls = controls) } }
+            .launchIn(viewModelScope)
+    }
+
+    fun onReadAloudPlay() = readAloudHandler.play()
+
+    fun onReadAloudPause() = readAloudHandler.pause()
+
+    fun onReadAloudSkipForward() = readAloudHandler.skipForward()
+
+    fun onReadAloudSkipBackward() {
+        readAloudHandler.skipBackward()
     }
 
     fun toggleToolbarButton() {
@@ -2553,6 +2595,8 @@ data class ReaderViewState(
     val pageProgress: String? = null,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
+    val isReadAloudActive: Boolean = false,
+    val readAloudControls: ReadAloudControlsState? = null,
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey
