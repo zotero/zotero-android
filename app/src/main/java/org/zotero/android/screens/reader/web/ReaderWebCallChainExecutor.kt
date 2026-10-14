@@ -134,11 +134,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
 
                         "onSetAnnotationPopup" -> {
-                            val params = data["params"].asJsonObject
-
-                            if (params.isEmpty) {
+                            val dParams = data["params"]
+                            if (dParams == null
+                                || dParams.isJsonNull
+                                || !dParams.isJsonObject
+                                || dParams.asJsonObject.isEmpty
+                            ) {
                                 return@launch
                             }
+                            val params = dParams.asJsonObject
 
 //                            val rectArray = params["rect"].asJsonArray.map { it.asDouble }
                             val key = params["annotation"].asJsonObject["id"].asString

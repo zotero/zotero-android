@@ -49,6 +49,7 @@ import org.zotero.android.database.requests.EditAnnotationFontSizeDbRequest
 import org.zotero.android.database.requests.EditAnnotationPathsDbRequestV2
 import org.zotero.android.database.requests.EditAnnotationRectsDbRequestV2
 import org.zotero.android.database.requests.EditAnnotationRotationDbRequest
+import org.zotero.android.database.requests.EditHtmlEpubAnnotationDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
@@ -1015,13 +1016,9 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun updateHtmlEpubDatabaseAnnotation(annotation: NewReaderAnnotation) {
-        val request = editItemFieldsDbRequestFactory.create(
-            key = annotation.key,
+        val request = EditHtmlEpubAnnotationDbRequest(
             libraryId = this.library.identifier,
-            fieldValues = mapOf(
-                KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.color,
-                KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to annotation.comment,
-            ),
+            annotation = annotation,
         )
         ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
         dbWrapperMain.realmDbStorage.perform(request)
