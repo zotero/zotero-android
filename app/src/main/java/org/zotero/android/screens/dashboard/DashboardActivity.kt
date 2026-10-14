@@ -103,7 +103,7 @@ internal class DashboardActivity : BaseActivity() {
 
         val onOpenWebpage: (url: String) -> Unit = { url ->
             var prefixedUrl = url
-            if (!prefixedUrl.startsWith("http://") && !prefixedUrl.startsWith("https://")) {
+            if (prefixedUrl.toUri().scheme == null) {
                 prefixedUrl = "http://$prefixedUrl"
             }
 
