@@ -14,6 +14,7 @@ class RemoteVoicesController @Inject constructor(
 ) {
     sealed class Error : Exception() {
         object noData : Error()
+        data class outOfCredits(val reason: SpeechState.OutOfCreditsReason) : Error()
     }
 
     data class Credits(
@@ -29,7 +30,7 @@ class RemoteVoicesController @Inject constructor(
     suspend fun loadVoices(): CustomResult<VoicesResult> {
         val networkResult = safeApiCall { zoteroApi.voicesRequest() }
         if (networkResult is CustomResult.GeneralError) {
-            return networkResult
+            return mapOutOfCredits(networkResult)
         }
         networkResult as NetworkSuccess
         val voicesResponse = networkResult.value ?: return CustomResult.GeneralError.CodeError(Error.noData)
@@ -46,7 +47,7 @@ class RemoteVoicesController @Inject constructor(
     suspend fun loadCredits(): CustomResult<Credits> {
         val networkResult = safeApiCall { zoteroApi.creditsRequest() }
         if (networkResult is CustomResult.GeneralError) {
-            return networkResult
+            return mapOutOfCredits(networkResult)
         }
         networkResult as NetworkSuccess
         val response = networkResult.value ?: return CustomResult.GeneralError.CodeError(Error.noData)
@@ -58,7 +59,7 @@ class RemoteVoicesController @Inject constructor(
     suspend fun downloadSample(voiceId: String): CustomResult<ByteArray> {
         val networkResult = safeApiCall { zoteroApi.readAloudSampleRequest(voiceId = voiceId) }
         if (networkResult is CustomResult.GeneralError) {
-            return networkResult
+            return mapOutOfCredits(networkResult)
         }
         networkResult as NetworkSuccess
         val body = networkResult.value ?: return CustomResult.GeneralError.CodeError(Error.noData)
@@ -68,10 +69,22 @@ class RemoteVoicesController @Inject constructor(
     suspend fun downloadSound(text: String, voiceId: String): CustomResult<ByteArray> {
         val networkResult = safeApiCall { zoteroApi.readAloudAudioRequest(text = text, voiceId = voiceId) }
         if (networkResult is CustomResult.GeneralError) {
-            return networkResult
+            return mapOutOfCredits(networkResult)
         }
         networkResult as NetworkSuccess
         val body = networkResult.value ?: return CustomResult.GeneralError.CodeError(Error.noData)
         return CustomResult.GeneralSuccess(body.bytes())
+    }
+
+    private fun mapOutOfCredits(error: CustomResult.GeneralError): CustomResult.GeneralError {
+        if (error !is CustomResult.GeneralError.NetworkError || error.httpCode != 402) {
+            return error
+        }
+        val reason = if (error.stringResponse?.contains("daily_limit_exceeded") == true) {
+            SpeechState.OutOfCreditsReason.dailyLimitExceeded
+        } else {
+            SpeechState.OutOfCreditsReason.quotaExceeded
+        }
+        return CustomResult.GeneralError.CodeError(Error.outOfCredits(reason))
     }
 }

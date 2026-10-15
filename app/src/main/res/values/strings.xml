@@ -91,4 +91,23 @@
     <string name="pdf_settings_flow_mode_paginated">Paginated</string>
     <string name="pdf_settings_flow_mode_scrolled">Scrolled</string>
 
+    <string name="speech_voice">Voice</string>
+    <string name="speech_voices">Voices</string>
+    <string name="speech_speak">Speak</string>
+    <string name="speech_automatic">Automatic</string>
+    <string name="speech_language">Language</string>
+    <string name="speech_region">Region</string>
+    <string name="speech_speech_rate">Speech Rate</string>
+    <string name="speech_switch">Switch</string>
+    <string name="speech_stop">Stop</string>
+    <string name="speech_add_time">Add More Time</string>
+    <string name="speech_continue_standard">Continue Reading With Standard Voices</string>
+    <string name="speech_continue_local">Continue Reading With Local Voices</string>
+    <string name="speech_local_sample">I am the local voice %1$s.</string>
+    <string name="speech_no_voices_for_tier">No voices found for detected language %1$s in this tier. Pick a different tier or choose language manually.</string>
+    <string name="speech_onboarding_title">Choose your preferred Read Aloud voice:</string>
+    <string name="speech_onboarding_tier_premium">Premium</string>
+    <string name="speech_onboarding_tier_standard">Standard</string>
+    <string name="speech_onboarding_tier_local">Local</string>
+
 </resources>

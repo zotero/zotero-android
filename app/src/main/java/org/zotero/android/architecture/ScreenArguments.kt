@@ -24,6 +24,7 @@ import org.zotero.android.screens.reader.annotationmore.data.ReaderAnnotationMor
 import org.zotero.android.screens.reader.annotationmore.editpage.data.ReaderAnnotationEditPageArgs
 import org.zotero.android.screens.reader.colorpicker.data.ReaderColorPickerArgs
 import org.zotero.android.screens.reader.filter.data.ReaderFilterArgs
+import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionArgs
 import org.zotero.android.screens.settings.csllocalepicker.data.SettingsCslLocalePickerArgs
 import org.zotero.android.screens.settings.stylepicker.data.SettingsStylePickerArgs
 import org.zotero.android.screens.share.sharecollectionpicker.data.ShareCollectionPickerArgs
@@ -39,6 +40,7 @@ object ScreenArguments {
     lateinit var addOrEditNoteArgs: AddOrEditNoteArgs
     lateinit var creatorEditArgs: CreatorEditArgs
     lateinit var sortPickerArgs: SortPickerArgs
+    lateinit var readAloudVoiceSelectionArgs: ReadAloudVoiceSelectionArgs
     lateinit var filterArgs: FilterArgs
     lateinit var tagPickerArgs: TagPickerArgs
     lateinit var singlePickerArgs: SinglePickerArgs
