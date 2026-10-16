@@ -14,7 +14,8 @@ class ReadFilteredTagsDbRequest(
     private val collectionId: CollectionIdentifier,
     private val libraryId: LibraryIdentifier,
     private val showAutomatic: Boolean,
-    private val filters: List<ItemsFilter>
+    private val filters: List<ItemsFilter>,
+    private val showSubcollectionItems: Boolean = false,
 
 ): DbResponseRequest<Set<Tag>> {
     override val needsWrite: Boolean
@@ -27,7 +28,12 @@ class ReadFilteredTagsDbRequest(
         val thisCollectionId = this.collectionId
         when(thisCollectionId) {
             is CollectionIdentifier.collection -> {
-                predicates = predicates.and().rawPredicate("any item.collections.key = \"${thisCollectionId.key}\"")
+                predicates = if (this.showSubcollectionItems) {
+                    val keys = database.selfAndSubcollectionKeys(thisCollectionId.key, this.libraryId)
+                    predicates.and().`in`("item.collections.key", keys.toTypedArray())
+                } else {
+                    predicates.and().rawPredicate("any item.collections.key = \"${thisCollectionId.key}\"")
+                }
             }
             is CollectionIdentifier.custom -> {
                 when(thisCollectionId.type) {
