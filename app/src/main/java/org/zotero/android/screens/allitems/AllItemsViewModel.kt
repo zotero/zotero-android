@@ -17,6 +17,8 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -38,6 +40,7 @@ import org.zotero.android.architecture.ViewState
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
+import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.citation.CitationController
 import org.zotero.android.citation.CitationController.Format
 import org.zotero.android.database.DbError
@@ -130,6 +133,7 @@ internal class AllItemsViewModel @Inject constructor(
     private val updateSuggestionUseCase: UpdateSuggestionUseCase,
     private val createAttachmentsDbRequestFactory: CreateAttachmentsDbRequest.Factory,
     private val defaults: Defaults,
+    private val attachmentDownloader: AttachmentDownloader,
 ) : BaseViewModel2<AllItemsViewState, AllItemsViewEffect>(AllItemsViewState()),
     AllItemsProcessorInterface {
 
@@ -229,6 +233,14 @@ internal class AllItemsViewModel @Inject constructor(
                 allItemsProcessorInterface = this@AllItemsViewModel,
                 searchTerm = searchTerm
             )
+
+            attachmentDownloader.batchState
+                .onEach { batchState ->
+                    updateState {
+                        copy(downloadBatchState = batchState)
+                    }
+                }
+                .launchIn(viewModelScope)
 
             maybeShowAppUpdateDialog()
 
@@ -1409,6 +1421,7 @@ internal class AllItemsViewModel @Inject constructor(
 
 internal data class AllItemsViewState(
     val lce: LCE2 = LCE2.Content,
+    val downloadBatchState: AttachmentDownloader.BatchState? = null,
     val snackbarMessage: SnackbarMessage? = null,
     val itemCellModels: SnapshotStateList<ItemCellModel> = mutableStateListOf(),
     val accessoryBeingDownloaded: SnapshotStateMap<String, ItemCellModel.Accessory?> = mutableStateMapOf(),
