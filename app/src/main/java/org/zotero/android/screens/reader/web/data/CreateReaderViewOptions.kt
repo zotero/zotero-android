@@ -25,6 +25,8 @@ data class CreateReaderViewState(
 
     //pdf
     var pageIndex: Int? = null,
+    var top: Double? = null,
+    var left: Double? = null,
 
     var flowMode: String? = null,
     var spreadMode: Int? = null,
