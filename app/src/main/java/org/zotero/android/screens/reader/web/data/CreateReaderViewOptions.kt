@@ -15,6 +15,7 @@ data class CreateReaderViewOptions(
 
 data class CreateReaderContentFit(
     val margin: Double,
+    val fitOnOpen: Boolean,
 )
 
 data class CreateReaderLocation(

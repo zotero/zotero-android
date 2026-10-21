@@ -509,7 +509,10 @@ class ReaderWebCallChainExecutor @Inject constructor(
             }
         }
         data.contentFitMargin?.let {
-            createReaderViewOptions.contentFit = CreateReaderContentFit(margin = it)
+            createReaderViewOptions.contentFit = CreateReaderContentFit(
+                margin = it,
+                fitOnOpen = data.fitToContentOnOpen,
+            )
         }
 
         val appearanceString = if (isDark) {
@@ -587,6 +590,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun fitToContent(margin: Double) {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("javascript:window.fitToContent({ margin: $margin });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setContentFit(margin: Double?) {
+        val options = if (margin != null) "{ margin: $margin }" else "null"
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:window.setContentFit($options);") {
                 cont.resume(Unit)
             }
         }

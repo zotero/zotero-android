@@ -1496,8 +1496,7 @@ class ReaderViewModel @Inject constructor(
                 } else {
                     null
                 }
-                // A zoom the user chose for this document takes precedence over fitting
-                val contentFitMargin = if (page is ReaderPage.pdf && savedPdfViewState == null && readerSettings.fitToContent) {
+                val contentFitMargin = if (page is ReaderPage.pdf && readerSettings.fitToContent) {
                     readerSettings.contentMargin.fraction
                 } else {
                     null
@@ -1510,6 +1509,8 @@ class ReaderViewModel @Inject constructor(
                     selectedAnnotationKey = viewState.selectedAnnotationKey,
                     savedPdfViewState = savedPdfViewState,
                     contentFitMargin = contentFitMargin,
+                    // A zoom the user chose for this document takes precedence over fitting
+                    fitToContentOnOpen = savedPdfViewState == null,
                 )
                 readerWebCallChainExecutor.loadDocument(
                     data = documentData,
@@ -2628,6 +2629,9 @@ class ReaderViewModel @Inject constructor(
                 }
                 if (viewState.fileType == ReaderFileType.PDF) {
                     readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                    readerWebCallChainExecutor.setContentFit(
+                        readerSettings.contentMargin.fraction.takeIf { readerSettings.fitToContent }
+                    )
                     if (shouldFitToContent) {
                         readerWebCallChainExecutor.fitToContent(readerSettings.contentMargin.fraction)
                     }
