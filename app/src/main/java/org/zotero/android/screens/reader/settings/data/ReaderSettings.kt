@@ -24,7 +24,7 @@ enum class PageLayoutFlowMode {
 // Space kept around fitted PDF content, as a fraction of the smaller viewport side
 enum class PageContentMargin(val fraction: Double) {
     NONE(0.0),
-    SMALL(0.02),
+    SMALL(0.01),
     MEDIUM(0.04),
     LARGE(0.08),
 }
