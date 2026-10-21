@@ -9,4 +9,9 @@ data class ReaderDocumentData(
     val annotationsJson: JsonArray,
     val page: ReaderPage?,
     val selectedAnnotationKey: String?,
+    val savedPdfViewState: ReaderPdfViewState? = null,
+    // Fit to Content margin, null when it's off
+    val contentFitMargin: Double? = null,
+    // False when a zoom the user chose is restored instead of fitting
+    val fitToContentOnOpen: Boolean = true,
 )

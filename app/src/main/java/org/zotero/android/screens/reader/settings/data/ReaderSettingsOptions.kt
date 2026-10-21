@@ -18,4 +18,12 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
 
     PageLayoutFlowModePaginated(Strings.pdf_settings_flow_mode_paginated),
     PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled),
+
+    FitToContentOff(Strings.pdf_settings_fit_to_content_off),
+    FitToContentOn(Strings.pdf_settings_fit_to_content_on),
+
+    ContentMarginNone(Strings.pdf_settings_content_margin_none),
+    ContentMarginSmall(Strings.pdf_settings_content_margin_small),
+    ContentMarginMedium(Strings.pdf_settings_content_margin_medium),
+    ContentMarginLarge(Strings.pdf_settings_content_margin_large),
 }
