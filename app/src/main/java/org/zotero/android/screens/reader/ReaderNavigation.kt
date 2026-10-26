@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -132,7 +134,7 @@ private fun NavGraphBuilder.readerScreen(
     onOpenWebpage: (url: String) -> Unit,
 ) {
     composable(
-        route = "${ReaderDestinations.READER_SCREEN}/{$ARG_READER_SCREEN}?uri={$ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG}",
+        route = ReaderDestinations.READER_SCREEN_ROUTE,
         arguments = listOf(
             navArgument(ARG_READER_SCREEN) { type = NavType.StringType },
             navArgument(ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG) { type = NavType.StringType },
@@ -153,6 +155,8 @@ private fun NavGraphBuilder.readerScreen(
 
 private object ReaderDestinations {
     const val READER_SCREEN = "readerScreen"
+    const val READER_SCREEN_ROUTE =
+        "$READER_SCREEN/{$ARG_READER_SCREEN}?uri={$ARG_READER_SCREEN_ENCODED_FILE_PATH_ARG}"
     const val READER_FILTER_NAVIGATION = "readerFilterNavigation"
     const val READER_ANNOTATION_MORE_NAVIGATION = "readerAnnotationMoreNavigation"
     const val READER_COLOR_PICKER = "readerColorPicker"
@@ -160,11 +164,26 @@ private object ReaderDestinations {
     const val READER_SETTINGS = "readerSettings"
 }
 
+private var isReaderSessionOpen = false
+
 fun ZoteroNavigation.toReaderScreen(
     readerParams: String,
     readerEncodedFilePathParam: String,
 ) {
+    if (isReaderSessionOpen) {
+        return
+    }
     navController.navigate("${ReaderDestinations.READER_SCREEN}/$readerParams?uri=$readerEncodedFilePathParam")
+    val readerEntry = navController.currentBackStackEntry ?: return
+    if (readerEntry.destination.route != ReaderDestinations.READER_SCREEN_ROUTE) {
+        return
+    }
+    isReaderSessionOpen = true
+    readerEntry.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+        if (event == Lifecycle.Event.ON_DESTROY) {
+            isReaderSessionOpen = false
+        }
+    })
 }
 
 private fun ZoteroNavigation.toReaderAnnotationNavigation() {
