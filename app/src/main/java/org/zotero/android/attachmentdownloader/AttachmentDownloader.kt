@@ -386,13 +386,14 @@ class AttachmentDownloader @Inject constructor(
             }
         }
         operation.finishedDownload = { result ->
+            val canUseLocalCopy = hasLocalCopy && file.exists()
             when (result) {
                 is CustomResult.GeneralError -> {
                     finish(
                         download = download,
                         parentKey = parentKey,
                         result = result,
-                        hasLocalCopy = hasLocalCopy
+                        hasLocalCopy = canUseLocalCopy
                     )
                 }
 
@@ -408,7 +409,7 @@ class AttachmentDownloader @Inject constructor(
                         download = download,
                         parentKey = parentKey,
                         result = result,
-                        hasLocalCopy = hasLocalCopy
+                        hasLocalCopy = canUseLocalCopy
                     )
                 }
             }
