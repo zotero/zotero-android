@@ -18,12 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.zotero.android.pdf.reader.sidebar.SidebarDivider
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.sidebar.ReaderSidebar
 
 @Composable
 internal fun ReaderSideBySideMode(
     viewModel: ReaderViewModel,
     viewState: ReaderViewState,
+    scrubberViewModel: ReaderScrubberViewModel,
     annotationsLazyListState: LazyListState,
     annotationMaxSideSize: Int,
 ) {
@@ -73,6 +75,7 @@ internal fun ReaderSideBySideMode(
         ReaderBox(
             viewState = viewState,
             viewModel = viewModel,
+            scrubberViewModel = scrubberViewModel,
             isOverlayMode = false
         )
     }

@@ -5,4 +5,5 @@ import org.zotero.android.screens.reader.data.ReaderFileType
 data class ReaderSettingsArgs(
     val readerSettings: ReaderSettings,
     val fileType: ReaderFileType,
+    val readingModeEnabled: Boolean = false,
 )

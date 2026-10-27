@@ -1,16 +1,21 @@
 package org.zotero.android.screens.reader
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,14 +29,18 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.scrubber.ReaderPageHistoryArrowButton
+import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
+import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
-import org.zotero.android.screens.reader.web.actionmenu.ReaderActionMenuPopup
 
 
 @Composable
 internal fun ReaderBox(
     viewModel: ReaderViewModel,
     viewState: ReaderViewState,
+    scrubberViewModel: ReaderScrubberViewModel,
     isOverlayMode: Boolean,
 ) {
     val density = LocalDensity.current
@@ -91,15 +100,6 @@ internal fun ReaderBox(
                     )
                 }
         ) {
-            val selectedTextParamsRects = viewState.selectedTextParamsRects
-            if (selectedTextParamsRects != null) {
-                ReaderActionMenuPopup(
-                    selectedTextParamsRects = selectedTextParamsRects,
-                    viewModel = viewModel,
-                    viewState = viewState,
-                )
-            }
-
             ReaderWebView(viewModel = viewModel)
             if (viewState.showCreationToolbar) {
                 ReaderAnnotationCreationToolbar(
@@ -110,6 +110,39 @@ internal fun ReaderBox(
                     onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
+            }
+            if (viewState.fileType == ReaderFileType.PDF) {
+                val isScrubberVisible = viewState.isScrubberVisible()
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = if (isScrubberVisible) 0.dp else 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    ReaderPageIndicatorLabel(viewModel = scrubberViewModel, visible = isScrubberVisible)
+                    AnimatedVisibility(visible = isScrubberVisible) {
+                        ReaderPageScrubber(viewModel = scrubberViewModel)
+                    }
+                }
+                if (isScrubberVisible) {
+                    ReaderPageHistoryBackArrow(
+                        visible = viewState.canNavigateBack,
+                        onClick = { viewModel.navigatePageHistoryBack() },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                            .padding(start = 16.dp, bottom = ScrubberBottomClearance),
+                    )
+                    ReaderPageHistoryForwardArrow(
+                        visible = viewState.canNavigateForward,
+                        onClick = { viewModel.navigatePageHistoryForward() },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .windowInsetsPadding(NavigationBarDefaults.windowInsets)
+                            .padding(end = 16.dp, bottom = ScrubberBottomClearance),
+                    )
+                }
             }
         }
 
@@ -134,6 +167,30 @@ internal fun ReaderBox(
                 }
             }
         }
+    }
+}
+
+private val ScrubberBottomClearance = 80.dp
+
+@Composable
+private fun ReaderPageHistoryBackArrow(
+    visible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ReaderPageHistoryArrowButton(isForward = false, onClick = onClick)
+    }
+}
+
+@Composable
+private fun ReaderPageHistoryForwardArrow(
+    visible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ReaderPageHistoryArrowButton(isForward = true, onClick = onClick)
     }
 }
 

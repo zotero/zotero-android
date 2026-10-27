@@ -551,6 +551,18 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun documentWorkerDirectory(): File {
+        val folderPath = File(getRootDirectory(), "document-worker")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
+    fun sdtCacheDirectory(): File {
+        val folderPath = File(getRootDirectory(), "sdt-cache")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun citationDirectory(): File {
         val folderPath = File(getRootDirectory(), "citation")
         folderPath.mkdirs()
@@ -608,18 +620,6 @@ class FileStore @Inject constructor (
 
     fun runningReaderUserFileSubDirectory(ext: String): File {
         val folderPath = File(runningReaderDirectory(), "userFile.${ext}")
-        folderPath.mkdirs()
-        return folderPath
-    }
-
-    fun documentWorkerDirectory(): File {
-        val folderPath = File(getRootDirectory(), "document_worker")
-        folderPath.mkdirs()
-        return folderPath
-    }
-
-    fun documentWorkerHostDirectory(): File {
-        val folderPath = File(getRootDirectory(), "document_worker_host")
         folderPath.mkdirs()
         return folderPath
     }

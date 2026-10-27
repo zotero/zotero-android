@@ -52,6 +52,10 @@ class GetUriDetailsUseCase @Inject constructor(
         application.contentResolver.getType(contentUri)
     }
 
+    suspend fun getFileMimeTypeOrDefault(file: File): MimeType = withContext(dispatcher) {
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension.lowercase()) ?: "*/*"
+    }
+
     suspend fun copyFile(uriInputStream: InputStream, toFile: File) = withContext(dispatcher) {
         Timber.i("GetUriDetailsUseCase: copy file to attachment folder")
 

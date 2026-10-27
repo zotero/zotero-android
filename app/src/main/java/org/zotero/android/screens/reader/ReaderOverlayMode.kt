@@ -16,12 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.sidebar.ReaderSidebar
 
 @Composable
 internal fun ReaderOverlayMode(
     viewModel: ReaderViewModel,
     viewState: ReaderViewState,
+    scrubberViewModel: ReaderScrubberViewModel,
     annotationsLazyListState: LazyListState,
     layoutType: CustomLayoutSize.LayoutType,
     annotationMaxSideSize: Int,
@@ -52,6 +54,7 @@ internal fun ReaderOverlayMode(
         ReaderBox(
             viewState = viewState,
             viewModel = viewModel,
+            scrubberViewModel = scrubberViewModel,
             isOverlayMode = true,
         )
         AnimatedContent(

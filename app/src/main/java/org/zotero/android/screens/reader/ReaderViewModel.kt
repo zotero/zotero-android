@@ -1,14 +1,9 @@
 package org.zotero.android.screens.reader
 
-import android.app.Activity
-import android.app.SearchManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.RectF
-import android.webkit.WebView
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -18,9 +13,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.realm.OrderedCollectionChangeSet
 import io.realm.RealmObjectChangeListener
 import io.realm.RealmResults
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +36,7 @@ import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.navigation.toolbar.data.SyncProgressHandler
 import org.zotero.android.architecture.require
+import org.zotero.android.database.DbRequest
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.AnnotationType
 import org.zotero.android.database.objects.AnnotationsConfig
@@ -52,6 +45,11 @@ import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.UpdatableChangeType
 import org.zotero.android.database.requests.CreateHtmlEpubAnnotationsDbRequest
 import org.zotero.android.database.requests.CreatePDFAnnotationsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationFontSizeDbRequest
+import org.zotero.android.database.requests.EditAnnotationPathsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationRectsDbRequestV2
+import org.zotero.android.database.requests.EditAnnotationRotationDbRequest
+import org.zotero.android.database.requests.EditHtmlEpubAnnotationDbRequest
 import org.zotero.android.database.requests.EditItemFieldsDbRequest
 import org.zotero.android.database.requests.EditTagsForItemDbRequest
 import org.zotero.android.database.requests.MarkObjectsAsDeletedDbRequest
@@ -60,6 +58,7 @@ import org.zotero.android.database.requests.ReadDocumentDataDbRequest
 import org.zotero.android.database.requests.ReadItemDbRequest
 import org.zotero.android.database.requests.StorePageForItemDbRequest
 import org.zotero.android.database.requests.key
+import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.files.FileStore
 import org.zotero.android.helpers.FileHelper
 import org.zotero.android.helpers.formatter.iso8601DateFormatV3
@@ -104,12 +103,14 @@ import org.zotero.android.screens.reader.settings.data.PageAppearanceMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsArgs
 import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResult
-import org.zotero.android.screens.reader.sidebar.annotations.ReaderAnnotationBitmapManager
-import org.zotero.android.screens.reader.sidebar.annotations.cache.ReaderAnnotationBitmapCacheSnapshotEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
+import org.zotero.android.screens.reader.sidebar.data.ReaderRequestAnnotationImageRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
 import org.zotero.android.screens.reader.sidebar.data.ReaderWrapperOutline
+import org.zotero.android.screens.reader.web.ReaderCustomWebView
+import org.zotero.android.screens.reader.web.ReaderSelectionActionModeDelegate
 import org.zotero.android.screens.reader.web.ReaderWebCallChainEventStream
 import org.zotero.android.screens.reader.web.ReaderWebCallChainExecutor
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
@@ -149,11 +150,11 @@ class ReaderViewModel @Inject constructor(
     private val readerSearchTermEventStream: ReaderSearchTermEventStream,
     private val webCallChainEventStream: ReaderWebCallChainEventStream,
     private val readerRequestThumbnailRenderEventStream: ReaderRequestThumbnailRenderEventStream,
-    private val annotationBitmapManager: ReaderAnnotationBitmapManager,
-    private val annotationBitmapCacheSnapshotEventStream: ReaderAnnotationBitmapCacheSnapshotEventStream,
+    private val readerRequestAnnotationImageRenderEventStream: ReaderRequestAnnotationImageRenderEventStream,
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
     private val progressHandler: SyncProgressHandler,
+    private val documentWorkerController: DocumentWorkerController,
     private val readAloudHandler: ReaderReadAloudHandler,
 
     stateHandle: SavedStateHandle,
@@ -166,6 +167,7 @@ class ReaderViewModel @Inject constructor(
     private var userId: Long = 0L
     private var username: String = ""
     private var selectedTextParams: JsonObject? = null
+    private var readerWebView: ReaderCustomWebView? = null
     private var annotations = mutableMapOf<String, ReaderAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
@@ -186,8 +188,6 @@ class ReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: String? = null
 
     private var savedSearchTerm = ""
-
-    private var selectedTextParamsText: String = ""
 
     private var currentPageIndex = 0
     private var pagesCount: Int? = null
@@ -281,6 +281,17 @@ class ReaderViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReaderHistoryTrackingEvent) {
+        viewModelScope.launch {
+            if (result.suspend) {
+                readerWebCallChainExecutor.beginNavigation()
+            } else {
+                readerWebCallChainExecutor.endNavigation()
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(tagPickerResult: TagPickerResult) {
         if (tagPickerResult.callPoint == TagPickerResult.CallPoint.ReaderScreen) {
             val key = this.annotationEditReaderKey ?: return
@@ -315,26 +326,9 @@ class ReaderViewModel @Inject constructor(
                 updateState {
                     copy(isDark = isDark)
                 }
-                clearAnnotationsBitmapCache()
                 triggerEffect(ReaderViewEffect.ScreenRefresh)
             }
             .launchIn(viewModelScope)
-    }
-
-    private fun setupAnnotationsBitmapCacheUpdateStream() {
-        annotationBitmapCacheSnapshotEventStream.flow()
-            .onEach { cacheSnapshot ->
-                Timber.d("ReaderThumbnailProcessing: thumbnailCache updated")
-                updateState {
-                    copy(annotationsBitmapCache = cacheSnapshot)
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-
-    private fun clearAnnotationsBitmapCache() {
-        annotationBitmapManager.cancelProcessing()
     }
 
     private fun startObservingSearchTerm() {
@@ -370,6 +364,18 @@ class ReaderViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun startObservingRequestAnnotationImageRender() {
+        readerRequestAnnotationImageRenderEventStream.flow()
+            .onEach { keys ->
+                Timber.d("ReaderAnnotationImageProcessing: requesting annotation images: ${keys}")
+                for (key in keys) {
+                    readerWebCallChainExecutor.renderAnnotationImages(key)
+                }
+            }
+
+            .launchIn(viewModelScope)
+    }
+
     fun initOnce(
         isTablet: Boolean,
         textFont: TextStyle,
@@ -387,13 +393,11 @@ class ReaderViewModel @Inject constructor(
         startObservingTheme()
         startObservingSearchTerm()
         startObservingRequestThumbnailRender()
+        startObservingRequestAnnotationImageRender()
 
         setupCommentChangeFlow()
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
-
-        setupAnnotationsBitmapCacheUpdateStream()
-        initAnnotationManager()
 
         this.activeLineWidth = defaults.getActiveLineWidth()
         this.activeEraserSize = defaults.getActiveEraserSize()
@@ -421,19 +425,22 @@ class ReaderViewModel @Inject constructor(
 
     }
 
-    fun initEveryTime(webView: WebView) {
+    fun initEveryTime(webView: ReaderCustomWebView) {
         restartDisableForceScreenOnTimer()
-        readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
-    }
+        this.readerWebView = webView
+        webView.selectionActionModeDelegate = object : ReaderSelectionActionModeDelegate {
+            override fun hasValidSelection(): Boolean = viewState.selectedText != null
+            override fun onHighlight() {
+                this@ReaderViewModel.onHighlight()
+            }
 
-    private fun initAnnotationManager() {
-        annotationBitmapManager.init(viewModelScope)
-        val annotationsBitmapCache = annotationBitmapManager.generateEmptySnapshot().toPersistentMap()
-        updateState {
-            copy(
-                annotationsBitmapCache = annotationsBitmapCache
-            )
+            override fun onUnderline() {
+                this@ReaderViewModel.onUnderline()
+            }
+
+            override fun onCopy(): Boolean = copySelectedTextToClipboard()
         }
+        readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
     }
 
     private fun copyReaderFiles() {
@@ -714,7 +721,7 @@ class ReaderViewModel @Inject constructor(
             )
         }
 
-        this.selectedTextParams = null
+        clearSelectedTextParams()
         for (annotation in annotations) {
             this.annotations[annotation.key] = annotation
         }
@@ -786,10 +793,11 @@ class ReaderViewModel @Inject constructor(
         object cantUpdateAnnotation: Error()
         object incompatibleDocument: Error()
         object unknown: Error()
+        object readingModeUnavailable: Error()
 
         val title: Int get(){
             when (this) {
-                cantAddAnnotations, cantDeleteAnnotation, cantUpdateAnnotation, incompatibleDocument, unknown -> {
+                cantAddAnnotations, cantDeleteAnnotation, cantUpdateAnnotation, incompatibleDocument, unknown, readingModeUnavailable -> {
                     return Strings.error
                 }
             }
@@ -813,7 +821,7 @@ class ReaderViewModel @Inject constructor(
                     return Strings.errors_pdf_incompatible_document
                 }
 
-                unknown -> {
+                unknown, readingModeUnavailable -> {
                     return Strings.errors_unknown
                 }
             }
@@ -845,24 +853,28 @@ class ReaderViewModel @Inject constructor(
         if (annotation != null && viewState.activeTool != null) {
             toggle(viewState.activeTool!!)
         }
-        if (viewState.fileType == ReaderFileType.PDF) {
-            createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
-        } else {
-            createHtmlEpubDatabaseAnnotations(annotations = annotations as List<NewReaderAnnotation>)
-        }
 
+        val newAnnotations = annotations.filter { this.annotations[it.key] == null }
+        val editedAnnotations = annotations.filter { this.annotations[it.key] != null }
 
-        rawAnnotations.forEach {
-            val data = it.asJsonObject
-            val key = data["id"]?.asString
-            val imageBase64 = data["image"]?.asString
-            if (key != null && imageBase64 != null) {
-                annotationBitmapManager.store(
-                    key = key,
-                    encodedImageBase64String = imageBase64
-                )
+        if (newAnnotations.isNotEmpty()) {
+            for (newAnnotation in newAnnotations) {
+                this.annotations[newAnnotation.key] = newAnnotation
             }
-
+            if (viewState.fileType == ReaderFileType.PDF) {
+                createPdfDatabaseAnnotations(annotations = newAnnotations as List<PDFDocumentAnnotation>)
+            } else {
+                createHtmlEpubDatabaseAnnotations(annotations = newAnnotations as List<NewReaderAnnotation>)
+            }
+        }
+        for (editedAnnotation in editedAnnotations) {
+            this.annotations[editedAnnotation.key] = editedAnnotation
+            if (viewState.fileType == ReaderFileType.PDF) {
+                editedAnnotation as PDFDocumentAnnotation
+                updatePdfDatabaseAnnotation(editedAnnotation)
+            } else {
+                updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+            }
         }
     }
 
@@ -877,12 +889,11 @@ class ReaderViewModel @Inject constructor(
 
     }
 
-    private suspend fun selectAnnotationFromDocument(key: String) {
-        _select(key = key, didSelectInDocument = true)
+    private suspend fun selectAnnotationFromDocument(key: String, inlineTextEditing: Boolean = false) {
+        _select(key = key, didSelectInDocument = true, inlineTextEditing = inlineTextEditing)
     }
 
-
-    private suspend fun _select(key: String?, didSelectInDocument: Boolean) {
+    private suspend fun _select(key: String?, didSelectInDocument: Boolean, inlineTextEditing: Boolean = false) {
         if (key == viewState.selectedAnnotationKey) {
             return
         }
@@ -918,19 +929,107 @@ class ReaderViewModel @Inject constructor(
                     )
                 }
             }
+            selectAndFocusAnnotationInDocument(centerInDocument = true)
         } else {
             updateState {
                 copy(focusSidebarKey = key)
             }
+            selectAndFocusAnnotationInDocument(centerInDocument = false)
         }
-        selectAndFocusAnnotationInDocument()
-        openAnnotationDialog()
+        openAnnotationDialog(suppressPopup = inlineTextEditing)
     }
 
-    private fun selectInDocument(key: String) {
+    private fun selectInDocument(key: String, centerInDocument: Boolean = true) {
         viewModelScope.launch {
-            readerWebCallChainExecutor.selectInDocument(key)
+            readerWebCallChainExecutor.selectInDocument(key, centerInDocument)
         }
+    }
+
+    private fun updatePdfDatabaseAnnotation(annotation: PDFDocumentAnnotation) {
+        val key = annotation.key
+        val libraryId = this.library.identifier
+        val requests = mutableListOf<DbRequest>()
+
+        val fieldValues = mutableMapOf(
+            KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to annotation.color,
+            KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to annotation.comment,
+        )
+
+        when (annotation.type) {
+            AnnotationType.ink -> {
+                requests.add(
+                    EditAnnotationPathsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        paths = annotation.paths
+                    )
+                )
+                val lineWidth = annotation.lineWidth
+                if (lineWidth != null) {
+                    fieldValues[
+                        KeyBaseKeyPair(
+                            key = FieldKeys.Item.Annotation.Position.lineWidth,
+                            baseKey = FieldKeys.Item.Annotation.position
+                        )
+                    ] = lineWidth.rounded(3).toString()
+                }
+            }
+
+            AnnotationType.text -> {
+                requests.add(
+                    EditAnnotationRectsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        rects = annotation.rects
+                    )
+                )
+                requests.add(
+                    EditAnnotationRotationDbRequest(
+                        key = key,
+                        libraryId = libraryId,
+                        rotation = annotation.rotation ?: 0
+                    )
+                )
+                requests.add(
+                    EditAnnotationFontSizeDbRequest(
+                        key = key,
+                        libraryId = libraryId,
+                        size = (annotation.fontSize ?: 0f).toInt()
+                    )
+                )
+            }
+
+            AnnotationType.note, AnnotationType.highlight, AnnotationType.image, AnnotationType.underline -> {
+                requests.add(
+                    EditAnnotationRectsDbRequestV2(
+                        key = key,
+                        libraryId = libraryId,
+                        rects = annotation.rects
+                    )
+                )
+            }
+        }
+
+        requests.add(
+            0,
+            editItemFieldsDbRequestFactory.create(
+                key = key,
+                libraryId = libraryId,
+                fieldValues = fieldValues,
+            )
+        )
+
+        ignoreDbCallbackOnReaderModificationItemKeys.add(key)
+        dbWrapperMain.realmDbStorage.perform(requests)
+    }
+
+    private fun updateHtmlEpubDatabaseAnnotation(annotation: NewReaderAnnotation) {
+        val request = EditHtmlEpubAnnotationDbRequest(
+            libraryId = this.library.identifier,
+            annotation = annotation,
+        )
+        ignoreDbCallbackOnReaderModificationItemKeys.add(annotation.key)
+        dbWrapperMain.realmDbStorage.perform(request)
     }
 
     private fun setTags(tags: List<Tag>, key: String) {
@@ -1207,6 +1306,8 @@ class ReaderViewModel @Inject constructor(
     //We need to skip it's execution otherwise it will trigger unnecessary reader update, whichc already has the correct state.
     private var ignoreDbCallbackOnReaderInsertionItemKey : String? = null
 
+    private val ignoreDbCallbackOnReaderModificationItemKeys = mutableSetOf<String>()
+
     fun update(
         changeSet: OrderedCollectionChangeSet,
         objects: RealmResults<RItem>,
@@ -1248,7 +1349,17 @@ class ReaderViewModel @Inject constructor(
 
             Timber.w("ReaderViewModel: update annotation $key")
             annotations[key] = annotation
-            updatedPdfAnnotations.add(json)
+            val isOwnEditEcho = ignoreDbCallbackOnReaderModificationItemKeys.remove(key)
+            val isSyncResponseVersionBump = item.changeType == UpdatableChangeType.syncResponse.name
+            if (!isOwnEditEcho && !isSyncResponseVersionBump) {
+                updatedPdfAnnotations.add(json)
+            }
+
+            if (!isSyncResponseVersionBump &&
+                (annotation.type == AnnotationType.image || annotation.type == AnnotationType.ink || annotation.type == AnnotationType.text)
+            ) {
+                readerRequestAnnotationImageRenderEventStream.emitAsync(listOf(key))
+            }
 
             if (canUpdate(key = key, item = item)) {
                 Timber.i("ReaderViewModel: update sidebar key $key")
@@ -1361,7 +1472,10 @@ class ReaderViewModel @Inject constructor(
 
         updateState {
             if (this@ReaderViewModel.snapshotKeys == null) {
-                copy(sortedKeys = keys)
+                copy(
+                    sortedKeys = keys,
+                    annotationsUpdatedCounter = annotationsUpdatedCounter + 1,
+                )
             } else {
                 this@ReaderViewModel.snapshotKeys = keys
                 copy(
@@ -1369,7 +1483,8 @@ class ReaderViewModel @Inject constructor(
                         snapshot = keys,
                         term = viewState.annotationSearchTerm,
                         filter = viewState.annotationFilter
-                    )
+                    ),
+                    annotationsUpdatedCounter = annotationsUpdatedCounter + 1,
                 )
             }
         }
@@ -1402,11 +1517,13 @@ class ReaderViewModel @Inject constructor(
                 }
                 //TODO remove later if it doesnt lead to new issues
 //                if (!shouldIgnoreUpdate) {
+                if (!updatedPdfAnnotations.isEmpty || !insertedPdfAnnotations.isEmpty || !deletedPdfAnnotations.isEmpty) {
                     readerWebCallChainExecutor.updateView(
                         modifications = updatedPdfAnnotations,
                         insertions = insertedPdfAnnotations,
                         deletions = deletedPdfAnnotations
                     )
+                }
 //                }
 
             }
@@ -1533,10 +1650,13 @@ class ReaderViewModel @Inject constructor(
                 saveAnnotations(successValue.params)
             }
             is ReaderWebData.selectAnnotationFromDocument -> {
-                selectAnnotationFromDocument(successValue.key)
+                selectAnnotationFromDocument(successValue.key, successValue.inlineTextEditing)
             }
             is ReaderWebData.setSelectedTextParams -> {
                 setSelectedTextParams(successValue.params)
+            }
+            ReaderWebData.clearSelectedTextParams -> {
+                clearSelectedTextParams()
             }
             is ReaderWebData.setViewState -> {
                 setViewState(successValue.params)
@@ -1549,6 +1669,10 @@ class ReaderViewModel @Inject constructor(
             }
             ReaderWebData.toggleInterfaceVisibility -> {
                 decideTopBarAndBottomBarVisibility()
+            }
+
+            ReaderWebData.onEdgePageTurnTap -> {
+                onDocumentUserGestureDetected()
             }
 
             ReaderWebData.onViewContentInitialized -> {
@@ -1565,6 +1689,17 @@ class ReaderViewModel @Inject constructor(
                     copy(isReaderLoading = false)
                 }
                 readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+            }
+
+            is ReaderWebData.setReadingModeEnabled -> {
+                updateState {
+                    copy(readingModeEnabled = successValue.enabled)
+                }
+                if (successValue.enabled && !viewState.isTopBarVisible) {
+                    updateState {
+                        copy(isTopBarVisible = true, isScrubberSuppressedByScroll = false)
+                    }
+                }
             }
 
             else -> {
@@ -1636,6 +1771,12 @@ class ReaderViewModel @Inject constructor(
         this.pagesCount = pagesCount
         val pageLabel = stats?.stringOrNull("pageLabel")
         val usePhysicalPageNumbers = stats?.boolOrNull("usePhysicalPageNumbers") ?: false
+        val canNavigateBack = stats?.boolOrNull("canNavigateBack") ?: false
+        val canNavigateForward = stats?.boolOrNull("canNavigateForward") ?: false
+
+        if (viewState.canNavigateBack != canNavigateBack || viewState.canNavigateForward != canNavigateForward) {
+            updateState { copy(canNavigateBack = canNavigateBack, canNavigateForward = canNavigateForward) }
+        }
 
         // Hide the indicator unless we have what we need to build it: a page
         // (label, or 1-based index) and a percentage (index over total pages).
@@ -1656,12 +1797,34 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setSelectedTextParams(params: JsonObject) {
-        this.selectedTextParams = params
-        val rects = params["rect"].asJsonArray
-        this.selectedTextParamsText = (params["annotation"].asJsonObject)["text"].asString
+        val text = params["annotation"]
+            ?.takeIf { it.isJsonObject }
+            ?.asJsonObject
+            ?.get("text")
+            ?.takeIf { it.isJsonPrimitive }
+            ?.asString
+            ?.takeIf { it.isNotBlank() }
+
+        this.selectedTextParams = params.takeIf { text != null }
         updateState {
-            copy(selectedTextParamsRects = rects)
+            copy(selectedText = text)
         }
+        readerWebView?.invalidateSelectionActionMode()
+    }
+
+    private fun clearSelectedTextParams() {
+        this.selectedTextParams = null
+        updateState {
+            copy(selectedText = null)
+        }
+        readerWebView?.invalidateSelectionActionMode()
+    }
+
+    private fun copySelectedTextToClipboard(): Boolean {
+        val text = viewState.selectedText ?: return false
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Copied Text", text))
+        return true
     }
 
     fun load() {
@@ -1728,10 +1891,12 @@ class ReaderViewModel @Inject constructor(
         }
         val selectedAnnotationKey = viewState.selectedAnnotationKey
         if (newShowSideBarState && selectedAnnotationKey != null) {
-            val index = viewState.sortedKeys.indexOf(selectedAnnotationKey)
-            triggerEffect(
-                ReaderViewEffect.ScrollSideBar(index)
-            )
+            val index = displayedSortedKeys().indexOf(selectedAnnotationKey)
+            if (index != -1) {
+                triggerEffect(
+                    ReaderViewEffect.ScrollSideBar(index)
+                )
+            }
         }
     }
 
@@ -1776,6 +1941,18 @@ class ReaderViewModel @Inject constructor(
 
     fun annotation(key: String): ReaderAnnotation? {
         return this.annotations[key]
+    }
+
+    fun displayedSortedKeys(): List<String> {
+        if (!viewState.readingModeEnabled) {
+            return viewState.sortedKeys
+        }
+        return viewState.sortedKeys.filter { key ->
+            when (annotation(key)?.type) {
+                AnnotationType.highlight, AnnotationType.underline, AnnotationType.note -> true
+                else -> false
+            }
+        }
     }
 
     fun onCommentFocusFieldChange(annotationKey: String) {
@@ -1943,7 +2120,7 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    private suspend fun selectAndFocusAnnotationInDocument() {
+    private suspend fun selectAndFocusAnnotationInDocument(centerInDocument: Boolean = true) {
         val selectedKey = viewState.selectedAnnotationKey
         val annotation = selectedKey?.let { annotation(it) }
         if (annotation != null) {
@@ -1953,18 +2130,19 @@ class ReaderViewModel @Inject constructor(
             } else if (annotation.type != AnnotationType.ink
                 || viewState.activeTool != ReaderAnnotationTool.ink
             ) {
-                select(selectedKey)
+                select(selectedKey, centerInDocument = centerInDocument)
             }
         } else {
-            select(null)
+            select(null, centerInDocument = centerInDocument)
         }
     }
 
     private suspend fun select(
         annotationKey: String?,
+        centerInDocument: Boolean = true,
     ) {
         if (annotationKey != null) {
-            selectInDocument(annotationKey)
+            selectInDocument(annotationKey, centerInDocument)
         } else {
             //TODO may need to check whether some annotation is actually selected in reader
             //Otherwise might lead to callback loop
@@ -2245,8 +2423,8 @@ class ReaderViewModel @Inject constructor(
 
 
 
-    private fun openAnnotationDialog() {
-        val showAnnotationPopup = !viewState.showSideBar && viewState.selectedAnnotationKey != null
+    private fun openAnnotationDialog(suppressPopup: Boolean = false) {
+        val showAnnotationPopup = !suppressPopup && !viewState.showSideBar && viewState.selectedAnnotationKey != null
         if (showAnnotationPopup) {
             annotationEditReaderKey = viewState.selectedAnnotationKey
             val selectedAnnotation = annotationEditReaderKey?.let { this.annotations[it] }
@@ -2262,7 +2440,7 @@ class ReaderViewModel @Inject constructor(
             }
         }
 
-        val index = viewState.sortedKeys.indexOf(viewState.selectedAnnotationKey)
+        val index = displayedSortedKeys().indexOf(viewState.selectedAnnotationKey)
         triggerEffect(
             ReaderViewEffect.ShowPdfAnnotationAndUpdateAnnotationsList(
                 index,
@@ -2307,8 +2485,11 @@ class ReaderViewModel @Inject constructor(
     private var previousSidebarVisibilityState = false
 
     private fun decideTopBarAndBottomBarVisibility() = viewModelScope.launch {
-        val isTopBarCurrentlyVisible = viewState.isTopBarVisible
-        val topBarNewVisibilityState = !isTopBarCurrentlyVisible
+        val isFullyVisible = viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll
+        val topBarNewVisibilityState = !isFullyVisible
+        if (topBarNewVisibilityState) {
+            updateState { copy(isScrubberSuppressedByScroll = false) }
+        }
         setTopBarVisibility(topBarNewVisibilityState)
         delay(300)//First hide topbar and then with a delay sidebar, creates much nicer visual effect
         if (!topBarNewVisibilityState) {
@@ -2319,10 +2500,23 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    fun onDocumentUserGestureDetected() {
+        if (viewState.fileType != ReaderFileType.PDF) {
+            return
+        }
+        if (viewState.activeTool != null) {
+            return
+        }
+        if (viewState.isTopBarVisible && !viewState.isScrubberSuppressedByScroll) {
+            updateState { copy(isScrubberSuppressedByScroll = true) }
+        }
+    }
+
     fun navigateToReaderSettings() {
         val args = ReaderSettingsArgs(
             readerSettings = defaults.getReaderSettings(),
-            fileType = viewState.fileType
+            fileType = viewState.fileType,
+            readingModeEnabled = viewState.readingModeEnabled,
         )
         val params = navigationParamsMarshaller.encodeObjectToBase64(args)
         if (isTablet) {
@@ -2330,6 +2524,58 @@ class ReaderViewModel @Inject constructor(
         } else {
             updateState {
                 copy(readerSettingsArgs = args)
+            }
+        }
+    }
+
+    private var didSetSDTPack = false
+
+    fun toggleReadingMode() {
+        val enable = !viewState.readingModeEnabled
+        if (!enable) {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.setReadingModeEnabled(false)
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                if (!didSetSDTPack) {
+                    updateState {
+                        copy(readingModeLoading = true)
+                    }
+                    val pack = documentWorkerController.getOrGenerateSDTPack(
+                        file = this@ReaderViewModel.originalFile,
+                        onProgress = { progress ->
+                            Timber.i("ReaderViewModel: SDT generation progress: $progress")
+                        },
+                    )
+                    readerWebCallChainExecutor.setSDTPack(
+                        bytesBase64 = android.util.Base64.encodeToString(
+                            pack.bytes,
+                            android.util.Base64.NO_WRAP
+                        ),
+                        packVersion = pack.packVersion,
+                        schemaMajorVersion = pack.schemaMajorVersion,
+                    )
+                    didSetSDTPack = true
+                    updateState {
+                        copy(readingModeLoading = false)
+                    }
+                }
+                val readerSettings = defaults.getReaderSettings()
+                readerWebCallChainExecutor.setAppearance(
+                    lineHeight = readerSettings.lineHeight.toDouble(),
+                    wordSpacing = readerSettings.wordSpacing.toDouble(),
+                    letterSpacing = readerSettings.letterSpacing.toDouble(),
+                    pageWidth = readerSettings.pageWidth,
+                )
+                readerWebCallChainExecutor.setReadingModeEnabled(true)
+            } catch (e: Exception) {
+                Timber.e(e, "ReaderViewModel: failed to enable reading mode")
+                updateState {
+                    copy(readingModeLoading = false, error = Error.readingModeUnavailable)
+                }
             }
         }
     }
@@ -2382,6 +2628,17 @@ class ReaderViewModel @Inject constructor(
                 if (viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setFlowMode(readerSettings.pageLayoutFlowMode)
                 }
+                if (viewState.fileType == ReaderFileType.PDF) {
+                    readerWebCallChainExecutor.setScrollMode(readerSettings.scrollMode)
+                }
+                if (viewState.fileType == ReaderFileType.EPUB || viewState.readingModeEnabled) {
+                    readerWebCallChainExecutor.setAppearance(
+                        lineHeight = readerSettings.lineHeight.toDouble(),
+                        wordSpacing = readerSettings.wordSpacing.toDouble(),
+                        letterSpacing = readerSettings.letterSpacing.toDouble(),
+                        pageWidth = readerSettings.pageWidth,
+                    )
+                }
             }
 
         }
@@ -2409,75 +2666,44 @@ class ReaderViewModel @Inject constructor(
         triggerEffect(ReaderViewEffect.OpenWebpage(url))
     }
 
-    fun dismissActionMenu(deselectInReader: Boolean = false) {
-        updateState {
-            copy(selectedTextParamsRects = null)
-        }
-        if (deselectInReader) {
-            viewModelScope.launch {
-                readerWebCallChainExecutor.deselectText()
-            }
-        }
-    }
-
-    fun onCopy() {
-        dismissActionMenu()
-
-        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Copied Text", selectedTextParamsText)
-        clipboard.setPrimaryClip(clip)
-    }
-
-    fun onShare(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, selectedTextParamsText)
-        }
-        localActivity?.startActivity(Intent.createChooser(intent, "Share text"))
-    }
-    fun onTranslate(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_PROCESS_TEXT)
-        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, selectedTextParamsText)
-        intent.putExtra(
-            Intent.EXTRA_PROCESS_TEXT_READONLY,
-            false
-        )
-        intent.setType("text/plain")
-        localActivity?.startActivity(intent)
-    }
-    fun onWebSearch(localActivity: Activity?) {
-        dismissActionMenu()
-
-        val intent = Intent(Intent.ACTION_WEB_SEARCH)
-        intent.putExtra(SearchManager.QUERY, selectedTextParamsText)
-        localActivity?.startActivity(intent)
-    }
-
-    fun onHighlight() = viewModelScope.launch {
+    private fun onHighlight() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.highlight)
-        dismissActionMenu(deselectInReader = true)
+        readerWebCallChainExecutor.deselectText()
     }
 
-    fun onUnderline() = viewModelScope.launch {
+    private fun onUnderline() = viewModelScope.launch {
         saveAnnotationFromSelection(AnnotationType.underline)
-        dismissActionMenu(deselectInReader = true)
+        readerWebCallChainExecutor.deselectText()
     }
 
-    private suspend fun scrollReaderIfNeeded(location: Map<String, Any>, animated: Boolean, completion: () -> Unit) {
+    fun navigatePageHistoryBack() {
+        if (!viewState.canNavigateBack) {
+            return
+        }
+        viewModelScope.launch {
+            readerWebCallChainExecutor.navigateBack()
+        }
+    }
+
+    fun navigatePageHistoryForward() {
+        if (!viewState.canNavigateForward) {
+            return
+        }
+        viewModelScope.launch {
+            readerWebCallChainExecutor.navigateForward()
+        }
+    }
+
+    private suspend fun scrollReaderIfNeeded(
+        location: Map<String, Any>,
+        animated: Boolean,
+        completion: () -> Unit,
+    ) {
 //        val locationsPage = location["pageNumber"] ?: location["pageIndex"]
 //        if (isCurrentFilePdf() && viewState.currentPdfPageIndex.toString() == locationsPage as String) {
 //            completion()
 //            return
 //        }
-        if (!animated) {
-            readerWebCallChainExecutor.show(location = location)
-            completion()
-            return
-        }
         readerWebCallChainExecutor.show(location = location)
         completion()
     }
@@ -2560,7 +2786,7 @@ class ReaderViewModel @Inject constructor(
 }
 
 data class ReaderViewState(
-    val selectedTextParamsRects: JsonArray? = null,
+    val selectedText: String? = null,
     val isDark: Boolean = false,
     val error: ReaderViewModel.Error? = null,
     val activeTool: ReaderAnnotationTool? = null,
@@ -2574,6 +2800,7 @@ data class ReaderViewState(
     val annotationPopoverRect: RectF? = null,
     var outlineSearch: String = "",
     val isTopBarVisible: Boolean = true,
+    val isScrubberSuppressedByScroll: Boolean = false,
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
@@ -2591,10 +2818,14 @@ data class ReaderViewState(
     val readerFilterArgs: ReaderFilterArgs? = null,
     val toolColors: Map<ReaderAnnotationTool, String> = emptyMap(),
     val focusDocumentLocationAnnotationKey: String? = null,
-    val annotationsBitmapCache: PersistentMap<String, Bitmap> = persistentMapOf(),
     val pageProgress: String? = null,
+    val canNavigateBack: Boolean = false,
+    val canNavigateForward: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
+    val annotationsUpdatedCounter: Int = 0,
+    val readingModeEnabled: Boolean = false,
+    val readingModeLoading: Boolean = false,
     val isReadAloudActive: Boolean = false,
     val readAloudControls: ReadAloudControlsState? = null,
     ) : ViewState {
@@ -2609,6 +2840,10 @@ data class ReaderViewState(
 
     fun isPdfOrHtml(): Boolean {
         return fileType == ReaderFileType.PDF || fileType == ReaderFileType.HTML
+    }
+
+    fun isScrubberVisible(): Boolean {
+        return fileType == ReaderFileType.PDF && !readingModeEnabled && isTopBarVisible && !isScrubberSuppressedByScroll
     }
 
 

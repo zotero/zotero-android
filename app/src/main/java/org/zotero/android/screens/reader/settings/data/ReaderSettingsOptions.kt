@@ -8,13 +8,14 @@ enum class ReaderSettingsOptions(@StringRes val optionStringId: Int) {
     AppearanceDark(Strings.pdf_settings_appearance_dark_mode),
     AppearanceAutomatic(Strings.pdf_settings_appearance_auto),
 
-    ScrollDirectionHorizontal(Strings.pdf_settings_scroll_direction_horizontal),
-    ScrollDirectionVertical(Strings.pdf_settings_scroll_direction_vertical),
+    ScrollModeVertical(Strings.pdf_settings_scroll_mode_vertical),
+    ScrollModeHorizontal(Strings.pdf_settings_scroll_mode_horizontal),
+    ScrollModeWrapped(Strings.pdf_settings_scroll_mode_wrapped),
 
     PageSpreadsNone(Strings.pdf_settings_page_mode_none),
     PageSpreadsDouble(Strings.pdf_settings_page_mode_double),
     PageSpreadsEven(Strings.pdf_settings_page_mode_even),
 
     PageLayoutFlowModePaginated(Strings.pdf_settings_flow_mode_paginated),
-    PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled)
+    PageLayoutFlowModeScrolled(Strings.pdf_settings_flow_mode_scrolled),
 }

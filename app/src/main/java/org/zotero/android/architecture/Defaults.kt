@@ -10,6 +10,7 @@ import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.webdav.data.WebDavScheme
@@ -70,7 +71,7 @@ open class Defaults @Inject constructor(
     private val lastUtilitiesCommitHash = "lastUtilitiesCommitHash"
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
     private val lastReaderCommitHash = "lastReaderCommitHash"
-    private val lastDocumentWorkerHash = "lastDocumentWorkerHash"
+    private val lastDocumentWorkerCommitHash = "lastDocumentWorkerCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -440,6 +441,14 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastPdfWorkerCommitHash, newValue) }
     }
 
+    fun getLastDocumentWorkerCommitHash(): String {
+        return sharedPreferences.getString(lastDocumentWorkerCommitHash, "") ?: ""
+    }
+
+    fun setLastDocumentWorkerCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastDocumentWorkerCommitHash, newValue) }
+    }
+
     fun getDoNotShowAppUpdateBannerBeforeTime(): Long {
         return sharedPreferences.getLong(doNotShowAppUpdateBannerBeforeTime, 0L)
     }
@@ -554,20 +563,23 @@ open class Defaults @Inject constructor(
         sharedPreferences.edit { putString(lastReaderCommitHash, newValue) }
     }
 
-    fun getLastDocumentWorkerHash(): String {
-        return sharedPreferences.getString(lastDocumentWorkerHash, "") ?: ""
-    }
-
-    fun setLastDocumentWorkerHash(newValue: String) {
-        sharedPreferences.edit { putString(lastDocumentWorkerHash, newValue) }
-    }
-
     fun getReaderSettings(): ReaderSettings {
         val json: String = sharedPreferences.getString(
             this.readerSettings,
             null
         ) ?: return ReaderSettings.default()
-        return dataMarshaller.unmarshal(json)
+        val settings = try {
+            dataMarshaller.unmarshal<ReaderSettings>(json)
+        } catch (e: Exception) {
+            return ReaderSettings.default()
+        }
+        if (settings.scrollMode == null) {
+            settings.scrollMode = PageScrollMode.VERTICAL
+        }
+        if (settings.lineHeight <= 0f) {
+            settings.lineHeight = 1.2f
+        }
+        return settings
     }
 
     fun setReaderSettings(

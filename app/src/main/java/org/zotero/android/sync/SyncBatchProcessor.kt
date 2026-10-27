@@ -21,6 +21,7 @@ import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.safeApiCall
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.requests.DeleteMissingPlaceholderItemsDbRequest
 import org.zotero.android.database.requests.StoreCollectionsDbRequest
 import org.zotero.android.database.requests.StoreItemsDbResponseRequest
 import org.zotero.android.database.requests.StoreSearchesDbRequest
@@ -236,8 +237,24 @@ class SyncBatchProcessor @AssistedInject constructor(
                     denyIncorrectCreator = true,
                 )
                 val response = dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
+
+                // Keys the server didn't return at all, as opposed to keys whose data failed to
+                // parse or store. Placeholders for them can't ever be resolved by this request,
+                // so they're deleted instead of being marked for resync.
+                val responseKeys = dataArray.mapNotNull {
+                    try {
+                        it.asJsonObject["key"]?.asString
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                val missingKeys =
+                    failedKeys(expectedKeys = expectedKeys, parsedKeys = responseKeys)
+                val deletedKeys =
+                    deleteMissingPlaceholders(keys = missingKeys, libraryId = libraryId)
                 val failedKeys =
                     failedKeys(expectedKeys = expectedKeys, parsedKeys = items.map { it.key })
+                        .filter { !deletedKeys.contains(it) }
 
                 renameExistingFiles(changes = response.changedFilenames, libraryId = libraryId)
                 SyncBatchResponse(failedKeys, errors, response.conflicts)
@@ -251,6 +268,15 @@ class SyncBatchProcessor @AssistedInject constructor(
 
     private fun failedKeys(expectedKeys: List<String>, parsedKeys: List<String>): List<String> {
         return expectedKeys.filter { !parsedKeys.contains(it) }
+    }
+
+    private fun deleteMissingPlaceholders(keys: List<String>, libraryId: LibraryIdentifier): List<String> {
+        if (keys.isEmpty()) {
+            return emptyList()
+        }
+        return dbWrapperMain.realmDbStorage.perform(
+            request = DeleteMissingPlaceholderItemsDbRequest(libraryId = libraryId, keys = keys)
+        )
     }
 
     private fun renameExistingFiles(changes: List<StoreItemsResponse.FilenameChange>, libraryId: LibraryIdentifier) {

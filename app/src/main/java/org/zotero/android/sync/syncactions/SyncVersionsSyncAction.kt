@@ -168,6 +168,7 @@ class SyncVersionsSyncAction @AssistedInject constructor(
 
             val request = SyncVersionsDbRequest(
                 versions = response,
+                libraryId = libraryId,
                 syncObject = objectS,
                 syncType = syncType,
                 delayIntervals = delayIntervals

@@ -9,8 +9,9 @@ realpath() {
 SCRIPT_PATH=`realpath "$0"`
 SCRIPT_DIR=`dirname "$SCRIPT_PATH"`
 SUBMODULE_DIR="$SCRIPT_DIR/../document-worker"
-DESTINATION_DIR="$SCRIPT_DIR/../app/src/main/assets/document_worker"
-HASH_FILE="$DESTINATION_DIR/document_worker_hash.txt"
+DESTINATION_DIR="$SCRIPT_DIR/../app/src/main/assets/document-worker"
+HASH_FILE="$DESTINATION_DIR/document-worker_commit_hash.txt"
+ANDROID_HOST_DIR="$SUBMODULE_DIR/test/runtime/android"
 
 if ! git -C "$SCRIPT_DIR" submodule status "$SUBMODULE_DIR" | grep -qv '^-'; then
     echo "Error: The document-worker submodule is not initialized. Run:"
@@ -38,24 +39,33 @@ if [ -d "$DESTINATION_DIR" ]; then
     fi
 fi
 
-TMP_DIR=$(mktemp -d)
-echo "Created temp dir: $TMP_DIR"
-
-echo "Downloading build from: $DOWNLOAD_URL"
-curl -L "$DOWNLOAD_URL" -o "$TMP_DIR/build.zip"
-
-echo "Unzipping..."
-unzip -q "$TMP_DIR/build.zip" -d "$TMP_DIR/build"
-
 mkdir -p "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
 mkdir -p "$DESTINATION_DIR"
 
-shopt -s dotglob
-cp -r "$TMP_DIR/build/"* "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
-shopt -u dotglob
+TMP_DIR=$(mktemp -d)
+echo "Created temp dir: $TMP_DIR"
+
+DOWNLOADED=0
+echo "Downloading build from: $DOWNLOAD_URL"
+if curl -fL "$DOWNLOAD_URL" -o "$TMP_DIR/build.zip"; then
+    echo "Unzipping..."
+    unzip -q "$TMP_DIR/build.zip" -d "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
+    DOWNLOADED=1
+else
+    echo "Prebuilt document-worker artifact not found, building from source instead."
+fi
+
+if [ "$DOWNLOADED" -eq 0 ]; then
+    (cd "$SUBMODULE_DIR" && npm ci && npm run build)
+    shopt -s dotglob
+    cp -r "$SUBMODULE_DIR/build/"* "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
+    shopt -u dotglob
+fi
+
+cp "$ANDROID_HOST_DIR"/* "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
 
 cd "$DOCUMENT_WORKER_TO_ZIP_FOLDER"
-zip -r "$DESTINATION_DIR/document_worker.zip" "."
+zip -r "$DESTINATION_DIR/document-worker.zip" "."
 
 echo "$CURRENT_HASH" > "$HASH_FILE"
 echo "Build installed at $DESTINATION_DIR from hash $CURRENT_HASH"

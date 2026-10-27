@@ -11,10 +11,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.speech.data.SDTRect
 import org.zotero.android.speech.data.TextRange
-import org.zotero.android.speech.documentworker.DocumentWorkerWebCallChainExecutor
+import org.zotero.android.speech.documentworker.SDTPack
 import timber.log.Timber
 import java.lang.ref.WeakReference
 
@@ -22,7 +23,7 @@ class SpeechManager<Index : Any>(
     delegate: SpeechManagerDelegate<Index>,
     voiceLanguage: String?,
     voiceProcessorFactory: VoiceProcessorFactory,
-    private val documentWorkerExecutor: DocumentWorkerWebCallChainExecutor,
+    private val documentWorkerController: DocumentWorkerController,
     private val dispatchers: Dispatchers,
 ) : VoiceProcessorDelegate {
     data class SpeechParagraph<Index>(
@@ -513,7 +514,7 @@ class SpeechManager<Index : Any>(
         val startTime = System.currentTimeMillis()
         mutableExtractionProgress.value = null
         val pack = try {
-            documentWorkerExecutor.extractStructuredDocumentText(file, contentType, delegate.documentPassword)
+            SDTPack(documentWorkerController.getOrGenerateSDTPack(file, contentType, delegate.documentPassword).bytes)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

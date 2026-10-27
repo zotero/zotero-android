@@ -17,6 +17,7 @@ import org.zotero.android.screens.reader.data.ReaderPage
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.data.ReaderWebError
 import org.zotero.android.screens.reader.settings.data.PageLayoutFlowMode
+import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.PageSpreadsMode
 import org.zotero.android.screens.reader.web.data.CreateReaderLocation
 import org.zotero.android.screens.reader.web.data.CreateReaderViewOptions
@@ -103,6 +104,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onRenderAnnotationImage" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onRenderAnnotationImage(params)
+                                )
+                            )
+                        }
+
                         "onSetPageLabels" -> {
                             val params = data["params"].asJsonObject
                             val pageLabelsJsonArray = params["pageLabels"].asJsonArray
@@ -124,11 +134,15 @@ class ReaderWebCallChainExecutor @Inject constructor(
                         }
 
                         "onSetAnnotationPopup" -> {
-                            val params = data["params"].asJsonObject
-
-                            if (params.isEmpty) {
+                            val dParams = data["params"]
+                            if (dParams == null
+                                || dParams.isJsonNull
+                                || !dParams.isJsonObject
+                                || dParams.asJsonObject.isEmpty
+                            ) {
                                 return@launch
                             }
+                            val params = dParams.asJsonObject
 
 //                            val rectArray = params["rect"].asJsonArray.map { it.asDouble }
                             val key = params["annotation"].asJsonObject["id"].asString
@@ -162,9 +176,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             }
                             val key = idsJsonArrayOfStrings.firstOrNull()
                             if (key != null) {
+                                val inlineTextEditing = paramsObject["inlineTextEditing"]
+                                    ?.takeIf { !it.isJsonNull }?.asBoolean ?: false
                                 observable.emitAsync(
                                     Result.Success(
-                                        ReaderWebData.selectAnnotationFromDocument(key)
+                                        ReaderWebData.selectAnnotationFromDocument(
+                                            key,
+                                            inlineTextEditing
+                                        )
                                     )
                                 )
                             } else {
@@ -182,6 +201,11 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                 || dParams.isJsonNull
                                 || (dParams.isJsonObject && dParams.asJsonObject.isEmpty)
                             ) {
+                                observable.emitAsync(
+                                    Result.Success(
+                                        ReaderWebData.clearSelectedTextParams
+                                    )
+                                )
                                 return@launch
                             }
                             val params = dParams.asJsonObject
@@ -235,6 +259,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             )
                         }
 
+                        "onEdgePageTurnTap" -> {
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.onEdgePageTurnTap
+                                )
+                            )
+                        }
+
                         "onViewContentInitialized" -> {
                             observable.emitAsync(
                                 Result.Success(
@@ -248,6 +280,16 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(
                                 Result.Success(
                                     ReaderWebData.setViewStats(params)
+                                )
+                            )
+                        }
+
+                        "onReadingModeEnabled" -> {
+                            val params = data["params"].asJsonObject
+                            val enabled = params["enabled"].asBoolean
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.setReadingModeEnabled(enabled)
                                 )
                             )
                         }
@@ -267,9 +309,9 @@ class ReaderWebCallChainExecutor @Inject constructor(
         //no-op
     }
 
-    suspend fun selectInDocument(key: String) {
+    suspend fun selectInDocument(key: String, centerInDocument: Boolean = true) {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("select({ key: '$key' });") {
+            readerWebViewHandler.evaluateJavascript("select({ key: '$key', centerInDocument: $centerInDocument });") {
                 cont.resume(Unit)
             }
         }
@@ -285,9 +327,41 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
+    suspend fun navigateBack() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateBack();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun navigateForward() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:navigateForward();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun beginNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:beginNavigation();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun endNavigation() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:endNavigation();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
     suspend fun selectSearchResult(index: Int) {
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: '${index}' });") {
+            readerWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: ${index} });") {
                 cont.resume(Unit)
             }
         }
@@ -305,6 +379,14 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun renderThumbnails(index: Int) {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("renderThumbnails([$index])") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun renderAnnotationImages(id: String) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("renderAnnotationImages(['$id'])") {
                 cont.resume(Unit)
             }
         }
@@ -411,6 +493,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 is ReaderPage.pdf -> {
                     createReaderViewOptions.viewState.pageIndex = page.pageIndex
                     createReaderViewOptions.viewState.spreadMode = spreadsModeInt
+                    createReaderViewOptions.viewState.scrollMode =
+                        defaults.getReaderSettings().scrollMode.jsValue
                 }
             }
         }
@@ -481,6 +565,49 @@ class ReaderWebCallChainExecutor @Inject constructor(
 
         return suspendCancellableCoroutine { cont ->
             val javascript = "window._view.setSpreadMode(${spreadsModeString.toInt()});"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setScrollMode(scrollMode: PageScrollMode) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript = "window._view.setScrollMode(${scrollMode.jsValue});"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setSDTPack(bytesBase64: String, packVersion: Int, schemaMajorVersion: Int) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript =
+                "javascript:setSDTPack({ bytes: '$bytesBase64', packVersion: $packVersion, schemaMajorVersion: $schemaMajorVersion });"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setAppearance(
+        lineHeight: Double,
+        wordSpacing: Double,
+        letterSpacing: Double,
+        pageWidth: Int
+    ) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript =
+                "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth });"
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setReadingModeEnabled(enabled: Boolean) {
+        return suspendCancellableCoroutine { cont ->
+            val javascript = "javascript:setReadingModeEnabled({ enabled: $enabled });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }

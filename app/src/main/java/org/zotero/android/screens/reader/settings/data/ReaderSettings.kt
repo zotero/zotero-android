@@ -4,8 +4,10 @@ enum class PageAppearanceMode {
     LIGHT, DARK, AUTOMATIC
 }
 
-enum class PageScrollDirection {
-    HORIZONTAL, VERTICAL
+enum class PageScrollMode(val jsValue: Int) {
+    VERTICAL(0),
+    HORIZONTAL(1),
+    WRAPPED(2),
 }
 
 enum class PageSpreadsMode {
@@ -22,17 +24,25 @@ enum class PageLayoutFlowMode {
 
 data class ReaderSettings(
     var appearanceMode: PageAppearanceMode,
-    var direction: PageScrollDirection,
+    var scrollMode: PageScrollMode,
     var spreadsMode: PageSpreadsMode,
     var pageLayoutFlowMode: PageLayoutFlowMode,
+    var lineHeight: Float,
+    var wordSpacing: Float,
+    var letterSpacing: Float,
+    var pageWidth: Int,
 ) {
     companion object {
         fun default(): ReaderSettings {
             return ReaderSettings(
                 appearanceMode = PageAppearanceMode.AUTOMATIC,
-                direction = PageScrollDirection.HORIZONTAL,
+                scrollMode = PageScrollMode.VERTICAL,
                 spreadsMode = PageSpreadsMode.NONE,
-                pageLayoutFlowMode = PageLayoutFlowMode.PAGINATED
+                pageLayoutFlowMode = PageLayoutFlowMode.PAGINATED,
+                lineHeight = 1.2f,
+                wordSpacing = 0f,
+                letterSpacing = 0f,
+                pageWidth = 0,
             )
         }
     }

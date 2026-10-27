@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -276,7 +275,7 @@ internal class AllItemsViewModel @Inject constructor(
                     )
                     when (contentType) {
                         "application/pdf" -> {
-                            showPdf(
+                            showReader(
                                 file = file,
                                 key = attachment.key,
                                 parentKey = parentKey,
@@ -686,9 +685,12 @@ internal class AllItemsViewModel @Inject constructor(
 
     private suspend fun showUrl(url: String) {
         val uri = url.toUri()
-        if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
-            val mimeType = getUriDetailsUseCase.getMimeType(url)!!
-            triggerEffect(AllItemsViewEffect.OpenFile(uri.toFile(), mimeType))
+        val path = uri.path
+        if (uri.scheme == "file" && !path.isNullOrEmpty()) {
+            val file = File(path)
+            val mimeType = getUriDetailsUseCase.getMimeType(url)
+                ?: getUriDetailsUseCase.getFileMimeTypeOrDefault(file)
+            triggerEffect(AllItemsViewEffect.OpenFile(file, mimeType))
         } else {
             triggerEffect(AllItemsViewEffect.OpenWebpage(url))
         }

@@ -116,6 +116,9 @@ internal class ReaderAnnotationViewModel @Inject constructor(
     }
 
     private fun postAnnotationCommentResult() {
+        if (viewState.commentFocusText == viewState.annotation!!.comment) {
+            return
+        }
         EventBus.getDefault().post(
             ReaderAnnotationCommentResult(
                 annotationKey = viewState.annotation!!.key,

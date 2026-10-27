@@ -2,7 +2,9 @@ package org.zotero.android.screens.reader.topbar
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import org.zotero.android.architecture.ui.CustomLayoutSize
 import org.zotero.android.screens.reader.ReaderViewModel
 import org.zotero.android.screens.reader.ReaderViewState
+import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.search.ReaderSearchViewModel
 import org.zotero.android.screens.reader.search.ReaderSearchViewState
 import org.zotero.android.screens.reader.search.popup.ReaderSearchPopup
@@ -34,6 +37,7 @@ internal fun ReaderTopBar(
     onBack: () -> Unit,
     onShowHideSideBar: () -> Unit,
     toPdfSettings: () -> Unit,
+    toggleReadingMode: () -> Unit,
     onShowHidePdfSearch: () -> Unit,
     toggleToolbarButton: () -> Unit,
     onToggleReadAloud: () -> Unit,
@@ -89,6 +93,41 @@ internal fun ReaderTopBar(
                     },
                     isSelected = showSideBar
                 )
+            }
+
+            if (viewState.fileType == ReaderFileType.PDF) {
+                TooltipBox(
+                    positionProvider = rememberTooltipPositionProvider(
+                        TooltipAnchorPosition.Below,
+                        4.dp
+                    ),
+                    tooltip = {
+                        PlainTooltip() {
+                            Text(
+                                safeStringResource(
+                                    Strings.pdf_reader_plain_reader
+                                )
+                            )
+                        }
+                    },
+                    state = rememberTooltipState()
+                ) {
+                    if (viewState.readingModeLoading) {
+                        Box(modifier = Modifier.size(48.dp)) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp).align(androidx.compose.ui.Alignment.Center),
+                                strokeWidth = 2.dp,
+                            )
+                        }
+                    } else {
+                        IconWithPaddingM3(
+                            unselectedDrawableRes = Drawables.reader,
+                            selectedDrawableRes = Drawables.reader,
+                            onToggle = toggleReadingMode,
+                            isSelected = viewState.readingModeEnabled
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))

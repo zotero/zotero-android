@@ -19,6 +19,7 @@ fun ReaderWebView(viewModel: ReaderViewModel) {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
+            webView.onUserGestureDetected = { viewModel.onDocumentUserGestureDetected() }
             viewModel.initOnce(isTablet = isTablet, textFont = textFont)
             viewModel.initEveryTime(webView = webView)
             webView

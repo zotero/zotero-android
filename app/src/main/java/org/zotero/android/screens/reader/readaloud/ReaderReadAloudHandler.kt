@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.speech.SpeechManager
 import org.zotero.android.speech.SpeechManagerFactory
 import org.zotero.android.speech.SpeechState
@@ -17,6 +18,7 @@ import javax.inject.Inject
 
 class ReaderReadAloudHandler @Inject constructor(
     private val speechManagerFactory: SpeechManagerFactory,
+    private val documentWorkerController: DocumentWorkerController,
     dispatchers: Dispatchers,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + dispatchers.main)
@@ -62,7 +64,11 @@ class ReaderReadAloudHandler @Inject constructor(
 
     private fun startSession(delegate: ReaderSpeechDelegate) {
         Timber.i("ReaderReadAloudHandler: starting read aloud")
-        val manager = speechManagerFactory.create(delegate = delegate, voiceLanguage = null)
+        val manager = speechManagerFactory.create(
+            delegate = delegate,
+            voiceLanguage = null,
+            documentWorkerController = documentWorkerController,
+        )
         speechDelegate = delegate
         speechManager = manager
         mutableIsActive.value = true

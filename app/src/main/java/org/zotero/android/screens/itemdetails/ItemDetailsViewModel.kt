@@ -1649,7 +1649,7 @@ class ItemDetailsViewModel @Inject constructor(
                 )
                 when (contentType) {
                     "application/pdf" -> {
-                        showPdf(file = file, parentKey = parentKey, attachment = attachment)
+                        showReader(file = file, parentKey = parentKey, attachment = attachment)
                     }
                     "text/html", "application/epub+zip" -> {
                         Timber.i("ItemDetailsViewModel: show HTML / EPUB ${attachment.key}")
@@ -1680,9 +1680,11 @@ class ItemDetailsViewModel @Inject constructor(
 
     private suspend fun showUrl(url: String) {
         val uri = url.toUri()
-        if (uri.scheme != null && uri.scheme != "http" && uri.scheme != "https") {
-            val mimeType = getUriDetailsUseCase.getMimeType(url)!!
-            triggerEffect(OpenFile(uri.toFile(), mimeType))
+        if (uri.scheme == "file") {
+            val file = uri.toFile()
+            val mimeType = getUriDetailsUseCase.getMimeType(url)
+                ?: getUriDetailsUseCase.getFileMimeTypeOrDefault(file)
+            triggerEffect(OpenFile(file, mimeType))
         } else {
             triggerEffect(OpenWebpage(url))
         }

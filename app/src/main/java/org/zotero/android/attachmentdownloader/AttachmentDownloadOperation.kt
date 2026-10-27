@@ -18,6 +18,7 @@ import timber.log.Timber
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.SocketException
 
 class AttachmentDownloadOperation(
@@ -45,6 +46,8 @@ class AttachmentDownloadOperation(
     var progressInHundreds: Int = 0
 
     private var coroutineScope: CoroutineScope? = null
+
+    private val downloadedFile = File(file.parent, file.name + ".download")
 
     suspend fun start(coroutineScope: CoroutineScope) {
         if (this.state == null && isOperationNotActive()) {
@@ -87,7 +90,7 @@ class AttachmentDownloadOperation(
             val byteStream = responseBody.byteStream()
 
             val input = BufferedInputStream(byteStream)
-            val output = FileOutputStream(file)
+            val output = FileOutputStream(downloadedFile)
 
             val contentLength = responseBody.contentLength()
             var numOfBytesRead: Int
@@ -121,6 +124,12 @@ class AttachmentDownloadOperation(
                 return
             }
 
+            if (!downloadedFile.renameTo(file)) {
+                downloadedFile.delete()
+                finish(CustomResult.GeneralError.CodeError(IOException("Can't move downloaded file to ${file.absolutePath}")))
+                return
+            }
+
             // Finish download
             finish(CustomResult.GeneralSuccess(null))
         } catch (e: Exception) {
@@ -141,7 +150,7 @@ class AttachmentDownloadOperation(
             if (zipFile.exists()) {
                 zipFile.delete()
             }
-            file.renameTo(zipFile)
+            downloadedFile.renameTo(zipFile)
             val files = zipFile.parentFile!!.listFiles()
             for (file in files) {
                 if (file.name == zipFile.name && file.extension == zipFile.extension) {
@@ -219,6 +228,7 @@ class AttachmentDownloadOperation(
             State.downloading -> {
                 this.coroutineScope?.cancel()
                 this.coroutineScope = null
+                downloadedFile.delete()
             }
             State.done -> {
             }
@@ -253,9 +263,7 @@ class AttachmentDownloadOperation(
         if (isOperationNotActive()) {
             return
         }
-        if (file.exists()) {
-            file.deleteRecursively()
-        }
+        downloadedFile.delete()
 
         this.coroutineScope = null
         state = State.done

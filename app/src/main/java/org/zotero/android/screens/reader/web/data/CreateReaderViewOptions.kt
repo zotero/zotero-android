@@ -28,5 +28,6 @@ data class CreateReaderViewState(
 
     var flowMode: String? = null,
     var spreadMode: Int? = null,
+    var scrollMode: Int? = null,
 
 )

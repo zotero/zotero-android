@@ -78,6 +78,7 @@
         <activity
             android:exported="false"
             android:name=".screens.dashboard.DashboardActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize" />
 
         <activity

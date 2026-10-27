@@ -112,7 +112,8 @@ class ReaderThumbnailPreviewManager @Inject constructor(
         this.coroutineScope?.let { scope ->
             requestThumbnailDebounceFlow
                 .debounce(150)
-                .combine(isReaderInitializedFlow
+                .combine(
+                    isReaderInitializedFlow
                 ) { centerVisibleItemIndex, isReaderInitialized ->
                     if (isReaderInitialized) {
                         requestThumbnailAfterDebounce(centerVisibleItemIndex)
@@ -140,6 +141,22 @@ class ReaderThumbnailPreviewManager @Inject constructor(
         println()
         coroutineScope?.launch {
             requestThumbnailDebounceFlow.tryEmit(centerVisibleItemIndex)
+        }
+    }
+
+    fun requestExactThumbnails(indices: List<Int>) {
+        coroutineScope?.launch {
+            if (numOfPagesInDocument == 0) {
+                return@launch
+            }
+            val indicesToRequest = indices
+                .filter { it in 0 until numOfPagesInDocument }
+                .filter { index -> !memoryCache.isInCache(index) }
+                .filter { index -> !isCurrentlyProcessing(index) }
+            if (indicesToRequest.isNotEmpty()) {
+                currentlyProcessingThumbnails.addAll(indicesToRequest)
+                readerRequestThumbnailRenderEventStream.emitAsync(indicesToRequest)
+            }
         }
     }
 
