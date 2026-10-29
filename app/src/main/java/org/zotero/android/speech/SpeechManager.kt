@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.speech.data.RemoteVoice
@@ -22,8 +23,10 @@ import java.lang.ref.WeakReference
 class SpeechManager<Index : Any>(
     delegate: SpeechManagerDelegate<Index>,
     voiceLanguage: String?,
-    voiceProcessorFactory: VoiceProcessorFactory,
+    remoteVoiceTier: RemoteVoice.Tier?,
+    private val voiceProcessorFactory: VoiceProcessorFactory,
     private val documentWorkerController: DocumentWorkerController,
+    private val defaults: Defaults,
     private val dispatchers: Dispatchers,
 ) : VoiceProcessorDelegate {
     data class SpeechParagraph<Index>(
@@ -88,6 +91,7 @@ class SpeechManager<Index : Any>(
     var onSpeakingPositionChanged: ((ResumePosition<Index>) -> Unit)? = null
 
     val isActive: Boolean get() = !state.value.isStopped
+    val voice: SpeechVoice? get() = processor.speechVoice
     val language: String? get() = processor.preferredLanguage
     val speechRateModifier: Float get() = processor.speechRateModifier
     val detectedLanguage: String get() = processor.detectedLanguage ?: "en"
@@ -101,13 +105,24 @@ class SpeechManager<Index : Any>(
         }
 
     init {
-        processor = voiceProcessorFactory.makeLocalProcessor(
-            language = voiceLanguage,
-            detectedLanguage = null,
-            speechRateModifier = 1f,
-            delegate = this,
-            scope = scope,
-        )
+        processor = if (remoteVoiceTier != null) {
+            voiceProcessorFactory.makeRemoteProcessor(
+                language = voiceLanguage,
+                detectedLanguage = null,
+                tier = remoteVoiceTier,
+                speechRateModifier = 1f,
+                delegate = this,
+                scope = scope,
+            )
+        } else {
+            voiceProcessorFactory.makeLocalProcessor(
+                language = voiceLanguage,
+                detectedLanguage = null,
+                speechRateModifier = 1f,
+                delegate = this,
+                scope = scope,
+            )
+        }
         scope.launch {
             state.collect { state ->
                 if (state.isStopped) {
@@ -293,15 +308,115 @@ class SpeechManager<Index : Any>(
         processor.stop()
     }
 
+    fun set(voice: SpeechVoice, preferredLanguage: String?) {
+        when (voice) {
+            is SpeechVoice.Local -> {
+                val current = processor as? LocalVoiceProcessor
+                if (current != null) {
+                    current.set(voice.voice, preferredLanguage)
+                    return
+                }
+                val newProcessor = makeLocalProcessor(preferredLanguage)
+                newProcessor.set(voice.voice, preferredLanguage)
+                replaceProcessor(newProcessor)
+                remainingTime.value = null
+            }
+
+            is SpeechVoice.Remote -> {
+                val current = processor as? RemoteVoiceProcessor
+                if (current != null) {
+                    current.set(voice.voice, preferredLanguage)
+                    return
+                }
+                val newProcessor = voiceProcessorFactory.makeRemoteProcessor(
+                    language = preferredLanguage,
+                    detectedLanguage = processor.detectedLanguage,
+                    tier = voice.voice.tier,
+                    speechRateModifier = processor.speechRateModifier,
+                    delegate = this,
+                    scope = scope,
+                )
+                newProcessor.set(voice.voice, preferredLanguage)
+                replaceProcessor(newProcessor)
+            }
+        }
+    }
+
     fun set(rateModifier: Float) {
         processor.speechRateModifier = rateModifier
+    }
+
+    fun downgradeVoiceTierAndContinue() {
+        val currentVoice = voice ?: return
+        if (currentVoice !is SpeechVoice.Remote) {
+            return
+        }
+        if (currentVoice.voice.tier == RemoteVoice.Tier.standard) {
+            downgradeToLocalVoice()
+            return
+        }
+        val remoteProcessor = processor as? RemoteVoiceProcessor
+        if (remoteProcessor == null) {
+            downgradeToLocalVoice()
+            return
+        }
+        scope.launch {
+            val standardVoice = try {
+                remoteProcessor.standardVoice(processor.language)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SpeechManager: can't load standard voice for downgrade")
+                return@launch
+            }
+            if (processor !== remoteProcessor || voice != currentVoice || !state.value.isOutOfCredits) {
+                return@launch
+            }
+            if (standardVoice == null) {
+                downgradeToLocalVoice()
+                return@launch
+            }
+            defaults.setRemoteVoiceTier(RemoteVoice.Tier.standard)
+            remoteProcessor.set(standardVoice, remoteProcessor.preferredLanguage)
+            resume()
+        }
+    }
+
+    private fun downgradeToLocalVoice() {
+        defaults.setRemoteVoiceTier(null)
+        replaceProcessor(makeLocalProcessor(processor.preferredLanguage))
+        remainingTime.value = null
+        resume()
+    }
+
+    private fun makeLocalProcessor(language: String?): LocalVoiceProcessor {
+        return voiceProcessorFactory.makeLocalProcessor(
+            language = language,
+            detectedLanguage = processor.detectedLanguage,
+            speechRateModifier = processor.speechRateModifier,
+            delegate = this,
+            scope = scope,
+        )
+    }
+
+    private fun replaceProcessor(newProcessor: VoiceProcessor) {
+        val oldProcessor = processor
+        processor = newProcessor
+        releaseProcessor(oldProcessor)
+    }
+
+    private fun releaseProcessor(processor: VoiceProcessor) {
+        when (processor) {
+            is LocalVoiceProcessor -> processor.release()
+            is RemoteVoiceProcessor -> processor.release()
+        }
     }
 
     fun release() {
         pendingNavigation?.second?.cancel()
         pendingNavigation = null
         processor.stop()
-        (processor as? LocalVoiceProcessor)?.release()
+        releaseProcessor(processor)
         scope.cancel()
     }
 

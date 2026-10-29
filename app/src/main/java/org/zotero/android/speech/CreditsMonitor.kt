@@ -42,7 +42,7 @@ class CreditsMonitor(
         return if (credits.remaining(tier) == 0) SpeechState.OutOfCreditsReason.quotaExceeded else null
     }
 
-    private suspend fun loadCredits(): RemoteVoicesController.Credits? {
+    suspend fun loadCredits(): RemoteVoicesController.Credits? {
         val result = remoteVoicesController.loadCredits()
         if (result is CustomResult.GeneralError) {
             Timber.e("CreditsMonitor: could not load credits - $result")
