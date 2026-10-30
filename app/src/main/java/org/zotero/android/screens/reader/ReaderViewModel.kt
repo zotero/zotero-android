@@ -89,6 +89,7 @@ import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.readaloud.ReadAloudControlsState
 import org.zotero.android.screens.reader.readaloud.ReaderReadAloudHandler
 import org.zotero.android.screens.reader.readaloud.ReaderSpeechDelegate
+import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionResult
 import org.zotero.android.screens.reader.data.ReaderOutline
 import org.zotero.android.screens.reader.data.ReaderPage
 import org.zotero.android.screens.reader.data.ReaderWebData
@@ -1908,9 +1909,20 @@ class ReaderViewModel @Inject constructor(
                 fileType = viewState.fileType,
                 currentPage = { currentPageIndex },
                 pagesCount = { pagesCount },
-            )
+            ),
+            showOnboarding = { args ->
+                ScreenArguments.readAloudVoiceSelectionArgs = args
+                triggerEffect(ReaderViewEffect.ShowReadAloudOnboarding)
+            },
         )
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: ReadAloudVoiceSelectionResult) {
+        readAloudHandler.onOnboardingResult(result.change)
+    }
+
+    fun onReadAloudDowngrade() = readAloudHandler.downgradeVoice()
 
     private fun observeReadAloudState() {
         readAloudHandler.isActive
@@ -2859,6 +2871,7 @@ sealed class ReaderViewEffect : ViewEffect {
     object ShowReaderAnnotationMore : ReaderViewEffect()
     object NavigateToTagPickerScreen : ReaderViewEffect()
     object ShowReaderColorPicker : ReaderViewEffect()
+    object ShowReadAloudOnboarding : ReaderViewEffect()
     data class ShowReaderSettings(val params: String) : ReaderViewEffect()
     data class ShowPdfAnnotationAndUpdateAnnotationsList(
         val scrollToIndex: Int,

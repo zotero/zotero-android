@@ -16,12 +16,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.zotero.android.uicomponents.Drawables
+import org.zotero.android.uicomponents.Strings
 
 private val sideSlotWidth = 88.dp
 
@@ -32,6 +35,7 @@ internal fun ReadAloudControlsBar(
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onForward: () -> Unit,
+    onDowngrade: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -40,6 +44,16 @@ internal fun ReadAloudControlsBar(
             .navigationBarsPadding()
     ) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        controls.downgrade?.let { downgrade ->
+            TextButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                onClick = onDowngrade,
+            ) {
+                Text(text = stringResource(downgrade.titleRes()))
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -61,6 +75,11 @@ internal fun ReadAloudControlsBar(
             Spacer(modifier = Modifier.width(sideSlotWidth))
         }
     }
+}
+
+private fun ReadAloudControlsState.Downgrade.titleRes(): Int = when (this) {
+    ReadAloudControlsState.Downgrade.standard -> Strings.speech_continue_standard
+    ReadAloudControlsState.Downgrade.local -> Strings.speech_continue_local
 }
 
 @Composable

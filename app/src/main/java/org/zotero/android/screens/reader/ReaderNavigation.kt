@@ -22,6 +22,9 @@ import org.zotero.android.screens.reader.annotationmore.toReaderAnnotationMoreSc
 import org.zotero.android.screens.reader.colorpicker.ReaderColorPickerScreen
 import org.zotero.android.screens.reader.filter.ReaderFilterNavigation
 import org.zotero.android.screens.reader.filter.toReaderFilterScreen
+import org.zotero.android.screens.reader.readaloud.readAloudOnboardingDialog
+import org.zotero.android.screens.reader.readaloud.readAloudOnboardingScreen
+import org.zotero.android.screens.reader.readaloud.toReadAloudOnboarding
 import org.zotero.android.screens.reader.settings.ReaderSettingsScreen
 
 internal const val ARG_READER_SCREEN = "readerArgs"
@@ -43,9 +46,11 @@ internal fun NavGraphBuilder.readerNavScreensForTablet(
         navigateToReaderAnnotationMore = navigation::toReaderAnnotationMoreNavigation,
         navigateToReaderColorPicker = navigation::toReaderColorPicker,
         navigateToReaderSettings = navigation::toReaderSettings,
+        navigateToReadAloudOnboarding = navigation::toReadAloudOnboarding,
         onOpenWebpage = onOpenWebpage,
 
     )
+    readAloudOnboardingDialog(navigation)
     dialogFixedDimens(
         modifier = Modifier
             .height(400.dp)
@@ -119,8 +124,10 @@ internal fun NavGraphBuilder.readerNavScreensForPhone(
         navigateToReaderAnnotationMore = navigation::toReaderAnnotationMoreScreen,
         navigateToReaderColorPicker = navigation::toReaderColorPicker,
         navigateToReaderSettings = navigation::toReaderSettings,
+        navigateToReadAloudOnboarding = navigation::toReadAloudOnboarding,
         onOpenWebpage = onOpenWebpage,
     )
+    readAloudOnboardingScreen(navigation)
 }
 
 private fun NavGraphBuilder.readerScreen(
@@ -131,6 +138,7 @@ private fun NavGraphBuilder.readerScreen(
     navigateToReaderAnnotationMore: () -> Unit,
     navigateToReaderColorPicker: () -> Unit,
     navigateToReaderSettings: (args: String) -> Unit,
+    navigateToReadAloudOnboarding: () -> Unit,
     onOpenWebpage: (url: String) -> Unit,
 ) {
     composable(
@@ -148,6 +156,7 @@ private fun NavGraphBuilder.readerScreen(
             navigateToReaderAnnotationMore = navigateToReaderAnnotationMore,
             navigateToReaderColorPicker = navigateToReaderColorPicker,
             navigateToReaderSettings = navigateToReaderSettings,
+            navigateToReadAloudOnboarding = navigateToReadAloudOnboarding,
             onOpenWebpage = onOpenWebpage
         )
     }

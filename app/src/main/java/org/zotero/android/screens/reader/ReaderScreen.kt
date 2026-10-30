@@ -63,6 +63,7 @@ internal fun ReaderScreen(
     navigateToReaderAnnotationMore: () -> Unit,
     navigateToReaderColorPicker: () -> Unit,
     navigateToReaderSettings: (args: String) -> Unit,
+    navigateToReadAloudOnboarding: () -> Unit,
     onOpenWebpage: (url: String) -> Unit,
     viewModel: ReaderViewModel = hiltViewModel(),
 ) {
@@ -141,6 +142,10 @@ internal fun ReaderScreen(
 
                 is ReaderViewEffect.ShowReaderColorPicker -> {
                     navigateToReaderColorPicker()
+                }
+
+                is ReaderViewEffect.ShowReadAloudOnboarding -> {
+                    navigateToReadAloudOnboarding()
                 }
 
                 is ReaderViewEffect.ShowReaderSettings -> {
@@ -227,6 +232,7 @@ internal fun ReaderScreen(
                         onPlay = viewModel::onReadAloudPlay,
                         onPause = viewModel::onReadAloudPause,
                         onForward = viewModel::onReadAloudSkipForward,
+                        onDowngrade = viewModel::onReadAloudDowngrade,
                     )
                 }
             },

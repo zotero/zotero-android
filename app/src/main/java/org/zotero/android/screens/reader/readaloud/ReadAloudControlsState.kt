@@ -2,6 +2,8 @@ package org.zotero.android.screens.reader.readaloud
 
 import org.zotero.android.speech.RemainingTimeFormatter
 import org.zotero.android.speech.SpeechState
+import org.zotero.android.speech.SpeechVoice
+import org.zotero.android.speech.data.RemoteVoice
 
 data class ReadAloudControlsState(
     val isPlayVisible: Boolean,
@@ -9,12 +11,16 @@ data class ReadAloudControlsState(
     val isProgressVisible: Boolean,
     val areSkipButtonsEnabled: Boolean,
     val remainingTimeText: String?,
+    val downgrade: Downgrade?,
 ) {
+    enum class Downgrade { standard, local }
+
     companion object {
-        fun from(state: SpeechState, remainingTime: Double?): ReadAloudControlsState {
+        fun from(state: SpeechState, remainingTime: Double?, voice: SpeechVoice?): ReadAloudControlsState {
             val remainingTimeText = remainingTime
                 ?.takeIf { RemainingTimeFormatter.isWarning(it) }
                 ?.let { RemainingTimeFormatter.formatted(it) }
+            val downgrade = downgrade(remainingTime, voice)
             return when (state) {
                 SpeechState.Initializing -> ReadAloudControlsState(
                     isPlayVisible = false,
@@ -22,6 +28,7 @@ data class ReadAloudControlsState(
                     isProgressVisible = true,
                     areSkipButtonsEnabled = false,
                     remainingTimeText = remainingTimeText,
+                    downgrade = downgrade,
                 )
 
                 SpeechState.Loading -> ReadAloudControlsState(
@@ -30,6 +37,7 @@ data class ReadAloudControlsState(
                     isProgressVisible = true,
                     areSkipButtonsEnabled = true,
                     remainingTimeText = remainingTimeText,
+                    downgrade = downgrade,
                 )
 
                 SpeechState.Speaking -> ReadAloudControlsState(
@@ -38,6 +46,7 @@ data class ReadAloudControlsState(
                     isProgressVisible = false,
                     areSkipButtonsEnabled = true,
                     remainingTimeText = remainingTimeText,
+                    downgrade = downgrade,
                 )
 
                 SpeechState.Paused -> ReadAloudControlsState(
@@ -46,6 +55,7 @@ data class ReadAloudControlsState(
                     isProgressVisible = false,
                     areSkipButtonsEnabled = true,
                     remainingTimeText = remainingTimeText,
+                    downgrade = downgrade,
                 )
 
                 SpeechState.Stopped, is SpeechState.OutOfCredits -> ReadAloudControlsState(
@@ -54,7 +64,19 @@ data class ReadAloudControlsState(
                     isProgressVisible = false,
                     areSkipButtonsEnabled = false,
                     remainingTimeText = remainingTimeText,
+                    downgrade = downgrade,
                 )
+            }
+        }
+
+        private fun downgrade(remainingTime: Double?, voice: SpeechVoice?): Downgrade? {
+            if (remainingTime == null || remainingTime > 0) {
+                return null
+            }
+            val remoteVoice = (voice as? SpeechVoice.Remote)?.voice ?: return null
+            return when (remoteVoice.tier) {
+                RemoteVoice.Tier.premium -> Downgrade.standard
+                RemoteVoice.Tier.standard -> Downgrade.local
             }
         }
     }
