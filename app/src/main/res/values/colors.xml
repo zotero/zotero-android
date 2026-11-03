@@ -18,6 +18,7 @@
     <color name="red">#FF001F</color>
     <color name="zoteroDefaultBlue">#FF4072E5</color>
     <color name="zoteroBlueWithDarkMode">#FF4071E6</color>
+    <color name="reader_selection_handle">#FF4C7FF0</color>
     <color name="surface">@color/white</color>
 
     <color name="checkbox_light">@color/cool_grey</color>

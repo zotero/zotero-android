@@ -88,6 +88,15 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
+    <!-- Applied only to the reader WebView context: the system text selection handles are tinted
+         with colorControlActivated, which follows colorPrimary/colorAccent (black in day mode,
+         white in night mode) and is invisible against the reader's own, independently chosen,
+         dark/light page. -->
+    <style name="ReaderWebViewThemeOverlay">
+        <item name="colorControlActivated">@color/reader_selection_handle</item>
+        <item name="android:colorControlActivated">@color/reader_selection_handle</item>
+    </style>
+
     <style name="ClearBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/ClearBottomSheetStyle</item>
     </style>
