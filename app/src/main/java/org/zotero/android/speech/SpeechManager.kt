@@ -13,6 +13,9 @@ import kotlinx.coroutines.withContext
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.documentworker.DocumentWorkerController
+import org.zotero.android.screens.reader.data.ReaderAnnotationTool
+import org.zotero.android.speech.data.HighlightResult
+import org.zotero.android.speech.data.HighlightVoiceInfo
 import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.speech.data.SDTRect
 import org.zotero.android.speech.data.TextRange
@@ -28,7 +31,7 @@ class SpeechManager<Index : Any>(
     private val documentWorkerController: DocumentWorkerController,
     private val defaults: Defaults,
     private val dispatchers: Dispatchers,
-) : VoiceProcessorDelegate {
+) : VoiceProcessorDelegate, SpeechHighlightSessionManagerDelegate<Index> {
     data class SpeechParagraph<Index>(
         val text: String,
         val page: Index,
@@ -76,6 +79,8 @@ class SpeechManager<Index : Any>(
     private var documentLoaded = false
     private var documentLanguage: String? = null
 
+    private val highlightSessionManager = SpeechHighlightSessionManager<Index>(scope)
+
     private var processor: VoiceProcessor
     private var position: Position? = null
         set(value) {
@@ -105,6 +110,7 @@ class SpeechManager<Index : Any>(
         }
 
     init {
+        highlightSessionManager.delegate = this
         processor = if (remoteVoiceTier != null) {
             voiceProcessorFactory.makeRemoteProcessor(
                 language = voiceLanguage,
@@ -344,6 +350,139 @@ class SpeechManager<Index : Any>(
 
     fun set(rateModifier: Float) {
         processor.speechRateModifier = rateModifier
+    }
+
+    fun startHighlightSession(): HighlightResult<Index>? {
+        val position = position ?: return null
+        if (!(state.value.isSpeaking || state.value.isPaused) || position.paragraphIndex >= paragraphs.size) {
+            return null
+        }
+        val paragraph = paragraphs[position.paragraphIndex]
+        val voiceInfo = when (val voice = processor.speechVoice) {
+            is SpeechVoice.Remote -> HighlightVoiceInfo.Remote(
+                granularity = if (voice.voice.granularity == RemoteVoice.Granularity.paragraph) {
+                    RemoteVoice.Granularity.paragraph
+                } else {
+                    RemoteVoice.Granularity.sentence
+                },
+                audioProgress = processor.segmentAudioProgress,
+                elapsedTime = processor.segmentAudioElapsedTime,
+            )
+
+            is SpeechVoice.Local -> HighlightVoiceInfo.Local
+            null -> return null
+        }
+        val result = highlightSessionManager.startSession(
+            voiceInfo = voiceInfo,
+            position = paragraph.pageOffset + position.range.location,
+            segments = segments(paragraph.page),
+            pageIndex = paragraph.page,
+        ) ?: return null
+        notifyAnnotationPreviewChanged(result)
+        return result
+    }
+
+    fun moveHighlightForward(): HighlightResult<Index>? {
+        val result = highlightSessionManager.moveForward() ?: return null
+        notifyAnnotationPreviewChanged(result)
+        return result
+    }
+
+    fun moveHighlightBackward(): HighlightResult<Index>? {
+        val result = highlightSessionManager.moveBackward() ?: return null
+        notifyAnnotationPreviewChanged(result)
+        return result
+    }
+
+    fun extendHighlightForward(): HighlightResult<Index>? {
+        val result = highlightSessionManager.extendForward() ?: return null
+        notifyAnnotationPreviewChanged(result)
+        return result
+    }
+
+    fun extendHighlightBackward(): HighlightResult<Index>? {
+        val result = highlightSessionManager.extendBackward() ?: return null
+        notifyAnnotationPreviewChanged(result)
+        return result
+    }
+
+    val highlightAnnotationTool: ReaderAnnotationTool
+        get() = highlightSessionManager.annotationTool
+
+    val highlightAnnotationColor: String
+        get() = highlightSessionManager.annotationColor
+
+    var onHighlightSessionTimedOut: (() -> Unit)?
+        get() = highlightSessionManager.onSessionTimedOut
+        set(value) {
+            highlightSessionManager.onSessionTimedOut = value
+        }
+
+    fun setHighlightAnnotationTool(tool: ReaderAnnotationTool) {
+        highlightSessionManager.annotationTool = tool
+        highlightSessionManager.startInactivityTimer()
+    }
+
+    fun setHighlightAnnotationColor(color: String) {
+        highlightSessionManager.annotationColor = color
+        highlightSessionManager.startInactivityTimer()
+    }
+
+    fun stopHighlightInactivityTimer() {
+        highlightSessionManager.stopInactivityTimer()
+    }
+
+    fun startHighlightInactivityTimer() {
+        highlightSessionManager.startInactivityTimer()
+    }
+
+    fun endHighlightSession() {
+        val session = highlightSessionManager.session
+        val sourceLocation = session?.range?.location ?: 0
+        val sourceTextLength = session?.pageText?.length ?: 0
+        val rects = session?.let { SpeechDocumentParser.pdfLineRects(it.range, it.segments) } ?: emptyList()
+        highlightSessionManager.endSession()?.let { result ->
+            delegate?.createAnnotation(
+                tool = highlightSessionManager.annotationTool,
+                color = highlightSessionManager.annotationColor,
+                text = result.text,
+                rects = rects,
+                pageIndex = result.pageIndex,
+                sourceLocation = sourceLocation,
+                sourceTextLength = sourceTextLength,
+            )
+        }
+        delegate?.clearAnnotationPreview()
+    }
+
+    fun cancelHighlightSession() {
+        highlightSessionManager.cancelSession()
+        delegate?.clearAnnotationPreview()
+    }
+
+    private fun notifyAnnotationPreviewChanged(result: HighlightResult<Index>) {
+        val session = highlightSessionManager.session
+        delegate?.annotationPreviewChanged(
+            text = result.text,
+            rects = session?.let { SpeechDocumentParser.pdfLineRects(it.range, it.segments) } ?: emptyList(),
+            pageIndex = result.pageIndex,
+            tool = highlightSessionManager.annotationTool,
+            color = highlightSessionManager.annotationColor,
+            sourceLocation = session?.range?.location ?: 0,
+            sourceTextLength = session?.pageText?.length ?: 0,
+        )
+    }
+
+    override fun highlightSessionSegments(pageIndex: Index): List<SpeechDocumentParser.Segment> {
+        return segments(pageIndex)
+    }
+
+    override fun highlightSessionNextReadablePage(pageIndex: Index): Index? {
+        return nextReadablePage(pageIndex)
+    }
+
+    override fun highlightSessionPreviousReadablePage(pageIndex: Index): Index? {
+        return previousReadablePage(pageIndex)
     }
 
     fun downgradeVoiceTierAndContinue() {
