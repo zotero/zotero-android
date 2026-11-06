@@ -138,6 +138,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
     @Index
     var lastRead: Date? = null
     var effectiveLastRead: Date? = null
+    var speechLanguage: String? = null
 
     val doi: String?
         get() {

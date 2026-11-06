@@ -7,6 +7,7 @@ import org.zotero.android.database.migration.main.solutions.MigrateExtractAnnota
 import org.zotero.android.database.migration.main.solutions.MigrateMarkAllNonLocalGroupsAsOutdatedToTriggerResync
 import org.zotero.android.database.migration.main.solutions.MigrateNonArabicFormattingSortIndex
 import org.zotero.android.database.migration.main.solutions.MigrateRecentlyRead
+import org.zotero.android.database.migration.main.solutions.MigrateSpeechLanguage
 
 internal class MainDbMigration(private val fileName: String) : RealmMigration {
 
@@ -25,6 +26,9 @@ internal class MainDbMigration(private val fileName: String) : RealmMigration {
         }
         if (oldVersion < 7) {
             MigrateRecentlyRead(dynamicRealm).migrate()
+        }
+        if (oldVersion < 8) {
+            MigrateSpeechLanguage(dynamicRealm).migrate()
         }
     }
 

@@ -25,9 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudLanguageChoice
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionState
+import org.zotero.android.speech.LanguageDetector
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionViewEffect
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionViewModel
 import org.zotero.android.uicomponents.CustomScaffoldM3
@@ -38,6 +41,7 @@ import org.zotero.android.uicomponents.themem3.AppThemeM3
 @Composable
 internal fun ReadAloudOnboardingScreen(
     onBack: () -> Unit,
+    navigateToLanguagePicker: () -> Unit,
     viewModel: ReadAloudVoiceSelectionViewModel = hiltViewModel(),
 ) {
     viewModel.init()
@@ -50,6 +54,7 @@ internal fun ReadAloudOnboardingScreen(
             when (viewEffect?.consume()) {
                 null -> Unit
                 is ReadAloudVoiceSelectionViewEffect.OnBack -> onBack()
+                is ReadAloudVoiceSelectionViewEffect.ShowLanguagePicker -> navigateToLanguagePicker()
             }
         }
         CustomScaffoldM3(
@@ -72,6 +77,11 @@ internal fun ReadAloudOnboardingScreen(
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         DescriptionBullets(viewState)
+                    }
+                    if (viewState.canShowLanguage) {
+                        item {
+                            LanguageRow(state = viewState, onClick = viewModel::onLanguageClicked)
+                        }
                     }
                     if (viewState.currentRegions.size > 1) {
                         regionSection(viewState, viewModel::onRegionSelected)
@@ -129,6 +139,43 @@ private fun DescriptionBullets(state: ReadAloudVoiceSelectionState) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun LanguageRow(
+    state: ReadAloudVoiceSelectionState,
+    onClick: (automaticTitle: String, title: String) -> Unit,
+) {
+    val automatic = stringResource(Strings.speech_automatic)
+    val title = stringResource(Strings.speech_language)
+    val detectedName = LanguageDetector.localizedLanguageName(LanguageDetector.baseLanguage(of = state.detectedLanguage))
+        ?: state.detectedLanguage
+    val automaticTitle = "$automatic - $detectedName"
+    val value = when (val language = state.language) {
+        ReadAloudLanguageChoice.Auto -> automaticTitle
+        is ReadAloudLanguageChoice.Language -> LanguageDetector.localizedLanguageName(language.code) ?: language.code
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick(automaticTitle, title) }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            modifier = Modifier.weight(1f),
+            text = value,
+            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

@@ -390,6 +390,7 @@ class ReaderViewModel @Inject constructor(
 
         initState()
         setupWebCallChainEventStream()
+        readAloudHandler.attach(key = key, libraryId = library.identifier)
         observeReadAloudState()
         startObservingTheme()
         startObservingSearchTerm()

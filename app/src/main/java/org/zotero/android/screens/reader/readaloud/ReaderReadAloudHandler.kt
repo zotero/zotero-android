@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
+import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.requests.ReadSpeechLanguageDbRequest
+import org.zotero.android.database.requests.SetSpeechLanguageDbRequest
 import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceChange
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionArgs
@@ -17,6 +20,7 @@ import org.zotero.android.speech.SpeechManager
 import org.zotero.android.speech.SpeechManagerFactory
 import org.zotero.android.speech.SpeechState
 import org.zotero.android.speech.SpeechVoice
+import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -24,9 +28,15 @@ class ReaderReadAloudHandler @Inject constructor(
     private val speechManagerFactory: SpeechManagerFactory,
     private val documentWorkerController: DocumentWorkerController,
     private val defaults: Defaults,
+    private val dbWrapperMain: DbWrapperMain,
     dispatchers: Dispatchers,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + dispatchers.main)
+
+    private var itemKey: String? = null
+    private var libraryId: LibraryIdentifier? = null
+    private var voiceLanguage: String? = null
+    private var wasPlayingBeforeVoiceChange = false
 
     private var pendingOnboardingDelegate: ReaderSpeechDelegate? = null
     private var speechManager: SpeechManager<Int>? = null
@@ -59,6 +69,56 @@ class ReaderReadAloudHandler @Inject constructor(
         speechManager?.downgradeVoiceTierAndContinue()
     }
 
+    fun attach(key: String, libraryId: LibraryIdentifier) {
+        itemKey = key
+        this.libraryId = libraryId
+        voiceLanguage = try {
+            dbWrapperMain.realmDbStorage
+                .perform(request = ReadSpeechLanguageDbRequest(key = key, libraryId = libraryId))
+                .takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            Timber.e(e, "ReaderReadAloudHandler: can't load speech language")
+            null
+        }
+    }
+
+    fun prepareVoiceChange(): ReadAloudVoiceSelectionArgs? {
+        val manager = speechManager ?: return null
+        val voice = manager.voice ?: return null
+        val state = manager.state.value
+        wasPlayingBeforeVoiceChange = state.isSpeakingOrLoading || state.isOutOfCredits
+        manager.pause()
+        return ReadAloudVoiceSelectionArgs(
+            initialVoice = voice,
+            language = manager.language,
+            detectedLanguage = manager.detectedLanguage,
+            savesOnVoiceChange = true,
+        )
+    }
+
+    fun onVoiceChange(change: ReadAloudVoiceChange) {
+        saveSpeechLanguage(change.preferredLanguage)
+        val manager = speechManager ?: return
+        manager.set(change.voice, change.preferredLanguage)
+        if (wasPlayingBeforeVoiceChange) {
+            wasPlayingBeforeVoiceChange = false
+            manager.resume()
+        }
+    }
+
+    private fun saveSpeechLanguage(language: String?) {
+        voiceLanguage = language
+        val key = itemKey ?: return
+        val libraryId = libraryId ?: return
+        try {
+            dbWrapperMain.realmDbStorage.perform(
+                request = SetSpeechLanguageDbRequest(key = key, libraryId = libraryId, language = language)
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "ReaderReadAloudHandler: can't save speech language")
+        }
+    }
+
     fun toggle(delegate: ReaderSpeechDelegate, showOnboarding: (ReadAloudVoiceSelectionArgs) -> Unit) {
         if (speechManager != null) {
             stopAndReleaseManager()
@@ -72,7 +132,7 @@ class ReaderReadAloudHandler @Inject constructor(
         showOnboarding(
             ReadAloudVoiceSelectionArgs(
                 initialVoice = null,
-                language = null,
+                language = voiceLanguage,
                 detectedLanguage = "en",
                 savesOnVoiceChange = false,
             )
@@ -98,7 +158,7 @@ class ReaderReadAloudHandler @Inject constructor(
         Timber.i("ReaderReadAloudHandler: starting read aloud")
         val manager = speechManagerFactory.create(
             delegate = delegate,
-            voiceLanguage = null,
+            voiceLanguage = voiceLanguage,
             documentWorkerController = documentWorkerController,
         )
         voice?.let { manager.set(it, preferredLanguage = null) }

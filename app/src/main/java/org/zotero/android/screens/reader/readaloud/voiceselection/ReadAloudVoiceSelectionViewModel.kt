@@ -22,6 +22,12 @@ import org.zotero.android.speech.data.ReadAloudLanguage
 import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.speech.identifier
 import org.zotero.android.speech.languageTag
+import org.zotero.android.uicomponents.singlepicker.SinglePickerArgs
+import org.zotero.android.uicomponents.singlepicker.SinglePickerItem
+import org.zotero.android.uicomponents.singlepicker.SinglePickerResult
+import org.zotero.android.uicomponents.singlepicker.SinglePickerState
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -34,6 +40,7 @@ class ReadAloudVoiceSelectionViewModel @Inject constructor(
 ) : BaseViewModel2<ReadAloudVoiceSelectionState, ReadAloudVoiceSelectionViewEffect>(ReadAloudVoiceSelectionState()) {
 
     fun init() = initOnce {
+        EventBus.getDefault().register(this)
         val args = ScreenArguments.readAloudVoiceSelectionArgs
         val initialVoice = args.initialVoice
         updateState {
@@ -106,6 +113,32 @@ class ReadAloudVoiceSelectionViewModel @Inject constructor(
 
             ReadAloudVoiceType.premium, ReadAloudVoiceType.standard -> autoSelectRemoteVoice()
         }
+    }
+
+    fun onLanguageClicked(automaticTitle: String, title: String) {
+        val items = listOf(SinglePickerItem(id = autoLanguageId, name = automaticTitle)) +
+                createLanguages().map { SinglePickerItem(id = it.id, name = it.name) }
+        val selected = (viewState.language as? ReadAloudLanguageChoice.Language)?.code ?: autoLanguageId
+        ScreenArguments.singlePickerArgs = SinglePickerArgs(
+            singlePickerState = SinglePickerState(objects = items, selectedRow = selected),
+            title = title,
+            showSaveButton = false,
+            callPoint = SinglePickerResult.CallPoint.ReadAloudLanguage,
+        )
+        triggerEffect(ReadAloudVoiceSelectionViewEffect.ShowLanguagePicker)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(result: SinglePickerResult) {
+        if (result.callPoint != SinglePickerResult.CallPoint.ReadAloudLanguage) {
+            return
+        }
+        onLanguageSelected(createLanguages().firstOrNull { it.id == result.id })
+    }
+
+    override fun onCleared() {
+        EventBus.getDefault().unregister(this)
+        super.onCleared()
     }
 
     fun createLanguages(): List<ReadAloudLanguage> {
@@ -293,6 +326,9 @@ class ReadAloudVoiceSelectionViewModel @Inject constructor(
     }
 }
 
+private const val autoLanguageId = "auto"
+
 sealed class ReadAloudVoiceSelectionViewEffect : ViewEffect {
     object OnBack : ReadAloudVoiceSelectionViewEffect()
+    object ShowLanguagePicker : ReadAloudVoiceSelectionViewEffect()
 }
