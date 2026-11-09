@@ -279,7 +279,7 @@ class SpeechManager<Index : Any>(
             return
         }
         val startOffset = if (target is StartTarget.PageTextOffset && page == currentIndex) {
-            target.offsetForPageText(pageText(page))
+            sentenceStartOffset(target.offsetForPageText(pageText(page)), segments(page))
         } else {
             0
         }
@@ -289,6 +289,10 @@ class SpeechManager<Index : Any>(
             return
         }
         startSpeaking(resolved.first, resolved.second, reportPageChange = false)
+    }
+
+    private fun sentenceStartOffset(offset: Int, segments: List<SpeechDocumentParser.Segment>): Int {
+        return SpeechDocumentParser.unitRange(offset, RemoteVoice.Granularity.sentence, segments)?.location ?: offset
     }
 
     private fun applySessionLanguageIfNeeded() {

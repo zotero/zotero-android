@@ -9,7 +9,7 @@ data class LocalUtterance(
     companion object {
         private val sentenceEndings = listOf(". ", "! ", "? ", "; ")
 
-        fun split(pageText: String, startIndex: Int, generation: Int, maxLength: Int): List<LocalUtterance> {
+        fun split(pageText: String, startIndex: Int, generation: Int, maxLength: Int, baseOffset: Int = 0): List<LocalUtterance> {
             val utterances = mutableListOf<LocalUtterance>()
             var position = startIndex
             while (position < pageText.length) {
@@ -18,7 +18,7 @@ data class LocalUtterance(
                     LocalUtterance(
                         id = "$generation-${utterances.size}",
                         text = pageText.substring(position, end),
-                        pageOffset = position,
+                        pageOffset = baseOffset + position,
                         isLast = end >= pageText.length,
                     )
                 )

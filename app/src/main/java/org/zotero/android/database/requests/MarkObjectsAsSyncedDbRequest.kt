@@ -15,6 +15,7 @@ import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCollectionChanges
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
@@ -83,6 +84,10 @@ class MarkSettingsAsSyncedDbRequest(
                 val pageIndex = database.where<RPageIndex>().findAll()
                     .uniqueObject(key = setting.key, libraryId = setting.libraryId)
                 objectS = pageIndex!!
+            } else if (setting.uid.startsWith("lastReadAloudPosition_")) {
+                val position = database.where<RLastReadAloudPosition>().findAll()
+                    .uniqueObject(key = setting.key, libraryId = setting.libraryId)
+                objectS = position!!
             } else {
                 Timber.e("MarkSettingsAsSyncedDbRequest: could not find setting for ${setting.uid}")
                 continue

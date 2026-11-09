@@ -545,6 +545,7 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         when (this.rawType) {
             ItemTypes.attachment -> {
                 deletePageIndex(database)
+                deleteLastReadAloudPosition(database)
                 cleanupAttachmentFiles()
             }
             ItemTypes.annotation -> {
@@ -562,6 +563,13 @@ open class RItem : Updatable, Deletable, Syncable, RealmObject() {
         if (libraryId != null) {
             database.where<RPageIndex>().key(key, libraryId).findFirst()?.deleteFromRealm()
         }
+    }
+
+    private fun deleteLastReadAloudPosition(database: Realm) {
+        val libraryId = this.libraryId ?: return
+        val position = database.where<RLastReadAloudPosition>().key(key, libraryId).findFirst() ?: return
+        position.willRemove(database)
+        position.deleteFromRealm()
     }
 
     private fun cleanupAnnotationFiles() {

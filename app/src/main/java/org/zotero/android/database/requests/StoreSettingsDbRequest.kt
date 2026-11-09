@@ -3,6 +3,7 @@ package org.zotero.android.database.requests
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
+import org.zotero.android.api.pojo.sync.LastReadAloudPositionResponse
 import org.zotero.android.api.pojo.sync.LastReadResponse
 import org.zotero.android.api.pojo.sync.PageIndexResponse
 import org.zotero.android.api.pojo.sync.SettingsResponse
@@ -10,6 +11,7 @@ import org.zotero.android.api.pojo.sync.TagColorResponse
 import org.zotero.android.database.DbRequest
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RTag
@@ -42,6 +44,29 @@ class StoreSettingsDbRequest(
 
         syncPages(pages = this.response.pageIndices.indices, database)
         syncLastReadValues(values=  this.response.lastReadValues.values, database)
+        syncLastReadAloudPositions(positions = this.response.lastReadAloudPositions.positions, database)
+    }
+
+    private fun syncLastReadAloudPositions(positions: List<LastReadAloudPositionResponse>, database: Realm) {
+        for (position in positions) {
+            val rPosition: RLastReadAloudPosition
+            val existing = database
+                .where<RLastReadAloudPosition>()
+                .uniqueObjectV2(key = position.key, libraryId = position.libraryId)
+            if (existing != null) {
+                rPosition = existing
+            } else {
+                rPosition = database.createObject<RLastReadAloudPosition>()
+                rPosition.key = position.key
+                rPosition.libraryId = position.libraryId
+            }
+            rPosition.set(position.value, database)
+            rPosition.version = position.version
+            rPosition.deleted = false
+            rPosition.changeType = UpdatableChangeType.sync.name
+
+            rPosition.deleteAllChanges(database)
+        }
     }
 
     private fun syncPages(pages: List<PageIndexResponse>, database: Realm) {

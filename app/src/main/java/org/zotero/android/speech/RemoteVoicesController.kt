@@ -4,6 +4,7 @@ import org.zotero.android.api.ZoteroApi
 import org.zotero.android.api.network.CustomResult
 import org.zotero.android.api.network.CustomResult.GeneralSuccess.NetworkSuccess
 import org.zotero.android.api.network.safeApiCall
+import org.zotero.android.api.pojo.speech.ReadAloudAudioBody
 import org.zotero.android.api.pojo.speech.VoicesResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,7 +68,7 @@ class RemoteVoicesController @Inject constructor(
     }
 
     suspend fun downloadSound(text: String, voiceId: String): CustomResult<ByteArray> {
-        val networkResult = safeApiCall { zoteroApi.readAloudAudioRequest(text = text, voiceId = voiceId) }
+        val networkResult = safeApiCall { zoteroApi.readAloudAudioRequest(ReadAloudAudioBody(text = text, voice = voiceId)) }
         if (networkResult is CustomResult.GeneralError) {
             return mapOutOfCredits(networkResult)
         }

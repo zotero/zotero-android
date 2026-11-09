@@ -7,6 +7,7 @@ import org.zotero.android.api.pojo.sync.SettingKeyParser
 import org.zotero.android.database.DbWrapperMain
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
@@ -15,6 +16,7 @@ import org.zotero.android.database.requests.CountObjectsDbRequest
 import org.zotero.android.database.requests.PerformCollectionDeletionsDbRequest
 import org.zotero.android.database.requests.PerformItemDeletionsDbRequest
 import org.zotero.android.database.requests.PerformLastReadDeletionsDbRequest
+import org.zotero.android.database.requests.PerformLastReadAloudPositionDeletionsDbRequest
 import org.zotero.android.database.requests.PerformPageIndexDeletionsDbRequest
 import org.zotero.android.database.requests.PerformSearchDeletionsDbRequest
 import org.zotero.android.database.requests.PerformTagDeletionsDbRequest
@@ -116,6 +118,27 @@ class PerformDeletionsSyncAction @AssistedInject constructor(
                 for ((libraryId, keys) in groupedIndices) {
                     dbWrapperMain.realmDbStorage.perform(
                         request = PerformPageIndexDeletionsDbRequest(
+                            libraryId = libraryId,
+                            keys = keys
+                        )
+                    )
+                }
+            }
+        }
+
+        val readAloudPositions = settings.filter { it.startsWith("lastReadAloudPosition_") }
+        val hasReadAloudPositions =
+            dbWrapperMain.realmDbStorage.perform(request = CountObjectsDbRequest(RLastReadAloudPosition::class)) > 0
+        if (hasReadAloudPositions) {
+            batch(values = readAloudPositions, batchSize = this.batchSize) { uids ->
+                val groupedPositions = mutableMapOf<LibraryIdentifier, MutableList<String>>()
+                for (uid in uids) {
+                    val (key, libraryId) = SettingKeyParser.parse(key = uid)
+                    groupedPositions.getOrPut(libraryId, { mutableListOf() }).add(key)
+                }
+                for ((libraryId, keys) in groupedPositions) {
+                    dbWrapperMain.realmDbStorage.perform(
+                        request = PerformLastReadAloudPositionDeletionsDbRequest(
                             libraryId = libraryId,
                             keys = keys
                         )

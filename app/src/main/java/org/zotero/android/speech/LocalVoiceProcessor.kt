@@ -24,7 +24,7 @@ class LocalVoiceProcessor(
     private var speakJob: Job? = null
     private var generation = 0
     private var utterances: Map<String, LocalUtterance> = emptyMap()
-    private var text: String? = null
+    private var segments: List<SpeechDocumentParser.Segment> = emptyList()
     private var lastRangeStart = 0
     private var voice: Voice? = null
     private var isActive = false
@@ -52,10 +52,53 @@ class LocalVoiceProcessor(
         get() = 0.0
 
     override fun speak(segments: List<SpeechDocumentParser.Segment>, startPageTextOffset: Int) {
-        speak(
-            pageText = segments.joinToString(SpeechDocumentParser.segmentSeparator) { it.text },
-            startIndex = startPageTextOffset,
-        )
+        generation += 1
+        val currentGeneration = generation
+        speakJob?.cancel()
+        engine?.stop()
+
+        this.segments = segments
+        isActive = true
+        isPaused = false
+
+        val segment = segments.lastOrNull { it.pageOffset <= startPageTextOffset } ?: segments.firstOrNull()
+        if (segment == null) {
+            continueWithNextParagraph()
+            return
+        }
+        val startIndex = (startPageTextOffset - segment.pageOffset).coerceIn(0, segment.text.length)
+        lastRangeStart = segment.pageOffset + startIndex
+        if (startIndex >= segment.text.length) {
+            continueWithNextParagraph()
+            return
+        }
+
+        speakJob = scope.launch {
+            val engine = prepareEngine() ?: return@launch finishSpeaking()
+            if (currentGeneration != generation) {
+                return@launch
+            }
+            val voice = this@LocalVoiceProcessor.voice ?: resolveVoice(engine)
+            this@LocalVoiceProcessor.voice = voice
+            voice?.let { engine.voice = it }
+            engine.setSpeechRate(speechRateModifier)
+
+            val chunks = LocalUtterance.split(
+                pageText = segment.text,
+                startIndex = startIndex,
+                generation = currentGeneration,
+                maxLength = minOf(TextToSpeech.getMaxSpeechInputLength(), maxUtteranceLength),
+                baseOffset = segment.pageOffset,
+            )
+            if (chunks.isEmpty()) {
+                return@launch continueWithNextParagraph()
+            }
+            utterances = chunks.associateBy { it.id }
+            chunks.forEachIndexed { index, chunk ->
+                val mode = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
+                engine.speak(chunk.text, mode, null, chunk.id)
+            }
+        }
     }
 
     override fun pause() {
@@ -131,9 +174,7 @@ class LocalVoiceProcessor(
         if (!utterance.isLast) {
             return
         }
-        if (!delegate.goToNextPageIfAvailable()) {
-            finishSpeaking()
-        }
+        continueWithNextParagraph()
     }
 
     override fun utteranceFailed(utteranceId: String) {
@@ -145,42 +186,9 @@ class LocalVoiceProcessor(
         finishSpeaking()
     }
 
-    private fun speak(pageText: String, startIndex: Int) {
-        generation += 1
-        val currentGeneration = generation
-        speakJob?.cancel()
-        engine?.stop()
-
-        val clampedStart = startIndex.coerceIn(0, pageText.length)
-        text = pageText
-        lastRangeStart = clampedStart
-        isActive = true
-        isPaused = false
-
-        speakJob = scope.launch {
-            val engine = prepareEngine() ?: return@launch finishSpeaking()
-            if (currentGeneration != generation) {
-                return@launch
-            }
-            val voice = this@LocalVoiceProcessor.voice ?: resolveVoice(engine)
-            this@LocalVoiceProcessor.voice = voice
-            voice?.let { engine.voice = it }
-            engine.setSpeechRate(speechRateModifier)
-
-            val chunks = LocalUtterance.split(
-                pageText = pageText,
-                startIndex = clampedStart,
-                generation = currentGeneration,
-                maxLength = minOf(TextToSpeech.getMaxSpeechInputLength(), maxUtteranceLength),
-            )
-            if (chunks.isEmpty()) {
-                return@launch finishSpeaking()
-            }
-            utterances = chunks.associateBy { it.id }
-            chunks.forEachIndexed { index, chunk ->
-                val mode = if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
-                engine.speak(chunk.text, mode, null, chunk.id)
-            }
+    private fun continueWithNextParagraph() {
+        if (!delegate.goToNextPageIfAvailable()) {
+            finishSpeaking()
         }
     }
 
@@ -204,9 +212,11 @@ class LocalVoiceProcessor(
     }
 
     private fun reloadUtterance() {
-        val text = text ?: return
+        if (segments.isEmpty()) {
+            return
+        }
         val startIndex = delegate.speechRange?.location ?: lastRangeStart
-        speak(pageText = text, startIndex = startIndex)
+        speak(segments, startIndex)
     }
 
     private fun isCurrent(utteranceId: String): Boolean {
@@ -215,7 +225,7 @@ class LocalVoiceProcessor(
 
     private fun finishSpeaking() {
         Timber.d("LocalVoiceProcessor: finished speaking")
-        text = null
+        segments = emptyList()
         utterances = emptyMap()
         voice = null
         isActive = false

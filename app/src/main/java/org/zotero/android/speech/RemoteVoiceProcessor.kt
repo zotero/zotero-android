@@ -346,10 +346,8 @@ class RemoteVoiceProcessor(
     }
 
     private fun updateRemainingTimeDisplay(credits: RemoteVoicesController.Credits) {
-        if (tier == RemoteVoice.Tier.premium && credits.premium != 0 && voice == null) {
-            return
-        }
-        delegate.remainingTime.value = CreditsMonitor.remainingTime(credits, tier, voice)
+        val remainingTime = CreditsMonitor.remainingTime(credits, tier, voice) ?: return
+        delegate.remainingTime.value = remainingTime
     }
 
     private fun finishSpeaking() {

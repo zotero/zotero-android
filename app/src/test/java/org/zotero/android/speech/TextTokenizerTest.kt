@@ -7,6 +7,7 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.Test
+import org.zotero.android.speech.data.TextRange
 
 class TextTokenizerTest {
 
@@ -275,5 +276,33 @@ class TextTokenizerTest {
     fun `previousSentenceStart returns null when in first sentence`() {
         val text = "First. Second."
         sut.previousSentenceStart(text, 3).shouldBeNull()
+    }
+
+    @Test
+    fun `findSentence splits sentences over the length limit between words`() {
+        val texts = listOf("word ".repeat(200) + "end.", "   " + "word ".repeat(90) + "end.")
+        for (text in texts) {
+            val ranges = sentenceRangesBySearching(text)
+
+            (ranges.size > 1).shouldBeTrue()
+            joinedSentences(ranges, text) shouldBeEqualTo text.trim(' ')
+        }
+    }
+
+    private fun joinedSentences(ranges: List<TextRange>, text: String): String {
+        return ranges.joinToString(" ") { text.substring(it.location, it.end).trim() }
+    }
+
+    private fun sentenceRangesBySearching(text: String): List<TextRange> {
+        val ranges = mutableListOf<TextRange>()
+        var index = 0
+        while (true) {
+            val sentence = sut.findSentence(text, index) ?: break
+            val end = sentence.range.end
+            if (end <= index) break
+            ranges.add(sentence.range)
+            index = end
+        }
+        return ranges
     }
 }

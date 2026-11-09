@@ -57,13 +57,11 @@ class CreditsMonitor(
             tier: RemoteVoice.Tier,
             voice: RemoteVoice?,
         ): Double? {
-            return when (tier) {
-                RemoteVoice.Tier.standard -> null
-                RemoteVoice.Tier.premium -> when {
-                    credits.premium == 0 -> 0.0
-                    voice != null -> credits.premium.toDouble() / voice.creditsPerMinute * 60
-                    else -> null
-                }
+            val tierCredits = credits.remaining(tier)
+            return when {
+                tierCredits == 0 -> 0.0
+                voice != null -> tierCredits.toDouble() / voice.creditsPerMinute * 60
+                else -> null
             }
         }
 

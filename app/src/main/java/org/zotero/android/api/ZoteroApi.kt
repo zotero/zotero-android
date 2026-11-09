@@ -4,6 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.ResponseBody
 import org.zotero.android.api.pojo.speech.CreditsResponse
+import org.zotero.android.api.pojo.speech.ReadAloudAudioBody
 import org.zotero.android.api.pojo.speech.VoicesResponse
 import org.zotero.android.api.pojo.sync.DeletionsResponse
 import org.zotero.android.api.pojo.sync.GroupResponse
@@ -110,11 +111,10 @@ interface ZoteroApi {
     @GET("tts/credits")
     suspend fun creditsRequest(): retrofit2.Response<CreditsResponse>
 
-    @GET("tts/speak")
+    @POST("tts/speak")
     @Streaming
     suspend fun readAloudAudioRequest(
-        @Query("text") text: String,
-        @Query("voice") voiceId: String,
+        @Body body: ReadAloudAudioBody,
     ): retrofit2.Response<ResponseBody>
 
     @GET("tts/sample")

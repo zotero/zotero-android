@@ -8,6 +8,7 @@ class SettingsResponseMapper @Inject constructor(
     private val tagColorsResponseMapper: TagColorsResponseMapper,
     private val pageIndicesResponseMapper: PageIndicesResponseMapper,
     private val lastReadValuesResponseMapper: LastReadValuesResponseMapper,
+    private val lastReadAloudPositionResponseMapper: LastReadAloudPositionResponseMapper,
 ) {
 
     fun fromJson(json: JsonObject): SettingsResponse {
@@ -15,11 +16,13 @@ class SettingsResponseMapper @Inject constructor(
             json["tagColors"]?.asJsonObject?.let { tagColorsResponseMapper.fromJson(it) }
         val pageIndices = pageIndicesResponseMapper.fromJson(json)
         val lastReadValues = lastReadValuesResponseMapper.fromJson(json)
+        val lastReadAloudPositions = lastReadAloudPositionResponseMapper.fromJson(json)
 
         return SettingsResponse(
             tagColors = tagColors,
             pageIndices = pageIndices,
-            lastReadValues = lastReadValues
+            lastReadValues = lastReadValues,
+            lastReadAloudPositions = lastReadAloudPositions,
         )
     }
 }

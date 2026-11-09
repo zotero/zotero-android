@@ -14,6 +14,7 @@ import org.zotero.android.database.RealmDbCoordinator
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
@@ -39,6 +40,7 @@ class ObjectUserChangeObserver(
     private lateinit var itemsToken: RealmResults<RItem>
     private lateinit var collectionsToken: RealmResults<RCollection>
     private lateinit var lastReadToken: RealmResults<RLastReadDate>
+    private lateinit var lastReadAloudPositionsToken: RealmResults<RLastReadAloudPosition>
 
     init {
         applicationScope.launch {
@@ -60,6 +62,8 @@ class ObjectUserChangeObserver(
                 this@ObjectUserChangeObserver.pagesToken =
                     registerSettingsObserver(coordinator = coordinator)
                 this@ObjectUserChangeObserver.lastReadToken =
+                    registerSettingsObserver(coordinator = coordinator)
+                this@ObjectUserChangeObserver.lastReadAloudPositionsToken =
                     registerSettingsObserver(coordinator = coordinator)
             })
         } catch (error: Exception) {

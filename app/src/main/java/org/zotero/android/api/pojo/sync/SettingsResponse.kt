@@ -4,4 +4,5 @@ data class SettingsResponse(
     val tagColors: TagColorsResponse?,
     val pageIndices: PageIndicesResponse,
     val lastReadValues: LastReadValuesResponse,
+    val lastReadAloudPositions: LastReadAloudPositionsResponse,
 )

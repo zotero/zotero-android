@@ -84,7 +84,17 @@ object TextTokenizer {
     }
 
     private fun extractOriginalText(text: String, range: TextRange): String {
-        return text.substring(range.location, range.end).trim()
+        return untrimmedOriginalText(text, range).trim()
+    }
+
+    private fun untrimmedOriginalText(text: String, range: TextRange): String {
+        return text.substring(range.location, range.end)
+    }
+
+    private fun enforceMaxLengthInUntrimmed(rawText: String): Pair<String, Int>? {
+        val (splitText, splitLength) = enforceMaxLength(rawText.trim()) ?: return null
+        val leadingWhitespaceCount = rawText.takeWhile { it.isWhitespace() }.length
+        return splitText to leadingWhitespaceCount + splitLength
     }
 
     private fun enforceMaxLength(text: String): Pair<String, Int>? {
@@ -140,24 +150,22 @@ object TextTokenizer {
             remainingNormText.substring(tokenRange.location, tokenRange.end).trim()
 
         val originalRange: TextRange
-        val resultText: String
         if (extractedNormText.isEmpty()) {
             val trimmedStart = remainingNormText.indexOf(trimmedRemaining)
             val normLocation = normStartIndex + trimmedStart
             originalRange =
                 normalized.originalRange(TextRange(normLocation, trimmedRemaining.length))
-            resultText = extractOriginalText(text, originalRange)
         } else {
             val normLocation = normStartIndex + tokenRange.location
             originalRange = normalized.originalRange(TextRange(normLocation, tokenRange.length))
-            resultText = extractOriginalText(text, originalRange)
         }
+        val rawText = untrimmedOriginalText(text, originalRange)
 
-        val enforced = enforceMaxLength(resultText)
+        val enforced = enforceMaxLengthInUntrimmed(rawText)
         if (enforced != null) {
             return Match(enforced.first, TextRange(originalRange.location, enforced.second))
         }
-        return Match(resultText, originalRange)
+        return Match(rawText.trim(), originalRange)
     }
 
     fun findSentenceContaining(text: String, index: Int): Match? {

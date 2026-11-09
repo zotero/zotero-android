@@ -7,6 +7,7 @@ import org.zotero.android.database.DbResponseRequest
 import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
@@ -44,6 +45,9 @@ class ReadUpdatedSettingsUpdateParametersDbRequest(val libraryId: LibraryIdentif
                 update(parameters =  parameters, uuids = uuids,  changedIndices)
                 val changedDates = database.where<RLastReadDate>().changesWithoutDeletions().findAll()
                 update(parameters = parameters, uuids = uuids, changedDates)
+                val changedReadAloudPositions =
+                    database.where<RLastReadAloudPosition>().changesWithoutDeletions().findAll()
+                update(parameters = parameters, uuids = uuids, changedReadAloudPositions)
                 ReadUpdatedParametersResponse(parameters = parameters, changeUuids = uuids)
             }
         }

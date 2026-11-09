@@ -8,6 +8,7 @@ import org.zotero.android.database.objects.RCollection
 import org.zotero.android.database.objects.RCustomLibraryType
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.database.objects.RItemChanges
+import org.zotero.android.database.objects.RLastReadAloudPosition
 import org.zotero.android.database.objects.RLastReadDate
 import org.zotero.android.database.objects.RPageIndex
 import org.zotero.android.database.objects.RSearch
@@ -130,6 +131,30 @@ class PerformPageIndexDeletionsDbRequest(
 
     override fun process(database: Realm) {
         val objects = database.where<RPageIndex>().keys(keys, libraryId).findAll()
+        for (objectS in objects) {
+            if (objectS.isInvalidated) {
+                continue
+            }
+            if (objectS.isChanged) {
+                objectS.markAsChanged(database)
+            } else {
+                objectS.willRemove(database)
+                objectS.deleteFromRealm()
+            }
+        }
+    }
+
+}
+
+class PerformLastReadAloudPositionDeletionsDbRequest(
+    private val libraryId: LibraryIdentifier,
+    private val keys: List<String>,
+) : DbRequest {
+    override val needsWrite: Boolean
+        get() = true
+
+    override fun process(database: Realm) {
+        val objects = database.where<RLastReadAloudPosition>().keys(keys, libraryId).findAll()
         for (objectS in objects) {
             if (objectS.isInvalidated) {
                 continue

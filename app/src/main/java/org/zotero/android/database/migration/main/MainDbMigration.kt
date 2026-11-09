@@ -4,6 +4,7 @@ import io.realm.DynamicRealm
 import io.realm.RealmMigration
 import org.zotero.android.database.migration.main.solutions.MigrateAllItemsDbRowTypeIconNameTypeChange
 import org.zotero.android.database.migration.main.solutions.MigrateExtractAnnotationTypeFromItems
+import org.zotero.android.database.migration.main.solutions.MigrateLastReadAloudPosition
 import org.zotero.android.database.migration.main.solutions.MigrateMarkAllNonLocalGroupsAsOutdatedToTriggerResync
 import org.zotero.android.database.migration.main.solutions.MigrateNonArabicFormattingSortIndex
 import org.zotero.android.database.migration.main.solutions.MigrateRecentlyRead
@@ -29,6 +30,9 @@ internal class MainDbMigration(private val fileName: String) : RealmMigration {
         }
         if (oldVersion < 8) {
             MigrateSpeechLanguage(dynamicRealm).migrate()
+        }
+        if (oldVersion < 9) {
+            MigrateLastReadAloudPosition(dynamicRealm).migrate()
         }
     }
 
