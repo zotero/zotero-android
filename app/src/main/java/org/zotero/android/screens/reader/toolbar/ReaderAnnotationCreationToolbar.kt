@@ -52,7 +52,7 @@ import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.foundation.safeStringResource
 import kotlin.math.roundToInt
 
-private val TOOLBAR_CHROME_HEIGHT = 188.dp
+private val TOOLBAR_CHROME_HEIGHT = 268.dp
 private val TOOLBAR_TOOL_HEIGHT = 40.dp
 
 private val htmlEpubReaderToolsList = listOf(
@@ -266,6 +266,52 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             }
 
             Spacer(modifier = Modifier.height(48.dp))
+
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip() {
+                        Text(
+                            safeStringResource(
+                                Strings.accessibility_pdf_undo
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                ReaderAnnotationCreationButton(
+                    isEnabled = viewState.canUndo,
+                    iconInt = Drawables.undo_24px,
+                    onButtonClick = viewModel::onUndoClick
+                )
+            }
+
+            TooltipBox(
+                positionProvider = rememberTooltipPositionProvider(
+                    TooltipAnchorPosition.Above,
+                    4.dp
+                ),
+                tooltip = {
+                    PlainTooltip() {
+                        Text(
+                            safeStringResource(
+                                Strings.accessibility_pdf_redo
+                            )
+                        )
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                ReaderAnnotationCreationButton(
+                    isEnabled = viewState.canRedo,
+                    iconInt = Drawables.redo_24px,
+                    onButtonClick = viewModel::onRedoClick
+                )
+            }
 
             TooltipBox(
                 positionProvider = rememberTooltipPositionProvider(

@@ -22,6 +22,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -166,7 +168,9 @@ class ReaderViewModel @Inject constructor(
     private var readerWebView: ReaderCustomWebView? = null
     private var annotations = mutableMapOf<String, ReaderAnnotation?>()
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
-    private val onCommentChangeFlow = MutableStateFlow<Pair<String, String>?>(null)
+    private var pendingComment: Pair<String, String>? = null
+    private var pendingCommentJob: Job? = null
+    private val commentDispatchMutex = Mutex()
     private var comments = mutableMapOf<String, String>()
     private val onOutlineSearchStateFlow = MutableStateFlow("")
     private val onAnnotationSearchStateFlow = MutableStateFlow("")
@@ -387,7 +391,6 @@ class ReaderViewModel @Inject constructor(
         startObservingRequestThumbnailRender()
         startObservingRequestAnnotationImageRender()
 
-        setupCommentChangeFlow()
         setupAnnotationSearchStateFlow()
         setupOutlineSearchStateFlow()
 
@@ -699,35 +702,8 @@ class ReaderViewModel @Inject constructor(
             this.selectedTextParams?.get("annotation")?.asJsonObject ?: return
         val params = params(textParams, type) ?: return
 
-        val annotations = if (viewState.fileType == ReaderFileType.PDF) {
-            parsePdfJson(
-                pdfAnnotations = JsonArray().apply { add(params) },
-                author = this.username,
-                isAuthor = true
-            )
-        } else {
-            parseHtmlEpubJson(
-                annotations = JsonArray().apply { add(params) },
-                author = this.username,
-                isAuthor = true
-            )
-        }
-
         clearSelectedTextParams()
-        for (annotation in annotations) {
-            this.annotations[annotation.key] = annotation
-        }
-
-        readerWebCallChainExecutor.updateView(
-            modifications = JsonArray(),
-            insertions = JsonArray().apply { add(params) },
-            deletions = JsonArray()
-        )
-        if (viewState.fileType == ReaderFileType.PDF) {
-            createPdfDatabaseAnnotations(annotations = annotations as List<PDFDocumentAnnotation>)
-        } else {
-            createHtmlEpubDatabaseAnnotations(annotations = annotations as List<NewReaderAnnotation>)
-        }
+        readerWebCallChainExecutor.addAnnotation(params)
     }
 
 
@@ -822,8 +798,11 @@ class ReaderViewModel @Inject constructor(
 
     private fun saveAnnotations(params: JsonObject) {
         val rawAnnotations = params["annotations"]?.asJsonArray
-        if (rawAnnotations == null || rawAnnotations.isEmpty()) {
-            Timber.e("ReaderViewModel: annotations missing or empty - ${params["annotations"] ?: emptyList<String>()}")
+        if (rawAnnotations == null) {
+            Timber.e("ReaderViewModel: annotations missing - ${params["annotations"] ?: emptyList<String>()}")
+            return
+        }
+        if (rawAnnotations.isEmpty()) {
             return
         }
         val annotations = if (viewState.fileType == ReaderFileType.PDF) {
@@ -841,7 +820,7 @@ class ReaderViewModel @Inject constructor(
         }
 
         // Disable annotation tool & select annotation
-        val annotation = annotations.firstOrNull {it.type == AnnotationType.note }
+        val annotation = annotations.firstOrNull { it.type == AnnotationType.note && this.annotations[it.key] == null }
         if (annotation != null && viewState.activeTool != null) {
             toggle(viewState.activeTool!!)
         }
@@ -859,13 +838,29 @@ class ReaderViewModel @Inject constructor(
                 createHtmlEpubDatabaseAnnotations(annotations = newAnnotations as List<NewReaderAnnotation>)
             }
         }
+        val isHistoryChange = params["history"]?.takeIf { !it.isJsonNull }?.asBoolean ?: false
         for (editedAnnotation in editedAnnotations) {
             this.annotations[editedAnnotation.key] = editedAnnotation
+            if (isHistoryChange) {
+                showCommentChangedByHistory(editedAnnotation)
+            }
             if (viewState.fileType == ReaderFileType.PDF) {
                 editedAnnotation as PDFDocumentAnnotation
                 updatePdfDatabaseAnnotation(editedAnnotation)
             } else {
                 updateHtmlEpubDatabaseAnnotation(editedAnnotation as NewReaderAnnotation)
+            }
+        }
+    }
+
+    private fun showCommentChangedByHistory(annotation: ReaderAnnotation) {
+        if (annotation.type == AnnotationType.text) {
+            return
+        }
+        this.comments[annotation.key] = annotation.comment
+        if (viewState.commentFocusKey == annotation.key) {
+            updateState {
+                copy(commentFocusText = annotation.comment)
             }
         }
     }
@@ -1043,28 +1038,8 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setComment(key: String, comment: String) {
-        val htmlComment = comment //TODO convert to HTML
         this.comments[key] = comment
-
-        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.comment, baseKey = null) to htmlComment)
-        val request = editItemFieldsDbRequestFactory.create(
-            key = key,
-            libraryId = this.library.identifier,
-            fieldValues = values,
-        )
-
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "ReaderViewModel: can't set comment $key")
-                updateState {
-                    copy(error = Error.cantUpdateAnnotation)
-                }
-                return@launch
-            }
-        }
+        editAnnotation(key = key, comment = comment)
     }
 
     fun setCommentActive(isActive: Boolean) {
@@ -1076,6 +1051,30 @@ class ReaderViewModel @Inject constructor(
     private fun deselectSelectedAnnotation() {
         updateState {
             copy(selectedAnnotationKey = null)
+        }
+    }
+
+    fun onUndoClick() {
+        viewModelScope.launch {
+            flushPendingComment()
+            readerWebCallChainExecutor.undo()
+        }
+    }
+
+    fun onRedoClick() {
+        viewModelScope.launch {
+            flushPendingComment()
+            readerWebCallChainExecutor.redo()
+        }
+    }
+
+    private suspend fun flushPendingComment() {
+        commentDispatchMutex.withLock {
+            val (key, comment) = pendingComment ?: return
+            pendingComment = null
+            this.comments[key] = comment
+            val changes = annotationChanges(key = key, comment = comment) ?: return
+            readerWebCallChainExecutor.editAnnotation(changes)
         }
     }
 
@@ -1264,6 +1263,7 @@ class ReaderViewModel @Inject constructor(
             jsons.add(json)
             sortedKeys.add(annotation.key)
             annotations[item.key] = annotation
+            lastReaderJsonByKey[item.key] = json.contentKey()
         }
         return Triple(sortedKeys, annotations, jsons)
     }
@@ -1299,6 +1299,19 @@ class ReaderViewModel @Inject constructor(
     private var ignoreDbCallbackOnReaderInsertionItemKey : String? = null
 
     private val ignoreDbCallbackOnReaderModificationItemKeys = mutableSetOf<String>()
+
+    private val lastReaderJsonByKey = mutableMapOf<String, String>()
+
+    private fun JsonObject.contentKey(): String {
+        val builder = StringBuilder()
+        for ((name, value) in entrySet()) {
+            if (name == "dateModified") {
+                continue
+            }
+            builder.append(name).append('=').append(value).append(';')
+        }
+        return builder.toString()
+    }
 
     fun update(
         changeSet: OrderedCollectionChangeSet,
@@ -1343,11 +1356,13 @@ class ReaderViewModel @Inject constructor(
             annotations[key] = annotation
             val isOwnEditEcho = ignoreDbCallbackOnReaderModificationItemKeys.remove(key)
             val isSyncResponseVersionBump = item.changeType == UpdatableChangeType.syncResponse.name
-            if (!isOwnEditEcho && !isSyncResponseVersionBump) {
+            val contentKey = json.contentKey()
+            val isUnchanged = lastReaderJsonByKey.put(key, contentKey) == contentKey
+            if (!isOwnEditEcho && !isSyncResponseVersionBump && !isUnchanged) {
                 updatedPdfAnnotations.add(json)
             }
 
-            if (!isSyncResponseVersionBump &&
+            if (!isSyncResponseVersionBump && !isUnchanged &&
                 (annotation.type == AnnotationType.image || annotation.type == AnnotationType.ink || annotation.type == AnnotationType.text)
             ) {
                 readerRequestAnnotationImageRenderEventStream.emitAsync(listOf(key))
@@ -1400,6 +1415,7 @@ class ReaderViewModel @Inject constructor(
 
             val key = keys.removeAt(index)
             annotations[key] = null
+            lastReaderJsonByKey.remove(key)
             deletedPdfAnnotations.add(key)
             Timber.i("ReaderViewModel: delete key $key")
 
@@ -1432,6 +1448,7 @@ class ReaderViewModel @Inject constructor(
 
             keys.add(index, item.key)
             annotations[item.key] = annotation
+            lastReaderJsonByKey[item.key] = json.contentKey()
             if (viewState.annotationPopoverKey == item.key) {
                 popoverWasInserted = true
             }
@@ -1639,6 +1656,14 @@ class ReaderViewModel @Inject constructor(
             }
             is ReaderWebData.saveAnnotations -> {
                 saveAnnotations(successValue.params)
+            }
+            is ReaderWebData.deleteAnnotations -> {
+                remove(successValue.keys)
+            }
+            is ReaderWebData.setUndoRedoState -> {
+                updateState {
+                    copy(canUndo = successValue.canUndo, canRedo = successValue.canRedo)
+                }
             }
             is ReaderWebData.selectAnnotationFromDocument -> {
                 selectAnnotationFromDocument(successValue.key, successValue.inlineTextEditing)
@@ -1933,7 +1958,12 @@ class ReaderViewModel @Inject constructor(
         updateState {
             copy(commentFocusText = comment)
         }
-        onCommentChangeFlow.tryEmit(annotationKey to comment)
+        pendingComment = annotationKey to comment
+        pendingCommentJob?.cancel()
+        pendingCommentJob = viewModelScope.launch {
+            delay(500)
+            flushPendingComment()
+        }
     }
 
     private fun searchAnnotations(term: String) {
@@ -2156,6 +2186,14 @@ class ReaderViewModel @Inject constructor(
         text: String,
         key: String
     ) {
+        val annotation = this.annotations[key]
+        if (annotation != null && annotation.type == type && annotation.pageLabel == pageLabel
+            && (annotation.text ?: "") == text
+        ) {
+            editAnnotation(key = key, color = color, fontSize = fontSize, lineWidth = lineWidth)
+            return
+        }
+
         val values = mapOf(
             KeyBaseKeyPair(
                 key = FieldKeys.Item.Annotation.type,
@@ -2199,7 +2237,9 @@ class ReaderViewModel @Inject constructor(
 
     private fun removeAnnotation(key: String) {
         //TODO hide popover
-        remove(listOf(key))
+        viewModelScope.launch {
+            readerWebCallChainExecutor.deleteAnnotations(listOf(key))
+        }
     }
 
     private fun remove(keys: List<String>) {
@@ -2216,17 +2256,6 @@ class ReaderViewModel @Inject constructor(
                 return@launch
             }
         }
-    }
-
-    private fun setupCommentChangeFlow() {
-        onCommentChangeFlow
-            .debounce(500)
-            .map { data ->
-                if (data != null) {
-                    setComment(key = data.first, comment = data.second)
-                }
-            }
-            .launchIn(viewModelScope)
     }
 
     fun showToolOptions() {
@@ -2417,26 +2446,75 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setColor(color: String, key: String) {
-        val values =
-            mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.color, baseKey = null) to color)
-        val request = editItemFieldsDbRequestFactory.create(
+        editAnnotation(key = key, color = color)
+    }
+
+    private fun editAnnotation(
+        key: String,
+        color: String? = null,
+        fontSize: Float? = null,
+        lineWidth: Float? = null,
+        comment: String? = null,
+    ) {
+        val changes = annotationChanges(
             key = key,
-            libraryId = this.library.identifier,
-            fieldValues = values,
-        )
+            color = color,
+            fontSize = fontSize,
+            lineWidth = lineWidth,
+            comment = comment,
+        ) ?: return
 
         viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "ReaderViewModel: can't set color $key")
-                updateState {
-                    copy(error = Error.cantUpdateAnnotation)
-                }
-                return@launch
+            readerWebCallChainExecutor.editAnnotation(changes)
+        }
+    }
+
+    private fun annotationChanges(
+        key: String,
+        color: String? = null,
+        fontSize: Float? = null,
+        lineWidth: Float? = null,
+        comment: String? = null,
+    ): JsonObject? {
+        val annotation = this.annotations[key]
+        if (annotation == null) {
+            Timber.w("ReaderViewModel: can't edit unknown annotation $key")
+            return null
+        }
+
+        val changes = JsonObject()
+        if (color != null) {
+            val hex = if (color.startsWith("#")) color else "#$color"
+            if (!hex.equals(annotation.displayColor, ignoreCase = true)) {
+                changes.addProperty("color", hex)
             }
         }
+
+        if (comment != null && comment != annotation.comment) {
+            changes.addProperty("comment", comment)
+        }
+
+        val position = JsonObject()
+        if (fontSize != null && annotation.type == AnnotationType.text
+            && fontSize.rounded(3) != (annotation.fontSize ?: 0f).rounded(3)
+        ) {
+            position.addProperty("fontSize", fontSize.rounded(3))
+        }
+        if (lineWidth != null && annotation.type == AnnotationType.ink
+            && lineWidth.rounded(3) != (annotation.lineWidth ?: 0f).rounded(3)
+        ) {
+            position.addProperty("width", lineWidth.rounded(3))
+        }
+        if (position.size() > 0) {
+            changes.add("position", position)
+            changes.addProperty("sortIndex", annotation.sortIndex)
+        }
+
+        if (changes.size() == 0) {
+            return null
+        }
+        changes.addProperty("id", key)
+        return changes
     }
 
     private var previousSidebarVisibilityState = false
@@ -2696,48 +2774,11 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun setFontSize(key:String, fontSize: Float) {
-        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.Position.fontSize, baseKey = null) to "$fontSize")
-        val request = editItemFieldsDbRequestFactory.create(
-            key = key,
-            libraryId = this.library.identifier,
-            fieldValues = values,
-        )
-
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "ReaderViewModel: can't set font size $key")
-                updateState {
-                    copy(error = Error.cantUpdateAnnotation)
-                }
-                return@launch
-            }
-        }
+        editAnnotation(key = key, fontSize = fontSize)
     }
 
     private fun setLineWidth(key:String, width: Float) {
-        val values = mapOf(KeyBaseKeyPair(key = FieldKeys.Item.Annotation.Position.lineWidth, baseKey = null) to width.rounded(3).toString())
-        val request = editItemFieldsDbRequestFactory.create(
-            key = key,
-            libraryId = this.library.identifier,
-            fieldValues = values,
-        )
-
-        viewModelScope.launch {
-            perform(
-                dbWrapper = dbWrapperMain,
-                request = request
-            ).ifFailure {
-                Timber.e(it, "ReaderViewModel: can't set line width $key")
-                updateState {
-                    copy(error = Error.cantUpdateAnnotation)
-                }
-                return@launch
-            }
-        }
-
+        editAnnotation(key = key, lineWidth = width)
     }
 
 }
@@ -2783,6 +2824,8 @@ data class ReaderViewState(
     val annotationsUpdatedCounter: Int = 0,
     val readingModeEnabled: Boolean = false,
     val readingModeLoading: Boolean = false,
+    val canUndo: Boolean = false,
+    val canRedo: Boolean = false,
     ) : ViewState {
     fun isAnnotationSelected(annotationKey: String): Boolean {
         return this.selectedAnnotationKey == annotationKey

@@ -4,6 +4,7 @@ import android.webkit.WebMessage
 import android.webkit.WebView
 import com.google.gson.Gson
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
@@ -129,6 +130,28 @@ class ReaderWebCallChainExecutor @Inject constructor(
                             observable.emitAsync(
                                 Result.Success(
                                     ReaderWebData.saveAnnotations(params)
+                                )
+                            )
+                        }
+
+                        "onDeleteAnnotations" -> {
+                            val params = data["params"].asJsonObject
+                            val keys = params["ids"].asJsonArray.map { it.asString }
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.deleteAnnotations(keys)
+                                )
+                            )
+                        }
+
+                        "onChangeUndoHistory" -> {
+                            val params = data["params"].asJsonObject
+                            observable.emitAsync(
+                                Result.Success(
+                                    ReaderWebData.setUndoRedoState(
+                                        canUndo = params["canUndo"].asBoolean,
+                                        canRedo = params["canRedo"].asBoolean
+                                    )
                                 )
                             )
                         }
@@ -405,6 +428,52 @@ class ReaderWebCallChainExecutor @Inject constructor(
     suspend fun clearTool() {
         return suspendCancellableCoroutine { cont ->
             readerWebViewHandler.evaluateJavascript("clearTool();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun addAnnotation(annotation: JsonObject) {
+        val encodedAnnotation = encodeAsJSONForJavascript(gson = this.gson, data = annotation)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("addAnnotation({ annotation: '${encodedAnnotation}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun editAnnotation(annotation: JsonObject) {
+        val encodedAnnotation = encodeAsJSONForJavascript(gson = this.gson, data = annotation)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("editAnnotation({ annotation: '${encodedAnnotation}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun deleteAnnotations(keys: List<String>) {
+        val encodedIds = encodeAsJSONForJavascript(gson = this.gson, data = keys)
+
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("deleteAnnotations({ ids: '${encodedIds}' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun undo() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("undo();") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun redo() {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("redo();") {
                 cont.resume(Unit)
             }
         }

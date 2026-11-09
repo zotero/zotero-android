@@ -29,6 +29,9 @@ fun ReaderWebView(viewModel: ReaderViewModel) {
             webView
         },
         update = {
+        },
+        onRelease = { webView ->
+            webView.destroy()
         }
     )
 }
