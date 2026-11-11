@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.zotero.android.screens.dashboard.BuildInfo
 import org.zotero.android.screens.settings.elements.NewSettingsDivider
 import org.zotero.android.screens.settings.elements.NewSettingsItem
+import org.zotero.android.screens.settings.elements.NewSettingsSwitchItem
 import org.zotero.android.uicomponents.CustomScaffoldM3
 import org.zotero.android.uicomponents.Strings
 import org.zotero.android.uicomponents.themem3.AppThemeM3
@@ -31,6 +32,7 @@ internal fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     AppThemeM3 {
+        val viewState by viewModel.viewStates.observeAsState(SettingsViewState())
         val viewEffect by viewModel.viewEffects.observeAsState()
         LaunchedEffect(key1 = viewModel) {
             viewModel.init()
@@ -63,6 +65,14 @@ internal fun SettingsScreen(
                 NewSettingsItem(
                     title = stringResource(id = Strings.settings_sync_account),
                     onItemTapped = toAccountScreen,
+                )
+
+                NewSettingsDivider()
+
+                NewSettingsSwitchItem(
+                    title = stringResource(id = Strings.settings_general_show_subcollections_title),
+                    isChecked = viewState.showSubcollectionItems,
+                    onCheckedChange = viewModel::setShowSubcollectionItems,
                 )
 
                 NewSettingsDivider()
