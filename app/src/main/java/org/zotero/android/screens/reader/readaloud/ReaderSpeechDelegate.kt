@@ -3,7 +3,7 @@ package org.zotero.android.screens.reader.readaloud
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.speech.SpeechManagerDelegate
-import org.zotero.android.speech.data.SDTRect
+import org.zotero.android.speech.data.ReadAloudPosition
 import java.io.File
 
 class ReaderSpeechDelegate(
@@ -12,6 +12,7 @@ class ReaderSpeechDelegate(
     private val fileType: ReaderFileType,
     private val currentPage: () -> Int,
     private val pagesCount: () -> Int?,
+    private val bridge: ReaderReadAloudBridge?,
 ) : SpeechManagerDelegate<Int> {
 
     override val documentContentType: String?
@@ -41,43 +42,50 @@ class ReaderSpeechDelegate(
         return structuredDocumentTextPage
     }
 
+    override fun structuredDocumentTextPage(pageIndex: Int): Int? {
+        return pageIndex.takeIf { it >= 0 }
+    }
+
     override fun moved(pageIndex: Int, previousPageIndex: Int) {
     }
 
     override fun focusPage(pageIndex: Int) {
     }
 
-    override fun readAloudHighlightChanged(
-        text: String,
-        rects: List<SDTRect>,
-        pageIndex: Int,
-        sourceLocation: Int,
-        sourceTextLength: Int,
-    ) {
+    override fun readAloudLoaded(sdtPackBytes: ByteArray, packVersion: Int, schemaMajorVersion: Int) {
+        if (fileType == ReaderFileType.PDF) return
+        bridge?.setSDTPack(sdtPackBytes, packVersion, schemaMajorVersion)
+    }
+
+    override fun readAloudHighlightChanged(position: ReadAloudPosition, pageIndex: Int) {
+        if (position !is ReadAloudPosition.HtmlEpub) return
+        bridge?.setSpotlight(position.sdtStart, position.sdtEnd)
+    }
+
+    fun clearSpeechHighlight() {
+        bridge?.clearSpotlight()
     }
 
     override fun annotationPreviewChanged(
-        text: String,
-        rects: List<SDTRect>,
+        position: ReadAloudPosition,
         pageIndex: Int,
         tool: ReaderAnnotationTool,
         color: String,
-        sourceLocation: Int,
-        sourceTextLength: Int,
     ) {
+        if (position !is ReadAloudPosition.HtmlEpub) return
+        bridge?.setAnnotation(tool, color, position.sdtStart, position.sdtEnd)
     }
 
     override fun createAnnotation(
         tool: ReaderAnnotationTool,
         color: String,
-        text: String,
-        rects: List<SDTRect>,
+        position: ReadAloudPosition,
         pageIndex: Int,
-        sourceLocation: Int,
-        sourceTextLength: Int,
     ) {
+        bridge?.endAnnotationSession(store = true)
     }
 
     override fun clearAnnotationPreview() {
+        bridge?.endAnnotationSession(store = false)
     }
 }

@@ -4,8 +4,10 @@ import android.webkit.WebMessage
 import android.webkit.WebView
 import com.google.gson.Gson
 import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -26,6 +28,8 @@ import org.zotero.android.translator.helper.TranslatorHelper.encodeAsJSONForJava
 import org.zotero.android.translator.helper.TranslatorHelper.encodeStringToBase64Binary
 import timber.log.Timber
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -41,6 +45,8 @@ class ReaderWebCallChainExecutor @Inject constructor(
     private val limitedParallelismDispatcher =
         dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
+    private val readAloudRequests = ConcurrentHashMap<Int, CompletableDeferred<Any?>>()
+    private val nextReadAloudRequestID = AtomicInteger(0)
 
     fun start(webView: WebView, file: File) {
         try {
@@ -282,6 +288,24 @@ class ReaderWebCallChainExecutor @Inject constructor(
                                     ReaderWebData.setViewStats(params)
                                 )
                             )
+                        }
+
+                        "onReadAloudStartBlockIndex" -> {
+                            val params = data["params"].asJsonObject
+                            val blockIndex = params["blockIndex"]?.takeIf { it.isJsonPrimitive }?.asInt
+                            completeReadAloudRequest(params["requestID"].asInt, blockIndex)
+                        }
+
+                        "onSourceSDTPosition" -> {
+                            val params = data["params"].asJsonObject
+                            val position = params["position"]?.takeIf { it.isJsonObject }?.asJsonObject
+                            completeReadAloudRequest(params["requestID"].asInt, position)
+                        }
+
+                        "onReadAloudAnnotation" -> {
+                            val params = data["params"].asJsonObject
+                            val annotation = params["annotation"]?.takeIf { it.isJsonObject }?.asJsonObject
+                            completeReadAloudRequest(params["requestID"].asInt, annotation)
                         }
 
                         "onReadingModeEnabled" -> {
@@ -600,6 +624,66 @@ class ReaderWebCallChainExecutor @Inject constructor(
             val javascript =
                 "javascript:setAppearance({ lineHeight: $lineHeight, wordSpacing: $wordSpacing, letterSpacing: $letterSpacing, pageWidth: $pageWidth });"
             readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    private fun completeReadAloudRequest(requestID: Int, result: Any?) {
+        readAloudRequests.remove(requestID)?.complete(result)
+    }
+
+    private suspend fun <T> readAloudRequest(javascript: (requestID: Int) -> String): T? {
+        val requestID = nextReadAloudRequestID.getAndIncrement()
+        val deferred = CompletableDeferred<Any?>()
+        readAloudRequests[requestID] = deferred
+        try {
+            suspendCancellableCoroutine { cont ->
+                readerWebViewHandler.evaluateJavascript(javascript(requestID)) {
+                    cont.resume(Unit)
+                }
+            }
+            @Suppress("UNCHECKED_CAST")
+            return deferred.await() as T?
+        } finally {
+            readAloudRequests.remove(requestID)
+        }
+    }
+
+    suspend fun getReadAloudStartBlockIndex(): Int? {
+        return readAloudRequest { "javascript:getReadAloudStartBlockIndex({ requestID: $it });" }
+    }
+
+    suspend fun sourceToSDTPosition(source: JsonObject): JsonObject? {
+        val encoded = encodeStringToBase64Binary(source.toString())
+        return readAloudRequest { "javascript:sourceToSDTPosition({ position: '$encoded', requestID: $it });" }
+    }
+
+    suspend fun setReadAloudAnnotation(params: JsonObject): JsonObject? {
+        val encoded = encodeStringToBase64Binary(params.toString())
+        return readAloudRequest { "javascript:setReadAloudAnnotation({ params: '$encoded', requestID: $it });" }
+    }
+
+    suspend fun unsetReadAloudAnnotation(key: String) {
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:unsetReadAloudAnnotation({ key: '$key' });") {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun setReadAloudSpotlight(sdtStart: List<Int>?, sdtEnd: List<Int>?) {
+        val anchor = if (sdtStart != null && sdtEnd != null) {
+            val json = JsonObject().apply {
+                add("start", gson.toJsonTree(sdtStart))
+                add("end", gson.toJsonTree(sdtEnd))
+            }
+            "'${encodeStringToBase64Binary(json.toString())}'"
+        } else {
+            "null"
+        }
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript("javascript:setReadAloudSpotlight({ anchor: $anchor });") {
                 cont.resume(Unit)
             }
         }

@@ -86,7 +86,9 @@ import org.zotero.android.screens.reader.data.ReaderAnnotationsFilter
 import org.zotero.android.screens.reader.data.ReaderArgs
 import org.zotero.android.screens.reader.data.ReaderDocumentData
 import org.zotero.android.screens.reader.data.ReaderFileType
+import org.zotero.android.screens.reader.readaloud.ReadAloudAnnotationSession
 import org.zotero.android.screens.reader.readaloud.ReadAloudControlsState
+import org.zotero.android.screens.reader.readaloud.ReaderReadAloudBridge
 import org.zotero.android.screens.reader.readaloud.ReaderReadAloudHandler
 import org.zotero.android.screens.reader.readaloud.ReaderSpeechDelegate
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionResult
@@ -486,6 +488,7 @@ class ReaderViewModel @Inject constructor(
 
     fun onStop() {
         disableForceScreenOnTimer?.cancel()
+        readAloudHandler.storePendingPosition()
     }
 
     private fun setTopBarVisibility(isVisible: Boolean) {
@@ -831,10 +834,16 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun saveAnnotations(params: JsonObject) {
-        val rawAnnotations = params["annotations"]?.asJsonArray
+        var rawAnnotations = params["annotations"]?.asJsonArray
         if (rawAnnotations == null || rawAnnotations.isEmpty()) {
             Timber.e("ReaderViewModel: annotations missing or empty - ${params["annotations"] ?: emptyList<String>()}")
             return
+        }
+        if (viewState.fileType != ReaderFileType.PDF) {
+            rawAnnotations = withoutReadAloudSessionAnnotations(rawAnnotations)
+            if (rawAnnotations.isEmpty) {
+                return
+            }
         }
         val annotations = if (viewState.fileType == ReaderFileType.PDF) {
             parsePdfJson(pdfAnnotations = rawAnnotations, author = this.username, isAuthor = true)
@@ -1910,6 +1919,7 @@ class ReaderViewModel @Inject constructor(
                 fileType = viewState.fileType,
                 currentPage = { currentPageIndex },
                 pagesCount = { pagesCount },
+                bridge = readAloudBridge,
             ),
             showOnboarding = { args ->
                 ScreenArguments.readAloudVoiceSelectionArgs = args
@@ -2542,6 +2552,98 @@ class ReaderViewModel @Inject constructor(
     }
 
     private var didSetSDTPack = false
+
+    private var isReadAloudAnnotationSessionActive = false
+    private val ignoredReadAloudAnnotationKeys = mutableSetOf<String>()
+    private val readAloudAnnotationSession = ReadAloudAnnotationSession(
+        scope = viewModelScope,
+        send = readerWebCallChainExecutor::setReadAloudAnnotation,
+        unset = readerWebCallChainExecutor::unsetReadAloudAnnotation,
+        onStart = { isReadAloudAnnotationSessionActive = true },
+        onEnd = ::onReadAloudAnnotationSessionEnded,
+    )
+
+    private val readAloudBridge = object : ReaderReadAloudBridge {
+        override fun setSDTPack(bytes: ByteArray, packVersion: Int, schemaMajorVersion: Int) {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.setSDTPack(
+                    bytesBase64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP),
+                    packVersion = packVersion,
+                    schemaMajorVersion = schemaMajorVersion,
+                )
+                didSetSDTPack = true
+            }
+        }
+
+        override fun setSpotlight(sdtStart: List<Int>, sdtEnd: List<Int>) {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.setReadAloudSpotlight(sdtStart, sdtEnd)
+            }
+        }
+
+        override fun clearSpotlight() {
+            viewModelScope.launch {
+                readerWebCallChainExecutor.setReadAloudSpotlight(null, null)
+            }
+        }
+
+        override fun setAnnotation(tool: ReaderAnnotationTool, color: String, sdtStart: List<Int>, sdtEnd: List<Int>) {
+            val type = when (tool) {
+                ReaderAnnotationTool.highlight -> "highlight"
+                ReaderAnnotationTool.underline -> "underline"
+                else -> return
+            }
+            fun path(values: List<Int>) = JsonObject().apply {
+                add("start", JsonArray().apply { values.forEach { add(it) } })
+                add("end", JsonArray().apply { values.forEach { add(it) } })
+            }
+            readAloudAnnotationSession.set(
+                JsonObject().apply {
+                    addProperty("type", type)
+                    addProperty("color", color)
+                    add("startPosition", path(sdtStart))
+                    add("endPosition", path(sdtEnd))
+                }
+            )
+        }
+
+        override fun endAnnotationSession(store: Boolean) {
+            readAloudAnnotationSession.end(store)
+        }
+    }
+
+    private fun onReadAloudAnnotationSessionEnded(annotation: JsonObject?, key: String?) {
+        isReadAloudAnnotationSessionActive = false
+        key?.let { ignoredReadAloudAnnotationKeys.add(it) }
+        if (annotation == null) return
+        val parsed = parseHtmlEpubJson(
+            annotations = JsonArray().apply { add(annotation) },
+            author = this.username,
+            isAuthor = true,
+        )
+        if (parsed.isEmpty()) {
+            Timber.e("ReaderViewModel: could not parse read aloud session annotation")
+            return
+        }
+        ignoreDbCallbackOnReaderInsertionItemKey = parsed[0].key
+        for (item in parsed) {
+            this.annotations[item.key] = item
+        }
+        createHtmlEpubDatabaseAnnotations(parsed.filterIsInstance<NewReaderAnnotation>())
+    }
+
+    private fun withoutReadAloudSessionAnnotations(rawAnnotations: JsonArray): JsonArray {
+        val result = JsonArray()
+        for (element in rawAnnotations) {
+            val id = element.asJsonObject["id"]?.asString
+            val isStored = id != null && this.annotations[id] != null
+            if (id != null && !isStored && (id in ignoredReadAloudAnnotationKeys || isReadAloudAnnotationSessionActive)) {
+                continue
+            }
+            result.add(element)
+        }
+        return result
+    }
 
     fun toggleReadingMode() {
         val enable = !viewState.readingModeEnabled

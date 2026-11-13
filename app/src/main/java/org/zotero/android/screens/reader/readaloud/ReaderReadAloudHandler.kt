@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -11,8 +12,10 @@ import kotlinx.coroutines.launch
 import org.zotero.android.architecture.Defaults
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.database.DbWrapperMain
+import org.zotero.android.database.requests.ReadLastReadAloudPositionDbRequest
 import org.zotero.android.database.requests.ReadSpeechLanguageDbRequest
 import org.zotero.android.database.requests.SetSpeechLanguageDbRequest
+import org.zotero.android.database.requests.StoreLastReadAloudPositionDbRequest
 import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceChange
 import org.zotero.android.screens.reader.readaloud.voiceselection.ReadAloudVoiceSelectionArgs
@@ -20,6 +23,7 @@ import org.zotero.android.speech.SpeechManager
 import org.zotero.android.speech.SpeechManagerFactory
 import org.zotero.android.speech.SpeechState
 import org.zotero.android.speech.SpeechVoice
+import org.zotero.android.speech.data.ReadAloudResumePosition
 import org.zotero.android.sync.LibraryIdentifier
 import timber.log.Timber
 import javax.inject.Inject
@@ -37,6 +41,10 @@ class ReaderReadAloudHandler @Inject constructor(
     private var libraryId: LibraryIdentifier? = null
     private var voiceLanguage: String? = null
     private var wasPlayingBeforeVoiceChange = false
+    private val positionStoreDebounceMillis = 3000L
+    private var lastSpeakingPosition: ReadAloudResumePosition? = null
+    private var pendingPosition: ReadAloudResumePosition? = null
+    private var pendingPositionJob: Job? = null
 
     private var pendingOnboardingDelegate: ReaderSpeechDelegate? = null
     private var speechManager: SpeechManager<Int>? = null
@@ -79,6 +87,42 @@ class ReaderReadAloudHandler @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "ReaderReadAloudHandler: can't load speech language")
             null
+        }
+        if (lastSpeakingPosition == null && speechManager == null) {
+            lastSpeakingPosition = try {
+                dbWrapperMain.realmDbStorage
+                    .perform(request = ReadLastReadAloudPositionDbRequest(attachmentKey = key, libraryId = libraryId))
+                    .position
+            } catch (e: Exception) {
+                Timber.e(e, "ReaderReadAloudHandler: can't load read aloud position")
+                null
+            }
+        }
+    }
+
+    fun storePendingPosition() {
+        pendingPositionJob?.cancel()
+        pendingPositionJob = null
+        val position = pendingPosition ?: return
+        pendingPosition = null
+        val key = itemKey ?: return
+        val libraryId = libraryId ?: return
+        try {
+            dbWrapperMain.realmDbStorage.perform(
+                request = StoreLastReadAloudPositionDbRequest(key = key, libraryId = libraryId, position = position)
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "ReaderReadAloudHandler: can't store read aloud position")
+        }
+    }
+
+    private fun scheduleStore(position: ReadAloudResumePosition) {
+        lastSpeakingPosition = position
+        pendingPosition = position
+        pendingPositionJob?.cancel()
+        pendingPositionJob = scope.launch {
+            delay(positionStoreDebounceMillis)
+            storePendingPosition()
         }
     }
 
@@ -151,6 +195,7 @@ class ReaderReadAloudHandler @Inject constructor(
 
     fun release() {
         stopAndReleaseManager()
+        storePendingPosition()
         scope.cancel()
     }
 
@@ -162,6 +207,7 @@ class ReaderReadAloudHandler @Inject constructor(
             documentWorkerController = documentWorkerController,
         )
         voice?.let { manager.set(it, preferredLanguage = null) }
+        manager.onSpeakingPositionChanged = { scheduleStore(it) }
         speechDelegate = delegate
         speechManager = manager
         mutableIsActive.value = true
@@ -171,15 +217,23 @@ class ReaderReadAloudHandler @Inject constructor(
             }.collect { (state, remainingTime) ->
                 if (state is SpeechState.Stopped) {
                     stopAndReleaseManager()
+                    storePendingPosition()
                 } else {
+                    if (state.isOutOfCredits) {
+                        storePendingPosition()
+                    }
                     mutableControls.value = ReadAloudControlsState.from(state, remainingTime, manager.voice)
                 }
             }
         }
-        manager.start(SpeechManager.StartTarget.CurrentPage)
+        val resumePosition = lastSpeakingPosition
+        manager.start(
+            if (resumePosition != null) SpeechManager.StartTarget.Resume(resumePosition) else SpeechManager.StartTarget.CurrentPage
+        )
     }
 
     private fun stopAndReleaseManager() {
+        speechDelegate?.clearSpeechHighlight()
         stateJob?.cancel()
         stateJob = null
         speechManager?.release()

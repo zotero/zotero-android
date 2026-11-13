@@ -38,6 +38,9 @@ class SpeechHighlightSessionManagerTest {
     private val noGoBack = HighlightVoiceInfo.Remote(RemoteVoice.Granularity.sentence, audioProgress = 0.9f, elapsedTime = 10.0)
     private val goBack = HighlightVoiceInfo.Remote(RemoteVoice.Granularity.sentence, audioProgress = 0.1f, elapsedTime = 1.0)
 
+    private val paragraphNoGoBack = HighlightVoiceInfo.Remote(RemoteVoice.Granularity.paragraph, audioProgress = 0.9f, elapsedTime = 10.0)
+    private val paragraphGoBack = HighlightVoiceInfo.Remote(RemoteVoice.Granularity.paragraph, audioProgress = 0.1f, elapsedTime = 1.0)
+
     private lateinit var delegate: MockPageProvider
     private lateinit var sut: SpeechHighlightSessionManager<Int>
 
@@ -347,6 +350,59 @@ class SpeechHighlightSessionManagerTest {
         first.pageIndex shouldBeEqualTo 0
 
         sut.moveBackward().shouldBeNull()
+    }
+
+    @Test
+    fun `paragraph granularity moves between paragraphs`() {
+        start(paragraphNoGoBack, 0, "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.")
+
+        sut.currentText() shouldBeEqualTo "First paragraph."
+        sut.moveForward()
+        sut.currentText() shouldBeEqualTo "Second paragraph."
+        sut.moveForward()
+        sut.currentText() shouldBeEqualTo "Third paragraph."
+    }
+
+    @Test
+    fun `paragraph granularity extends across paragraphs on same page`() {
+        start(paragraphNoGoBack, 5, "P1.\n\nP2.\n\nP3.")
+
+        sut.extendForward()
+        sut.currentText() shouldBeEqualTo "P2.\n\nP3."
+        sut.extendBackward()
+        sut.currentText() shouldBeEqualTo "P2."
+        sut.extendBackward()
+        sut.currentText() shouldBeEqualTo "P1.\n\nP2."
+    }
+
+    @Test
+    fun `paragraph granularity goes back to previous paragraph with low progress`() {
+        val result = start(paragraphGoBack, 20, "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.").shouldNotBeNull()
+
+        result.text shouldBeEqualTo "First paragraph."
+    }
+
+    @Test
+    fun `session range spans all unit ranges`() {
+        val pageText = "S1. S2. S3."
+        start(noGoBack, 0, pageText)
+        sut.extendForward()
+        sut.extendForward()
+
+        val range = sut.session.shouldNotBeNull().range
+        range.location shouldBeEqualTo 0
+        (range.location + range.length) shouldBeEqualTo pageText.length
+    }
+
+    @Test
+    fun `page index is preserved through navigation on same page`() {
+        start(noGoBack, 0, "S1. S2. S3.", pageIndex = 42)
+        sut.session?.pageIndex shouldBeEqualTo 42
+
+        sut.moveForward()
+        sut.session?.pageIndex shouldBeEqualTo 42
+
+        sut.endSession().shouldNotBeNull().pageIndex shouldBeEqualTo 42
     }
 
     private fun start(voiceInfo: HighlightVoiceInfo, position: Int, pageText: String, pageIndex: Int = 0) =

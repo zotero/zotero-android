@@ -31,10 +31,22 @@ object SpeechDocumentParser {
         val charRects: List<SDTRect?>,
     )
 
+    data class SDTSpan(
+        val range: TextRange,
+        val start: List<Int>,
+        val end: List<Int>,
+    )
+
+    data class SDTPositionRange(
+        val start: List<Int>,
+        val end: List<Int>,
+    )
+
     data class Segment(
         val text: String,
         val pageOffset: Int,
         val charRects: List<SDTRect?> = emptyList(),
+        val sdtSpans: List<SDTSpan> = emptyList(),
     )
 
     data class ParsedDocument(
@@ -362,6 +374,64 @@ object SpeechDocumentParser {
             }
         }
         return mergeLineRects(rects)
+    }
+
+    fun sdtPositionRange(range: TextRange, segments: List<Segment>): SDTPositionRange? {
+        if (range.length <= 0) return null
+        val rangeStart = range.location
+        val rangeEnd = range.location + range.length
+        var start: List<Int>? = null
+        var end: List<Int>? = null
+        for (segment in segments) {
+            for (span in segment.sdtSpans) {
+                val spanStart = segment.pageOffset + span.range.location
+                val spanEnd = spanStart + span.range.length
+                if (spanStart >= rangeEnd || spanEnd <= rangeStart) continue
+                if (start == null) start = span.start
+                end = span.end
+            }
+        }
+        if (start == null || end == null) return null
+        return SDTPositionRange(start, end)
+    }
+
+    fun pageTextOffset(sdtStart: List<Int>, segments: List<Segment>): Int? {
+        for (segment in segments) {
+            for (span in segment.sdtSpans) {
+                if (compareSDTPaths(span.end, sdtStart) > 0) {
+                    return segment.pageOffset + span.range.location
+                }
+            }
+        }
+        return null
+    }
+
+    private fun compareSDTPaths(lhs: List<Int>, rhs: List<Int>): Int {
+        for ((left, right) in lhs.zip(rhs)) {
+            if (left != right) return left - right
+        }
+        return lhs.size - rhs.size
+    }
+
+    fun closestPageTextOffset(x: Double, y: Double, segments: List<Segment>): Int? {
+        var closestOffset: Int? = null
+        var closestDistance = Double.MAX_VALUE
+        for (segment in segments) {
+            for ((index, rect) in segment.charRects.withIndex()) {
+                if (rect == null) continue
+                val distance = squaredDistance(x, y, rect)
+                if (distance >= closestDistance) continue
+                closestDistance = distance
+                closestOffset = segment.pageOffset + index
+            }
+        }
+        return closestOffset
+    }
+
+    private fun squaredDistance(x: Double, y: Double, rect: SDTRect): Double {
+        val dx = maxOf(rect.x - x, 0.0, x - (rect.x + rect.width))
+        val dy = maxOf(rect.y - y, 0.0, y - (rect.y + rect.height))
+        return dx * dx + dy * dy
     }
 
     private fun mergeLineRects(rects: List<SDTRect>): List<SDTRect> {

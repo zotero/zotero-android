@@ -1,7 +1,7 @@
 package org.zotero.android.speech
 
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
-import org.zotero.android.speech.data.SDTRect
+import org.zotero.android.speech.data.ReadAloudPosition
 import java.io.File
 
 interface SpeechManagerDelegate<Index : Any> {
@@ -13,32 +13,23 @@ interface SpeechManagerDelegate<Index : Any> {
     fun getNextPageIndex(currentPageIndex: Index): Index?
     fun getPreviousPageIndex(currentPageIndex: Index): Index?
     fun pageIndex(structuredDocumentTextPage: Int): Index?
+    fun structuredDocumentTextPage(pageIndex: Index): Int?
+    fun readAloudLoaded(sdtPackBytes: ByteArray, packVersion: Int, schemaMajorVersion: Int) {
+    }
     fun moved(pageIndex: Index, previousPageIndex: Index)
     fun focusPage(pageIndex: Index)
-    fun readAloudHighlightChanged(
-        text: String,
-        rects: List<SDTRect>,
-        pageIndex: Index,
-        sourceLocation: Int,
-        sourceTextLength: Int,
-    )
+    fun readAloudHighlightChanged(position: ReadAloudPosition, pageIndex: Index)
     fun annotationPreviewChanged(
-        text: String,
-        rects: List<SDTRect>,
+        position: ReadAloudPosition,
         pageIndex: Index,
         tool: ReaderAnnotationTool,
         color: String,
-        sourceLocation: Int,
-        sourceTextLength: Int,
     )
     fun createAnnotation(
         tool: ReaderAnnotationTool,
         color: String,
-        text: String,
-        rects: List<SDTRect>,
+        position: ReadAloudPosition,
         pageIndex: Index,
-        sourceLocation: Int,
-        sourceTextLength: Int,
     )
     fun clearAnnotationPreview()
 }

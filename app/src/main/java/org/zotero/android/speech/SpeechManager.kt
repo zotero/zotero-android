@@ -16,6 +16,8 @@ import org.zotero.android.documentworker.DocumentWorkerController
 import org.zotero.android.screens.reader.data.ReaderAnnotationTool
 import org.zotero.android.speech.data.HighlightResult
 import org.zotero.android.speech.data.HighlightVoiceInfo
+import org.zotero.android.speech.data.ReadAloudPosition
+import org.zotero.android.speech.data.ReadAloudResumePosition
 import org.zotero.android.speech.data.RemoteVoice
 import org.zotero.android.speech.data.SDTRect
 import org.zotero.android.speech.data.TextRange
@@ -38,6 +40,7 @@ class SpeechManager<Index : Any>(
         val pageOffset: Int,
         val rects: List<SDTRect>,
         val charRects: List<SDTRect?>,
+        val sdtSpans: List<SpeechDocumentParser.SDTSpan> = emptyList(),
     )
 
     private val delegateReference = WeakReference(delegate)
@@ -56,16 +59,10 @@ class SpeechManager<Index : Any>(
         val highlightGranularity: RemoteVoice.Granularity,
     )
 
-    data class ResumePosition<Index>(
-        val page: Index,
-        val paragraphIndex: Int,
-        val offset: Int,
-    )
-
     sealed class StartTarget<out Index> {
         data object CurrentPage : StartTarget<Nothing>()
         class PageTextOffset(val offsetForPageText: (String) -> Int) : StartTarget<Nothing>()
-        data class Resume<Index>(val position: ResumePosition<Index>) : StartTarget<Index>()
+        data class Resume(val position: ReadAloudResumePosition) : StartTarget<Nothing>()
     }
 
     private enum class NavigationDirection { forward, backward }
@@ -75,7 +72,6 @@ class SpeechManager<Index : Any>(
 
     private var paragraphs: List<SpeechParagraph<Index>> = emptyList()
     private var paragraphIndicesByPage: Map<Index, List<Int>> = emptyMap()
-    private var pageTextLength: Map<Index, Int> = emptyMap()
     private var documentLoaded = false
     private var documentLanguage: String? = null
 
@@ -85,15 +81,12 @@ class SpeechManager<Index : Any>(
     private var position: Position? = null
         set(value) {
             field = value
-            if (value == null || value.paragraphIndex >= paragraphs.size) return
-            val paragraph = paragraphs[value.paragraphIndex]
-            onSpeakingPositionChanged?.invoke(
-                ResumePosition(page = paragraph.page, paragraphIndex = value.paragraphIndex, offset = value.range.location)
-            )
+            reportSpeakingPosition()
         }
+    private var lastReportedSentence: Pair<Int, TextRange>? = null
     private var currentSpeakingPage: Index? = null
     private var pendingNavigation: Pair<NavigationDirection, Job>? = null
-    var onSpeakingPositionChanged: ((ResumePosition<Index>) -> Unit)? = null
+    var onSpeakingPositionChanged: ((ReadAloudResumePosition) -> Unit)? = null
 
     val isActive: Boolean get() = !state.value.isStopped
     val voice: SpeechVoice? get() = processor.speechVoice
@@ -133,6 +126,7 @@ class SpeechManager<Index : Any>(
             state.collect { state ->
                 if (state.isStopped) {
                     position = null
+                    lastReportedSentence = null
                     currentSpeakingPage = null
                     processor.detectedLanguage = null
                     pendingNavigation?.second?.cancel()
@@ -176,13 +170,51 @@ class SpeechManager<Index : Any>(
         return SpeechDocumentParser.pdfLineRects(pageTextRange, segments(paragraph.page))
     }
 
+    private fun reportSpeakingPosition() {
+        val onSpeakingPositionChanged = onSpeakingPositionChanged ?: return
+        val position = position ?: return
+        if (position.paragraphIndex >= paragraphs.size) return
+        val paragraph = paragraphs[position.paragraphIndex]
+        val sentence = findHighlightUnit(position.range.location, paragraph.text, RemoteVoice.Granularity.sentence) ?: return
+        val last = lastReportedSentence
+        if (last != null && last.first == position.paragraphIndex && last.second == sentence.range) return
+        lastReportedSentence = position.paragraphIndex to sentence.range
+
+        val rects = (highlightPosition(paragraph, sentence.range) as? ReadAloudPosition.Pdf)?.rects.orEmpty()
+        if (rects.isEmpty()) return
+        val pageIndex = delegate?.structuredDocumentTextPage(paragraph.page) ?: return
+        onSpeakingPositionChanged(ReadAloudResumePosition.Pdf(pageIndex = pageIndex, rects = rects))
+    }
+
     private fun TextRange.contains(index: Int): Boolean = index >= location && index < end
 
     private fun segments(page: Index): List<SpeechDocumentParser.Segment> {
         return (paragraphIndicesByPage[page] ?: emptyList()).map {
             val paragraph = paragraphs[it]
-            SpeechDocumentParser.Segment(text = paragraph.text, pageOffset = paragraph.pageOffset, charRects = paragraph.charRects)
+            SpeechDocumentParser.Segment(
+                text = paragraph.text,
+                pageOffset = paragraph.pageOffset,
+                charRects = paragraph.charRects,
+                sdtSpans = paragraph.sdtSpans,
+            )
         }
+    }
+
+    private fun highlightPosition(paragraph: SpeechParagraph<Index>, highlightRange: TextRange): ReadAloudPosition {
+        val pageTextRange = TextRange(paragraph.pageOffset + highlightRange.location, highlightRange.length)
+        val segments = segments(paragraph.page)
+        SpeechDocumentParser.sdtPositionRange(pageTextRange, segments)?.let {
+            return ReadAloudPosition.HtmlEpub(sdtStart = it.start, sdtEnd = it.end)
+        }
+        return ReadAloudPosition.Pdf(SpeechDocumentParser.pdfLineRects(pageTextRange, segments))
+    }
+
+    private fun highlightSessionPosition(): ReadAloudPosition? {
+        val session = highlightSessionManager.session ?: return null
+        SpeechDocumentParser.sdtPositionRange(session.range, session.segments)?.let {
+            return ReadAloudPosition.HtmlEpub(sdtStart = it.start, sdtEnd = it.end)
+        }
+        return ReadAloudPosition.Pdf(SpeechDocumentParser.pdfLineRects(session.range, session.segments))
     }
 
     private fun pageText(page: Index): String {
@@ -263,12 +295,18 @@ class SpeechManager<Index : Any>(
             return
         }
 
-        if (target is StartTarget.Resume && target.position.paragraphIndex < paragraphs.size) {
-            val resumePosition = target.position
-            val paragraph = paragraphs[resumePosition.paragraphIndex]
-            val offset = resumePosition.offset.coerceIn(0, paragraph.text.length)
-            startSpeaking(resumePosition.paragraphIndex, offset, reportPageChange = false)
-            return
+        val resumePosition = (target as? StartTarget.Resume)?.position as? ReadAloudResumePosition.Pdf
+        val rect = resumePosition?.rects?.firstOrNull()
+        if (resumePosition != null && rect != null) {
+            val storedPage = delegate.pageIndex(resumePosition.pageIndex)
+            val offset = storedPage?.let { closestSentenceStartOffset(rect.x, rect.y + rect.height / 2, it) }
+            if (storedPage != null && offset != null) {
+                if (storedPage != delegate.getCurrentPageIndex()) {
+                    delegate.focusPage(storedPage)
+                }
+                beginPlayback(storedPage, offset)
+                return
+            }
         }
 
         val currentIndex = delegate.getCurrentPageIndex()
@@ -283,12 +321,22 @@ class SpeechManager<Index : Any>(
         } else {
             0
         }
+        beginPlayback(page, startOffset)
+    }
+
+    private fun beginPlayback(page: Index, startOffset: Int) {
         val resolved = resolveParagraph(startOffset, page)
         if (resolved == null) {
             state.value = SpeechState.Stopped
             return
         }
         startSpeaking(resolved.first, resolved.second, reportPageChange = false)
+    }
+
+    private fun closestSentenceStartOffset(x: Double, y: Double, page: Index): Int? {
+        val segments = segments(page)
+        val offset = SpeechDocumentParser.closestPageTextOffset(x, y, segments) ?: return null
+        return sentenceStartOffset(offset, segments)
     }
 
     private fun sentenceStartOffset(offset: Int, segments: List<SpeechDocumentParser.Segment>): Int {
@@ -440,20 +488,21 @@ class SpeechManager<Index : Any>(
         highlightSessionManager.startInactivityTimer()
     }
 
+    val currentHighlightSDTRange: SpeechDocumentParser.SDTPositionRange?
+        get() {
+            val session = highlightSessionManager.session ?: return null
+            return SpeechDocumentParser.sdtPositionRange(session.range, session.segments)
+        }
+
     fun endHighlightSession() {
-        val session = highlightSessionManager.session
-        val sourceLocation = session?.range?.location ?: 0
-        val sourceTextLength = session?.pageText?.length ?: 0
-        val rects = session?.let { SpeechDocumentParser.pdfLineRects(it.range, it.segments) } ?: emptyList()
-        highlightSessionManager.endSession()?.let { result ->
+        val position = highlightSessionPosition()
+        val result = highlightSessionManager.endSession()
+        if (result != null && position != null) {
             delegate?.createAnnotation(
                 tool = highlightSessionManager.annotationTool,
                 color = highlightSessionManager.annotationColor,
-                text = result.text,
-                rects = rects,
+                position = position,
                 pageIndex = result.pageIndex,
-                sourceLocation = sourceLocation,
-                sourceTextLength = sourceTextLength,
             )
         }
         delegate?.clearAnnotationPreview()
@@ -465,15 +514,12 @@ class SpeechManager<Index : Any>(
     }
 
     private fun notifyAnnotationPreviewChanged(result: HighlightResult<Index>) {
-        val session = highlightSessionManager.session
+        val position = highlightSessionPosition() ?: return
         delegate?.annotationPreviewChanged(
-            text = result.text,
-            rects = session?.let { SpeechDocumentParser.pdfLineRects(it.range, it.segments) } ?: emptyList(),
+            position = position,
             pageIndex = result.pageIndex,
             tool = highlightSessionManager.annotationTool,
             color = highlightSessionManager.annotationColor,
-            sourceLocation = session?.range?.location ?: 0,
-            sourceTextLength = session?.pageText?.length ?: 0,
         )
     }
 
@@ -594,11 +640,8 @@ class SpeechManager<Index : Any>(
 
         if (unit != null) {
             delegate?.readAloudHighlightChanged(
-                text = unit.text,
-                rects = highlightRects(paragraph, newHighlightRange),
+                position = highlightPosition(paragraph, newHighlightRange),
                 pageIndex = paragraph.page,
-                sourceLocation = paragraph.pageOffset + newHighlightRange.location,
-                sourceTextLength = pageTextLength[paragraph.page] ?: paragraph.text.length,
             )
         }
     }
@@ -742,11 +785,8 @@ class SpeechManager<Index : Any>(
 
         if (highlightText != null) {
             delegate?.readAloudHighlightChanged(
-                text = highlightText,
-                rects = highlightRects(paragraph, newHighlightRange),
+                position = highlightPosition(paragraph, newHighlightRange),
                 pageIndex = paragraph.page,
-                sourceLocation = paragraph.pageOffset + newHighlightRange.location,
-                sourceTextLength = pageTextLength[paragraph.page] ?: paragraph.text.length,
             )
         }
 
@@ -772,7 +812,9 @@ class SpeechManager<Index : Any>(
         val startTime = System.currentTimeMillis()
         mutableExtractionProgress.value = null
         val pack = try {
-            SDTPack(documentWorkerController.getOrGenerateSDTPack(file, contentType, delegate.documentPassword).bytes)
+            val generated = documentWorkerController.getOrGenerateSDTPack(file, contentType, delegate.documentPassword)
+            delegate.readAloudLoaded(generated.bytes, generated.packVersion, generated.schemaMajorVersion)
+            SDTPack(generated.bytes)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -797,7 +839,6 @@ class SpeechManager<Index : Any>(
         val delegate = delegate ?: return
         val newParagraphs = mutableListOf<SpeechParagraph<Index>>()
         val indicesByPage = mutableMapOf<Index, MutableList<Int>>()
-        val lengths = mutableMapOf<Index, Int>()
         for (paragraph in parsed.paragraphs) {
             val page = delegate.pageIndex(paragraph.page) ?: continue
             val index = newParagraphs.size
@@ -811,11 +852,9 @@ class SpeechManager<Index : Any>(
                 )
             )
             indicesByPage.getOrPut(page) { mutableListOf() }.add(index)
-            lengths[page] = maxOf(lengths[page] ?: 0, paragraph.pageOffset + paragraph.text.length)
         }
         paragraphs = newParagraphs
         paragraphIndicesByPage = indicesByPage
-        pageTextLength = lengths
         documentLanguage = parsed.language
     }
 }
