@@ -20,7 +20,7 @@ ios_base_dir = "iosLocalizables"
 android_base_dir = "app/src/main/res"
 
 # iOS language folders pattern (e.g., en.lproj, bg.lproj, cs.lproj)
-IOS_LPROJ_PATTERN = re.compile(r'^([a-z]{2}(?:_[A-Z]{2})?)\.lproj$')
+IOS_LPROJ_PATTERN = re.compile(r'^([a-z]{2}(?:_[A-Z]{2}|-Latn)?)\.lproj$')
 
 # Map iOS language codes to Android resource folder names
 # English (en) is special - it goes to 'values' folder (default)
@@ -32,6 +32,7 @@ LANGUAGE_CODE_MAP = {
 	'es-ES': 'es',        # Spanish Spain
 	'en-US': 'en',        # English US
 	'en-GB': 'en-rGB',    # English UK
+	'sr-Latn': 'b+sr+Latn',  # Serbian Latin
 }
 
 # Android reserved keywords that cannot be used as resource names
