@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# Update the Android strings from the iOS translations
+#
+# Run scripts/locales_update in zotero-ios first to pull the latest translations from
+# Transifex. Usage: scripts/locales_update [path to zotero-ios] (default: ../zotero-ios)
+set -e
+cd "$(dirname "$0")/.."
+
+IOS_DIR="${1:-../zotero-ios}"
+ASSETS_DIR="$IOS_DIR/Zotero/Assets"
+if [ ! -d "$ASSETS_DIR/en.lproj" ]; then
+	echo "$ASSETS_DIR/en.lproj not found" >&2
+	echo "Usage: $0 [path to zotero-ios]" >&2
+	exit 1
+fi
+
+rm -rf iosLocalizables
+trap 'rm -rf iosLocalizables' EXIT
+mkdir iosLocalizables
+cp -R "$ASSETS_DIR"/*.lproj iosLocalizables/
+python3 scripts/ios_localizable_to_android_xml.py > /dev/null
+python3 scripts/check_string_formats.py
