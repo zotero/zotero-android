@@ -4,8 +4,9 @@
 #
 # A translation that reorders unnumbered placeholders (e.g., "%@ in %@ (%d / %d)" for
 # "Syncing %@ (%d / %d) in %@") becomes a string whose argument types don't match the
-# code, which crashes the app with an IllegalFormatConversionException. Every string in
-# values-*/imported_strings*.xml is compared against values/, and mismatches are listed.
+# code, which crashes the app with an IllegalFormatConversionException. A stray % (e.g.,
+# "@%" for "%@") crashes it too. Every string in values-*/imported_strings*.xml is
+# compared against values/, and mismatches are listed.
 
 import os
 import re
@@ -33,6 +34,11 @@ def arg_types(text):
 			index = position
 		types.setdefault(index, set()).add(TYPES.get(conversion.lower(), conversion))
 	return types
+
+
+def has_stray_percent(text):
+	"""A % that doesn't start a format specifier (e.g., "@%" for "%@")"""
+	return '%' in SPECIFIER.sub('', text)
 
 
 def load(dir_path):
@@ -73,7 +79,7 @@ def main():
 				for index, types in arg_types(text).items():
 					expected.setdefault(index, set()).update(types)
 			for text in texts:
-				if not compatible(expected, arg_types(text)):
+				if not compatible(expected, arg_types(text)) or (expected and has_stray_percent(text)):
 					problems.append(f'{folder}: {name}: {text!r} (English: {english[name][-1]!r})')
 	if problems:
 		print(f'{len(problems)} translated strings have format arguments that don\'t match the English:')
