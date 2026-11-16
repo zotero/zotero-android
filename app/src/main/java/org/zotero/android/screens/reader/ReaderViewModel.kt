@@ -105,6 +105,7 @@ import org.zotero.android.screens.reader.settings.data.ReaderSettingsChangeResul
 import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestAnnotationImageRenderEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderThumbnailsInvalidatedEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderSliderOptions
 import org.zotero.android.screens.reader.sidebar.data.ReaderWrapperOutline
@@ -149,6 +150,7 @@ class ReaderViewModel @Inject constructor(
     private val readerSearchTermEventStream: ReaderSearchTermEventStream,
     private val webCallChainEventStream: ReaderWebCallChainEventStream,
     private val readerRequestThumbnailRenderEventStream: ReaderRequestThumbnailRenderEventStream,
+    private val readerThumbnailsInvalidatedEventStream: ReaderThumbnailsInvalidatedEventStream,
     private val readerRequestAnnotationImageRenderEventStream: ReaderRequestAnnotationImageRenderEventStream,
     private val readerWebCallChainExecutor: ReaderWebCallChainExecutor,
     private val lastReadWatcher: LastReadWatcher,
@@ -2647,16 +2649,21 @@ class ReaderViewModel @Inject constructor(
     }
 
     private fun update(readerSettings: ReaderSettings) {
+        val wasDark = pdfReaderCurrentThemeEventStream.currentValue()!!.isDark
         defaults.setReaderSettings(readerSettings)
         updatePdfPageAppearanceMode(readerSettings)
-        updateAppearanceAccordingToSettings(true)
+        val isThemeChanged = wasDark != pdfReaderCurrentThemeEventStream.currentValue()!!.isDark
+        updateAppearanceAccordingToSettings(isSettingsUpdate = true, isThemeChanged = isThemeChanged)
     }
 
-    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean) {
+    private fun updateAppearanceAccordingToSettings(isSettingsUpdate: Boolean, isThemeChanged: Boolean) {
         viewModelScope.launch {
             val readerSettings = defaults.getReaderSettings()
             if (isSettingsUpdate) {
-                readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+                if (isThemeChanged) {
+                    readerWebCallChainExecutor.updateInterface(pdfReaderCurrentThemeEventStream.currentValue()!!.isDark)
+                    readerThumbnailsInvalidatedEventStream.emitAsync(Unit)
+                }
                 if (viewState.fileType == ReaderFileType.PDF || viewState.fileType == ReaderFileType.EPUB) {
                     readerWebCallChainExecutor.setSpreadMode(readerSettings.spreadsMode)
                 }

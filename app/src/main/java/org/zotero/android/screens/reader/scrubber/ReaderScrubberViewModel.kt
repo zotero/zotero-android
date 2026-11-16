@@ -5,15 +5,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.greenrobot.eventbus.EventBus
 import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.screens.reader.sidebar.data.ReaderHistoryTrackingEvent
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.thumbnails.ReaderThumbnailPreviewManager
@@ -25,14 +22,11 @@ import javax.inject.Inject
 internal class ReaderScrubberViewModel @Inject constructor(
     private val thumbnailPreviewCacheUpdatedEventStream: ReaderThumbnailPreviewCacheSnapshotEventStream,
     private val thumbnailPreviewManager: ReaderThumbnailPreviewManager,
-    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
 ) : BaseViewModel2<ReaderScrubberViewState, ReaderScrubberViewEffect>(ReaderScrubberViewState()) {
 
-    private var pdfReaderThemeCancellable: Job? = null
     private var lastRequestedLandmarks: List<Int> = emptyList()
 
     fun initOnce() = initOnce {
-        startObservingTheme()
         setupThumbnailCacheUpdateStream()
         thumbnailPreviewManager.init(viewModelScope)
     }
@@ -90,20 +84,7 @@ internal class ReaderScrubberViewModel @Inject constructor(
         updateState {
             copy(selectedPage = page)
         }
-    }
-
-    private fun clearThumbnailCaches() {
-        thumbnailPreviewManager.cancelProcessing()
-        lastRequestedLandmarks = emptyList()
-    }
-
-    private fun startObservingTheme() {
-        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
-            .drop(1)
-            .onEach { data ->
-                clearThumbnailCaches()
-            }
-            .launchIn(viewModelScope)
+        thumbnailPreviewManager.requestThumbnail(page)
     }
 }
 

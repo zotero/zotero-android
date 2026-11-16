@@ -6,9 +6,7 @@ import com.google.gson.JsonArray
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -17,7 +15,6 @@ import org.zotero.android.architecture.BaseViewModel2
 import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
-import org.zotero.android.pdf.data.PdfReaderCurrentThemeEventStream
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.sidebar.data.ReaderScrollReaderIfNeededEvent
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewCacheSnapshotEventStream
@@ -30,13 +27,9 @@ internal class ReaderThumbnailsViewModel @Inject constructor(
     private val thumbnailPreviewCacheUpdatedEventStream: ReaderThumbnailPreviewCacheSnapshotEventStream,
     private val thumbnailPreviewManager: ReaderThumbnailPreviewManager,
     private val webCallChainEventStream: ReaderWebCallChainEventStream,
-    private val pdfReaderCurrentThemeEventStream: PdfReaderCurrentThemeEventStream,
 ) : BaseViewModel2<ReaderThumbnailsViewState, ReaderThumbnailsViewEffect>(ReaderThumbnailsViewState()) {
 
-    private var pdfReaderThemeCancellable: Job? = null
-
     fun initOnce() = initOnce {
-        startObservingTheme()
         setupWebCallChainEventStream()
         setupThumbnailCacheUpdateStream()
         thumbnailPreviewManager.init(viewModelScope)
@@ -107,19 +100,6 @@ internal class ReaderThumbnailsViewModel @Inject constructor(
         updateState {
             copy(pageLabels = pageLabelsJsonArray.map { it.asString })
         }
-    }
-
-    private fun clearThumbnailCaches() {
-        thumbnailPreviewManager.cancelProcessing()
-    }
-
-    private fun startObservingTheme() {
-        this.pdfReaderThemeCancellable = pdfReaderCurrentThemeEventStream.flow()
-            .drop(1)
-            .onEach { data ->
-                clearThumbnailCaches()
-            }
-            .launchIn(viewModelScope)
     }
 
     fun requestThumbnail(centerIndex: Int) {

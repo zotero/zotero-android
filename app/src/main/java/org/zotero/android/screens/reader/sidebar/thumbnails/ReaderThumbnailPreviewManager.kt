@@ -23,6 +23,7 @@ import org.zotero.android.architecture.Result
 import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.screens.reader.data.ReaderWebData
 import org.zotero.android.screens.reader.sidebar.data.ReaderRequestThumbnailRenderEventStream
+import org.zotero.android.screens.reader.sidebar.data.ReaderThumbnailsInvalidatedEventStream
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewCacheSnapshotEventStream
 import org.zotero.android.screens.reader.sidebar.thumbnails.cache.ReaderThumbnailPreviewMemoryCache
 import org.zotero.android.screens.reader.web.ReaderWebCallChainEventStream
@@ -36,6 +37,7 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     private val memoryCache: ReaderThumbnailPreviewMemoryCache,
     private val readerThumbnailPreviewCacheSnapshotEventStream: ReaderThumbnailPreviewCacheSnapshotEventStream,
     private val readerRequestThumbnailRenderEventStream: ReaderRequestThumbnailRenderEventStream,
+    private val readerThumbnailsInvalidatedEventStream: ReaderThumbnailsInvalidatedEventStream,
     private val webCallChainEventStream: ReaderWebCallChainEventStream
 
 ) {
@@ -48,12 +50,16 @@ class ReaderThumbnailPreviewManager @Inject constructor(
 
     private var numOfPagesInDocument = 0
 
+    @Volatile
+    private var lastExactIndices: List<Int> = emptyList()
+
     private val requestThumbnailDebounceFlow = MutableStateFlow(0)
     private val isReaderInitializedFlow = MutableStateFlow(false)
 
     fun init(viewModelScope: CoroutineScope) {
         this.viewModelScope = viewModelScope
         setupWebCallChainEventStream()
+        setupThumbnailsInvalidatedEventStream()
         resetManagerState()
     }
 
@@ -61,6 +67,14 @@ class ReaderThumbnailPreviewManager @Inject constructor(
         webCallChainEventStream.flow()
             .onEach { result ->
                 process(result)
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun setupThumbnailsInvalidatedEventStream() {
+        readerThumbnailsInvalidatedEventStream.flow()
+            .onEach {
+                invalidate()
             }
             .launchIn(viewModelScope)
     }
@@ -90,6 +104,7 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     private fun initNumOfPages(numberOfPages: Int) {
         isReaderInitializedFlow.tryEmit(true)
         if (this.numOfPagesInDocument != 0) {
+            invalidate()
             return
         }
         this.numOfPagesInDocument = numberOfPages
@@ -145,6 +160,7 @@ class ReaderThumbnailPreviewManager @Inject constructor(
     }
 
     fun requestExactThumbnails(indices: List<Int>) {
+        lastExactIndices = indices
         coroutineScope?.launch {
             if (numOfPagesInDocument == 0) {
                 return@launch
@@ -245,12 +261,12 @@ class ReaderThumbnailPreviewManager @Inject constructor(
         return currentlyProcessingThumbnails.contains(index)
     }
 
-    fun cancelProcessing() {
-        isReaderInitializedFlow.tryEmit(false)
+    private fun invalidate() {
         resetManagerState()
         currentlyProcessingThumbnails.clear()
         memoryCache.clear()
         sendEmptyCacheState()
+        requestExactThumbnails(lastExactIndices)
     }
 
     private fun sendEmptyCacheState() {
