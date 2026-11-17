@@ -2263,10 +2263,17 @@ class ReaderViewModel @Inject constructor(
     fun showToolOptions() {
         val tool = viewState.activeTool ?: return
         val colorHex = viewState.toolColors[tool]
+        val size: Float? = when (tool) {
+            ReaderAnnotationTool.ink -> this.activeLineWidth
+            ReaderAnnotationTool.text -> this.activeFontSize
+            ReaderAnnotationTool.eraser -> this.activeEraserSize
+            else -> null
+        }
 
         val args = ReaderColorPickerArgs(
             tool = tool,
             colorHex = colorHex,
+            size = size,
         )
         ScreenArguments.readerColorPickerArgs = args
         if (isTablet) {

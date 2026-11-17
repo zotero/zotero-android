@@ -259,9 +259,13 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             }
             val activeAnnotationTool = viewState.activeTool
             if (activeAnnotationTool != null) {
-                val color = viewState.toolColors[activeAnnotationTool]
-                if (color != null) {
-                    ReaderFilterCircle(hex = color, onClick = viewModel::showToolOptions)
+                if (activeAnnotationTool == ReaderAnnotationTool.eraser) {
+                    ReaderEmptyFilterCircle(onClick = viewModel::showToolOptions)
+                } else {
+                    val color = viewState.toolColors[activeAnnotationTool]
+                    if (color != null) {
+                        ReaderFilterCircle(hex = color, onClick = viewModel::showToolOptions)
+                    }
                 }
             }
 
