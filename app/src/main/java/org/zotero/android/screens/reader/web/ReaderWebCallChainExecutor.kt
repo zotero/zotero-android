@@ -43,7 +43,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
         dispatchers.io.limitedParallelism(1)
     private var webViewExecutorScope = CoroutineScope(limitedParallelismDispatcher)
 
-    fun start(webView: WebView, file: File) {
+    fun start(webView: WebView, file: File, onRendererGone: ((didCrash: Boolean) -> Unit)? = null) {
         try {
             val filePath = "file://" + file.absolutePath
 
@@ -52,6 +52,7 @@ class ReaderWebCallChainExecutor @Inject constructor(
                 url = filePath,
                 onWebViewLoadPage = ::onIndexHtmlLoaded,
                 processWebViewResponses = ::receiveMessage,
+                onRendererGone = onRendererGone,
             )
 
             Timber.i("ReaderWebCallChainExecutor: initialization succeeded")
@@ -395,6 +396,16 @@ class ReaderWebCallChainExecutor @Inject constructor(
             val javascript = "setTool({ type: '$toolName', color: '$colorHex',  size: '$size' });"
             readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
+            }
+        }
+    }
+
+    suspend fun trimMemory(): String {
+        return suspendCancellableCoroutine { cont ->
+            val javascript = "(function() { var v = window._view && window._view._view; " +
+                    "if (v && v.trimMemory) { v.trimMemory(); return 'trimmed'; } return 'unavailable'; })();"
+            readerWebViewHandler.evaluateJavascript(javascript) { result ->
+                cont.resume(result)
             }
         }
     }

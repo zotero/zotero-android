@@ -2,7 +2,9 @@ package org.zotero.android.screens.reader
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentCallbacks2
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.RectF
 import androidx.compose.ui.text.TextStyle
 import androidx.lifecycle.SavedStateHandle
@@ -132,6 +134,10 @@ import javax.inject.Inject
 import kotlin.concurrent.timerTask
 import kotlin.math.roundToInt
 
+private const val TRIM_MEMORY_AFTER_NAVIGATION_DELAY_MS = 1500L
+private const val RENDERER_GONE_WINDOW_MS = 60_000L
+private const val MAX_RENDERER_RECOVERIES_IN_WINDOW = 3
+
 @HiltViewModel
 class ReaderViewModel @Inject constructor(
     private val defaults: Defaults,
@@ -172,6 +178,7 @@ class ReaderViewModel @Inject constructor(
     private var texts = mutableMapOf<String, Pair<String, Map<TextStyle, String>>?>()
     private var pendingComment: Pair<String, String>? = null
     private var pendingCommentJob: Job? = null
+    private var trimMemoryJob: Job? = null
     private val commentDispatchMutex = Mutex()
     private var comments = mutableMapOf<String, String>()
     private val onOutlineSearchStateFlow = MutableStateFlow("")
@@ -283,10 +290,39 @@ class ReaderViewModel @Inject constructor(
     fun onEvent(result: ReaderHistoryTrackingEvent) {
         viewModelScope.launch {
             if (result.suspend) {
+                trimMemoryJob?.cancel()
                 readerWebCallChainExecutor.beginNavigation()
             } else {
                 readerWebCallChainExecutor.endNavigation()
+                trimMemoryJob?.cancel()
+                trimMemoryJob = viewModelScope.launch {
+                    delay(TRIM_MEMORY_AFTER_NAVIGATION_DELAY_MS)
+                    trimReaderMemory("scrub end")
+                }
             }
+        }
+    }
+
+    private fun trimReaderMemory(reason: String) {
+        viewModelScope.launch {
+            val result = readerWebCallChainExecutor.trimMemory()
+            Timber.d("ReaderTrimMemory: reason=$reason result=$result")
+        }
+    }
+
+    private val trimMemoryCallbacks = object : ComponentCallbacks2 {
+        override fun onTrimMemory(level: Int) {
+            if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+                trimReaderMemory("onTrimMemory level=$level")
+            }
+        }
+
+        override fun onConfigurationChanged(newConfig: Configuration) {
+            //no-op
+        }
+
+        override fun onLowMemory() {
+            trimReaderMemory("onLowMemory")
         }
     }
 
@@ -385,6 +421,7 @@ class ReaderViewModel @Inject constructor(
         this.isTablet = isTablet
 
         EventBus.getDefault().register(this)
+        context.registerComponentCallbacks(trimMemoryCallbacks)
 
         initState()
         setupWebCallChainEventStream()
@@ -437,7 +474,28 @@ class ReaderViewModel @Inject constructor(
 
             override fun onCopy(): Boolean = copySelectedTextToClipboard()
         }
-        readerWebCallChainExecutor.start(webView = webView, file = this.readerFile)
+        readerWebCallChainExecutor.start(
+            webView = webView,
+            file = this.readerFile,
+            onRendererGone = ::onReaderRendererGone,
+        )
+    }
+
+    private val rendererGoneTimestamps = mutableListOf<Long>()
+
+    private fun onReaderRendererGone(didCrash: Boolean) {
+        val now = System.currentTimeMillis()
+        rendererGoneTimestamps.removeAll { now - it > RENDERER_GONE_WINDOW_MS }
+        rendererGoneTimestamps.add(now)
+        Timber.e("ReaderViewModel: web content process gone, didCrash=$didCrash, count in window=${rendererGoneTimestamps.size}")
+        trimMemoryJob?.cancel()
+        if (rendererGoneTimestamps.size > MAX_RENDERER_RECOVERIES_IN_WINDOW) {
+            triggerEffect(ReaderViewEffect.NavigateBack)
+            return
+        }
+        updateState {
+            copy(isReaderLoading = true, webViewGeneration = webViewGeneration + 1)
+        }
     }
 
     private fun copyReaderFiles() {
@@ -1601,6 +1659,7 @@ class ReaderViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        context.unregisterComponentCallbacks(trimMemoryCallbacks)
         EventBus.getDefault().unregister(this)
         progressHandler.unMuteProgressToolbarForScreen()
 
@@ -2835,6 +2894,7 @@ data class ReaderViewState(
     val canNavigateForward: Boolean = false,
     val fileType: ReaderFileType = ReaderFileType.EPUB,
     val isReaderLoading: Boolean = true,
+    val webViewGeneration: Int = 0,
     val annotationsUpdatedCounter: Int = 0,
     val readingModeEnabled: Boolean = false,
     val readingModeLoading: Boolean = false,

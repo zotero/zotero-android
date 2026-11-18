@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.webkit.ConsoleMessage
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebMessage
 import android.webkit.WebMessagePort
@@ -31,15 +32,23 @@ class ReaderWebViewHandler @Inject constructor(
     private lateinit var webView: WebView
     private lateinit var webViewPort: WebMessagePort
 
+    private class PendingJavascriptResult(val callback: (String) -> Unit)
+
+    private val pendingJavascriptResults = mutableSetOf<PendingJavascriptResult>()
+    private var isRenderProcessGone = false
+
     @SuppressLint("SetJavaScriptEnabled")
     fun load(
         webView: WebView,
         url: String,
         onWebViewLoadPage: () -> Unit,
-        processWebViewResponses: ((message: WebMessage) -> Unit)? = null
+        processWebViewResponses: ((message: WebMessage) -> Unit)? = null,
+        onRendererGone: ((didCrash: Boolean) -> Unit)? = null,
     ) {
         this.webView = webView
         uiMainCoroutineScope.launch {
+            isRenderProcessGone = false
+            failPendingJavascriptResults()
             webView.settings.javaScriptEnabled = true
             webView.settings.allowFileAccess = true
             webView.settings.allowFileAccessFromFileURLs = true
@@ -79,6 +88,20 @@ class ReaderWebViewHandler @Inject constructor(
                     return false
                 }
 
+                override fun onRenderProcessGone(
+                    view: WebView,
+                    detail: RenderProcessGoneDetail
+                ): Boolean {
+                    if (view !== this@ReaderWebViewHandler.webView) {
+                        return true
+                    }
+                    Timber.e("ReaderWebViewHandler: render process gone, didCrash=${detail.didCrash()}")
+                    isRenderProcessGone = true
+                    failPendingJavascriptResults()
+                    onRendererGone?.invoke(detail.didCrash())
+                    return true
+                }
+
                 override fun onPageFinished(view: WebView, url: String) {
                     webView.requestFocus()
                     val channel = webView.createWebMessageChannel()
@@ -106,10 +129,24 @@ class ReaderWebViewHandler @Inject constructor(
 
     fun evaluateJavascript(javascript: String, result: (String) -> Unit) {
         uiMainCoroutineScope.launch {
-            webView.evaluateJavascript(javascript) { result ->
-                result(result)
+            if (isRenderProcessGone) {
+                result("null")
+                return@launch
+            }
+            val pending = PendingJavascriptResult(result)
+            pendingJavascriptResults.add(pending)
+            webView.evaluateJavascript(javascript) { value ->
+                if (pendingJavascriptResults.remove(pending)) {
+                    result(value)
+                }
             }
         }
+    }
+
+    private fun failPendingJavascriptResults() {
+        val pending = pendingJavascriptResults.toList()
+        pendingJavascriptResults.clear()
+        pending.forEach { it.callback("null") }
     }
 
 }
