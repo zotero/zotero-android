@@ -6,7 +6,7 @@
         <domain includeSubdomains="true">local</domain>
         <domain includeSubdomains="true">www.zotero.org</domain>
     </domain-config>
-    <base-config>
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
             <certificates src="user"
