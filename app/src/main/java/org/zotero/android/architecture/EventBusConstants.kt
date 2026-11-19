@@ -17,4 +17,6 @@ object EventBusConstants {
     data class AttachmentDeleted(val file: File)
     data class AttachmentFileDeleted(val notification: AttachmentFileDeletedNotification)
     data class OnKeyboardVisibilityChange(val isOpen: Boolean)
+    object PdfReaderNavigateNextPage
+    object PdfReaderNavigatePreviousPage
 }
