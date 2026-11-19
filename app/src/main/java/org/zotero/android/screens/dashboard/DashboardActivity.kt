@@ -1,9 +1,11 @@
 package org.zotero.android.screens.dashboard
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -16,10 +18,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
@@ -37,6 +44,7 @@ import org.zotero.android.architecture.navigation.phone.DashboardRootPhoneNaviga
 import org.zotero.android.architecture.navigation.tablet.DashboardRootTopLevelTabletNavigation
 import org.zotero.android.architecture.navigation.toolbar.SyncToolbarScreen
 import org.zotero.android.architecture.ui.CustomLayoutSize
+import org.zotero.android.attachmentdownloader.AttachmentDownloader
 import org.zotero.android.files.FileStore
 import org.zotero.android.ktx.enableEdgeToEdgeAndTranslucency
 import org.zotero.android.uicomponents.themem3.AppThemeM3
@@ -48,6 +56,7 @@ import javax.inject.Inject
 internal class DashboardActivity : BaseActivity() {
 
     private lateinit var pickFileLauncher: ActivityResultLauncher<Intent>
+    private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
 
     private val viewModel: DashboardViewModel by viewModels()
 
@@ -61,6 +70,9 @@ internal class DashboardActivity : BaseActivity() {
 
     @Inject
     lateinit var dispatchers: Dispatchers
+
+    @Inject
+    lateinit var attachmentDownloader: AttachmentDownloader
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +98,13 @@ internal class DashboardActivity : BaseActivity() {
                     .post(EventBusConstants.FileWasSelected(uri, pickFileCallPoint))
             }
         }
+
+        notificationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) {
+            // Downloads continue either way, only their notification depends on it
+        }
+        askForDownloadNotificationPermissionWhenBatchStarts()
 
         val onPickFile: (callPoint: CallPoint) -> Unit = { callPoint ->
             pickFileCallPoint = callPoint
@@ -212,6 +231,28 @@ internal class DashboardActivity : BaseActivity() {
                 startActivity(intent)
             } else {
                 longToast(noAppFoundMessage)
+            }
+        }
+    }
+
+    // The batch download notification needs permission since Android 13. Ask when the user first
+    // downloads attachments in a batch, so the request is in context, and only once
+    private fun askForDownloadNotificationPermissionWhenBatchStarts() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                attachmentDownloader.batchState.first { it != null }
+                if (defaults.didAskForDownloadNotificationPermission()) {
+                    return@repeatOnLifecycle
+                }
+                val permission = Manifest.permission.POST_NOTIFICATIONS
+                if (ContextCompat.checkSelfPermission(this@DashboardActivity, permission) == PackageManager.PERMISSION_GRANTED) {
+                    return@repeatOnLifecycle
+                }
+                defaults.setDidAskForDownloadNotificationPermission(true)
+                notificationPermissionLauncher.launch(permission)
             }
         }
     }

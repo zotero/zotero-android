@@ -10,6 +10,7 @@ import org.zotero.android.database.objects.LinkType
 import org.zotero.android.database.objects.ObjectSyncState
 import org.zotero.android.database.objects.RItem
 import org.zotero.android.files.FileStore
+import org.zotero.android.helpers.FileHelper
 import timber.log.Timber
 import java.io.File
 import java.util.Date
@@ -317,8 +318,9 @@ class AttachmentCreator {
             }
             val webDavEnabled = defaults.isWebDavEnabled()
             return if (file.exists()|| (webDavEnabled && file.copyWithExt("zip").exists())) {
-                val md5 = fileStorage.md5(file)
-                if (!item.backendMd5.isEmpty() && md5 != item.backendMd5) {
+                // Only rehashes files whose size or modification date changed, like iOS
+                val md5 = FileHelper.cachedMD5(file)
+                if (!item.backendMd5.isEmpty() && md5 != null && md5 != item.backendMd5) {
                     Attachment.FileLocation.localAndChangedRemotely
                 } else {
                     Attachment.FileLocation.local

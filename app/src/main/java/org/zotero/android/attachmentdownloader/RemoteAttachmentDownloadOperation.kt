@@ -83,8 +83,15 @@ class RemoteAttachmentDownloadOperation(
                 if (isOperationNotActive()) {
                     return
                 }
-                progressInHundreds = ((totalNumberOfBytesRead / contentLength.toDouble()) * 100).toInt()
-                onDownloadProgressUpdated?.onProgressUpdated(progressInHundreds!!)
+                // Each update is processed by the UI, so only report whole percentage changes
+                // rather than every buffer read. The length is unknown (-1) for some responses
+                if (contentLength > 0) {
+                    val progress = ((totalNumberOfBytesRead / contentLength.toDouble()) * 100).toInt()
+                    if (progress != progressInHundreds) {
+                        progressInHundreds = progress
+                        onDownloadProgressUpdated?.onProgressUpdated(progress)
+                    }
+                }
             }
             output.flush()
             output.close()

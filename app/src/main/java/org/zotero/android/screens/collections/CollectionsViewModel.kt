@@ -13,6 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -22,6 +23,7 @@ import org.zotero.android.architecture.LCE2
 import org.zotero.android.architecture.ScreenArguments
 import org.zotero.android.architecture.ViewEffect
 import org.zotero.android.architecture.ViewState
+import org.zotero.android.architecture.coroutines.Dispatchers
 import org.zotero.android.architecture.ifFailure
 import org.zotero.android.architecture.navigation.ARG_COLLECTIONS_SCREEN
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
@@ -79,6 +81,7 @@ internal class CollectionsViewModel @Inject constructor(
     private val collectionTreeController: CollectionTreeController,
     private val readAllAttachmentsFromCollectionDbRequestFactory: ReadAllAttachmentsFromCollectionDbRequest.Factory,
     private val readItemsDbRequestFactory: ReadItemsDbRequest.Factory,
+    private val dispatchers: Dispatchers,
     stateHandle: SavedStateHandle,
 ) : BaseViewModel2<CollectionsViewState, CollectionsViewEffect>(CollectionsViewState()), CollectionTreeControllerInterface {
 
@@ -503,50 +506,72 @@ internal class CollectionsViewModel @Inject constructor(
         }
     }
 
-    private fun downloadAttachments(collectionId: CollectionIdentifier) {
+    private suspend fun downloadAttachments(collectionId: CollectionIdentifier) {
+        this.attachmentDownloader.setPreparingBatch(true)
         try {
-            val items = dbWrapperMain.realmDbStorage.perform(
-                request = readAllAttachmentsFromCollectionDbRequestFactory.create(
-                    collectionId = collectionId,
-                    libraryId = this.library.identifier,
-                ),
-            )
-            val attachments = items.mapNotNull { item ->
-                val attachment = AttachmentCreator.attachment(
-                    item,
-                    fileStorage = this.fileStore,
-                    defaults = this.defaults,
-                    urlDetector = null,
-                    isForceRemote = false
-                ) ?: return@mapNotNull null
-
-                when (attachment.type) {
-                    is Attachment.Kind.file -> {
-                        val linkType = attachment.type.linkType
-                        when (linkType) {
-                            FileLinkType.importedFile, FileLinkType.importedUrl -> {
-                                return@mapNotNull attachment to item.parent?.key
-                            }
-                            else -> {
-                                //no-op
-                            }
-
-                        }
-                    }
-
-                    else -> {
-                        //no-op
-                    }
-                }
-                return@mapNotNull null
-            }
+            val attachments = readAttachmentsToDownload(collectionId)
             this.attachmentDownloader.batchDownload(
                 attachments = attachments
             )
         } catch (error: Exception) {
             Timber.e(error, "CollectionsViewModel: download attachments")
+        } finally {
+            this.attachmentDownloader.setPreparingBatch(false)
         }
+    }
 
+    // Determining the location of each attachment hashes every file that is already downloaded,
+    // which takes long enough for large collections to make the app unresponsive on the main thread
+    private suspend fun readAttachmentsToDownload(
+        collectionId: CollectionIdentifier
+    ): List<Pair<Attachment, String?>> = withContext(dispatchers.io) {
+        var attachments: List<Pair<Attachment, String?>> = emptyList()
+        dbWrapperMain.realmDbStorage.performCoordinator(
+            coordinatorAction = { coordinator ->
+                val items = coordinator.perform(
+                    request = readAllAttachmentsFromCollectionDbRequestFactory.create(
+                        collectionId = collectionId,
+                        libraryId = this@CollectionsViewModel.library.identifier,
+                    ),
+                )
+                attachments = attachmentsToDownload(items)
+            },
+            invalidateRealm = true,
+            refreshRealm = true,
+        )
+        attachments
+    }
+
+    private fun attachmentsToDownload(items: List<RItem>): List<Pair<Attachment, String?>> {
+        return items.mapNotNull { item ->
+            val attachment = AttachmentCreator.attachment(
+                item,
+                fileStorage = this.fileStore,
+                defaults = this.defaults,
+                urlDetector = null,
+                isForceRemote = false
+            ) ?: return@mapNotNull null
+
+            when (attachment.type) {
+                is Attachment.Kind.file -> {
+                    val linkType = attachment.type.linkType
+                    when (linkType) {
+                        FileLinkType.importedFile, FileLinkType.importedUrl -> {
+                            return@mapNotNull attachment to item.parent?.key
+                        }
+                        else -> {
+                            //no-op
+                        }
+
+                    }
+                }
+
+                else -> {
+                    //no-op
+                }
+            }
+            return@mapNotNull null
+        }
     }
 
     private fun emptyTrash() {
