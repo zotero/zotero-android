@@ -2,55 +2,81 @@
 <!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
 <resources>
     <plurals name="items_collections_selected">
-        <item quantity="one">1 Collection Selected</item>
-        <item quantity="other">%d Collections Selected</item>
+        <item quantity="one">1 Коллекция выбрана</item>
+        <item quantity="few">%d Коллекций выбрано</item>
+        <item quantity="many">%d  Коллекций выбрано</item>
+        <item quantity="other">%d Коллекций выбрано</item>
     </plurals>
     <plurals name="items_delete_question">
-        <item quantity="one">Are you sure you want to delete the selected item?</item>
-        <item quantity="other">Are you sure you want to delete the selected items?</item>
+        <item quantity="one">Вы уверены, что хотите удалить выбранный элемент?</item>
+        <item quantity="few">Вы уверены, что хотите удалить выбранные элементы?</item>
+        <item quantity="many">Вы уверены, что хотите удалить выбранные элементы?</item>
+        <item quantity="other">Вы уверены, что хотите удалить выбранные элементы?</item>
     </plurals>
     <plurals name="items_remove_from_collection_question">
-        <item quantity="one">Are you sure you want to remove the selected item from this collection?</item>
-        <item quantity="other">Are you sure you want to remove the selected items from this collection?</item>
+        <item quantity="one">Вы уверены, что хотите удалить выбранный элемент из этой коллекции?</item>
+        <item quantity="few">Вы уверены, что хотите удалить выбранные элементы из этой коллекции?</item>
+        <item quantity="many">Вы уверены, что хотите удалить выбранные элементы из этой коллекции?</item>
+        <item quantity="other">Вы уверены, что хотите удалить выбранные элементы из этой коллекции?</item>
     </plurals>
     <plurals name="items_toolbar_filter">
-        <item quantity="one">Filter: 1 item</item>
-        <item quantity="other">Filter: %d items</item>
+        <item quantity="one">Фильтр: 1 элемент</item>
+        <item quantity="few">Фильтр: %d элементов</item>
+        <item quantity="many">Фильтр: %d элементов</item>
+        <item quantity="other">Фильтр: %d элементов</item>
     </plurals>
     <plurals name="pdf_search_matches">
-        <item quantity="one">Found 1 match</item>
-        <item quantity="other">Found %d matches</item>
+        <item quantity="one">Найдено 1 совпадение</item>
+        <item quantity="few">Найдено %d совпадения</item>
+        <item quantity="many">Найдено %d совпадений</item>
+        <item quantity="other">Найдено %d совпадений</item>
     </plurals>
     <plurals name="settings_storage_files_size_and_unit">
-        <item quantity="one">1 file</item>
-        <item quantity="other">%d files</item>
+        <item quantity="one">1 файл</item>
+        <item quantity="few">%d файла</item>
+        <item quantity="many">%d файлов</item>
+        <item quantity="other">%d файлов</item>
     </plurals>
     <plurals name="errors_sync_toolbar_errors">
-        <item quantity="one">1 issue</item>
-        <item quantity="other">%d issues</item>
+        <item quantity="one">1 проблема</item>
+        <item quantity="few">%d проблемы</item>
+        <item quantity="many">%d проблем</item>
+        <item quantity="other">%d проблем</item>
     </plurals>
     <plurals name="tag_picker_tags_selected">
-        <item quantity="one">1 tag selected</item>
-        <item quantity="other">%d tags selected</item>
+        <item quantity="one">Выбран 1 тег</item>
+        <item quantity="few">Выбрано %d тега</item>
+        <item quantity="many">Выбрано %d тегов</item>
+        <item quantity="other">Выбрано %d тегов</item>
     </plurals>
     <plurals name="tag_picker_confirm_deletion">
-        <item quantity="one">Are you sure you want to delete 1 automatic tag in this library?\n\nThis action cannot be undone.</item>
-        <item quantity="other">Are you sure you want to delete %d automatic tags in this library?\n\nThis action cannot be undone.</item>
+        <item quantity="one">Вы уверены, что хотите удалить 1 автоматический тег в этой библиотеке?\n\nЭто действие нельзя отменить.</item>
+        <item quantity="few">Вы уверены, что хотите удалить %d автоматических тегов в этой библиотеке?\n\nЭто действие нельзя отменить.</item>
+        <item quantity="many">Вы уверены, что хотите удалить %d автоматических тегов в этой библиотеке?\n\nЭто действие нельзя отменить.</item>
+        <item quantity="other">Вы уверены, что хотите удалить %d автоматических тегов в этой библиотеке?\n\nЭто действие нельзя отменить.</item>
     </plurals>
     <plurals name="settings_lines_logged">
-        <item quantity="one">1 line logged</item>
-        <item quantity="other">%d lines logged</item>
+        <item quantity="one">1 строка залогирована</item>
+        <item quantity="few">%d строк залогировано</item>
+        <item quantity="many">%d строк залогировано</item>
+        <item quantity="other">%d строк залогировано</item>
     </plurals>
     <plurals name="settings_lines">
-        <item quantity="one">1 line</item>
-        <item quantity="other">%d lines</item>
+        <item quantity="one">1 строка</item>
+        <item quantity="few">%d строки</item>
+        <item quantity="many">%d строк</item>
+        <item quantity="other">%d строк</item>
     </plurals>
     <plurals name="errors_sync_toolbar_webdav_error2">
-        <item quantity="one">Could not delete 1 file from your WebDAV server</item>
-        <item quantity="other">Could not delete %d files from your WebDAV server</item>
+        <item quantity="one">Не удалось удалить 1 файл с вашего сервера WebDAV.</item>
+        <item quantity="few">Не удалось удалить %d файла с вашего сервера WebDAV</item>
+        <item quantity="many">Не удалось удалить %d файлов с вашего сервера WebDAV</item>
+        <item quantity="other">Не удалось удалить %d файлов с вашего сервера WebDAV</item>
     </plurals>
     <plurals name="settings_general_after_x_days">
-        <item quantity="one">After 1 Day</item>
-        <item quantity="other">After %d Days</item>
+        <item quantity="one">Через 1 день</item>
+        <item quantity="few">Через %d дней</item>
+        <item quantity="many">Через %d дней</item>
+        <item quantity="other">Через %d дней</item>
     </plurals>
 </resources>

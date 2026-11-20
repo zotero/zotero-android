@@ -42,9 +42,9 @@
         <item quantity="other">%d marqueurs sélectionnés</item>
     </plurals>
     <plurals name="tag_picker_confirm_deletion">
-        <item quantity="one">Voulez-vous vraiment supprimer de cette bibliothèque 1 marqueur ajouté automatiquement ? Cette action ne peut pas être annulée.</item>
-        <item quantity="many">Voulez-vous vraiment supprimer de cette bibliothèque %d marqueurs ajoutés automatiquement ? Cette action ne peut pas être annulée.</item>
-        <item quantity="other">Voulez-vous vraiment supprimer de cette bibliothèque %d marqueurs ajoutés automatiquement ? Cette action ne peut pas être annulée.</item>
+        <item quantity="one">Voulez-vous vraiment supprimer de cette bibliothèque 1 marqueur ajouté automatiquement ?\n\nCette action ne peut pas être annulée.</item>
+        <item quantity="many">Voulez-vous vraiment supprimer de cette bibliothèque %d marqueurs ajoutés automatiquement ?\n\nCette action ne peut pas être annulée.</item>
+        <item quantity="other">Voulez-vous vraiment supprimer de cette bibliothèque %d marqueurs ajoutés automatiquement ?\n\nCette action ne peut pas être annulée.</item>
     </plurals>
     <plurals name="settings_lines_logged">
         <item quantity="one">1 ligne enregistrée</item>

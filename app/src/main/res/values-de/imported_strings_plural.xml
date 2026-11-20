@@ -10,16 +10,16 @@
         <item quantity="other">Wollen Sie die ausgewählten Einträge wirklich löschen?</item>
     </plurals>
     <plurals name="items_remove_from_collection_question">
-        <item quantity="one">Are you sure you want to remove the selected item from this collection?</item>
-        <item quantity="other">Are you sure you want to remove the selected items from this collection?</item>
+        <item quantity="one">Sicher, dass der ausgewählte Eintrag aus dieser Sammlung entfernt werden soll?</item>
+        <item quantity="other">Sicher, dass die ausgewählten Einträge aus dieser Sammlung entfernt werden sollen?</item>
     </plurals>
     <plurals name="items_toolbar_filter">
-        <item quantity="one">Filter: 1 item</item>
-        <item quantity="other">Filter: %d items</item>
+        <item quantity="one">Filter: 1 Eintrag</item>
+        <item quantity="other">Filter: %d Einträge</item>
     </plurals>
     <plurals name="pdf_search_matches">
-        <item quantity="one">Found 1 match</item>
-        <item quantity="other">Found %d matches</item>
+        <item quantity="one">1 Treffer gefunden</item>
+        <item quantity="other">%d Treffer gefunden</item>
     </plurals>
     <plurals name="settings_storage_files_size_and_unit">
         <item quantity="one">1 file</item>
@@ -42,15 +42,15 @@
         <item quantity="other">%d lines logged</item>
     </plurals>
     <plurals name="settings_lines">
-        <item quantity="one">1 line</item>
-        <item quantity="other">%d lines</item>
+        <item quantity="one">1 Zeile</item>
+        <item quantity="other">%d Zeilen</item>
     </plurals>
     <plurals name="errors_sync_toolbar_webdav_error2">
-        <item quantity="one">Could not delete 1 file from your WebDAV server</item>
-        <item quantity="other">Could not delete %d files from your WebDAV server</item>
+        <item quantity="one">1 Datei konnte nicht von Ihrem WebDAV-Server gelöscht werden</item>
+        <item quantity="other">%d Dateien konnten nicht von Ihrem WebDAV-Server gelöscht werden</item>
     </plurals>
     <plurals name="settings_general_after_x_days">
-        <item quantity="one">After 1 Day</item>
-        <item quantity="other">After %d Days</item>
+        <item quantity="one">Nach 1 Tag</item>
+        <item quantity="other">Nach %d Tagen</item>
     </plurals>
 </resources>

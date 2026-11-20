@@ -2,55 +2,68 @@
 <!-- Auto-generated from iOS Localizable.strings and Localizable.stringsdict -->
 <resources>
     <plurals name="items_collections_selected">
-        <item quantity="one">1 Collection Selected</item>
-        <item quantity="other">%d Collections Selected</item>
+        <item quantity="one">Изабрана је %d збирка</item>
+        <item quantity="few">Изабране су %d збирке</item>
+        <item quantity="other">Изабрано је %d збирки</item>
     </plurals>
     <plurals name="items_delete_question">
-        <item quantity="one">Are you sure you want to delete the selected item?</item>
-        <item quantity="other">Are you sure you want to delete the selected items?</item>
+        <item quantity="one">Да ли заиста желите да обришете изабрану ставку?</item>
+        <item quantity="few">Да ли заиста желите да обришете изабране ставке?</item>
+        <item quantity="other">Да ли заиста желите да обришете изабране ставке?</item>
     </plurals>
     <plurals name="items_remove_from_collection_question">
-        <item quantity="one">Are you sure you want to remove the selected item from this collection?</item>
-        <item quantity="other">Are you sure you want to remove the selected items from this collection?</item>
+        <item quantity="one">Да ли заиста желите да уклоните изабрану ставку из ове збирке?</item>
+        <item quantity="few">Да ли заиста желите да уклоните изабране ставке из ове збирке?</item>
+        <item quantity="other">Да ли заиста желите да уклоните изабране ставке из ове збирке?</item>
     </plurals>
     <plurals name="items_toolbar_filter">
-        <item quantity="one">Filter: 1 item</item>
-        <item quantity="other">Filter: %d items</item>
+        <item quantity="one">Филтер: %d ставка</item>
+        <item quantity="few">Филтер: %d ставке</item>
+        <item quantity="other">Филтер: %d ставки</item>
     </plurals>
     <plurals name="pdf_search_matches">
-        <item quantity="one">Found 1 match</item>
-        <item quantity="other">Found %d matches</item>
+        <item quantity="one">Пронађено је %d подударање</item>
+        <item quantity="few">Пронађена су %d подударања</item>
+        <item quantity="other">Пронађено је %d подударања</item>
     </plurals>
     <plurals name="settings_storage_files_size_and_unit">
-        <item quantity="one">1 file</item>
-        <item quantity="other">%d files</item>
+        <item quantity="one">%d датотека</item>
+        <item quantity="few">%d датотеке</item>
+        <item quantity="other">%d датотека</item>
     </plurals>
     <plurals name="errors_sync_toolbar_errors">
-        <item quantity="one">1 issue</item>
-        <item quantity="other">%d issues</item>
+        <item quantity="one">%d проблем</item>
+        <item quantity="few">%d проблема</item>
+        <item quantity="other">%d проблема</item>
     </plurals>
     <plurals name="tag_picker_tags_selected">
-        <item quantity="one">1 tag selected</item>
-        <item quantity="other">%d tags selected</item>
+        <item quantity="one">Изабрана је %d ознака</item>
+        <item quantity="few">Изабране су %d ознаке</item>
+        <item quantity="other">Изабрано је %d ознака</item>
     </plurals>
     <plurals name="tag_picker_confirm_deletion">
-        <item quantity="one">Are you sure you want to delete 1 automatic tag in this library?\n\nThis action cannot be undone.</item>
-        <item quantity="other">Are you sure you want to delete %d automatic tags in this library?\n\nThis action cannot be undone.</item>
+        <item quantity="one">Да ли желите да избришете %d аутоматску ознаку из ове библиотеке?\n\nОва радња се не може опозвати.</item>
+        <item quantity="few">Да ли желите да избришете %d аутоматске ознаке из ове библиотеке?\n\nОва радња се не може опозвати.</item>
+        <item quantity="other">Да ли желите да избришете %d аутоматских ознака из ове библиотеке?\n\nОва радња се не може опозвати.</item>
     </plurals>
     <plurals name="settings_lines_logged">
-        <item quantity="one">1 line logged</item>
-        <item quantity="other">%d lines logged</item>
+        <item quantity="one">Забележен је %d ред</item>
+        <item quantity="few">Забележена су %d реда</item>
+        <item quantity="other">Забележено је %d редова</item>
     </plurals>
     <plurals name="settings_lines">
-        <item quantity="one">1 line</item>
-        <item quantity="other">%d lines</item>
+        <item quantity="one">%d ред</item>
+        <item quantity="few">%d реда</item>
+        <item quantity="other">%d редова</item>
     </plurals>
     <plurals name="errors_sync_toolbar_webdav_error2">
-        <item quantity="one">Could not delete 1 file from your WebDAV server</item>
-        <item quantity="other">Could not delete %d files from your WebDAV server</item>
+        <item quantity="one">Није могуће избрисати %d датотеку са вашег ВебДАВ сервера</item>
+        <item quantity="few">Није могуће избрисати %d датотеке са вашег ВебДАВ сервера</item>
+        <item quantity="other">Није могуће избрисати %d датотека са вашег ВебДАВ сервера</item>
     </plurals>
     <plurals name="settings_general_after_x_days">
-        <item quantity="one">After 1 Day</item>
-        <item quantity="other">After %d Days</item>
+        <item quantity="one">После %d дана</item>
+        <item quantity="few">После %d дана</item>
+        <item quantity="other">После %d дана</item>
     </plurals>
 </resources>
