@@ -41,6 +41,10 @@ def has_stray_percent(text):
 	return '%' in SPECIFIER.sub('', text)
 
 
+def line_breaks(text):
+	return text.count('\\n') + text.count('\n')
+
+
 def load(dir_path):
 	strings = {}
 	for filename in FILES:
@@ -68,6 +72,7 @@ def compatible(english, translation):
 def main():
 	english = load(os.path.join(RES_DIR, 'values'))
 	problems = []
+	warnings = []
 	for folder in sorted(os.listdir(RES_DIR)):
 		if not folder.startswith('values-'):
 			continue
@@ -78,9 +83,16 @@ def main():
 			for text in english[name]:
 				for index, types in arg_types(text).items():
 					expected.setdefault(index, set()).update(types)
+			english_breaks = {line_breaks(text or '') for text in english[name]}
 			for text in texts:
+				if line_breaks(text or '') not in english_breaks:
+					warnings.append(f'{folder}: {name}: {text!r}')
 				if not compatible(expected, arg_types(text)) or (expected and has_stray_percent(text)):
 					problems.append(f'{folder}: {name}: {text!r} (English: {english[name][-1]!r})')
+	if warnings:
+		print(f'{len(warnings)} translated strings have different line breaks from the English:')
+		for warning in warnings:
+			print('  ' + warning)
 	if problems:
 		print(f'{len(problems)} translated strings have format arguments that don\'t match the English:')
 		for problem in problems:
