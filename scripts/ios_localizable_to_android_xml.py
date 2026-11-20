@@ -120,6 +120,9 @@ def escape_android_string(value):
 	# Escape quotes
 	value = value.replace('"', '\\"')
 
+	# Escape line breaks
+	value = value.replace('\n', '\\n')
+
 	return value
 
 def convert_ios_placeholder_to_android(value):
