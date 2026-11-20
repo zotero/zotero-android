@@ -168,6 +168,69 @@ object TextTokenizer {
         return Match(rawText.trim(), originalRange)
     }
 
+    fun sentenceRanges(
+        text: String,
+        breakIterator: BreakIterator = BreakIterator.getSentenceInstance(Locale.getDefault())
+    ): List<TextRange> {
+        if (text.isEmpty()) {
+            return emptyList()
+        }
+
+        val normalized = normalizeText(text)
+        val normalizedText = normalized.text
+        breakIterator.setText(normalizedText)
+
+        val tokens = mutableListOf<TextRange>()
+        var lowerBound = breakIterator.first()
+        var upperBound = breakIterator.next()
+        while (upperBound != BreakIterator.DONE) {
+            val tokenText = normalizedText.substring(lowerBound, upperBound)
+            if (tokenText.trim().isNotEmpty()) {
+                tokens.add(TextRange(lowerBound, upperBound - lowerBound))
+            }
+            lowerBound = upperBound
+            upperBound = breakIterator.next()
+        }
+
+        val ranges = mutableListOf<TextRange>()
+        var index = 0
+        var tokenIndex = 0
+        while (index < text.length) {
+            val normalizedStart = normalized.normalizedIndex(index)
+            val firstNonWhitespace = (normalizedStart until normalizedText.length)
+                .firstOrNull { !normalizedText[it].isWhitespace() } ?: break
+
+            while (tokenIndex < tokens.size && tokens[tokenIndex].end <= normalizedStart) {
+                tokenIndex++
+            }
+
+            val normalizedRange: TextRange
+            if (tokenIndex < tokens.size &&
+                tokens[tokenIndex].location <= normalizedStart &&
+                normalizedText.substring(normalizedStart, tokens[tokenIndex].end).any { !it.isWhitespace() }
+            ) {
+                normalizedRange = TextRange(normalizedStart, tokens[tokenIndex].end - normalizedStart)
+            } else {
+                val lastNonWhitespace = (normalizedText.length - 1 downTo 0)
+                    .firstOrNull { !normalizedText[it].isWhitespace() } ?: firstNonWhitespace
+                normalizedRange = TextRange(firstNonWhitespace, lastNonWhitespace + 1 - firstNonWhitespace)
+            }
+
+            var range = normalized.originalRange(normalizedRange)
+            val enforced = enforceMaxLengthInUntrimmed(text.substring(range.location, range.end))
+            if (enforced != null) {
+                range = TextRange(range.location, enforced.second)
+            }
+            val end = range.end
+            if (end <= index) {
+                break
+            }
+            ranges.add(range)
+            index = end
+        }
+        return ranges
+    }
+
     fun findSentenceContaining(text: String, index: Int): Match? {
         if (index < 0 || index >= text.length) {
             return null

@@ -1,6 +1,7 @@
 package org.zotero.android.speech
 
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -276,6 +277,36 @@ class TextTokenizerTest {
     fun `previousSentenceStart returns null when in first sentence`() {
         val text = "First. Second."
         sut.previousSentenceStart(text, 3).shouldBeNull()
+    }
+
+    @Test
+    fun `sentenceRanges returns the ranges successive findSentence calls return`() {
+        val longSentence = "word ".repeat(90) + "end."
+        val texts = listOf(
+            "First sentence. Second sentence.",
+            "Footnote after a sentence.12 Next sentence follows.",
+            "A question?15 The answer. Decimals like 3.5 stay.",
+            "  Leading whitespace. Trailing whitespace.  ",
+            "$longSentence After the long one.",
+            "No punctuation at all",
+            "Emoji 👨‍👩‍👧 in text. Second one.",
+            "word ".repeat(200) + "end.",
+            "   $longSentence"
+        )
+        for (text in texts) {
+            sut.sentenceRanges(text) shouldBeEqualTo sentenceRangesBySearching(text)
+        }
+    }
+
+    @Test
+    fun `sentenceRanges splits sentences over the length limit between words`() {
+        val texts = listOf("word ".repeat(200) + "end.", "   " + "word ".repeat(90) + "end.")
+        for (text in texts) {
+            val ranges = sut.sentenceRanges(text)
+
+            ranges.size shouldBeGreaterThan 1
+            joinedSentences(ranges, text) shouldBeEqualTo text.trim(' ')
+        }
     }
 
     @Test
