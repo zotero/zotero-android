@@ -128,6 +128,14 @@ class AllItemsProcessor @Inject constructor(
         onAttachmentFileDeletedEventStream.emitAsync(attachmentFileDeleted)
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event: EventBusConstants.ShowSubcollectionItemsChanged) {
+        search(
+            text = processorInterface.currentSearchTerm(),
+            filters = processorInterface.currentFilters()
+        )
+    }
+
     private fun setupOnAttachmentFileDeletedStateFlow() {
         onAttachmentFileDeletedEventStream.flow()
             .debounce(100)
