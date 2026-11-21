@@ -9,4 +9,5 @@ data class ReaderDocumentData(
     val annotationsJson: JsonArray,
     val page: ReaderPage?,
     val selectedAnnotationKey: String?,
+    val savedPdfViewState: ReaderPdfViewState? = null,
 )
