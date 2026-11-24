@@ -19,3 +19,6 @@
 [submodule "document-worker"]
 	path = document-worker
 	url = https://github.com/zotero/document-worker.git
+[submodule "note-editor"]
+	path = note-editor
+	url = https://github.com/zotero/note-editor.git

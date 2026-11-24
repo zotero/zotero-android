@@ -82,3 +82,6 @@ app/src/main/assets/reader/
 
 #document-worker generated files:
 app/src/main/assets/document-worker/
+
+#note-editor generated files:
+app/src/main/assets/note-editor/

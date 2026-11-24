@@ -71,6 +71,7 @@ open class Defaults @Inject constructor(
     private val lastCslLocalesCommitHash = "lastCslLocalesCommitHash"
     private val lastReaderCommitHash = "lastReaderCommitHash"
     private val lastDocumentWorkerCommitHash = "lastDocumentWorkerCommitHash"
+    private val lastNoteEditorCommitHash = "lastNoteEditorCommitHash"
 
     private val isWebDavEnabled = "isWebDavEnabled"
     private val webDavVerified = "webDavVerified"
@@ -440,6 +441,14 @@ open class Defaults @Inject constructor(
 
     fun setLastDocumentWorkerCommitHash(newValue: String) {
         sharedPreferences.edit { putString(lastDocumentWorkerCommitHash, newValue) }
+    }
+
+    fun getLastNoteEditorCommitHash(): String {
+        return sharedPreferences.getString(lastNoteEditorCommitHash, "") ?: ""
+    }
+
+    fun setLastNoteEditorCommitHash(newValue: String) {
+        sharedPreferences.edit { putString(lastNoteEditorCommitHash, newValue) }
     }
 
     fun getDoNotShowAppUpdateBannerBeforeTime(): Long {

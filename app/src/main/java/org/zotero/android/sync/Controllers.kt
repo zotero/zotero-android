@@ -26,6 +26,7 @@ import org.zotero.android.loaders.csl.ExportCslLocaleReader
 import org.zotero.android.loaders.pdfworker.PdfWorkerLoader
 import org.zotero.android.loaders.reader.ReaderLoader
 import org.zotero.android.loaders.documentworker.DocumentWorkerLoader
+import org.zotero.android.loaders.noteeditor.NoteEditorLoader
 import org.zotero.android.loaders.translator.TranslationLoader
 import org.zotero.android.loaders.translator.TranslatorsAndStylesLoader
 import org.zotero.android.loaders.utilities.UtilitiesLoader
@@ -68,6 +69,7 @@ class Controllers @Inject constructor(
     private val exportCslLocaleReader: ExportCslLocaleReader,
     private val readerLoader: ReaderLoader,
     private val documentWorkerLoader: DocumentWorkerLoader,
+    private val noteEditorLoader: NoteEditorLoader,
     private val lastReadWatcher: LastReadWatcher,
     ) {
     private var sessionCancellable: Job? = null
@@ -107,6 +109,7 @@ class Controllers @Inject constructor(
                 cslLocalesLoader.updateCslLocalesIfNeeded()
                 readerLoader.updateReaderIfNeeded()
                 documentWorkerLoader.updateDocumentWorkerIfNeeded()
+                noteEditorLoader.updateNoteEditorIfNeeded()
                 setupExportDefaults()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to update Translator or translation items")

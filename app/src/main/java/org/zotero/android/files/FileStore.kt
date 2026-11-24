@@ -612,6 +612,12 @@ class FileStore @Inject constructor (
         return folderPath
     }
 
+    fun noteEditorDirectory(): File {
+        val folderPath = File(getRootDirectory(), "note-editor")
+        folderPath.mkdirs()
+        return folderPath
+    }
+
     fun runningReaderDirectory(): File {
         val folderPath = File(getRootDirectory(), "runningReader")
         folderPath.mkdirs()

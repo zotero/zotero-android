@@ -96,6 +96,12 @@ jobs:
       - name: Execute bundle_document-worker.sh
         run: scripts/bundle_document-worker.sh
 
+      - name: Grant execute permission for bundle_note_editor.sh
+        run: chmod +x scripts/bundle_note_editor.sh
+
+      - name: Execute bundle_note_editor.sh
+        run: scripts/bundle_note_editor.sh
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
