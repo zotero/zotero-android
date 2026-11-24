@@ -392,6 +392,7 @@ class CollectionTreeController @Inject constructor(dispatchers: Dispatchers){
             if (traverseResult.first) {
                 return traverseResult
             }
+            listOfParents.removeLast()
         }
         return false to emptyList()
     }
