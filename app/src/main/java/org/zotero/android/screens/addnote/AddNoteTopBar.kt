@@ -3,7 +3,10 @@ package org.zotero.android.screens.addnote
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +28,7 @@ import org.zotero.android.uicomponents.Drawables
 @Composable
 internal fun AddNoteTopBar(
     titleData: AddOrEditNoteArgs.TitleData?,
+    isClosing: Boolean,
     onBack: () -> Unit,
 ) {
     TopAppBar(
@@ -68,6 +72,16 @@ internal fun AddNoteTopBar(
                     painter = painterResource(Drawables.arrow_back_24dp),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+        actions = {
+            if (isClosing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(24.dp),
+                    strokeWidth = 2.dp,
                 )
             }
         },

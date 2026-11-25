@@ -64,7 +64,6 @@ import org.zotero.android.helpers.SelectMediaUseCase
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addbyidentifier.data.AddByIdentifierPickerArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
-import org.zotero.android.screens.addnote.data.SaveNoteAction
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowAddByIdentifierEffect
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowItemTypePickerEffect
 import org.zotero.android.screens.allitems.AllItemsViewEffect.ShowScanBarcode
@@ -156,16 +155,6 @@ internal class AllItemsViewModel @Inject constructor(
         if (event.uri != null && event.callPoint == EventBusConstants.FileWasSelected.CallPoint.AllItems) {
             viewModelScope.launch {
                 addAttachments(listOf(event.uri))
-            }
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(saveNoteAction: SaveNoteAction) {
-        println()
-        if (saveNoteAction.isFromDashboard) {
-            viewModelScope.launch {
-                saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
             }
         }
     }
@@ -523,7 +512,7 @@ internal class AllItemsViewModel @Inject constructor(
     }
 
     fun onAddNote() {
-        showNoteCreation(title = null, libraryId = this.library.identifier)
+        showNoteCreation(title = null)
     }
 
     fun onAddManually(title: String) {
@@ -540,14 +529,18 @@ internal class AllItemsViewModel @Inject constructor(
 
     }
 
-    private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?, libraryId: LibraryIdentifier) {
+    private fun showNoteCreation(title: AddOrEditNoteArgs.TitleData?) {
         val key = KeyGenerator.newKey()
+        val collectionKey = when (val identifier = this.collection.identifier) {
+            is CollectionIdentifier.collection -> identifier.key
+            is CollectionIdentifier.custom, is CollectionIdentifier.search -> null
+        }
         val args = AddOrEditNoteArgs(
             title = title,
             key = key,
-            libraryId = libraryId,
+            library = this.library,
             readOnly = false,
-            isFromDashboard = true,
+            collectionKey = collectionKey,
         )
         val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
             data = args,
@@ -566,10 +559,9 @@ internal class AllItemsViewModel @Inject constructor(
                 val library = this.library
                 val args = AddOrEditNoteArgs(
                     title = null,
-                    libraryId = library.identifier,
+                    library = library,
                     readOnly = !library.metadataEditable,
                     key = note.key,
-                    isFromDashboard = true
                 )
                 val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
                     data = args,
@@ -586,45 +578,6 @@ internal class AllItemsViewModel @Inject constructor(
                 )
                 val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(args)
                 triggerEffect(AllItemsViewEffect.ShowItemDetailEffect(encodedArgs))
-            }
-        }
-    }
-
-    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) = withContext(dispatchers.io) {
-        val note = Note(key = key, text = text, tags = tags)
-        val libraryId = this@AllItemsViewModel.library.identifier
-        var collectionKey: String?
-
-        val identifier = this@AllItemsViewModel.collection.identifier
-        collectionKey = when (identifier) {
-            is CollectionIdentifier.collection ->
-                identifier.key
-
-            is CollectionIdentifier.custom, is CollectionIdentifier.search ->
-                null
-        }
-
-        try {
-            dbWrapperMain.realmDbStorage.perform(
-                EditNoteDbRequest(
-                    note = note,
-                    libraryId = libraryId
-                )
-            )
-        } catch (e: Throwable) {
-            if (e is DbError.objectNotFound) {
-                val request = CreateNoteDbRequest(
-                    note = note,
-                    localizedType = (schemaController.localizedItemType(
-                        ItemTypes.note
-                    ) ?: ""),
-                    libraryId = libraryId,
-                    collectionKey = collectionKey,
-                    parentKey = null
-                )
-                dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
-            } else {
-                Timber.e(e)
             }
         }
     }

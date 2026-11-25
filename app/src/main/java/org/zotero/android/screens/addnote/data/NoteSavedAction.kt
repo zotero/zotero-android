@@ -2,9 +2,9 @@ package org.zotero.android.screens.addnote.data
 
 import org.zotero.android.sync.Tag
 
-data class SaveNoteAction(
+data class NoteSavedAction(
+    val key: String,
     val text: String,
     val tags: List<Tag>,
-    val key: String,
-    val isFromDashboard: Boolean,
+    val parentKey: String?,
 )

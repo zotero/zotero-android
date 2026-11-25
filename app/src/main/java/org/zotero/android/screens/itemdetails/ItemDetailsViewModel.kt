@@ -78,7 +78,7 @@ import org.zotero.android.helpers.formatter.sqlFormat
 import org.zotero.android.ktx.index
 import org.zotero.android.pdf.data.PdfReaderArgs
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
-import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.addnote.data.NoteSavedAction
 import org.zotero.android.screens.collections.data.LibrariesAndCollectionsBackButtonActiveEvent
 import org.zotero.android.screens.creatoredit.data.CreatorEditArgs
 import org.zotero.android.screens.itemdetails.ItemDetailsViewEffect.NavigateToPdfScreen
@@ -187,11 +187,20 @@ class ItemDetailsViewModel @Inject constructor(
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(saveNoteAction: SaveNoteAction) {
-        if (!saveNoteAction.isFromDashboard) {
-            viewModelScope.launch {
-                saveNote(saveNoteAction.text, saveNoteAction.tags, saveNoteAction.key)
-            }
+    fun onEvent(action: NoteSavedAction) {
+        if (action.parentKey != viewState.key) {
+            return
+        }
+        val note = Note(key = action.key, text = action.text, tags = action.tags)
+        val updatedNotes = viewState.notes.toMutableList()
+        val index = updatedNotes.indexOfFirst { it.key == note.key }
+        if (index != -1) {
+            updatedNotes[index] = note
+        } else {
+            updatedNotes.add(note)
+        }
+        updateState {
+            copy(notes = updatedNotes.toPersistentList())
         }
     }
 
@@ -1117,88 +1126,15 @@ class ItemDetailsViewModel @Inject constructor(
         val args = AddOrEditNoteArgs(
             title = title,
             key = key,
-            libraryId = library.identifier,
+            library = library,
             readOnly = !library.metadataEditable,
-            isFromDashboard = false
+            parentKey = viewState.key,
         )
         val encodedArgs = navigationParamsMarshaller.encodeObjectToBase64(
             data = args,
             charset = StandardCharsets.UTF_8
         )
         triggerEffect(ShowAddOrEditNoteEffect(encodedArgs))
-    }
-
-    private suspend fun saveNote(text: String, tags: List<Tag>, key: String) {
-        val oldNote = viewState.notes.firstOrNull { it.key == key }
-        val note = Note(key = key, text = text, tags = tags)
-
-        val indexNote = viewState.notes.indexOfFirst { it.key == key }
-        val updatedNotes = viewState.notes.toMutableList()
-        if (indexNote != -1) {
-            updatedNotes[indexNote] = note
-        } else {
-            updatedNotes.add(note)
-        }
-        updateState {
-            copy(
-                notes = updatedNotes.toPersistentList(),
-                backgroundProcessedItems = (backgroundProcessedItems + key).toImmutableSet()
-            )
-        }
-
-        fun finishSave(error: Throwable?) {
-            updateState {
-                copy(backgroundProcessedItems = (backgroundProcessedItems - key).toImmutableSet())
-            }
-            if (error == null) {
-                return
-            }
-
-            Timber.e(error, "Can't edit/save note $key")
-            updateState {
-                copy(error = ItemDetailError.cantSaveNote)
-            }
-            val index = viewState.notes.indexOfFirst { it.key == key }
-            if (index == -1) {
-                return
-            }
-            val updatedNotes = viewState.notes.toMutableList()
-            if (oldNote != null) {
-                updatedNotes[index] = oldNote
-            } else {
-                updatedNotes.removeAt(index)
-            }
-            updateState {
-                copy(notes = updatedNotes.toPersistentList())
-            }
-        }
-
-        if (oldNote != null) {
-            val request = EditNoteDbRequest (note = note, libraryId = viewState.library!!.identifier)
-            perform(dbWrapper = dbWrapperMain, request = request).ifFailure {
-                finishSave(it)
-                return
-            }
-            return
-        }
-
-        val type = schemaController.localizedItemType(ItemTypes.note) ?: ItemTypes.note
-        val request = CreateNoteDbRequest(
-            note = note,
-            localizedType = type,
-            libraryId = viewState.library!!.identifier,
-            collectionKey = null,
-            parentKey = viewState.key
-        )
-        perform(
-            dbWrapper = dbWrapperMain,
-            request = request,
-            invalidateRealm = true
-        ).ifFailure { error ->
-            finishSave(error)
-            return
-        }
-        finishSave(null)
     }
 
     fun openAttachment(attachment: Attachment) {

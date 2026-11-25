@@ -8,7 +8,12 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.greenrobot.eventbus.EventBus
@@ -23,17 +28,20 @@ import org.zotero.android.architecture.navigation.ARG_ADD_OR_EDIT_NOTE
 import org.zotero.android.architecture.navigation.NavigationParamsMarshaller
 import org.zotero.android.architecture.require
 import org.zotero.android.database.DbWrapperMain
-import org.zotero.android.database.objects.RCustomLibraryType
+import org.zotero.android.database.objects.ItemTypes
+import org.zotero.android.database.requests.CreateNoteDbRequest
+import org.zotero.android.database.requests.EditNoteDbRequest
 import org.zotero.android.database.requests.ReadNoteDbRequest
 import org.zotero.android.loaders.noteeditor.NoteEditorLoader
 import org.zotero.android.screens.addnote.data.AddOrEditNoteArgs
-import org.zotero.android.screens.addnote.data.SaveNoteAction
+import org.zotero.android.screens.addnote.data.NoteSavedAction
 import org.zotero.android.screens.addnote.web.NoteEditorMessage
 import org.zotero.android.screens.addnote.web.NoteEditorStartOptions
 import org.zotero.android.screens.addnote.web.NoteEditorWebViewHandler
 import org.zotero.android.screens.tagpicker.data.TagPickerArgs
 import org.zotero.android.screens.tagpicker.data.TagPickerResult
-import org.zotero.android.sync.LibraryIdentifier
+import org.zotero.android.sync.Note
+import org.zotero.android.sync.SchemaController
 import org.zotero.android.sync.Tag
 import timber.log.Timber
 import java.nio.charset.StandardCharsets
@@ -45,6 +53,7 @@ internal class AddNoteViewModel @Inject constructor(
     stateHandle: SavedStateHandle,
     private val dbWrapperMain: DbWrapperMain,
     private val dispatchers: Dispatchers,
+    private val schemaController: SchemaController,
     private val noteEditorLoader: NoteEditorLoader,
     private val noteEditorWebViewHandler: NoteEditorWebViewHandler,
 ) : BaseViewModel2<AddNoteViewState, AddNoteViewEffect>(AddNoteViewState()) {
@@ -60,8 +69,15 @@ internal class AddNoteViewModel @Inject constructor(
     private var noteText: String = ""
     private var isNoteLoaded = false
     private var isEditorInitialized = false
+
+    @Volatile
+    private var noteExistsInDb = false
     private var lastSavedText: String = ""
     private var lastSavedTags: List<Tag> = emptyList()
+
+    private val saveMutex = Mutex()
+    private var saveJob: Job? = null
+    private var isDiscarding = false
 
     private var webViewSaveDeferred: CompletableDeferred<Unit>? = null
     private val rendererGoneTimestamps = mutableListOf<Long>()
@@ -73,6 +89,7 @@ internal class AddNoteViewModel @Inject constructor(
                 updateState {
                     copy(tags = tagPickerResult.tags.toPersistentList())
                 }
+                scheduleSave()
             }
         }
     }
@@ -93,6 +110,7 @@ internal class AddNoteViewModel @Inject constructor(
             val text = note?.text ?: ""
             val tags = note?.tags ?: listOf()
             viewModelScope.launch {
+                noteExistsInDb = note != null
                 noteText = text
                 lastSavedText = text
                 lastSavedTags = tags
@@ -134,6 +152,7 @@ internal class AddNoteViewModel @Inject constructor(
             is NoteEditorMessage.Update -> {
                 message.value?.let {
                     noteText = it
+                    scheduleSave()
                 }
                 webViewSaveDeferred?.complete(Unit)
             }
@@ -172,20 +191,78 @@ internal class AddNoteViewModel @Inject constructor(
         }
     }
 
-    private fun saveNote() {
-        if (lastSavedText != noteText || lastSavedTags != viewState.tags) {
-            EventBus.getDefault().post(
-                SaveNoteAction(
-                    text = noteText,
-                    tags = viewState.tags,
-                    key = addOrEditNoteArgs.key,
-                    isFromDashboard = addOrEditNoteArgs.isFromDashboard
-                )
-            )
+    private fun scheduleSave() {
+        if (addOrEditNoteArgs.readOnly) {
+            return
+        }
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch {
+            delay(SAVE_DEBOUNCE_MS)
+            if (!save()) {
+                updateState { copy(error = AddNoteError(isClosing = false)) }
+            }
         }
     }
 
-    private suspend fun flushAndSave() {
+    private suspend fun save(force: Boolean = false): Boolean = saveMutex.withLock {
+        if (addOrEditNoteArgs.readOnly || !isNoteLoaded) {
+            return@withLock true
+        }
+        val text = noteText
+        val tags = viewState.tags.toList()
+        val hasChanges = text != lastSavedText || tags != lastSavedTags
+        val mustCreate = force && !noteExistsInDb
+        if (!hasChanges && !mustCreate) {
+            return@withLock true
+        }
+
+        val error = withContext(NonCancellable + dispatchers.io) {
+            try {
+                store(text = text, tags = tags)
+                null
+            } catch (e: Throwable) {
+                e
+            }
+        }
+        if (error != null) {
+            Timber.e(error, "AddNoteViewModel: can't save note ${addOrEditNoteArgs.key}")
+            return@withLock false
+        }
+
+        noteExistsInDb = true
+        lastSavedText = text
+        lastSavedTags = tags
+        EventBus.getDefault().post(
+            NoteSavedAction(
+                key = addOrEditNoteArgs.key,
+                text = text,
+                tags = tags,
+                parentKey = addOrEditNoteArgs.parentKey,
+            )
+        )
+        true
+    }
+
+    private fun store(text: String, tags: List<Tag>) {
+        val note = Note(key = addOrEditNoteArgs.key, text = text, tags = tags)
+        val libraryId = addOrEditNoteArgs.library.identifier
+        Timber.i("AddNoteViewModel: ${if (noteExistsInDb) "edit" else "create"} note ${note.key}; parent=${addOrEditNoteArgs.parentKey}; collection=${addOrEditNoteArgs.collectionKey}")
+        if (noteExistsInDb) {
+            dbWrapperMain.realmDbStorage.perform(EditNoteDbRequest(note = note, libraryId = libraryId))
+            return
+        }
+        val request = CreateNoteDbRequest(
+            note = note,
+            localizedType = schemaController.localizedItemType(ItemTypes.note) ?: ItemTypes.note,
+            libraryId = libraryId,
+            collectionKey = addOrEditNoteArgs.collectionKey,
+            parentKey = addOrEditNoteArgs.parentKey,
+        )
+        dbWrapperMain.realmDbStorage.perform(request = request, invalidateRealm = true)
+    }
+
+    private suspend fun flushAndSave(): Boolean {
+        saveJob?.cancel()
         if (isEditorInitialized && noteEditorWebViewHandler.isAlive) {
             val deferred = CompletableDeferred<Unit>()
             webViewSaveDeferred = deferred
@@ -193,19 +270,49 @@ internal class AddNoteViewModel @Inject constructor(
             withTimeoutOrNull(FORCE_SAVE_TIMEOUT_MS) { deferred.await() }
             webViewSaveDeferred = null
         }
-        saveNote()
+        return save()
+    }
+
+    fun onBackClicked() {
+        if (viewState.isClosing) {
+            return
+        }
+        viewModelScope.launch {
+            updateState { copy(isClosing = true) }
+            if (flushAndSave()) {
+                triggerEffect(AddNoteViewEffect.NavigateBack)
+            } else {
+                updateState { copy(isClosing = false, error = AddNoteError(isClosing = true)) }
+            }
+        }
+    }
+
+    fun onDismissError() {
+        updateState { copy(error = null) }
+    }
+
+    fun onCloseWithoutSaving() {
+        isDiscarding = true
+        saveJob?.cancel()
+        updateState { copy(error = null) }
+        triggerEffect(AddNoteViewEffect.NavigateBack)
     }
 
     fun onStop() = viewModelScope.launch {
-        if (!isNoteLoaded) {
+        if (!isNoteLoaded || isDiscarding) {
             return@launch
         }
-        flushAndSave()
+        if (!flushAndSave()) {
+            updateState { copy(error = AddNoteError(isClosing = false)) }
+        }
     }
 
     fun onTagsClicked() {
+        if (addOrEditNoteArgs.readOnly) {
+            return
+        }
         ScreenArguments.tagPickerArgs = TagPickerArgs(
-            libraryId = LibraryIdentifier.custom(RCustomLibraryType.myLibrary),
+            libraryId = addOrEditNoteArgs.library.identifier,
             selectedTags = viewState.tags.map { it.name }.toSet(),
             tags = emptyList(),
             callPoint = TagPickerResult.CallPoint.AddNote,
@@ -219,16 +326,21 @@ internal class AddNoteViewModel @Inject constructor(
     }
 
     private companion object {
+        const val SAVE_DEBOUNCE_MS = 1000L
         const val FORCE_SAVE_TIMEOUT_MS = 1500L
         const val RENDERER_GONE_WINDOW_MS = 60_000L
         const val MAX_RENDERER_RECOVERIES_IN_WINDOW = 3
     }
 }
 
+internal data class AddNoteError(val isClosing: Boolean)
+
 internal data class AddNoteViewState(
     val title: AddOrEditNoteArgs.TitleData? = null,
     var tags: PersistentList<Tag> = persistentListOf(),
     val readOnly: Boolean = false,
+    val isClosing: Boolean = false,
+    val error: AddNoteError? = null,
     val isEditorInstalled: Boolean = false,
     val webViewGeneration: Int = 0,
 ) : ViewState {
