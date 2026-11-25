@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,10 +74,14 @@ internal fun AddNoteScreen(
             },
         ) {
             Box {
-                AddNoteWebView(
-                    viewModel = viewModel,
-                    isKeyboardShown = isKeyboardShown
-                )
+                if (viewState.isEditorInstalled) {
+                    key(viewState.webViewGeneration) {
+                        AddNoteWebView(
+                            viewModel = viewModel,
+                            isKeyboardShown = isKeyboardShown
+                        )
+                    }
+                }
                 if (!isKeyboardShown) {
                     AddNoteTagSelector(
                         viewState = viewState,
