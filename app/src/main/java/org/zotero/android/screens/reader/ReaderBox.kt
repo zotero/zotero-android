@@ -1,11 +1,7 @@
 package org.zotero.android.screens.reader
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,12 +18,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.scrubber.ReaderPageHistoryArrowButton
@@ -44,42 +39,8 @@ internal fun ReaderBox(
     scrubberViewModel: ReaderScrubberViewModel,
     isOverlayMode: Boolean,
 ) {
-    val density = LocalDensity.current
-    val positionalThreshold = { distance: Float -> distance * 0.5f }
-    val velocityThreshold = { with(density) { 1000.dp.toPx() } }
-    val animationSpec = tween<Float>()
-
     var shouldShowSnapTargetAreas: Boolean by remember { mutableStateOf(false) }
-    val confirmValueChange = { newValue: DragAnchors ->
-        shouldShowSnapTargetAreas = false
-        true
-    }
-    val decayAnimationSpec = rememberSplineBasedDecay<Float>()
-    val anchoredDraggableState: AnchoredDraggableState<DragAnchors> = rememberSaveable(
-        saver = AnchoredDraggableState.Saver(
-            snapAnimationSpec = animationSpec,
-            positionalThreshold = positionalThreshold,
-            velocityThreshold = velocityThreshold,
-            confirmValueChange = confirmValueChange,
-            decayAnimationSpec = decayAnimationSpec
-        )
-    ) {
-        AnchoredDraggableState(
-            initialValue = DragAnchors.Start,
-            positionalThreshold = positionalThreshold,
-            velocityThreshold = velocityThreshold,
-            snapAnimationSpec = animationSpec,
-            decayAnimationSpec = decayAnimationSpec,
-            confirmValueChange = confirmValueChange,
-        )
-    }
-    val extraRightPadding = if (isOverlayMode && viewState.showSideBar) {
-        330.dp
-    } else {
-        0.dp
-    }
-
-    val rightTargetAreaXOffset = with(density) { 96.dp.toPx() + extraRightPadding.toPx() }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     Column(
         Modifier
@@ -89,28 +50,20 @@ internal fun ReaderBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .onSizeChanged { layoutSize ->
-                    val dragEndPoint = layoutSize.width - rightTargetAreaXOffset
-                    anchoredDraggableState.updateAnchors(
-                        DraggableAnchors {
-                            DragAnchors.entries
-                                .forEach { anchor ->
-                                    anchor at dragEndPoint * anchor.fraction
-                                }
-                        }
-                    )
-                }
+                .onSizeChanged { layoutSize -> containerSize = layoutSize }
         ) {
             key(viewState.webViewGeneration) {
                 ReaderWebView(viewModel = viewModel)
             }
-            if (viewState.showCreationToolbar) {
+            if (viewState.showCreationToolbar && containerSize != IntSize.Zero) {
                 ReaderAnnotationCreationToolbar(
                     viewState = viewState,
                     viewModel = viewModel,
                     isOverlayMode = isOverlayMode,
-                    state = anchoredDraggableState,
-                    onShowSnapTargetAreas = { shouldShowSnapTargetAreas = true },
+                    position = viewState.toolbarPosition,
+                    onPositionChange = viewModel::onToolbarPositionChange,
+                    containerSize = containerSize,
+                    onSnapTargetAreasVisibilityChange = { shouldShowSnapTargetAreas = it },
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
@@ -197,8 +150,9 @@ private fun ReaderPageHistoryForwardArrow(
     }
 }
 
-enum class DragAnchors(val fraction: Float) {
-    Start(0f),
-    End(1f),
+enum class ReaderToolbarPosition {
+    Start,
+    End,
+    Top,
 }
 

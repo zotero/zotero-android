@@ -462,6 +462,9 @@ class ReaderViewModel @Inject constructor(
         this.activeFontSize = defaults.getActiveFontSize()
 
         updateState {
+            copy(toolbarPosition = defaults.getReaderToolbarPosition())
+        }
+        updateState {
             copy(toolColors = mapOf(
                 ReaderAnnotationTool.highlight to defaults.getHighlightColorHex(),
                 ReaderAnnotationTool.note to defaults.getNoteColorHex(),
@@ -2005,6 +2008,13 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
+    fun onToolbarPositionChange(position: ReaderToolbarPosition) {
+        defaults.setReaderToolbarPosition(position)
+        updateState {
+            copy(toolbarPosition = position)
+        }
+    }
+
     fun toggleToolbarButton() {
         updateState {
             copy(showCreationToolbar = !viewState.showCreationToolbar)
@@ -2905,6 +2915,7 @@ data class ReaderViewState(
     val showPdfSearch: Boolean = false,
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
+    val toolbarPosition: ReaderToolbarPosition = ReaderToolbarPosition.Start,
     val commentFocusKey: String? = null,
     val commentFocusText: String = "",
     val sidebarSliderSelectedOption: ReaderSliderOptions = ReaderSliderOptions.Annotations,

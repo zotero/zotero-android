@@ -10,6 +10,7 @@ import org.zotero.android.screens.allitems.data.ItemsSortType
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMethod
 import org.zotero.android.screens.citbibexport.data.CitBibExportOutputMode
 import org.zotero.android.screens.itemdetails.data.ItemDetailCreator
+import org.zotero.android.screens.reader.ReaderToolbarPosition
 import org.zotero.android.screens.reader.settings.data.PageScrollMode
 import org.zotero.android.screens.reader.settings.data.ReaderSettings
 import org.zotero.android.webdav.data.WebDavScheme
@@ -56,6 +57,7 @@ open class Defaults @Inject constructor(
     private val exportLocaleId = "exportLocaleId"
     private val quickCopyAsHtml = "quickCopyAsHtml"
     private val readerSettings = "readerSettings1"
+    private val readerToolbarPosition = "readerToolbarPosition"
 
     private val exportOutputMode = "exportOutputMode"
     private val exportOutputMethod = "exportOutputMethod"
@@ -580,6 +582,16 @@ open class Defaults @Inject constructor(
     ) {
         val json = dataMarshaller.marshal(readerSettings)
         sharedPreferences.edit { putString(this@Defaults.readerSettings, json) }
+    }
+
+    fun getReaderToolbarPosition(): ReaderToolbarPosition {
+        val name = sharedPreferences.getString(readerToolbarPosition, null)
+        return ReaderToolbarPosition.entries.firstOrNull { it.name == name }
+            ?: ReaderToolbarPosition.Start
+    }
+
+    fun setReaderToolbarPosition(position: ReaderToolbarPosition) {
+        sharedPreferences.edit { putString(readerToolbarPosition, position.name) }
     }
 
     fun reset() {
