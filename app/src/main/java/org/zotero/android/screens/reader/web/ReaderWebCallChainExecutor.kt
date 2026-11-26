@@ -383,9 +383,52 @@ class ReaderWebCallChainExecutor @Inject constructor(
         }
     }
 
-    suspend fun selectSearchResult(index: Int) {
+    /**
+     * The reader only navigates when `index` differs from the previous one it was given, so when the same index
+     * is requested again (e.g. after scrolling away) a different [intermediateIndex] is sent first.
+     */
+    suspend fun selectSearchResult(index: Int, intermediateIndex: Int? = null) {
+        val javascript = if (intermediateIndex != null) {
+            "javascript:(function() { window._view.find({ index: ${intermediateIndex} }); window._view.find({ index: ${index} }); })();"
+        } else {
+            "javascript:window._view.find({ index: ${index} });"
+        }
         return suspendCancellableCoroutine { cont ->
-            readerWebViewHandler.evaluateJavascript("javascript:window._view.find({ index: ${index} });") {
+            readerWebViewHandler.evaluateJavascript(javascript) {
+                cont.resume(Unit)
+            }
+        }
+    }
+
+    /**
+     * The reader's PDF search ignores `find({ index })` (only EPUB, snapshot and reading mode honor it),
+     * so move to the requested result by stepping from the current one the shorter way around.
+     */
+    suspend fun selectPdfSearchResult(
+        index: Int,
+        currentIndex: Int,
+        total: Int,
+        currentPositionJson: String?,
+    ) {
+        if (total <= 0 || index !in 0 until total || currentIndex !in 0 until total) {
+            return
+        }
+        val forwardSteps = (index - currentIndex + total) % total
+        val backwardSteps = total - forwardSteps
+        val javascript = if (forwardSteps == 0) {
+            // Already the current result, but the user may have scrolled away: navigate to it again.
+            // (findNext + findPrevious in one go does not work: the reader applies the last direction to both.)
+            if (currentPositionJson == null) {
+                return
+            }
+            "javascript:window._view.navigate({ position: ${currentPositionJson} });"
+        } else {
+            val functionName = if (forwardSteps <= backwardSteps) "findNext" else "findPrevious"
+            val steps = minOf(forwardSteps, backwardSteps)
+            "javascript:(function() { for (var i = 0; i < ${steps}; i++) { window._view.${functionName}(); } })();"
+        }
+        return suspendCancellableCoroutine { cont ->
+            readerWebViewHandler.evaluateJavascript(javascript) {
                 cont.resume(Unit)
             }
         }

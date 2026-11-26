@@ -197,6 +197,10 @@ class ReaderViewModel @Inject constructor(
     private var annotationEditReaderKey: String? = null
 
     private var savedSearchTerm = ""
+    private var currentSearchResultIndex = -1
+    private var searchResultsTotal = 0
+    private var currentSearchResultPositionJson: String? = null
+    private var lastSentFindIndex: Int? = null
 
     var activeLineWidth: Float = 0.0f
     var activeEraserSize: Float = 0.0f
@@ -232,7 +236,26 @@ class ReaderViewModel @Inject constructor(
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(result: ReaderSearchResultSelected) {
         viewModelScope.launch {
-            readerWebCallChainExecutor.selectSearchResult(result.index)
+            if (viewState.fileType == ReaderFileType.PDF && !viewState.readingModeEnabled) {
+                readerWebCallChainExecutor.selectPdfSearchResult(
+                    index = result.index,
+                    currentIndex = currentSearchResultIndex,
+                    total = searchResultsTotal,
+                    currentPositionJson = currentSearchResultPositionJson,
+                )
+                if (result.index != currentSearchResultIndex) {
+                    currentSearchResultIndex = result.index
+                    // Stale until the reader publishes the new current result.
+                    currentSearchResultPositionJson = null
+                }
+            } else {
+                val isRepeat = result.index == lastSentFindIndex && searchResultsTotal > 1
+                readerWebCallChainExecutor.selectSearchResult(
+                    index = result.index,
+                    intermediateIndex = if (!isRepeat) null else if (result.index == 0) 1 else result.index - 1,
+                )
+                lastSentFindIndex = result.index
+            }
         }
     }
 
@@ -373,6 +396,7 @@ class ReaderViewModel @Inject constructor(
                 val string = data?.term ?: ""
                 savedSearchTerm = string
                 if (string.isEmpty()) {
+                    lastSentFindIndex = null
                     readerWebCallChainExecutor.clearSearch()
                     readerSearchResultsEventStream.emitAsync(
                         ReaderSearchResultsData(
@@ -1709,6 +1733,12 @@ class ReaderViewModel @Inject constructor(
                 deselectSelectedAnnotation()
             }
             is ReaderWebData.processDocumentSearchResults -> {
+                val resultParams = successValue.params.get("params")?.takeIf { it.isJsonObject }?.asJsonObject
+                currentSearchResultIndex = resultParams?.get("index")?.takeIf { it.isJsonPrimitive }?.asInt ?: -1
+                searchResultsTotal = resultParams?.get("total")?.takeIf { it.isJsonPrimitive }?.asInt ?: 0
+                currentSearchResultPositionJson = resultParams?.get("annotation")
+                    ?.takeIf { it.isJsonObject }?.asJsonObject
+                    ?.get("position")?.takeIf { it.isJsonObject }?.toString()
                 readerSearchResultsEventStream.emitAsync(
                     ReaderSearchResultsData(
                         successValue.params
