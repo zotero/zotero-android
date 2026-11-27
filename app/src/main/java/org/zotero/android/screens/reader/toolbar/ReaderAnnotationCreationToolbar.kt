@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -47,9 +48,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -70,6 +73,7 @@ import org.zotero.android.screens.reader.data.ReaderFileType
 import org.zotero.android.screens.reader.toolbar.data.ReaderTool
 import org.zotero.android.uicomponents.Drawables
 import org.zotero.android.uicomponents.Strings
+import org.zotero.android.uicomponents.theme.CustomTheme
 import org.zotero.android.uicomponents.foundation.safeStringResource
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -79,6 +83,12 @@ private val TOOLBAR_CHROME_HEIGHT = 268.dp
 private val TOOLBAR_TOOL_HEIGHT = 40.dp
 private val TOOLBAR_ITEM_SIZE = 48.dp
 private val TOOLBAR_MARGIN = 16.dp
+private val TOOLBAR_PINNED_CONTENT_HEIGHT = 64.dp
+private val PLACEHOLDER_DASH_WIDTH = 3.dp
+private val PLACEHOLDER_DASH_ON = 6.dp
+private val PLACEHOLDER_DASH_OFF = 3.dp
+private val PLACEHOLDER_CORNER_RADIUS = 8.dp
+private val PLACEHOLDER_SHAPE = RoundedCornerShape(PLACEHOLDER_CORNER_RADIUS)
 private val TOOLBAR_OVERLAY_SIDEBAR_INSET = 330.dp
 private val TOOLBAR_HORIZONTAL_SPACER = 8.dp
 
@@ -147,6 +157,19 @@ private val pdfReaderToolsList = listOf(
         isHidden = false
     )
 )
+
+/** The system strip at the top of the screen (status bar, camera cutout), also while it is hidden. */
+@Composable
+private fun topSystemInset(): WindowInsets {
+    return WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+}
+
+/** The height of the toolbar when it is pinned in place of the top bar, including the status bar strip. */
+@Composable
+internal fun pinnedToolbarHeight(): Dp {
+    val density = LocalDensity.current
+    return with(density) { topSystemInset().getTop(density).toDp() } + TOOLBAR_PINNED_CONTENT_HEIGHT
+}
 
 private fun toolbarHeight(toolCount: Int): Dp {
     return TOOLBAR_CHROME_HEIGHT + TOOLBAR_TOOL_HEIGHT * toolCount
@@ -233,16 +256,29 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         if (viewState.showSideBar && isOverlayMode) TOOLBAR_OVERLAY_SIDEBAR_INSET.toPx() else 0f
     }
     val marginPx = with(density) { TOOLBAR_MARGIN.toPx() }
+    // The "ignoring visibility" insets keep reporting the bar height while the bars are hidden.
+    val topSystemInsetPx = topSystemInset().getTop(density).toFloat()
+    // The pinned toolbar covers the status bar strip and has the height of the top bar.
+    val pinnedHeightPx = topSystemInsetPx + with(density) { TOOLBAR_PINNED_CONTENT_HEIGHT.toPx() }
+    val pinnedHeight = with(density) { pinnedHeightPx.toDp() }
     // In full-screen mode (top bar hidden) the system bars are hidden too and a PDF/HTML page is drawn
     // edge to edge, so the toolbar must stay below the status bar / camera cutout strip itself.
-    // The "ignoring visibility" insets keep reporting the bar height while the bars are hidden.
-    val topSystemInsetPx = if (viewState.isPdfOrHtml() && !viewState.isTopBarVisible) {
-        WindowInsets.statusBarsIgnoringVisibility
-            .union(WindowInsets.displayCutout)
-            .getTop(density)
-            .toFloat()
+    val isTopBarAbsent = viewState.isPdfOrHtml() && !viewState.isTopBarVisible
+    // The screen y of the bottom edge of the top bar, where the Start, End and Top toolbars begin. While
+    // the toolbar is pinned they begin below it, as if the top bar was there.
+    val belowTopBarY = if (isTopBarAbsent && position != ReaderToolbarPosition.Pinned) {
+        topSystemInsetPx
     } else {
-        0f
+        pinnedHeightPx
+    }
+    // The screen y of the top of the box this toolbar is drawn in. It is the top bar's bottom edge, except
+    // when there is no top bar (full screen, or the toolbar is pinned in its place).
+    val containerTopY =
+        if (isTopBarAbsent || position == ReaderToolbarPosition.Pinned) 0f else pinnedHeightPx
+    // The pinned position replaces the top bar, so there is nothing to replace in full screen.
+    val isPinnedAvailable = !isTopBarAbsent || position == ReaderToolbarPosition.Pinned
+    val availablePositions = ReaderToolbarPosition.entries.filter {
+        it != ReaderToolbarPosition.Pinned || isPinnedAvailable
     }
     // Docked at the top the toolbar spans the whole width, with no side margins.
     val horizontalWidth = with(density) { (containerSize.width - insetPx).toDp() }
@@ -250,28 +286,32 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
 
     val sizeOf: (ReaderToolbarPosition) -> Size = { p ->
         with(density) {
-            if (p == ReaderToolbarPosition.Top) {
-                Size(horizontalWidth.toPx(), TOOLBAR_ITEM_SIZE.toPx())
-            } else {
-                Size(TOOLBAR_ITEM_SIZE.toPx(), verticalHeight.toPx())
+            when (p) {
+                ReaderToolbarPosition.Top -> Size(horizontalWidth.toPx(), TOOLBAR_ITEM_SIZE.toPx())
+                ReaderToolbarPosition.Pinned -> Size(horizontalWidth.toPx(), pinnedHeightPx)
+                else -> Size(TOOLBAR_ITEM_SIZE.toPx(), verticalHeight.toPx())
             }
         }
     }
+    // The targets are screen coordinates in y (and container coordinates in x), so they do not depend on
+    // which position currently decides where the container starts.
     val targetOf: (ReaderToolbarPosition) -> Offset = { p ->
         val size = sizeOf(p)
         when (p) {
-            ReaderToolbarPosition.Start -> Offset(insetPx + marginPx, topSystemInsetPx + marginPx)
+            ReaderToolbarPosition.Start -> Offset(insetPx + marginPx, belowTopBarY + marginPx)
             ReaderToolbarPosition.End -> Offset(
                 containerSize.width - marginPx - size.width,
-                topSystemInsetPx + marginPx
+                belowTopBarY + marginPx
             )
 
-            ReaderToolbarPosition.Top -> Offset(insetPx, topSystemInsetPx)
+            ReaderToolbarPosition.Top -> Offset(insetPx, belowTopBarY)
+            ReaderToolbarPosition.Pinned -> Offset(insetPx, 0f)
         }
     }
 
     val currentSizeOf by rememberUpdatedState(sizeOf)
     val currentTargetOf by rememberUpdatedState(targetOf)
+    val currentAvailablePositions by rememberUpdatedState(availablePositions)
     val currentPosition by rememberUpdatedState(position)
     val currentOnPositionChange by rememberUpdatedState(onPositionChange)
     val currentOnSnapAreasChange by rememberUpdatedState(onSnapTargetAreasVisibilityChange)
@@ -280,6 +320,7 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
     var isDragging by remember { mutableStateOf(false) }
     var pointerPosition by remember { mutableStateOf(Offset.Zero) }
     var grabPoint by remember { mutableStateOf(Offset.Zero) }
+    var selectedPosition by remember { mutableStateOf(position) }
     val moveSpec = tween<Offset>(durationMillis = 300, easing = FastOutSlowInEasing)
 
     val target = targetOf(position)
@@ -289,10 +330,21 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         }
     }
 
+    val nearestPosition: () -> ReaderToolbarPosition = {
+        currentAvailablePositions.minBy { p ->
+            distanceToRect(
+                point = pointerPosition,
+                topLeft = currentTargetOf(p),
+                size = currentSizeOf(p)
+            )
+        }
+    }
+
     val onDragStart: (Offset) -> Unit = { startPoint ->
         isDragging = true
         grabPoint = startPoint
         pointerPosition = offset.value + startPoint
+        selectedPosition = currentPosition
         currentOnSnapAreasChange(true)
         coroutineScope.launch { offset.stop() }
     }
@@ -303,15 +355,10 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         // finger can reach the edges and corners where the snap areas are.
         val newOffset = pointerPosition - grabPoint
         coroutineScope.launch { offset.snapTo(newOffset) }
+        selectedPosition = nearestPosition()
     }
     val onDragEnd: () -> Unit = {
-        val best = ReaderToolbarPosition.entries.minBy { p ->
-            distanceToRect(
-                point = pointerPosition,
-                topLeft = currentTargetOf(p),
-                size = currentSizeOf(p)
-            )
-        }
+        val best = nearestPosition()
         isDragging = false
         currentOnSnapAreasChange(false)
         currentOnPositionChange(best)
@@ -344,46 +391,97 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
     )
 
     if (shouldShowSnapTargetAreas) {
-        val stroke = Stroke(
-            width = 5f,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-        )
-        val strokeColor = MaterialTheme.colorScheme.primary
-        ReaderToolbarPosition.entries.forEach { p ->
+        // Same look as iOS: translucent blue areas with a dashed border, the one the toolbar would snap
+        // to is highlighted. The pinned and top areas are stacked, sharing the dashed line between them.
+        val blue = CustomTheme.colors.zoteroBlueWithDarkMode
+        availablePositions.forEach { p ->
             val areaTopLeft = targetOf(p)
             val areaSize = sizeOf(p)
+            val isSelected = p == selectedPosition
+            val areaColor = blue.copy(alpha = if (isSelected) 0.5f else 0.15f)
+            val dashColor = blue.copy(alpha = if (isSelected) 1f else 0.5f)
+            val isVerticalArea = p == ReaderToolbarPosition.Start || p == ReaderToolbarPosition.End
             Box(
                 modifier = Modifier
                     .offset {
-                        IntOffset(areaTopLeft.x.roundToInt(), areaTopLeft.y.roundToInt())
+                        IntOffset(
+                            areaTopLeft.x.roundToInt(),
+                            (areaTopLeft.y - containerTopY).roundToInt()
+                        )
                     }
                     .size(
                         width = with(density) { areaSize.width.toDp() },
                         height = with(density) { areaSize.height.toDp() },
                     )
                     .background(
-                        color = snapAreaBackgroundColor,
-                        shape = roundCornerShape
+                        color = areaColor,
+                        shape = if (isVerticalArea) PLACEHOLDER_SHAPE else RectangleShape
                     )
-                    .clip(roundCornerShape)
                     .drawBehind {
-                        drawRoundRect(color = strokeColor, style = stroke)
+                        val strokeWidth = PLACEHOLDER_DASH_WIDTH.toPx()
+                        val dashEffect = PathEffect.dashPathEffect(
+                            floatArrayOf(PLACEHOLDER_DASH_ON.toPx(), PLACEHOLDER_DASH_OFF.toPx()),
+                            0f
+                        )
+                        fun line(start: Offset, end: Offset) {
+                            drawLine(
+                                color = dashColor,
+                                start = start,
+                                end = end,
+                                strokeWidth = strokeWidth,
+                                pathEffect = dashEffect,
+                            )
+                        }
+
+                        val topLeft = Offset(0f, 0f)
+                        val topRight = Offset(size.width, 0f)
+                        val bottomLeft = Offset(0f, size.height)
+                        val bottomRight = Offset(size.width, size.height)
+                        when (p) {
+                            ReaderToolbarPosition.Start, ReaderToolbarPosition.End -> drawRoundRect(
+                                color = dashColor,
+                                cornerRadius = CornerRadius(PLACEHOLDER_CORNER_RADIUS.toPx()),
+                                style = Stroke(width = strokeWidth, pathEffect = dashEffect),
+                            )
+
+                            // Left, right and top, plus the line shared with the top area below it.
+                            ReaderToolbarPosition.Pinned -> {
+                                line(topLeft, bottomLeft)
+                                line(topRight, bottomRight)
+                                line(topLeft, topRight)
+                                line(bottomLeft, bottomRight)
+                            }
+
+                            // Left, right and bottom, the top is the pinned area's bottom line.
+                            ReaderToolbarPosition.Top -> {
+                                line(topLeft, bottomLeft)
+                                line(topRight, bottomRight)
+                                line(bottomLeft, bottomRight)
+                            }
+                        }
                     }
             )
         }
     }
 
     // Docked at the top the toolbar sits flush against the top bar, so its top corners are square.
-    val surfaceShape = if (position == ReaderToolbarPosition.Top) {
-        RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 12.dp, bottomEnd = 12.dp)
-    } else {
-        roundCornerShape
+    // The pinned toolbar is an edge to edge bar like the top bar it replaces.
+    val surfaceShape = when (position) {
+        ReaderToolbarPosition.Top -> RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 0.dp,
+            bottomStart = 12.dp,
+            bottomEnd = 12.dp
+        )
+
+        ReaderToolbarPosition.Pinned -> RoundedCornerShape(0.dp)
+        else -> roundCornerShape
     }
     val surfaceModifier = Modifier
         .offset {
             IntOffset(
                 x = offset.value.x.roundToInt(),
-                y = offset.value.y.roundToInt(),
+                y = (offset.value.y - containerTopY).roundToInt(),
             )
         }
         .background(
@@ -392,11 +490,12 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
         )
         .clip(surfaceShape)
 
-    if (position == ReaderToolbarPosition.Top) {
+    if (position == ReaderToolbarPosition.Top || position == ReaderToolbarPosition.Pinned) {
+        val isPinned = position == ReaderToolbarPosition.Pinned
         BoxWithConstraints(
             modifier = surfaceModifier
                 .width(horizontalWidth)
-                .height(TOOLBAR_ITEM_SIZE)
+                .height(if (isPinned) pinnedHeight else TOOLBAR_ITEM_SIZE)
                 .then(holdDragModifier),
         ) {
             val toolbarWidth = maxWidth
@@ -406,6 +505,8 @@ internal fun BoxScope.ReaderAnnotationCreationToolbar(
             Row(
                 modifier = Modifier
                     .fillMaxHeight()
+                    // The pinned toolbar extends under the status bar, the buttons stay below it.
+                    .padding(top = if (isPinned) with(density) { topSystemInsetPx.toDp() } else 0.dp)
                     .horizontalScroll(rememberScrollState())
                     .widthIn(min = toolbarWidth),
                 horizontalArrangement = Arrangement.Center,

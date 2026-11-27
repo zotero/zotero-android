@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
@@ -184,8 +185,12 @@ internal fun ReaderScreen(
         CustomScaffoldM3(
             shouldIncludeTopBarAndNavBarPaddings = viewState.isPdfOrHtml(),
             topBar = {
+                // The top bar stays invisible (but keeps its space) while the toolbar is dragged, so the
+                // snap area of the pinned position, which lies where the top bar is, can be seen.
                 AnimatedContent(
-                    targetState = viewState.isTopBarVisible,
+                    modifier = Modifier.alpha(if (viewState.isToolbarDragging) 0f else 1f),
+                    // A pinned toolbar takes the place of the top bar.
+                    targetState = viewState.isTopBarVisible && !viewState.isToolbarPinned(),
                     label = ""
                 ) { isTopBarVisible ->
                     if (isTopBarVisible) {

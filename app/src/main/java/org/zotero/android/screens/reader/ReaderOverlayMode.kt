@@ -39,7 +39,8 @@ internal fun ReaderOverlayMode(
             bottom = insetBottom
         )
 
-    if (!isPdfOrHtml) {
+    // A pinned toolbar takes the place of the top bar, so the reserved space is not needed.
+    if (!isPdfOrHtml && !viewState.isToolbarPinned()) {
         val statusBarTop = with(density) {
             systemBarsInsets.getTop(this).toDp()
         } + TopAppBarDefaults.TopAppBarExpandedHeight

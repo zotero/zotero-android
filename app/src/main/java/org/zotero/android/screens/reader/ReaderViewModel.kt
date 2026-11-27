@@ -2011,7 +2011,17 @@ class ReaderViewModel @Inject constructor(
     fun onToolbarPositionChange(position: ReaderToolbarPosition) {
         defaults.setReaderToolbarPosition(position)
         updateState {
-            copy(toolbarPosition = position)
+            copy(
+                toolbarPosition = position,
+                // A pinned toolbar takes the place of the top bar, which also hides the sidebar button.
+                showSideBar = showSideBar && position != ReaderToolbarPosition.Pinned,
+            )
+        }
+    }
+
+    fun onToolbarDragChange(isDragging: Boolean) {
+        updateState {
+            copy(isToolbarDragging = isDragging)
         }
     }
 
@@ -2916,6 +2926,7 @@ data class ReaderViewState(
     val showSideBar: Boolean = false,
     val showCreationToolbar: Boolean = false,
     val toolbarPosition: ReaderToolbarPosition = ReaderToolbarPosition.Start,
+    val isToolbarDragging: Boolean = false,
     val commentFocusKey: String? = null,
     val commentFocusText: String = "",
     val sidebarSliderSelectedOption: ReaderSliderOptions = ReaderSliderOptions.Annotations,
@@ -2953,6 +2964,11 @@ data class ReaderViewState(
 
     fun isPdfOrHtml(): Boolean {
         return fileType == ReaderFileType.PDF || fileType == ReaderFileType.HTML
+    }
+
+    /** The creation toolbar is docked at the very top, in place of the top bar. */
+    fun isToolbarPinned(): Boolean {
+        return showCreationToolbar && toolbarPosition == ReaderToolbarPosition.Pinned
     }
 
     fun isScrubberVisible(): Boolean {

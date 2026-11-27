@@ -30,6 +30,7 @@ import org.zotero.android.screens.reader.scrubber.ReaderPageIndicatorLabel
 import org.zotero.android.screens.reader.scrubber.ReaderPageScrubber
 import org.zotero.android.screens.reader.scrubber.ReaderScrubberViewModel
 import org.zotero.android.screens.reader.toolbar.ReaderAnnotationCreationToolbar
+import org.zotero.android.screens.reader.toolbar.pinnedToolbarHeight
 
 
 @Composable
@@ -52,8 +53,20 @@ internal fun ReaderBox(
                 .weight(1f)
                 .onSizeChanged { layoutSize -> containerSize = layoutSize }
         ) {
-            key(viewState.webViewGeneration) {
-                ReaderWebView(viewModel = viewModel)
+            // The pinned toolbar replaces the top bar, so the document starts below it.
+            val documentTopPadding = if (viewState.isToolbarPinned()) {
+                pinnedToolbarHeight()
+            } else {
+                0.dp
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = documentTopPadding)
+            ) {
+                key(viewState.webViewGeneration) {
+                    ReaderWebView(viewModel = viewModel)
+                }
             }
             if (viewState.showCreationToolbar && containerSize != IntSize.Zero) {
                 ReaderAnnotationCreationToolbar(
@@ -63,7 +76,10 @@ internal fun ReaderBox(
                     position = viewState.toolbarPosition,
                     onPositionChange = viewModel::onToolbarPositionChange,
                     containerSize = containerSize,
-                    onSnapTargetAreasVisibilityChange = { shouldShowSnapTargetAreas = it },
+                    onSnapTargetAreasVisibilityChange = {
+                        shouldShowSnapTargetAreas = it
+                        viewModel.onToolbarDragChange(it)
+                    },
                     shouldShowSnapTargetAreas = shouldShowSnapTargetAreas
                 )
             }
@@ -154,5 +170,7 @@ enum class ReaderToolbarPosition {
     Start,
     End,
     Top,
+    /** Docked at the very top of the screen, taking the place of the top bar. */
+    Pinned,
 }
 
